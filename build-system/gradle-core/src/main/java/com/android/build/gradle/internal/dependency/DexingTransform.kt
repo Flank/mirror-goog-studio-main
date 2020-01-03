@@ -83,7 +83,7 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
         @get:Input
         val libConfiguration: Property<String>
         @get:Input
-        val incrementalDesugaringV2: Property<Boolean>
+        val incrementalDexingV2: Property<Boolean>
     }
 
     @get:Inject
@@ -111,10 +111,10 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
 
         val outputKeepRulesEnabled =
             parameters.libConfiguration.isPresent && !parameters.debuggable.get()
-        val incrementalDesugaringV2 = parameters.incrementalDesugaringV2.get()
+        val incrementalDexingV2 = parameters.incrementalDexingV2.get()
 
         val provideIncrementalSupport =
-            !isJarFile(input) && !outputKeepRulesEnabled && incrementalDesugaringV2
+            !isJarFile(input) && !outputKeepRulesEnabled && incrementalDexingV2
 
         val dexOutputDir =
             if (outputKeepRulesEnabled) {
@@ -332,7 +332,7 @@ fun getDexingArtifactConfiguration(scope: VariantScope): DexingArtifactConfigura
         enableDesugaring = scope.java8LangSupportType == VariantScope.Java8LangSupport.D8,
         enableCoreLibraryDesugaring = scope.isCoreLibraryDesugaringEnabled,
         needsShrinkDesugarLibrary = scope.needsShrinkDesugarLibrary,
-        incrementalDesugaringV2 = scope.globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2)
+        incrementalDexingV2 = scope.globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2)
     )
 }
 
@@ -342,7 +342,7 @@ data class DexingArtifactConfiguration(
     private val enableDesugaring: Boolean,
     private val enableCoreLibraryDesugaring: Boolean,
     private val needsShrinkDesugarLibrary: Boolean,
-    private val incrementalDesugaringV2: Boolean
+    private val incrementalDexingV2: Boolean
 ) {
 
     private val needsClasspath = enableDesugaring && minSdk < AndroidVersion.VersionCodes.N
@@ -353,7 +353,7 @@ data class DexingArtifactConfiguration(
         bootClasspath: FileCollection,
         libConfiguration: Provider<String>,
         errorFormat: SyncOptions.ErrorFormatMode,
-        incrementalDesugaringV2: Boolean
+        incrementalDexingV2: Boolean
     ) {
         dependencyHandler.registerTransform(getTransformClass()) { spec ->
             spec.parameters { parameters ->
@@ -368,10 +368,10 @@ data class DexingArtifactConfiguration(
                 if (enableCoreLibraryDesugaring) {
                     parameters.libConfiguration.set(libConfiguration)
                 }
-                parameters.incrementalDesugaringV2.set(incrementalDesugaringV2)
+                parameters.incrementalDexingV2.set(incrementalDexingV2)
             }
             // Put this behind a flag as we need to monitor the performance impact
-            if (incrementalDesugaringV2) {
+            if (incrementalDexingV2) {
                 spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.CLASSES.type)
             } else {
                 spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.CLASSES_JAR.type)
@@ -405,7 +405,7 @@ data class DexingArtifactConfiguration(
             ATTR_MIN_SDK to minSdk.toString(),
             ATTR_IS_DEBUGGABLE to isDebuggable.toString(),
             ATTR_ENABLE_DESUGARING to enableDesugaring.toString(),
-            ATTR_INCREMENTAL_DESUGARING_V2 to incrementalDesugaringV2.toString()
+            ATTR_INCREMENTAL_DEXING_V2 to incrementalDexingV2.toString()
         )
     }
 }
@@ -415,7 +415,7 @@ val ATTR_IS_DEBUGGABLE: Attribute<String> =
     Attribute.of("dexing-is-debuggable", String::class.java)
 val ATTR_ENABLE_DESUGARING: Attribute<String> =
     Attribute.of("dexing-enable-desugaring", String::class.java)
-val ATTR_INCREMENTAL_DESUGARING_V2: Attribute<String> =
+val ATTR_INCREMENTAL_DEXING_V2: Attribute<String> =
     Attribute.of("dexing-incremental-desugaring-v2", String::class.java)
 
 const val DESUGAR_GRAPH_FILE_NAME = "desugar_graph.bin"

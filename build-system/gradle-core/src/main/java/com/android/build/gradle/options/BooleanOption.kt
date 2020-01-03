@@ -151,7 +151,7 @@ enum class BooleanOption(
     USE_SAFE_PROPERTIES("android.variant.safe.properties", false, FeatureStage.Experimental),
 
     /** Incremental dexing with desugaring using D8's new API for desugaring graph computation. */
-    ENABLE_INCREMENTAL_DESUGARING_V2("android.enableIncrementalDesugaringV2", false, FeatureStage.Experimental),
+    ENABLE_INCREMENTAL_DEXING_V2("android.enableIncrementalDexingV2", false, FeatureStage.Experimental),
 
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES

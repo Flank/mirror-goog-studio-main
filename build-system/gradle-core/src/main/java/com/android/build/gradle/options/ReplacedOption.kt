@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.options
 
+import com.android.build.gradle.options.Version.VERSION_4_0
 import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 
 /**
@@ -90,6 +91,13 @@ enum class ReplacedOption(
         "android.androidTest.nonFinalResIds",
         VERSION_BEFORE_4_0,
         "This property has been replaced by ${BooleanOption.USE_NON_FINAL_RES_IDS.propertyName}"
+    ),
+
+    @Suppress("unused")
+    ENABLE_INCREMENTAL_DESUGARING_V2(
+        "android.enableIncrementalDesugaringV2",
+        VERSION_4_0,
+        "This property has been replaced by ${BooleanOption.ENABLE_INCREMENTAL_DEXING_V2.propertyName}"
     ),
 
     ;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.desugar
+package com.android.build.gradle.integration.dexing
 
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 
-import com.android.build.gradle.integration.desugar.IncrementalDesugaringTest.Scenario.APP
-import com.android.build.gradle.integration.desugar.IncrementalDesugaringTest.Scenario.ANDROID_LIB
-import com.android.build.gradle.integration.desugar.IncrementalDesugaringTest.Scenario.ANDROID_LIB_WITH_POST_JAVAC_CLASSES
-import com.android.build.gradle.integration.desugar.IncrementalDesugaringTest.Scenario.JAVA_LIB
+import com.android.build.gradle.integration.dexing.IncrementalDexingWithDesugaringTest.Scenario.APP
+import com.android.build.gradle.integration.dexing.IncrementalDexingWithDesugaringTest.Scenario.ANDROID_LIB
+import com.android.build.gradle.integration.dexing.IncrementalDexingWithDesugaringTest.Scenario.ANDROID_LIB_WITH_POST_JAVAC_CLASSES
+import com.android.build.gradle.integration.dexing.IncrementalDexingWithDesugaringTest.Scenario.JAVA_LIB
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.ChangeType.CHANGED
@@ -46,20 +46,20 @@ import java.io.File
 
 /**
  * Tests that dexing with desugaring is incremental (only a minimal number of class files are
- * re-desugared).
+ * re-dexed).
  *
  * Note that this test is focused on the incrementality aspect. The correctness aspect should be
  * tested by other tests.
  */
 @RunWith(FilterableParameterized::class)
-class IncrementalDesugaringTest(
+class IncrementalDexingWithDesugaringTest(
     private val scenario: Scenario,
-    private val withIncrementaDesugaringV2: Boolean
+    private val withIncrementalDexingV2: Boolean
 ) {
 
     companion object {
 
-        @Parameterized.Parameters(name = "scenario_{0}_incrementalDesugaringV2_{1}")
+        @Parameterized.Parameters(name = "scenario_{0}_incrementalDexingV2_{1}")
         @JvmStatic
         fun parameters() = listOf(
             arrayOf(APP, true),
@@ -253,7 +253,7 @@ class IncrementalDesugaringTest(
                 }
                 ANDROID_LIB -> {
                     {
-                        if (withIncrementaDesugaringV2) {
+                        if (withIncrementalDexingV2) {
                             RUNTIME_LIBRARY_CLASSES_DIR.getOutputDir(subproject.buildDir)
                                 .resolve("debug/$it.class")
                         } else {
@@ -264,7 +264,7 @@ class IncrementalDesugaringTest(
                 }
                 ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
                     {
-                        if (withIncrementaDesugaringV2) {
+                        if (withIncrementalDexingV2) {
                             RUNTIME_LIBRARY_CLASSES_DIR.getOutputDir(subproject.buildDir)
                                 .resolve("debug/classes.jar")
                         } else {
@@ -294,7 +294,7 @@ class IncrementalDesugaringTest(
                 }
                 ANDROID_LIB -> {
                     {
-                        if (withIncrementaDesugaringV2) {
+                        if (withIncrementalDexingV2) {
                             findDexTransformOutputDir(subproject.buildDir).resolve("debug/$it.dex")
                         } else {
                             findDexTransformOutputDir(subproject.buildDir).resolve("classes/classes.dex")
@@ -340,8 +340,8 @@ class IncrementalDesugaringTest(
     }
 
     private fun getExecutor(): GradleTaskExecutor = project.executor().with(
-        BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2,
-        withIncrementaDesugaringV2
+        BooleanOption.ENABLE_INCREMENTAL_DEXING_V2,
+        withIncrementalDexingV2
     )
 
     /**
@@ -408,13 +408,13 @@ class IncrementalDesugaringTest(
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to
-                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
                                 },
                         dummyStandAlonePublishedClassFile!! to
-                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
@@ -423,7 +423,7 @@ class IncrementalDesugaringTest(
                         interfaceWithDefaultMethodDexFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to CHANGED,
                         dummyStandAloneDexFile to
-                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
@@ -490,13 +490,13 @@ class IncrementalDesugaringTest(
                         // Published class files
                         interfaceWithDefaultMethodPublishedClassFile!! to CHANGED,
                         classUsingInterfaceWithDefaultMethodPublishedClassFile!! to
-                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
                                 },
                         dummyStandAlonePublishedClassFile!! to
-                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
                                     UNCHANGED
                                 } else {
                                     CHANGED
@@ -504,13 +504,13 @@ class IncrementalDesugaringTest(
                         // Dex files
                         interfaceWithDefaultMethodDexFile to CHANGED,
                         classUsingInterfaceWithDefaultMethodDexFile to
-                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
                                     CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS
                                 } else {
                                     CHANGED
                                 },
                         dummyStandAloneDexFile to
-                                if (scenario == ANDROID_LIB && withIncrementaDesugaringV2) {
+                                if (scenario == ANDROID_LIB && withIncrementalDexingV2) {
                                     UNCHANGED
                                 } else {
                                     CHANGED

@@ -83,7 +83,7 @@ import kotlin.test.fail
 @RunWith(Parameterized::class)
 class DexArchiveBuilderDelegateTest(
     private var dexerTool: DexerTool,
-    private val withIncrementalDesugaringV2: Boolean
+    private val withIncrementalDexingV2: Boolean
 ) {
 
     private lateinit var cacheDir: File
@@ -174,8 +174,8 @@ class DexArchiveBuilderDelegateTest(
 
     @Test
     fun testCacheUsedForExternalLibOnly() {
-        // Caching is currently not supported when withIncrementalDesugaringV2 == true
-        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDesugaringV2)
+        // Caching is currently not supported when withIncrementalDexingV2 == true
+        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDexingV2)
 
         val projectJar = tmpDir.root.toPath().resolve("projectInput.jar")
         jarWithEmptyClasses(projectJar, ImmutableList.of("$PACKAGE/A"))
@@ -249,8 +249,8 @@ class DexArchiveBuilderDelegateTest(
 
     @Test
     fun testCacheKeyInputsChanges() {
-        // Caching is currently not supported when withIncrementalDesugaringV2 == true
-        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDesugaringV2)
+        // Caching is currently not supported when withIncrementalDexingV2 == true
+        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDexingV2)
 
         val inputJar = tmpDir.root.toPath().resolve("input.jar")
         jarWithEmptyClasses(inputJar, ImmutableList.of())
@@ -299,8 +299,8 @@ class DexArchiveBuilderDelegateTest(
         // Only for D8, Ignore DX
         Assume.assumeTrue(dexerTool == DexerTool.D8)
 
-        // Caching is currently not supported when withIncrementalDesugaringV2 == true
-        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDesugaringV2)
+        // Caching is currently not supported when withIncrementalDexingV2 == true
+        Assume.assumeFalse(dexerTool == DexerTool.D8 && withIncrementalDexingV2)
 
         val inputJar = tmpDir.root.toPath().resolve("input.jar")
         val emptyLibDir = tmpDir.root.toPath().resolve("emptylibDir")
@@ -422,7 +422,7 @@ class DexArchiveBuilderDelegateTest(
     @Test
     fun testCachingExternalLibsForCoreLibraryDesugaring() {
         Assume.assumeTrue(dexerTool == DexerTool.D8)
-        Assume.assumeFalse(withIncrementalDesugaringV2)
+        Assume.assumeFalse(withIncrementalDexingV2)
 
         val inputJar = tmpDir.root.toPath().resolve("input.jar")
         TestInputsGenerator.pathWithClasses(
@@ -750,8 +750,8 @@ class DexArchiveBuilderDelegateTest(
             mixedScopeOutputKeepRules = null,
             inputJarHashesFile = tmpDir.newFile(),
             desugarClasspathChangedClasses = emptySet(),
-            incrementalDesugaringV2 = withIncrementalDesugaringV2,
-            desugarGraphDir =  tmpDir.newFolder().takeIf{ withIncrementalDesugaringV2 },
+            incrementalDexingV2 = withIncrementalDexingV2,
+            desugarGraphDir =  tmpDir.newFolder().takeIf{ withIncrementalDexingV2 },
             dexer = dexerTool,
             useGradleWorkers = false,
             projectVariant = "myVariant",
@@ -779,10 +779,10 @@ class DexArchiveBuilderDelegateTest(
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "dexerTool_{0}_incrementalDesugaringV2_{1}")
+        @Parameterized.Parameters(name = "dexerTool_{0}_incrementalDexingV2_{1}")
         fun parameters() = listOf(
             arrayOf(DexerTool.DX, false),
-            // No need to test arrayOf(DexerTool.DX, true) as incrementalDesugaringV2 is only for D8
+            // No need to test arrayOf(DexerTool.DX, true) as incrementalDexingV2 is only for D8
             arrayOf(DexerTool.D8, false),
             arrayOf(DexerTool.D8, true)
         )
