@@ -1736,4 +1736,106 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun testAnnotationArrays() {
+        // Regression test for
+        // https://issuetracker.google.com/37065470
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                import android.support.annotation.IdRes;
+                public @interface MySweetAnnotation {
+                    @IdRes
+                    int[] ids() default {};
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                public class AnnotationUsageJava {
+                    @MySweetAnnotation() // OK
+                    public void test1() {
+                    }
+                    @MySweetAnnotation(ids = R.string.app_name) // ERROR
+                    public void test2() {
+                    }
+                    @MySweetAnnotation(ids = { R.string.app_name }) // ERROR
+                    public void test3() {
+                    }
+                    @MySweetAnnotation(ids = { R.id.left, R.string.app_name }) // OK - has id
+                    public void test4() {
+                    }
+                    @MySweetAnnotation(ids = { R.string.app_name, R.id.left }) // OK
+                    public void test5() {
+                    }
+                    @MySweetAnnotation(ids = { R.string.app_name, R.drawable.my_drawable }) // ERROR
+                    public void test6() {
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                class AnnotationUsageKotlin {
+                    @MySweetAnnotation // OK
+                    fun test1() {
+                    }
+                    @MySweetAnnotation(ids = [R.string.app_name]) // ERROR
+                    fun test3() {
+                    }
+                    @MySweetAnnotation(ids = [R.id.left, R.string.app_name]) // OK - has id
+                    fun test4() {
+                    }
+                    @MySweetAnnotation(ids = [R.string.app_name, R.id.left]) // OK
+                    fun test5() {
+                    }
+                    @MySweetAnnotation(ids = [R.string.app_name, R.drawable.my_drawable]) // ERROR
+                    fun test6() {
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                    package test.pkg;
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    public final class R {
+                        public static final class string {
+                            public static final int app_name = 0x7f0b0021;
+                        }
+                        public static final class id {
+                            public static final int left = 0x7f0c00fa;
+                        }
+                        public static final class drawable {
+                            public static final int my_drawable = 0x7f0c00fb;
+                        }
+                    }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/AnnotationUsageJava.java:6: Error: Expected resource of type id [ResourceType]
+                @MySweetAnnotation(ids = R.string.app_name) // ERROR
+                                         ~~~~~~~~~~~~~~~~~
+            src/test/pkg/AnnotationUsageJava.java:9: Error: Expected resource of type id [ResourceType]
+                @MySweetAnnotation(ids = { R.string.app_name }) // ERROR
+                                         ~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/AnnotationUsageJava.java:18: Error: Expected resource of type id [ResourceType]
+                @MySweetAnnotation(ids = { R.string.app_name, R.drawable.my_drawable }) // ERROR
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/AnnotationUsageKotlin.kt:6: Error: Expected resource of type id [ResourceType]
+                @MySweetAnnotation(ids = [R.string.app_name]) // ERROR
+                                         ~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/AnnotationUsageKotlin.kt:15: Error: Expected resource of type id [ResourceType]
+                @MySweetAnnotation(ids = [R.string.app_name, R.drawable.my_drawable]) // ERROR
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            5 errors, 0 warnings
+            """
+        )
+    }
 }
