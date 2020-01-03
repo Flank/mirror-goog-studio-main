@@ -24,7 +24,6 @@ import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.bottomNavigationActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.emptyActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.fullscreenActivityTemplate
-import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.googleMapsActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.googleMapsWearActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.loginActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.masterDetailFlowTemplate
@@ -43,6 +42,7 @@ import com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.mo
 import com.android.tools.idea.wizard.template.impl.fragments.scrollFragment.scrollFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.settingsFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.viewModelFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.other.folders.resourcesFolderTemplate
 
 /**
  * Implementation of the Android Wizard Template plugin extension point.
@@ -74,6 +74,8 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     modalBottomSheetTemplate,
     settingsFragmentTemplate,
     scrollFragmentTemplate,
-    viewModelFragmentTemplate
+    viewModelFragmentTemplate,
+
+    resourcesFolderTemplate
   )
 }
