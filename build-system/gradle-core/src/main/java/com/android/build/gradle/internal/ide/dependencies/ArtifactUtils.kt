@@ -28,7 +28,6 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.file.FileCollection
 
 /** This holder class exists to allow lint to depend on the artifact collections. */
 class ArtifactCollections(
@@ -99,14 +98,14 @@ class ArtifactCollections(
         AndroidArtifacts.ArtifactType.JAR
     )
 
-    val allCollections: Collection<FileCollection>
+    val allCollections: Collection<ArtifactCollection>
         get() = listOfNotNull(
             all,
             manifests,
             nonNamespacedManifests,
             explodedAars,
             projectJars
-        ).map { it.artifactFiles }
+        )
 }
 
 /**
