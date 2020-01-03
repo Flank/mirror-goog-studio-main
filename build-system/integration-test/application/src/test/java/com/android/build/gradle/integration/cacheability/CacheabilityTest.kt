@@ -79,7 +79,6 @@ class CacheabilityTest {
                     ":app:mergeDebugJavaResource",
                     ":app:mergeDebugNativeLibs",
                     ":app:mergeDexDebug",
-                    ":app:stripDebugDebugSymbols",
                     ":app:extractDeepLinksDebug",
                     ":app:dexBuilderDebug",
                     ":app:parseDebugIntegrityConfig"
@@ -101,7 +100,8 @@ class CacheabilityTest {
                     ":app:processDebugJavaRes",
                     ":app:assembleDebug",
                     ":app:processDebugUnitTestJavaRes",
-                    ":app:compileDebugSources"
+                    ":app:compileDebugSources",
+                    ":app:stripDebugDebugSymbols"
                 ),
                 FAILED to setOf()
             )

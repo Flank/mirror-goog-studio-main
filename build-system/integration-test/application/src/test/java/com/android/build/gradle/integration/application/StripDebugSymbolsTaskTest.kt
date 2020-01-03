@@ -20,11 +20,13 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
+import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 
 /**
- * Tests for [StripDebugSymbolsTaskTest]
+ * Tests for [StripDebugSymbolsTask]
  */
 class StripDebugSymbolsTaskTest {
 
@@ -61,5 +63,38 @@ class StripDebugSymbolsTaskTest {
                 assertThat(scanner).doesNotContain("Packaging it as is")
             }
         }
+    }
+
+    @Test
+    fun testTaskSkippedWhenNoNativeLibs() {
+        // first test that the task is skipped when there are no native libraries.
+        val result1 = project.executor().run(":stripDebugDebugSymbols")
+        assertThat(result1.skippedTasks).containsAtLeastElementsIn(
+            listOf(":stripDebugDebugSymbols")
+        )
+        // then test that the task does work if we add a native library.
+        doTest(project) {
+            it.addFile("src/main/jniLibs/x86/foo.so", "foo")
+            val result2 = project.executor().run(":stripDebugDebugSymbols")
+            assertThat(result2.didWorkTasks).containsAtLeastElementsIn(
+                listOf(":stripDebugDebugSymbols")
+            )
+            // then test that the task is up-to-date if nothing changes.
+            val result3 = project.executor().run(":stripDebugDebugSymbols")
+            assertThat(result3.upToDateTasks).containsAtLeastElementsIn(
+                listOf(":stripDebugDebugSymbols")
+            )
+        }
+        // then test that the task does work after the native library is removed (since it must be
+        // removed from the task's output dir).
+        val result4 = project.executor().run(":stripDebugDebugSymbols")
+        assertThat(result4.didWorkTasks).containsAtLeastElementsIn(
+            listOf(":stripDebugDebugSymbols")
+        )
+        // finally test that the task is skipped if we build again with no native libraries.
+        val result5 = project.executor().run(":stripDebugDebugSymbols")
+        assertThat(result5.skippedTasks).containsAtLeastElementsIn(
+            listOf(":stripDebugDebugSymbols")
+        )
     }
 }

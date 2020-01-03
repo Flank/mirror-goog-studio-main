@@ -77,7 +77,6 @@ class LibraryCacheabilityTest {
                     ":lib:packageReleaseResources",
                     ":lib:parseReleaseLocalResources",
                     ":lib:processReleaseManifest",
-                    ":lib:stripReleaseDebugSymbols",
                     ":lib:syncReleaseLibJars",
                     ":lib:verifyReleaseResources"
                 ),
@@ -96,7 +95,8 @@ class LibraryCacheabilityTest {
                     ":lib:compileReleaseAidl",
                     ":lib:compileReleaseRenderscript",
                     ":lib:compileReleaseShaders",
-                    ":lib:processReleaseJavaRes"
+                    ":lib:processReleaseJavaRes",
+                    ":lib:stripReleaseDebugSymbols"
                 ),
                 FAILED to setOf()
             )

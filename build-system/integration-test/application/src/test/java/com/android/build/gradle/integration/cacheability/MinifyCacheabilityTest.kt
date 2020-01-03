@@ -17,24 +17,19 @@
 package com.android.build.gradle.integration.cacheability
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.integration.common.truth.TaskStateList
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.DID_WORK
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FAILED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FROM_CACHE
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
-import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.builder.model.CodeShrinker
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
 import org.junit.runners.Parameterized
 
 /**
@@ -81,7 +76,6 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":mergeMinifiedShaders",
             if (shrinker == CodeShrinker.R8) ":minifyMinifiedWithR8"
             else ":minifyMinifiedWithProguard",
-            ":stripMinifiedDebugSymbols",
             ":validateSigningMinified"
         ),
         DID_WORK to setOf(
@@ -98,7 +92,8 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":compileMinifiedRenderscript",
             ":compileMinifiedShaders",
             ":preMinifiedBuild",
-            ":processMinifiedJavaRes"
+            ":processMinifiedJavaRes",
+            ":stripMinifiedDebugSymbols"
         ),
         FAILED to setOf()
     )
