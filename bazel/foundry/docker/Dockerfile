@@ -4,6 +4,8 @@ RUN apt-get update && apt-get --no-install-recommends install -y ca-certificates
 RUN apt-get update && apt-get install -y lib32ncurses5 lib32z1
 # Install dependencies for emulator.
 RUN apt-get update && apt-get install -y libpulse-dev libgl1-mesa-glx libxcomposite-dev libxcursor-dev libasound2
+# Install dependencies to build skia
+RUN apt-get update && apt-get install -y libstdc++-5-dev
 # Container uses dockerUseURandom to mount /dev/urandom as /dev/random.
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
