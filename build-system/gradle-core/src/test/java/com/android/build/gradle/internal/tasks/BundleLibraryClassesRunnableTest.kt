@@ -138,16 +138,16 @@ class BundleLibraryClassesRunnableTest(private val outputType: AndroidArtifacts.
         val input = setOf(
             tmp.newFolder().also { dir ->
                 dir.resolve("A.class").createNewFile()
-                dir.resolve("test").mkdirs()
-                dir.resolve("test/R.class").createNewFile()
-                dir.resolve("test/R\$string.class").createNewFile()
-                dir.resolve("test/Manifest.class").createNewFile()
-                dir.resolve("test/Manifest\$nested.class").createNewFile()
+                dir.resolve("com/example").mkdirs()
+                dir.resolve("com/example/R.class").createNewFile()
+                dir.resolve("com/example/R\$string.class").createNewFile()
+                dir.resolve("com/example/Manifest.class").createNewFile()
+                dir.resolve("com/example/Manifest\$nested.class").createNewFile()
             }
         )
         BundleLibraryClassesRunnable(
             BundleLibraryClassesRunnable.Params(
-                packageName = "test",
+                packageName = "com.example",
                 toIgnore = listOf(),
                 outputType = outputType,
                 output = output,
@@ -159,10 +159,10 @@ class BundleLibraryClassesRunnableTest(private val outputType: AndroidArtifacts.
             )
         ).run()
         assertContains(output, "A.class")
-        assertDoesNotContain(output, "test/R.class")
-        assertDoesNotContain(output, "test/R\$string.class")
-        assertDoesNotContain(output, "test/Manifest.class")
-        assertDoesNotContain(output, "test/Manifest\$nested.class")
+        assertDoesNotContain(output, "com/example/R.class")
+        assertDoesNotContain(output, "com/example/R\$string.class")
+        assertDoesNotContain(output, "com/example/Manifest.class")
+        assertDoesNotContain(output, "com/example/Manifest\$nested.class")
     }
 
     @Test
@@ -170,16 +170,16 @@ class BundleLibraryClassesRunnableTest(private val outputType: AndroidArtifacts.
         val input = setOf(
             tmp.newFolder().also { dir ->
                 dir.resolve("A.class").createNewFile()
-                dir.resolve("test").mkdirs()
-                dir.resolve("test/R.class").createNewFile()
-                dir.resolve("test/R\$string.class").createNewFile()
-                dir.resolve("test/Manifest.class").createNewFile()
-                dir.resolve("test/Manifest\$nested.class").createNewFile()
+                dir.resolve("com/example").mkdirs()
+                dir.resolve("com/example/R.class").createNewFile()
+                dir.resolve("com/example/R\$string.class").createNewFile()
+                dir.resolve("com/example/Manifest.class").createNewFile()
+                dir.resolve("com/example/Manifest\$nested.class").createNewFile()
             }
         )
         BundleLibraryClassesRunnable(
             BundleLibraryClassesRunnable.Params(
-                packageName = "test",
+                packageName = "com.example",
                 toIgnore = listOf(),
                 outputType = outputType,
                 output = output,
@@ -191,10 +191,10 @@ class BundleLibraryClassesRunnableTest(private val outputType: AndroidArtifacts.
             )
         ).run()
         assertContains(output, "A.class")
-        assertContains(output, "test/R.class")
-        assertContains(output, "test/R\$string.class")
-        assertDoesNotContain(output, "test/Manifest.class")
-        assertDoesNotContain(output, "test/Manifest\$nested.class")
+        assertContains(output, "com/example/R.class")
+        assertContains(output, "com/example/R\$string.class")
+        assertDoesNotContain(output, "com/example/Manifest.class")
+        assertDoesNotContain(output, "com/example/Manifest\$nested.class")
     }
 
     @Test

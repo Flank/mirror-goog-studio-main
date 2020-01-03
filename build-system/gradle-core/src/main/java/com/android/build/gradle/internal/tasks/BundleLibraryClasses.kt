@@ -262,7 +262,7 @@ class BundleLibraryClassesRunnable @Inject constructor(private val params: Param
     override fun run() {
         val ignorePatterns =
             (LibraryAarJarsTask.getDefaultExcludes(
-                packagePath = params.packageName,
+                packagePath = params.packageName.replace('.', '/'),
                 packageR = params.packageRClass
             ) + params.toIgnore)
                 .map { Pattern.compile(it) }
