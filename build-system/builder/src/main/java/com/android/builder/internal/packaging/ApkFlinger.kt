@@ -100,6 +100,7 @@ class ApkFlinger(
                         .setCertificates(signingOptions.certificates)
                         .setMinSdkVersion(signingOptions.minSdkVersion)
                         .setPrivateKey(signingOptions.key)
+                        .setSdkDependencies(signingOptions.sdkDependencyData)
                         .setV1Enabled(signingOptions.isV1SigningEnabled)
                         .setV2Enabled(signingOptions.isV2SigningEnabled)
                         .setV1CreatedBy(creationData.createdBy ?: DEFAULT_CREATED_BY)

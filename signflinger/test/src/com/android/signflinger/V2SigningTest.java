@@ -82,4 +82,26 @@ public class V2SigningTest {
         System.out.println("Adding and Signing time=" + totalTime);
     }
 
+    @Test
+    public void benchmarkAddAndV2signWithDependencyInfo() throws Exception {
+        File androidManifest = workspace.getDummyAndroidManifest();
+        File file = workspace.createZip(400, 120_000, "apk-42MiB-400files.apk", androidManifest);
+
+        SignerConfig signerConfig = Signers.getDefaultRSASigner(workspace);
+        SignedApkOptions.Builder builder =
+                new SignedApkOptions.Builder()
+                        .setSdkDependencies(new byte[500])
+                        .setV2Enabled(true)
+                        .setV1Enabled(false)
+                        .setPrivateKey(signerConfig.getPrivateKey())
+                        .setCertificates(signerConfig.getCertificates())
+                        .setExecutor(Utils.createExecutor());
+        SignedApkOptions options = builder.build();
+
+        try (SignedApk signedApk = new SignedApk(file, options)) {
+            signedApk.add(new BytesSource(workspace.getResourceFile("test1.txt"), "test1", 1));
+        }
+        Utils.verifyApk(file);
+        Utils.verifySdkDependencyBlock(file);
+    }
 }

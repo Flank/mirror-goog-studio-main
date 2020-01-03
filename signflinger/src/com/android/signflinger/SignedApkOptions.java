@@ -48,11 +48,13 @@ public class SignedApkOptions {
     final boolean v1TrustManifest;
 
     final int minSdkVersion;
+    final byte[] sdkDependencies;
 
     private SignedApkOptions(
             PrivateKey privateKey,
             List<X509Certificate> certificates,
             RunnablesExecutor executor,
+            byte[] sdkDependencies,
             boolean v1Enabled,
             boolean v2Enabled,
             String v1CreatedBy,
@@ -62,6 +64,7 @@ public class SignedApkOptions {
         this.privateKey = privateKey;
         this.certificates = certificates;
         this.executor = executor;
+        this.sdkDependencies = sdkDependencies;
         this.v1Enabled = v1Enabled;
         this.v2Enabled = v2Enabled;
         this.v1CreatedBy = v1CreatedBy;
@@ -74,6 +77,7 @@ public class SignedApkOptions {
         PrivateKey privateKey;
         List<X509Certificate> certificates;
         RunnablesExecutor executor;
+        byte[] sdkDependencies;
         boolean v1Enabled = false;
         boolean v2Enabled = true;
         String v1CreatedBy = "Signflinger";
@@ -93,6 +97,11 @@ public class SignedApkOptions {
 
         public Builder setExecutor(@NonNull RunnablesExecutor executor) {
             this.executor = executor;
+            return this;
+        }
+
+        public Builder setSdkDependencies(byte[] sdkDependencies) {
+            this.sdkDependencies = sdkDependencies;
             return this;
         }
 
@@ -132,6 +141,7 @@ public class SignedApkOptions {
                     privateKey,
                     certificates,
                     executor,
+                    sdkDependencies,
                     v1Enabled,
                     v2Enabled,
                     v1CreatedBy,

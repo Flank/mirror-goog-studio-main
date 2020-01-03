@@ -48,6 +48,9 @@ import java.util.zip.Deflater;
 
 public class SignedApk implements Archive {
 
+    /** Signing block Id for SDK dependency block. */
+    static final int DEPENDENCY_INFO_BLOCK_ID = 0x504b4453;
+
     private final ZipArchive archive;
     private final ApkSignerEngine signer;
     private final SignedApkOptions options;
@@ -182,6 +185,9 @@ public class SignedApk implements Archive {
         ZipInfo zipInfo = archive.closeWithInfo();
         try (RandomAccessFile raf = new RandomAccessFile(archive.getFile(), "rw")) {
             byte[] sigBlock = v2Sign(raf, zipInfo);
+            sigBlock =
+                    SigningBlockUtils.addToSigningBlock(
+                            sigBlock, options.sdkDependencies, DEPENDENCY_INFO_BLOCK_ID);
             ApkSigningBlock.addToArchive(raf, sigBlock, zipInfo);
         } catch (IOException
                 | NoSuchAlgorithmException
