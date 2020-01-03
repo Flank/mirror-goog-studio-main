@@ -42,7 +42,7 @@ import com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.mo
 import com.android.tools.idea.wizard.template.impl.fragments.scrollFragment.scrollFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.settingsFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.viewModelFragmentTemplate
-import com.android.tools.idea.wizard.template.impl.other.folders.resourcesFolderTemplate
+import com.android.tools.idea.wizard.template.impl.other.folders.folderTemplates
 
 /**
  * Implementation of the Android Wizard Template plugin extension point.
@@ -74,8 +74,6 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     modalBottomSheetTemplate,
     settingsFragmentTemplate,
     scrollFragmentTemplate,
-    viewModelFragmentTemplate,
-
-    resourcesFolderTemplate
-  )
+    viewModelFragmentTemplate
+  ) + folderTemplates
 }
