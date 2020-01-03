@@ -55,8 +55,10 @@ public class CompanionSupplierRule extends ExternalResource {
                             return "visible";
                         case View.INVISIBLE:
                             return "invisible";
-                        default:
+                        case View.GONE:
                             return "gone";
+                        default:
+                            return null;
                     }
                 };
 
@@ -181,7 +183,7 @@ public class CompanionSupplierRule extends ExternalResource {
                         case ViewGroup.LayoutParams.WRAP_CONTENT:
                             return "wrap_content";
                         default:
-                            return Integer.toString(value);
+                            return null;
                     }
                 };
 

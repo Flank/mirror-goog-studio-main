@@ -187,8 +187,14 @@ public class ViewNode<V extends View> {
             PropertyType type = property.getPropertyType();
             IntFunction<String> mapping = type.getEnumMapping();
             if (mapping != null) {
-                readAny(id, mapping.apply(value));
+                String mappedValue = mapping.apply(value);
+                if (mappedValue != null) {
+                    readAny(id, mappedValue);
+                    return;
+                }
             }
+            readAny(id, value);
+            mProperties.get(id).setType(ValueType.INT32);
         }
 
         @Override

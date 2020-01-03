@@ -68,7 +68,7 @@ public class ViewNodeTest {
 
         Map<String, Property> layoutProperties = asMap(node.getLayoutProperties());
         assertThat(layoutProperties.get("layout_width").getValue()).isEqualTo("match_parent");
-        assertThat(layoutProperties.get("layout_height").getValue()).isEqualTo("400");
+        assertThat(layoutProperties.get("layout_height").getValue()).isEqualTo(400);
         // From LinearLayout:
         assertThat(layoutProperties.get("layout_marginBottom").getValue()).isEqualTo(10);
     }

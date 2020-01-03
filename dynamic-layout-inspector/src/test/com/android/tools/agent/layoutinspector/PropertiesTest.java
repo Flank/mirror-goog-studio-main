@@ -65,7 +65,6 @@ public class PropertiesTest {
             int index = 0;
             checkProperty(myProperties.get(index++), "focused", Type.BOOLEAN, 1);
             checkProperty(myProperties.get(index++), "byte", Type.BYTE, 7);
-
             checkProperty(myProperties.get(index++), "char", Type.CHAR, (int) 'g');
             checkProperty(myProperties.get(index++), "double", Type.DOUBLE, 3.75);
             checkProperty(myProperties.get(index++), "scaleX", Type.FLOAT, 1.75f);
@@ -95,12 +94,8 @@ public class PropertiesTest {
                     Type.INT_FLAG,
                     ImmutableSet.of("left", "bottom"));
             checkProperty(myProperties.get(index++), "text", Type.STRING, "Hello World!");
-
             checkProperty(myProperties.get(index++), "layout_width", Type.INT_ENUM, "match_parent");
-
-            // TODO: Do not hold numbers in the string table as it happens here:
-            checkProperty(myProperties.get(index++), "layout_height", Type.INT_ENUM, "400");
-
+            checkProperty(myProperties.get(index++), "layout_height", Type.INT32, 400);
             checkProperty(myProperties.get(index++), "layout_marginBottom", Type.INT32, 10);
             checkProperty(
                     myProperties.get(index++),
