@@ -126,6 +126,20 @@ class TranslationDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testCaseHandlingInRepositories() {
+        // Regression test for https://issuetracker.google.com/120747416
+        lint().files(
+            xml("res/values/cases.xml", """
+                <resources>
+                    <string name="abc_abc.abc.abc_abc">ABC</string>
+                </resources>
+            """).indented()
+        )
+            .incremental("res/values/cases.xml")
+            .run()
+            .expectClean()
+    }
+
     private val valuesCsArrays = xml(
         "res/values-cs/arrays.xml", "" +
                 "<resources xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +

@@ -1683,6 +1683,49 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void test120747416() {
+        // Regression test for https://issuetracker.google.com/120747416
+        // "Unused Resources missing logic for strings with dot in the id"
+        lint().files(
+                gradle("apply plugin: 'com.android.application'\n"),
+                kotlin(
+                        ""
+                                + "package test.pkg\n"
+                                + "\n"
+                                + "import android.support.annotation.StringRes\n"
+                                + "import android.app.Activity\n"
+                                + "import android.app.AlertDialog\n"
+                                + "\n"
+                                + "fun showDialog(activity: Activity, @StringRes messageId: Int) {\n"
+                                + "    AlertDialog.Builder(activity)\n"
+                                + "            .setMessage(messageId)\n"
+                                + "            .create()\n"
+                                + "            .show()\n"
+                                + "}\n"
+                                + "\n"
+                                + "fun test() {\n"
+                                + "    showDialog(R.string.abc_abc_abc_abc_abc)\n"
+                                + "}\n"),
+                java(
+                        ""
+                                + "package test.pkg;\n"
+                                + "public final class R {\n"
+                                + "    public static final class string {\n"
+                                + "        public static final int abc_abc_abc_abc_abc=0x7f020000;\n"
+                                + "    }\n"
+                                + "}\n"),
+                xml(
+                        "src/main/res/values/strings.xml",
+                        ""
+                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                + "       <string name=\"abc_abc.abc.abc_abc\">ABC</string>\n"
+                                + "</resources>\n"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mAccessibility =
             xml(
