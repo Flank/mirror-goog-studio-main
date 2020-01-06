@@ -20,13 +20,6 @@
         help="The name of the activity class to create" />
 
     <parameter
-        id="isLauncher"
-        name="Default Android launcher flag"
-        visibility="false"
-        type="boolean"
-        default="true"/>
-
-    <parameter
         id="isThingsLauncher"
         name="Launch activity automatically on boot"
         type="boolean"
