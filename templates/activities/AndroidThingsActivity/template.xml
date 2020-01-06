@@ -28,7 +28,7 @@
 
     <parameter
         id="generateLayout"
-        name="Generate a UI layout File"
+        name="Generate a Layout File"
         type="boolean"
         default="true"
         help="If true, a layout file will be generated. Android Things devices don't require a display, so UI is optional." />
