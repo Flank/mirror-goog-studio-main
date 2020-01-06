@@ -1251,6 +1251,7 @@ public final class SdkConstants {
     public static final String TAG_SELECTOR = "selector"; //$NON-NLS-1$
     public static final String TAG_TRANSITION = "transition"; //$NON-NLS-1$
     public static final String TAG_VECTOR = "vector"; //$NON-NLS-1$
+    public static final String TAG_LEVEL_LIST = "level-list";
 
     // Tags: Data-Binding
     public static final String TAG_LAYOUT = "layout"; //$NON-NLS-1$
