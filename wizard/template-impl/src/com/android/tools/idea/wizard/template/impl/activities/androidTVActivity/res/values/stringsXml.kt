@@ -29,7 +29,7 @@ fun stringsXml(
   return """
 <resources>
     $labelBlock
-    <string name="browse_title"><![CDATA[Videos by Your Company]]></string>
+    <string name="browse_title">Videos by Your Company</string>
     <string name="related_movies">Related Videos</string>
     <string name="grid_view">Grid View</string>
     <string name="error_fragment">Error Fragment</string>
