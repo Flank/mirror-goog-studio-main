@@ -63,7 +63,6 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
-import com.google.common.base.Joiner
 import com.google.common.collect.Sets
 import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiElement
@@ -429,34 +428,27 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
         }
 
-        val message: String
-        if (actual != null && actual.size == 1 && actual.contains(
-                ResourceEvaluator.COLOR_INT_MARKER_TYPE
-            )
-        ) {
-            message = "Expected a color resource id (`R.color.`) but received an RGB integer"
-        } else if (expectedTypes.contains(ResourceEvaluator.COLOR_INT_MARKER_TYPE)) {
-            message = String.format(
-                "Should pass resolved color instead of resource id here: `getResources().getColor(%1\$s)`",
-                argument.asSourceString()
-            )
-        } else if (actual != null && actual.size == 1 && actual.contains(
-                ResourceEvaluator.DIMENSION_MARKER_TYPE
-            )
-        ) {
-            message = "Expected a dimension resource id (`R.color.`) but received a pixel integer"
-        } else if (expectedTypes.contains(ResourceEvaluator.DIMENSION_MARKER_TYPE)) {
-            message = String.format(
-                "Should pass resolved pixel size instead of resource id here: `getResources().getDimension*(%1\$s)`",
-                argument.asSourceString()
-            )
-        } else if (expectedTypes.size < ResourceType.values().size - 2) { // -2: marker types
-            message = String.format(
-                "Expected resource of type %1\$s",
-                Joiner.on(" or ").join(expectedTypes)
-            )
-        } else {
-            message = "Expected resource identifier (`R`.type.`name`)"
+        val message = when {
+            actual != null && actual.size == 1 && actual.contains(COLOR_INT_MARKER_TYPE) -> {
+                "Expected a color resource id (`R.color.`) but received an RGB integer"
+            }
+            expectedTypes.contains(COLOR_INT_MARKER_TYPE) -> {
+                "Should pass resolved color instead of resource id here: " +
+                  "`getResources().getColor(${argument.asSourceString()})`"
+            }
+            actual != null && actual.size == 1 && actual.contains(DIMENSION_MARKER_TYPE) -> {
+                "Expected a dimension resource id (`R.color.`) but received a pixel integer"
+            }
+            expectedTypes.contains(DIMENSION_MARKER_TYPE) -> {
+                "Should pass resolved pixel size instead of resource id here: " +
+                  "`getResources().getDimension*(${argument.asSourceString()})`"
+            }
+            expectedTypes == ResourceEvaluator.getAnyRes() -> {
+                "Expected resource identifier (`R`.type.`name`)"
+            }
+            else -> {
+                "Expected resource of type ${expectedTypes.joinToString(" or ")}"
+            }
         }
         report(context, RESOURCE_TYPE, argument, context.getLocation(argument), message)
     }

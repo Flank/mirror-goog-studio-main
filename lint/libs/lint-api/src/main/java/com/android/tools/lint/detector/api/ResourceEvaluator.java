@@ -737,7 +737,8 @@ public class ResourceEvaluator {
         return ResourceUrl.create(type, name, isFramework);
     }
 
-    private static EnumSet<ResourceType> getAnyRes() {
+    /** The set of all "real" resource types. */
+    public static EnumSet<ResourceType> getAnyRes() {
         EnumSet<ResourceType> types = EnumSet.allOf(ResourceType.class);
         types.remove(COLOR_INT_MARKER_TYPE);
         types.remove(DIMENSION_MARKER_TYPE);
