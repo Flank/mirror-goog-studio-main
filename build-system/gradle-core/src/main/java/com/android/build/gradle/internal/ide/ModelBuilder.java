@@ -28,6 +28,7 @@ import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.PublicArtifactType;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -973,8 +974,9 @@ public class ModelBuilder<Extension extends BaseExtension>
             case BASE_APK:
             case OPTIONAL_APK:
             case TEST_APK:
+            case ANDROID_TEST:
                 return new BuildOutputsSupplier(
-                        ImmutableList.of(InternalArtifactType.APK.INSTANCE),
+                        ImmutableList.of(PublicArtifactType.APK.INSTANCE),
                         ImmutableList.of(variantScope.getApkLocation()));
             case LIBRARY:
                 return BuildOutputSupplier.of(
@@ -989,10 +991,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                                                 .getFinalProduct(InternalArtifactType.AAR.INSTANCE)
                                                 .get()
                                                 .getAsFile())));
-            case ANDROID_TEST:
-                return new BuildOutputsSupplier(
-                        ImmutableList.of(InternalArtifactType.APK.INSTANCE),
-                        ImmutableList.of(variantScope.getApkLocation()));
             case UNIT_TEST:
                 return (BuildOutputSupplier<Collection<EarlySyncBuildOutput>>)
                         () -> {

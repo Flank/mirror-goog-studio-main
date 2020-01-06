@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-960399dda50a8e3ce2b9435c02af7020f1747955e1e6bcd5f38cd9d72ae243ee
+e214a4e48706380760131fd2201a31729e6b58846565ea10b2046adfddde161e
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -154,6 +154,27 @@ com.android.build.api.variant.BuildTypedVariantFilterBuilder
 com.android.build.api.variant.BuildTypedVariantFilterBuilder.withFlavor: com.android.build.api.variant.BuildTypedVariantFilterBuilder<T> (kotlin.Pair<java.lang.String, java.lang.String>)
 com.android.build.api.variant.BuildTypedVariantFilterBuilder.withFlavor: void (kotlin.Pair<java.lang.String, java.lang.String>, kotlin.jvm.functions.Function1<? super T, kotlin.Unit>)
 com.android.build.api.variant.BuildTypedVariantFilterBuilder.withFlavor: void (kotlin.Pair<java.lang.String, java.lang.String>, org.gradle.api.Action<T>)
+com.android.build.api.variant.BuiltArtifact
+com.android.build.api.variant.BuiltArtifact.getFilters: java.util.Collection<com.android.build.api.variant.FilterConfiguration> ()
+com.android.build.api.variant.BuiltArtifact.getOutputFile: java.nio.file.Path ()
+com.android.build.api.variant.BuiltArtifact.getOutputType: com.android.build.api.variant.VariantOutputConfiguration$OutputType ()
+com.android.build.api.variant.BuiltArtifact.getProperties: java.util.Map<java.lang.String, java.lang.String> ()
+com.android.build.api.variant.BuiltArtifact.getVersionCode: int ()
+com.android.build.api.variant.BuiltArtifact.getVersionName: java.lang.String ()
+com.android.build.api.variant.BuiltArtifact.isEnabled: boolean ()
+com.android.build.api.variant.BuiltArtifacts
+com.android.build.api.variant.BuiltArtifacts$Companion
+com.android.build.api.variant.BuiltArtifacts$Companion.getLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
+com.android.build.api.variant.BuiltArtifacts.getApplicationId: java.lang.String ()
+com.android.build.api.variant.BuiltArtifacts.getArtifactType: com.android.build.api.artifact.ArtifactType<?> ()
+com.android.build.api.variant.BuiltArtifacts.getElements: java.util.Collection<com.android.build.api.variant.BuiltArtifact> ()
+com.android.build.api.variant.BuiltArtifacts.getLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
+com.android.build.api.variant.BuiltArtifacts.getVariantName: java.lang.String ()
+com.android.build.api.variant.BuiltArtifacts.save: void (org.gradle.api.file.Directory)
+com.android.build.api.variant.BuiltArtifacts.transform: com.android.build.api.variant.BuiltArtifacts (com.android.build.api.artifact.ArtifactType<?>, kotlin.jvm.functions.Function1<? super java.io.File, ? extends java.io.File>)
+com.android.build.api.variant.BuiltArtifactsLoader
+com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.Directory)
+com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.FileCollection)
 com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.DynamicFeatureVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.FilterConfiguration

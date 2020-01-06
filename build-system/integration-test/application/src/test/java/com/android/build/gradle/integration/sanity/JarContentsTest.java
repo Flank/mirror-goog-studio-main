@@ -466,6 +466,8 @@ public class JarContentsTest {
                 "META-INF/gradle-plugins/com.android.library.properties",
                 "META-INF/gradle-plugins/com.android.reporting.properties",
                 "META-INF/gradle-plugins/com.android.test.properties",
+                "META-INF/services/",
+                "META-INF/services/com.android.build.api.variant.BuiltArtifactsLoader",
                 "NOTICE");
         expected.putAll(
                 "com/android/tools/sdk-common",
