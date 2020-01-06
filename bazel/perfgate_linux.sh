@@ -32,7 +32,7 @@ readonly invocation_id="$(uuidgen)"
   --profile=${dist_dir}/perfgate-profile-${build_number}.json.gz \
   --runs_per_test=5 \
   -- \
-  //tools/base/bazel:perfgate_logs_collector_deploy.jar \
+  //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
   $(< "${script_dir}/targets")
 
 readonly bazel_status=$?
@@ -46,7 +46,9 @@ if [[ -d "${dist_dir}" ]]; then
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
 
-  ${java} -jar ${bin_dir}/tools/base/bazel/perfgate_logs_collector_deploy.jar "${testlogs_dir}" "${dist_dir}/bazel-${build_number}.bes" "${dist_dir}/perfgate_data.zip" "${dist_dir}/logs/perfgate_logs_collector.log"
+  ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \
+    -bes "${DIST_DIR}/bazel-${BUILD_NUMBER}.bes" \
+    -perfzip "${DIST_DIR}/perfgate_data.zip"
 
   # Upload all test logs
   find "${testlogs_dir}" -type f -name outputs.zip -exec zip -r "${dist_dir}/bazel_test_logs.zip" {} \;
