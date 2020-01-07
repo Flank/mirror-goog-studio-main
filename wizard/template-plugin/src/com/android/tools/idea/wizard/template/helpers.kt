@@ -15,8 +15,32 @@
  */
 package com.android.tools.idea.wizard.template
 
-inline fun renderIf(predicate: Boolean, trimVertical: Boolean = true, str: () -> String) =
+/**
+ * This is a special token which means "remove this line".
+ *
+ * Usually it is used in cases like this:
+ * ```
+ * val predicate = false
+ * val block = renderIf(predicate) { "optional line" }
+ * // block == SKIP_LINE
+ * val text = """
+ * required line 1
+ * $block
+ * required line 2
+ * """
+ * ```
+ *
+ * If we will render a template containing `text` it will contain only two lines without an empty line between them.
+ */
+const val SKIP_LINE = "[THIS LINE SHOULDN'T BE RENDERED!]"
+
+/**
+ * Returns [str] result if [predicate] is true.
+ *
+ * @see SKIP_LINE
+ */
+inline fun renderIf(predicate: Boolean, trim: Boolean = true, skipLine: Boolean = true, str: () -> String) =
   if (predicate)
-    if(trimVertical) str().trim() else str()
+    if(trim) str().trim() else str()
   else
-    ""
+    SKIP_LINE.takeIf { skipLine }.orEmpty()
