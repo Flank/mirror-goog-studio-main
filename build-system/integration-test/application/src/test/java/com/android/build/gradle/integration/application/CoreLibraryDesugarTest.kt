@@ -20,13 +20,11 @@ import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.Adb
 import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.LoggingLevel
 import com.android.build.gradle.integration.common.fixture.TestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.JavaSourceFileBuilder
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.AbiMatcher
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher
@@ -36,8 +34,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
-import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.AssumeUtil.assumeNotWindows
+import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestInputsGenerator.jarWithClasses
 import com.android.testutils.apk.AndroidArchive
@@ -84,6 +82,8 @@ class CoreLibraryDesugarTest {
     private val usedDesugarClass2 = "Lj$/time/Month;"
     private val usedDesugarClass3 = "Lj$/time/LocalTime;"
     private val unusedDesugarClass = "Lj$/time/Year;"
+    private val unObfuscatedClass = "Lj$/util/stream/StreamSupport;"
+    private val obfuscatedClass = "Lj$/util/stream/e;"
 
     private fun setUpTestProject(): TestProject {
         return MultiModuleTestProject.builder()
@@ -257,6 +257,9 @@ class CoreLibraryDesugarTest {
         DexSubject.assertThat(desugarLibDex).containsClass(usedDesugarClass3)
         // check unused API classes are removed from the from desugar lib dex.
         DexSubject.assertThat(desugarLibDex).doesNotContainClasses(unusedDesugarClass)
+        // check non minified release builds are not obfuscated.
+        DexSubject.assertThat(desugarLibDex).containsClass(unObfuscatedClass)
+        DexSubject.assertThat(desugarLibDex).doesNotContainClasses(obfuscatedClass)
     }
 
     @Test

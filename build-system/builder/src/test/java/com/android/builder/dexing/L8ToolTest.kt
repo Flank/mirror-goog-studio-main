@@ -45,7 +45,7 @@ class L8ToolTest {
             desugarConfig,
             bootClasspath,
             20,
-            null)
+            KeepRulesConfig(null, null))
         assertThat(getDexFileCount(output)).isEqualTo(1)
         assertThat(output.toFile().resolve("classes1000.dex")).exists()
     }

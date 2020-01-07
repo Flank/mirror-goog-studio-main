@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.utils.DESUGAR_LIB_DEX
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
+import com.android.builder.dexing.KeepRulesConfig
 import com.android.builder.dexing.runL8
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.artifacts.transform.InputArtifact
@@ -61,7 +62,7 @@ abstract class L8DexDesugarLibTransform : TransformAction<L8DexDesugarLibTransfo
             parameters.libConfiguration.get(),
             parameters.bootClasspath.map { it.toPath() },
             parameters.minSdkVersion.get(),
-            null
+            KeepRulesConfig(null, null)
             )
     }
 }
