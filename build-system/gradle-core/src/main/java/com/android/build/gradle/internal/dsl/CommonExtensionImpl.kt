@@ -39,7 +39,7 @@ abstract class CommonExtensionImpl<
         SigningConfigT: com.android.build.api.dsl.SigningConfig,
         VariantT: Variant<VariantPropertiesT>,
         VariantPropertiesT: VariantProperties>(
-    dslScope: DslScope,
+    protected val dslScope: DslScope,
     override val buildTypes: NamedDomainObjectContainer<BuildTypeT>,
     override val defaultConfig: DefaultConfigT,
     override val productFlavors: NamedDomainObjectContainer<ProductFlavorT>,

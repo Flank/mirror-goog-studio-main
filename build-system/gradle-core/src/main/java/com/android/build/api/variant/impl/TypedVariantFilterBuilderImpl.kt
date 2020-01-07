@@ -20,17 +20,20 @@ import com.android.build.api.variant.BuildTypedVariantFilterBuilder
 import com.android.build.api.variant.FlavoredVariantFilterBuilder
 import com.android.build.api.variant.TypedVariantFilterBuilder
 import com.android.build.api.variant.VariantConfiguration
+import com.android.build.gradle.internal.api.dsl.DslScope
 import org.gradle.api.Action
 import java.util.regex.Pattern
+import javax.inject.Inject
 
-internal class TypedVariantFilterBuilderImpl<T, U>(
+internal open class TypedVariantFilterBuilderImpl<T, U> @Inject constructor(
+    dslScope: DslScope,
     operations: VariantOperations<T>,
     type: Class<U>)
     : TypedVariantFilterBuilder<U> where T: ActionableVariantObject, T: VariantConfiguration, U: T  {
 
     // due to the type bounds, this does not work as a implementation by delegate...
     @Suppress("UNCHECKED_CAST")
-    private val builder = GenericVariantFilterBuilderImpl(operations as VariantOperations<U>, type)
+    private val builder = GenericVariantFilterBuilderImpl(dslScope, operations as VariantOperations<U>, type)
 
     override fun withBuildType(buildType: String): BuildTypedVariantFilterBuilder<U> {
         return builder.withBuildType(buildType)

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-5cbe9b482c8cde27a693088219c6868b53ab7df42f523329b812e652dfde3cd6
+960399dda50a8e3ce2b9435c02af7020f1747955e1e6bcd5f38cd9d72ae243ee
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -95,14 +95,14 @@ com.android.build.api.dsl.CommonExtension.getCompileSdkVersion: java.lang.String
 com.android.build.api.dsl.CommonExtension.getDefaultConfig: DefaultConfigT ()
 com.android.build.api.dsl.CommonExtension.getExternalNativeBuild: ExternalNativeBuildT ()
 com.android.build.api.dsl.CommonExtension.getJacoco: JacocoOptionsT ()
+com.android.build.api.dsl.CommonExtension.getOnVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<VariantPropertiesT> ()
+com.android.build.api.dsl.CommonExtension.getOnVariants: com.android.build.api.variant.GenericVariantFilterBuilder<VariantT> ()
 com.android.build.api.dsl.CommonExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<ProductFlavorT> ()
 com.android.build.api.dsl.CommonExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<SigningConfigT> ()
 com.android.build.api.dsl.CommonExtension.getTestOptions: TestOptionsT ()
 com.android.build.api.dsl.CommonExtension.jacoco: void (kotlin.jvm.functions.Function1<? super JacocoOptionsT, kotlin.Unit>)
-com.android.build.api.dsl.CommonExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<VariantPropertiesT> ()
 com.android.build.api.dsl.CommonExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super VariantPropertiesT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.onVariantProperties: void (org.gradle.api.Action<VariantPropertiesT>)
-com.android.build.api.dsl.CommonExtension.onVariants: com.android.build.api.variant.GenericVariantFilterBuilder<VariantT> ()
 com.android.build.api.dsl.CommonExtension.onVariants: void (kotlin.jvm.functions.Function1<? super VariantT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.onVariants: void (org.gradle.api.Action<VariantT>)
 com.android.build.api.dsl.CommonExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<ProductFlavorT>>)
@@ -170,7 +170,9 @@ com.android.build.api.variant.FilterConfiguration.getFilterType: com.android.bui
 com.android.build.api.variant.FilterConfiguration.getIdentifier: java.lang.String ()
 com.android.build.api.variant.FilterConfiguration.hashCode: int ()
 com.android.build.api.variant.FilterConfiguration.toString: java.lang.String ()
-com.android.build.api.variant.FlavoredVariantFilterBuilder
+com.android.build.api.variant.FlavoredVariantFilterBuilder implements com.android.build.api.variant.BuildTypedVariantFilterBuilder
+com.android.build.api.variant.FlavoredVariantFilterBuilder.withBuildType: com.android.build.api.variant.BuildTypedVariantFilterBuilder<T> (java.lang.String)
+com.android.build.api.variant.FlavoredVariantFilterBuilder.withBuildType: void (java.lang.String, kotlin.jvm.functions.Function1<? super T, kotlin.Unit>)
 com.android.build.api.variant.FlavoredVariantFilterBuilder.withBuildType: void (java.lang.String, org.gradle.api.Action<T>)
 com.android.build.api.variant.GenericVariantFilterBuilder implements com.android.build.api.variant.TypedVariantFilterBuilder
 com.android.build.api.variant.GenericVariantFilterBuilder.withType: com.android.build.api.variant.TypedVariantFilterBuilder<U> (java.lang.Class<U>)

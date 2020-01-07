@@ -23,6 +23,7 @@ import com.android.build.api.variant.AppVariantProperties
 import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
+import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.api.dsl.DslScope
@@ -76,16 +77,21 @@ class LibraryExtensionImpl(
         variantPropertiesOperations.executeActions(variant)
     }
 
-    override fun onVariants(): GenericVariantFilterBuilder<LibraryVariant> {
-        return GenericVariantFilterBuilderImpl(
-            variantOperations, LibraryVariant::class.java
-        )
-    }
+    @Suppress("UNCHECKED_CAST")
+    override val onVariants: GenericVariantFilterBuilder<LibraryVariant>
+        get() = dslScope.objectFactory.newInstance(
+            GenericVariantFilterBuilderImpl::class.java,
+            dslScope,
+            variantOperations,
+            LibraryVariant::class.java
+        ) as GenericVariantFilterBuilder<LibraryVariant>
 
-    override fun onVariantProperties(): GenericVariantFilterBuilder<LibraryVariantProperties> {
-        return GenericVariantFilterBuilderImpl(
-            variantPropertiesOperations,
+    @Suppress("UNCHECKED_CAST")
+    override val onVariantProperties: GenericVariantFilterBuilder<LibraryVariantProperties>
+        get() = dslScope.objectFactory.newInstance(
+            GenericVariantFilterBuilderImpl::class.java,
+            dslScope,
+            variantOperations,
             LibraryVariantProperties::class.java
-        )
-    }
+        ) as GenericVariantFilterBuilder<LibraryVariantProperties>
 }

@@ -82,13 +82,12 @@ class BaseAppModuleExtensionTest {
 
     @Test
     fun testOnVariants() {
-        val onVariants = appExtension.onVariants()
-        appExtension.onVariants()
+        appExtension.onVariants
             .withType(AppVariant::class.java)
             .withName("foo") {
                 minSdkVersion = 23
             }
-        appExtension.onVariants()
+        appExtension.onVariants
             .withName("foo") {
                 enabled = false
             }
@@ -96,22 +95,22 @@ class BaseAppModuleExtensionTest {
 
     @Test
     fun testOnVariantsProperties() {
-        appExtension.onVariantProperties()
+        appExtension.onVariantProperties
             .withName("foo", Action {
                 it.operations.get(PublicArtifactType.APK) })
-        appExtension.onVariantProperties()
+        appExtension.onVariantProperties
             .withFlavor("f1" to "dim1", Action {
                 it.operations.get(PublicArtifactType.APK) }
             )
 
-        appExtension.onVariantProperties()
+        appExtension.onVariantProperties
             .withType(AppVariantProperties::class.java)
             .withBuildType("debug")
             .withFlavor("f1" to "dim1", Action {
                 it.operations.get(PublicArtifactType.APK)
             })
 
-        appExtension.onVariantProperties()
+        appExtension.onVariantProperties
             .withType(AppVariantProperties::class.java)
             .withBuildType("debug")
             .withFlavor("f1" to "dim1")

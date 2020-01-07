@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 package com.android.build.api.variant
+
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 import java.util.regex.Pattern
+
 /**
  * Filter for [Variant] or [VariantProperties]
  */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.fixtures
+package com.android.testutils
 
 import com.google.common.truth.Truth
 
@@ -33,7 +33,8 @@ abstract class AbstractGivenExpectTest<GivenT, ResultT> {
         DONE
     }
 
-    private var state: TestState = TestState.START
+    private var state: TestState =
+        TestState.START
 
     /**
      * Registers an action block returning the given state as a single object
@@ -76,7 +77,7 @@ abstract class AbstractGivenExpectTest<GivenT, ResultT> {
      * Default implementation does assertThat.isEqual
      */
     open fun compareResult(expected: ResultT?, actual: ResultT?, given: GivenT) {
-        Truth.assertThat(expected).isEqualTo(actual)
+        Truth.assertThat(actual).isEqualTo(expected)
     }
 
     /**

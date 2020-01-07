@@ -18,18 +18,22 @@ package com.android.build.api.variant.impl
 import com.android.build.api.variant.ActionableVariantObject
 import com.android.build.api.variant.BuildTypedVariantFilterBuilder
 import com.android.build.api.variant.VariantConfiguration
+import com.android.build.gradle.internal.api.dsl.DslScope
 import org.gradle.api.Action
+import javax.inject.Inject
 
-internal class BuildTypedVariantFilterBuilderImpl<T>(
+internal open class BuildTypedVariantFilterBuilderImpl<T> @Inject constructor(
+    private val dslScope: DslScope,
     private val operations: VariantOperations<T>,
     private val buildType: String,
+    private val flavorToDimensionList: List<Pair<String, String>> = listOf(),
     private val type: Class<T>
 ): BuildTypedVariantFilterBuilder<T> where T : ActionableVariantObject, T: VariantConfiguration {
     override fun withFlavor(flavorToDimension: Pair<String, String>, action: Action<T>) {
         operations.addFilteredAction(FilteredVariantOperation(
             specificType = type,
             buildType = buildType,
-            flavorToDimensionData = listOf(flavorToDimension),
+            flavorToDimensionData = flavorToDimensionList + listOf(flavorToDimension),
             action = action
         ))
     }
@@ -39,6 +43,14 @@ internal class BuildTypedVariantFilterBuilderImpl<T>(
     }
 
     override fun withFlavor(flavorToDimension: Pair<String, String>): BuildTypedVariantFilterBuilder<T> {
-        return this;
+        @Suppress("UNCHECKED_CAST")
+        return dslScope.objectFactory.newInstance(
+            BuildTypedVariantFilterBuilderImpl::class.java,
+            dslScope,
+            operations,
+            buildType,
+            flavorToDimensionList + listOf(flavorToDimension),
+            type
+        ) as BuildTypedVariantFilterBuilder<T>
     }
 }

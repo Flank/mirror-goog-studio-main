@@ -326,7 +326,7 @@ interface CommonExtension<
      *
      * @return a [GenericVariantFilterBuilder] of [VariantT]
      */
-    fun onVariants(): GenericVariantFilterBuilder<VariantT>
+    val onVariants: GenericVariantFilterBuilder<VariantT>
 
     /**
      * Registers an [Action] to be executed on each [VariantProperties] of the project.
@@ -348,5 +348,5 @@ interface CommonExtension<
      *
      * @areturn a [GenericVariantFilterBuilder] of [VariantPropertiesT]
      */
-    fun onVariantProperties(): GenericVariantFilterBuilder<VariantPropertiesT>
+    val onVariantProperties: GenericVariantFilterBuilder<VariantPropertiesT>
 }

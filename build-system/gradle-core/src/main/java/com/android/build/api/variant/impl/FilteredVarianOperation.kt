@@ -37,7 +37,7 @@ class FilteredVariantOperation<T>(
 ) where T: ActionableVariantObject, T: VariantConfiguration {
 
     fun executeFor(variant: T) {
-        if (buildType != variant.buildType) {
+        if (buildType != null && buildType != variant.buildType) {
             return
         }
 

@@ -17,8 +17,8 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.Variant
-import com.android.build.gradle.internal.fixtures.AbstractGivenExpectTest
-import com.android.build.gradle.internal.fixtures.on
+import com.android.testutils.AbstractGivenExpectTest
+import com.android.testutils.on
 import org.gradle.api.Action
 import org.junit.Test
 import org.mockito.Mockito
@@ -116,6 +116,19 @@ class FilteredVariantOperationTest: AbstractGivenExpectTest<Pair<FilteredVariant
                 buildType = "debug"
             } on variant {
                 buildType = "release"
+            }
+        }
+
+        expect { false }
+    }
+
+    @Test
+    fun `not matching build type when no-build-type variant`() {
+        given {
+            filteredOperation {
+                buildType = "debug"
+            } on variant {
+                buildType = null
             }
         }
 
@@ -256,12 +269,15 @@ class FilteredVariantOperationTest: AbstractGivenExpectTest<Pair<FilteredVariant
 
     private fun filteredOperation(action: FilterInfo.() -> Unit) = FilterInfo().also { action(it) }
 
+    /**
+     * Variant Info.
+     *
+     * Important to have some default that match the most common use case.
+     */
     class VariantInfo(
-        var name: String? = null,
-        var buildType: String? = null,
+        var name: String = "some-name",
+        var buildType: String? = "some-build-type",
         var productFlavors: List<Pair<String, String>> = listOf()
-
-
     ) {
         override fun toString(): String {
             return "VariantInfo(name=$name, buildType=$buildType, productFlavors=$productFlavors)"

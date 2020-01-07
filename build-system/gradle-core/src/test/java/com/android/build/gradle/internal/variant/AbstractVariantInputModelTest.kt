@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.gradle.internal.api.dsl.DslScope
-import com.android.build.gradle.internal.fixtures.AbstractGivenExpectTest
 import com.android.build.gradle.internal.variant2.createFakeDslScope
 import com.android.builder.model.SyncIssue
+import com.android.testutils.AbstractGivenExpectTest
 import com.google.common.truth.Truth
 
 abstract class AbstractVariantInputModelTest<ResultT>:

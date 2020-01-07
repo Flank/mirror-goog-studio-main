@@ -25,7 +25,6 @@ import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
-import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.NamedDomainObjectContainer
 
 /** Internal implementation of the 'new' DSL interface */
@@ -74,16 +73,21 @@ class TestExtensionImpl(
         variantPropertiesOperations.executeActions(variant)
     }
 
-    override fun onVariants(): GenericVariantFilterBuilder<TestVariant> {
-        return GenericVariantFilterBuilderImpl(
-            variantOperations, TestVariant::class.java
-        )
-    }
+    @Suppress("UNCHECKED_CAST")
+    override val onVariants: GenericVariantFilterBuilder<TestVariant>
+        get() = dslScope.objectFactory.newInstance(
+            GenericVariantFilterBuilderImpl::class.java,
+            dslScope,
+            variantOperations,
+            TestVariant::class.java
+        ) as GenericVariantFilterBuilder<TestVariant>
 
-    override fun onVariantProperties(): GenericVariantFilterBuilder<TestVariantProperties> {
-        return GenericVariantFilterBuilderImpl(
-            variantPropertiesOperations,
+    @Suppress("UNCHECKED_CAST")
+    override val onVariantProperties: GenericVariantFilterBuilder<TestVariantProperties>
+        get() = dslScope.objectFactory.newInstance(
+            GenericVariantFilterBuilderImpl::class.java,
+            dslScope,
+            variantOperations,
             TestVariantProperties::class.java
-        )
-    }
+        ) as GenericVariantFilterBuilder<TestVariantProperties>
 }
