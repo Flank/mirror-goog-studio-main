@@ -25,6 +25,7 @@ import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.bottomNavigationActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.emptyActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.fullscreenActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.googleAdMobAdsActivity.googleAdMobAdsActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.googleMapsWearActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.loginActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.masterDetailFlowTemplate
@@ -57,6 +58,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     bottomNavigationActivityTemplate,
     emptyActivityTemplate,
     fullscreenActivityTemplate,
+    googleAdMobAdsActivityTemplate,
     // b/78621322: googleMapsActivityTemplate
     googleMapsWearActivityTemplate,
     loginActivityTemplate,
