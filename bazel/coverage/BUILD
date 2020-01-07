@@ -84,20 +84,20 @@ coverage_report(
 coverage_report(
     name = "navigationeditor",
     srcpath_include = [
-        "tools/adt/idea/naveditor/src/com/android/tools/idea/naveditor",
+        "tools/adt/idea/nav/editor/src/com/android/tools/idea/naveditor",
     ],
     tests = [
-        "//tools/adt/idea/naveditor:intellij.android.naveditor.tests_tests",
+        "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
     ],
 )
 
 coverage_report(
     name = "navigationpropertyinspector",
     srcpath_include = [
-        "tools/adt/idea/naveditor/src/com/android/tools/idea/naveditor/property2",
+        "tools/adt/idea/nav/editor/src/com/android/tools/idea/naveditor/property2",
     ],
     tests = [
-        "//tools/adt/idea/naveditor:intellij.android.naveditor.tests_tests",
+        "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
     ],
 )
 
@@ -146,11 +146,11 @@ coverage_report(
     ],
     srcpath_include = [
         "tools/adt/idea/designer/src/com/android/tools/idea",
-        "tools/adt/idea/naveditor/src/com/android/tools/idea/naveditor",
+        "tools/adt/idea/nav/editor/src/com/android/tools/idea/naveditor",
     ],
     tests = [
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
-        "//tools/adt/idea/naveditor:intellij.android.naveditor.tests_tests",
+        "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
     ],
 )
 
@@ -214,14 +214,14 @@ coverage_report(
     name = "designtools",
     srcpath_exclude = layouteditor_excludes,
     srcpath_include = layouteditor_includes + [
-        "tools/adt/idea/naveditor/src/",
+        "tools/adt/idea/nav/editor/src/",
         "tools/adt/idea/layout-inspector/src/",
         "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager",
     ],
     tests = layouteditor_tests + [
         "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
-        "//tools/adt/idea/naveditor:intellij.android.naveditor.tests_tests",
+        "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
     ],
 )
 
@@ -349,7 +349,7 @@ coverage_report(
         "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
         "//tools/adt/idea/native-symbolizer:native-symbolizer_tests",
-        "//tools/adt/idea/naveditor:intellij.android.naveditor.tests_tests",
+        "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
         "//tools/adt/idea/observable:intellij.android.observable_tests",
         "//tools/adt/idea/observable-ui:intellij.android.observable.ui_tests",
         "//tools/adt/idea/profilers:intellij.android.profilers_tests",
