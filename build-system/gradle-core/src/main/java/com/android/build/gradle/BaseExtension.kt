@@ -18,6 +18,7 @@ package com.android.build.gradle
 import com.android.SdkConstants
 import com.android.annotations.NonNull
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.dsl.TestExtension
@@ -689,4 +690,8 @@ abstract class BaseExtension protected constructor(
     abstract fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
 
     abstract override val testOptions: TestOptions
+
+    // this is indirectly implemented by extensions when they implement the new public
+    // extension interfaces via delegates.
+    abstract val buildFeatures: BuildFeatures
 }

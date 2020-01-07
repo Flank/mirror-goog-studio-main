@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-180bb2b79637b5a2e57ce5f34a7abc23a5e9b89f7e02af181d816b6405326fd6
+b8e3f97b3f3b72483ba000e58eaf3186ff8ae832228dd5f854d4c7e77f1926a1
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (org.gradle.api.Project, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -86,6 +86,7 @@ com.android.build.gradle.BaseExtension.getAdbOptions: com.android.build.gradle.i
 com.android.build.gradle.BaseExtension.getAidlPackageWhiteList: java.util.Collection<java.lang.String> ()
 com.android.build.gradle.BaseExtension.getBaseFeature: java.lang.Boolean ()
 com.android.build.gradle.BaseExtension.getBootClasspath: java.util.List<java.io.File> ()
+com.android.build.gradle.BaseExtension.getBuildFeatures: com.android.build.api.dsl.BuildFeatures ()
 com.android.build.gradle.BaseExtension.getBuildOutputs: java.util.Collection ()
 com.android.build.gradle.BaseExtension.getBuildOutputs: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput> ()
 com.android.build.gradle.BaseExtension.getBuildToolsRevision: com.android.repository.Revision ()
