@@ -15,7 +15,7 @@ platform(
         "@bazel_toolchains//constraints/sanitizers:support_msan",
     ],
     exec_properties = create_rbe_exec_properties_dict(
-        container_image = "docker://gcr.io/google.com/android-studio-alphasource/rbe-ubuntu16-as@sha256:b346bf48fd581e5445a3fe7982359a957b088c35c6b3735c0a35be0c8db6d2c1",
+        container_image = "docker://gcr.io/google.com/android-studio-alphasource/rbe-ubuntu16-as@sha256:a0ad6f3df1cc882051654e9d4c9b807c01da4f8ae9ec146f04baa2c3dafbf43c",
         docker_add_capabilities = "SYS_NICE",
         docker_network = "off",
         docker_use_urandom = True,

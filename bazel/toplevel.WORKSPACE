@@ -62,5 +62,20 @@ custom_exec_properties(
         "LARGE_MACHINE": create_rbe_exec_properties_dict(
             pool = "large-machines",
         ),
+        "EMULATOR_MACHINE": create_rbe_exec_properties_dict(
+            pool = "emulator-machines",
+            docker_privileged = True,
+        ),
     },
+)
+
+# Download system images when needed by avd. This should be updated when new
+# API levels are released.
+# Currently at API level 29.
+http_archive(
+    name = "system_image_latest_default_x86_64",
+    url = "https://dl.google.com/android/repository/sys-img/android/x86_64-29_r06.zip",
+    sha256 = "5d866d9925ad7b142c89bbffc9ce9941961e08747d6f64e28b5158cc44ad95cd",
+    strip_prefix = "x86_64",
+    build_file = "//tools/base/bazel/avd:system_images.BUILD",
 )

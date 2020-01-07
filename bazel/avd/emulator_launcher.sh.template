@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# This template is used to generate a script that can be used to launch or kill
+# an emulator:
+#   <target_name> [kill] port
+# Where port is the ADB port to open and kill is supplied to kill the emulator
+# on the supplied port.
+
+# The path to the source.properties inside the system image.
+source_properties_path="%source_properties_path%"
+
+# Set environment variables.
+export HOME=$(pwd)
+export ANDROID_SDK_HOME=$HOME
+export ANDROID_SDK_ROOT=$HOME/prebuilts/studio/sdk/linux
+export ANDROID_EMULATOR_HOME=$HOME/.android
+export ANDROID_AVD_HOME=$ANDROID_EMULATOR_HOME/avd
+
+# Relevant binaries.
+emulator=prebuilts/android-emulator/linux-x86_64/emulator
+adb=prebuilts/studio/sdk/linux/platform-tools/adb
+
+# Clear emulator files.
+rm -rf .android
+mkdir .android
+
+# Kill the emulator if requested. This is needed to kill the emulator for
+# local development.
+if [ "$1" = "kill" ]; then
+  echo "Killing emulator-$2"
+  $adb -s emulator-$2 emu kill
+  exit $?
+fi
+
+# Read system image properties.
+api_level="$(cat $source_properties_path | sed -rn 's/AndroidVersion.ApiLevel=(.*)/\1/p')"
+abi_type="$(cat $source_properties_path | sed -rn 's/SystemImage.Abi=(.*)/\1/p')"
+if [ -z "$api_level" ]; then
+  echo "No API level found"
+  exit 1
+fi
+if [ -z "$abi_type" ]; then
+  echo "No ABI type found"
+  exit 1
+fi
+
+# Create an AVD named "emu" with hardware properties from pixel.
+echo "Creating AVD with API level $api_level and ABI type $abi_type"
+system_image_dir=$(pwd)/$(dirname "$source_properties_path")
+mkdir -p $ANDROID_AVD_HOME/emu.avd
+cat > $ANDROID_AVD_HOME/emu.ini << EOF
+avd.ini.encoding=UTF-8
+path=$ANDROID_AVD_HOME/emu.avd
+path.rel=avd/emu.avd
+target=android-$api_level
+EOF
+cat > $ANDROID_AVD_HOME/emu.avd/config.ini << EOF
+PlayStore.enabled=false
+abi.type=$abi_type
+avd.ini.encoding=UTF-8
+hw.accelerometer=yes
+hw.audioInput=yes
+hw.battery=yes
+hw.cpu.arch=$abi_type
+hw.dPad=no
+hw.device.hash2=MD5:524882cfa9f421413193056700a29392
+hw.device.manufacturer=Google
+hw.device.name=pixel
+hw.gps=yes
+hw.lcd.density=480
+hw.lcd.height=1920
+hw.lcd.width=1080
+hw.mainKeys=no
+hw.sdCard=yes
+hw.sensors.orientation=yes
+hw.sensors.proximity=yes
+hw.trackBall=no
+image.sysdir.1=$system_image_dir
+EOF
+
+# Launch the emulator.
+echo "Launching emulator-$1"
+$emulator @emu -no-window -port $1 &
+emu_pid=$!
+
+# Wait for the emulator to connect.
+echo "Waiting for emulator to connect to ADB"
+while true; do
+  output=$($adb -s emulator-$1 get-state 2> /dev/null)
+  if [ "$output" = "device" ]; then
+    break
+  fi
+  if ! kill -0 $emu_pid 2> /dev/null; then
+    exit 1
+  fi
+  sleep 1
+done
+
+# Wait for the emulator to boot.
+echo "Waiting for emulator to boot"
+while true; do
+  output=$($adb -s emulator-$1 shell getprop sys.boot_completed)
+  if [ "$output" = "1" ]; then
+    break
+  fi
+  if ! kill -0 $emu_pid 2> /dev/null; then
+    exit 1
+  fi
+  sleep 1
+done
