@@ -52,7 +52,6 @@ class TransportRule @JvmOverloads constructor(
     : ExternalResource() {
 
     open class Config {
-        open val additionalDaemonArgs: Array<String> = arrayOf()
         open fun initDaemonConfig(daemonConfig: CommonConfig.Builder) {}
         open fun initAgentConfig(agentConfig: AgentConfig.Builder) {}
         open fun onBeforeActivityLaunched(transportRule: TransportRule) {}
@@ -189,7 +188,10 @@ class TransportRule @JvmOverloads constructor(
         while (!::transportDaemon.isInitialized || transportDaemon.port == 0) {
             serverPort = availablePort
             val daemonConfig = buildDaemonConfig()
-            transportDaemon = TransportDaemonRunner(daemonConfig.absolutePath, *ruleConfig.additionalDaemonArgs)
+            // Specify a custom root dir to ensure it is writable; otherwise, the daemon defaults
+            // to a path which, under bazel tests, is read only
+            transportDaemon =
+                    TransportDaemonRunner(daemonConfig.absolutePath, "--file_system_root=${temporaryFolder.newFolder("daemon-root")}")
             transportDaemon.start()
         }
     }

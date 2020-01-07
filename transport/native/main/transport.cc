@@ -33,7 +33,7 @@
 #include "utils/trace.h"
 
 DEFINE_bool(experimental_pipeline, false, "Use unified pipeline");
-DEFINE_bool(profiler_test, false, "Run profiler test");
+DEFINE_string(file_system_root, "", "Daemon file system root directory");
 DEFINE_string(config_file, profiler::kDaemonConfigDefaultPath,
               "Path to daemon config file");
 DEFINE_string(connect, "", "Communicate with an agent");
@@ -71,9 +71,10 @@ int main(int argc, char** argv) {
   profiler::SteadyClock clock;
   profiler::DaemonConfig config(FLAGS_config_file);
   profiler::EventBuffer buffer(&clock);
-  profiler::FileCache file_cache(FLAGS_profiler_test
-                                     ? getenv("TEST_TMPDIR")
-                                     : profiler::CurrentProcess::dir());
+
+  profiler::FileCache file_cache(FLAGS_file_system_root.empty()
+                                     ? profiler::CurrentProcess::dir()
+                                     : FLAGS_file_system_root);
   profiler::Daemon daemon(&clock, &config, &file_cache, &buffer);
 
   RegisterTransports(&daemon);

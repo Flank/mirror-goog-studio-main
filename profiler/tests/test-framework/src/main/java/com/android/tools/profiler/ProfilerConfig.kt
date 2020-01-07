@@ -22,26 +22,11 @@ import com.android.tools.profiler.proto.Memory.MemoryAllocSamplingData
 import com.android.tools.transport.TransportRule
 
 /**
- * Arg which tells the device daemon to behave slightly differently because it's running in a test
- * environment. One of the main changes is it causes the daemon to write files to a temporary
- * directory on the host machine instead of the device directory (which would be writable in
- * production but read-only inside a bazel test)
- *
- * TODO: This should probably be renamed to --transport_root_dir, since in hindsight it may
- *  apply to other codebases besides profilers, and that would be a more readable name without
- *  needing such a long comment.
- */
-private const val PROFILER_TEST_ARG = "--profiler_test=true"
-
-/**
  * Additional profiler configurations that can be passed into a [TransportRule].
  */
 open class ProfilerConfig : TransportRule.Config() {
     open fun usesUnifiedPipeline() = false
     open val liveAllocSampleRate = 1
-
-
-    final override val additionalDaemonArgs: Array<String> = arrayOf(PROFILER_TEST_ARG)
 
     final override fun initDaemonConfig(daemonConfig: Common.CommonConfig.Builder) {
         daemonConfig.profilerUnifiedPipeline = usesUnifiedPipeline()
