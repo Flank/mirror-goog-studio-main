@@ -48,6 +48,8 @@ public class ApkPreInstaller {
         }
     }
 
+    public static final String SKIPPED_INSTALLATION = "<SKIPPED-INSTALLATION>";
+
     private final AdbClient adb;
     private final Installer installer;
     private final ILogger logger;
@@ -126,7 +128,7 @@ public class ApkPreInstaller {
             List<Deploy.PatchInstruction> patches =
                     new PatchSetGenerator(logger).generateFromPairs(pairs);
             if (patches.isEmpty()) {
-                return "<SKIPPED-INSTALLATION>";
+                return SKIPPED_INSTALLATION;
             }
 
             for (Deploy.PatchInstruction patch : patches) {

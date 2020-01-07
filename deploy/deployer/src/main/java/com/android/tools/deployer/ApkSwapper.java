@@ -62,6 +62,10 @@ public class ApkSwapper {
         // At this point, a session was created but may have not been handed to the device.
         // The session needs to be aborted.
 
+        if (ApkPreInstaller.SKIPPED_INSTALLATION.equals(sessionId)) {
+            return null;
+        }
+
         // TODO: Getting a String and parsing it here is wrong. The parsing should happen
         // in a dedicated object. To lower the volume of code in this CL I did not refactor
         // but I will do it in my next CL.
