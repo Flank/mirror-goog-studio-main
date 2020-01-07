@@ -216,8 +216,6 @@ cc_binary(
         "redirect_executor.cc",
         "redirect_executor.h",
         "runas_executor.h",
-        "workspace.cc",
-        "workspace.h",
     ],
     copts = ANDROID_COPTS,
     linkopts = ANDROID_LINKOPTS,

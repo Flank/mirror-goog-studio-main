@@ -21,8 +21,8 @@
 #include <string>
 
 #include "tools/base/deploy/common/proto_pipe.h"
+#include "tools/base/deploy/installer/executor.h"
 #include "tools/base/deploy/installer/install_client.h"
-#include "tools/base/deploy/installer/workspace.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
@@ -48,9 +48,10 @@ class InstallServer {
 };
 
 // Starts an install server in a new process.
-std::unique_ptr<InstallClient> StartServer(const Workspace& workspace,
+std::unique_ptr<InstallClient> StartServer(Executor& executor,
                                            const std::string& server_path,
-                                           const std::string& package_name);
+                                           const std::string& package_name,
+                                           const std::string& exec_name);
 
 }  // namespace deploy
 

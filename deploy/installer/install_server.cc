@@ -185,12 +185,12 @@ bool InstallServer::DoesOverlayIdMatch(const std::string& overlay_folder,
   return Overlay::Exists(overlay_folder, expected_id);
 }
 
-std::unique_ptr<InstallClient> StartServer(const Workspace& workspace,
+std::unique_ptr<InstallClient> StartServer(Executor& executor,
                                            const std::string& server_path,
-                                           const std::string& package_name) {
+                                           const std::string& package_name,
+                                           const std::string& exec_name) {
   const std::string exec_path = "/data/data/" + package_name + "/code_cache/";
-  const std::string exec_name = "iwi-" + workspace.GetVersion();
-  const RunasExecutor run_as(package_name, workspace.GetExecutor());
+  const RunasExecutor run_as(package_name, executor);
 
   StartResult result;
   auto client = TryStartServer(run_as, exec_path + exec_name, &result);

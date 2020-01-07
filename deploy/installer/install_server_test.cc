@@ -18,7 +18,6 @@
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/executor.h"
-#include "tools/base/deploy/installer/workspace.h"
 
 #include <fcntl.h>
 #include <gtest/gtest.h>
@@ -118,10 +117,7 @@ TEST_F(InstallServerTest, TestServerStartNoOverlay) {
   std::deque<bool> success = {true};
   FakeExecutor fake_exec(server_thread, success);
 
-  // Don't call workspace init; it closes stdout.
-  Workspace workspace("/path/to/fake/installer", "fakeversion", &fake_exec);
-
-  auto client = StartServer(workspace, "fakepath", "fakepackage");
+  auto client = StartServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
   proto::InstallServerRequest request;
@@ -136,14 +132,11 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   std::deque<bool> success = {true, true, true};
   FakeExecutor fake_exec(server_thread, success);
 
-  // Don't call workspace init; it closes stdout.
-  Workspace workspace("/path/to/fake/installer", "fakeversion", &fake_exec);
-
   proto::InstallServerRequest request;
   proto::InstallServerResponse response;
 
   // Start the server and create an overlay
-  auto client = StartServer(workspace, "fakepath", "fakepackage");
+  auto client = StartServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
   request.mutable_overlay_request()->set_overlay_id("id");
@@ -158,7 +151,7 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   fake_exec.JoinServerThread();
 
   // Attempt to update with an id mismatch
-  client = StartServer(workspace, "fakepath", "fakepackage");
+  client = StartServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
   request.mutable_overlay_request()->set_overlay_id("next-id");
@@ -174,7 +167,7 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   fake_exec.JoinServerThread();
 
   // Update correctly
-  client = StartServer(workspace, "fakepath", "fakepackage");
+  client = StartServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
   request.mutable_overlay_request()->set_overlay_id("next-id");
@@ -196,14 +189,11 @@ TEST_F(InstallServerTest, TestOverlayEmptyIdCheck) {
   std::deque<bool> success = {true, true, true};
   FakeExecutor fake_exec(server_thread, success);
 
-  // Don't call workspace init; it closes stdout.
-  Workspace workspace("/path/to/fake/installer", "fakeversion", &fake_exec);
-
   proto::InstallServerRequest request;
   proto::InstallServerResponse response;
 
   // Start the server and create an overlay
-  auto client = StartServer(workspace, "fakepath", "fakepackage");
+  auto client = StartServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
   request.mutable_overlay_request()->set_overlay_id("id");
@@ -218,7 +208,7 @@ TEST_F(InstallServerTest, TestOverlayEmptyIdCheck) {
   fake_exec.JoinServerThread();
 
   // Attempt to update with an un-set expected id.
-  client = StartServer(workspace, "fakepath", "fakepackage");
+  client = StartServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
   request.mutable_overlay_request()->set_overlay_id("next-id");
@@ -238,14 +228,11 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
   std::deque<bool> success = {true, true};
   FakeExecutor fake_exec(server_thread, success);
 
-  // // Don't call workspace init; it closes stdout.
-  Workspace workspace("/path/to/fake/installer", "fakeversion", &fake_exec);
-
   proto::InstallServerRequest request;
   proto::InstallServerResponse response;
 
   // Start the server and create an overlay
-  auto client = StartServer(workspace, "fakepath", "fakepackage");
+  auto client = StartServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
   request.mutable_overlay_request()->set_overlay_id("id");
@@ -269,7 +256,7 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
   fake_exec.JoinServerThread();
 
   // Start the server and overwrite and delete a file
-  client = StartServer(workspace, "fakepath", "fakepackage");
+  client = StartServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
   request.mutable_overlay_request()->set_expected_overlay_id("id");
@@ -304,10 +291,7 @@ TEST_F(InstallServerTest, TestNeedCopy) {
   std::deque<bool> success = {false, true, true};
   FakeExecutor fake_exec(server_thread, success);
 
-  // Don't call workspace init; it closes stdout.
-  Workspace workspace("/path/to/fake/installer", "fakeversion", &fake_exec);
-
-  auto client = StartServer(workspace, "fakepath", "fakepackage");
+  auto client = StartServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
   proto::InstallServerRequest request;
@@ -326,10 +310,7 @@ TEST_F(InstallServerTest, TestCopyFails) {
   std::deque<bool> success = {false, false};
   FakeExecutor fake_exec(server_thread, success);
 
-  // Don't call workspace init; it closes stdout.
-  Workspace workspace("/path/to/fake/installer", "fakeversion", &fake_exec);
-
-  auto client = StartServer(workspace, "fakepath", "fakepackage");
+  auto client = StartServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_TRUE(nullptr == client);
 
   // Make sure we consumed all the exec results.
@@ -342,10 +323,7 @@ TEST_F(InstallServerTest, TestAllStartsFail) {
   std::deque<bool> success = {false, true, false};
   FakeExecutor fake_exec(server_thread, success);
 
-  // Don't call workspace init; it closes stdout.
-  Workspace workspace("/path/to/fake/installer", "fakeversion", &fake_exec);
-
-  auto client = StartServer(workspace, "fakepath", "fakepackage");
+  auto client = StartServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_TRUE(nullptr == client);
 
   // Make sure we consumed all the exec results.
