@@ -46,6 +46,7 @@ fun RecipeExecutor.googleMapsActivityRecipe(
 
   addDependency("com.google.android.gms:play-services-maps:+")
   addDependency("com.android.support:appcompat-v7:${buildApi}.+")
+  addDependency("com.android.support.constraint:constraint-layout:+")
 
   mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, packageName, simpleName),
            manifestOut.resolve("AndroidManifest.xml"))

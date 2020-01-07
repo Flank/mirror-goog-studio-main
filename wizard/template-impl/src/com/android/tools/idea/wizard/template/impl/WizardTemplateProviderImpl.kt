@@ -62,7 +62,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     emptyActivityTemplate,
     fullscreenActivityTemplate,
     googleAdMobAdsActivityTemplate,
-    // b/78621322: googleMapsActivityTemplate
+    googleMapsActivityTemplate,
     googleMapsWearActivityTemplate,
     loginActivityTemplate,
     masterDetailFlowTemplate,
