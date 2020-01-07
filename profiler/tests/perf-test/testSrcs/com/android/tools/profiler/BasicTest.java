@@ -16,21 +16,19 @@
 
 package com.android.tools.profiler;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.profiler.proto.EventProfiler.ActivityDataResponse;
 import com.android.tools.profiler.proto.EventProfiler.EventDataRequest;
 import com.android.tools.profiler.proto.EventServiceGrpc;
 import com.android.tools.transport.TestUtils;
-import com.android.tools.transport.TransportRule;
 import com.android.tools.transport.device.SdkLevel;
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.util.Arrays;
-import java.util.Collection;
-
-import static com.google.common.truth.Truth.assertThat;
 
 /**
  * A very basic test which ensures that a profiler session successfully started.
@@ -44,19 +42,21 @@ public class BasicTest {
 
     private static final String ACTIVITY_CLASS = "com.activity.EmptyActivity";
 
-    @Rule public final TransportRule myTransportRule;
+    @Rule public final ProfilerRule myProfilerRule;
 
     public BasicTest(SdkLevel sdkLevel) {
-        myTransportRule = new TransportRule(ACTIVITY_CLASS, sdkLevel, new ProfilerConfig());
+        myProfilerRule = new ProfilerRule(ACTIVITY_CLASS, sdkLevel);
     }
 
     @Test
     public void findActivityNameBySession() {
         // Verify that the activity we launched was created.
         EventServiceGrpc.EventServiceBlockingStub eventStub =
-                EventServiceGrpc.newBlockingStub(myTransportRule.getGrpc().getChannel());
+                EventServiceGrpc.newBlockingStub(
+                        myProfilerRule.getTransportRule().getGrpc().getChannel());
 
-        EventDataRequest request = EventDataRequest.newBuilder().setSession(myTransportRule.getSession()).build();
+        EventDataRequest request =
+                EventDataRequest.newBuilder().setSession(myProfilerRule.getSession()).build();
         ActivityDataResponse response =
                 TestUtils.waitForAndReturn(
                         () -> eventStub.getActivityData(request),

@@ -16,27 +16,25 @@
 
 package com.android.tools.profiler.network;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.fakeandroid.FakeAndroidDriver;
-import com.android.tools.profiler.ProfilerConfig;
+import com.android.tools.profiler.ProfilerRule;
 import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsResponse;
 import com.android.tools.transport.TestUtils;
-import com.android.tools.transport.TransportRule;
 import com.android.tools.transport.device.SdkLevel;
 import com.android.tools.transport.grpc.Grpc;
 import com.android.tools.transport.grpc.TransportStubWrapper;
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.util.Arrays;
-import java.util.Collection;
-
-import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(Parameterized.class)
 public final class HttpUrlTest {
@@ -47,21 +45,21 @@ public final class HttpUrlTest {
 
     private static final String ACTIVITY_CLASS = "com.activity.network.HttpUrlActivity";
 
-    @Rule public final TransportRule myTransportRule;
+    @Rule public final ProfilerRule myProfilerRule;
 
     private FakeAndroidDriver myAndroidDriver;
     private Grpc myGrpc;
     private Session mySession;
 
     public HttpUrlTest(SdkLevel sdkLevel) {
-        myTransportRule = new TransportRule(ACTIVITY_CLASS, sdkLevel, new ProfilerConfig());
+        myProfilerRule = new ProfilerRule(ACTIVITY_CLASS, sdkLevel);
     }
 
     @Before
     public void setup() {
-        myAndroidDriver = myTransportRule.getAndroidDriver();
-        myGrpc = myTransportRule.getGrpc();
-        mySession = myTransportRule.getSession();
+        myAndroidDriver = myProfilerRule.getTransportRule().getAndroidDriver();
+        myGrpc = myProfilerRule.getTransportRule().getGrpc();
+        mySession = myProfilerRule.getSession();
     }
 
     @Test

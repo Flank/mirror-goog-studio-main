@@ -16,28 +16,27 @@
 
 package com.android.tools.profiler.network;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.ProfilerConfig;
+import com.android.tools.profiler.ProfilerRule;
 import com.android.tools.profiler.proto.Common.Event;
 import com.android.tools.profiler.proto.Network;
-import com.android.tools.transport.TransportRule;
 import com.android.tools.transport.device.SdkLevel;
 import com.android.tools.transport.grpc.Grpc;
 import com.android.tools.transport.grpc.TransportAsyncStubWrapper;
 import com.android.tools.transport.grpc.TransportStubWrapper;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static com.google.common.truth.Truth.assertThat;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class UnifiedPipelineOkHttpTest {
@@ -50,24 +49,28 @@ public class UnifiedPipelineOkHttpTest {
     private static final String ACTIVITY_CLASS = "com.activity.network.OkHttpActivity";
     private static final String EXPECTED_RESPONSE_CODE = "response-status-code = 200";
 
-    @Rule public final TransportRule myTransportRule;
+    @Rule public final ProfilerRule myProfilerRule;
 
     private FakeAndroidDriver myAndroidDriver;
     private Grpc myGrpc;
 
     public UnifiedPipelineOkHttpTest(SdkLevel sdkLevel) {
-        myTransportRule = new TransportRule(ACTIVITY_CLASS, sdkLevel, new ProfilerConfig() {
-            @Override
-            public boolean usesUnifiedPipeline() {
-                return true;
-            }
-        });
+        myProfilerRule =
+                new ProfilerRule(
+                        ACTIVITY_CLASS,
+                        sdkLevel,
+                        new ProfilerConfig() {
+                            @Override
+                            public boolean usesUnifiedPipeline() {
+                                return true;
+                            }
+                        });
     }
 
     @Before
     public void setup() {
-        myAndroidDriver = myTransportRule.getAndroidDriver();
-        myGrpc = myTransportRule.getGrpc();
+        myAndroidDriver = myProfilerRule.getTransportRule().getAndroidDriver();
+        myGrpc = myProfilerRule.getTransportRule().getGrpc();
     }
 
     @Test

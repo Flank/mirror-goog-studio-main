@@ -16,6 +16,10 @@
 
 package com.android.tools.profiler.memory;
 
+import static com.android.tools.profiler.memory.MemoryTestUtils.findClassTag;
+import static com.android.tools.profiler.memory.MemoryTestUtils.startAllocationTracking;
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.ProfilerConfig;
 import com.android.tools.profiler.proto.*;
@@ -23,16 +27,11 @@ import com.android.tools.profiler.proto.Memory.AllocationEvent;
 import com.android.tools.transport.device.SdkLevel;
 import com.android.tools.transport.grpc.Grpc;
 import com.android.tools.transport.grpc.TransportAsyncStubWrapper;
+import java.util.HashSet;
+import java.util.concurrent.CountDownLatch;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.util.HashSet;
-import java.util.concurrent.CountDownLatch;
-
-import static com.android.tools.profiler.memory.MemoryTestUtils.findClassTag;
-import static com.android.tools.profiler.memory.MemoryTestUtils.startAllocationTracking;
-import static com.google.common.truth.Truth.assertThat;
 
 public final class UnifiedPipelineMemoryTest {
     private static final String ACTIVITY_CLASS = "com.activity.memory.MemoryActivity";
@@ -59,7 +58,7 @@ public final class UnifiedPipelineMemoryTest {
     public void setUp() {
         myAndroidDriver = myMemoryRule.getTransportRule().getAndroidDriver();
         myGrpc = myMemoryRule.getTransportRule().getGrpc();
-        mySession = myMemoryRule.getTransportRule().getSession();
+        mySession = myMemoryRule.getProfilerRule().getSession();
     }
 
     @Test

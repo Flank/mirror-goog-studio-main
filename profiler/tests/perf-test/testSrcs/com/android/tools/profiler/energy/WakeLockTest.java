@@ -16,8 +16,11 @@
 
 package com.android.tools.profiler.energy;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.ProfilerConfig;
+import com.android.tools.profiler.ProfilerRule;
 import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.Energy.EnergyEventData.MetadataCase;
@@ -25,20 +28,16 @@ import com.android.tools.profiler.proto.Energy.WakeLockAcquired.Level;
 import com.android.tools.profiler.proto.Energy.WakeLockReleased.ReleaseFlag;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
 import com.android.tools.transport.TestUtils;
-import com.android.tools.transport.TransportRule;
 import com.android.tools.transport.device.SdkLevel;
 import com.android.tools.transport.grpc.Grpc;
 import com.android.tools.transport.grpc.TransportAsyncStubWrapper;
+import java.util.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import java.util.*;
-
-import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(Parameterized.class)
 public final class WakeLockTest {
@@ -54,7 +53,7 @@ public final class WakeLockTest {
 
     private static final String ACTIVITY_CLASS = "com.activity.energy.WakeLockActivity";
 
-    @Rule public final TransportRule myTransportRule;
+    @Rule public final ProfilerRule myProfilerRule;
 
     private boolean myIsUnifiedPipeline;
     private Grpc myGrpc;
@@ -64,19 +63,23 @@ public final class WakeLockTest {
     public WakeLockTest(SdkLevel sdkLevel, boolean isUnifiedPipeline) {
         myIsUnifiedPipeline = isUnifiedPipeline;
 
-        myTransportRule = new TransportRule(ACTIVITY_CLASS, sdkLevel, new ProfilerConfig() {
-            @Override
-            public boolean usesUnifiedPipeline() {
-                return isUnifiedPipeline;
-            }
-        });
+        myProfilerRule =
+                new ProfilerRule(
+                        ACTIVITY_CLASS,
+                        sdkLevel,
+                        new ProfilerConfig() {
+                            @Override
+                            public boolean usesUnifiedPipeline() {
+                                return isUnifiedPipeline;
+                            }
+                        });
     }
 
     @Before
     public void setUp() {
-        myAndroidDriver = myTransportRule.getAndroidDriver();
-        myGrpc = myTransportRule.getGrpc();
-        mySession = myTransportRule.getSession();
+        myAndroidDriver = myProfilerRule.getTransportRule().getAndroidDriver();
+        myGrpc = myProfilerRule.getTransportRule().getGrpc();
+        mySession = myProfilerRule.getSession();
     }
 
     @Test

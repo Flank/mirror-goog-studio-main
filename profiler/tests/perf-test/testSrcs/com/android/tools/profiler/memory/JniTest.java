@@ -16,6 +16,8 @@
 
 package com.android.tools.profiler.memory;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Memory.*;
@@ -24,14 +26,11 @@ import com.android.tools.profiler.proto.MemoryProfiler.TrackAllocationsResponse;
 import com.android.tools.transport.TestUtils;
 import com.android.tools.transport.device.SdkLevel;
 import com.android.tools.transport.grpc.Grpc;
+import java.util.HashSet;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.util.HashSet;
-import java.util.List;
-
-import static com.google.common.truth.Truth.assertThat;
 
 public final class JniTest {
     private static final String ACTIVITY_CLASS = "com.activity.memory.NativeCodeActivity";
@@ -48,7 +47,7 @@ public final class JniTest {
     public void setUp() {
         myAndroidDriver = myMemoryRule.getTransportRule().getAndroidDriver();
         myGrpc = myMemoryRule.getTransportRule().getGrpc();
-        mySession = myMemoryRule.getTransportRule().getSession();
+        mySession = myMemoryRule.getProfilerRule().getSession();
     }
 
     private int findClassTag(List<BatchAllocationContexts> samples, String className) {

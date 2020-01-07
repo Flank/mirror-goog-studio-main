@@ -17,10 +17,12 @@ package com.android.tools.transport
 
 import com.android.tools.fakeandroid.FakeAndroidDriver
 import com.android.tools.fakeandroid.ProcessRunner
-import com.android.tools.profiler.proto.*
 import com.android.tools.profiler.proto.Agent.AgentConfig
+import com.android.tools.profiler.proto.Commands
 import com.android.tools.profiler.proto.Common.CommonConfig
+import com.android.tools.profiler.proto.Transport
 import com.android.tools.profiler.proto.Transport.DaemonConfig
+import com.android.tools.profiler.proto.TransportServiceGrpc
 import com.android.tools.transport.device.DeviceProperties
 import com.android.tools.transport.device.SdkLevel
 import com.android.tools.transport.device.TransportDaemonRunner
@@ -39,8 +41,6 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.regex.Pattern
 
-private const val DUMMY_DEVICE_ID = 1234L
-
 /**
  * A JUnit rule which handles management of test ports, processes, and basic rpc calls that are shared
  * between all transport tests.
@@ -50,6 +50,10 @@ class TransportRule @JvmOverloads constructor(
         val sdkLevel: SdkLevel,
         private val ruleConfig: Config = Config())
     : ExternalResource() {
+
+    companion object {
+        const val DUMMY_DEVICE_ID = 1234L
+    }
 
     open class Config {
         open fun initDaemonConfig(daemonConfig: CommonConfig.Builder) {}
@@ -88,9 +92,6 @@ class TransportRule @JvmOverloads constructor(
      */
     private lateinit var transportDaemon: TransportDaemonRunner
 
-    lateinit var session: Common.Session
-        private set
-
     var pid = -1
         private set
 
@@ -110,11 +111,10 @@ class TransportRule @JvmOverloads constructor(
         println("Start activity $activityClass with sdk level $sdkLevel")
         startDaemon()
         start(activityClass)
-        startSession()
+        startAgent()
     }
 
     override fun after() {
-        session.end(grpc)
         androidDriver.stop()
         transportDaemon.stop()
 
@@ -196,11 +196,25 @@ class TransportRule @JvmOverloads constructor(
         }
     }
 
-    private fun startSession() {
-        session = if (sdkLevel.supportsJvmti()) {
-            beginSessionWithAgent(grpc, androidDriver.communicationPort, pid)
-        } else {
-            beginSession(grpc, pid)
+    private fun startAgent() {
+        if (sdkLevel.supportsJvmti()) {
+            val transportStub = TransportServiceGrpc.newBlockingStub(grpc.channel)
+            transportStub.execute(
+                    Transport.ExecuteRequest.newBuilder()
+                            .setCommand(
+                                    Commands.Command.newBuilder()
+                                            .setType(Commands.Command.CommandType.ATTACH_AGENT)
+                                            .setPid(androidDriver.communicationPort)
+                                            .setStreamId(DUMMY_DEVICE_ID)
+                                            .setAttachAgent(
+                                                    Commands.AttachAgent.newBuilder()
+                                                            .setAgentLibFileName("libjvmtiagent.so")
+                                                            .setAgentConfigPath(buildAgentConfig().absolutePath))
+                                            .build())
+                            .build())
+
+            // Block until we can verify the agent was fully attached, which takes a while.
+            assertThat(androidDriver.waitForInput("Transport agent connected to daemon.")).isTrue()
         }
     }
 
@@ -215,41 +229,5 @@ class TransportRule @JvmOverloads constructor(
             outputStream.flush()
         }
         return file
-    }
-
-    private fun beginSession(grpc: Grpc, pid: Int): Common.Session {
-        val requestBuilder = Profiler.BeginSessionRequest.newBuilder().setDeviceId(DUMMY_DEVICE_ID).setPid(pid)
-        val profilerStub = ProfilerServiceGrpc.newBlockingStub(grpc.channel)
-        return profilerStub.beginSession(requestBuilder.build()).session
-    }
-
-    private fun beginSessionWithAgent(grpc: Grpc, agentPort: Int, pid: Int): Common.Session {
-        val transportStub = TransportServiceGrpc.newBlockingStub(grpc.channel)
-        transportStub.execute(
-                Transport.ExecuteRequest.newBuilder()
-                        .setCommand(
-                                Commands.Command.newBuilder()
-                                        .setType(Commands.Command.CommandType.ATTACH_AGENT)
-                                        .setPid(agentPort)
-                                        .setStreamId(DUMMY_DEVICE_ID)
-                                        .setAttachAgent(
-                                                Commands.AttachAgent.newBuilder()
-                                                        .setAgentLibFileName("libjvmtiagent.so")
-                                                        .setAgentConfigPath(buildAgentConfig().absolutePath))
-                                        .build())
-                        .build())
-
-        // Block until we can verify the agent was fully attached, which takes a while.
-        assertThat(androidDriver.waitForInput("Transport agent connected to daemon.")).isTrue()
-
-        val session = beginSession(grpc, pid)
-        assertThat(androidDriver.waitForInput("Profiler initialization complete on agent.")).isTrue()
-
-        return session
-    }
-
-    private fun Common.Session.end(grpc: Grpc) {
-        val profilerStub = ProfilerServiceGrpc.newBlockingStub(grpc.channel)
-        profilerStub.endSession(Profiler.EndSessionRequest.newBuilder().setSessionId(sessionId).build())
     }
 }

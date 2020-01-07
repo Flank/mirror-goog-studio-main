@@ -16,6 +16,7 @@
 package com.android.tools.profiler.memory
 
 import com.android.tools.profiler.ProfilerConfig
+import com.android.tools.profiler.ProfilerRule
 import com.android.tools.profiler.proto.MemoryProfiler.MemoryStartRequest
 import com.android.tools.profiler.proto.MemoryProfiler.MemoryStopRequest
 import com.android.tools.profiler.proto.MemoryServiceGrpc
@@ -34,23 +35,24 @@ class MemoryRule @JvmOverloads constructor(
         ruleConfig: ProfilerConfig = ProfilerConfig())
     : ExternalResource() {
 
-    val transportRule = TransportRule(activityClass, sdkLevel, ruleConfig)
+    val profilerRule = ProfilerRule(activityClass, sdkLevel, ruleConfig)
+    val transportRule = profilerRule.transportRule
 
     override fun apply(base: Statement, description: Description): Statement {
-        return RuleChain.outerRule(transportRule).apply(super.apply(base, description), description)
+        return RuleChain.outerRule(profilerRule).apply(super.apply(base, description), description)
     }
 
     override fun before() {
         // For Memory tests, we need to invoke beginSession and startMonitoringApp to properly
         // initialize the memory cache and establish the perfa->perfd connection
         val memoryStub = MemoryServiceGrpc.newBlockingStub(transportRule.grpc.channel)
-        memoryStub.startMonitoringApp(MemoryStartRequest.newBuilder().setSession(transportRule.session).build())
+        memoryStub.startMonitoringApp(MemoryStartRequest.newBuilder().setSession(profilerRule.session).build())
     }
 
     override fun after() {
         try {
             val memoryStub = MemoryServiceGrpc.newBlockingStub(transportRule.grpc.channel)
-            memoryStub.stopMonitoringApp(MemoryStopRequest.newBuilder().setSession(transportRule.session).build())
+            memoryStub.stopMonitoringApp(MemoryStopRequest.newBuilder().setSession(profilerRule.session).build())
         } catch (e: StatusRuntimeException) { // TODO(b/112274301): fix "connection closed" error.
         }
         super.after()

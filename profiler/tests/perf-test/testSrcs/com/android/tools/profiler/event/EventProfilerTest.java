@@ -16,21 +16,19 @@
 
 package com.android.tools.profiler.event;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.fakeandroid.FakeAndroidDriver;
-import com.android.tools.profiler.ProfilerConfig;
-import com.android.tools.transport.TransportRule;
+import com.android.tools.profiler.ProfilerRule;
 import com.android.tools.transport.device.SdkLevel;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.regex.Pattern;
-
-import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(Parameterized.class)
 public final class EventProfilerTest {
@@ -41,17 +39,17 @@ public final class EventProfilerTest {
 
     private static final String ACTIVITY_CLASS = "com.activity.event.EventActivity";
 
-    @Rule public final TransportRule myTransportRule;
+    @Rule public final ProfilerRule myProfilerRule;
 
     private FakeAndroidDriver myAndroidDriver;
 
     public EventProfilerTest(SdkLevel sdkLevel) {
-        myTransportRule = new TransportRule(ACTIVITY_CLASS, sdkLevel, new ProfilerConfig());
+        myProfilerRule = new ProfilerRule(ACTIVITY_CLASS, sdkLevel);
     }
 
     @Before
     public void setup() {
-        myAndroidDriver = myTransportRule.getAndroidDriver();
+        myAndroidDriver = myProfilerRule.getTransportRule().getAndroidDriver();
     }
 
     @Test

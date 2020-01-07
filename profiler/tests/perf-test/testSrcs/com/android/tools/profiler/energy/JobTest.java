@@ -16,33 +16,32 @@
 
 package com.android.tools.profiler.energy;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.ProfilerConfig;
+import com.android.tools.profiler.ProfilerRule;
 import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Common.Session;
-import com.android.tools.profiler.proto.Energy.EnergyEventData.MetadataCase;
 import com.android.tools.profiler.proto.Energy.*;
+import com.android.tools.profiler.proto.Energy.EnergyEventData.MetadataCase;
 import com.android.tools.profiler.proto.Energy.JobInfo.BackoffPolicy;
 import com.android.tools.profiler.proto.Energy.JobInfo.NetworkType;
 import com.android.tools.profiler.proto.Energy.JobScheduled.Result;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
 import com.android.tools.transport.TestUtils;
-import com.android.tools.transport.TransportRule;
 import com.android.tools.transport.device.SdkLevel;
 import com.android.tools.transport.grpc.Grpc;
 import com.android.tools.transport.grpc.TransportAsyncStubWrapper;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
 @RunWith(Parameterized.class)
 public final class JobTest {
@@ -58,7 +57,7 @@ public final class JobTest {
 
     private static final String ACTIVITY_CLASS = "com.activity.energy.JobActivity";
 
-    @Rule public final TransportRule myTransportRule;
+    @Rule public final ProfilerRule myProfilerRule;
 
     private boolean myIsUnifiedPipeline;
     private Grpc myGrpc;
@@ -68,19 +67,23 @@ public final class JobTest {
     public JobTest(SdkLevel sdkLevel, boolean isUnifiedPipeline) {
         myIsUnifiedPipeline = isUnifiedPipeline;
 
-        myTransportRule = new TransportRule(ACTIVITY_CLASS, sdkLevel, new ProfilerConfig() {
-            @Override
-            public boolean usesUnifiedPipeline() {
-                return isUnifiedPipeline;
-            }
-        });
+        myProfilerRule =
+                new ProfilerRule(
+                        ACTIVITY_CLASS,
+                        sdkLevel,
+                        new ProfilerConfig() {
+                            @Override
+                            public boolean usesUnifiedPipeline() {
+                                return isUnifiedPipeline;
+                            }
+                        });
     }
 
     @Before
     public void setUp() {
-        myAndroidDriver = myTransportRule.getAndroidDriver();
-        myGrpc = myTransportRule.getGrpc();
-        mySession = myTransportRule.getSession();
+        myAndroidDriver = myProfilerRule.getTransportRule().getAndroidDriver();
+        myGrpc = myProfilerRule.getTransportRule().getGrpc();
+        mySession = myProfilerRule.getSession();
     }
 
     @Test
