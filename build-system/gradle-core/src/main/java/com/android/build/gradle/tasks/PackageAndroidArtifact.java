@@ -26,7 +26,12 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.variant.FilterConfiguration;
+import com.android.build.api.variant.VariantOutputConfiguration;
+import com.android.build.api.variant.impl.BuiltArtifactImpl;
+import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.VariantDslInfo;
@@ -391,19 +396,74 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             }
         }
 
-        ExistingBuildElements.from(taskInputType, getResourceFiles())
-                .transform(
-                        getWorkerFacadeWithWorkers(),
-                        IncrementalSplitterRunnable.class,
-                        (apkInfo, inputFile) ->
-                                new SplitterParams(
-                                        apkInfo,
-                                        inputFile,
-                                        changedResourceFiles.contains(inputFile),
-                                        changes,
-                                        this,
-                                        apkCreatorType))
-                .into(getInternalArtifactType(), getOutputDirectory().get().getAsFile());
+        // TODO: provide a BuiltArtifacts API that can handle workers.
+        BuildElements apkBuiltElements =
+                ExistingBuildElements.from(taskInputType, getResourceFiles())
+                        .transform(
+                                getWorkerFacadeWithWorkers(),
+                                IncrementalSplitterRunnable.class,
+                                (apkInfo, inputFile) ->
+                                        new SplitterParams(
+                                                apkInfo,
+                                                inputFile,
+                                                changedResourceFiles.contains(inputFile),
+                                                changes,
+                                                this,
+                                                apkCreatorType))
+                        .into(getInternalArtifactType());
+
+        List<BuiltArtifactImpl> builtArtifactList =
+                apkBuiltElements
+                        .stream()
+                        .map(
+                                builtElement -> {
+                                    List<FilterConfiguration> filters =
+                                            builtElement
+                                                    .getApkData()
+                                                    .getFilters()
+                                                    .stream()
+                                                    .map(
+                                                            filterData ->
+                                                                    new FilterConfiguration(
+                                                                            FilterConfiguration
+                                                                                    .FilterType
+                                                                                    .valueOf(
+                                                                                            filterData
+                                                                                                    .getFilterType()),
+                                                                            filterData
+                                                                                    .getIdentifier()))
+                                                    .collect(Collectors.toList());
+
+                                    return new BuiltArtifactImpl(
+                                            builtElement.getOutputFile().toPath(),
+                                            builtElement.getProperties(),
+                                            builtElement.getVersionCode(),
+                                            String.valueOf(builtElement.getVersionCode()),
+                                            true,
+                                            builtElement.getApkData().isUniversal()
+                                                    ? VariantOutputConfiguration.OutputType
+                                                            .UNIVERSAL
+                                                    : builtElement
+                                                                    .getOutputType()
+                                                                    .equals(
+                                                                            VariantOutput.OutputType
+                                                                                    .MAIN
+                                                                                    .toString())
+                                                            ? VariantOutputConfiguration.OutputType
+                                                                    .SINGLE
+                                                            : VariantOutputConfiguration.OutputType
+                                                                    .ONE_OF_MANY,
+                                            filters);
+                                })
+                        .collect(Collectors.toList());
+
+        new BuiltArtifactsImpl(
+                        BuildElements.METADATA_FILE_VERSION,
+                        InternalArtifactType.APK.INSTANCE,
+                        getApplicationId().get(),
+                        getVariantName(),
+                        builtArtifactList)
+                .save(getOutputDirectory().get());
     }
 
     private void checkFileNameUniqueness() {

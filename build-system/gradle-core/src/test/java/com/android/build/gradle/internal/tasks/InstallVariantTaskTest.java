@@ -20,23 +20,21 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
-import com.android.build.OutputFile;
-import com.android.build.gradle.internal.scope.ApkData;
-import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.api.artifact.PublicArtifactType;
+import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.api.variant.VariantOutputConfiguration;
+import com.android.build.api.variant.impl.BuiltArtifactImpl;
+import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceProvider;
-import com.android.ide.common.process.DefaultProcessExecutor;
-import com.android.ide.common.process.ProcessExecutor;
 import com.android.sdklib.AndroidVersion;
-import com.android.utils.StdLogger;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.List;
 import org.gradle.api.logging.Logger;
@@ -56,16 +54,6 @@ public class InstallVariantTaskTest {
     @Mock DeviceConnector kitkatDevice;
     @Mock DeviceConnector lollipopDevice;
     @Mock Logger logger;
-    private ProcessExecutor processExecutor =
-            new DefaultProcessExecutor(new StdLogger(StdLogger.Level.INFO));
-
-    @NonNull
-    private static BuildOutput createSingleMainApkOutput(@NonNull File mainOutputFileApk) {
-
-        ApkData apkInfo = mock(ApkData.class);
-        when(apkInfo.getType()).thenReturn(OutputFile.OutputType.MAIN);
-        return new BuildOutput(InternalArtifactType.APK.INSTANCE, apkInfo, mainOutputFileApk);
-    }
 
     @Before
     public void setUpMocks() {
@@ -87,15 +75,27 @@ public class InstallVariantTaskTest {
 
     private void checkSingleApk(DeviceConnector deviceConnector) throws Exception {
         File mainOutputFileApk = temporaryFolder.newFile("main.apk");
-
+        BuiltArtifacts builtArtifacts =
+                new BuiltArtifactsImpl(
+                        BuiltArtifacts.METADATA_FILE_VERSION,
+                        PublicArtifactType.APK.INSTANCE,
+                        "com.android.test",
+                        "debug",
+                        ImmutableList.of(
+                                new BuiltArtifactImpl(
+                                        mainOutputFileApk.toPath(),
+                                        ImmutableMap.of(),
+                                        123,
+                                        "version_name",
+                                        true,
+                                        VariantOutputConfiguration.OutputType.SINGLE,
+                                        ImmutableList.of())));
         InstallVariantTask.install(
                 "project",
                 "variant",
                 new FakeDeviceProvider(ImmutableList.of(deviceConnector)),
                 new AndroidVersion(1),
-                processExecutor,
-                temporaryFolder.newFile("split_select"),
-                ImmutableList.of(createSingleMainApkOutput(mainOutputFileApk)),
+                builtArtifacts,
                 null,
                 ImmutableList.of(),
                 4000,

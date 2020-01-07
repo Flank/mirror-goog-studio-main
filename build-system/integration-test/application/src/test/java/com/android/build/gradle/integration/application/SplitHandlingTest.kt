@@ -17,17 +17,25 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.VariantOutput
+import com.android.build.api.variant.BuiltArtifacts
+import com.android.build.api.variant.BuiltArtifactsLoader
+import com.android.build.api.variant.VariantConfiguration
+import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.file.Directory
+import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
+import kotlin.test.assertNotNull
 
 /**
  * Integration test that test resConfig(s) settings with full or pure splits.
@@ -104,16 +112,11 @@ class SplitHandlingTest {
         project.execute("clean", "assembleDebug")
 
         val apkOutputFolder = File(project.outputDir, "apk/debug")
-        ExistingBuildElements.load(
-                apkOutputFolder.toPath(),
-                null,
-                FileReader(ExistingBuildElements.getMetadataFile(apkOutputFolder)))
-                .forEach { output ->
-                    val manifestContent = ApkSubject.getConfigurations(output.outputPath)
+        loadBuiltArtifacts(apkOutputFolder).elements.forEach { output ->
+                    val manifestContent = ApkSubject.getConfigurations(output.outputFile)
                     assertThat(manifestContent).contains("fr")
                     assertThat(manifestContent).contains("de")
                     assertThat(manifestContent).doesNotContain("en")
-
                 }
     }
 
@@ -149,12 +152,9 @@ class SplitHandlingTest {
         project.execute("clean", "assembleDebug")
 
         val apkOutputFolder = File(project.outputDir, "apk/debug")
-        ExistingBuildElements.load(
-                apkOutputFolder.toPath(),
-                null,
-                FileReader(ExistingBuildElements.getMetadataFile(apkOutputFolder)))
+        loadBuiltArtifacts(apkOutputFolder).elements
                 .forEach { output ->
-                    val manifestContent = ApkSubject.getConfigurations(output.outputPath)
+                    val manifestContent = ApkSubject.getConfigurations(output.outputFile)
                     assertThat(manifestContent).contains("es")
                     assertThat(manifestContent).doesNotContain("fr")
                     assertThat(manifestContent).doesNotContain("de")
@@ -188,26 +188,26 @@ class SplitHandlingTest {
         project.execute("clean", "assembleDebug")
 
         val apkOutputFolder = File(project.outputDir, "apk/debug")
-        ExistingBuildElements.load(
-                apkOutputFolder.toPath(),
-                null,
-                FileReader(ExistingBuildElements.getMetadataFile(apkOutputFolder)))
+        loadBuiltArtifacts(apkOutputFolder).elements
                 .forEach { output ->
-                    when(output.apkData.type) {
-                        VariantOutput.OutputType.MAIN -> {
-                            val manifestContent = ApkSubject.getConfigurations(output.outputPath)
+                    when(output.outputType) {
+                        VariantOutputConfiguration.OutputType.SINGLE -> {
+                            val manifestContent = ApkSubject.getConfigurations(output.outputFile)
                             // all remaining languages are packaged in the main APK.
                             assertThat(manifestContent).contains("de")
                             assertThat(manifestContent).doesNotContain("fr")
                             assertThat(manifestContent).doesNotContain("en")
 
                         }
-                        VariantOutput.OutputType.FULL_SPLIT -> {
+                        VariantOutputConfiguration.OutputType.ONE_OF_MANY -> {
                             // we don't do language based multi-apk so all languages should be packaged.
-                            val manifestContent = ApkSubject.getConfigurations(output.outputPath)
+                            val manifestContent = ApkSubject.getConfigurations(output.outputFile)
                             assertThat(manifestContent).contains("es")
                             assertThat(manifestContent).contains("fr")
                             assertThat(manifestContent).contains("de")
+                        }
+                        VariantOutputConfiguration.OutputType.UNIVERSAL -> {
+                            fail("Universal output not expected.")
                         }
                     }
                 }
@@ -219,5 +219,13 @@ class SplitHandlingTest {
             cause = cause.cause
         }
         return cause
+    }
+
+    private fun loadBuiltArtifacts(outputFolder: File): BuiltArtifacts {
+        val directory = Mockito.mock(Directory::class.java)
+        Mockito.`when`(directory.asFile).thenReturn(outputFolder)
+        val builtArtifacts = BuiltArtifacts.Loader.load(directory)
+        assertNotNull(builtArtifacts)
+        return builtArtifacts
     }
 }

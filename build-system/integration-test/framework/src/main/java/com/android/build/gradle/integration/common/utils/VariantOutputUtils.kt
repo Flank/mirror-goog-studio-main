@@ -18,13 +18,14 @@
 package com.android.build.gradle.integration.common.utils
 
 import com.android.build.VariantOutput
+import com.android.build.api.variant.BuiltArtifact
+import com.android.build.api.variant.FilterConfiguration
 
-fun VariantOutput.getFilter(filterType: String): String? {
-    for (filterData in filters) {
-        if (filterData.filterType == filterType) {
-            return filterData.identifier
-        }
-    }
-    return null
-}
+fun VariantOutput.getFilter(filterType: String): String? =
+    filters.firstOrNull { it.filterType == filterType}?.identifier
+
+
+fun BuiltArtifact.getFilter(filterType: FilterConfiguration.FilterType): String? =
+    filters.firstOrNull { it.filterType == filterType }?.identifier
+
 

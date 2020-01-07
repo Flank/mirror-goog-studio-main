@@ -20,11 +20,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.scope.BuildElements;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.testing.TestData;
 import com.android.builder.model.SourceProvider;
 import com.android.sdklib.AndroidVersion;
@@ -160,15 +159,17 @@ public abstract class AbstractTestDataImpl implements TestData {
     @NonNull
     @Override
     public File getTestApk() {
-        BuildElements testApkOutputs =
-                ExistingBuildElements.from(InternalArtifactType.APK.INSTANCE, testApkDir);
-        if (testApkOutputs.size() != 1) {
+        BuiltArtifacts testApkOutputs = new BuiltArtifactsLoaderImpl().load(testApkDir.get());
+        if (testApkOutputs == null) {
+            throw new RuntimeException("No test APK in provided directory, file a bug");
+        }
+        if (testApkOutputs.getElements().size() != 1) {
             throw new RuntimeException(
                     "Unexpected number of main APKs, expected 1, got  "
-                            + testApkOutputs.size()
+                            + testApkOutputs.getElements().size()
                             + ":"
-                            + Joiner.on(",").join(testApkOutputs));
+                            + Joiner.on(",").join(testApkOutputs.getElements()));
         }
-        return testApkOutputs.iterator().next().getOutputFile();
+        return testApkOutputs.getElements().iterator().next().getOutputFile().toFile();
     }
 }

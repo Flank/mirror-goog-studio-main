@@ -5,12 +5,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.android.build.OutputFile;
-import com.android.build.VariantOutput;
+import com.android.build.api.variant.BuiltArtifact;
+import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.api.variant.FilterConfiguration;
+import com.android.build.api.variant.VariantOutputConfiguration;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
-import com.android.build.gradle.internal.scope.BuildElements;
-import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.builder.core.BuilderConstants;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.Maps;
@@ -24,7 +24,7 @@ import org.junit.Test;
 
 /** Assemble tests for densitySplit. */
 public class DensitySplitTest {
-    private static BuildElements buildElements;
+    private static BuiltArtifacts builtArtifacts;
 
     @ClassRule
     public static GradleTestProject project =
@@ -32,7 +32,7 @@ public class DensitySplitTest {
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        buildElements =
+        builtArtifacts =
                 project.executeAndReturnOutputModels("clean", "assembleDebug")
                         .get(BuilderConstants.DEBUG);
     }
@@ -44,7 +44,7 @@ public class DensitySplitTest {
 
     @Test
     public void testPackaging() throws IOException {
-        Collection<BuildOutput> outputFiles = buildElements.getElements();
+        Collection<BuiltArtifact> outputFiles = builtArtifacts.getElements();
         assertThat(outputFiles).hasSize(5);
 
         Apk mdpiApk = project.getApk("mdpi", GradleTestProject.ApkType.DEBUG);
@@ -78,7 +78,7 @@ public class DensitySplitTest {
     @Test
     public void checkVersionCodeInModel() {
 
-        Collection<BuildOutput> debugOutputs = buildElements.getElements();
+        Collection<BuiltArtifact> debugOutputs = builtArtifacts.getElements();
         assertEquals(5, debugOutputs.size());
 
         // build a map of expected outputs and their versionCode
@@ -90,14 +90,12 @@ public class DensitySplitTest {
         expected.put("xxhdpi", 512);
 
         assertEquals(5, debugOutputs.size());
-        for (OutputFile output : debugOutputs) {
-            assertEquals(VariantOutput.FULL_SPLIT, output.getMainOutputFile().getOutputType());
-            Collection<? extends OutputFile> outputFiles = output.getOutputs();
-            assertEquals(1, outputFiles.size());
-            assertNotNull(output.getMainOutputFile());
+        for (BuiltArtifact output : debugOutputs) {
+            assertEquals(VariantOutputConfiguration.OutputType.ONE_OF_MANY, output.getOutputType());
+            assertNotNull(output.getOutputFile());
 
             String densityFilter =
-                    VariantOutputUtils.getFilter(output.getMainOutputFile(), VariantOutput.DENSITY);
+                    VariantOutputUtils.getFilter(output, FilterConfiguration.FilterType.DENSITY);
             Integer value = expected.get(densityFilter);
             // this checks we're not getting an unexpected output.
             assertNotNull(

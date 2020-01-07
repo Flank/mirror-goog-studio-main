@@ -17,15 +17,15 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.OutputFile;
+import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.process.GradleProcessExecutor;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.build.gradle.internal.test.SplitOutputMatcher;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.internal.InstallUtils;
@@ -33,9 +33,7 @@ import com.android.builder.testing.api.DeviceConfigProviderImpl;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
-import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessExecutor;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
@@ -69,7 +67,6 @@ import org.gradle.process.ExecOperations;
 public abstract class InstallVariantTask extends NonIncrementalTask {
 
     private Provider<File> adbExecutableProvider;
-    private Provider<File> splitSelectExeProvider;
 
     private int timeOutInMs = 0;
 
@@ -92,26 +89,20 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         final ILogger iLogger = new LoggerWrapper(getLogger());
         DeviceProvider deviceProvider =
                 new ConnectedDeviceProvider(adbExecutableProvider.get(), getTimeOutInMs(), iLogger);
-        GradleProcessExecutor gradleProcessExecutor =
-                new GradleProcessExecutor(execOperations::exec);
         deviceProvider.use(
                 () -> {
                     BaseVariantData variantData = getVariantData();
                     VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
 
-                    List<OutputFile> outputs =
-                            ImmutableList.copyOf(
-                                    ExistingBuildElements.from(
-                                            InternalArtifactType.APK.INSTANCE, getApkDirectory()));
+                    BuiltArtifacts builtArtifacts =
+                            new BuiltArtifactsLoaderImpl().load(getApkDirectory().get());
 
                     install(
                             getProjectName(),
                             variantDslInfo.getFullName(),
                             deviceProvider,
                             variantDslInfo.getMinSdkVersion(),
-                            gradleProcessExecutor,
-                            getSplitSelectExe().getOrNull(),
-                            outputs,
+                            builtArtifacts,
                             variantDslInfo.getSupportedAbis(),
                             getInstallOptions(),
                             getTimeOutInMs(),
@@ -126,9 +117,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
             @NonNull String variantName,
             @NonNull DeviceProvider deviceProvider,
             @NonNull AndroidVersion minSkdVersion,
-            @NonNull ProcessExecutor processExecutor,
-            @Nullable File splitSelectExe,
-            @NonNull List<OutputFile> outputs,
+            @NonNull BuiltArtifacts builtArtifacts,
             @Nullable Set<String> supportedAbis,
             @NonNull Collection<String> installOptions,
             int timeOutInMs,
@@ -142,9 +131,9 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
                     device, minSkdVersion, iLogger, projectName, variantName)) {
                 // When InstallUtils.checkDeviceApiLevel returns false, it logs the reason.
                 final List<File> apkFiles =
-                        SplitOutputMatcher.computeBestOutput(
+                        SplitOutputMatcher.INSTANCE.computeBestOutput(
                                 new DeviceConfigProviderImpl(device),
-                                outputs,
+                                builtArtifacts,
                                 supportedAbis);
 
                 if (apkFiles.isEmpty()) {
@@ -192,13 +181,6 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
     @PathSensitive(PathSensitivity.NAME_ONLY)
     public Provider<File> getAdbExe() {
         return adbExecutableProvider;
-    }
-
-    @InputFile
-    @Optional
-    @PathSensitive(PathSensitivity.NONE)
-    public Provider<File> getSplitSelectExe() {
-        return splitSelectExeProvider;
     }
 
     @Input
@@ -268,8 +250,6 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
                     scope.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
             task.adbExecutableProvider =
                     scope.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
-            task.splitSelectExeProvider =
-                    scope.getGlobalScope().getSdkComponents().getSplitSelectExecutableProvider();
         }
 
         @Override

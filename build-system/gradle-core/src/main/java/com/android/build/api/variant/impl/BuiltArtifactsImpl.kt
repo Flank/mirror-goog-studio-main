@@ -27,7 +27,7 @@ import java.io.File
 import java.nio.file.Path
 
 class BuiltArtifactsImpl(
-    val version: Int = BuildElements.METADATA_FILE_VERSION,
+    val version: Int = BuiltArtifacts.METADATA_FILE_VERSION,
     override val artifactType: ArtifactType<*>,
     override val applicationId: String,
     override val variantName: String,

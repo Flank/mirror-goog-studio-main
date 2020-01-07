@@ -29,6 +29,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.PublicArtifactType;
+import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -50,6 +51,7 @@ import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
@@ -964,7 +966,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
     }
 
-    private static BuildOutputSupplier<Collection<EarlySyncBuildOutput>> getBuildOutputSupplier(
+    private BuildOutputSupplier<Collection<EarlySyncBuildOutput>> getBuildOutputSupplier(
             BaseVariantData variantData) {
         final VariantScope variantScope = variantData.getScope();
 
@@ -976,6 +978,7 @@ public class ModelBuilder<Extension extends BaseExtension>
             case TEST_APK:
             case ANDROID_TEST:
                 return new BuildOutputsSupplier(
+                        BuiltArtifacts.METADATA_FILE_VERSION,
                         ImmutableList.of(PublicArtifactType.APK.INSTANCE),
                         ImmutableList.of(variantScope.getApkLocation()));
             case LIBRARY:
@@ -1042,7 +1045,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     // is it still used by IDE ? at this point, it becomes impossible to set this up accurately.
-    private static BuildOutputSupplier<Collection<EarlySyncBuildOutput>> getManifestsSupplier(
+    private BuildOutputSupplier<Collection<EarlySyncBuildOutput>> getManifestsSupplier(
             BaseVariantData variantData) {
 
         VariantTypeImpl variantType = (VariantTypeImpl) variantData.getType();
@@ -1053,6 +1056,7 @@ public class ModelBuilder<Extension extends BaseExtension>
             case ANDROID_TEST:
             case TEST_APK:
                 return new BuildOutputsSupplier(
+                        BuildElements.METADATA_FILE_VERSION,
                         ImmutableList.of(InternalArtifactType.MERGED_MANIFESTS.INSTANCE),
                         ImmutableList.of(variantData.getScope().getManifestOutputDirectory()));
             case LIBRARY:

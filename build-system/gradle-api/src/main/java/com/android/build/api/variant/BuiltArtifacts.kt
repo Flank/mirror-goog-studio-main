@@ -69,13 +69,24 @@ interface BuiltArtifacts {
     @Incubating
     companion object {
         /**
+         * Current version of the metadata file.
+         */
+        const val METADATA_FILE_VERSION = 2
+
+        /**
          * Provides an implementation of [BuiltArtifactsLoader]
          */
         @JvmStatic
-        val Loader: BuiltArtifactsLoader =
-            ServiceLoader.load(
+        val Loader: BuiltArtifactsLoader by lazy {
+            var loadedServices = ServiceLoader.load(
                 BuiltArtifactsLoader::class.java,
-                BuiltArtifactsLoader::class.java.classLoader).first()
+                BuiltArtifactsLoader::class.java.classLoader
+            )
+            if (!loadedServices.iterator().hasNext()) {
+                loadedServices = ServiceLoader.load(BuiltArtifactsLoader::class.java)
+            }
+            loadedServices.first()
+        }
     }
 
     /**

@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.api.variant.BuiltArtifact;
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -27,6 +27,7 @@ import com.android.builder.testing.api.TestServer;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.gradle.api.file.DirectoryProperty;
@@ -47,10 +48,12 @@ public abstract class TestServerTask extends NonIncrementalTask {
 
         List<File> testedApkFiles =
                 getTestedApks().isPresent()
-                        ? ExistingBuildElements.from(
-                                        InternalArtifactType.APK.INSTANCE, getTestedApks())
+                        ? new BuiltArtifactsLoaderImpl()
+                                .load(getTestedApks().get())
+                                .getElements()
                                 .stream()
-                                .map(BuildOutput::getOutputFile)
+                                .map(BuiltArtifact::getOutputFile)
+                                .map(Path::toFile)
                                 .collect(Collectors.toList())
                         : ImmutableList.of();
 
@@ -59,9 +62,12 @@ public abstract class TestServerTask extends NonIncrementalTask {
         }
         File testedApkFile = testedApkFiles.isEmpty() ? null : testedApkFiles.get(0);
         List<File> testApkFiles =
-                ExistingBuildElements.from(InternalArtifactType.APK.INSTANCE, getTestApks())
+                new BuiltArtifactsLoaderImpl()
+                        .load(getTestApks().get())
+                        .getElements()
                         .stream()
-                        .map(BuildOutput::getOutputFile)
+                        .map(BuiltArtifact::getOutputFile)
+                        .map(Path::toFile)
                         .collect(Collectors.toList());
         if (testApkFiles.size() > 1) {
             throw new RuntimeException("Cannot handle split APKs in test APKs");

@@ -19,7 +19,6 @@ package com.android.build.api.variant
 import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
-import org.gradle.api.model.ObjectFactory
 
 /**
  * Facility to load [BuiltArtifacts] instances from metadata files in the file system.

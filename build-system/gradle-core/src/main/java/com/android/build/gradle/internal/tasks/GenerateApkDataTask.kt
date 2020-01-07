@@ -20,11 +20,10 @@ import com.android.SdkConstants.DOT_ANDROID_PACKAGE
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FD_RES_RAW
 import com.android.SdkConstants.FD_RES_XML
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
-import com.android.build.gradle.internal.scope.ExistingBuildElements
-import com.android.build.gradle.internal.scope.InternalArtifactType.APK
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ApkVariantData
@@ -118,25 +117,26 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
         }
 
         if (apkDirectory != null) {
-            val apks = ExistingBuildElements.from(APK, apkDirectory)
+            val apks = BuiltArtifactsLoaderImpl.loadFromDirectory(apkDirectory)
 
-            check(!apks.isEmpty()) { "Wear App dependency resolve to zero APK" }
+            check(apks != null) { "Wear App dependency resolve to zero APK" }
+            check(!apks.elements.isEmpty()) { "Wear App dependency resolve to zero APK" }
 
-            check(apks.size() <= 1) {
-                "Wear App dependency resolve to more than one APK: ${apks.map { it.outputFile }}"
+            check(apks.elements.size <= 1) {
+                "Wear App dependency resolve to more than one APK: ${apks.elements.map { it.outputFile }}"
             }
 
-            val apk = Iterables.getOnlyElement(apks).outputFile
+            val apk = Iterables.getOnlyElement(apks.elements).outputFile
 
             // copy the file into the destination, by sanitizing the name first.
             val rawDir = File(outDir, FD_RES_RAW)
             FileUtils.mkdirs(rawDir)
 
             val to = File(rawDir, ANDROID_WEAR_MICRO_APK + DOT_ANDROID_PACKAGE)
-            Files.copy(apk, to)
+            Files.copy(apk.toFile(), to)
 
             generateApkData(
-                apk, outDir, mainPkgName.get(), aapt2Executable.singleFile
+                apk.toFile(), outDir, mainPkgName.get(), aapt2Executable.singleFile
             )
         } else {
             generateUnbundledWearApkData(outDir, mainPkgName.get())

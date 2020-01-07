@@ -18,22 +18,20 @@ package com.android.build.gradle.internal.test;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.OutputFile;
+import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.testing.TestData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.builder.testing.api.DeviceConfigProvider;
-import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
@@ -106,19 +104,21 @@ public class TestDataImpl extends AbstractTestDataImpl {
                 (BaseVariantData) testVariantData.getTestedVariantData();
 
         ImmutableList.Builder<File> apks = ImmutableList.builder();
-        // FIX ME : there has to be a better way...
-        Collection<OutputFile> splitOutputs =
-                ImmutableList.copyOf(
-                        ExistingBuildElements.from(
-                                InternalArtifactType.APK.INSTANCE,
+        BuiltArtifacts builtArtifacts =
+                new BuiltArtifactsLoaderImpl()
+                        .load(
                                 testedVariantData
                                         .getScope()
                                         .getArtifacts()
-                                        .getFinalProduct(InternalArtifactType.APK.INSTANCE)));
+                                        .getFinalProduct(InternalArtifactType.APK.INSTANCE)
+                                        .get());
+        if (builtArtifacts == null) {
+            return ImmutableList.of();
+        }
         apks.addAll(
-                SplitOutputMatcher.computeBestOutput(
+                SplitOutputMatcher.INSTANCE.computeBestOutput(
                         deviceConfigProvider,
-                        splitOutputs,
+                        builtArtifacts,
                         testedVariantData.getVariantDslInfo().getSupportedAbis()));
         return apks.build();
     }

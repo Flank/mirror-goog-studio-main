@@ -22,7 +22,12 @@ import static org.mockito.Mockito.when;
 
 import com.android.AndroidProjectTypes;
 import com.android.build.OutputFile;
-import com.android.build.VariantOutput;
+import com.android.build.api.artifact.PublicArtifactType;
+import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.api.variant.FilterConfiguration;
+import com.android.build.api.variant.VariantOutputConfiguration;
+import com.android.build.api.variant.impl.BuiltArtifactImpl;
+import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
@@ -30,6 +35,7 @@ import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
+import com.android.build.gradle.internal.fixtures.FakeGradleDirectory;
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
@@ -54,8 +60,8 @@ import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.utils.FileUtils;
-import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
@@ -187,16 +193,22 @@ public class ModelBuilderTest {
         Files.asCharSink(apkOutput, Charsets.UTF_8).write("some apk");
 
         OutputFactory outputFactory = new OutputFactory(PROJECT, variantDslInfo);
-        new BuildElements(
-                        BuildElements.METADATA_FILE_VERSION,
+
+        new BuiltArtifactsImpl(
+                        BuiltArtifacts.METADATA_FILE_VERSION,
+                        PublicArtifactType.APK.INSTANCE,
                         "com.android.test",
-                        VariantTypeImpl.BASE_APK.toString(),
+                        "debug",
                         ImmutableList.of(
-                                new BuildOutput(
-                                        InternalArtifactType.APK.INSTANCE,
-                                        outputFactory.addMainApk(),
-                                        apkOutput)))
-                .save(variantOutputFolder);
+                                new BuiltArtifactImpl(
+                                        apkOutput.toPath(),
+                                        ImmutableMap.of(),
+                                        123,
+                                        "version_name",
+                                        true,
+                                        VariantOutputConfiguration.OutputType.SINGLE,
+                                        ImmutableList.of())))
+                .save(new FakeGradleDirectory(variantOutputFolder));
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
         assertThat(projectBuildOutput).isNotNull();
@@ -238,26 +250,31 @@ public class ModelBuilderTest {
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
 
-        ImmutableList.Builder<BuildOutput> buildOutputBuilder = ImmutableList.builder();
+        ImmutableList.Builder<BuiltArtifactImpl> builtArtifactsBuilder = ImmutableList.builder();
 
         for (int i = 0; i < 5; i++) {
             File apkOutput = createApk(variantOutputFolder, "split_" + i + ".apk");
 
-            buildOutputBuilder.add(
-                    new BuildOutput(
-                            InternalArtifactType.APK.INSTANCE,
-                            outputFactory.addFullSplit(
-                                    ImmutableList.of(
-                                            Pair.of(VariantOutput.FilterType.DENSITY, "hdpi"))),
-                            apkOutput));
+            builtArtifactsBuilder.add(
+                    new BuiltArtifactImpl(
+                            apkOutput.toPath(),
+                            ImmutableMap.of(),
+                            123,
+                            "version_name",
+                            true,
+                            VariantOutputConfiguration.OutputType.ONE_OF_MANY,
+                            ImmutableList.of(
+                                    new FilterConfiguration(
+                                            FilterConfiguration.FilterType.DENSITY, "hdpi"))));
         }
 
-        new BuildElements(
-                        BuildElements.METADATA_FILE_VERSION,
+        new BuiltArtifactsImpl(
+                        BuiltArtifacts.METADATA_FILE_VERSION,
+                        PublicArtifactType.APK.INSTANCE,
                         "com.android.test",
-                        VariantTypeImpl.BASE_APK.toString(),
-                        buildOutputBuilder.build())
-                .save(variantOutputFolder);
+                        "debug",
+                        builtArtifactsBuilder.build())
+                .save(new FakeGradleDirectory(variantOutputFolder));
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
         assertThat(projectBuildOutput).isNotNull();
@@ -303,16 +320,22 @@ public class ModelBuilderTest {
             Files.asCharSink(apkOutput, Charsets.UTF_8).write("some apk");
 
             OutputFactory outputFactory = new OutputFactory(PROJECT, variantDslInfo);
-            new BuildElements(
-                            BuildElements.METADATA_FILE_VERSION,
+            new BuiltArtifactsImpl(
+                            BuiltArtifacts.METADATA_FILE_VERSION,
+                            PublicArtifactType.APK.INSTANCE,
                             "com.android.test",
-                            VariantTypeImpl.BASE_APK.toString(),
+                            "debug",
                             ImmutableList.of(
-                                    new BuildOutput(
-                                            InternalArtifactType.APK.INSTANCE,
-                                            outputFactory.addMainApk(),
-                                            apkOutput)))
-                    .save(variantOutputFolder);
+                                    new BuiltArtifactImpl(
+                                            apkOutput.toPath(),
+                                            ImmutableMap.of(),
+                                            123,
+                                            "version_name",
+                                            true,
+                                            VariantOutputConfiguration.OutputType.SINGLE,
+                                            ImmutableList.of())))
+                    .save(new FakeGradleDirectory(variantOutputFolder));
+
             scopes.add(variantScope);
         }
 

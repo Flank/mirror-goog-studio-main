@@ -57,7 +57,7 @@ class BuiltArtifactsImplTest {
         val jsonContent = outputJsonFile.readText(Charsets.UTF_8)
         Truth.assertThat(jsonContent).isEqualTo(
 """{
-  "version": 1,
+  "version": 2,
   "artifactType": {
     "type": "APK",
     "kind": "Directory"
@@ -126,7 +126,7 @@ class BuiltArtifactsImplTest {
         Truth.assertThat(outputJsonFile.exists())
         val jsonContent = outputJsonFile.readText(Charsets.UTF_8)
         Truth.assertThat(jsonContent).isEqualTo("""{
-  "version": 1,
+  "version": 2,
   "artifactType": {
     "type": "APK",
     "kind": "Directory"
@@ -205,7 +205,7 @@ class BuiltArtifactsImplTest {
         val jsonContent = outputJsonFile.readText(Charsets.UTF_8)
         Truth.assertThat(jsonContent).isEqualTo(
             """{
-  "version": 1,
+  "version": 2,
   "artifactType": {
     "type": "APK",
     "kind": "Directory"
