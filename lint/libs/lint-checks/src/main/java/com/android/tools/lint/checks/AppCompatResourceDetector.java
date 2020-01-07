@@ -60,8 +60,8 @@ public class AppCompatResourceDetector extends ResourceXmlDetector {
                     Severity.ERROR,
                     new Implementation(AppCompatResourceDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
-    private static final String ATTR_ACTION_VIEW_CLASS = "actionViewClass";
-    private static final String ATTR_ACTION_PROVIDER_CLASS = "actionProviderClass";
+    public static final String ATTR_ACTION_VIEW_CLASS = "actionViewClass";
+    public static final String ATTR_ACTION_PROVIDER_CLASS = "actionProviderClass";
 
     /** Constructs a new {@link AppCompatResourceDetector} */
     public AppCompatResourceDetector() {}

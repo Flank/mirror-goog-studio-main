@@ -20,11 +20,19 @@ import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_CLASS
 import com.android.SdkConstants.ATTR_FRAGMENT
 import com.android.SdkConstants.ATTR_NAME
-import com.android.SdkConstants.CONSTRUCTOR_NAME
-import com.android.SdkConstants.DOT_JAVA
+import com.android.SdkConstants.AUTO_URI
+import com.android.SdkConstants.CLASS_ACTIVITY
+import com.android.SdkConstants.CLASS_APPLICATION
+import com.android.SdkConstants.CLASS_BROADCASTRECEIVER
+import com.android.SdkConstants.CLASS_CONTENTPROVIDER
+import com.android.SdkConstants.CLASS_FRAGMENT
+import com.android.SdkConstants.CLASS_SERVICE
+import com.android.SdkConstants.CLASS_V4_FRAGMENT
+import com.android.SdkConstants.CLASS_VIEW
 import com.android.SdkConstants.TAG_ACTIVITY
 import com.android.SdkConstants.TAG_APPLICATION
 import com.android.SdkConstants.TAG_HEADER
+import com.android.SdkConstants.TAG_ITEM
 import com.android.SdkConstants.TAG_PROVIDER
 import com.android.SdkConstants.TAG_RECEIVER
 import com.android.SdkConstants.TAG_SERVICE
@@ -32,14 +40,17 @@ import com.android.SdkConstants.TAG_STRING
 import com.android.SdkConstants.VIEW_FRAGMENT
 import com.android.SdkConstants.VIEW_TAG
 import com.android.resources.ResourceFolderType
+import com.android.resources.ResourceFolderType.DRAWABLE
 import com.android.resources.ResourceFolderType.LAYOUT
+import com.android.resources.ResourceFolderType.MENU
+import com.android.resources.ResourceFolderType.TRANSITION
 import com.android.resources.ResourceFolderType.VALUES
 import com.android.resources.ResourceFolderType.XML
+import com.android.tools.lint.checks.AppCompatResourceDetector.ATTR_ACTION_PROVIDER_CLASS
+import com.android.tools.lint.checks.AppCompatResourceDetector.ATTR_ACTION_VIEW_CLASS
+import com.android.tools.lint.client.api.JavaEvaluator
+import com.android.tools.lint.client.api.LintClient.Companion.isStudio
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.ClassContext
-import com.android.tools.lint.detector.api.ClassContext.Companion.createSignature
-import com.android.tools.lint.detector.api.ClassContext.Companion.getFqcn
-import com.android.tools.lint.detector.api.ClassContext.Companion.getInternalName
 import com.android.tools.lint.detector.api.ClassScanner
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
@@ -47,95 +58,180 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LayoutDetector
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
-import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
-import com.android.tools.lint.detector.api.XmlScannerConstants
-import com.android.tools.lint.detector.api.isStaticInnerClass
+import com.android.tools.lint.detector.api.getInternalName
 import com.android.utils.SdkUtils.endsWith
-import com.google.common.collect.Lists
-import com.google.common.collect.Maps
-import com.google.common.collect.Sets
-import org.objectweb.asm.Opcodes
-import org.objectweb.asm.tree.ClassNode
-import org.objectweb.asm.tree.MethodNode
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiModifier
+import com.intellij.psi.util.PsiUtil
+import org.jetbrains.uast.kotlin.KotlinUClass
+import org.w3c.dom.Attr
 import org.w3c.dom.Element
 import org.w3c.dom.Node
-import java.io.File
-import java.io.File.separatorChar
-import java.util.ArrayList
-import java.util.EnumSet
 import java.util.Locale
 
 /** Checks to ensure that classes referenced in the manifest actually exist and are included */
 class MissingClassDetector : LayoutDetector(), ClassScanner {
-    private var referencedClasses: MutableMap<String, Location.Handle?>? = null
-    private var customViews: MutableSet<String>? = null
-    private var haveClasses = false
+    /**
+     * Prevent checking the same class more than once since it can be referenced
+     * repeatedly. The value in the map is true if the class is okay and false if it
+     * is not.
+     */
+    private var checkedClasses: MutableMap<String, Boolean> = mutableMapOf()
 
     // ---- Implements XmlScanner ----
 
     override fun getApplicableElements(): Collection<String>? {
-        return XmlScannerConstants.ALL
+        return ALL
     }
 
-    override fun appliesTo(folderType: ResourceFolderType): Boolean {
-        return folderType == VALUES ||
+    override fun appliesTo(folderType: ResourceFolderType): Boolean =
+        folderType == VALUES ||
                 folderType == LAYOUT ||
-                folderType == XML
-    }
+                folderType == XML ||
+                folderType == DRAWABLE ||
+                folderType == MENU ||
+                folderType == TRANSITION
 
     override fun visitElement(
         context: XmlContext,
         element: Element
     ) {
-        var pkg: String? = null
-        val classNameNode: Node
-        val className: String
         val tag = element.tagName
-        val folderType = context.resourceFolderType
-        if (folderType == VALUES) {
-            if (tag != TAG_STRING) {
-                return
+
+        @Suppress("NON_EXHAUSTIVE_WHEN")
+        when (context.resourceFolderType) {
+            null -> { // Manifest file
+                if (TAG_APPLICATION == tag ||
+                    TAG_ACTIVITY == tag ||
+                    TAG_SERVICE == tag ||
+                    TAG_RECEIVER == tag ||
+                    TAG_PROVIDER == tag
+                ) {
+                    val attr = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME) ?: return
+                    val pkg = context.project.getPackage()
+                    checkClassReference(
+                        context,
+                        pkg,
+                        attr.value,
+                        attr,
+                        element,
+                        requireInstantiatable = true,
+                        expectedParent = when (tag) {
+                            TAG_ACTIVITY -> CLASS_ACTIVITY
+                            TAG_SERVICE -> CLASS_SERVICE
+                            TAG_RECEIVER -> CLASS_BROADCASTRECEIVER
+                            TAG_PROVIDER -> CLASS_CONTENTPROVIDER
+                            TAG_APPLICATION -> CLASS_APPLICATION
+                            else -> null
+                        }
+                    )
+                }
             }
-            val attr = element.getAttributeNode(ATTR_NAME) ?: return
-            className = attr.value
-            classNameNode = attr
-        } else if (folderType == LAYOUT) {
-            if (tag.indexOf('.') > 0) {
-                className = tag
-                classNameNode = element
-            } else if (tag == VIEW_FRAGMENT || tag == VIEW_TAG) {
-                val attr = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)
-                    ?: element.getAttributeNode(ATTR_CLASS)
-                    ?: return
-                className = attr.value
-                classNameNode = attr
-            } else {
-                return
+            VALUES -> {
+                // Check class name in analytics references
+                // Only look for fully qualified tracker names in analytics files
+                if (tag == TAG_STRING && endsWith(context.file.path, "analytics.xml")) {
+                    val attr = element.getAttributeNode(ATTR_NAME) ?: return
+                    checkClassReference(context, null, attr.value, attr, element)
+                }
             }
-        } else if (folderType == XML) {
-            if (tag != TAG_HEADER) {
-                return
+            LAYOUT -> {
+                when {
+                    tag.indexOf('.') > 0 -> {
+                        checkClassReference(
+                            context, null, tag, element, element,
+                            // Already doing hierarchy checks in Studio, don't duplicate effort
+                            expectedParent = if (isStudio) null else CLASS_VIEW
+                        )
+                    }
+                    tag == VIEW_TAG -> {
+                        val attr = element.getAttributeNode(ATTR_CLASS) ?: return
+                        checkClassReference(
+                            context, null, attr.value, attr, element,
+                            expectedParent = if (isStudio) null else CLASS_VIEW
+                        )
+                    }
+                    tag == VIEW_FRAGMENT -> {
+                        val attr = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)
+                            ?: element.getAttributeNode(ATTR_CLASS)
+                            ?: return
+                        checkClassReference(
+                            context, null, attr.value, attr, element,
+                            requireInstantiatable = true,
+                            expectedParent = CLASS_FRAGMENT
+                        )
+                    }
+                }
             }
-            val attr = element.getAttributeNodeNS(ANDROID_URI, ATTR_FRAGMENT) ?: return
-            className = attr.value
-            classNameNode = attr
-        } else { // Manifest file
-            if (TAG_APPLICATION == tag ||
-                TAG_ACTIVITY == tag ||
-                TAG_SERVICE == tag ||
-                TAG_RECEIVER == tag ||
-                TAG_PROVIDER == tag) {
-                val attr = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME) ?: return
-                className = attr.value
-                classNameNode = attr
-                pkg = context.project.getPackage()
-            } else {
-                return
+            DRAWABLE -> {
+                when {
+                    tag.indexOf('.') > 0 -> {
+                        checkClassReference(context, null, tag, element, element)
+                    }
+                    tag == "drawable" -> {
+                        val attr = element.getAttributeNode(ATTR_CLASS)
+                            ?: return
+                        checkClassReference(
+                            context, null, attr.value, attr, element,
+                            expectedParent = "android.graphics.drawable.Drawable"
+                        )
+                    }
+                }
+            }
+            TRANSITION -> {
+                if (tag == "transition" || tag == "pathMotion") {
+                    val attr = element.getAttributeNode(ATTR_CLASS)
+                        ?: return
+                    val expectedParent = if (tag == "transition")
+                        "android.transition.Transition"
+                    else
+                        "android.transition.PathMotion"
+                    checkClassReference(
+                        context, null, attr.value, attr, element, expectedParent = expectedParent
+                    )
+                }
+            }
+            XML -> {
+                if (tag == TAG_HEADER) {
+                    val attr = element.getAttributeNodeNS(ANDROID_URI, ATTR_FRAGMENT) ?: return
+                    checkClassReference(
+                        context, null, attr.value, attr, element,
+                        requireInstantiatable = true, expectedParent = CLASS_FRAGMENT
+                    )
+                }
+            }
+            MENU -> {
+                if (tag == TAG_ITEM) {
+                    val view = element.getAttributeNodeNS(AUTO_URI, ATTR_ACTION_VIEW_CLASS)
+                        ?: element.getAttributeNodeNS(ANDROID_URI, ATTR_ACTION_VIEW_CLASS)
+                    if (view != null) {
+                        checkClassReference(
+                            context, null, view.value, view, element,
+                            expectedParent = CLASS_VIEW
+                        )
+                    }
+                    val provider = element.getAttributeNodeNS(AUTO_URI, ATTR_ACTION_PROVIDER_CLASS)
+                        ?: element.getAttributeNodeNS(ANDROID_URI, ATTR_ACTION_PROVIDER_CLASS)
+                        ?: return
+                    // Consider checking for one of the action provider parent classes
+                    checkClassReference(context, null, provider.value, provider, element)
+                }
             }
         }
+    }
+
+    private fun checkClassReference(
+        context: XmlContext,
+        pkg: String?,
+        className: String,
+        classNameNode: Node,
+        element: Element,
+        requireInstantiatable: Boolean = false,
+        expectedParent: String? = null
+    ) {
         if (className.isEmpty()) {
             return
         }
@@ -143,7 +239,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
         val dotIndex = className.indexOf('.')
         if (dotIndex <= 0) {
             if (pkg == null) {
-                return // value file
+                return // not a manifest file; no implicit package
             }
             fqcn = if (dotIndex == 0) {
                 pkg + className
@@ -157,277 +253,206 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
         } else {
             // else: the class name is already a fully qualified class name
             fqcn = className
-            // Only look for fully qualified tracker names in analytics files
-            if (folderType == VALUES && !endsWith(context.file.path, "analytics.xml")) {
-                return
-            }
         }
-        var signature = getInternalName(fqcn)
-        if (signature.isEmpty() || signature.startsWith(ANDROID_PKG_PREFIX)) {
+
+        if (fqcn.startsWith(ANDROID_PKG_PREFIX) ||
+            fqcn.startsWith("com.android.internal.")
+        ) {
             return
         }
-        if (!context.project.reportIssues) {
-            // If this is a library project not being analyzed, ignore it
-            return
-        }
-        var handle: Location.Handle? = null
-        if (!context.driver.isSuppressed(context, MISSING, element)) {
-            if (referencedClasses == null) {
-                referencedClasses = Maps.newHashMapWithExpectedSize(16)
-                customViews = Sets.newHashSetWithExpectedSize(8)
-            }
-            handle = context.createLocationHandle(element)
-            referencedClasses!![signature] = handle
-            if (folderType == LAYOUT && tag != VIEW_FRAGMENT) {
-                customViews!!.add(getInternalName(className))
-            }
-        }
-        if (signature.indexOf('$') != -1) {
-            checkInnerClass(
-                context,
-                element,
-                pkg,
-                classNameNode,
-                className
-            )
-            // The internal name contains a $ which means it's an inner class.
-            // The conversion from fqcn to internal name is a bit ambiguous:
-            // "a.b.C.D" usually means "inner class D in class C in package a.b".
-            // However, it can (see issue 31592) also mean class D in package "a.b.C".
-            // To make sure we don't falsely complain that foo/Bar$Baz doesn't exist,
-            // in case the user has actually created a package named foo/Bar and a proper
-            // class named Baz, we register *both* into the reference map.
-            // When generating errors we'll look for these an rip them back out if
-            // it looks like one of the two variations have been seen.
-            if (handle != null) {
-                // Assume that each successive $ is really a capitalized package name
-                // instead. In other words, for A$B$C$D (assumed to be class A with
-                // inner classes A.B, A.B.C and A.B.C.D) generate the following possible
-                // referenced classes A/B$C$D (class B in package A with inner classes C and C.D),
-                // A/B/C$D and A/B/C/D
-                while (true) {
-                    val index = signature.indexOf('$')
-                    if (index == -1) {
-                        break
-                    }
-                    signature = signature.substring(0, index) + '/' + signature.substring(index + 1)
-                    referencedClasses!![signature] = handle
-                    if (folderType == LAYOUT && tag != VIEW_FRAGMENT) {
-                        customViews!!.add(signature)
-                    }
+
+        var ok = checkedClasses[fqcn]
+        if (ok == null) {
+            val parser = context.client.getUastParser(context.mainProject)
+            val evaluator = parser.evaluator
+            val cls = evaluator.findClass(fqcn.replace('$', '.'))
+            if (cls != null) {
+                ok = true
+                if (requireInstantiatable) {
+                    checkInstantiatable(context, evaluator, cls, fqcn, classNameNode)
                 }
+                checkInnerClassReference(context, cls, className, classNameNode, element)
+                if (expectedParent != null) {
+                    checkExpectedParent(context, evaluator, classNameNode, cls, expectedParent)
+                }
+            } else {
+                ok = false
             }
+            checkedClasses[fqcn] = ok
+        }
+        if (ok == false) {
+            val location = getRefLocation(context, classNameNode)
+            reportMissing(location, fqcn, context)
         }
     }
 
-    private fun checkInnerClass(
+    private fun checkExpectedParent(
         context: XmlContext,
-        element: Element,
-        pkg: String?,
-        classNameNode: Node,
-        className: String
+        evaluator: JavaEvaluator,
+        nameNode: Node,
+        cls: PsiClass,
+        expectedParent: String
     ) {
-        if (pkg != null &&
-            className.indexOf('$') == -1 && className.indexOf('.', 1) > 0
-        ) {
-            var haveUpperCase = false
-            var i = 0
-            val n = pkg.length
-            while (i < n) {
-                if (Character.isUpperCase(pkg[i])) {
-                    haveUpperCase = true
-                    break
+        if (!evaluator.inheritsFrom(cls, expectedParent, false)) {
+            if (expectedParent == CLASS_FRAGMENT) {
+                checkExpectedParent(context, evaluator, nameNode, cls, CLASS_V4_FRAGMENT.oldName())
+                return
+            } else if (expectedParent == CLASS_V4_FRAGMENT.oldName()) {
+                checkExpectedParent(context, evaluator, nameNode, cls, CLASS_V4_FRAGMENT.newName())
+                return
+            }
+            val message =
+                if (expectedParent.contains("Fragment")) {
+                    "`${cls.name}` must be a fragment"
+                } else {
+                    "`${cls.name}` must extend $expectedParent"
                 }
-                i++
-            }
-            if (!haveUpperCase) {
-                val fixed = className[0].toString() + className.substring(1).replace('.', '$')
-                val message =
-                    "Use '$' instead of '.' for inner classes (or use only lowercase letters in package names); replace \"$className\" with \"$fixed\""
-                val location = context.getLocation(classNameNode)
-                val fix = LintFix.create().replace().text(className).with(fixed).autoFix().build()
-                context.report(INNERCLASS, element, location, message, fix)
-            }
+            context.report(INSTANTIATABLE, getRefLocation(context, nameNode), message)
         }
     }
 
-    override fun afterCheckRootProject(context: Context) {
-        val mainProject = context.mainProject
-        if (context.project === mainProject && haveClasses &&
-            !mainProject.isLibrary &&
-            referencedClasses != null && referencedClasses!!.isNotEmpty() &&
-            context.driver.scope.contains(Scope.CLASS_FILE)
-        ) {
-            val classes = ArrayList(referencedClasses!!.keys)
-            classes.sort()
-            classLoop@
-            for (owner in classes) {
-                val handle = referencedClasses!![owner]
-                val fqcn = getFqcn(owner)
-                var signature = getInternalName(fqcn)
-                if (signature != owner) {
-                    if (!referencedClasses!!.containsKey(signature)) {
-                        continue
-                    }
-                } else if (signature.indexOf('$') != -1) {
-                    signature = signature.replace('$', '/')
-                    if (!referencedClasses!!.containsKey(signature)) {
-                        continue
-                    }
-                }
-                referencedClasses!!.remove(owner)
-                // Ignore usages of platform libraries
-                if (owner.startsWith("android/")) {
-                    continue
-                }
-                // Sanity check: make sure we can't find the missing class as source
-                // anywhere either. This is relevant for example if we're running lint
-                // from Gradle across all variants but the source code hasn't been
-                // compiled for all the variants we're checking.
-                val all: MutableList<Project> = Lists.newArrayList(mainProject.allLibraries)
-                all.add(mainProject)
-                for (project in all) {
-                    for (root in project.javaSourceFolders) {
-                        val source = File(root, owner.replace('/', separatorChar) + DOT_JAVA)
-                        if (source.exists()) {
-                            continue@classLoop
-                        }
-                    }
-                }
-                // One last sanity check:
-                val cls = context.client.getUastParser(mainProject).evaluator.findClass(fqcn)
-                if (cls != null) {
-                    val expectedName = owner.substring(owner.lastIndexOf('/') + 1)
-                    if (owner.contains("$") && cls.containingClass != null || expectedName == cls.name
-                    ) {
-                        continue
-                    }
-                }
-                val location = handle!!.resolve()
-                val parentFile = location.file.parentFile
-                val target =
-                    if (parentFile != null) {
-                        val parent = parentFile.name
-                        when (val type = ResourceFolderType.getFolderType(parent)) {
-                            null -> "manifest"
-                            LAYOUT -> "layout file"
-                            XML -> "preference header file"
-                            VALUES -> "analytics file"
-                            else -> {
-                                "${type.getName().toLowerCase(Locale.US)} file"
-                            }
-                        }
+    private fun checkInnerClassReference(
+        context: XmlContext,
+        cls: PsiClass,
+        className: String,
+        nameNode: Node,
+        element: Element
+    ) {
+        val name = cls.name
+        if (cls.containingClass == null || name == null || className.contains("$")) {
+            return
+        }
+        val full = getInternalName(cls)?.replace('/', '.') ?: return
+        val fixed = full.substring(full.length - className.length)
+        val message =
+            "Use '$' instead of '.' for inner classes; replace \"$className\" with \"$fixed\""
+        val location = getRefLocation(context, nameNode)
+        val fix = LintFix.create().replace().text(className).with(fixed).autoFix().build()
+        context.report(INNERCLASS, element, location, message, fix)
+    }
+
+    /** Make sure [cls] is instantiatable */
+    private fun checkInstantiatable(
+        context: XmlContext,
+        evaluator: JavaEvaluator,
+        cls: PsiClass,
+        fqcn: String,
+        nameNode: Node
+    ) {
+        if (evaluator.isPrivate(cls)) {
+            val message = "This class should be public (`$fqcn`)"
+            context.report(INSTANTIATABLE, getRefLocation(context, nameNode), message)
+        } else if (cls.containingClass != null && !evaluator.isStatic(cls)) {
+            val message = "This inner class should be static (`$fqcn`)"
+            context.report(INSTANTIATABLE, getRefLocation(context, nameNode), message)
+        } else {
+            val constructors = cls.constructors
+            if (constructors.isEmpty() && hasImplicitDefaultConstructor(cls)) {
+                return
+            }
+            for (constructor in cls.constructors) {
+                if (constructor.parameterList.isEmpty) {
+                    if (evaluator.isPrivate(constructor)) {
+                        val message =
+                            "The default constructor must be public in `$fqcn`"
+                        context.report(INSTANTIATABLE,
+                            getRefLocation(context, nameNode), message)
+                        return
                     } else {
-                        "the manifest"
-                    }
-                val message = "Class referenced in the $target, `$fqcn`, was not found in the project or the libraries"
-                context.report(MISSING, location, message)
-            }
-        }
-    }
-
-    // ---- Implements ClassScanner ----
-
-    override fun checkClass(
-        context: ClassContext,
-        classNode: ClassNode
-    ) {
-        if (!haveClasses &&
-            !context.isFromClassLibrary &&
-            context.project === context.mainProject
-        ) {
-            haveClasses = true
-        }
-        val curr = classNode.name
-        if (referencedClasses != null && referencedClasses!!.containsKey(curr)) {
-            val isCustomView = customViews!!.contains(curr)
-            removeReferences(curr)
-            // Ensure that the class is non static and has a null constructor!
-            if (classNode.access and Opcodes.ACC_PRIVATE != 0) {
-                val signature = createSignature(classNode.name, null, null)
-                val message = "This class should be public ($signature)"
-                context.report(INSTANTIATABLE, context.getLocation(classNode), message)
-                return
-            }
-            if (classNode.name.indexOf('$') != -1 && !isStaticInnerClass(classNode)) {
-                val signature = createSignature(classNode.name, null, null)
-                val message = "This inner class should be static ($signature)"
-                context.report(INSTANTIATABLE, context.getLocation(classNode), message)
-                return
-            }
-            var hasDefaultConstructor = false
-            val methodList: List<*> = classNode.methods
-            for (m in methodList) {
-                val method = m as MethodNode
-                if (method.name == CONSTRUCTOR_NAME) {
-                    if (method.desc == "()V") { // The constructor must be public
-                        if (method.access and Opcodes.ACC_PUBLIC == 0) {
-                            context.report(
-                                INSTANTIATABLE,
-                                context.getLocation(method, classNode),
-                                "The default constructor must be public"
-                            )
-                            // Also mark that we have a constructor so we don't complain again
-                            // below since we've already emitted a more specific error related
-                            // to the default constructor
-                        }
-                        hasDefaultConstructor = true
+                        return
                     }
                 }
             }
-            if (!hasDefaultConstructor &&
-                !isCustomView &&
-                !context.isFromClassLibrary &&
-                context.project.reportIssues
-            ) {
-                val signature = createSignature(classNode.name, null, null)
-                val message =
-                    "This class should provide a default constructor (a public constructor with no arguments) ($signature)"
-                context.report(INSTANTIATABLE, context.getLocation(classNode), message)
-            }
+
+            val message =
+                "This class should provide a default constructor (a public constructor with no arguments) (`$fqcn`)"
+            context.report(INSTANTIATABLE, getRefLocation(context, nameNode), message)
         }
     }
 
-    private fun removeReferences(name: String) {
-        var curr = name
-        referencedClasses!!.remove(curr)
+    private fun getRefLocation(
+        context: XmlContext,
+        nameNode: Node
+    ): Location {
+        return if (nameNode is Attr) {
+            context.getValueLocation(nameNode)
+        } else {
+            context.getLocation(nameNode)
+        }
+    }
 
-        // Since "A.B.C" is ambiguous whether it's referencing a class in package A.B or
-        // an inner class C in package A, we insert multiple possible references when we
-        // encounter the A.B.C reference; now that we've seen the actual class we need to
-        // remove all the possible permutations we've added such that the permutations
-        // don't count as unreferenced classes.
-        var index = curr.lastIndexOf('/')
-        if (index == -1) {
-            return
+    private fun hasImplicitDefaultConstructor(psiClass: PsiClass): Boolean {
+        if (psiClass is KotlinUClass && psiClass.sourcePsi == null) {
+            // Top level kt classes (FooKt for Foo.kt) do not have implicit default constructor
+            return false
         }
-        var hasCapitalizedPackageName = false
-        for (i in index - 1 downTo 0) {
-            val c = curr[i]
-            if (Character.isUpperCase(c)) {
-                hasCapitalizedPackageName = true
-                break
+
+        val constructors = psiClass.constructors
+        if (constructors.isEmpty() && !psiClass.isInterface && !psiClass.isAnnotationType && !psiClass.isEnum) {
+            if (PsiUtil.hasDefaultConstructor(psiClass)) {
+                return true
+            }
+
+            // The above method isn't always right; for example, for the ContactsContract.Presence class
+            // in the framework, which looks like this:
+            //    @Deprecated
+            //    public static final class Presence extends StatusUpdates {
+            //    }
+            // javac makes a default constructor:
+            //    public final class android.provider.ContactsContract$Presence extends android.provider.ContactsContract$StatusUpdates {
+            //        public android.provider.ContactsContract$Presence();
+            //    }
+            // but the above method returns false. So add some of our own heuristics:
+            if (psiClass.hasModifierProperty(PsiModifier.FINAL) &&
+                !psiClass.hasModifierProperty(PsiModifier.ABSTRACT) &&
+                psiClass.hasModifierProperty(PsiModifier.PUBLIC)
+            ) {
+                return true
             }
         }
-        if (!hasCapitalizedPackageName) { // No path ambiguity
-            return
-        }
-        while (true) {
-            index = curr.lastIndexOf('/')
-            if (index == -1) {
-                break
+
+        return false
+    }
+
+    private fun reportMissing(
+        location: Location,
+        fqcn: String,
+        context: Context
+    ) {
+        val parentFile = location.file.parentFile
+        val target =
+            if (parentFile != null) {
+                val parent = parentFile.name
+                when (val type = ResourceFolderType.getFolderType(parent)) {
+                    null -> "manifest"
+                    LAYOUT -> "layout file"
+                    XML -> "preference header file"
+                    VALUES -> "analytics file"
+                    else -> {
+                        "${type.getName().toLowerCase(Locale.US)} file"
+                    }
+                }
+            } else {
+                "the manifest"
             }
-            curr = curr.substring(0, index) + '$' + curr.substring(index + 1)
-            referencedClasses!!.remove(curr)
-        }
+        val message =
+            "Class referenced in the $target, `$fqcn`, was not found in the project or the libraries"
+        context.report(MISSING, location, message)
     }
 
     companion object {
+        val IMPLEMENTATION = Implementation(
+            MissingClassDetector::class.java,
+            Scope.MANIFEST_AND_RESOURCE_SCOPE,
+            Scope.MANIFEST_SCOPE,
+            Scope.RESOURCE_FILE_SCOPE
+        )
+
         /** Manifest or layout referenced classes missing from the project or libraries */
         @JvmField
         val MISSING =
             Issue.create(
-                id = "MissingRegistered",
+                id = "MissingClass",
                 briefDescription = "Missing registered class",
                 explanation = """
                     If a class is referenced in the manifest or in a layout file, it must \
@@ -441,16 +466,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
                 severity = Severity.ERROR,
                 moreInfo = "http://developer.android.com/guide/topics/manifest/manifest-intro.html",
                 androidSpecific = true,
-                enabledByDefault = false, // Until http://b.android.com/229868 is fixed
-                implementation = Implementation(
-                    MissingClassDetector::class.java,
-                    EnumSet.of(
-                        Scope.MANIFEST,
-                        Scope.CLASS_FILE,
-                        Scope.JAVA_LIBRARIES,
-                        Scope.RESOURCE_FILE
-                    )
-                )
+                implementation = IMPLEMENTATION
             )
 
         /** Are activity, service, receiver etc subclasses instantiatable? */
@@ -469,10 +485,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
                 priority = 6,
                 severity = Severity.FATAL,
                 androidSpecific = true,
-                implementation = Implementation(
-                    MissingClassDetector::class.java,
-                    Scope.CLASS_FILE_SCOPE
-                )
+                implementation = IMPLEMENTATION
             )
 
         /** Is the right character used for inner class separators? */
@@ -494,10 +507,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
                 priority = 3,
                 severity = Severity.WARNING,
                 androidSpecific = true,
-                implementation = Implementation(
-                    MissingClassDetector::class.java,
-                    Scope.MANIFEST_SCOPE
-                )
+                implementation = IMPLEMENTATION
             )
     }
 }

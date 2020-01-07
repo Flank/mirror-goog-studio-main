@@ -435,7 +435,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         } else {
             int initialSize = 12;
             if (scope.contains(Scope.RESOURCE_FILE)) {
-                initialSize += 107;
+                initialSize += 115;
             } else if (scope.contains(Scope.ALL_RESOURCE_FILES)) {
                 initialSize += 12;
             }
@@ -445,7 +445,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 16;
             } else if (scope.contains(Scope.MANIFEST)) {
-                initialSize += 54;
+                initialSize += 60;
             } else if (scope.contains(Scope.GRADLE_FILE)) {
                 initialSize += 15;
             }

@@ -971,40 +971,6 @@ class LintDriver
             moduleCount++
         }
 
-        // Look up manifest information (but not for library projects)
-        if (project.isAndroidProject) {
-            for (manifestFile in project.manifestFiles) {
-                val parser = client.xmlParser
-                val context = createXmlContext(project, main, manifestFile, null, parser)
-                if (context != null) {
-                    try {
-                        project.readManifest(context.document)
-                        if ((!project.isLibrary || main != null &&
-                                    main.isMergingManifests) && scope.contains(Scope.MANIFEST)
-                        ) {
-                            val detectors = scopeDetectors[Scope.MANIFEST]
-                            if (detectors != null) {
-                                val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
-                                for (detector in detectors) {
-                                    if (detector is XmlScanner) {
-                                        xmlDetectors.add(detector)
-                                    }
-                                }
-
-                                val v = ResourceVisitor(parser, xmlDetectors, null)
-                                fireEvent(EventType.SCANNING_FILE, context)
-                                v.visitFile(context)
-                                fileCount++
-                                resourceFileCount++
-                            }
-                        }
-                    } finally {
-                        disposeXmlContext(context)
-                    }
-                }
-            }
-        }
-
         // Prepare Java/Kotlin compilation. We're not processing these files yet, but
         // we need to prepare to load various symbol tables such that class lookup
         // works from resource detectors
@@ -1040,6 +1006,40 @@ class LintDriver
 
         if (isCanceled) {
             return
+        }
+
+        // Look up manifest information (but not for library projects)
+        if (project.isAndroidProject) {
+            for (manifestFile in project.manifestFiles) {
+                val parser = client.xmlParser
+                val context = createXmlContext(project, main, manifestFile, null, parser)
+                if (context != null) {
+                    try {
+                        project.readManifest(context.document)
+                        if ((!project.isLibrary || main != null &&
+                                    main.isMergingManifests) && scope.contains(Scope.MANIFEST)
+                        ) {
+                            val detectors = scopeDetectors[Scope.MANIFEST]
+                            if (detectors != null) {
+                                val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
+                                for (detector in detectors) {
+                                    if (detector is XmlScanner) {
+                                        xmlDetectors.add(detector)
+                                    }
+                                }
+
+                                val v = ResourceVisitor(parser, xmlDetectors, null)
+                                fireEvent(EventType.SCANNING_FILE, context)
+                                v.visitFile(context)
+                                fileCount++
+                                resourceFileCount++
+                            }
+                        }
+                    } finally {
+                        disposeXmlContext(context)
+                    }
+                }
+            }
         }
 
         if (project.isAndroidProject) {

@@ -40,6 +40,7 @@ import static com.android.SdkConstants.PROGUARD_CONFIG;
 import static com.android.SdkConstants.PROJECT_PROPERTIES;
 import static com.android.SdkConstants.RES_FOLDER;
 import static com.android.SdkConstants.TAG_USES_SDK;
+import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_API;
 import static com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API;
@@ -335,7 +336,7 @@ public class Project {
                         this.proguardPath = proguardPath;
                     }
                     mergeManifests =
-                            VALUE_TRUE.equals(properties.getProperty("manifestmerger.enabled"));
+                            !VALUE_FALSE.equals(properties.getProperty("manifestmerger.enabled"));
                     String target = properties.getProperty("target");
                     if (target != null) {
                         setBuildTargetHash(target);

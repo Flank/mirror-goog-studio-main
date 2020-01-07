@@ -176,33 +176,10 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
             String framework = manifestRegistrations.get(className);
             if (framework == null) {
                 reportMissing(context, cls, className, rightTag);
-            } else if (!evaluator.extendsClass(cls, framework, false)) {
-                reportWrongTag(context, cls, rightTag, className, framework);
             }
+            // Checking that the registered classes extends the right type is handled
+            // by the MissingClassDetector
         }
-    }
-
-    private static void reportWrongTag(
-            @NonNull JavaContext context,
-            @NonNull UClass node,
-            @NonNull String rightTag,
-            @NonNull String className,
-            @NonNull String framework) {
-        String wrongTag = classToTag(framework);
-        if (wrongTag == null) {
-            return;
-        }
-        Location location = context.getNameLocation(node);
-        String message =
-                String.format(
-                        "`%1$s` is %2$s but is registered in the manifest as %3$s",
-                        className, describeTag(rightTag), describeTag(wrongTag));
-        context.report(ISSUE, node, location, message);
-    }
-
-    private static String describeTag(@NonNull String tag) {
-        String article = tag.startsWith("a") ? "an" : "a"; // an for activity and application
-        return String.format("%1$s `<%2$s>`", article, tag);
     }
 
     private static void reportMissing(
