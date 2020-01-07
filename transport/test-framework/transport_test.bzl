@@ -88,11 +88,7 @@ def transport_test(name,
             "//tools/base/bazel:studio-proto",
             "//tools/base/transport:transport_main",
         ],
-        runtime_deps = select({
-            "//tools/base/bazel:darwin": [],
-            "//tools/base/bazel:windows": [],
-            "//conditions:default": runtime_deps,
-        }),
+        runtime_deps = runtime_deps,
         tags = tags,
         size = size,
         jvm_flags = jvm_flags + [
@@ -102,10 +98,6 @@ def transport_test(name,
             "-Dapp.dexes.jvmti=" + _targets_to_paths(app_dexes),
             "-Dapp.dexes.nojvmti=" + _targets_to_paths(app_dexes_nojvmti),
         ],
-        data = select({
-            "//tools/base/bazel:darwin": [],
-            "//tools/base/bazel:windows": [],
-            # Data listed here to be made available for "$location" expansions
-            "//conditions:default": all_app_dexes + app_runtime_deps + data,
-        }),
+        # Data listed here to be made available for "$location" expansions
+        data = all_app_dexes + app_runtime_deps + data,
     )
