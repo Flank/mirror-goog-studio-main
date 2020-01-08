@@ -110,7 +110,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public String getName() {
-        return getVariantData().getVariantDslInfo().getVariantConfiguration().getName();
+        return getVariantData().getVariantDslInfo().getComponentIdentity().getName();
     }
 
     @Override
@@ -134,7 +134,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     @Override
     public String getFlavorName() {
-        return getVariantData().getVariantDslInfo().getVariantConfiguration().getFlavorName();
+        return getVariantData().getVariantDslInfo().getComponentIdentity().getFlavorName();
     }
 
     @NonNull

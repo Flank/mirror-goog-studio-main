@@ -1,6 +1,5 @@
-
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.api.variant
+
+package com.android.build.api.component
 
 import org.gradle.api.Incubating
 
+/**
+ * Properties for the android test Variant of a module
+ */
 @Incubating
-interface GenericVariantFilterBuilder<T: ActionableVariantObject>: TypedVariantFilterBuilder<T> {
-    fun <U: T> withType(subType: Class<U>): TypedVariantFilterBuilder<U>
+interface AndroidTestProperties : ComponentProperties {
 }

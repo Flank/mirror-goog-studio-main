@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.api.variant.impl
+
+package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.Operations
-import com.android.build.api.variant.AppVariantProperties
-import com.android.build.api.variant.VariantConfiguration
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.component.UnitTestProperties
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.VariantScope
 import javax.inject.Inject
 
-internal open class AppVariantPropertiesImpl @Inject constructor(
+internal open class UnitTestPropertiesImpl @Inject constructor(
     dslScope: DslScope,
     variantScope: VariantScope,
     operations: Operations,
-    configuration: VariantConfiguration
-) : VariantPropertiesImpl(dslScope, variantScope, operations, configuration),
-    AppVariantProperties {
+    configuration: ComponentIdentity
+) : ComponentPropertiesImpl(dslScope, variantScope, operations, configuration),
+    UnitTestProperties {
 }

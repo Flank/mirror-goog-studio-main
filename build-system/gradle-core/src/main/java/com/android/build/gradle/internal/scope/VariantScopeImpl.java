@@ -285,7 +285,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public String getName() {
-        return variantDslInfo.getVariantConfiguration().getName();
+        return variantDslInfo.getComponentIdentity().getName();
     }
 
     @Override
@@ -1370,7 +1370,7 @@ public class VariantScopeImpl implements VariantScope {
                                         + "gradle.properties file to enable Java 8 "
                                         + "language support.",
                                 missingFlag.name()),
-                        variantDslInfo.getVariantConfiguration().getName());
+                        variantDslInfo.getComponentIdentity().getName());
         return Java8LangSupport.INVALID;
     }
 
@@ -1397,7 +1397,7 @@ public class VariantScopeImpl implements VariantScope {
                     .getDslScope()
                     .getIssueReporter()
                     .reportError(
-                            Type.GENERIC, msg, variantDslInfo.getVariantConfiguration().getName());
+                            Type.GENERIC, msg, variantDslInfo.getComponentIdentity().getName());
             return false;
         }
     }

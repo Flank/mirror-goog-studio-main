@@ -17,8 +17,8 @@
 package com.android.testutils
 
 /**
- * Base class to write given/expect test using lambdas returning the [GivenT] and [ResulT]
- * objects.
+ * Base class to write given/expect test using one returning the [GivenT] object and one to
+ * build the [ResulT] object.
  *
  * A good use case is when the input and the result are a single objects
  *
@@ -33,10 +33,10 @@ package com.android.testutils
  *  }
  *
  *  expect {
- *     100
+ *     result = 100
  *  }
  */
-abstract class AbstractGivenExpectReturnTest<GivenT, ResultT> :
+abstract class AbstractReturnGivenBuildResultTest<GivenT, ResultBuilderT: AbstractReturnGivenBuildResultTest.ResultBuilder<ResultT>, ResultT> :
     AbstractGivenExpectTest<GivenT, ResultT>() {
 
     private var givenAction: (() -> GivenT)? = null
@@ -53,10 +53,16 @@ abstract class AbstractGivenExpectReturnTest<GivenT, ResultT> :
     /**
      * Registers an action block return the expected result values. This also runs the test.
      */
-    fun expect(expectedProvider: () -> ResultT?) {
+    fun expect(resultAction: ResultBuilderT.() -> Unit) {
         runTest(
             givenAction?.invoke() ?: throw RuntimeException("No given data"),
-            expectedProvider.invoke()
+            instantiateResulBuilder().also { resultAction.invoke(it) }.toResult()
         )
+    }
+
+    abstract fun instantiateResulBuilder(): ResultBuilderT
+
+    interface ResultBuilder<T> {
+        fun toResult(): T
     }
 }

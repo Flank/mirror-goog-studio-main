@@ -17,8 +17,8 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.Operations
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.TestVariantProperties
-import com.android.build.api.variant.VariantConfiguration
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.VariantScope
 import javax.inject.Inject
@@ -27,6 +27,7 @@ internal open class TestVariantPropertiesImpl @Inject constructor(
     dslScope: DslScope,
     variantScope: VariantScope,
     override val operations: Operations,
-    publicVariantConfiguration: VariantConfiguration):
+    publicVariantConfiguration: ComponentIdentity
+):
     VariantPropertiesImpl(dslScope, variantScope, operations, publicVariantConfiguration), TestVariantProperties{
 }

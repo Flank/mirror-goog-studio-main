@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.api.variant.impl
+package com.android.build.api.component.impl
 
 import com.android.build.api.variant.Variant
-import com.android.testutils.AbstractGivenExpectReturnTest
-import com.android.testutils.AbstractGivenExpectTest
+import com.android.testutils.AbstractReturnGivenReturnExpectTest
 import com.android.testutils.on
 import org.gradle.api.Action
 import org.junit.Test
@@ -28,9 +27,9 @@ import java.util.regex.Pattern
 import kotlin.test.fail
 
 /**
- * Tests for [FilteredVariantOperation]
+ * Tests for [FilteredComponentAction]
  */
-class FilteredVariantOperationTest: AbstractGivenExpectReturnTest<Pair<FilteredVariantOperationTest.FilterInfo, FilteredVariantOperationTest.VariantInfo>, Boolean>() {
+class FilteredComponentActionTest: AbstractReturnGivenReturnExpectTest<Pair<FilteredComponentActionTest.FilterInfo, FilteredComponentActionTest.VariantInfo>, Boolean>() {
 
     @Test
     fun `matching name`() {
@@ -207,12 +206,12 @@ class FilteredVariantOperationTest: AbstractGivenExpectReturnTest<Pair<FilteredV
         val atomicBoolean = AtomicBoolean(false)
 
         val operation = with(given.first) {
-            FilteredVariantOperation(
+            FilteredComponentAction(
                 specificType = Variant::class.java,
-                variantName = name,
-                variantNamePattern = namePattern,
+                name = name,
+                namePattern = namePattern,
                 buildType = buildType,
-                flavorToDimensionData = productFlavors ?: listOf(),
+                flavors = productFlavors ?: listOf(),
                 action = Action {
                     atomicBoolean.set(true)
                 })

@@ -16,15 +16,15 @@
 
 package com.android.build.gradle.internal.core
 
-import com.android.build.api.variant.VariantConfiguration
-import com.android.build.api.variant.impl.VariantConfigurationImpl
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.component.impl.ComponentIdentityImpl
 import com.android.build.gradle.internal.core.VariantBuilder.Companion.getBuilder
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.utils.toImmutableList
-import com.android.build.gradle.internal.variant.VariantCombination
+import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.ManifestAttributeSupplier
 import com.android.builder.core.VariantType
@@ -42,7 +42,7 @@ import java.util.function.BooleanSupplier
  * Use [getBuilder] as an entry point.
  */
 abstract class VariantBuilder protected constructor(
-    protected val variantCombination: VariantCombination,
+    protected val dimensionCombination: DimensionCombination,
     val variantType: VariantType,
     protected val defaultConfig: DefaultConfig,
     protected val defaultSourceProvider: SourceProvider,
@@ -61,7 +61,7 @@ abstract class VariantBuilder protected constructor(
          */
         @JvmStatic
         fun getBuilder(
-            variantCombination: VariantCombination,
+            dimensionCombination: DimensionCombination,
             variantType: VariantType,
             defaultConfig: DefaultConfig,
             defaultSourceSet: SourceProvider,
@@ -77,7 +77,7 @@ abstract class VariantBuilder protected constructor(
             // if this is the test module, we have a slightly different builder
             return if (variantType.isForTesting && !variantType.isTestComponent) {
                 TestModuleConfigurationBuilder(
-                    variantCombination,
+                    dimensionCombination,
                     variantType,
                     defaultConfig,
                     defaultSourceSet,
@@ -92,7 +92,7 @@ abstract class VariantBuilder protected constructor(
                 )
             } else {
                 VariantConfigurationBuilder(
-                    variantCombination,
+                    dimensionCombination,
                     variantType,
                     defaultConfig,
                     defaultSourceSet,
@@ -120,20 +120,20 @@ abstract class VariantBuilder protected constructor(
         @JvmStatic
         @JvmOverloads
         fun computeName(
-            variantCombination: VariantCombination,
+            dimensionCombination: DimensionCombination,
             variantType: VariantType,
             flavorNameCallback: ((String) -> Unit)? = null
         ): String {
             // compute the flavor name
-            val flavorName = if (variantCombination.productFlavors.isNullOrEmpty()) {
+            val flavorName = if (dimensionCombination.productFlavors.isNullOrEmpty()) {
                 ""
             } else {
-                combineAsCamelCase(variantCombination.productFlavors, Pair<String,String>::second)
+                combineAsCamelCase(dimensionCombination.productFlavors, Pair<String,String>::second)
             }
             flavorNameCallback?.let { it(flavorName) }
 
             val sb = StringBuilder()
-            val buildType = variantCombination.buildType
+            val buildType = dimensionCombination.buildType
             if (buildType == null) {
                 if (flavorName.isNotEmpty()) {
                     sb.append(flavorName)
@@ -186,11 +186,11 @@ abstract class VariantBuilder protected constructor(
          */
         @JvmStatic
         fun computeBaseName(
-            variantCombination: VariantCombination,
+            dimensionCombination: DimensionCombination,
             variantType: VariantType) : String {
             val sb = StringBuilder()
-            if (variantCombination.productFlavors.isNotEmpty()) {
-                for ((_, name) in variantCombination.productFlavors) {
+            if (dimensionCombination.productFlavors.isNotEmpty()) {
+                for ((_, name) in dimensionCombination.productFlavors) {
                     if (sb.isNotEmpty()) {
                         sb.append('-')
                     }
@@ -198,7 +198,7 @@ abstract class VariantBuilder protected constructor(
                 }
             }
 
-            variantCombination.buildType?.let {
+            dimensionCombination.buildType?.let {
                 if (sb.isNotEmpty()) {
                     sb.append('-')
                 }
@@ -227,7 +227,7 @@ abstract class VariantBuilder protected constructor(
          */
         @JvmStatic
         fun computeFullNameWithSplits(
-            variantConfiguration: VariantConfiguration,
+            variantConfiguration: ComponentIdentity,
             variantType: VariantType,
             splitName: String): String {
             val sb = StringBuilder()
@@ -308,7 +308,7 @@ abstract class VariantBuilder protected constructor(
      * computes the name for the variant and the multi-flavor combination
      */
     private fun computeNames() {
-        variantName = computeName(variantCombination, variantType) {
+        variantName = computeName(dimensionCombination, variantType) {
             multiFlavorName = it
         }
     }
@@ -316,7 +316,7 @@ abstract class VariantBuilder protected constructor(
 
 /** Builder for non test plugin variant configurations  */
 private class VariantConfigurationBuilder(
-    variantCombination: VariantCombination,
+    dimensionCombination: DimensionCombination,
     variantType: VariantType,
     defaultConfig: DefaultConfig,
     defaultSourceSet: SourceProvider,
@@ -328,7 +328,7 @@ private class VariantConfigurationBuilder(
     issueReporter: IssueReporter,
     isInExecutionPhase: BooleanSupplier
 ) : VariantBuilder(
-    variantCombination,
+    dimensionCombination,
     variantType,
     defaultConfig,
     defaultSourceSet,
@@ -344,11 +344,11 @@ private class VariantConfigurationBuilder(
     override fun createVariantDslInfo(): VariantDslInfoImpl {
 
         return VariantDslInfoImpl(
-            VariantConfigurationImpl(
+            ComponentIdentityImpl(
                 name,
                 flavorName,
-                variantCombination.buildType,
-                variantCombination.productFlavors
+                dimensionCombination.buildType,
+                dimensionCombination.productFlavors
             ),
             variantType,
             defaultConfig,
@@ -376,7 +376,7 @@ private class VariantConfigurationBuilder(
  * is different.
  */
 private class TestModuleConfigurationBuilder(
-    variantCombination: VariantCombination,
+    dimensionCombination: DimensionCombination,
     variantType: VariantType,
     defaultConfig: DefaultConfig,
     defaultSourceSet: SourceProvider,
@@ -388,7 +388,7 @@ private class TestModuleConfigurationBuilder(
     issueReporter: IssueReporter,
     isInExecutionPhase: BooleanSupplier
 ) : VariantBuilder(
-    variantCombination,
+    dimensionCombination,
     variantType,
     defaultConfig,
     defaultSourceSet,
@@ -403,11 +403,11 @@ private class TestModuleConfigurationBuilder(
 
     override fun createVariantDslInfo(): VariantDslInfoImpl {
         return object: VariantDslInfoImpl(
-            VariantConfigurationImpl(
+            ComponentIdentityImpl(
                 name,
                 flavorName,
-                variantCombination.buildType,
-                variantCombination.productFlavors
+                dimensionCombination.buildType,
+                dimensionCombination.productFlavors
             ),
             variantType,
             defaultConfig,

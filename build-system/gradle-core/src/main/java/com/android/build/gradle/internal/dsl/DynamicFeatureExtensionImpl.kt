@@ -16,20 +16,17 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.component.FilteredComponentActionRegistrar
+import com.android.build.api.component.GenericFilteredComponentActionRegistrar
+import com.android.build.api.component.impl.FilteredComponentActionRegistrarImpl
+import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 import com.android.build.api.dsl.DynamicFeatureExtension
-import com.android.build.api.variant.AppVariant
-import com.android.build.api.variant.AppVariantProperties
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.DynamicFeatureVariantProperties
-import com.android.build.api.variant.GenericVariantFilterBuilder
-import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.TestVariantProperties
-import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
-import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.NamedDomainObjectContainer
 
 class DynamicFeatureExtensionImpl(
@@ -73,29 +70,20 @@ class DynamicFeatureExtensionImpl(
     override val buildFeatures: DynamicFeatureBuildFeatures =
         dslScope.objectFactory.newInstance(DynamicFeatureBuildFeaturesImpl::class.java)
 
-    override fun executeVariantOperations(variant: DynamicFeatureVariant) {
-        variantOperations.executeActions(variant)
-    }
-
-    override fun executeVariantPropertiesOperations(variant: DynamicFeatureVariantProperties) {
-        variantPropertiesOperations.executeActions(variant)
-    }
-
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericVariantFilterBuilder<DynamicFeatureVariant>
+    override val onVariants: GenericFilteredComponentActionRegistrar<DynamicFeatureVariant>
         get() = dslScope.objectFactory.newInstance(
-            GenericVariantFilterBuilderImpl::class.java,
+            GenericFilteredComponentActionRegistrarImpl::class.java,
             dslScope,
             variantOperations,
             DynamicFeatureVariant::class.java
-        ) as GenericVariantFilterBuilder<DynamicFeatureVariant>
-
+        ) as GenericFilteredComponentActionRegistrar<DynamicFeatureVariant>
     @Suppress("UNCHECKED_CAST")
-    override val onVariantProperties: GenericVariantFilterBuilder<DynamicFeatureVariantProperties>
+    override val onVariantProperties: GenericFilteredComponentActionRegistrar<DynamicFeatureVariantProperties>
         get() = dslScope.objectFactory.newInstance(
-            GenericVariantFilterBuilderImpl::class.java,
+            GenericFilteredComponentActionRegistrarImpl::class.java,
             dslScope,
-            variantOperations,
+            variantPropertiesOperations,
             DynamicFeatureVariantProperties::class.java
-        ) as GenericVariantFilterBuilder<DynamicFeatureVariantProperties>
+        ) as GenericFilteredComponentActionRegistrar<DynamicFeatureVariantProperties>
 }

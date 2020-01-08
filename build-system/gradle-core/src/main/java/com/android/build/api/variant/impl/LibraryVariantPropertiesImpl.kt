@@ -16,8 +16,8 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.Operations
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.LibraryVariantProperties
-import com.android.build.api.variant.VariantConfiguration
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.VariantScope
 import javax.inject.Inject
@@ -26,6 +26,6 @@ internal open class LibraryVariantPropertiesImpl @Inject constructor(
     dslScope: DslScope,
     variantScope: VariantScope,
     operations: Operations,
-    configuration: VariantConfiguration
+    configuration: ComponentIdentity
 ) : VariantPropertiesImpl(dslScope, variantScope, operations, configuration),
     LibraryVariantProperties

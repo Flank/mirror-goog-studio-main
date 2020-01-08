@@ -106,7 +106,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.isPreserveFileTimestamps = false
 
             task.description = ("Assembles a bundle containing the library in "
-                    + variantScope.variantDslInfo.variantConfiguration.name
+                    + variantScope.variantDslInfo.componentIdentity.name
                     + ".")
 
             task.archiveFileName.set(variantScope.variantData.publicVariantPropertiesApi

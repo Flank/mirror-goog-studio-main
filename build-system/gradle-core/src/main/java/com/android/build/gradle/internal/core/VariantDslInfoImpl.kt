@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.internal.core
 
-import com.android.build.api.variant.VariantConfiguration
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.variant.VariantCombination
+import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
@@ -72,7 +72,7 @@ import java.util.function.Supplier
  *
  */
 open class VariantDslInfoImpl internal constructor(
-    override val variantConfiguration: VariantConfiguration,
+    override val componentIdentity: ComponentIdentity,
     override val variantType: VariantType,
     private val defaultConfig: DefaultConfig,
     manifestFile: File,
@@ -88,12 +88,12 @@ open class VariantDslInfoImpl internal constructor(
     private val projectOptions: ProjectOptions,
     private val issueReporter: IssueReporter,
     isInExecutionPhase: BooleanSupplier
-): VariantDslInfo, VariantCombination {
+): VariantDslInfo, DimensionCombination {
 
     override val buildType: String?
-        get() = variantConfiguration.buildType
+        get() = componentIdentity.buildType
     override val productFlavors: List<Pair<String, String>>
-        get() = variantConfiguration.productFlavors
+        get() = componentIdentity.productFlavors
     /**
      * This should be mostly private and not used outside of this class.
      * Unfortunately there are a few cases where this cannot happen.
@@ -142,7 +142,7 @@ open class VariantDslInfoImpl internal constructor(
             variantType.isTestComponent,
             manifestParser,
             manifestFile,
-            variantConfiguration.name
+            componentIdentity.name
         )
         mergeOptions()
     }
@@ -156,7 +156,7 @@ open class VariantDslInfoImpl internal constructor(
      */
     override fun computeFullNameWithSplits(splitName: String): String {
         return VariantBuilder.computeFullNameWithSplits(
-            variantConfiguration,
+            componentIdentity,
             variantType,
             splitName
         )

@@ -392,7 +392,7 @@ public class LibraryTaskManager extends TaskManager {
         // Old style publishing. This is likely to go away at some point.
         if (extension
                 .getDefaultPublishConfig()
-                .equals(variantScope.getVariantDslInfo().getVariantConfiguration().getName())) {
+                .equals(variantScope.getVariantDslInfo().getComponentIdentity().getName())) {
             VariantHelper.setupArchivesConfig(project, variantDependencies.getRuntimeClasspath());
 
             // add the artifact that will be published.

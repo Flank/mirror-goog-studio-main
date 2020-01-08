@@ -16,10 +16,10 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.AppVariant
+import com.android.build.api.component.impl.FilteredComponentAction
+import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.google.common.truth.Truth
@@ -37,11 +37,11 @@ class VariantOperationsTest {
     @Test
     fun unfilteredActionsTest() {
         val counter = AtomicInteger(0)
-        val operations = VariantOperations<AppVariant>()
+        val operations = VariantOperations<ApplicationVariant>()
         for (i in 1..5) {
             operations.actions.add(Action { counter.getAndAdd(10.0.pow(i - 1).toInt())})
         }
-        val variant = createVariant(AppVariant::class.java)
+        val variant = createVariant(ApplicationVariant::class.java)
 
         operations.executeActions(variant)
         Truth.assertThat(counter.get()).isEqualTo(11111)
@@ -50,13 +50,14 @@ class VariantOperationsTest {
     @Test
     fun singleFilteredActionTest() {
         val counter = AtomicInteger(0)
-        val operations = VariantOperations<AppVariant>()
-        operations.addFilteredAction(FilteredVariantOperation(
-            specificType = AppVariant::class.java,
-            action = Action { counter.incrementAndGet() })
+        val operations = VariantOperations<ApplicationVariant>()
+        operations.addFilteredAction(
+            FilteredComponentAction(
+                specificType = ApplicationVariant::class.java,
+                action = Action { counter.incrementAndGet() })
         )
 
-        val variant = createVariant(AppVariant::class.java)
+        val variant = createVariant(ApplicationVariant::class.java)
         operations.executeActions(variant)
         Truth.assertThat(counter.get()).isEqualTo(1)
     }
@@ -69,20 +70,20 @@ class VariantOperationsTest {
         operations.actions.add(Action { counter.incrementAndGet()})
 
         operations.addFilteredAction(
-            FilteredVariantOperation(
+            FilteredComponentAction(
                 specificType = LibraryVariant::class.java,
                 action = Action { counter.getAndAdd(10) }
             )
         )
 
         operations.addFilteredAction(
-            FilteredVariantOperation(
-                specificType = AppVariant::class.java,
+            FilteredComponentAction(
+                specificType = ApplicationVariant::class.java,
                 action = Action { counter.getAndAdd(100) }
             )
         )
 
-        val variant = createVariant(AppVariant::class.java)
+        val variant = createVariant(ApplicationVariant::class.java)
         operations.executeActions(variant)
 
         Truth.assertThat(counter.get()).isEqualTo(101)

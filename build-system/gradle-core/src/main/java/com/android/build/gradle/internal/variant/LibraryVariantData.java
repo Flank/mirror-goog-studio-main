@@ -78,14 +78,14 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
         if (variantDslInfo.hasFlavors()) {
             StringBuilder sb = new StringBuilder(50);
             StringHelper.appendCapitalized(
-                    sb, variantDslInfo.getVariantConfiguration().getBuildType());
+                    sb, variantDslInfo.getComponentIdentity().getBuildType());
             sb.append(" build for flavor ");
             StringHelper.appendCapitalized(
-                    sb, variantDslInfo.getVariantConfiguration().getFlavorName());
+                    sb, variantDslInfo.getComponentIdentity().getFlavorName());
             return sb.toString();
         } else {
             return StringHelper.capitalizeAndAppend(
-                    variantDslInfo.getVariantConfiguration().getBuildType(), " build");
+                    variantDslInfo.getComponentIdentity().getBuildType(), " build");
         }
     }
 

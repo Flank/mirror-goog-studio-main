@@ -16,25 +16,51 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.api.component.AndroidTest
+import com.android.build.api.component.AndroidTestProperties
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.component.UnitTest
+import com.android.build.api.component.UnitTestProperties
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantConfiguration
 import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
 import org.gradle.api.Action
-import java.lang.Boolean.TRUE
 
-abstract class VariantImpl<T: VariantProperties>(variantConfiguration: VariantConfiguration):
-    Variant<T>, VariantConfiguration by variantConfiguration {
+abstract class VariantImpl<VariantPropertiesT: VariantProperties>(
+    variantDslInfo: VariantDslInfo,
+    componentIdentity: ComponentIdentity
+):
+    ComponentImpl<VariantPropertiesT>(componentIdentity), Variant<VariantPropertiesT> {
 
-    private val actions = DelayedActionExecutor<T>()
+    private val unitTestActions = DelayedActionExecutor<UnitTest<UnitTestProperties>>()
+    private val androidTestActions = DelayedActionExecutor<AndroidTest<AndroidTestProperties>>()
 
-    override fun onProperties(action: Action<T>) {
-        actions.registerAction(action)
+    override var minSdkVersion = variantDslInfo.minSdkVersion.apiLevel
+
+    override fun unitTest(action: UnitTest<UnitTestProperties>.() -> Unit) {
+        unitTestActions.registerAction(Action { action(it) })
     }
 
-    fun executeActions(target: T) {
-        actions.executeActions(target)
+    fun unitTest(action: Action<UnitTest<UnitTestProperties>>) {
+        unitTestActions.registerAction(action)
     }
 
-    override var enabled: Boolean = TRUE
+    override fun androidTest(action: AndroidTest<AndroidTestProperties>.() -> Unit) {
+        androidTestActions.registerAction(Action { action(it) })
+    }
+
+    fun androidTest(action: Action<AndroidTest<AndroidTestProperties>>) {
+        androidTestActions.registerAction(action)
+    }
+
+    // FIXME should be internal
+    fun executeUnitTestActions(target: UnitTest<UnitTestProperties>) {
+        unitTestActions.executeActions(target)
+    }
+
+    // FIXME should be internal
+    fun executeAndroidTestActions(target: AndroidTest<AndroidTestProperties>) {
+        androidTestActions.executeActions(target)
+    }
 }

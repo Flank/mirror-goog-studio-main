@@ -21,9 +21,9 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
-import com.android.build.api.variant.VariantConfiguration;
-import com.android.build.api.variant.impl.AppVariantImpl;
-import com.android.build.api.variant.impl.AppVariantPropertiesImpl;
+import com.android.build.api.component.ComponentIdentity;
+import com.android.build.api.variant.impl.ApplicationVariantImpl;
+import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.api.variant.impl.VariantOutputList;
@@ -32,7 +32,6 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.api.ApplicationVariantImpl;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
@@ -78,28 +77,26 @@ public class ApplicationVariantFactory extends BaseVariantFactory {
     @NonNull
     @Override
     public VariantImpl createVariantObject(
-            @NonNull VariantConfiguration variantConfiguration,
-            @NonNull VariantDslInfo variantDslInfo) {
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
         return globalScope
                 .getDslScope()
                 .getObjectFactory()
-                .newInstance(AppVariantImpl.class, variantConfiguration, variantDslInfo);
+                .newInstance(ApplicationVariantImpl.class, variantDslInfo, componentIdentity);
     }
 
     @NonNull
     @Override
     public VariantPropertiesImpl createVariantPropertiesObject(
-            @NonNull VariantConfiguration variantConfiguration,
-            @NonNull VariantScope variantScope) {
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope) {
         return globalScope
                 .getDslScope()
                 .getObjectFactory()
                 .newInstance(
-                        AppVariantPropertiesImpl.class,
+                        ApplicationVariantPropertiesImpl.class,
                         globalScope.getDslScope(),
                         variantScope,
                         variantScope.getArtifacts().getOperations(),
-                        variantConfiguration);
+                        componentIdentity);
     }
 
     @Override
@@ -302,7 +299,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory {
     @NonNull
     public Class<? extends BaseVariantImpl> getVariantImplementationClass(
             @NonNull BaseVariantData variantData) {
-        return ApplicationVariantImpl.class;
+        return com.android.build.gradle.internal.api.ApplicationVariantImpl.class;
     }
 
     @NonNull

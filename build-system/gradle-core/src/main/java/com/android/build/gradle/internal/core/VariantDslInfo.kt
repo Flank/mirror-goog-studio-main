@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.internal.core
 
-import com.android.build.api.variant.VariantConfiguration
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
@@ -46,7 +46,7 @@ import java.util.function.Supplier
  */
 interface VariantDslInfo {
 
-    val variantConfiguration: VariantConfiguration
+    val componentIdentity: ComponentIdentity
 
     val variantType: VariantType
 

@@ -16,8 +16,8 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.VariantOutput
 import com.android.build.api.artifact.Operations
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.ApkData
@@ -50,7 +50,7 @@ class VariantPropertiesImplTest {
     @Mock lateinit var variantDslInfo: VariantDslInfo
     @Mock lateinit var apkData: ApkData
     @Mock lateinit var operations: Operations
-    @Mock lateinit var publicConfiguration: com.android.build.api.variant.VariantConfiguration
+    @Mock lateinit var componentIdentity: ComponentIdentity
     @Mock lateinit var dslScope: DslScope
 
     lateinit var project: Project
@@ -70,7 +70,7 @@ class VariantPropertiesImplTest {
     @Test
     fun testManifestProvidedVersion() {
         val properties = VariantPropertiesImpl(
-            dslScope, variantScope, operations, publicConfiguration)
+            dslScope, variantScope, operations, componentIdentity)
         Mockito.`when`(variantDslInfo.manifestVersionCodeSupplier)
             .thenReturn(IntSupplier { 10 })
         Mockito.`when`(variantDslInfo.manifestVersionNameSupplier)
@@ -86,7 +86,7 @@ class VariantPropertiesImplTest {
     @Test
     fun testDslProvidedVersion() {
         val properties = object: VariantPropertiesImpl(
-            dslScope, variantScope, operations, publicConfiguration) {
+            dslScope, variantScope, operations, componentIdentity) {
             @Suppress("UNCHECKED_CAST")
             override val applicationId: Property<String> = Mockito.mock(Property::class.java) as Property<String>
         }
@@ -103,7 +103,7 @@ class VariantPropertiesImplTest {
     @Test
     fun testManifestAndDslProvidedVersions() {
         val properties = VariantPropertiesImpl(
-            dslScope, variantScope, operations, publicConfiguration)
+            dslScope, variantScope, operations, componentIdentity)
         Mockito.`when`(variantDslInfo.manifestVersionCodeSupplier)
             .thenReturn(IntSupplier { 10 })
         Mockito.`when`(variantDslInfo.manifestVersionNameSupplier)

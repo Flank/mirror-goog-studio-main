@@ -66,7 +66,7 @@ public class OutputFactory {
         ApkData mainOutput =
                 new Main(
                         variantDslInfo.getBaseName(),
-                        variantDslInfo.getVariantConfiguration().getName(),
+                        variantDslInfo.getComponentIdentity().getName(),
                         defaultFilename);
         checkMainSplitExistenceAndAdd(mainOutput);
         return mainOutput;

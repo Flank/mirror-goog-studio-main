@@ -16,25 +16,27 @@
 
 package com.android.build.api.variant
 
-import org.gradle.api.Action
+import com.android.build.api.component.AndroidTest
+import com.android.build.api.component.AndroidTestProperties
+import com.android.build.api.component.Component
+import com.android.build.api.component.UnitTest
+import com.android.build.api.component.UnitTestProperties
+import com.android.build.api.component.ActionableComponentObject
 import org.gradle.api.Incubating
 
 /**
  * Variant object that contains properties that must be set during configuration time as it
  * changes the build flow for the variant.
  *
- * @param T the [VariantProperties] type associated with this [Variant]
+ * @param VariantPropertiesT the [VariantProperties] type associated with this [Variant]
  */
 @Incubating
-interface Variant<T : VariantProperties>: VariantConfiguration, ActionableVariantObject {
+interface Variant<VariantPropertiesT : VariantProperties>: Component<VariantPropertiesT>,
+    ActionableComponentObject {
 
-    /**
-     * Set to True if the variant is active and should be configured, false otherwise.
-     */
-    var enabled: Boolean
+    fun unitTest(action: UnitTest<UnitTestProperties>.() -> Unit)
 
-    /**
-     * Runs the [Action] block on the [VariantProperties] object once created.
-     */
-    fun onProperties(action: Action<T>)
+    fun androidTest(action: AndroidTest<AndroidTestProperties>.() -> Unit)
+
+    var minSdkVersion: Int
 }

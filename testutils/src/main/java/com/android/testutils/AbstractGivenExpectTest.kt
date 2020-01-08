@@ -21,8 +21,8 @@ import com.google.common.truth.Truth
 /**
  * Abstract class allowing to write test using a given/expect DSL.
  *
- * Do no use Directly. Instead use [AbstractGivenExpectBuilderTest] or
- * [AbstractGivenExpectReturnTest]
+ * Do no use Directly. Instead use [AbstractBuildGivenBuildExpectTest] or
+ * [AbstractReturnGivenReturnExpectTest]
  */
 abstract class AbstractGivenExpectTest<GivenT, ResultT> {
 

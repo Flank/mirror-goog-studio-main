@@ -16,16 +16,17 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.component.FilteredComponentActionRegistrar
+import com.android.build.api.component.GenericFilteredComponentActionRegistrar
+import com.android.build.api.component.impl.FilteredComponentActionRegistrarImpl
+import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
-import com.android.build.api.variant.AppVariant
-import com.android.build.api.variant.AppVariantProperties
-import com.android.build.api.variant.GenericVariantFilterBuilder
-import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
+import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
-import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.NamedDomainObjectContainer
 
 /** Internal implementation of the 'new' DSL interface */
@@ -42,8 +43,8 @@ class ApplicationExtensionImpl(
             DefaultConfig,
             ProductFlavor,
             SigningConfig,
-            AppVariant,
-            AppVariantProperties>(
+            ApplicationVariant,
+            ApplicationVariantProperties>(
         dslScope,
         buildTypes,
         defaultConfig,
@@ -69,29 +70,20 @@ class ApplicationExtensionImpl(
     override val buildFeatures: ApplicationBuildFeatures =
         dslScope.objectFactory.newInstance(ApplicationBuildFeaturesImpl::class.java)
 
-    override fun executeVariantOperations(variant: AppVariant) {
-        variantOperations.executeActions(variant)
-    }
-
-    override fun executeVariantPropertiesOperations(variant: AppVariantProperties) {
-        variantPropertiesOperations.executeActions(variant)
-    }
-
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericVariantFilterBuilder<AppVariant>
+    override val onVariants: GenericFilteredComponentActionRegistrar<ApplicationVariant>
         get() = dslScope.objectFactory.newInstance(
-            GenericVariantFilterBuilderImpl::class.java,
+            GenericFilteredComponentActionRegistrarImpl::class.java,
             dslScope,
             variantOperations,
-            AppVariant::class.java
-        ) as GenericVariantFilterBuilder<AppVariant>
-
+            ApplicationVariant::class.java
+        ) as GenericFilteredComponentActionRegistrar<ApplicationVariant>
     @Suppress("UNCHECKED_CAST")
-    override val onVariantProperties: GenericVariantFilterBuilder<AppVariantProperties>
-        get() =  dslScope.objectFactory.newInstance(
-            GenericVariantFilterBuilderImpl::class.java,
+    override val onVariantProperties: GenericFilteredComponentActionRegistrar<ApplicationVariantProperties>
+        get() = dslScope.objectFactory.newInstance(
+            GenericFilteredComponentActionRegistrarImpl::class.java,
             dslScope,
-            variantOperations,
-            AppVariantProperties::class.java
-        ) as GenericVariantFilterBuilder<AppVariantProperties>
+            variantPropertiesOperations,
+            ApplicationVariantProperties::class.java
+        ) as GenericFilteredComponentActionRegistrar<ApplicationVariantProperties>
 }

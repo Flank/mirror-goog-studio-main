@@ -17,8 +17,7 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.artifact.PublicArtifactType
-import com.android.build.api.variant.AppVariant
-import com.android.build.api.variant.AppVariantProperties
+import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
@@ -66,10 +65,10 @@ class BaseAppModuleExtensionTest {
     @Test
     fun testOnVariants() {
         appExtension.onVariants
-            .withType(AppVariant::class.java)
             .withName("foo") {
                 minSdkVersion = 23
             }
+
         appExtension.onVariants
             .withName("foo") {
                 enabled = false
@@ -87,14 +86,14 @@ class BaseAppModuleExtensionTest {
             )
 
         appExtension.onVariantProperties
-            .withType(AppVariantProperties::class.java)
+            .withType(ApplicationVariantProperties::class.java)
             .withBuildType("debug")
             .withFlavor("f1" to "dim1", Action {
                 it.operations.get(PublicArtifactType.APK)
             })
 
         appExtension.onVariantProperties
-            .withType(AppVariantProperties::class.java)
+            .withType(ApplicationVariantProperties::class.java)
             .withBuildType("debug")
             .withFlavor("f1" to "dim1")
             .withFlavor("f2" to "dim2", Action {

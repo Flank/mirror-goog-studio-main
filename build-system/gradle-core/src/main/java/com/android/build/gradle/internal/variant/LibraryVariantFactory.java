@@ -20,8 +20,7 @@ import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.variant.LibraryVariantProperties;
-import com.android.build.api.variant.VariantConfiguration;
+import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -52,23 +51,21 @@ public class LibraryVariantFactory extends BaseVariantFactory {
 
     @NonNull
     @Override
-    public VariantImpl<LibraryVariantProperties> createVariantObject(
-            @NonNull VariantConfiguration variantConfiguration,
-            @NonNull VariantDslInfo variantDslInfo) {
+    public VariantImpl createVariantObject(
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
         return globalScope
                 .getDslScope()
                 .getObjectFactory()
                 .newInstance(
                         com.android.build.api.variant.impl.LibraryVariantImpl.class,
-                        variantConfiguration,
-                        variantDslInfo);
+                        variantDslInfo,
+                        componentIdentity);
     }
 
     @NonNull
     @Override
     public VariantPropertiesImpl createVariantPropertiesObject(
-            @NonNull VariantConfiguration variantConfiguration,
-            @NonNull VariantScope variantScope) {
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope) {
         return globalScope
                 .getDslScope()
                 .getObjectFactory()
@@ -77,7 +74,7 @@ public class LibraryVariantFactory extends BaseVariantFactory {
                         globalScope.getDslScope(),
                         variantScope,
                         variantScope.getArtifacts().getOperations(),
-                        variantConfiguration);
+                        componentIdentity);
     }
 
     @Override

@@ -20,7 +20,11 @@ package com.android.build.gradle.internal.variant;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
-import com.android.build.api.variant.VariantConfiguration;
+import com.android.build.api.component.ComponentIdentity;
+import com.android.build.api.component.impl.AndroidTestImpl;
+import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
+import com.android.build.api.component.impl.UnitTestImpl;
+import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.TaskManager;
@@ -48,12 +52,27 @@ public interface VariantFactory {
 
     @NonNull
     VariantImpl createVariantObject(
-            @NonNull VariantConfiguration variantConfiguration,
-            @NonNull VariantDslInfo variantDslInfo);
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo);
+
+    @NonNull
+    UnitTestImpl createUnitTestObject(
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo);
+
+    @NonNull
+    AndroidTestImpl createAndroidTestObject(
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo);
 
     @NonNull
     VariantPropertiesImpl createVariantPropertiesObject(
-            @NonNull VariantConfiguration variantConfiguration, @NonNull VariantScope variantScope);
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope);
+
+    @NonNull
+    UnitTestPropertiesImpl createUnitTestProperties(
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope);
+
+    @NonNull
+    AndroidTestPropertiesImpl createAndroidTestProperties(
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope);
 
     @NonNull
     BaseVariantData createVariantData(

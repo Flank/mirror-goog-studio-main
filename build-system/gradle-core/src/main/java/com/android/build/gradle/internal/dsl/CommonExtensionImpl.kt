@@ -19,8 +19,6 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DefaultConfig
-import com.android.build.api.variant.AppVariant
-import com.android.build.api.variant.AppVariantProperties
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantOperations
@@ -159,7 +157,7 @@ abstract class CommonExtensionImpl<
         variantOperations.actions.add(action)
     }
 
-    override fun onVariants(action: (VariantT) -> Unit) {
+    override fun onVariants(action: VariantT.() -> Unit) {
         variantOperations.actions.add(Action { action.invoke(it) } )
     }
 
@@ -169,5 +167,13 @@ abstract class CommonExtensionImpl<
 
     override fun onVariantProperties(action: (VariantPropertiesT) -> Unit) {
         variantPropertiesOperations.actions.add(Action { action.invoke(it) } )
+    }
+
+    override fun executeVariantOperations(variant: VariantT) {
+        variantOperations.executeActions(variant)
+    }
+
+    override fun executeVariantPropertiesOperations(variant: VariantPropertiesT) {
+        variantPropertiesOperations.executeActions(variant)
     }
 }

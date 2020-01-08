@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.api.variant.VariantConfiguration
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl
 import com.android.build.api.variant.impl.VariantImpl
@@ -30,16 +30,21 @@ class DynamicFeatureVariantFactory(
 ): ApplicationVariantFactory(globalScope) {
 
     override fun createVariantObject(
-        variantConfiguration: VariantConfiguration,
-        variantDslInfo: VariantDslInfo): VariantImpl<*> {
+        componentIdentity: ComponentIdentity,
+        variantDslInfo: VariantDslInfo
+    ): VariantImpl<*> {
         return globalScope
             .dslScope
             .objectFactory
-            .newInstance(DynamicFeatureVariantImpl::class.java, variantConfiguration, variantDslInfo)
+            .newInstance(
+                DynamicFeatureVariantImpl::class.java,
+                variantDslInfo,
+                componentIdentity
+            )
     }
 
     override fun createVariantPropertiesObject(
-        variantConfiguration: VariantConfiguration,
+        componentIdentity: ComponentIdentity,
         variantScope: VariantScope
     ): VariantPropertiesImpl {
         return globalScope
@@ -50,7 +55,7 @@ class DynamicFeatureVariantFactory(
                 globalScope.dslScope,
                 variantScope,
                 variantScope.artifacts.getOperations(),
-                variantConfiguration
+                componentIdentity
             )
     }
 }

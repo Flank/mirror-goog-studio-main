@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.build.api.variant
+package com.android.build.api.component.impl
 
-import org.gradle.api.Incubating
-import org.gradle.api.Named
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.component.UnitTest
+import com.android.build.api.component.UnitTestProperties
+import com.android.build.gradle.internal.core.VariantDslInfo
+import javax.inject.Inject
 
-/**
- * Tag interface for interfaces or classes that can be used as parameter to an
- * [org.gradle.api.Action] or lambda in the Variant API.
- */
-@Incubating
-interface ActionableVariantObject
+open class UnitTestImpl @Inject constructor(
+    variantDslInfo: VariantDslInfo,
+    variantConfiguration: ComponentIdentity
+): ComponentImpl<UnitTestProperties>(variantConfiguration), UnitTest<UnitTestProperties> {
+}

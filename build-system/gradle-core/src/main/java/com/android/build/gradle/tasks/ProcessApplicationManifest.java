@@ -30,8 +30,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.variant.VariantProperties;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
@@ -567,15 +566,15 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     public static class CreationAction
             extends VariantTaskCreationAction<ProcessApplicationManifest> {
 
-        protected final VariantProperties variantProperties;
+        protected final ComponentPropertiesImpl componentProperties;
         protected final boolean isAdvancedProfilingOn;
 
         public CreationAction(
-                @NonNull VariantPropertiesImpl variantProperties,
+                @NonNull ComponentPropertiesImpl componentProperties,
                 // TODO : remove this variable and find ways to access it from scope.
                 boolean isAdvancedProfilingOn) {
-            super(variantProperties.getVariantScope());
-            this.variantProperties = variantProperties;
+            super(componentProperties.getVariantScope());
+            this.componentProperties = componentProperties;
             this.isAdvancedProfilingOn = isAdvancedProfilingOn;
         }
 
@@ -775,7 +774,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                 variantScope.getArtifactFileCollection(
                                         RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
             }
-            task.packageOverride.set(variantProperties.getApplicationId());
+            task.packageOverride.set(componentProperties.getApplicationId());
             task.packageOverride.disallowChanges();
             task.manifestPlaceholders.set(
                     task.getProject().provider(variantDslInfo::getManifestPlaceholders));
@@ -786,7 +785,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     task.getProject().provider(variantSources::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
             task.isFeatureSplitVariantType = variantDslInfo.getVariantType().isDynamicFeature();
-            task.buildTypeName = variantDslInfo.getVariantConfiguration().getBuildType();
+            task.buildTypeName = variantDslInfo.getComponentIdentity().getBuildType();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
 

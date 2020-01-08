@@ -16,8 +16,8 @@
 
 package com.android.build.api.dsl
 
-import com.android.build.api.variant.AppVariant
-import com.android.build.api.variant.AppVariantProperties
+import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.ApplicationVariantProperties
 import org.gradle.api.Incubating
 
 /**
@@ -58,8 +58,8 @@ interface ApplicationExtension<
             SigningConfigT,
             TestOptionsT,
             UnitTestOptionsT,
-            AppVariant,
-            AppVariantProperties>,
+            ApplicationVariant,
+            ApplicationVariantProperties>,
     ApkExtension,
     TestedExtension {
     // TODO(b/140406102)

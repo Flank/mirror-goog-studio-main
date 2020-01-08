@@ -16,14 +16,14 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.testutils.AbstractGivenExpectReturnTest
-import com.android.testutils.AbstractGivenExpectTest
+import com.android.builder.model.AndroidProject
+import com.android.testutils.AbstractReturnGivenBuildResultTest
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 
 /** Tests to validate the different filtering mechanisms  */
-class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>() {
+class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFilteringTest.VariantBuilder, List<VariantFilteringTest.VariantInfo>>() {
     @get:Rule
     val project =
         GradleTestProject.builder().fromTestProject("emptyApp").create()
@@ -60,16 +60,27 @@ class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>(
         }
 
         expect {
-            listOf(
-                "x86GingerbreadDebug",
-                "x86GingerbreadRelease",
-                "mipsGingerbreadDebug",
-                "mipsGingerbreadRelease",
-                "armGingerbreadDebug",
-                "armGingerbreadRelease",
-                "armCupcakeDebug",
-                "armCupcakeRelease"
-            )
+            variant { name = "x86GingerbreadDebug" }
+            variant {
+                name = "x86GingerbreadRelease"
+                androidTest = false
+            }
+            variant { name = "mipsGingerbreadDebug" }
+            variant {
+                name = "mipsGingerbreadRelease"
+                androidTest = false
+            }
+            variant { name = "armGingerbreadDebug" }
+            variant {
+                name = "armGingerbreadRelease"
+                androidTest = false
+            }
+
+            variant { name = "armCupcakeDebug" }
+            variant {
+                name = "armCupcakeRelease"
+                androidTest = false
+            }
         }
     }
 
@@ -86,7 +97,9 @@ class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>(
         }
 
         expect {
-            listOf("release")
+            variant { name = "release"
+                androidTest = false
+            }
         }
     }
 
@@ -103,7 +116,10 @@ class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>(
         }
 
         expect {
-            listOf("release")
+            variant {
+                name = "release"
+                androidTest = false
+            }
         }
     }
 
@@ -112,13 +128,16 @@ class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>(
         given {
             """
                 |    onVariants.withBuildType("debug") {
-                |        it.enabled = false
+                |        enabled = false
                 |    }
             """
         }
 
         expect {
-            listOf("release")
+            variant {
+                name = "release"
+                androidTest = false
+            }
         }
     }
 
@@ -142,7 +161,11 @@ class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>(
         }
 
         expect {
-            listOf("flavor2Debug", "flavor2Release")
+            variant { name = "flavor2Debug" }
+            variant {
+                name = "flavor2Release"
+                androidTest = false
+            }
         }
     }
 
@@ -174,14 +197,21 @@ class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>(
         }
 
         expect {
-            listOf(
-                "flavor1FlavorBDebug",
-                "flavor1FlavorBRelease",
-                "flavor2FlavorADebug",
-                "flavor2FlavorARelease",
-                "flavor2FlavorBDebug",
-                "flavor2FlavorBRelease"
-            )
+            variant { name = "flavor1FlavorBDebug" }
+            variant {
+                name = "flavor1FlavorBRelease"
+                androidTest = false
+            }
+            variant { name = "flavor2FlavorADebug" }
+            variant {
+                name = "flavor2FlavorARelease"
+                androidTest = false
+            }
+            variant { name = "flavor2FlavorBDebug" }
+            variant {
+                name = "flavor2FlavorBRelease"
+                androidTest = false
+            }
         }
     }
 
@@ -207,7 +237,15 @@ class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>(
         }
 
         expect {
-            listOf("flavor1Release", "flavor2Debug", "flavor2Release")
+            variant {
+                name = "flavor1Release"
+                androidTest = false
+            }
+            variant { name = "flavor2Debug" }
+            variant {
+                name = "flavor2Release"
+                androidTest = false
+            }
         }
     }
 
@@ -233,7 +271,15 @@ class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>(
         }
 
         expect {
-            listOf("flavor1Release", "flavor2Debug", "flavor2Release")
+            variant {
+                name = "flavor1Release"
+                androidTest = false
+            }
+            variant { name = "flavor2Debug" }
+            variant {
+                name = "flavor2Release"
+                androidTest = false
+            }
         }
     }
 
@@ -266,15 +312,25 @@ class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>(
         }
 
         expect {
-            listOf(
-                "flavor1FlavorARelease",
-                "flavor1FlavorBDebug",
-                "flavor1FlavorBRelease",
-                "flavor2FlavorADebug",
-                "flavor2FlavorARelease",
-                "flavor2FlavorBDebug",
-                "flavor2FlavorBRelease"
-            )
+            variant {
+                name = "flavor1FlavorARelease"
+                androidTest = false
+            }
+            variant { name = "flavor1FlavorBDebug" }
+            variant {
+                name = "flavor1FlavorBRelease"
+                androidTest = false
+            }
+            variant { name = "flavor2FlavorADebug" }
+            variant {
+                name = "flavor2FlavorARelease"
+                androidTest = false
+            }
+            variant { name = "flavor2FlavorBDebug" }
+            variant {
+                name = "flavor2FlavorBRelease"
+                androidTest = false
+            }
         }
     }
 
@@ -307,15 +363,26 @@ class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>(
         }
 
         expect {
-            listOf(
-                "flavor1FlavorARelease",
-                "flavor1FlavorBDebug",
-                "flavor1FlavorBRelease",
-                "flavor2FlavorADebug",
-                "flavor2FlavorARelease",
-                "flavor2FlavorBDebug",
-                "flavor2FlavorBRelease"
-            )
+            variant {
+                name = "flavor1FlavorARelease"
+                androidTest = false
+            }
+            variant { name = "flavor1FlavorBDebug" }
+            variant {
+                name = "flavor1FlavorBRelease"
+                androidTest = false
+            }
+
+            variant { name = "flavor2FlavorADebug" }
+            variant {
+                name = "flavor2FlavorARelease"
+                androidTest = false
+            }
+            variant { name = "flavor2FlavorBDebug" }
+            variant {
+                name = "flavor2FlavorBRelease"
+                androidTest = false
+            }
         }
     }
 
@@ -339,14 +406,71 @@ class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>(
         }
 
         expect {
-            listOf("flavor1Release","flavor2Debug", "flavor2Release")
+            variant {
+                name = "flavor1Release"
+                androidTest = false
+            }
+            variant { name = "flavor2Debug" }
+            variant {
+                name = "flavor2Release"
+                androidTest = false
+            }
         }
     }
+
+    @Test
+    fun `unit-test filtering via new api using buildtype callback`() {
+        given {
+            """
+                |    onVariants.withBuildType("debug") {
+                |        unitTest {
+                |            enabled = false
+                |        }
+                |    }
+            """
+        }
+
+        expect {
+            variant {
+                name = "release"
+                androidTest = false
+            }
+            variant {
+                name = "debug"
+                unitTest = false
+            }
+        }
+    }
+
+    @Test
+    fun `android-test filtering via new api using buildtype callback`() {
+        given {
+            """
+                |    onVariants.withBuildType("debug") {
+                |        androidTest {
+                |            enabled = false
+                |        }
+                |    }
+            """
+        }
+
+        expect {
+            variant {
+                name = "release"
+                androidTest = false
+            }
+            variant {
+                name = "debug"
+                androidTest = false
+            }
+        }
+    }
+
 
     // ---------------------------------------------------------------------------------------------
 
 
-    override fun defaultWhen(given: String): List<String>? {
+    override fun defaultWhen(given: String): List<VariantInfo>? {
         project.buildFile.appendText(
             """
                 |android {
@@ -355,10 +479,35 @@ class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>(
             """.trimMargin()
         )
 
-        return project.model().fetchAndroidProjects().onlyModel.variants.map { it.name }
+        return project.model().fetchAndroidProjects().onlyModel.variants.map {
+            VariantInfo(
+                it.name,
+                unitTest = it.extraJavaArtifacts.any { it.name == AndroidProject.ARTIFACT_UNIT_TEST },
+                androidTest = it.extraAndroidArtifacts.any { it.name == AndroidProject.ARTIFACT_ANDROID_TEST })
+        }
     }
 
-    override fun compareResult(expected: List<String>?, actual: List<String>?, given: String) {
+    override fun compareResult(expected: List<VariantInfo>?, actual: List<VariantInfo>?, given: String) {
         Truth.assertThat(actual).containsExactlyElementsIn(expected)
     }
+
+    override fun instantiateResulBuilder(): VariantBuilder = VariantBuilder()
+
+    class VariantBuilder: ResultBuilder<List<VariantInfo>> {
+        private val variants = mutableListOf<VariantInfo>()
+
+        fun variant(action: VariantInfo.() -> Unit) {
+            variants.add(VariantInfo().also { action(it) })
+        }
+
+        override fun toResult(): List<VariantInfo> {
+            return variants
+        }
+    }
+
+    data class VariantInfo(
+        var name: String = "",
+        var unitTest: Boolean = true,
+        var androidTest: Boolean = true
+    )
 }

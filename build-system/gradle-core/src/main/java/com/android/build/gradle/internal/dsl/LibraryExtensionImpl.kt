@@ -16,19 +16,15 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.component.GenericFilteredComponentActionRegistrar
+import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.api.dsl.LibraryExtension
-import com.android.build.api.variant.AppVariant
-import com.android.build.api.variant.AppVariantProperties
-import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
-import com.android.build.api.variant.TestVariant
-import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
-import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.NamedDomainObjectContainer
 
 /** Internal implementation of the 'new' DSL interface */
@@ -72,29 +68,20 @@ class LibraryExtensionImpl(
     override val buildFeatures: LibraryBuildFeatures =
         dslScope.objectFactory.newInstance(LibraryBuildFeaturesImpl::class.java)
 
-    override fun executeVariantOperations(variant: LibraryVariant) {
-        variantOperations.executeActions(variant)
-    }
-
-    override fun executeVariantPropertiesOperations(variant: LibraryVariantProperties) {
-        variantPropertiesOperations.executeActions(variant)
-    }
-
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericVariantFilterBuilder<LibraryVariant>
+    override val onVariants: GenericFilteredComponentActionRegistrar<LibraryVariant>
         get() = dslScope.objectFactory.newInstance(
-            GenericVariantFilterBuilderImpl::class.java,
+            GenericFilteredComponentActionRegistrarImpl::class.java,
             dslScope,
             variantOperations,
             LibraryVariant::class.java
-        ) as GenericVariantFilterBuilder<LibraryVariant>
-
+        ) as GenericFilteredComponentActionRegistrar<LibraryVariant>
     @Suppress("UNCHECKED_CAST")
-    override val onVariantProperties: GenericVariantFilterBuilder<LibraryVariantProperties>
+    override val onVariantProperties: GenericFilteredComponentActionRegistrar<LibraryVariantProperties>
         get() = dslScope.objectFactory.newInstance(
-            GenericVariantFilterBuilderImpl::class.java,
+            GenericFilteredComponentActionRegistrarImpl::class.java,
             dslScope,
-            variantOperations,
+            variantPropertiesOperations,
             LibraryVariantProperties::class.java
-        ) as GenericVariantFilterBuilder<LibraryVariantProperties>
+        ) as GenericFilteredComponentActionRegistrar<LibraryVariantProperties>
 }
