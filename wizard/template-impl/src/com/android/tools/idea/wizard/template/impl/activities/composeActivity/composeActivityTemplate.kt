@@ -24,6 +24,7 @@ import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
 import com.android.tools.idea.wizard.template.Constraint.PACKAGE
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.FormFactor
+import com.android.tools.idea.wizard.template.LanguageWidget
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.PackageNameWidget
 import com.android.tools.idea.wizard.template.TemplateConstraint
@@ -99,7 +100,8 @@ val composeActivityTemplate
       CheckBoxWidget(isLauncher),
       // Invisible widgets to pass data
       TextFieldWidget(greeting),
-      TextFieldWidget(defaultPreview)
+      TextFieldWidget(defaultPreview),
+      LanguageWidget()
     )
 
     thumb { File("template_compose_empty_activity.png") }
