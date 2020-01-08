@@ -24,8 +24,8 @@ import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
-import com.android.build.api.variant.impl.VariantImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
@@ -120,16 +120,16 @@ public abstract class BaseVariantData {
 
     private final MutableTaskContainer taskContainer;
     public TextResource applicationIdTextResource;
-    private final VariantImpl publicVariantApi;
-    private final VariantPropertiesImpl publicVariantPropertiesApi;
+    private final ComponentImpl publicVariantApi;
+    private final ComponentPropertiesImpl publicVariantPropertiesApi;
 
     public BaseVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
             @NonNull VariantScope variantScope,
             @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantImpl publicVariantApi,
-            @NonNull VariantPropertiesImpl publicVariantPropertiesApi,
+            @NonNull ComponentImpl publicVariantApi,
+            @NonNull ComponentPropertiesImpl publicVariantPropertiesApi,
             @NonNull VariantSources variantSources) {
         this.scope = variantScope;
         this.variantDslInfo = variantDslInfo;
@@ -209,12 +209,12 @@ public abstract class BaseVariantData {
     }
 
     @NonNull
-    public VariantImpl getPublicVariantApi() {
+    public ComponentImpl getPublicVariantApi() {
         return publicVariantApi;
     }
 
     @NonNull
-    public VariantPropertiesImpl getPublicVariantPropertiesApi() {
+    public ComponentPropertiesImpl getPublicVariantPropertiesApi() {
         return publicVariantPropertiesApi;
     }
 

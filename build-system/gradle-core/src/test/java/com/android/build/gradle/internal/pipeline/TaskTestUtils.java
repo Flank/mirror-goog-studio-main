@@ -24,9 +24,9 @@ import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.ComponentIdentity;
+import com.android.build.api.component.impl.ComponentIdentityImpl;
 import com.android.build.api.transform.QualifiedContent;
-import com.android.build.api.variant.VariantConfiguration;
-import com.android.build.api.variant.impl.VariantConfigurationImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -290,10 +290,10 @@ public class TaskTestUtils {
         VariantDslInfo variantDslInfo = mock(VariantDslInfo.class);
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
         when(variantDslInfo.isDebuggable()).thenReturn(true);
-        VariantConfiguration varConfig =
-                new VariantConfigurationImpl(
+        ComponentIdentity varConfig =
+                new ComponentIdentityImpl(
                         "theVariantName", "theFlavorName", "debug", ImmutableList.of());
-        when(variantDslInfo.getVariantConfiguration()).thenReturn(varConfig);
+        when(variantDslInfo.getComponentIdentity()).thenReturn(varConfig);
         when(scope.getVariantDslInfo()).thenReturn(variantDslInfo);
         return scope;
     }

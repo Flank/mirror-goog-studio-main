@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.component.GenericFilteredComponentActionRegistrar
+import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.TestBuildFeatures
 import com.android.build.api.dsl.TestExtension
-import com.android.build.api.variant.GenericVariantFilterBuilder
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.TestVariantProperties
-import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
@@ -65,29 +65,20 @@ class TestExtensionImpl(
     override val buildFeatures: TestBuildFeatures =
         dslScope.objectFactory.newInstance(TestBuildFeaturesImpl::class.java)
 
-    override fun executeVariantOperations(variant: TestVariant) {
-        variantOperations.executeActions(variant)
-    }
-
-    override fun executeVariantPropertiesOperations(variant: TestVariantProperties) {
-        variantPropertiesOperations.executeActions(variant)
-    }
-
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericVariantFilterBuilder<TestVariant>
+    override val onVariants: GenericFilteredComponentActionRegistrar<TestVariant>
         get() = dslScope.objectFactory.newInstance(
-            GenericVariantFilterBuilderImpl::class.java,
+            GenericFilteredComponentActionRegistrarImpl::class.java,
             dslScope,
             variantOperations,
             TestVariant::class.java
-        ) as GenericVariantFilterBuilder<TestVariant>
-
+        ) as GenericFilteredComponentActionRegistrar<TestVariant>
     @Suppress("UNCHECKED_CAST")
-    override val onVariantProperties: GenericVariantFilterBuilder<TestVariantProperties>
+    override val onVariantProperties: GenericFilteredComponentActionRegistrar<TestVariantProperties>
         get() = dslScope.objectFactory.newInstance(
-            GenericVariantFilterBuilderImpl::class.java,
+            GenericFilteredComponentActionRegistrarImpl::class.java,
             dslScope,
-            variantOperations,
+            variantPropertiesOperations,
             TestVariantProperties::class.java
-        ) as GenericVariantFilterBuilder<TestVariantProperties>
+        ) as GenericFilteredComponentActionRegistrar<TestVariantProperties>
 }

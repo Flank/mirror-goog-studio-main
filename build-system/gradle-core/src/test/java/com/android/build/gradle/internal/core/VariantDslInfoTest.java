@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
-import com.android.build.gradle.internal.variant.VariantCombinationImpl;
+import com.android.build.gradle.internal.variant.DimensionCombinationImpl;
 import com.android.build.gradle.internal.variant2.FakeDslScope;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -273,7 +273,7 @@ public class VariantDslInfoTest {
         List<Pair<String, String>> flavors = ImmutableList.of(new Pair<>("dimension1", "flavor"));
         VariantBuilder builder =
                 VariantBuilder.getBuilder(
-                        new VariantCombinationImpl("debug", flavors),
+                        new DimensionCombinationImpl("debug", flavors),
                         VariantTypeImpl.BASE_APK,
                         defaultConfig,
                         new MockSourceProvider("main"),

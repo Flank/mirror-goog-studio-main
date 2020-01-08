@@ -28,7 +28,6 @@ import org.gradle.api.internal.tasks.TaskDependencyResolveContext
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.internal.DisplayName
-import java.lang.RuntimeException
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**

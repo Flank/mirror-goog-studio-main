@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.build.api.variant
+package com.android.build.api.component
 
+import com.android.build.api.variant.VariantProperties
+import org.gradle.api.Action
 import org.gradle.api.Incubating
 
-/**
- * Properties for a specific Variant of an application.
- */
 @Incubating
-interface AppVariantProperties : VariantProperties {
+interface Component<ComponentPropertiesT : ComponentProperties>: ComponentIdentity,
+    ActionableComponentObject {
+
+    /**
+     * Set to True if the variant is active and should be configured, false otherwise.
+     */
+    var enabled: Boolean
+
+    /**
+     * Runs the [Action] block on the [VariantProperties] object once created.
+     */
+    fun onProperties(action: ComponentPropertiesT.() -> Unit)
 
 }

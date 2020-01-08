@@ -114,7 +114,7 @@ public abstract class AbstractTestDataImpl implements TestData {
     @Override
     public String getFlavorName() {
         return testVariantConfig
-                .getVariantConfiguration()
+                .getComponentIdentity()
                 .getFlavorName()
                 .toUpperCase(Locale.getDefault());
     }

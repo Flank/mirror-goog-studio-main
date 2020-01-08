@@ -43,7 +43,7 @@ package com.android.testutils
  *     subtraction = -1
  *  }
  */
-abstract class AbstractGivenExpectBuilderTest<GivenT, ResultT> :
+abstract class AbstractBuildGivenBuildExpectTest<GivenT, ResultT> :
     AbstractGivenExpectTest<GivenT, ResultT>() {
 
     private var givenAction: (GivenT.() -> Unit)? = null

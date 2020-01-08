@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
@@ -163,13 +164,13 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             super.configure(task)
 
             task.screenSizes = screenSizes
-            task.applicationId.setDisallowChanges(
-                variantScope.variantData.publicVariantPropertiesApi.applicationId)
+            val variantProperties = variantScope.variantData.publicVariantPropertiesApi
+            task.applicationId.setDisallowChanges(variantProperties.applicationId)
 
             task.variantType.set(variantScope.variantData.type.toString())
             task.variantType.disallowChanges()
 
-            variantScope.variantData.publicVariantPropertiesApi.outputs.getEnabledVariantOutputs().forEach {
+            variantProperties.outputs.getEnabledVariantOutputs().forEach {
                 task.apkDataList.add(it.apkData)
             }
             task.apkDataList.disallowChanges()

@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.utils.FileUtils
@@ -214,7 +213,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions
 
-            task.buildTypeName = variantData.variantDslInfo.variantConfiguration.buildType
+            task.buildTypeName = variantData.variantDslInfo.componentIdentity.buildType
 
             task.variantTypeName.setDisallowChanges(variantData.type.name)
 

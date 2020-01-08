@@ -20,7 +20,11 @@ import static com.android.build.gradle.internal.dependency.VariantDependencies.C
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_TESTED_APKS;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.variant.VariantConfiguration;
+import com.android.build.api.component.ComponentIdentity;
+import com.android.build.api.component.impl.AndroidTestImpl;
+import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
+import com.android.build.api.component.impl.UnitTestImpl;
+import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -59,19 +63,31 @@ public class TestVariantFactory extends ApplicationVariantFactory {
     @NonNull
     @Override
     public VariantImpl createVariantObject(
-            @NonNull VariantConfiguration variantConfiguration,
-            @NonNull VariantDslInfo variantDslInfo) {
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
         return globalScope
                 .getDslScope()
                 .getObjectFactory()
-                .newInstance(TestVariantImpl.class, variantConfiguration, variantDslInfo);
+                .newInstance(TestVariantImpl.class, variantDslInfo, componentIdentity);
+    }
+
+    @NonNull
+    @Override
+    public UnitTestImpl createUnitTestObject(
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
+        throw new RuntimeException("cannot instantiate unit-test in test plugin");
+    }
+
+    @NonNull
+    @Override
+    public AndroidTestImpl createAndroidTestObject(
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
+        throw new RuntimeException("cannot instantiate android-test in test plugin");
     }
 
     @NonNull
     @Override
     public VariantPropertiesImpl createVariantPropertiesObject(
-            @NonNull VariantConfiguration variantConfiguration,
-            @NonNull VariantScope variantScope) {
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope) {
         return globalScope
                 .getDslScope()
                 .getObjectFactory()
@@ -80,7 +96,21 @@ public class TestVariantFactory extends ApplicationVariantFactory {
                         globalScope.getDslScope(),
                         variantScope,
                         variantScope.getArtifacts().getOperations(),
-                        variantConfiguration);
+                        componentIdentity);
+    }
+
+    @NonNull
+    @Override
+    public UnitTestPropertiesImpl createUnitTestProperties(
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope) {
+        throw new RuntimeException("cannot instantiate unit-test properties in test plugin");
+    }
+
+    @NonNull
+    @Override
+    public AndroidTestPropertiesImpl createAndroidTestProperties(
+            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope) {
+        throw new RuntimeException("cannot instantiate android-test properties in test plugin");
     }
 
     @Override

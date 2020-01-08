@@ -658,7 +658,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         return new VariantImpl(
                 variantName,
                 variantDslInfo.getBaseName(),
-                variantDslInfo.getVariantConfiguration().getBuildType(),
+                variantDslInfo.getComponentIdentity().getBuildType(),
                 getProductFlavorNames(variantData),
                 new ProductFlavorImpl(variantDslInfo.getMergedFlavor()),
                 mainArtifact,

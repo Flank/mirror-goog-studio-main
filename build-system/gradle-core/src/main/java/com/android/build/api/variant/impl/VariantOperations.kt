@@ -16,9 +16,9 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.ActionableVariantObject
-import com.android.build.api.variant.VariantConfiguration
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.api.component.ActionableComponentObject
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.component.impl.FilteredComponentAction
 import org.gradle.api.Action
 
 /**
@@ -28,13 +28,13 @@ import org.gradle.api.Action
  * @param VariantObjectT is either a [com.android.build.api.variant.Variant] or
  * [com.android.build.api.variant.VariantProperties]
  */
-class VariantOperations<VariantObjectT> where VariantObjectT: ActionableVariantObject, VariantObjectT: VariantConfiguration {
+class VariantOperations<VariantObjectT> where VariantObjectT: ActionableComponentObject, VariantObjectT: ComponentIdentity {
     val actions= mutableListOf<Action<VariantObjectT>>()
-    private val filteredActions= mutableListOf<FilteredVariantOperation<VariantObjectT>>()
+    private val filteredActions= mutableListOf<FilteredComponentAction<VariantObjectT>>()
 
-    fun addFilteredAction(action: FilteredVariantOperation<out VariantObjectT>) {
+    fun addFilteredAction(action: FilteredComponentAction<out VariantObjectT>) {
         @Suppress("UNCHECKED_CAST")
-        filteredActions.add(action as FilteredVariantOperation<VariantObjectT>)
+        filteredActions.add(action as FilteredComponentAction<VariantObjectT>)
     }
 
     fun executeActions(variant: VariantObjectT) {

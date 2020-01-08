@@ -17,7 +17,7 @@ package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.symbols.processLibraryMainSymbolTable
@@ -203,9 +202,9 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
 
 
     internal class CreationAction(
-        private val variantProperties: VariantPropertiesImpl,
+        componentProperties: ComponentPropertiesImpl,
         val isLibrary: Boolean)
-        : VariantTaskCreationAction<GenerateLibraryRFileTask>(variantProperties.variantScope) {
+        : VariantTaskCreationAction<GenerateLibraryRFileTask>(componentProperties.variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("generate", "RFile")
@@ -304,8 +303,8 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
         }
     }
 
-    internal class TestRuntimeStubRClassCreationAction(variantProperties: VariantPropertiesImpl) :
-        VariantTaskCreationAction<GenerateLibraryRFileTask>(variantProperties.variantScope) {
+    internal class TestRuntimeStubRClassCreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<GenerateLibraryRFileTask>(componentProperties.variantScope) {
 
         override val name: String = variantScope.getTaskName("generate", "StubRFile")
         override val type: Class<GenerateLibraryRFileTask> = GenerateLibraryRFileTask::class.java

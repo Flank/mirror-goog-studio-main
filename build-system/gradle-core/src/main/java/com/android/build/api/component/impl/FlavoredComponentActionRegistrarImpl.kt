@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,43 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.api.variant.impl
+package com.android.build.api.component.impl
 
-import com.android.build.api.variant.ActionableVariantObject
-import com.android.build.api.variant.BuildTypedVariantFilterBuilder
-import com.android.build.api.variant.FlavoredVariantFilterBuilder
-import com.android.build.api.variant.VariantConfiguration
+import com.android.build.api.component.ActionableComponentObject
+import com.android.build.api.component.BuildTypedComponentActionRegistrar
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.component.FlavoredComponentActionRegistrar
+import com.android.build.api.variant.impl.VariantOperations
 import com.android.build.gradle.internal.api.dsl.DslScope
 import org.gradle.api.Action
 import javax.inject.Inject
 
-internal open class FlavoredVariantQueryFilterImpl<T> @Inject constructor(
+internal open class FlavoredComponentActionRegistrarImpl<T> @Inject constructor(
     private val dslScope: DslScope,
     private val operations: VariantOperations<T>,
     private val flavorToDimensionList: List<Pair<String, String>>,
     private val type: Class<T>
-): FlavoredVariantFilterBuilder<T> where T: ActionableVariantObject, T: VariantConfiguration{
+): FlavoredComponentActionRegistrar<T> where T: ActionableComponentObject, T: ComponentIdentity {
 
-    override fun withBuildType(buildType: String): BuildTypedVariantFilterBuilder<T> {
+    override fun withBuildType(buildType: String): BuildTypedComponentActionRegistrar<T> {
         @Suppress("UNCHECKED_CAST")
         return dslScope.objectFactory.newInstance(
-            BuildTypedVariantFilterBuilderImpl::class.java,
+            BuildTypedComponentActionRegistrarImpl::class.java,
             dslScope,
             operations,
             buildType,
             flavorToDimensionList,
             type
-        ) as BuildTypedVariantFilterBuilder<T>
+        ) as BuildTypedComponentActionRegistrar<T>
     }
 
     override fun withBuildType(buildType: String, action: Action<T>) {
         operations.addFilteredAction(
-            FilteredVariantOperation(
+            FilteredComponentAction(
                 specificType = type,
                 buildType = buildType,
-                flavorToDimensionData = flavorToDimensionList,
+                flavors = flavorToDimensionList,
                 action = action
-            ))
+            )
+        )
     }
 
     override fun withBuildType(buildType: String, action: T.() -> Unit) {
@@ -57,9 +59,9 @@ internal open class FlavoredVariantQueryFilterImpl<T> @Inject constructor(
     }
 
     override fun withFlavor(flavorToDimension: Pair<String, String>, action: Action<T>) {
-        operations.addFilteredAction(FilteredVariantOperation(
+        operations.addFilteredAction(FilteredComponentAction(
             specificType = type,
-            flavorToDimensionData = flavorToDimensionList + flavorToDimension,
+            flavors = flavorToDimensionList + flavorToDimension,
             action = action
         ))
     }
@@ -68,14 +70,14 @@ internal open class FlavoredVariantQueryFilterImpl<T> @Inject constructor(
         withFlavor(flavorToDimension, Action { action(it) })
     }
 
-    override fun withFlavor(flavorToDimension: Pair<String, String>): BuildTypedVariantFilterBuilder<T> {
+    override fun withFlavor(flavorToDimension: Pair<String, String>): BuildTypedComponentActionRegistrar<T> {
         @Suppress("UNCHECKED_CAST")
         return dslScope.objectFactory.newInstance(
-            FlavoredVariantQueryFilterImpl::class.java,
+            FlavoredComponentActionRegistrarImpl::class.java,
             dslScope,
             operations,
             flavorToDimensionList + flavorToDimension,
             type
-        ) as FlavoredVariantFilterBuilder<T>
+        ) as FlavoredComponentActionRegistrar<T>
     }
 }

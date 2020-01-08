@@ -16,20 +16,18 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.api.variant.VariantConfiguration
-import com.android.build.api.variant.impl.VariantConfigurationImpl
+import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.builder.core.VariantType
 import com.android.builder.errors.IssueReporter
-import com.android.utils.appendCapitalized
-import com.android.utils.combineAsCamelCase
 import com.google.common.collect.ImmutableList
 
 /**
- * Computes the combination of variants from a [VariantInputModel] and returns a list of
- * [VariantConfiguration]
+ * Computes the combination of dimensions from a [VariantInputModel] to create components/variants
+ *
+ * This returns a list of [DimensionCombination]
  */
-class VariantCombinator(
+class DimensionCombinator(
     private val variantInputModel : VariantInputModel,
     private val errorReporter: IssueReporter,
     private val variantType: VariantType,
@@ -41,9 +39,9 @@ class VariantCombinator(
     }
 
     /**
-     * Computes and returns the list of variants as [VariantConfiguration] objects.
+     * Computes and returns the list of variants as [ComponentIdentity] objects.
      */
-    fun computeVariants() : List<VariantCombination> {
+    fun computeVariants() : List<DimensionCombination> {
         // different paths for flavors or no flavors to optimize things a bit
 
         if (variantInputModel.productFlavors.isEmpty()) {
@@ -54,17 +52,17 @@ class VariantCombinator(
     }
 
     /**
-     * Computes [VariantConfiguration] for the case where there are no flavors.
+     * Computes [ComponentIdentity] for the case where there are no flavors.
      */
-    private fun computeFlavorlessVariants() : List<VariantCombination> {
+    private fun computeFlavorlessVariants() : List<DimensionCombination> {
         return if (variantInputModel.buildTypes.isEmpty()) {
-            ImmutableList.of(VariantCombinationImpl())
+            ImmutableList.of(DimensionCombinationImpl())
         } else {
-            val builder = ImmutableList.builder<VariantCombination>()
+            val builder = ImmutableList.builder<DimensionCombination>()
 
             for (buildType in variantInputModel.buildTypes.keys) {
                 builder.add(
-                    VariantCombinationImpl(buildType = buildType)
+                    DimensionCombinationImpl(buildType = buildType)
                 )
             }
 
@@ -73,9 +71,9 @@ class VariantCombinator(
     }
 
     /**
-     * Computes [VariantConfiguration] for the case with flavors.
+     * Computes [ComponentIdentity] for the case with flavors.
      */
-    private fun computeVariantsWithFlavors(): List<VariantCombination> {
+    private fun computeVariantsWithFlavors(): List<DimensionCombination> {
         val flavorDimensionList = validateFlavorDimensions()
 
         // get a Map of (dimension, list of names) for the flavors
@@ -97,23 +95,23 @@ class VariantCombinator(
     }
 
     /**
-     * Computes [VariantConfiguration] from a list of [FlavorCombinationBuilder] by combining them
+     * Computes [ComponentIdentity] from a list of [FlavorCombinationBuilder] by combining them
      * with build types.
      */
     private fun combineFlavorsAndBuildTypes(
         flavorCombos: List<FlavorCombinationBuilder>
-    ) : List<VariantCombination> {
+    ) : List<DimensionCombination> {
         if (variantInputModel.buildTypes.isEmpty()) {
             // just convert the Accumulators to VariantConfiguration with no build type info
             return flavorCombos.map {
-                VariantCombinationImpl(productFlavors = it.flavorPairs)
+                DimensionCombinationImpl(productFlavors = it.flavorPairs)
             }
         } else {
-            val builder = ImmutableList.builder<VariantCombination>()
+            val builder = ImmutableList.builder<DimensionCombination>()
 
             for (buildType in variantInputModel.buildTypes.keys) {
                 builder.addAll(flavorCombos.map {
-                    VariantCombinationImpl(
+                    DimensionCombinationImpl(
                         buildType = buildType,
                         productFlavors = it.flavorPairs
                     )
@@ -192,25 +190,26 @@ class VariantCombinator(
 /**
  * A combination of one (optional) build type and one flavor from each dimension.
  */
-interface VariantCombination {
+interface DimensionCombination {
     /**
      * Build Type name, might be replaced with access to locked DSL object once ready
      */
     val buildType: String?
-
     /**
      * List of flavor names, might be replaced with access to locked DSL objects once ready
      *
      * The order is properly sorted based on the associated dimension order
      */
     val productFlavors: List<Pair<String, String>>
-
 }
 
-data class VariantCombinationImpl(
+/**
+ * A combination of one (optional) build type and one flavor from each dimension.
+ */
+data class DimensionCombinationImpl(
     override val buildType: String? = null,
     override val productFlavors: List<Pair<String, String>> = listOf()
-) : VariantCombination
+): DimensionCombination
 
 
 /**
@@ -233,7 +232,7 @@ data class VariantCombinationImpl(
  * `currentFlavorCombo` contains a pair for each dimension. This is then added to `comboList`
  *
  * This function is out of the main class because its `flavorDimensionList` param shadows
- * [VariantCombinator.flavorDimensionList], therefore it's clearer and more obvious that
+ * [DimensionCombinator.flavorDimensionList], therefore it's clearer and more obvious that
  * this is not the same value.
  *
  * @param flavorDimensionList the list of flavor dimension

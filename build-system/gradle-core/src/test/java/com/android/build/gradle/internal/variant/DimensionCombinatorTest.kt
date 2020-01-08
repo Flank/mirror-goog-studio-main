@@ -22,7 +22,7 @@ import com.android.builder.model.SyncIssue
 import com.google.common.truth.Truth
 import org.junit.Test
 
-class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantCombination>>() {
+class DimensionCombinatorTest: AbstractVariantInputModelTest<List<DimensionCombination>>() {
     @Test
     fun `test default config`() {
         given {
@@ -36,11 +36,11 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantCombinati
 
         expect {
             listOf(
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "debug",
                     productFlavors = emptyList()
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "release",
                     productFlavors = emptyList()
                 )
@@ -71,19 +71,19 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantCombinati
 
         expect {
             listOf(
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "debug",
                     productFlavors = listOf("one" to "flavor1")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "debug",
                     productFlavors = listOf("one" to "flavor2")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "release",
                     productFlavors = listOf("one" to "flavor1")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "release",
                     productFlavors = listOf("one" to "flavor2")
                 )
@@ -126,35 +126,35 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantCombinati
 
         expect {
             listOf(
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "debug",
                     productFlavors = listOf("one" to "flavor1", "two" to "flavorA")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "debug",
                     productFlavors = listOf("one" to "flavor1", "two" to "flavorB")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "debug",
                     productFlavors = listOf("one" to "flavor2", "two" to "flavorA")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "debug",
                     productFlavors = listOf("one" to "flavor2", "two" to "flavorB")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "release",
                     productFlavors = listOf("one" to "flavor1", "two" to "flavorA")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "release",
                     productFlavors = listOf("one" to "flavor1", "two" to "flavorB")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "release",
                     productFlavors = listOf("one" to "flavor2", "two" to "flavorA")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "release",
                     productFlavors = listOf("one" to "flavor2", "two" to "flavorB")
                 )
@@ -171,7 +171,7 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantCombinati
 
         expect {
             listOf(
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = null,
                     productFlavors = emptyList()
                 )
@@ -198,11 +198,11 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantCombinati
 
         expect {
             listOf(
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = null,
                     productFlavors = listOf("one" to "flavor1")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = null,
                     productFlavors = listOf("one" to "flavor2")
                 )
@@ -233,19 +233,19 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantCombinati
 
         expect {
             listOf(
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "debug",
                     productFlavors = listOf("one" to "flavor1")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "debug",
                     productFlavors = listOf("one" to "flavor2")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "release",
                     productFlavors = listOf("one" to "flavor1")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "release",
                     productFlavors = listOf("one" to "flavor2")
                 )
@@ -282,21 +282,21 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantCombinati
 
         expect {
             listOf(
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "debug",
-                    productFlavors = listOf(VariantCombinator.FAKE_DIMENSION to "flavor1")
+                    productFlavors = listOf(DimensionCombinator.FAKE_DIMENSION to "flavor1")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "debug",
-                    productFlavors = listOf(VariantCombinator.FAKE_DIMENSION to "flavor2")
+                    productFlavors = listOf(DimensionCombinator.FAKE_DIMENSION to "flavor2")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "release",
-                    productFlavors = listOf(VariantCombinator.FAKE_DIMENSION to "flavor1")
+                    productFlavors = listOf(DimensionCombinator.FAKE_DIMENSION to "flavor1")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "release",
-                    productFlavors = listOf(VariantCombinator.FAKE_DIMENSION to "flavor2")
+                    productFlavors = listOf(DimensionCombinator.FAKE_DIMENSION to "flavor2")
                 )
             )
         }
@@ -325,19 +325,19 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantCombinati
 
         expect {
             listOf(
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "debug",
                     productFlavors = listOf("one" to "flavor1")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "debug",
                     productFlavors = listOf("one" to "flavor2")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "release",
                     productFlavors = listOf("one" to "flavor1")
                 ),
-                VariantCombinationImpl(
+                DimensionCombinationImpl(
                     buildType = "release",
                     productFlavors = listOf("one" to "flavor2")
                 )
@@ -351,11 +351,11 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantCombinati
         flavorList = action()
     }
 
-    override fun defaultWhen(given: TestVariantInputModel): List<VariantCombination>? {
+    override fun defaultWhen(given: TestVariantInputModel): List<DimensionCombination>? {
         // compute the flavor list if needed
         val expectedFlavorList = flavorList ?: given.productFlavors.values.asSequence().mapNotNull { it.productFlavor.dimension }.toSet().toList()
 
-        val variantComputer = VariantCombinator(
+        val variantComputer = DimensionCombinator(
             given, dslScope.issueReporter, VariantTypeImpl.BASE_APK, expectedFlavorList
         )
 
@@ -363,8 +363,8 @@ class VariantCombinatorTest: AbstractVariantInputModelTest<List<VariantCombinati
     }
 
     override fun compareResult(
-        expected: List<VariantCombination>?,
-        actual: List<VariantCombination>?,
+        expected: List<DimensionCombination>?,
+        actual: List<DimensionCombination>?,
         given: TestVariantInputModel
     ) {
         Truth.assertThat(actual).containsExactlyElementsIn(expected)

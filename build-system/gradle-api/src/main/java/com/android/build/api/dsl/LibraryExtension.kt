@@ -58,4 +58,5 @@ interface LibraryExtension<
         LibraryVariantProperties>,
     TestedExtension {
     // TODO(b/140406102)
+
 }
