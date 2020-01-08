@@ -157,6 +157,7 @@ def kotlin_library(
         runtime_deps = deps + ["//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"],
         jars = [":lib" + target + ".jar" for target in targets],
         visibility = visibility,
+        testonly = testonly,
     )
 
     if pom:
@@ -187,6 +188,7 @@ def kotlin_test(name, srcs, deps = [], runtime_deps = [], friends = [], coverage
         name = name + ".testlib",
         srcs = srcs,
         deps = deps,
+        testonly = 1,
         runtime_deps = runtime_deps,
         jar_name = name + ".jar",
         visibility = visibility,

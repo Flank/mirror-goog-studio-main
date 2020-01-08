@@ -50,31 +50,31 @@ public class EnumPropertyMapper<E extends Enum<E>> {
     }
 
     public void mapDouble(@NonNull E e) {
-        myMapper.mapChar(nameOf(e), indexOf(e));
+        myMapper.mapDouble(nameOf(e), indexOf(e));
     }
 
     public void mapFloat(@NonNull E e) {
-        myMapper.mapChar(nameOf(e), indexOf(e));
+        myMapper.mapFloat(nameOf(e), indexOf(e));
     }
 
     public void mapInt(@NonNull E e) {
-        myMapper.mapChar(nameOf(e), indexOf(e));
+        myMapper.mapInt(nameOf(e), indexOf(e));
     }
 
     public void mapLong(@NonNull E e) {
-        myMapper.mapChar(nameOf(e), indexOf(e));
+        myMapper.mapLong(nameOf(e), indexOf(e));
     }
 
     public void mapShort(@NonNull E e) {
-        myMapper.mapChar(nameOf(e), indexOf(e));
+        myMapper.mapShort(nameOf(e), indexOf(e));
     }
 
     public void mapObject(@NonNull E e) {
-        myMapper.mapChar(nameOf(e), indexOf(e));
+        myMapper.mapObject(nameOf(e), indexOf(e));
     }
 
     public void mapColor(@NonNull E e) {
-        myMapper.mapChar(nameOf(e), indexOf(e));
+        myMapper.mapColor(nameOf(e), indexOf(e));
     }
 
     public void mapGravity(@NonNull E e) {
