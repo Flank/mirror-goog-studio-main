@@ -17,12 +17,15 @@
 package com.android.build.gradle.integration.r8
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.LoggingLevel
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import com.google.common.truth.Truth.assertThat
 
 class R8TaskTest {
 
@@ -37,7 +40,7 @@ class R8TaskTest {
             """
                 android {
                     buildTypes {
-                        release {
+                        debug {
                             minifyEnabled true
                             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
                         }
@@ -50,7 +53,20 @@ class R8TaskTest {
     @Test
     fun testCheckDuplicateClassesTaskDidWork() {
         val buildResult =
-            project.executor().run(":minifyReleaseWithR8")
-        assertThat(buildResult.didWorkTasks).contains(":checkReleaseDuplicateClasses")
+            project.executor().run(":minifyDebugWithR8")
+        assertThat(buildResult.didWorkTasks).contains(":checkDebugDuplicateClasses")
+    }
+
+    @Test
+    fun testTestedClassesPassedAsClasspathToR8() {
+        val buildResult =
+            project.executor().withLoggingLevel(LoggingLevel.DEBUG).run(":assembleDebugAndroidTest")
+        val appClasses = project.getIntermediateFile(
+                InternalArtifactType.APP_CLASSES.getFolderName() + "/debug/classes.jar"
+            );
+        buildResult.stdout.use {
+            ScannerSubject.assertThat(it)
+                .contains("[R8] Classpath classes: [$appClasses]")
+        }
     }
 }

@@ -76,6 +76,7 @@ fun runR8(
     inputJavaResources: Collection<Path>,
     javaResourcesJar: Path,
     libraries: Collection<Path>,
+    classpath: Collection<Path>,
     toolConfig: ToolConfig,
     proguardConfig: ProguardConfig,
     mainDexListConfig: MainDexListConfig,
@@ -95,6 +96,7 @@ fun runR8(
         logger.fine("Program classes: $inputClasses")
         logger.fine("Java resources: $inputJavaResources")
         logger.fine("Library classes: $libraries")
+        logger.fine("Classpath classes: $classpath")
         outputKeepRules?.let{ logger.fine("Keep rules for shrinking desugar lib: $it") }
     }
     val r8CommandBuilder = CompatProguardCommandBuilder(!useFullR8, D8DiagnosticsHandler(messageReceiver, "R8"))
@@ -238,9 +240,12 @@ fun runR8(
         }
     }
 
-    ClassFileProviderFactory(libraries).use { libClasspath ->
-        r8CommandBuilder.addLibraryResourceProvider(libClasspath.orderedProvider)
-        R8.run(r8CommandBuilder.build())
+    ClassFileProviderFactory(libraries).use { libraryClasses ->
+        ClassFileProviderFactory(classpath).use { classpathClasses ->
+            r8CommandBuilder.addLibraryResourceProvider(libraryClasses.orderedProvider)
+            r8CommandBuilder.addClasspathResourceProvider(classpathClasses.orderedProvider)
+            R8.run(r8CommandBuilder.build())
+        }
     }
 
     proguardConfig.proguardOutputFiles?.proguardMapOutput?.let {
