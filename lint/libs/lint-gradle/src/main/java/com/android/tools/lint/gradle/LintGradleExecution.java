@@ -36,7 +36,6 @@ import com.android.tools.lint.LintFixPerformer;
 import com.android.tools.lint.LintStats;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
-import com.android.tools.lint.UastEnvironment;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.XmlReporter;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
@@ -105,8 +104,6 @@ public class LintGradleExecution {
             // Not applying the Android Gradle plugin
             lintNonAndroid();
         }
-
-        UastEnvironment.ensureDisposed();
     }
 
     @Nullable
