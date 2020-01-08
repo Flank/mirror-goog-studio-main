@@ -117,6 +117,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         private static final String STATUS = "INSTRUMENTATION_STATUS: ";
         private static final String STATUS_CODE = "INSTRUMENTATION_STATUS_CODE: ";
         private static final String STATUS_FAILED = "INSTRUMENTATION_FAILED: ";
+        private static final String STATUS_ABORTED = "INSTRUMENTATION_ABORTED: ";
         private static final String ON_ERROR = "onError:";
         private static final String CODE = "INSTRUMENTATION_CODE: ";
         private static final String RESULT = "INSTRUMENTATION_RESULT: ";
@@ -327,6 +328,10 @@ public class InstrumentationResultParser extends MultiLineReceiver {
             parseTime(line);
         } else if (line.startsWith(Prefixes.ON_ERROR)) {
             mOnError = line;
+        } else if (line.startsWith(Prefixes.STATUS_ABORTED)) {
+            if (mOnError == null) {
+                mOnError = line;
+            }
         } else {
             if (mCurrentValue != null) {
                 // this is a value that has wrapped to next line.

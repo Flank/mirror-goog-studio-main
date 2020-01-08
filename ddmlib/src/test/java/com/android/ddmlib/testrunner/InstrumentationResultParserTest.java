@@ -362,6 +362,37 @@ public class InstrumentationResultParserTest extends TestCase {
     }
 
     /**
+     * Ensure that class name is properly parsed when INSTRUMENTATION_ABORTED occurs right after it.
+     */
+    public void testParse_instrumentationAborted() {
+        StringBuilder output = new StringBuilder();
+        addLine(output, "INSTRUMENTATION_STATUS: class=" + CLASS_NAME);
+        addLine(output, ON_ERROR);
+        // Instrumentation_aborted right after the status for the class.
+        addLine(output, "INSTRUMENTATION_ABORTED: System has crashed.");
+        addLine(output, "INSTRUMENTATION_STATUS: current=1");
+        addLine(output, "INSTRUMENTATION_STATUS: id=AndroidJUnitRunner");
+        addLine(output, "INSTRUMENTATION_STATUS: numtests=1");
+        addLine(output, "INSTRUMENTATION_STATUS: stream=");
+        addLine(output, "INSTRUMENTATION_STATUS: test=" + TEST_NAME);
+        addLine(output, "INSTRUMENTATION_STATUS_CODE: 1");
+
+        mMockListener.testRunStarted(RUN_NAME, 1);
+        mMockListener.testStarted(TEST_ID);
+        mMockListener.testFailed(
+                TEST_ID,
+                "Test failed to run to completion. Reason: "
+                        + "'Test run failed to complete. Expected 1 tests, received 0'. "
+                        + "Check device logcat for details");
+        mMockListener.testEnded(TEST_ID, Collections.emptyMap());
+        mMockListener.testRunFailed(
+                "Test run failed to complete. Expected 1 tests, received 0. " + ON_ERROR);
+        mMockListener.testRunEnded(0L, Collections.emptyMap());
+
+        injectAndVerifyTestString(output.toString());
+    }
+
+    /**
      * Test parsing and conversion of time output that contains extra chars.
      */
     public void testParse_timeBracket() {
