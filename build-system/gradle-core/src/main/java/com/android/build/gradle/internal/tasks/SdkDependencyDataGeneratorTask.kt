@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.tools.build.libraries.metadata.AppDependencies
 import org.gradle.api.tasks.OutputFile
+import com.google.common.io.BaseEncoding
 import java.io.FileOutputStream
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
@@ -43,7 +44,7 @@ import kotlin.random.Random
  */
 abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
 
-  private val publicKey: ByteArray? = null
+  private val publicKeyBase64: String = "CczY1Hsw0oqS5QUTM/s4A1xroCyjpqZAnFFOXGgQuu1WIz27yGSS+Jh75N8bMXyog6Deaq0W7P9O99Tp/IjSeA1qsds="
 
   @get:InputFile
   @get:PathSensitive(PathSensitivity.NONE)
@@ -73,12 +74,7 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
   }
 
   private fun encrypt(data: ByteArray): ByteArray {
-    // TODO(b/147092261): Remove this when public key is specified.
-    if (publicKey == null) {
-      return data;
-    }
-    val encrypter = KeymaestroHybridEncrypter(publicKey)
-    return encrypter.encrypt(data);
+    return KeymaestroHybridEncrypter(BaseEncoding.base64().decode(publicKeyBase64)).encrypt(data);
   }
 
   class CreationAction(
