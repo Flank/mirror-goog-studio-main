@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -72,7 +73,7 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
     @NonNull
     @Override
     protected AppExtension createExtension(
-            @NonNull Project project,
+            @NonNull DslScope dslScope,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
@@ -86,7 +87,7 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
                 .create(
                         "android",
                         getExtensionClass(),
-                        project,
+                        dslScope,
                         projectOptions,
                         globalScope,
                         buildOutputs,

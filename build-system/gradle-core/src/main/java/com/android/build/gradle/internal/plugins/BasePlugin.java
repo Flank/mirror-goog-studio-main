@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.plugins;
 import static com.google.common.base.Preconditions.checkState;
 
 import android.databinding.tool.DataBindingBuilder;
+import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -41,6 +42,7 @@ import com.android.build.gradle.internal.SdkComponents;
 import com.android.build.gradle.internal.SdkLocator;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.attribution.AttributionListenerInitializer;
 import com.android.build.gradle.internal.crash.CrashReporting;
 import com.android.build.gradle.internal.dependency.ConstraintHandler;
@@ -173,7 +175,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
     @NonNull
     protected abstract BaseExtension createExtension(
-            @NonNull Project project,
+            @NonNull DslScope dslScope,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
@@ -398,18 +400,17 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
     }
 
     private void configureExtension() {
-        ObjectFactory objectFactory = project.getObjects();
+        DslScope dslScope = globalScope.getDslScope();
 
         final NamedDomainObjectContainer<BuildType> buildTypeContainer =
-                project.container(BuildType.class, new BuildTypeFactory(globalScope.getDslScope()));
+                project.container(BuildType.class, new BuildTypeFactory(dslScope));
         final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
-                project.container(
-                        ProductFlavor.class, new ProductFlavorFactory(globalScope.getDslScope()));
+                project.container(ProductFlavor.class, new ProductFlavorFactory(dslScope));
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
                 project.container(
                         SigningConfig.class,
                         new SigningConfigFactory(
-                                objectFactory,
+                                dslScope.getObjectFactory(),
                                 GradleKeystoreHelper.getDefaultDebugKeystoreLocation()));
 
         final NamedDomainObjectContainer<BaseVariantOutput> buildOutputs =
@@ -419,20 +420,15 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
         sourceSetManager =
                 new SourceSetManager(
-                        project,
-                        isPackagePublished(),
-                        globalScope.getDslScope(),
-                        new DelayedActionsExecutor());
+                        project, isPackagePublished(), dslScope, new DelayedActionsExecutor());
 
         DefaultConfig defaultConfig =
-                objectFactory.newInstance(
-                        DefaultConfig.class,
-                        BuilderConstants.MAIN,
-                        globalScope.getDslScope());
+                dslScope.getObjectFactory()
+                        .newInstance(DefaultConfig.class, BuilderConstants.MAIN, dslScope);
 
         extension =
                 createExtension(
-                        project,
+                        dslScope,
                         projectOptions,
                         globalScope,
                         buildTypeContainer,
@@ -444,7 +440,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         extraModelInfo);
 
         // link the extension buildFeature to the BuildFeatureValues in DslScope
-        ((BuildFeatureValuesImpl) globalScope.getDslScope().getBuildFeatures())
+        ((BuildFeatureValuesImpl) dslScope.getBuildFeatures())
                 .setDslBuildFeatures(((CommonExtension) extension).getBuildFeatures());
 
         globalScope.setExtension(extension);
@@ -513,6 +509,8 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         // create default Objects, signingConfig first as its used by the BuildTypes.
         variantFactory.createDefaultComponents(
                 buildTypeContainer, productFlavorContainer, signingConfigContainer);
+
+        createAndroidTestUtilConfiguration();
     }
 
     protected void registerModels(
@@ -859,5 +857,21 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
      */
     protected boolean isPackagePublished() {
         return false;
+    }
+
+    // Create the "special" configuration for test buddy APKs. It will be resolved by the test
+    // running task, so that we can install all the found APKs before running tests.
+    private void createAndroidTestUtilConfiguration() {
+        getLogger()
+                .info(
+                        "Creating configuration "
+                                + SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION);
+        Configuration configuration =
+                project.getConfigurations()
+                        .maybeCreate(SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION);
+        configuration.setVisible(false);
+        configuration.setDescription("Additional APKs used during instrumentation testing.");
+        configuration.setCanBeConsumed(false);
+        configuration.setCanBeResolved(true);
     }
 }

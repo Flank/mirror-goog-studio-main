@@ -31,6 +31,7 @@ import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.AaptOptions
@@ -101,7 +102,7 @@ import java.io.File
 // All the public methods are meant to be exposed in the DSL. We can't use lambdas in this class
 // (yet), because the DSL reference generator doesn't understand them.
 abstract class BaseExtension protected constructor(
-    protected val project: Project,
+    protected val dslScope: DslScope,
     projectOptions: ProjectOptions,
     protected val globalScope: GlobalScope,
     /** All build outputs for all variants, can be used by users to customize a build output. */
@@ -115,23 +116,21 @@ abstract class BaseExtension protected constructor(
     /** Secondary dependencies for the custom transform. */
     private val _transformDependencies: MutableList<List<Any>> = mutableListOf()
 
-    private val objectFactory = project.objects
-
     override val aaptOptions: AaptOptions =
-        objectFactory.newInstance(
+        dslScope.objectFactory.newInstance(
             AaptOptions::class.java,
             projectOptions.get(BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT)
         )
     override val lintOptions: LintOptions =
-        objectFactory.newInstance(LintOptions::class.java)
+        dslScope.objectFactory.newInstance(LintOptions::class.java)
     override val dexOptions: DexOptions =
-        objectFactory.newInstance(DexOptions::class.java, globalScope.dslScope.deprecationReporter)
+        dslScope.objectFactory.newInstance(DexOptions::class.java, dslScope.deprecationReporter)
     override val packagingOptions: PackagingOptions =
-        objectFactory.newInstance(PackagingOptions::class.java)
+        dslScope.objectFactory.newInstance(PackagingOptions::class.java)
     override val splits: Splits =
-        objectFactory.newInstance(Splits::class.java, objectFactory)
+        dslScope.objectFactory.newInstance(Splits::class.java, dslScope.objectFactory)
     override val adbOptions: AdbOptions =
-        objectFactory.newInstance(AdbOptions::class.java)
+        dslScope.objectFactory.newInstance(AdbOptions::class.java)
 
     private val deviceProviderList: MutableList<DeviceProvider> = Lists.newArrayList()
     private val testServerList: MutableList<TestServer> = Lists.newArrayList()
@@ -140,7 +139,7 @@ abstract class BaseExtension protected constructor(
     @Incubating
     @get:Incubating
     val composeOptions: ComposeOptions =
-        objectFactory.newInstance(ComposeOptionsImpl::class.java)
+        dslScope.objectFactory.newInstance(ComposeOptionsImpl::class.java)
 
     abstract override val dataBinding: DataBindingOptions
     abstract val viewBinding: ViewBindingOptions
@@ -169,10 +168,6 @@ abstract class BaseExtension protected constructor(
     override var ndkVersion: String? = null
 
     init {
-        // Create the "special" configuration for test buddy APKs. It will be resolved by the test
-        // running task, so that we can install all the found APKs before running tests.
-        createAndroidTestUtilConfiguration()
-
         sourceSetManager.setUpSourceSet(SdkConstants.FD_MAIN)
     }
 
@@ -195,18 +190,6 @@ abstract class BaseExtension protected constructor(
             )
         }
     }
-
-    private fun createAndroidTestUtilConfiguration() {
-        val name = SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION
-        logger.info("Creating configuration {}", name)
-        val configuration = project.configurations.maybeCreate(name)
-        configuration.isVisible = false
-        configuration.description = "Additional APKs used during instrumentation testing."
-        configuration.isCanBeConsumed = false
-        configuration.isCanBeResolved = true
-    }
-
-
 
     /** For groovy only (so `compileSdkVersion=2` works) */
     fun setCompileSdkVersion(apiLevel: Int) {
@@ -635,13 +618,13 @@ abstract class BaseExtension protected constructor(
 
     fun getDefaultProguardFile(name: String): File {
         if (!ProguardFiles.KNOWN_FILE_NAMES.contains(name)) {
-            globalScope.dslScope
+            dslScope
                 .issueReporter
                 .reportError(
                     IssueReporter.Type.GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE
                 )
         }
-        return ProguardFiles.getDefaultProguardFile(name, project.layout)
+        return ProguardFiles.getDefaultProguardFile(name, dslScope.projectLayout)
     }
 
     // ---------------

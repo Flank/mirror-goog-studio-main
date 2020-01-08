@@ -4,13 +4,13 @@ import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
 
 /**
  * The `android` extension for application plugins.
@@ -22,7 +22,7 @@ import org.gradle.api.Project
  * For optional apks, this class is used directly.
  */
 abstract class AbstractAppExtension(
-    project: Project,
+    dslScope: DslScope,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
@@ -30,7 +30,7 @@ abstract class AbstractAppExtension(
     extraModelInfo: ExtraModelInfo,
     isBaseModule: Boolean
 ) : TestedExtension(
-    project,
+    dslScope,
     projectOptions,
     globalScope,
     buildOutputs,
@@ -62,7 +62,7 @@ abstract class AbstractAppExtension(
     </pre> *
      */
     val applicationVariants: DomainObjectSet<ApplicationVariant> =
-        project.objects.domainObjectSet(ApplicationVariant::class.java)
+        dslScope.objectFactory.domainObjectSet(ApplicationVariant::class.java)
 
     override fun addVariant(variant: BaseVariant, variantScope: VariantScope) {
         applicationVariants.add(variant as ApplicationVariant)

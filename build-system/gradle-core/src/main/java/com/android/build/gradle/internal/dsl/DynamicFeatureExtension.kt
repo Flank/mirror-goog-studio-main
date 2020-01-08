@@ -25,6 +25,7 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -34,7 +35,7 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 
 internal open class DynamicFeatureExtension(
-    project: Project,
+    dslScope: DslScope,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
@@ -42,7 +43,7 @@ internal open class DynamicFeatureExtension(
     extraModelInfo: ExtraModelInfo,
     private val publicExtensionImpl: DynamicFeatureExtensionImpl
 ) : AppExtension(
-    project, projectOptions, globalScope,
+    dslScope, projectOptions, globalScope,
     buildOutputs, sourceSetManager, extraModelInfo, false
 ), DynamicFeatureExtension<
         BuildType,
@@ -59,19 +60,19 @@ internal open class DynamicFeatureExtension(
     ActionableVariantObjectOperationsExecutor<DynamicFeatureVariant, DynamicFeatureVariantProperties> by publicExtensionImpl {
 
     override val dataBinding: DataBindingOptions =
-        project.objects.newInstance(
+        dslScope.objectFactory.newInstance(
             DataBindingOptions::class.java,
             publicExtensionImpl.buildFeatures,
             projectOptions,
-            globalScope.dslScope
+            dslScope
         )
 
     override val viewBinding: ViewBindingOptions =
-        project.objects.newInstance(
+        dslScope.objectFactory.newInstance(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
             projectOptions,
-            globalScope.dslScope
+            dslScope
         )
 
     // this is needed because the impl class needs this but the interface does not,

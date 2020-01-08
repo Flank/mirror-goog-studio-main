@@ -25,17 +25,10 @@ import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant2.createFakeDslScope
 import com.android.build.gradle.options.ProjectOptions
-import com.android.testutils.MockitoKt.any
 import org.gradle.api.Action
-import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ConfigurationContainer
-import org.gradle.api.model.ObjectFactory
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 
 /**
@@ -46,34 +39,24 @@ class BaseAppModuleExtensionTest {
     @Suppress("UNCHECKED_CAST")
     @Before
     fun setUp() {
-        val project = Mockito.mock(Project::class.java)
-        val objectFactory = Mockito.mock(ObjectFactory::class.java)
-        Mockito.`when`(project.objects).thenReturn(objectFactory)
-        val configurations = Mockito.mock(ConfigurationContainer::class.java)
-        Mockito.`when`(project.configurations).thenReturn(configurations)
-        Mockito.`when`(configurations.maybeCreate(any(String::class.java))).thenReturn(Mockito.mock(Configuration::class.java))
+        val dslScope = createFakeDslScope()
+
         val defaultConfig = Mockito.mock(DefaultConfig::class.java)
         val vectorDrawablesOptions = Mockito.mock(VectorDrawablesOptions::class.java)
         Mockito.`when`(defaultConfig.vectorDrawables).thenReturn(vectorDrawablesOptions)
         Mockito.`when`(defaultConfig.name).thenReturn("default")
-        Mockito.`when`(objectFactory.newInstance(any(Class::class.java), ArgumentMatchers.any()))
-            .thenAnswer { invocation -> Mockito.mock(invocation.arguments[0] as Class<*>) }
-        Mockito.`when`(objectFactory.domainObjectSet(any(Class::class.java))).thenReturn(Mockito.mock(DomainObjectSet::class.java))
         val extension = ApplicationExtensionImpl(
-            dslScope = createFakeDslScope(),
+            dslScope = dslScope,
             buildTypes = Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BuildType>,
             defaultConfig = defaultConfig,
             productFlavors = Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<ProductFlavor>,
             signingConfigs = Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<SigningConfig>
         )
 
-        val globalScope = Mockito.mock(GlobalScope::class.java)
-        Mockito.`when`(globalScope.dslScope).thenReturn(createFakeDslScope())
-
         appExtension = BaseAppModuleExtension(
-            project,
+            dslScope,
             Mockito.mock(ProjectOptions::class.java),
-            globalScope,
+            Mockito.mock(GlobalScope::class.java),
             Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BaseVariantOutput>,
             Mockito.mock(SourceSetManager::class.java),
             Mockito.mock(ExtraModelInfo::class.java),

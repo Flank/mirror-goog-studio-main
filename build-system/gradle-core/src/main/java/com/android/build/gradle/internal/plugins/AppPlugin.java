@@ -22,6 +22,7 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.AppModelBuilder;
 import com.android.build.gradle.internal.ExtraModelInfo;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.ApplicationExtensionImpl;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -81,7 +82,7 @@ public class AppPlugin extends AbstractAppPlugin {
     @NonNull
     @Override
     protected AppExtension createExtension(
-            @NonNull Project project,
+            @NonNull DslScope dslScope,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
@@ -95,7 +96,7 @@ public class AppPlugin extends AbstractAppPlugin {
                 .create(
                         "android",
                         getExtensionClass(),
-                        project,
+                        dslScope,
                         projectOptions,
                         globalScope,
                         buildOutputs,

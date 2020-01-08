@@ -25,6 +25,7 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -35,7 +36,7 @@ import org.gradle.api.Project
 
 /** The `android` extension for base feature module (application plugin).  */
 open class BaseAppModuleExtension(
-    project: Project,
+    dslScope: DslScope,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
@@ -43,7 +44,7 @@ open class BaseAppModuleExtension(
     extraModelInfo: ExtraModelInfo,
     private val publicExtensionImpl: ApplicationExtensionImpl
 ) : AppExtension(
-    project,
+    dslScope,
     projectOptions,
     globalScope,
     buildOutputs,
@@ -65,19 +66,19 @@ open class BaseAppModuleExtension(
     ActionableVariantObjectOperationsExecutor<AppVariant, AppVariantProperties> by publicExtensionImpl {
 
     override val dataBinding: DataBindingOptions =
-        project.objects.newInstance(
+        dslScope.objectFactory.newInstance(
             DataBindingOptions::class.java,
             publicExtensionImpl.buildFeatures,
             projectOptions,
-            globalScope.dslScope
+            dslScope
         )
 
     override val viewBinding: ViewBindingOptions =
-        project.objects.newInstance(
+        dslScope.objectFactory.newInstance(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
             projectOptions,
-            globalScope.dslScope
+            dslScope
         )
 
     // this is needed because the impl class needs this but the interface does not,
@@ -95,10 +96,10 @@ open class BaseAppModuleExtension(
     var assetPacks: MutableSet<String> = mutableSetOf()
 
     val bundle: BundleOptions =
-        project.objects.newInstance(
+        dslScope.objectFactory.newInstance(
             BundleOptions::class.java,
-            project.objects,
-            globalScope.dslScope.deprecationReporter
+            dslScope.objectFactory,
+            dslScope.deprecationReporter
         )
 
     fun bundle(action: Action<BundleOptions>) {

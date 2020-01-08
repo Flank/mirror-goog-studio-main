@@ -24,6 +24,7 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LibraryTaskManager;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -54,7 +55,7 @@ public class LibraryPlugin extends BasePlugin {
     @NonNull
     @Override
     protected BaseExtension createExtension(
-            @NonNull Project project,
+            @NonNull DslScope dslScope,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
@@ -68,7 +69,7 @@ public class LibraryPlugin extends BasePlugin {
                 .create(
                         "android",
                         getExtensionClass(),
-                        project,
+                        dslScope,
                         projectOptions,
                         globalScope,
                         buildOutputs,
