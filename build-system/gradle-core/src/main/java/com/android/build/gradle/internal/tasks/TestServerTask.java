@@ -128,7 +128,7 @@ public abstract class TestServerTask extends NonIncrementalTask {
 
             final BaseVariantData testedVariantData = scope.getTestedVariantData();
 
-            final String variantName = scope.getVariantDslInfo().getFullName();
+            final String variantName = scope.getName();
             task.setDescription(
                     "Uploads APKs for Build \'"
                             + variantName

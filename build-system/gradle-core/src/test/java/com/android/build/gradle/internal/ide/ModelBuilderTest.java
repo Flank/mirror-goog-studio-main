@@ -25,9 +25,11 @@ import com.android.build.OutputFile;
 import com.android.build.api.artifact.PublicArtifactType;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.FilterConfiguration;
+import com.android.build.api.variant.VariantConfiguration;
 import com.android.build.api.variant.VariantOutputConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
+import com.android.build.api.variant.impl.VariantConfigurationImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
@@ -469,10 +471,15 @@ public class ModelBuilderTest {
     private VariantScope createVariantScope(
             String variantName, String dirName, VariantDslInfo variantDslInfo) {
         VariantScope variantScope = Mockito.mock(VariantScope.class);
-        when(variantScope.getFullVariantName()).thenReturn(variantName);
+        when(variantScope.getName()).thenReturn(variantName);
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
         when(variantScope.getApkLocation()).thenReturn(new File(apkLocation, dirName));
         when(variantScope.getVariantDslInfo()).thenReturn(variantDslInfo);
+
+        VariantConfiguration variantConfig =
+                new VariantConfigurationImpl(
+                        variantName, "flavorName", "debug", ImmutableList.of());
+        when(variantDslInfo.getVariantConfiguration()).thenReturn(variantConfig);
 
         final VariantType type = variantDslInfo.getVariantType();
         when(variantScope.getType()).thenReturn(type);

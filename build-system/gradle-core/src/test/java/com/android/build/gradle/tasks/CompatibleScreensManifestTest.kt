@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
+import com.android.build.api.variant.impl.VariantConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
@@ -80,7 +81,7 @@ class CompatibleScreensManifestTest {
         task = project.tasks.create("test", CompatibleScreensManifest::class.java)
 
         MockitoAnnotations.initMocks(this)
-        `when`(scope.fullVariantName).thenReturn("fullVariantName")
+        `when`(scope.name).thenReturn("fullVariantName")
         `when`(scope.variantDslInfo).thenReturn(variantDslInfo)
         `when`(scope.globalScope).thenReturn(globalScope)
         `when`(scope.artifacts).thenReturn(buildArtifactsHolder)
@@ -89,8 +90,14 @@ class CompatibleScreensManifestTest {
         task.outputFolder.set(temporaryFolder.root)
         `when`<AndroidVersion>(variantDslInfo.minSdkVersion).thenReturn(AndroidVersion(21))
         `when`(variantDslInfo.baseName).thenReturn("baseName")
-        `when`(variantDslInfo.fullName).thenReturn("fullName")
         `when`(variantDslInfo.variantType).thenReturn(VariantTypeImpl.BASE_APK)
+        `when`(variantDslInfo.variantConfiguration).thenReturn(
+            VariantConfigurationImpl(
+                "fullVariantName",
+                "flavorName",
+                "debug"
+            )
+        )
         `when`(globalScope.projectOptions).thenReturn(
             ProjectOptions(
                 ImmutableMap.of<String, Any>(

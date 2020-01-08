@@ -368,7 +368,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             }
 
             task.debuggable
-                .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
+                .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
 
             if (variantScope.minSdkVersion.featureLevel < MIN_SDK_FOR_SPLITS
                 && task.assetPackZips.isPresent) {

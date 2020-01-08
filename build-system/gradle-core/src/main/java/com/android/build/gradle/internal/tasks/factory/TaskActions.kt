@@ -71,7 +71,7 @@ abstract class VariantTaskCreationAction<T>(
             task.dependsOn(taskContainer.preBuildTask)
         }
 
-        task.variantName = variantScope.fullVariantName
+        task.variantName = variantScope.name
         task.enableGradleWorkers.set(
             variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS)
         )

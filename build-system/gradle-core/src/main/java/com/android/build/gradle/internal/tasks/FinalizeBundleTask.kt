@@ -200,7 +200,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 task.intermediaryBundleFile)
 
             // Don't sign debuggable bundles.
-            if (!variantScope.variantData.publicVariantApi.isDebuggable) {
+            if (!variantScope.variantDslInfo.isDebuggable) {
                 task.signingConfig = SigningConfigProvider.create(variantScope)
             }
             task.applicationId.setDisallowChanges(

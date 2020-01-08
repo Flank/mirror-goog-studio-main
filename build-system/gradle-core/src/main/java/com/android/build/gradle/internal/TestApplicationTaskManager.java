@@ -90,8 +90,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
         Configuration testedApksConfig =
                 project.getConfigurations()
-                        .getByName(
-                                getTestedApksConfigurationName(variantScope.getFullVariantName()));
+                        .getByName(getTestedApksConfigurationName(variantScope.getName()));
 
         Provider<Directory> testingApk =
                 variantScope.getArtifacts().getFinalProduct(InternalArtifactType.APK.INSTANCE);

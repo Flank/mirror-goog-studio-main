@@ -105,7 +105,7 @@ class JavaCompileCreationAction(private val variantScope: VariantScope) :
 
     override fun configure(task: JavaCompile) {
         task.dependsOn(variantScope.taskContainer.preBuildTask)
-        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, variantScope.fullVariantName)
+        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, variantScope.name)
 
         task.configureProperties(variantScope)
         task.configurePropertiesForAnnotationProcessing(
@@ -127,7 +127,7 @@ class JavaCompileCreationAction(private val variantScope: VariantScope) :
         task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
             .withPropertyName("annotationProcessorList")
 
-        task.handleAnnotationProcessors(apList, variantScope.fullVariantName)
+        task.handleAnnotationProcessors(apList, variantScope.name)
 
         task.setDestinationDir(classesOutputDirectory.asFile)
 

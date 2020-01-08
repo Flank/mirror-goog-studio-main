@@ -1043,7 +1043,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact.setJniDebugBuild(variantDslInfo.isJniDebuggable());
             packageAndroidArtifact
                     .getDebugBuild()
-                    .set(variantScope.getVariantData().getPublicVariantApi().isDebuggable());
+                    .set(variantScope.getVariantDslInfo().isDebuggable());
             packageAndroidArtifact.getDebugBuild().disallowChanges();
 
             ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();

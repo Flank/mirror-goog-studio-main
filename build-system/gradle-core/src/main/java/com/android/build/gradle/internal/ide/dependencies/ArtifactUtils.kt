@@ -157,7 +157,7 @@ fun getAllArtifacts(
         dependencyFailureHandler.addErrors(
             variantScope.globalScope.project.path
                     + "@"
-                    + variantScope.fullVariantName
+                    + variantScope.name
                     + "/"
                     + consumedConfigType.getName(),
             failures
@@ -223,7 +223,7 @@ fun getAllArtifacts(
 
         check(mainArtifacts.isNotEmpty()) {
             """Internal Error: No artifact found for artifactType '$componentIdentifier'
-            | context: ${variantScope.globalScope.project.path} ${variantScope.fullVariantName}
+            | context: ${variantScope.globalScope.project.path} ${variantScope.name}
             | manifests = $manifests
             | explodedAars = $explodedAars
             | projectJars = $projectJars

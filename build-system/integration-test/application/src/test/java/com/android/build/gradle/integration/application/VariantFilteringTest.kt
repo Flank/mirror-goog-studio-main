@@ -16,13 +16,14 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.testutils.AbstractGivenExpectReturnTest
 import com.android.testutils.AbstractGivenExpectTest
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 
 /** Tests to validate the different filtering mechanisms  */
-class VariantFilteringTest: AbstractGivenExpectTest<String, List<String>>() {
+class VariantFilteringTest: AbstractGivenExpectReturnTest<String, List<String>>() {
     @get:Rule
     val project =
         GradleTestProject.builder().fromTestProject("emptyApp").create()

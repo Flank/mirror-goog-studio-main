@@ -16,10 +16,8 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SingleArtifactType
@@ -125,7 +123,7 @@ class NamespacedResourcesTaskManager(
     private fun createCompileResourcesTask() {
         for((sourceSetName, artifacts) in variantScope.variantData.androidResources) {
             val name = "compile".appendCapitalized(sourceSetName) +
-                    "ResourcesFor".appendCapitalized(variantScope.fullVariantName)
+                    "ResourcesFor".appendCapitalized(variantScope.name)
             // TODO : figure out when we need explicit task dependency and potentially remove it.
             taskFactory.register(CompileSourceSetResources.CreationAction(
                     name = name,

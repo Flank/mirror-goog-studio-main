@@ -113,7 +113,10 @@ public abstract class AbstractTestDataImpl implements TestData {
     @NonNull
     @Override
     public String getFlavorName() {
-        return testVariantConfig.getFlavorName().toUpperCase(Locale.getDefault());
+        return testVariantConfig
+                .getVariantConfiguration()
+                .getFlavorName()
+                .toUpperCase(Locale.getDefault());
     }
 
     /**

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-e214a4e48706380760131fd2201a31729e6b58846565ea10b2046adfddde161e
+67a8e1ba1719927088f6af2f1fc40d77d264a2ae3062005586383148a6e79000
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -217,8 +217,8 @@ com.android.build.api.variant.Variant.onProperties: void (org.gradle.api.Action<
 com.android.build.api.variant.Variant.setEnabled: void (boolean)
 com.android.build.api.variant.VariantConfiguration implements org.gradle.api.Named
 com.android.build.api.variant.VariantConfiguration.getBuildType: java.lang.String ()
+com.android.build.api.variant.VariantConfiguration.getFlavorName: java.lang.String ()
 com.android.build.api.variant.VariantConfiguration.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
-com.android.build.api.variant.VariantConfiguration.isDebuggable: boolean ()
 com.android.build.api.variant.VariantInfo
 com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()
 com.android.build.api.variant.VariantInfo.getFlavorNames: com.google.common.collect.ImmutableList<java.lang.String> ()

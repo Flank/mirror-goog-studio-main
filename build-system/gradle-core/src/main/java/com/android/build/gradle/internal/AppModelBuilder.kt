@@ -80,7 +80,7 @@ class AppModelBuilder(
                 val apkFolder = artifacts.getFinalProduct(InternalArtifactType.EXTRACTED_APKS)
                 variantsOutput.add(
                         DefaultAppBundleVariantBuildOutput(
-                            variantScope.fullVariantName, bundleFile.get().asFile, apkFolder.get().asFile))
+                            variantScope.name, bundleFile.get().asFile, apkFolder.get().asFile))
             }
         }
 

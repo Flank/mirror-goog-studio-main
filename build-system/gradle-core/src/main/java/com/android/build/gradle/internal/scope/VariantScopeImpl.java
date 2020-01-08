@@ -174,8 +174,7 @@ public class VariantScopeImpl implements VariantScope {
             throw new RuntimeException("InstantRun mode is not supported");
         }
         this.artifacts =
-                new VariantBuildArtifactsHolder(
-                        getProject(), getFullVariantName(), globalScope.getBuildDir());
+                new VariantBuildArtifactsHolder(getProject(), getName(), globalScope.getBuildDir());
         this.desugarTryWithResourcesRuntimeJar =
                 Suppliers.memoize(
                         () ->
@@ -245,7 +244,7 @@ public class VariantScopeImpl implements VariantScope {
                 if (configType.isPublicationConfig()) {
                     String classifier = null;
                     if (configType.isClassifierRequired()) {
-                        classifier = getFullVariantName();
+                        classifier = getName();
                     }
                     publishArtifactToDefaultVariant(config, artifact, artifactType, classifier);
                 } else {
@@ -285,8 +284,8 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public String getFullVariantName() {
-        return variantDslInfo.getFullName();
+    public String getName() {
+        return variantDslInfo.getVariantConfiguration().getName();
     }
 
     @Override
@@ -562,8 +561,7 @@ public class VariantScopeImpl implements VariantScope {
         }
         // Assume Java8LangSupport is either D8 or R8 as we checked that in
         // isCoreLibraryDesugaringEnabled()
-        if (getJava8LangSupportType() == Java8LangSupport.D8
-                && getVariantData().getPublicVariantApi().isDebuggable()) {
+        if (getJava8LangSupportType() == Java8LangSupport.D8 && variantDslInfo.isDebuggable()) {
             return false;
         }
         return true;
@@ -913,7 +911,7 @@ public class VariantScopeImpl implements VariantScope {
                                             .getFinalProductAsFileCollection(taskOutputType)
                                             .get(),
                                     getProject().getPath(),
-                                    testedScope.getFullVariantName());
+                                    testedScope.getName());
                 }
             }
         }
@@ -1372,7 +1370,7 @@ public class VariantScopeImpl implements VariantScope {
                                         + "gradle.properties file to enable Java 8 "
                                         + "language support.",
                                 missingFlag.name()),
-                        variantDslInfo.getFullName());
+                        variantDslInfo.getVariantConfiguration().getName());
         return Java8LangSupport.INVALID;
     }
 
@@ -1398,7 +1396,8 @@ public class VariantScopeImpl implements VariantScope {
             globalScope
                     .getDslScope()
                     .getIssueReporter()
-                    .reportError(Type.GENERIC, msg, variantDslInfo.getFullName());
+                    .reportError(
+                            Type.GENERIC, msg, variantDslInfo.getVariantConfiguration().getName());
             return false;
         }
     }
@@ -1411,7 +1410,7 @@ public class VariantScopeImpl implements VariantScope {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).addValue(getFullVariantName()).toString();
+        return MoreObjects.toStringHelper(this).addValue(getName()).toString();
     }
 
     @NonNull

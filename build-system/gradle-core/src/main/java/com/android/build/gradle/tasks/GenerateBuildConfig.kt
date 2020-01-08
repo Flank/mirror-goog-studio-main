@@ -223,12 +223,12 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 mainSplit?.versionName
                     ?: task.project.provider { variantDslInfo.versionName })
 
-            task.debuggable.setDisallowChanges(variantData.publicVariantApi.isDebuggable)
+            task.debuggable.setDisallowChanges(variantData.variantDslInfo.isDebuggable)
 
-            task.buildTypeName = variantDslInfo.buildType
+            task.buildTypeName = variantDslInfo.variantConfiguration.buildType
 
             // no need to memoize, variant configuration does that already.
-            task.flavorName.set(project.provider { variantDslInfo.flavorName })
+            task.flavorName.set(project.provider { variantDslInfo.variantConfiguration.flavorName })
             task.flavorName.disallowChanges()
 
             task.flavorNamesWithDimensionNames.set(project.provider {

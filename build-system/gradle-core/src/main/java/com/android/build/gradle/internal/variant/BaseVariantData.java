@@ -150,7 +150,7 @@ public abstract class BaseVariantData {
                     .warn(
                             String.format(
                                     "Variant %s requested removed pure splits support, reverted to full splits",
-                                    variantDslInfo.getFullName()));
+                                    publicVariantApi.getName()));
         }
 
         outputFactory = new OutputFactory(globalScope.getProjectBaseName(), variantDslInfo);
@@ -242,12 +242,12 @@ public abstract class BaseVariantData {
 
     @NonNull
     public String getName() {
-        return variantDslInfo.getFullName();
+        return publicVariantApi.getName();
     }
 
     @NonNull
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
-        return StringHelper.appendCapitalized(prefix, variantDslInfo.getFullName(), suffix);
+        return StringHelper.appendCapitalized(prefix, publicVariantApi.getName(), suffix);
     }
 
     @NonNull
@@ -665,7 +665,7 @@ public abstract class BaseVariantData {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).addValue(variantDslInfo.getFullName()).toString();
+        return MoreObjects.toStringHelper(this).addValue(publicVariantApi.getName()).toString();
     }
 
     @NonNull

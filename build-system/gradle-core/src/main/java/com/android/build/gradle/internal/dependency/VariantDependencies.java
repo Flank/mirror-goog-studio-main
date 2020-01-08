@@ -210,9 +210,9 @@ public class VariantDependencies {
             final Usage reverseMetadataUsage =
                     factory.named(Usage.class, "android-reverse-meta-data");
 
-            String variantName = variantDslInfo.getFullName();
+            String variantName = variantDslInfo.getVariantConfiguration().getName();
             VariantType variantType = variantDslInfo.getVariantType();
-            String buildType = variantDslInfo.getBuildType();
+            String buildType = variantDslInfo.getVariantConfiguration().getBuildType();
             Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> consumptionFlavorMap =
                     getFlavorAttributes(flavorSelection);
 

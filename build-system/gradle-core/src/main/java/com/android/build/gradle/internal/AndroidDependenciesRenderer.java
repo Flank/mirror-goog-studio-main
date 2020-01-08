@@ -67,8 +67,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
         hasConfigs = true;
         renderer = new GraphRenderer(getTextOutput());
         renderer.visit(
-                styledTextOutput ->
-                        getTextOutput().withStyle(Header).text(variantScope.getFullVariantName()),
+                styledTextOutput -> getTextOutput().withStyle(Header).text(variantScope.getName()),
                 true);
     }
 

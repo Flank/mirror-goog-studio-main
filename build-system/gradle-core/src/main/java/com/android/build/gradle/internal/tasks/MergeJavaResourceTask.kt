@@ -249,7 +249,7 @@ abstract class MergeJavaResourceTask
                     variantScope.globalScope.extension.packagingOptions
                 )
             task.intermediateDir =
-                variantScope.getIncrementalDir("${variantScope.fullVariantName}-mergeJavaRes")
+                variantScope.getIncrementalDir("${variantScope.name}-mergeJavaRes")
             task.cacheDir = File(task.intermediateDir, "zip-cache")
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
             task.noCompress =

@@ -219,7 +219,7 @@ public class TransformManager extends FilterableStreamCollection {
                     String.format(
                             "Unable to add Transform '%s' on variant '%s': requested streams not available: %s+%s / %s",
                             transform.getName(),
-                            scope.getFullVariantName(),
+                            scope.getName(),
                             transform.getScopes(),
                             transform.getReferencedScopes(),
                             transform.getInputTypes()));
@@ -228,7 +228,7 @@ public class TransformManager extends FilterableStreamCollection {
 
         //noinspection PointlessBooleanExpression
         if (DEBUG && logger.isEnabled(LogLevel.DEBUG)) {
-            logger.debug("ADDED TRANSFORM(" + scope.getFullVariantName() + "):");
+            logger.debug("ADDED TRANSFORM(" + scope.getName() + "):");
             logger.debug("\tName: " + transform.getName());
             logger.debug("\tTask: " + taskName);
             for (TransformStream sd : inputStreams) {
@@ -258,7 +258,7 @@ public class TransformManager extends FilterableStreamCollection {
         return Optional.of(
                 taskFactory.register(
                         new TransformTask.CreationAction<>(
-                                scope.getFullVariantName(),
+                                scope.getName(),
                                 taskName,
                                 transform,
                                 inputStreams,
@@ -347,9 +347,7 @@ public class TransformManager extends FilterableStreamCollection {
         // create the output
         IntermediateStream outputStream =
                 IntermediateStream.builder(
-                                project,
-                                transform.getName() + "-" + scope.getFullVariantName(),
-                                taskName)
+                                project, transform.getName() + "-" + scope.getName(), taskName)
                         .addContentTypes(outputTypes)
                         .addScopes(requestedScopes)
                         .setRootLocation(outRootFolder)

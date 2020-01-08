@@ -162,7 +162,7 @@ public class LibraryTaskManager extends TaskManager {
                 globalScope.getProjectBaseName());
 
         // Only verify resources if in Release and not namespaced.
-        if (!variantScope.getVariantData().getPublicVariantApi().isDebuggable()
+        if (!variantScope.getVariantDslInfo().isDebuggable()
                 && !variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             createVerifyLibraryResTask(variantScope);
         }
@@ -364,7 +364,7 @@ public class LibraryTaskManager extends TaskManager {
         final VariantDependencies variantDependencies = variantScope.getVariantDependencies();
 
         AdhocComponentWithVariants component =
-                globalScope.getComponentFactory().adhoc(variantScope.getFullVariantName());
+                globalScope.getComponentFactory().adhoc(variantScope.getName());
 
         final Configuration apiPub = variantDependencies.getElements(API_PUBLICATION);
         final Configuration runtimePub = variantDependencies.getElements(RUNTIME_PUBLICATION);
@@ -392,7 +392,7 @@ public class LibraryTaskManager extends TaskManager {
         // Old style publishing. This is likely to go away at some point.
         if (extension
                 .getDefaultPublishConfig()
-                .equals(variantScope.getVariantDslInfo().getFullName())) {
+                .equals(variantScope.getVariantDslInfo().getVariantConfiguration().getName())) {
             VariantHelper.setupArchivesConfig(project, variantDependencies.getRuntimeClasspath());
 
             // add the artifact that will be published.

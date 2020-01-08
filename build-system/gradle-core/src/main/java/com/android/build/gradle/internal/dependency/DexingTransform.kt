@@ -328,7 +328,7 @@ fun getDexingArtifactConfigurations(scopes: Collection<VariantScope>): Set<Dexin
 fun getDexingArtifactConfiguration(scope: VariantScope): DexingArtifactConfiguration {
     return DexingArtifactConfiguration(
         minSdk = scope.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel,
-        isDebuggable = scope.variantData.publicVariantApi.isDebuggable,
+        isDebuggable = scope.variantDslInfo.isDebuggable,
         enableDesugaring = scope.java8LangSupportType == VariantScope.Java8LangSupport.D8,
         enableCoreLibraryDesugaring = scope.isCoreLibraryDesugaringEnabled,
         needsShrinkDesugarLibrary = scope.needsShrinkDesugarLibrary,

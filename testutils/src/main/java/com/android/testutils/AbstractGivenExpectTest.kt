@@ -19,7 +19,10 @@ package com.android.testutils
 import com.google.common.truth.Truth
 
 /**
- * Abstract class allowing to write test using a given/expect DSL
+ * Abstract class allowing to write test using a given/expect DSL.
+ *
+ * Do no use Directly. Instead use [AbstractGivenExpectBuilderTest] or
+ * [AbstractGivenExpectReturnTest]
  */
 abstract class AbstractGivenExpectTest<GivenT, ResultT> {
 
@@ -33,17 +36,7 @@ abstract class AbstractGivenExpectTest<GivenT, ResultT> {
         DONE
     }
 
-    private var state: TestState =
-        TestState.START
-
-    /**
-     * Registers an action block returning the given state as a single object
-     */
-    open fun given(action: () -> GivenT) {
-        checkState(TestState.START)
-        givenAction = action
-        state = TestState.GIVEN
-    }
+    protected var state: TestState = TestState.START
 
     /**
      * Registers an action block converting the [given] object to a result object.
@@ -60,14 +53,10 @@ abstract class AbstractGivenExpectTest<GivenT, ResultT> {
     /**
      * Registers an action block return the expected result values. This also runs the test.
      */
-    fun expect(expectedProvider: () -> ResultT?) {
+    protected fun runTest(given: GivenT, expected: ResultT?) {
         // run the states by running all the necessary actions.
-        val given = givenAction?.invoke() ?: throw RuntimeException("No given data")
-
         val actual = whenAction?.invoke(given) ?: defaultWhen(given)
-
-        compareResult(expectedProvider(), actual, given)
-
+        compareResult(expected, actual, given)
         state = TestState.DONE
     }
 

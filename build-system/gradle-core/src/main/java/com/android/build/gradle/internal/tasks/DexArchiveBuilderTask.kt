@@ -399,10 +399,10 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
             )
             task.dexParams.debuggable.setDisallowChanges(
-                variantScope.variantData.publicVariantApi.isDebuggable
+                variantScope.variantDslInfo.isDebuggable
             )
             task.projectVariant.set(
-                "${variantScope.globalScope.project.name}:${variantScope.fullVariantName}"
+                "${variantScope.globalScope.project.name}:${variantScope.name}"
             )
             task.numberOfBuckets.set(
                 projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS) ?: DEFAULT_NUM_BUCKETS

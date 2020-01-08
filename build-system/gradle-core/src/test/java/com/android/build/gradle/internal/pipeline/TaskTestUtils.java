@@ -25,6 +25,8 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
+import com.android.build.api.variant.VariantConfiguration;
+import com.android.build.api.variant.impl.VariantConfigurationImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -283,13 +285,15 @@ public class TaskTestUtils {
         when(scope.getDirName()).thenReturn("config dir name");
         when(scope.getGlobalScope()).thenReturn(globalScope);
         when(scope.getTaskName(Mockito.anyString())).thenReturn(TASK_NAME);
-        when(scope.getFullVariantName()).thenReturn("theVariantName");
+        when(scope.getName()).thenReturn("theVariantName");
 
         VariantDslInfo variantDslInfo = mock(VariantDslInfo.class);
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
-        when(variantDslInfo.getBuildType()).thenReturn("debug");
         when(variantDslInfo.isDebuggable()).thenReturn(true);
-        when(variantDslInfo.getProductFlavors()).thenReturn(ImmutableList.of());
+        VariantConfiguration varConfig =
+                new VariantConfigurationImpl(
+                        "theVariantName", "theFlavorName", "debug", ImmutableList.of());
+        when(variantDslInfo.getVariantConfiguration()).thenReturn(varConfig);
         when(scope.getVariantDslInfo()).thenReturn(variantDslInfo);
         return scope;
     }

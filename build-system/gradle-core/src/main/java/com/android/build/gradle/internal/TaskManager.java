@@ -60,6 +60,7 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
+import com.android.build.api.variant.VariantConfiguration;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
@@ -776,7 +777,7 @@ public abstract class TaskManager {
     protected static boolean appliesCustomClassTransforms(
             @NonNull VariantScope scope, @NonNull ProjectOptions options) {
         final VariantType type = scope.getType();
-        return scope.getVariantData().getPublicVariantApi().isDebuggable()
+        return scope.getVariantDslInfo().isDebuggable()
                 && type.isApk()
                 && !type.isForTesting()
                 && !getAdvancedProfilingTransforms(options).isEmpty();
@@ -1470,7 +1471,7 @@ public abstract class TaskManager {
             } else {
                 throw new IllegalStateException(
                         "Tested variant "
-                                + testedVariantScope.getFullVariantName()
+                                + testedVariantScope.getName()
                                 + " in "
                                 + globalScope.getProject().getPath()
                                 + " must be a library or an application to have unit tests.");
@@ -1676,7 +1677,7 @@ public abstract class TaskManager {
         VariantScope variantScope = variantData.getScope();
 
         if (!isLintVariant(variantScope)
-                || variantScope.getVariantData().getPublicVariantApi().isDebuggable()
+                || variantScope.getVariantDslInfo().isDebuggable()
                 || !extension.getLintOptions().isCheckReleaseBuilds()) {
             return;
         }
@@ -2203,7 +2204,7 @@ public abstract class TaskManager {
         } else {
             boolean produceSeparateOutputs =
                     dexingType == DexingType.NATIVE_MULTIDEX
-                            && variantScope.getVariantData().getPublicVariantApi().isDebuggable();
+                            && variantScope.getVariantDslInfo().isDebuggable();
 
             taskFactory.register(
                     new DexMergingTask.CreationAction(
@@ -2552,7 +2553,9 @@ public abstract class TaskManager {
                 if (!variantType.isTestComponent()) {
                     final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
                     final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
-                    final String buildType = variantDslInfo.getBuildType();
+                    final VariantConfiguration variantConfiguration =
+                            variantDslInfo.getVariantConfiguration();
+                    final String buildType = variantConfiguration.getBuildType();
 
                     final TaskProvider<? extends Task> assembleTask =
                             taskContainer.getAssembleTask();
@@ -2566,7 +2569,7 @@ public abstract class TaskManager {
 
                     // if 2+ flavor dimensions, then make an assemble for the flavor combo
                     if (flavorDimensionCount > 1) {
-                        assembleMap.put(variantDslInfo.getFlavorName(), assembleTask);
+                        assembleMap.put(variantConfiguration.getFlavorName(), assembleTask);
                     }
 
                     // fill the bundle map only if the variant supports bundles.
@@ -2583,7 +2586,7 @@ public abstract class TaskManager {
 
                         // if 2+ flavor dimensions, then make an assemble for the flavor combo
                         if (flavorDimensionCount > 1) {
-                            bundleMap.put(variantDslInfo.getFlavorName(), bundleTask);
+                            bundleMap.put(variantConfiguration.getFlavorName(), bundleTask);
                         }
                     }
                 }
@@ -2678,7 +2681,9 @@ public abstract class TaskManager {
                 task ->
                         task.setDescription(
                                 "Assembles main output for variant "
-                                        + scope.getVariantDslInfo().getFullName()),
+                                        + scope.getVariantDslInfo()
+                                                .getVariantConfiguration()
+                                                .getName()),
                 taskProvider -> scope.getTaskContainer().setAssembleTask(taskProvider));
     }
 
@@ -2695,7 +2700,9 @@ public abstract class TaskManager {
                 task -> {
                     task.setDescription(
                             "Assembles bundle for variant "
-                                    + scope.getVariantDslInfo().getFullName());
+                                    + scope.getVariantDslInfo()
+                                            .getVariantConfiguration()
+                                            .getName());
                     task.dependsOn(
                             scope.getArtifacts()
                                     .getFinalProduct(InternalArtifactType.BUNDLE.INSTANCE));

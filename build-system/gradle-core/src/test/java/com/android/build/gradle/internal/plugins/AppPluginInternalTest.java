@@ -169,7 +169,9 @@ public class AppPluginInternalTest {
 
         BaseVariantData testVariant =
                 VariantCheckers.findVariantData(variants, "stagingAndroidTest");
-        TestCase.assertEquals("staging", testVariant.getVariantDslInfo().getBuildType());
+        TestCase.assertEquals(
+                "staging",
+                testVariant.getVariantDslInfo().getVariantConfiguration().getBuildType());
     }
     @Test
     public void testFlavors() {

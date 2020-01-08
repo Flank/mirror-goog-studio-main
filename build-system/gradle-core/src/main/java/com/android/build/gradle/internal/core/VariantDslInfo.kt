@@ -44,18 +44,11 @@ import java.util.function.Supplier
  * Use [VariantBuilder] to instantiate.
  *
  */
-interface VariantDslInfo: VariantConfiguration {
+interface VariantDslInfo {
 
-    val fullName: String
-
-    val flavorName: String
+    val variantConfiguration: VariantConfiguration
 
     val variantType: VariantType
-
-    /**
-     * The name of the build type
-     */
-    override val buildType: String?
 
     /** The list of product flavors. Items earlier in the list override later items.  */
     val productFlavorList: List<ProductFlavor>
@@ -406,7 +399,7 @@ interface VariantDslInfo: VariantConfiguration {
 
     val scopedGlslcArgs: Map<String, List<String>>
 
-    override val isDebuggable: Boolean
+    val isDebuggable: Boolean
 
     val isEmbedMicroApp: Boolean
 

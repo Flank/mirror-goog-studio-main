@@ -53,12 +53,14 @@ public abstract class ApkVariantData extends InstallableVariantData {
 
         if (variantDslInfo.hasFlavors()) {
             StringBuilder sb = new StringBuilder(50);
-            StringHelper.appendCapitalized(sb, variantDslInfo.getBuildType());
-            StringHelper.appendCapitalized(sb, variantDslInfo.getFlavorName());
+            StringHelper.appendCapitalized(
+                    sb, variantDslInfo.getVariantConfiguration().getBuildType());
+            StringHelper.appendCapitalized(sb, variantDslInfo.getVariantConfiguration().getName());
             sb.append(" build");
             return sb.toString();
         } else {
-            return StringHelper.capitalizeAndAppend(variantDslInfo.getBuildType(), " build");
+            return StringHelper.capitalizeAndAppend(
+                    variantDslInfo.getVariantConfiguration().getBuildType(), " build");
         }
     }
 }

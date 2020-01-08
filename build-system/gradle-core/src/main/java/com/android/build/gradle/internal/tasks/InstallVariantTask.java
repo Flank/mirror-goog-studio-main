@@ -99,7 +99,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
 
                     install(
                             getProjectName(),
-                            variantDslInfo.getFullName(),
+                            variantData.getName(),
                             deviceProvider,
                             variantDslInfo.getMinSdkVersion(),
                             builtArtifacts,

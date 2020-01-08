@@ -67,7 +67,7 @@ class BundleAllClassesTest {
         Mockito.`when`(scope.artifacts).thenReturn(artifacts)
         Mockito.`when`(scope.globalScope).thenReturn(globalScope)
         Mockito.`when`(scope.variantData).thenReturn(variantData)
-        Mockito.`when`(scope.fullVariantName).thenReturn("theVariantName")
+        Mockito.`when`(scope.name).thenReturn("theVariantName")
         Mockito.`when`(variantData.allPostJavacGeneratedBytecode).thenReturn(postJavacClasses)
         Mockito.`when`(variantData.allPreJavacGeneratedBytecode).thenReturn(preJavacClasses)
         Mockito.`when`(globalScope.extension).thenReturn(extension)

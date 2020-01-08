@@ -331,7 +331,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             task.jarCreatorType.setDisallowChanges(variantScope.jarCreatorType)
 
             task.debugBuild
-                .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
+                .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
 
             /*
              * Only get files that are CLASS, and exclude files that are both CLASS and RESOURCES

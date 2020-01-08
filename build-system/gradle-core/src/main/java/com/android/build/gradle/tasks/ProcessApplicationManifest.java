@@ -786,7 +786,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     task.getProject().provider(variantSources::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
             task.isFeatureSplitVariantType = variantDslInfo.getVariantType().isDynamicFeature();
-            task.buildTypeName = variantDslInfo.getBuildType();
+            task.buildTypeName = variantDslInfo.getVariantConfiguration().getBuildType();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
 
@@ -853,7 +853,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         if (variantScope.isTestOnly()) {
             features.add(Feature.TEST_ONLY);
         }
-        if (variantScope.getVariantData().getPublicVariantApi().isDebuggable()) {
+        if (variantScope.getVariantDslInfo().isDebuggable()) {
             features.add(Feature.DEBUGGABLE);
             if (isAdvancedProfilingOn) {
                 features.add(Feature.ADVANCED_PROFILING);

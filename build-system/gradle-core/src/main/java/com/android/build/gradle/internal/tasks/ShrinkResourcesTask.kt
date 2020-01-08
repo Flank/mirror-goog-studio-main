@@ -214,11 +214,11 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions
 
-            task.buildTypeName = variantData.variantDslInfo.buildType
+            task.buildTypeName = variantData.variantDslInfo.variantConfiguration.buildType
 
             task.variantTypeName.setDisallowChanges(variantData.type.name)
 
-            task.debuggableBuildType.setDisallowChanges(variantData.publicVariantApi.isDebuggable)
+            task.debuggableBuildType.setDisallowChanges(variantData.variantDslInfo.isDebuggable)
 
             task.enableRTxtResourceShrinking.set(variantScope
                 .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING])

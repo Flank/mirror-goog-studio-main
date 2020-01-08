@@ -281,12 +281,12 @@ public class ModelBuilder<Extension extends BaseExtension>
                                     .map(
                                             testVariantScope ->
                                                     new DefaultTestVariantBuildOutput(
-                                                            testVariantScope.getFullVariantName(),
+                                                            testVariantScope.getName(),
                                                             getBuildOutputSupplier(
                                                                             testVariantScope
                                                                                     .getVariantData())
                                                                     .get(),
-                                                            variantScope.getFullVariantName(),
+                                                            variantScope.getName(),
                                                             testVariantScope.getType()
                                                                             == VariantTypeImpl
                                                                                     .ANDROID_TEST
@@ -298,7 +298,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 }
                 variantsOutput.add(
                         new DefaultVariantBuildOutput(
-                                variantScope.getFullVariantName(),
+                                variantScope.getName(),
                                 getBuildOutputSupplier(variantScope.getVariantData()).get(),
                                 testVariantBuildOutputs));
             }
@@ -403,7 +403,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         String defaultVariant = variantModel.getDefaultVariant();
         for (VariantScope variantScope : variantModel.getVariants()) {
             if (!variantScope.getVariantData().getType().isTestComponent()) {
-                variantNames.add(variantScope.getFullVariantName());
+                variantNames.add(variantScope.getName());
                 if (shouldBuildVariant) {
                     variants.add(createVariant(variantScope.getVariantData()));
                 }
@@ -544,7 +544,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
         for (VariantScope variantScope : variantModel.getVariants()) {
             if (!variantScope.getVariantData().getType().isTestComponent()
-                    && variantScope.getFullVariantName().equals(variantName)) {
+                    && variantScope.getName().equals(variantName)) {
                 VariantImpl variant = createVariant(variantScope.getVariantData());
                 if (shouldScheduleSourceGeneration) {
                     scheduleSourceGeneration(project, variant);
@@ -613,7 +613,7 @@ public class ModelBuilder<Extension extends BaseExtension>
             }
         }
 
-        String variantName = variantDslInfo.getFullName();
+        String variantName = variantData.getName();
 
         List<AndroidArtifact> extraAndroidArtifacts = Lists.newArrayList(
                 extraModelInfo.getExtraAndroidArtifacts(variantName));
@@ -658,7 +658,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         return new VariantImpl(
                 variantName,
                 variantDslInfo.getBaseName(),
-                variantDslInfo.getBuildType(),
+                variantDslInfo.getVariantConfiguration().getBuildType(),
                 getProductFlavorNames(variantData),
                 new ProductFlavorImpl(variantDslInfo.getMergedFlavor()),
                 mainArtifact,
@@ -718,7 +718,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                         .addErrors(
                                 variantScope.getGlobalScope().getProject().getPath()
                                         + "@"
-                                        + variantScope.getFullVariantName()
+                                        + variantScope.getName()
                                         + "/testTarget",
                                 apkArtifacts.getFailures())
                         .registerIssues(syncIssueReporter);

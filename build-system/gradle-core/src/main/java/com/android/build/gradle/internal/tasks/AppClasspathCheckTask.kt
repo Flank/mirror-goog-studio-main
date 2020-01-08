@@ -75,7 +75,7 @@ dependencies {
             get() = AppClasspathCheckTask::class.java
 
         override fun configure(task: AppClasspathCheckTask) {
-            task.variantName = variantScope.fullVariantName
+            task.variantName = variantScope.name
 
             task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
             task.compileClasspath = variantScope.variantDependencies.compileClasspath

@@ -258,7 +258,7 @@ public class ApplicationTaskManager extends TaskManager {
             @NonNull String suffix,
             @NonNull AndroidArtifacts.PublishedConfigType publication) {
         AdhocComponentWithVariants component =
-                globalScope.getComponentFactory().adhoc(variantScope.getFullVariantName() + suffix);
+                globalScope.getComponentFactory().adhoc(variantScope.getName() + suffix);
 
         final Configuration config = variantScope.getVariantDependencies().getElements(publication);
 
@@ -477,7 +477,7 @@ public class ApplicationTaskManager extends TaskManager {
     }
 
     private static boolean addBundleDependenciesTask(@NonNull VariantScope scope) {
-        return !scope.getVariantData().getPublicVariantApi().isDebuggable();
+        return !scope.getVariantDslInfo().isDebuggable();
     }
 
     private void createAssetPackTasks(@NonNull VariantScope variantScope) {

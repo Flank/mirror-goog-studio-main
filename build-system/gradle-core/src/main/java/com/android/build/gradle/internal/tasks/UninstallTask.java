@@ -75,7 +75,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
                                 "Uninstalling {} (from {}:{}) from device '{}' ({}).",
                                 applicationId,
                                 getProject().getName(),
-                                variant.getVariantDslInfo().getFullName(),
+                                variant.getName(),
                                 device.getName(),
                                 device.getSerialNumber());
                     }
@@ -124,8 +124,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return StringHelper.appendCapitalized(
-                    "uninstall", getVariantScope().getVariantDslInfo().getFullName());
+            return StringHelper.appendCapitalized("uninstall", getVariantScope().getName());
         }
 
         @NonNull

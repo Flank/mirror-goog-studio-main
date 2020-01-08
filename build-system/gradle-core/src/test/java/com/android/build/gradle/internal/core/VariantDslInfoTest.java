@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
+import com.android.build.gradle.internal.variant.VariantCombinationImpl;
 import com.android.build.gradle.internal.variant2.FakeDslScope;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -31,7 +32,10 @@ import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.model.ApiVersion;
 import com.android.sdklib.AndroidVersion;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.List;
+import kotlin.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
@@ -266,8 +270,10 @@ public class VariantDslInfoTest {
                                     deviceApiVersion));
         }
 
+        List<Pair<String, String>> flavors = ImmutableList.of(new Pair<>("dimension1", "flavor"));
         VariantBuilder builder =
                 VariantBuilder.getBuilder(
+                        new VariantCombinationImpl("debug", flavors),
                         VariantTypeImpl.BASE_APK,
                         defaultConfig,
                         new MockSourceProvider("main"),

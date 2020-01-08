@@ -64,7 +64,7 @@ public class VariantCheckers {
     }
 
     public static void checkDefaultVariants(List<VariantScope> variants) {
-        assertThat(Lists.transform(variants, VariantScope::getFullVariantName))
+        assertThat(Lists.transform(variants, VariantScope::getName))
                 .containsExactly(
                         "release", "debug", "debugAndroidTest", "releaseUnitTest", "debugUnitTest");
     }
@@ -120,7 +120,7 @@ public class VariantCheckers {
             @NonNull Collection<VariantScope> variants, @NonNull String name) {
         Optional<?> result =
                 variants.stream()
-                        .filter(t -> t.getFullVariantName().equals(name))
+                        .filter(t -> t.getName().equals(name))
                         .map(VariantScope::getVariantData)
                         .findAny();
         //noinspection unchecked: too much hassle with BaseVariantData generics, not worth it for test code.

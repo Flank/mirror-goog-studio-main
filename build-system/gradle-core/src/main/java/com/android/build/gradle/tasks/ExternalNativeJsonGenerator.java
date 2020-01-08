@@ -562,7 +562,7 @@ public abstract class ExternalNativeJsonGenerator {
 
         GradleBuildVariant.Builder stats =
                 ProcessProfileWriter.getOrCreateVariant(
-                        module.getGradleModulePathName(), scope.getFullVariantName());
+                        module.getGradleModulePathName(), scope.getName());
 
         switch (module.getBuildSystem()) {
             case NDK_BUILD:

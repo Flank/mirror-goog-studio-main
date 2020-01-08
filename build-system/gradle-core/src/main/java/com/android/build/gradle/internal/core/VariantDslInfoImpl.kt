@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.variant.VariantCombination
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
@@ -47,7 +48,6 @@ import com.android.builder.model.ClassField
 import com.android.builder.model.CodeShrinker
 import com.android.builder.model.VectorDrawablesOptions
 import com.android.sdklib.AndroidVersion
-import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
@@ -72,8 +72,7 @@ import java.util.function.Supplier
  *
  */
 open class VariantDslInfoImpl internal constructor(
-    override val fullName: String,
-    override val flavorName: String,
+    override val variantConfiguration: VariantConfiguration,
     override val variantType: VariantType,
     private val defaultConfig: DefaultConfig,
     manifestFile: File,
@@ -89,18 +88,12 @@ open class VariantDslInfoImpl internal constructor(
     private val projectOptions: ProjectOptions,
     private val issueReporter: IssueReporter,
     isInExecutionPhase: BooleanSupplier
-): VariantDslInfo {
-
-    override fun getName(): String {
-        return fullName
-    }
+): VariantDslInfo, VariantCombination {
 
     override val buildType: String?
-        get() = buildTypeObj.name
-
+        get() = variantConfiguration.buildType
     override val productFlavors: List<Pair<String, String>>
-        get() = productFlavorList.map { it.dimension!! to it.name }
-
+        get() = variantConfiguration.productFlavors
     /**
      * This should be mostly private and not used outside of this class.
      * Unfortunately there are a few cases where this cannot happen.
@@ -149,7 +142,7 @@ open class VariantDslInfoImpl internal constructor(
             variantType.isTestComponent,
             manifestParser,
             manifestFile,
-            fullName
+            variantConfiguration.name
         )
         mergeOptions()
     }
@@ -162,19 +155,11 @@ open class VariantDslInfoImpl internal constructor(
      * @return a unique name made up of the variant and split names.
      */
     override fun computeFullNameWithSplits(splitName: String): String {
-        val sb = StringBuilder()
-        val flavorName = flavorName
-        if (!flavorName.isEmpty()) {
-            sb.append(flavorName)
-            sb.appendCapitalized(splitName)
-        } else {
-            sb.append(splitName)
-        }
-        sb.appendCapitalized(buildTypeObj.name)
-        if (variantType.isTestComponent) {
-            sb.append(variantType.suffix)
-        }
-        return sb.toString()
+        return VariantBuilder.computeFullNameWithSplits(
+            variantConfiguration,
+            variantType,
+            splitName
+        )
     }
 
     /**
@@ -184,18 +169,7 @@ open class VariantDslInfoImpl internal constructor(
      * @return the name of the variant
      */
     override val baseName : String by lazy {
-        val sb = StringBuilder()
-        if (productFlavorList.isNotEmpty()) {
-            for (pf in productFlavorList) {
-                sb.append(pf.name).append('-')
-            }
-        }
-        sb.append(buildTypeObj.name)
-        if (variantType.isTestComponent) {
-            sb.append('-').append(variantType.prefix)
-        }
-
-        sb.toString()
+        VariantBuilder.computeBaseName(this, variantType)
     }
 
     /**

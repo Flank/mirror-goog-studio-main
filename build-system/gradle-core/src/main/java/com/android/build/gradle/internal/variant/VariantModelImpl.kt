@@ -85,7 +85,7 @@ class VariantModelImpl(
             .filter { !it.type.isTestComponent }
             .minWith(preferredDefaultVariantScopeComparator)
 
-        return defaultVariantScope?.fullVariantName
+        return defaultVariantScope?.name
     }
 
     /** Prevent any subsequent modifications to the default variant DSL properties.  */
@@ -205,8 +205,8 @@ private class BuildAuthorSpecifiedDefaultBuildTypeComparator constructor(
         if (chosen == null) {
             return 0
         }
-        val b1Score = if (v1.variantDslInfo.buildType == chosen) 1 else 0
-        val b2Score = if (v2.variantDslInfo.buildType == chosen) 1 else 0
+        val b1Score = if (v1.variantDslInfo.variantConfiguration.buildType == chosen) 1 else 0
+        val b2Score = if (v2.variantDslInfo.variantConfiguration.buildType == chosen) 1 else 0
         return b2Score - b1Score
     }
 
@@ -257,8 +257,8 @@ private class DefaultBuildTypeComparator constructor(
     private val preferredBuildType: String
 ) : Comparator<VariantScope> {
     override fun compare(v1: VariantScope, v2: VariantScope): Int {
-        val b1 = v1.variantDslInfo.buildType
-        val b2 = v2.variantDslInfo.buildType
+        val b1 = v1.variantDslInfo.variantConfiguration.buildType
+        val b2 = v2.variantDslInfo.variantConfiguration.buildType
         return if (b1 == b2) {
             0
         } else if (b1 == preferredBuildType) {

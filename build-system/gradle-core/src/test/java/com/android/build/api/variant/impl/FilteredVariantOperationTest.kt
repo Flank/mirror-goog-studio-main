@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.Variant
+import com.android.testutils.AbstractGivenExpectReturnTest
 import com.android.testutils.AbstractGivenExpectTest
 import com.android.testutils.on
 import org.gradle.api.Action
@@ -29,7 +30,7 @@ import kotlin.test.fail
 /**
  * Tests for [FilteredVariantOperation]
  */
-class FilteredVariantOperationTest: AbstractGivenExpectTest<Pair<FilteredVariantOperationTest.FilterInfo, FilteredVariantOperationTest.VariantInfo>, Boolean>() {
+class FilteredVariantOperationTest: AbstractGivenExpectReturnTest<Pair<FilteredVariantOperationTest.FilterInfo, FilteredVariantOperationTest.VariantInfo>, Boolean>() {
 
     @Test
     fun `matching name`() {

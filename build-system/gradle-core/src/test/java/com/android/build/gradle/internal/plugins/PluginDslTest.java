@@ -729,7 +729,7 @@ public class PluginDslTest {
     public Map<String, VariantScope> getVariantMap() {
         Map<String, VariantScope> result = new HashMap<>();
         for (VariantScope variantScope : plugin.getVariantManager().getVariantScopes()) {
-            result.put(variantScope.getFullVariantName(), variantScope);
+            result.put(variantScope.getName(), variantScope);
         }
         return result;
     }

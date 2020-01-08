@@ -111,7 +111,7 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
         public void configure(@NonNull LintPerVariantTask lint) {
             super.configure(lint);
 
-            lint.setVariantName(scope.getFullVariantName());
+            lint.setVariantName(scope.getName());
             lint.allInputs = scope.getGlobalScope().getProject().files();
 
             lint.variantInputs = new VariantInputs(scope);
@@ -160,7 +160,7 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
         public void configure(@NonNull LintPerVariantTask task) {
             super.configure(task);
 
-            task.setVariantName(scope.getFullVariantName());
+            task.setVariantName(scope.getName());
             task.allInputs = scope.getGlobalScope().getProject().files();
 
             task.variantInputs = new VariantInputs(scope);

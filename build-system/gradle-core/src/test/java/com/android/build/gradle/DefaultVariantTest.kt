@@ -17,7 +17,9 @@
 package com.android.build.gradle
 
 import com.android.build.api.variant.VariantFilter
+import com.android.build.api.variant.impl.VariantConfigurationImpl
 import com.android.build.gradle.internal.VariantManager
+import com.android.build.gradle.internal.core.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.AbstractVariantInputModelTest
@@ -486,6 +488,8 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         val variantScopes = mutableListOf<VariantScope>()
 
         for (variant in variantComputer.computeVariants()) {
+            val name = VariantBuilder.computeName(variant, variantType)
+
             val flavors = variant.productFlavors.map {
                 (given.productFlavors[it.second] ?: error("Cant find flavor ${it.second}")).productFlavor
             }
@@ -494,7 +498,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             var ignore = false
             if (variantFilter != null) {
                 val variantInfo = VariantFilterImpl(
-                    variant.name,
+                    name,
                     given.defaultConfig.productFlavor,
                     given.buildTypes[variant.buildType]!!.buildType,
                     flavors
@@ -511,12 +515,19 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
                 val variantScope = Mockito.mock(VariantScope::class.java)
                 variantScopes.add(variantScope)
 
-                Mockito.`when`(variantScope.fullVariantName).thenReturn(variant.name)
+                val varConfig = VariantConfigurationImpl(
+                    name,
+                    "",
+                    variant.buildType,
+                    variant.productFlavors
+                )
+
+                Mockito.`when`(variantScope.name).thenReturn(name)
                 Mockito.`when`(variantScope.type).thenReturn(variantType)
 
                 val variantDslInfo = Mockito.mock(VariantDslInfo::class.java)
                 Mockito.`when`(variantScope.variantDslInfo).thenReturn(variantDslInfo)
-                Mockito.`when`(variantDslInfo.buildType).thenReturn(variant.buildType)
+                Mockito.`when`(variantDslInfo.variantConfiguration).thenReturn(varConfig)
                 Mockito.`when`(variantDslInfo.productFlavorList).thenReturn(flavors)
             }
         }
