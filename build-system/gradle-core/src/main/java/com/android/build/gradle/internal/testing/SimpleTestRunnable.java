@@ -69,7 +69,7 @@ public class SimpleTestRunnable implements Runnable {
     @NonNull private final String projectName;
     @NonNull private final DeviceConnector device;
     @NonNull private final String flavorName;
-    @NonNull private final TestData testData;
+    @NonNull private final StaticTestData testData;
     @NonNull private final File resultsDir;
     @Nullable private final File additionalTestOutputDir;
     @NonNull private final File coverageDir;
@@ -542,7 +542,7 @@ public class SimpleTestRunnable implements Runnable {
         @NonNull private final String projectName;
         @NonNull private final DeviceConnector device;
         @NonNull private final String flavorName;
-        @NonNull private final TestData testData;
+        @NonNull private final StaticTestData testData;
         @NonNull private final File resultsDir;
         private final boolean additionalTestOutputEnabled;
         @Nullable private final File additionalTestOutputDir;
@@ -561,7 +561,7 @@ public class SimpleTestRunnable implements Runnable {
                 @NonNull RemoteAndroidTestRunner runner,
                 @NonNull String flavorName,
                 @NonNull List<File> testedApks,
-                @NonNull TestData testData,
+                @NonNull StaticTestData testData,
                 @NonNull Set<File> helperApks,
                 @NonNull File resultsDir,
                 boolean additionalTestOutputEnabled,

@@ -103,7 +103,8 @@ public class TestApplicationTaskManager
                 new TestApplicationTestData(
                         testVariantProperties.getVariantDslInfo(),
                         testVariantProperties.getVariantSources(),
-                        testVariantProperties.getVariantDslInfo()::getApplicationId,
+                        testVariantProperties.getApplicationId(),
+                        project.getObjects().property(String.class),
                         testingApk,
                         testedApks);
 

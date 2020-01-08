@@ -18,14 +18,16 @@ package com.android.build.gradle.internal.test
 
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl
 import com.android.build.gradle.internal.tasks.getApkFiles
+import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.TestData
 import com.android.build.gradle.internal.utils.toImmutableList
-import com.android.build.gradle.internal.variant.TestVariantData
 import com.android.builder.testing.api.DeviceConfigProvider
+import com.android.sdklib.AndroidVersion
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
 
@@ -47,14 +49,14 @@ internal class BundleTestDataImpl(
     null
 ) {
 
+    override fun getApplicationId(): Provider<String> = testVariantData.applicationId
+
+    override fun getTestedApplicationId(): Provider<String> =
+        testVariantData.testedConfig.applicationId
+
     override fun load(metadataFile: File) {
         // do nothing, there is nothing in the metadata file we cannot get from the tested scope.
     }
-
-    override fun getApplicationId(): String = testVariantData.variantDslInfo.applicationId
-
-    override fun getTestedApplicationId(): String? =
-        testVariantData.variantDslInfo.testedApplicationId
 
     override fun isLibrary(): Boolean =
         testVariantData.testedVariant.variantType.isAar
@@ -74,4 +76,5 @@ internal class BundleTestDataImpl(
     }
 
     override fun getTestedApksFromBundle(): FileCollection? = apkBundle
+
 }

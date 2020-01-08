@@ -34,27 +34,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 
 /** Implementation of {@link TestData} for separate test modules. */
 public class TestApplicationTestData extends AbstractTestDataImpl {
 
-    private final Supplier<String> testApplicationId;
+    private final Provider<String> testApplicationId;
+    private final Property<String> testedApplicationId;
     private final Map<String, String> testedProperties;
 
     public TestApplicationTestData(
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantSources variantSources,
-            Supplier<String> testApplicationId,
+            Provider<String> testApplicationId,
+            Property<String> testedApplicationIdProperty,
             @NonNull Provider<Directory> testApkDir,
             @NonNull FileCollection testedApksDir) {
         super(variantDslInfo, variantSources, testApkDir, testedApksDir);
         this.testedProperties = new HashMap<>();
         this.testApplicationId = testApplicationId;
+        this.testedApplicationId = testedApplicationIdProperty;
     }
 
     @Override
@@ -72,18 +75,20 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
             throw new RuntimeException(
                     "No merged manifest metadata at " + metadataFile.getAbsolutePath());
         }
+        // TODO: Make this not be so terrible and get a real property instead of create a fake one
+        testedApplicationId.set(testedProperties.get("packageId"));
     }
 
     @NonNull
     @Override
-    public String getApplicationId() {
-        return testApplicationId.get();
+    public Provider<String> getApplicationId() {
+        return testApplicationId;
     }
 
-    @Nullable
+    @NonNull
     @Override
-    public String getTestedApplicationId() {
-        return testedProperties.get("packageId");
+    public Provider<String> getTestedApplicationId() {
+        return testedApplicationId;
     }
 
     @Override
@@ -96,12 +101,12 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
     public List<File> getTestedApks(
             @NonNull DeviceConfigProvider deviceConfigProvider, @NonNull ILogger logger) {
 
-        if (testedApksDir == null) {
+        if (getTestedApksDir() == null) {
             return ImmutableList.of();
         }
         // retrieve all the published files.
         @Nullable
-        BuiltArtifacts builtArtifacts = new BuiltArtifactsLoaderImpl().load(testedApksDir);
+        BuiltArtifacts builtArtifacts = new BuiltArtifactsLoaderImpl().load(getTestedApksDir());
         return builtArtifacts != null
                 ? builtArtifacts.getElements().stream()
                         .map(BuiltArtifact::getOutputFile)

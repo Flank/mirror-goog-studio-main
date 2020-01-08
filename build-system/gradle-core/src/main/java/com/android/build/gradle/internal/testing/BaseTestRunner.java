@@ -28,7 +28,6 @@ import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.TestException;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.testrunner.TestIdentifier;
-import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.ide.common.workers.WorkerExecutorException;
@@ -119,7 +118,7 @@ public abstract class BaseTestRunner implements TestRunner {
     public boolean runTests(
             @NonNull String projectName,
             @NonNull String variantName,
-            @NonNull TestData testData,
+            @NonNull StaticTestData testData,
             @NonNull Set<File> helperApks,
             @NonNull List<? extends DeviceConnector> deviceList,
             int timeoutInMs,
@@ -149,14 +148,7 @@ public abstract class BaseTestRunner implements TestRunner {
                     // now look for a matching output file
                     List<File> testedApks = ImmutableList.of();
                     if (!testData.isLibrary()) {
-                        try {
-                            testedApks =
-                                    testData.getTestedApks(
-                                            deviceConfigProvider,
-                                            logger);
-                        } catch (ProcessException e) {
-                            throw new TestException(e);
-                        }
+                        testedApks = testData.getTestedApks().invoke(deviceConfigProvider, logger);
 
                         if (testedApks.isEmpty()) {
                             logger.info(
@@ -220,7 +212,7 @@ public abstract class BaseTestRunner implements TestRunner {
     protected abstract List<TestResult> scheduleTests(
             @NonNull String projectName,
             @NonNull String variantName,
-            @NonNull TestData testData,
+            @NonNull StaticTestData testData,
             @NonNull Map<DeviceConnector, ImmutableList<File>> apksForDevice,
             @NonNull Set<File> helperApks,
             int timeoutInMs,

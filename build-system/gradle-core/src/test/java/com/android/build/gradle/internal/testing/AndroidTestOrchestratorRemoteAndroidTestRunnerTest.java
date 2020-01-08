@@ -55,15 +55,11 @@ public class AndroidTestOrchestratorRemoteAndroidTestRunnerTest {
             @NonNull String instrumentationRunner,
             @NonNull boolean useAndroidx,
             @NonNull String expected) {
-        TestData testData = new StubTestData("com.example.app", instrumentationRunner);
         DeviceConnector deviceConnector = Mockito.mock(DeviceConnector.class);
 
         AndroidTestOrchestratorRemoteAndroidTestRunner odoRunner =
                 new AndroidTestOrchestratorRemoteAndroidTestRunner(
-                        testData.getApplicationId(),
-                        testData.getInstrumentationRunner(),
-                        deviceConnector,
-                        useAndroidx);
+                        "com.example.app", instrumentationRunner, deviceConnector, useAndroidx);
 
         odoRunner.addInstrumentationArg("foo", "bar");
 

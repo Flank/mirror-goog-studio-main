@@ -157,9 +157,6 @@ public class BasicTest2 {
         assertThat(debugMainInfo)
                 .named("debug main artifact")
                 .isNotNull();
-        assertThat(debugMainInfo.getApplicationId())
-                .named("debug package name")
-                .isEqualTo("com.android.tests.basic.debug");
         assertThat(debugMainInfo.isSigned())
                 .named("debug isSigned")
                 .isTrue();
@@ -216,9 +213,6 @@ public class BasicTest2 {
         // this variant is tested.
         AndroidArtifact debugTestInfo = VariantUtils.getAndroidTestArtifact(debugVariant);
 
-        assertThat(debugTestInfo.getApplicationId())
-                .named("test package")
-                .isEqualTo("com.android.tests.basic.debug.test");
         assertThat(debugTestInfo.isSigned())
                 .named("test isSigned")
                 .isTrue();
@@ -293,9 +287,6 @@ public class BasicTest2 {
 
         AndroidArtifact relMainInfo = releaseVariant.getMainArtifact();
         assertThat(relMainInfo).named("release artifact").isNotNull();
-        assertThat(relMainInfo.getApplicationId())
-                .named("release package")
-                .isEqualTo("com.android.tests.basic");
         assertThat(relMainInfo.isSigned())
                 .named("release isSigned")
                 .isFalse();

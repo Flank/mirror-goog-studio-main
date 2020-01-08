@@ -44,6 +44,7 @@ class NoManifestTest {
         // we should be able to create task list, without a valid manifest.
     }
 
+    // FIXME: Revise this once appId is removed from the model
     @Test
     fun noManifestSyncNoApplicationIdTest() {
         val issues = project.model().with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).ignoreSyncIssues().fetchAndroidProjects().onlyModelSyncIssues

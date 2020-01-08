@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.testing;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.process.ProcessException;
 import com.android.sdklib.AndroidVersion;
@@ -27,6 +26,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.xml.parsers.ParserConfigurationException;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Input;
 import org.xml.sax.SAXException;
 
 /**
@@ -49,31 +50,36 @@ public interface TestData {
      *
      * @return the id
      */
+    @Input
     @NonNull
-    String getApplicationId();
+    Provider<String> getApplicationId();
 
     /**
      * Returns the tested application id. This can be empty if the test package is self-contained.
      *
      * @return the id or null.
      */
-    @Nullable
-    String getTestedApplicationId();
+    @Input
+    @NonNull
+    Provider<String> getTestedApplicationId();
 
+    @Input
     @NonNull
     String getInstrumentationRunner();
 
+    @Input
     @NonNull
     Map<String, String> getInstrumentationRunnerArguments();
 
+    @Input
     boolean getAnimationsDisabled();
 
-    /**
-     * Returns whether the tested app is enabled for code coverage
-     */
+    /** Returns whether the tested app is enabled for code coverage */
+    @Input
     boolean isTestCoverageEnabled();
 
     /** The min SDK version of the app */
+    @Input
     @NonNull
     AndroidVersion getMinSdkVersion();
 
@@ -90,23 +96,36 @@ public interface TestData {
             throws ProcessException;
     /**
      * Returns the flavor name being test.
+     *
      * @return the tested flavor name.
      */
+    @Input
     @NonNull
     String getFlavorName();
 
     /**
      * Returns the APK containing the test classes for the application.
+     *
      * @return the APK file.
      */
+    @Input
     @NonNull
     File getTestApk();
 
     /**
-     * Returns the list of directories containing test so the build system can check the presence
-     * of tests before deploying anything.
+     * Returns the list of directories containing test so the build system can check the presence of
+     * tests before deploying anything.
+     *
      * @return list of folders containing test source files.
      */
+    @Input
     @NonNull
     List<File> getTestDirectories();
+
+    /**
+     * Resolves all providers and returns a static version of this class
+     *
+     * @return StaticTestData version of this class
+     */
+    StaticTestData get();
 }

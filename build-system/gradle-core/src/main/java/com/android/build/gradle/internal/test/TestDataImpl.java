@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.testing.TestData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.builder.testing.api.DeviceConfigProvider;
-import com.android.ide.common.process.ProcessException;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -76,14 +75,14 @@ public class TestDataImpl extends AbstractTestDataImpl {
 
     @NonNull
     @Override
-    public String getApplicationId() {
-        return testVariantData.getVariantDslInfo().getApplicationId();
+    public Provider<String> getApplicationId() {
+        return testVariantData.getApplicationId();
     }
 
-    @Nullable
+    @NonNull
     @Override
-    public String getTestedApplicationId() {
-        return testVariantDslInfo.getTestedApplicationId();
+    public Provider<String> getTestedApplicationId() {
+        return testVariantData.getTestedConfig().getApplicationId();
     }
 
     @Override
@@ -95,8 +94,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
     @NonNull
     @Override
     public ImmutableList<File> getTestedApks(
-            @NonNull DeviceConfigProvider deviceConfigProvider,
-            @NonNull ILogger logger) throws ProcessException {
+            @NonNull DeviceConfigProvider deviceConfigProvider, @NonNull ILogger logger) {
         VariantPropertiesImpl testedVariant = testVariantData.getTestedVariant();
 
         ImmutableList.Builder<File> apks = ImmutableList.builder();

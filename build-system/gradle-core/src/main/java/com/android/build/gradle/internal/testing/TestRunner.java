@@ -44,7 +44,7 @@ public interface TestRunner {
     boolean runTests(
             @NonNull String projectName,
             @NonNull String variantName,
-            @NonNull TestData testData,
+            @NonNull StaticTestData testData,
             @NonNull Set<File> helperApks,
             @NonNull List<? extends DeviceConnector> deviceList,
             int timeoutInMs,
