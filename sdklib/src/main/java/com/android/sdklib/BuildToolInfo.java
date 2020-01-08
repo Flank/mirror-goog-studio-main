@@ -149,7 +149,7 @@ public class BuildToolInfo {
         AAPT2("24.0.0 rc2"),
 
         /** OS Path to the LLD linker. */
-        LLD("99.99.99"),
+        LLD("29.0.3"),
 
         /** OS Path to aapt2 that supports daemon mode. */
         // TODO(imorlowska): figure out which build tools will include the daemon mode.

@@ -93,8 +93,8 @@ class RenderScriptLinkerTest {
 
     @Test
     fun testAbiNewLinkerArgs() {
-        val abis32NewLinker = RenderScriptProcessor.getAbis("32", "99.99.99")
-        val abis64NewLinker = RenderScriptProcessor.getAbis("64", "99.99.99")
+        val abis32NewLinker = RenderScriptProcessor.getAbis("32", "29.0.3")
+        val abis64NewLinker = RenderScriptProcessor.getAbis("64", "29.0.3")
 
         assertThat(abis32NewLinker!!.map{ it.device })
             .containsExactlyElementsIn(expected32BitAbis.keys)
