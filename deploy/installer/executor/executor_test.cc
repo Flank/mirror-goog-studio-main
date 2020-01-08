@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include "tools/base/deploy/common/utils.h"
-#include "tools/base/deploy/installer/executor_impl.h"
+#include "tools/base/deploy/installer/executor/executor_impl.h"
 
 #include <fcntl.h>
 #include <gtest/gtest.h>
@@ -95,7 +95,8 @@ TEST_F(ShellCommandRunnerTest, TestForkAndExecWithFds) {
   fcntl(fds[1], F_SETFD, FD_CLOEXEC);
 
   int output, error, pid;
-  executor.ForkAndExecWithStdinFd("sh", {"-c", "cat"}, fds[0], &output, &error, &pid);
+  executor.ForkAndExecWithStdinFd("sh", {"-c", "cat"}, fds[0], &output, &error,
+                                  &pid);
 
   ASSERT_EQ(2, write(fds[1], "!!", 2));
   ASSERT_EQ(0, close(fds[1]));

@@ -15,7 +15,7 @@
  */
 
 #include "tools/base/deploy/common/event.h"
-#include "tools/base/deploy/installer/install_server.h"
+#include "tools/base/deploy/installer/server/install_server.h"
 
 using namespace deploy;
 

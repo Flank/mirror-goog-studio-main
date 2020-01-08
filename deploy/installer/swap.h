@@ -23,7 +23,7 @@
 
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/installer/command.h"
-#include "tools/base/deploy/installer/executor.h"
+#include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {

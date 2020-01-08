@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "tools/base/deploy/installer/redirect_executor.h"
+#include "tools/base/deploy/installer/executor/redirect_executor.h"
 
 namespace deploy {
 

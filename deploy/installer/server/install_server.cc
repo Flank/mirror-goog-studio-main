@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-#include "tools/base/deploy/installer/install_server.h"
+#include "tools/base/deploy/installer/server/install_server.h"
 
 #include <sys/wait.h>
 
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
-#include "tools/base/deploy/installer/overlay.h"
-#include "tools/base/deploy/installer/runas_executor.h"
+#include "tools/base/deploy/installer/executor/runas_executor.h"
+#include "tools/base/deploy/installer/overlay/overlay.h"
 
 using ServerResponse = proto::InstallServerResponse;
 

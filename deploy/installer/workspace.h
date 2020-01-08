@@ -28,7 +28,7 @@
 #include <unistd.h>
 
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
-#include "tools/base/deploy/installer/executor.h"
+#include "tools/base/deploy/installer/executor/executor.h"
 
 namespace deploy {
 

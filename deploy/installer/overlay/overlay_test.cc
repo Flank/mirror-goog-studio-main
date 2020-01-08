@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "tools/base/deploy/installer/overlay.h"
+#include "tools/base/deploy/installer/overlay/overlay.h"
 
 #include <fcntl.h>
 #include <gtest/gtest.h>

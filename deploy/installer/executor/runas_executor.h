@@ -17,7 +17,7 @@
 #ifndef RUNAS_EXECUTOR_H
 #define RUNAS_EXECUTOR_H
 
-#include "tools/base/deploy/installer/redirect_executor.h"
+#include "tools/base/deploy/installer/executor/redirect_executor.h"
 
 namespace deploy {
 

@@ -21,8 +21,8 @@
 #include <string>
 
 #include "tools/base/deploy/common/proto_pipe.h"
-#include "tools/base/deploy/installer/executor.h"
-#include "tools/base/deploy/installer/install_client.h"
+#include "tools/base/deploy/installer/executor/executor.h"
+#include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {

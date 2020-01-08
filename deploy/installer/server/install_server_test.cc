@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "tools/base/deploy/installer/install_server.h"
+#include "tools/base/deploy/installer/server/install_server.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
-#include "tools/base/deploy/installer/executor.h"
+#include "tools/base/deploy/installer/executor/executor.h"
 
 #include <fcntl.h>
 #include <gtest/gtest.h>

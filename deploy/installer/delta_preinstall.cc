@@ -28,7 +28,7 @@
 #include "tools/base/deploy/common/trace.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/command_cmd.h"
-#include "tools/base/deploy/installer/executor.h"
+#include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/patch_applier.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 

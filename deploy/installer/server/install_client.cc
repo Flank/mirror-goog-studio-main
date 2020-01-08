@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "tools/base/deploy/installer/install_client.h"
+#include "tools/base/deploy/installer/server/install_client.h"
 
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
