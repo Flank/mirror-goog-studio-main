@@ -13,7 +13,25 @@ test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-pe
 
 config_options="--config=remote"
 
-# Generate a UUID for use as the bazel invocation id
+# Building //tools/adt/idea/android:artifacts creates files referenced from
+# IMLs, which is required for iml_to_build to succeed below.
+"${script_dir}/bazel" \
+  build \
+  ${config_options} \
+  //tools/adt/idea/android:artifacts
+
+"${script_dir}/bazel" \
+  run \
+  ${config_options} \
+  //tools/base/bazel:iml_to_build -- --dry_run --warnings_as_errors
+
+readonly iml_to_build_status=$?
+if [ $iml_to_build_status -ne 0 ]; then
+  echo "BUILD files not in sync with *.iml files, run 'bazel run //tools/base/bazel:iml_to_build' to update them."
+  exit $iml_to_build_status
+fi
+
+# Generate a UUID for use as the bazel test invocation id
 readonly invocation_id="$(uuidgen)"
 
 # Run Bazel
