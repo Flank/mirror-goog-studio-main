@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-b231fd56d347aa115e9f51a14448451cc369b18af42cbdd4b1d4bd52f4e4b9df
+c41f82a6980bd3f3d59d029517aec95492431032d787cfac752fb675ab14df8c
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (com.android.build.gradle.internal.api.dsl.DslScope, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -1181,7 +1181,10 @@ com.android.build.gradle.internal.dsl.TestOptions implements com.android.build.a
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions implements com.android.build.api.dsl.UnitTestOptions
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.<init>: com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions (com.android.build.gradle.internal.api.dsl.DslScope)
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.all: void (groovy.lang.Closure<org.gradle.api.tasks.testing.Test>)
+com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.all: void (kotlin.jvm.functions.Function1<? super org.gradle.api.tasks.testing.Test, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.applyConfiguration: void (org.gradle.api.tasks.testing.Test)
+com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.getIncludeAndroidResources: boolean ()
+com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.getReturnDefaultValues: boolean ()
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.isIncludeAndroidResources: boolean ()
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.isReturnDefaultValues: boolean ()
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.setIncludeAndroidResources: void (boolean)

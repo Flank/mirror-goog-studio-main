@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-67a8e1ba1719927088f6af2f1fc40d77d264a2ae3062005586383148a6e79000
+ae600217fb4cf402d74c9a071ae0644ea05c599454884cbeb371939c9a59e1b2
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -144,6 +144,11 @@ com.android.build.api.dsl.TestOptions.getUnitTests: UnitTestOptionsT ()
 com.android.build.api.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super UnitTestOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.UnitTestOptions
+com.android.build.api.dsl.UnitTestOptions.all: void (kotlin.jvm.functions.Function1<? super org.gradle.api.tasks.testing.Test, kotlin.Unit>)
+com.android.build.api.dsl.UnitTestOptions.getIncludeAndroidResources: boolean ()
+com.android.build.api.dsl.UnitTestOptions.getReturnDefaultValues: boolean ()
+com.android.build.api.dsl.UnitTestOptions.setIncludeAndroidResources: void (boolean)
+com.android.build.api.dsl.UnitTestOptions.setReturnDefaultValues: void (boolean)
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
 com.android.build.api.variant.ActionableVariantObject
 com.android.build.api.variant.AppVariant implements com.android.build.api.variant.Variant
