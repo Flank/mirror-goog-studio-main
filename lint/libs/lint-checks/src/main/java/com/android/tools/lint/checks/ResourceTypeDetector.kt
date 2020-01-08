@@ -434,14 +434,14 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
             expectedTypes.contains(COLOR_INT_MARKER_TYPE) -> {
                 "Should pass resolved color instead of resource id here: " +
-                  "`getResources().getColor(${argument.asSourceString()})`"
+                    "`getResources().getColor(${argument.asSourceString()})`"
             }
             actual != null && actual.size == 1 && actual.contains(DIMENSION_MARKER_TYPE) -> {
                 "Expected a dimension resource id (`R.color.`) but received a pixel integer"
             }
             expectedTypes.contains(DIMENSION_MARKER_TYPE) -> {
                 "Should pass resolved pixel size instead of resource id here: " +
-                  "`getResources().getDimension*(${argument.asSourceString()})`"
+                    "`getResources().getDimension*(${argument.asSourceString()})`"
             }
             expectedTypes == ResourceEvaluator.getAnyRes() -> {
                 "Expected resource identifier (`R`.type.`name`)"
