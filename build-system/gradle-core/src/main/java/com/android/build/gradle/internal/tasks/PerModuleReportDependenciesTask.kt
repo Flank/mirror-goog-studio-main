@@ -162,7 +162,9 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
                         }
                     }
 
-                    libraryDependencies.add(libraryDependency.build())
+                    if (libraryDependency.getLibraryDepIndexCount() > 0) {
+                      libraryDependencies.add(libraryDependency.build())
+                    }
                 }
 
                 if (dependency.from.selectionReason.descriptions.filter
