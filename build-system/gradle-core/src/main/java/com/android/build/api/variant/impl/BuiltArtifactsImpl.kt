@@ -51,10 +51,17 @@ class BuiltArtifactsImpl(
 
     override fun save(out: Directory) {
         val outFile = File(out.asFile, METADATA_FILE_NAME)
-        save(outFile)
+        saveToFile(outFile)
     }
 
-    private fun save(out: File) {
+    internal fun saveToDirectory(directory: File) {
+        if (!directory.isDirectory) {
+            throw RuntimeException("$directory is not a directory but a file.")
+        }
+        saveToFile(File(directory, METADATA_FILE_NAME))
+    }
+
+    internal fun saveToFile(out: File) {
         out.writeText(persist(out.parentFile.toPath()), Charsets.UTF_8)
     }
 

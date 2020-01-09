@@ -18,6 +18,10 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.apksig.ApkSigner
 import com.android.build.VariantOutput
+import com.android.build.api.variant.BuiltArtifacts
+import com.android.build.api.variant.VariantOutputConfiguration
+import com.android.build.api.variant.impl.BuiltArtifactImpl
+import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
@@ -76,9 +80,6 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
     @get:Input
     abstract val applicationId: Property<String>
 
-    @get:Input
-    abstract val variantType: Property<String>
-
     override fun doTaskAction() {
         getWorkerFacadeWithWorkers().use {
             it.submit(
@@ -89,7 +90,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                     signingConfig = signingConfig?.convertToParams(),
                     bundleIdeModel = bundleIdeModel.get().asFile,
                     applicationId = applicationId.get(),
-                    variantType = variantType.get()
+                    variantName = variantName
                 )
             )
         }
@@ -101,7 +102,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         val signingConfig: SigningConfigProviderParams?,
         val bundleIdeModel: File,
         val applicationId: String,
-        val variantType: String
+        val variantName: String
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
@@ -135,15 +136,14 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 FileUtils.copyFile(params.intermediaryBundleFile, params.finalBundleFile)
             }
 
-            BuildElements(
+            BuiltArtifactsImpl(
+                artifactType = InternalArtifactType.BUNDLE,
                 applicationId = params.applicationId,
-                variantType = params.variantType,
+                variantName = params.variantName,
                 elements = listOf(
-                    BuildOutput(
-                        InternalArtifactType.BUNDLE,
-                        ApkData.of(VariantOutput.OutputType.MAIN, listOf(), -1),
-                        params.finalBundleFile
-                    )
+                    BuiltArtifactImpl(
+                        outputFile = params.finalBundleFile.toPath(),
+                        outputType = VariantOutputConfiguration.OutputType.SINGLE)
                 )
             ).saveToFile(params.bundleIdeModel)
         }
@@ -205,7 +205,6 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             }
 
             task.applicationId.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi.applicationId)
-            task.variantType.setDisallowChanges(variantScope.variantData.type.toString())
         }
 
     }

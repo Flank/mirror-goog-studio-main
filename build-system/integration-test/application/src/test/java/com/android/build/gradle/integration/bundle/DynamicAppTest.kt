@@ -19,11 +19,11 @@ package com.android.build.gradle.integration.bundle
 import com.android.AndroidProjectTypes
 import com.android.SdkConstants
 import com.android.apksig.ApkVerifier
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.integration.common.utils.getVariantByName
-import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.StringOption
@@ -454,14 +454,15 @@ class DynamicAppTest {
             debugVariantModule?.mainArtifact?.apkFromBundleTaskOutputListingFile
         assertThat(postApkFromBundleTaskModelFile).isNotNull()
         assertThat(File(postApkFromBundleTaskModelFile!!)).exists()
-        val apkFromBundleModel = ExistingBuildElements.fromFile(File(postApkFromBundleTaskModelFile))
-        assertThat(apkFromBundleModel.elements).hasSize(1)
+        val apkFromBundleModel = BuiltArtifactsLoaderImpl.loadFromFile(
+            File(postApkFromBundleTaskModelFile))
+        assertThat(apkFromBundleModel!!.elements).hasSize(1)
         val singleOutput = apkFromBundleModel.elements.first()
         assertThat(singleOutput).isNotNull()
-        assertThat(singleOutput.outputPath).isNotNull()
-        assertThat(singleOutput.outputPath.toFile()).exists()
+        assertThat(singleOutput.outputFile).isNotNull()
+        assertThat(singleOutput.outputFile.toFile()).exists()
         // 2 files, the apk and the output listing file.
-        assertThat(singleOutput.outputPath.toFile().listFiles()).hasLength(2)
+        assertThat(singleOutput.outputFile.toFile().listFiles()).hasLength(2)
 
         // -------------
         // build apks for API 18

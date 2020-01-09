@@ -32,12 +32,12 @@ import java.nio.file.Path
 
 data class BuiltArtifactImpl(
     override val outputFile: Path,
-    override val properties: Map<String, String>,
-    override val versionCode: Int,
-    override val versionName: String,
-    override val isEnabled: Boolean,
+    override val properties: Map<String, String> = mapOf(),
+    override val versionCode: Int = -1,
+    override val versionName: String = "",
+    override val isEnabled: Boolean = true,
     override val outputType: VariantOutputConfiguration.OutputType,
-    override val filters: Collection<FilterConfiguration>
+    override val filters: Collection<FilterConfiguration> = listOf()
 ) : BuiltArtifact, CommonBuiltArtifact {
     fun newOutput(newOutputFile: Path): BuiltArtifactImpl {
         return BuiltArtifactImpl(newOutputFile,

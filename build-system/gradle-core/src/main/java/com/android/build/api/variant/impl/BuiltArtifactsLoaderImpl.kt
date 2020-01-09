@@ -47,7 +47,7 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
 
 
         @JvmStatic
-        fun loadFromFile(metadataFile: File?, relativePath: Path?): BuiltArtifacts? {
+        fun loadFromFile(metadataFile: File?, relativePath: Path? = metadataFile?.parentFile?.toPath()): BuiltArtifacts? {
             if (metadataFile == null || relativePath == null || !metadataFile.exists()) {
                 return null
             }

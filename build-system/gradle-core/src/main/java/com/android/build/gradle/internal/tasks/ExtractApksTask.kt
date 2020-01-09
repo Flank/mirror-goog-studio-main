@@ -17,6 +17,9 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.VariantOutput
+import com.android.build.api.variant.VariantOutputConfiguration
+import com.android.build.api.variant.impl.BuiltArtifactImpl
+import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
@@ -77,9 +80,6 @@ abstract class ExtractApksTask : NonIncrementalTask() {
     abstract val applicationId: Property<String>
 
     @get:Input
-    abstract val variantType: Property<String>
-
-    @get:Input
     var extractInstant = false
         private set
 
@@ -96,7 +96,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
                     extractInstant,
                     apksFromBundleIdeModel.get().asFile,
                     applicationId.get(),
-                    variantType.get()
+                    variantName
                 )
             )
         }
@@ -109,7 +109,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
         val extractInstant: Boolean,
         val apksFromBundleIdeModel: File,
         val applicationId: String,
-        val variantType: String
+        val variantName: String
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
@@ -131,14 +131,14 @@ abstract class ExtractApksTask : NonIncrementalTask() {
 
             command.build().execute()
 
-            BuildElements(
+            BuiltArtifactsImpl(
+                artifactType = InternalArtifactType.EXTRACTED_APKS,
                 applicationId = params.applicationId,
-                variantType = params.variantType,
+                variantName = params.variantName,
                 elements = listOf(
-                    BuildOutput(
-                        InternalArtifactType.EXTRACTED_APKS,
-                        ApkData.of(VariantOutput.OutputType.MAIN, listOf(), -1),
-                        params.outputDir
+                    BuiltArtifactImpl(
+                        outputFile = params.outputDir.toPath(),
+                        outputType = VariantOutputConfiguration.OutputType.SINGLE
                     )
                 )
             ).saveToFile(params.apksFromBundleIdeModel)
@@ -180,9 +180,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             }
 
             task.extractInstant = variantScope.globalScope.projectOptions.get(BooleanOption.IDE_EXTRACT_INSTANT)
-
             task.applicationId.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi.applicationId)
-            task.variantType.setDisallowChanges(variantScope.variantData.type.toString())
         }
     }
 }
