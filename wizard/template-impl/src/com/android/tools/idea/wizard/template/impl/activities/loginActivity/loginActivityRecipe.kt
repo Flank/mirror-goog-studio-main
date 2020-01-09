@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.activities.loginActivity
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
@@ -25,7 +26,6 @@ import com.android.tools.idea.wizard.template.impl.activities.common.generateThe
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.layout.activityLoginXml
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.values.dimensXml
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.values.stringsXml
-import com.android.tools.idea.wizard.template.impl.activities.loginActivity.androidManifestXml
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.src.app_package.data.loginDataSourceJava
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.src.app_package.data.loginDataSourceKt
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.src.app_package.data.loginRepositoryJava

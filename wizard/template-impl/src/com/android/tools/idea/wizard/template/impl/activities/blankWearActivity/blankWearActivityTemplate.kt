@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.blankWearActivity
 
-import blankWearActivityRecipe
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
 import com.android.tools.idea.wizard.template.Constraint.CLASS

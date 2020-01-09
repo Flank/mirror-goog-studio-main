@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
-import com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.androidManifestXml
 import com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.res.layout.activityDetailsXml
 import com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.res.layout.activityMainXml
 import com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.res.values.colorsXml

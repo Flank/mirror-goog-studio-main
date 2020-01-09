@@ -34,7 +34,6 @@ import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.template
 import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
-import tabbedActivityRecipe
 import java.io.File
 
 val tabbedActivityTemplate

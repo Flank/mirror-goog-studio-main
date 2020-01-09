@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.fragments.loginFragment
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData

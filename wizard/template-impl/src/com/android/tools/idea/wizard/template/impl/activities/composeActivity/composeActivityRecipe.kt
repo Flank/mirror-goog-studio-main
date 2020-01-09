@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.activities.composeActivity
 
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor

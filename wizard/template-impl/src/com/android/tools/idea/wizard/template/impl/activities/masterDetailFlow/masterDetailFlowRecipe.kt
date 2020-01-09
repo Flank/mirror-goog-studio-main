@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
@@ -32,7 +33,6 @@ import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.r
 import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout.itemListContentXml
 import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.values.dimensXml
 import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.values.stringsXml
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.androidManifestXml
 import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package.contentDetailActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package.contentDetailActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package.contentDetailFragmentJava

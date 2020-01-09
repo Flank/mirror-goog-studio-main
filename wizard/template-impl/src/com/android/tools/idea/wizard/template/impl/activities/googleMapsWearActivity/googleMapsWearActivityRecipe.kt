@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity
+
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
@@ -22,8 +24,6 @@ import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActi
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.releaseRes.values.googleMapsApiXml as releaseGoogleMapsApiXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.res.layout.activityMapXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.res.values.stringsXml
-import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.androidManifestPermissionsXml
-import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.androidManifestXml
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.src.app_package.mapActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.src.app_package.mapActivityKt
 
@@ -33,7 +33,6 @@ fun RecipeExecutor.googleMapsWearActivityRecipe(
   isLauncher: Boolean,
   packageName: String
 ) {
-
   val (projectData, srcOut, resOut, manifestOut) = moduleData
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension

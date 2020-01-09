@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.activities.tabbedActivity
+
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
@@ -42,7 +44,6 @@ fun RecipeExecutor.tabbedActivityRecipe(
   isLauncher: Boolean,
   packageName: String
 ) {
-
   val (projectData, srcOut, resOut, _) = moduleData
   val apis = moduleData.apis
   val buildApi = apis.buildApi!!

@@ -30,7 +30,6 @@ import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.template
 import com.android.tools.idea.wizard.template.stringParameter
-import masterDetailFlowRecipe
 import java.io.File
 
 val masterDetailFlowTemplate

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
@@ -22,7 +23,6 @@ import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.generateThemeStyles
-import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.androidManifestXml
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.layout.activityFullscreenXml
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.fullscreenAttrs
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.res.values.fullscreenColors
@@ -39,7 +39,6 @@ fun RecipeExecutor.fullscreenActivityRecipe(
   layoutName: String,
   packageName: String
 ) {
-
   val (projectData, srcOut, resOut, manifestOut) = moduleData
   val apis = moduleData.apis
   val buildApi = apis.buildApi!!

@@ -34,7 +34,6 @@ import com.android.tools.idea.wizard.template.fragmentToLayout
 import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
-import googleMapsFragmentRecipe
 import java.io.File
 
 val googleMapsFragmentTemplate

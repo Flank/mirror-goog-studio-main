@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity
+
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
-import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.res.layout.activityMainXml
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.res.layout.navigationActivityMainXml
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.res.navigation.mobileNavigationXml
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.res.values.dimensXml
@@ -30,6 +31,7 @@ import com.android.tools.idea.wizard.template.impl.activities.common.navigation.
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.addSafeArgsPluginToClasspath
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.navigationDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.saveFragmentAndViewModel
+import navigationXml
 import java.io.File
 
 fun RecipeExecutor.bottomNavigationActivityRecipe(

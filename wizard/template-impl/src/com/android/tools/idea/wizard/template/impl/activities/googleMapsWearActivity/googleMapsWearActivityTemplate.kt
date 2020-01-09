@@ -36,7 +36,6 @@ import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
-import googleMapsWearActivityRecipe
 import java.io.File
 
 val googleMapsWearActivityTemplate

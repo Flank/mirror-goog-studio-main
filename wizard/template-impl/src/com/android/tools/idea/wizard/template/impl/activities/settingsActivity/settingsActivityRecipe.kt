@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.activities.settingsActivity
+
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
@@ -38,8 +40,8 @@ fun RecipeExecutor.settingsActivityRecipe(
   activityClass: String,
   activityTitle: String,
   multipleScreens: Boolean,
-  packageName: String) {
-
+  packageName: String
+) {
   val (projectData, srcOut, resOut, _) = moduleData
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")

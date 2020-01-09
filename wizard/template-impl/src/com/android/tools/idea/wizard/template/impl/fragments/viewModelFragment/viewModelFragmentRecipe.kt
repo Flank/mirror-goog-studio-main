@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
@@ -30,7 +31,6 @@ fun RecipeExecutor.viewModelFragmentRecipe(
   layoutName: String,
   viewModelName: String
 ) {
-
   val (projectData, srcOut, resOut, manifestOut) = moduleData
   val buildApi = moduleData.apis.buildApi
   val useAndroidX = moduleData.projectTemplateData.androidXSupport

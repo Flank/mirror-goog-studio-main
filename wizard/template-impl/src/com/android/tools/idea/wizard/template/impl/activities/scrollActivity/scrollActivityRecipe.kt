@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.activities.scrollActivity
+
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
@@ -35,8 +37,8 @@ fun RecipeExecutor.scrollActivityRecipe(
   contentLayoutName: String,
   menuName: String,
   isLauncher: Boolean,
-  packageName: String) {
-
+  packageName: String
+) {
   val (projectData, srcOut, resOut, _) = moduleData
   val apis = moduleData.apis
   val buildApi = apis.buildApi!!

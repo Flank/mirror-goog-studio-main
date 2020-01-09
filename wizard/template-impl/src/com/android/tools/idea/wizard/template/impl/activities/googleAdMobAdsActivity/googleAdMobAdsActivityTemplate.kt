@@ -42,7 +42,6 @@ import com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragm
 import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
-import googleAdMobAdsActivityRecipe
 import java.io.File
 
 val googleAdMobAdsActivityTemplate

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.fragments.blankFragment
+
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
@@ -28,7 +30,6 @@ fun RecipeExecutor.blankFragmentRecipe(
   className: String,
   layoutName: String
 ) {
-
   val (projectData, srcOut, resOut, _) = moduleData
   val buildApi = moduleData.apis.buildApi
   val packageName = moduleData.packageName

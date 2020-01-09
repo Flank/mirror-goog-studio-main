@@ -34,7 +34,6 @@ import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
-import composeActivityRecipe
 import java.io.File
 
 val composeActivityTemplate

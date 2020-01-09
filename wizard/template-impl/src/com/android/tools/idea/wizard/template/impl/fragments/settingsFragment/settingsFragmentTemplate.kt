@@ -29,7 +29,6 @@ import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.template
 import com.android.tools.idea.wizard.template.stringParameter
-import settingsFragmentRecipe
 import java.io.File
 
 val settingsFragmentTemplate

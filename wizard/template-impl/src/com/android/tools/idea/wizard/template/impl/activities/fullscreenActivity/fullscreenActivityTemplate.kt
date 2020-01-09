@@ -36,7 +36,6 @@ import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
-import fullscreenActivityRecipe
 import java.io.File
 
 val fullscreenActivityTemplate

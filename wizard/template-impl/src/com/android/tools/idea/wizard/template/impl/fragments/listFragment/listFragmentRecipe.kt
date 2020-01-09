@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+package com.android.tools.idea.wizard.template.impl.fragments.listFragment
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
@@ -21,7 +22,6 @@ import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.dummy.dummyContentJava
 import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.dummy.dummyContentKt
-import com.android.tools.idea.wizard.template.impl.fragments.listFragment.ColumnCount
 import com.android.tools.idea.wizard.template.impl.fragments.listFragment.res.layout.fragmentListXml
 import com.android.tools.idea.wizard.template.impl.fragments.listFragment.res.layout.itemListContentXml
 import com.android.tools.idea.wizard.template.impl.fragments.listFragment.res.values.dimensXml
