@@ -47,8 +47,11 @@ public class AndroidArtifacts {
     // they can be used)
     private static final String TYPE_PROCESSED_JAR = "processed-jar";
 
-    // types for AAR content
-    private static final String TYPE_CLASSES_JAR = "android-classes-jar";
+    private static final String TYPE_CLASSES = "android-classes";
+
+    // types published by an Android library
+    private static final String TYPE_CLASSES_JAR = "android-classes-jar"; // In AAR
+    private static final String TYPE_CLASSES_DIR = "android-classes-directory"; // Not in AAR
     private static final String TYPE_NON_NAMESPACED_CLASSES = "non-namespaced-android-classes";
     private static final String TYPE_SHARED_CLASSES = "android-shared-classes";
     private static final String TYPE_DEX = "android-dex";
@@ -125,6 +128,17 @@ public class AndroidArtifacts {
     private static final String TYPE_NAVIGATION_JSON = "android-navigation-json";
 
     private static final String TYPE_PREFAB_PACKAGE = "android-prefab";
+
+    private static final String TYPE_DESUGAR_LIB_PROJECT_KEEP_RULES =
+            "android-desugar-lib-project-keep-rules";
+    private static final String TYPE_DESUGAR_LIB_SUBPROJECT_KEEP_RULES =
+            "android-desugar-lib-subproject-keep-rules";
+    private static final String TYPE_DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES =
+            "android-desugar-lib-external-libs-keep-rules";
+    private static final String TYPE_DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES =
+            "android-desugar-lib-mixed-scope-keep-rules";
+    private static final String TYPE_DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES =
+            "android-desugar-lib-external-file-keep-rules";
 
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
@@ -225,7 +239,28 @@ public class AndroidArtifacts {
 
     /** Artifact published by modules for consumption by other modules. */
     public enum ArtifactType {
+
+        /**
+         * A jar or directory containing classes.
+         *
+         * <p>If it is a directory, it must contain class files only and not jars.
+         */
+        CLASSES(TYPE_CLASSES),
+
+        /** A jar containing classes. */
         CLASSES_JAR(TYPE_CLASSES_JAR),
+
+        /**
+         * A directory containing classes.
+         *
+         * <p>IMPORTANT: The directory may contain either class files only (preferred) or a single
+         * jar only, see {@link ClassesDirFormat}. Because of this, DO NOT CONSUME this artifact
+         * type directly, use {@link #CLASSES} or {@link #CLASSES_JAR} instead. (We have {@link
+         * com.android.build.gradle.internal.dependency.ClassesDirToClassesTransform} from {@link
+         * #CLASSES_DIR} to {@link #CLASSES} to normalize the format.)
+         */
+        CLASSES_DIR(TYPE_CLASSES_DIR),
+
         // classes.jar files from libraries that are not namespaced yet, and need to be rewritten to
         // be namespace aware.
         NON_NAMESPACED_CLASSES(TYPE_NON_NAMESPACED_CLASSES),
@@ -355,7 +390,13 @@ public class AndroidArtifacts {
         EXPLODED_AAR(TYPE_EXPLODED_AAR),
         AAR_OR_JAR(TYPE_AAR_OR_JAR), // See ArtifactUtils for how this is used.
 
-        NAVIGATION_JSON(TYPE_NAVIGATION_JSON);
+        NAVIGATION_JSON(TYPE_NAVIGATION_JSON),
+
+        DESUGAR_LIB_PROJECT_KEEP_RULES(TYPE_DESUGAR_LIB_PROJECT_KEEP_RULES),
+        DESUGAR_LIB_SUBPROJECT_KEEP_RULES(TYPE_DESUGAR_LIB_SUBPROJECT_KEEP_RULES),
+        DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES(TYPE_DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES),
+        DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES(TYPE_DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES),
+        DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES(TYPE_DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES);
 
         @NonNull private final String type;
 
@@ -367,5 +408,48 @@ public class AndroidArtifacts {
         public String getType() {
             return type;
         }
+    }
+
+    /**
+     * The format of the directory with artifact type {@link
+     * AndroidArtifacts.ArtifactType#CLASSES_DIR}.
+     *
+     * <p>See {@link #CONTAINS_SINGLE_JAR} for why we need this format.
+     */
+    public enum ClassesDirFormat {
+
+        /** The directory contains class files only. */
+        CONTAINS_CLASS_FILES_ONLY,
+
+        /**
+         * The directory contains a single jar only.
+         *
+         * <p>The need for this format arises when we want to publish all classes to a directory,
+         * but the input classes contain jars (e.g., R.jar or those provided by external
+         * users/plugins via the AGP API). There are a few approaches, and only the last one works:
+         *
+         * <p>1. Unzip the jars into the directory: This operation may fail due to OS differences
+         * (e.g., case sensitivity, char encoding). It is also inefficient to zip and unzip classes
+         * multiple times.
+         *
+         * <p>2. Put the jars inside the directory: The directory is usually put on a classpath, and
+         * the jars inside the directory would not be recognized as part of the classpath. Here are
+         * 2 attempts to fix it: 2a) At the consumer's side, modify the classpath to include the
+         * jars inside the directory. This is possible at the task/transform's execution but not
+         * possible at task graph creation. Therefore, Gradle would not apply input normalization
+         * correctly to the jars inside the directory. 2b) Add a transform to convert the directory
+         * into a jar. This transform takes all the class files inside the jars and merge them into
+         * a jar. Then, we can let consumers consume the jar instead of the directory. This is
+         * possible but not as efficient as #3 below.
+         *
+         * <p>3. Merge all the class files inside the jars into a single jar inside the directory,
+         * then add a transform to convert the directory into a jar where the transform simply
+         * selects the jar inside the directory as its output jar (see {@link
+         * com.android.build.gradle.internal.dependency.ClassesDirToClassesTransform}). This is
+         * better than 2b because 2b includes copying files when publishing and zipping files when
+         * transforming, whereas this includes zipping files when publishing and nearly a no-op when
+         * transforming.
+         */
+        CONTAINS_SINGLE_JAR
     }
 }

@@ -18,4 +18,5 @@ package com.activity.energy;
 
 import android.app.IntentService;
 
-public class MyService extends IntentService {}
+@SuppressWarnings("unused") // Accessed via reflection by perf-test
+public final class MyService extends IntentService {}

@@ -60,10 +60,10 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
+import com.android.build.api.variant.VariantConfiguration;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
-import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
@@ -190,7 +190,7 @@ import com.android.builder.core.DesugarProcessArgs;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
-import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
@@ -330,19 +330,6 @@ public abstract class TaskManager {
     /** Creates the tasks for a given BaseVariantData. */
     public abstract void createTasksForVariantScope(
             @NonNull VariantScope variantScope, @NonNull List<VariantScope> variantScopesForLint);
-
-    /** Override to configure NDK data in the scope. */
-    public static void configureScopeForNdk(@NonNull VariantScope scope) {
-        final BaseVariantData variantData = scope.getVariantData();
-        File objFolder =
-                new File(
-                        scope.getGlobalScope().getIntermediatesDir(),
-                        "ndk/" + variantData.getVariantDslInfo().getDirName() + "/obj");
-        for (Abi abi : Abi.values()) {
-            scope.addNdkDebuggableLibraryFolders(abi, new File(objFolder, "local/" + abi.getTag()));
-        }
-
-    }
 
     /**
      * Create tasks before the evaluation (on plugin apply). This is useful for tasks that could be
@@ -790,7 +777,7 @@ public abstract class TaskManager {
     protected static boolean appliesCustomClassTransforms(
             @NonNull VariantScope scope, @NonNull ProjectOptions options) {
         final VariantType type = scope.getType();
-        return scope.getVariantData().getPublicVariantApi().isDebuggable()
+        return scope.getVariantDslInfo().isDebuggable()
                 && type.isApk()
                 && !type.isForTesting()
                 && !getAdvancedProfilingTransforms(options).isEmpty();
@@ -1484,7 +1471,7 @@ public abstract class TaskManager {
             } else {
                 throw new IllegalStateException(
                         "Tested variant "
-                                + testedVariantScope.getFullVariantName()
+                                + testedVariantScope.getName()
                                 + " in "
                                 + globalScope.getProject().getPath()
                                 + " must be a library or an application to have unit tests.");
@@ -1690,7 +1677,7 @@ public abstract class TaskManager {
         VariantScope variantScope = variantData.getScope();
 
         if (!isLintVariant(variantScope)
-                || variantScope.getVariantData().getPublicVariantApi().isDebuggable()
+                || variantScope.getVariantDslInfo().isDebuggable()
                 || !extension.getLintOptions().isCheckReleaseBuilds()) {
             return;
         }
@@ -2217,7 +2204,7 @@ public abstract class TaskManager {
         } else {
             boolean produceSeparateOutputs =
                     dexingType == DexingType.NATIVE_MULTIDEX
-                            && variantScope.getVariantData().getPublicVariantApi().isDebuggable();
+                            && variantScope.getVariantDslInfo().isDebuggable();
 
             taskFactory.register(
                     new DexMergingTask.CreationAction(
@@ -2295,7 +2282,8 @@ public abstract class TaskManager {
         if (isTestCoverageEnabled) {
             if (variantScope.getDexer() == DexerTool.DX) {
                 globalScope
-                        .getErrorHandler()
+                        .getDslScope()
+                        .getIssueReporter()
                         .reportWarning(
                                 Type.GENERIC,
                                 String.format(
@@ -2565,7 +2553,9 @@ public abstract class TaskManager {
                 if (!variantType.isTestComponent()) {
                     final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
                     final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
-                    final String buildType = variantDslInfo.getBuildType();
+                    final VariantConfiguration variantConfiguration =
+                            variantDslInfo.getVariantConfiguration();
+                    final String buildType = variantConfiguration.getBuildType();
 
                     final TaskProvider<? extends Task> assembleTask =
                             taskContainer.getAssembleTask();
@@ -2573,13 +2563,13 @@ public abstract class TaskManager {
                         assembleMap.put(buildType, assembleTask);
                     }
 
-                    for (ProductFlavor flavor : variantDslInfo.getProductFlavors()) {
+                    for (ProductFlavor flavor : variantDslInfo.getProductFlavorList()) {
                         assembleMap.put(flavor.getName(), assembleTask);
                     }
 
                     // if 2+ flavor dimensions, then make an assemble for the flavor combo
                     if (flavorDimensionCount > 1) {
-                        assembleMap.put(variantDslInfo.getFlavorName(), assembleTask);
+                        assembleMap.put(variantConfiguration.getFlavorName(), assembleTask);
                     }
 
                     // fill the bundle map only if the variant supports bundles.
@@ -2590,13 +2580,13 @@ public abstract class TaskManager {
                             bundleMap.put(buildType, bundleTask);
                         }
 
-                        for (ProductFlavor flavor : variantDslInfo.getProductFlavors()) {
+                        for (ProductFlavor flavor : variantDslInfo.getProductFlavorList()) {
                             bundleMap.put(flavor.getName(), bundleTask);
                         }
 
                         // if 2+ flavor dimensions, then make an assemble for the flavor combo
                         if (flavorDimensionCount > 1) {
-                            bundleMap.put(variantDslInfo.getFlavorName(), bundleTask);
+                            bundleMap.put(variantConfiguration.getFlavorName(), bundleTask);
                         }
                     }
                 }
@@ -2691,7 +2681,9 @@ public abstract class TaskManager {
                 task ->
                         task.setDescription(
                                 "Assembles main output for variant "
-                                        + scope.getVariantDslInfo().getFullName()),
+                                        + scope.getVariantDslInfo()
+                                                .getVariantConfiguration()
+                                                .getName()),
                 taskProvider -> scope.getTaskContainer().setAssembleTask(taskProvider));
     }
 
@@ -2708,7 +2700,9 @@ public abstract class TaskManager {
                 task -> {
                     task.setDescription(
                             "Assembles bundle for variant "
-                                    + scope.getVariantDslInfo().getFullName());
+                                    + scope.getVariantDslInfo()
+                                            .getVariantConfiguration()
+                                            .getName());
                     task.dependsOn(
                             scope.getArtifacts()
                                     .getFinalProduct(InternalArtifactType.BUNDLE.INSTANCE));
@@ -3125,7 +3119,8 @@ public abstract class TaskManager {
                                         + ":"
                                         + dependency.getVersion();
                         globalScope
-                                .getErrorHandler()
+                                .getDslScope()
+                                .getIssueReporter()
                                 .reportError(
                                         Type.GENERIC,
                                         "Data Binding annotation processor version needs to match the"

@@ -35,6 +35,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.Serializable
@@ -53,6 +54,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
     // We cannot use @Classpath as it ignores empty directories which may be used as Java resources.
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:SkipWhenEmpty
     @get:Optional
     var resources: FileCollection? = null
         private set
@@ -60,6 +62,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
     // We cannot use @Classpath as it ignores empty directories which may be used as Java resources.
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:SkipWhenEmpty
     @get:Optional
     var resourcesAsJars: FileCollection? = null
         private set
@@ -131,7 +134,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
 
             task.jarCreatorType = variantScope.jarCreatorType
             task.debuggable
-                .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
+                .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
         }
     }
 }
@@ -158,7 +161,7 @@ class BundleLibraryJavaResRunnable @Inject constructor(val params: Params) : Run
             params.inputs.forEach { base ->
                 if (base.isDirectory) {
                     jarCreator.addDirectory(base.toPath())
-                } else if (base.toString().endsWith(SdkConstants.DOT_JAR)) {
+                } else if (base.isFile && base.name.endsWith(SdkConstants.DOT_JAR)) {
                     jarCreator.addJar(base.toPath())
                 }
             }

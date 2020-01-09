@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.android.build.gradle.internal.errors.SyncIssueHandler
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.errors.EvalIssueReporter.Type.ANDROID_X_PROPERTY_NOT_ENABLED
+import com.android.builder.errors.IssueReporter
+import com.android.builder.errors.IssueReporter.Type.ANDROID_X_PROPERTY_NOT_ENABLED
 import org.gradle.api.Action
 import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -33,7 +33,7 @@ import java.util.HashSet
  *
  * @see [com.android.builder.model.SyncIssue.TYPE_ANDROID_X_PROPERTY_NOT_ENABLED]
  */
-class AndroidXDependencyCheck(private val syncIssueHandler: SyncIssueHandler) :
+class AndroidXDependencyCheck(private val issueReporter: IssueReporter) :
     Action<ResolvableDependencies> {
 
     override fun execute(resolvableDependencies: ResolvableDependencies) {
@@ -56,8 +56,8 @@ class AndroidXDependencyCheck(private val syncIssueHandler: SyncIssueHandler) :
                         " Set this property to true in the gradle.properties file and retry.\n" +
                         "The following AndroidX dependencies are detected: $androidXDepList"
             // Report only once
-            if (!syncIssueHandler.hasSyncIssue(ANDROID_X_PROPERTY_NOT_ENABLED)) {
-                syncIssueHandler.reportError(
+            if (!issueReporter.hasIssue(ANDROID_X_PROPERTY_NOT_ENABLED)) {
+                issueReporter.reportError(
                     ANDROID_X_PROPERTY_NOT_ENABLED, message, androidXDepList
                 )
             }

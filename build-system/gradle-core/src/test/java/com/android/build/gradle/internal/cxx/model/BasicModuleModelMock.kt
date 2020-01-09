@@ -243,11 +243,11 @@ open class BasicModuleModelMock {
         doReturn(variantDslInfo).`when`(baseVariantData).variantDslInfo
         doReturn(coreExternalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
         doReturn(coreNdkOptions).`when`(variantDslInfo).ndkConfig
+        doReturn(true).`when`(variantDslInfo).isDebuggable
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
         doReturn(variantImpl).`when`(baseVariantData).publicVariantApi
-        doReturn(true).`when`(variantImpl).isDebuggable
         doReturn(minSdkVersion).`when`(variantDslInfo).minSdkVersion
         doReturn(":$appName").`when`(project).path
         return appFolder

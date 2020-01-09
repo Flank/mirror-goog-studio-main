@@ -63,7 +63,7 @@
 
     <!-- TODO: Replace with a proper thumbnail for modal bottom sheet -->
     <thumbs>
-        <thumb>template_blank_fragment.png</thumb>
+        <thumb>template_modal_bottom_sheet_fragment.png</thumb>
     </thumbs>
 
     <globals file="globals.xml.ftl" />

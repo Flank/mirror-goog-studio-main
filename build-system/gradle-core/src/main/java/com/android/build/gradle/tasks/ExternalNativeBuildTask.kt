@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
@@ -34,7 +35,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.DefaultIssueReporter
 import com.android.ide.common.process.BuildCommandException
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
@@ -70,7 +71,6 @@ import kotlin.streams.toList
  */
 abstract class ExternalNativeBuildTask : NonIncrementalTask() {
 
-    private lateinit var evalIssueReporter: EvalIssueReporter
     private lateinit var generator: Provider<ExternalNativeJsonGenerator>
 
     /**
@@ -117,7 +117,7 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
     )
 
     override fun doTaskAction() {
-        IssueReporterLoggingEnvironment(evalIssueReporter).use { buildImpl() }
+        IssueReporterLoggingEnvironment(DefaultIssueReporter(LoggerWrapper(logger))).use { buildImpl() }
     }
 
     @Throws(BuildCommandException::class, IOException::class)
@@ -474,7 +474,6 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
             )
 
             task.generator = generator
-            task.evalIssueReporter = variantScope.globalScope.errorHandler
         }
     }
 

@@ -23,6 +23,7 @@ import com.android.tools.r8.DexIndexedConsumer
 import com.android.tools.r8.DiagnosticsHandler
 import com.android.tools.r8.L8
 import com.android.tools.r8.L8Command
+import com.android.tools.r8.origin.Origin
 import com.android.utils.FileUtils
 import com.google.common.util.concurrent.MoreExecutors
 import java.nio.file.Path
@@ -38,7 +39,7 @@ fun runL8(
     libConfiguration: String,
     libraries: Collection<Path>,
     minSdkVersion: Int,
-    keepRules: List<Path>?
+    keepRules: KeepRulesConfig
 ) {
     val logger: Logger = Logger.getLogger("L8")
     if (logger.isLoggable(Level.FINE)) {
@@ -47,7 +48,9 @@ fun runL8(
         logger.fine("Special library configuration: $libConfiguration")
         logger.fine("Library classes: $libraries")
         logger.fine("Min Api level: $minSdkVersion")
-        keepRules?.forEach { logger.fine("Keep rules: $it") }
+        keepRules.keepRulesFiles?.forEach { logger.fine("Keep rules file: $it") }
+        keepRules.keepRulesConfigurations?.forEach {
+            logger.fine("Keep rules configuration: $it") }
     }
     FileUtils.cleanOutputDir(output.toFile())
 
@@ -78,9 +81,19 @@ fun runL8(
         .addLibraryFiles(libraries)
         .setMinApiLevel(minSdkVersion)
 
-    if (keepRules != null) {
-        l8CommandBuilder.addProguardConfigurationFiles(keepRules)
+    if (keepRules.keepRulesFiles != null) {
+        l8CommandBuilder.addProguardConfigurationFiles(keepRules.keepRulesFiles)
+    }
+
+    if (keepRules.keepRulesConfigurations != null) {
+        l8CommandBuilder.addProguardConfiguration(
+            keepRules.keepRulesConfigurations, Origin.unknown())
     }
 
     L8.run(l8CommandBuilder.build(), MoreExecutors.newDirectExecutorService())
 }
+
+data class KeepRulesConfig(
+    val keepRulesFiles: List<Path>?,
+    val keepRulesConfigurations: List<String>?
+)

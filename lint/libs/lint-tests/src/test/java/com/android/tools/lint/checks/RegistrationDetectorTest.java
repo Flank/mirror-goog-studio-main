@@ -100,56 +100,6 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testWrongRegistrations() {
-        String expected =
-                ""
-                        + "src/test/pkg/MyApplication.java:5: Warning: test.pkg.MyApplication is an <application> but is registered in the manifest as a <service> [Registered]\n"
-                        + "public class MyApplication extends Application {\n"
-                        + "             ~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/TestActivity.java:3: Warning: test.pkg.TestActivity is an <activity> but is registered in the manifest as a <receiver> [Registered]\n"
-                        + "public class TestActivity extends Activity {\n"
-                        + "             ~~~~~~~~~~~~\n"
-                        + "src/test/pkg/TestProvider.java:8: Warning: test.pkg.TestProvider is a <provider> but is registered in the manifest as an <activity> [Registered]\n"
-                        + "public class TestProvider extends ContentProvider {\n"
-                        + "             ~~~~~~~~~~~~\n"
-                        + "src/test/pkg/TestProvider2.java:3: Warning: test.pkg.TestProvider2 is a <provider> but is registered in the manifest as a <service> [Registered]\n"
-                        + "public class TestProvider2 extends TestProvider {\n"
-                        + "             ~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/TestReceiver.java:7: Warning: test.pkg.TestReceiver is a <receiver> but is registered in the manifest as a <service> [Registered]\n"
-                        + "public class TestReceiver extends BroadcastReceiver {\n"
-                        + "             ~~~~~~~~~~~~\n"
-                        + "src/test/pkg/TestService.java:7: Warning: test.pkg.TestService is a <service> but is registered in the manifest as a <provider> [Registered]\n"
-                        + "public class TestService extends Service {\n"
-                        + "             ~~~~~~~~~~~\n"
-                        + "0 errors, 6 warnings\n";
-        lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"test.pkg\">\n"
-                                        + "    <application\n"
-                                        + "        android:name=\".TestActivity\">\n"
-                                        + "        <!-- These registrations are bogus (wrong type) -->\n"
-                                        + "        <activity android:name=\".TestProvider\" />\n"
-                                        + "        <service android:name=\"test.pkg.TestProvider2\" />\n"
-                                        + "        <provider android:name=\".TestService\" />\n"
-                                        + "        <receiver android:name=\".TestActivity\" />\n"
-                                        + "        <service android:name=\".TestReceiver\" />\n"
-                                        + "        <service android:name=\".MyApplication\" />\n"
-                                        + "    </application>\n"
-                                        + "</manifest>\n"),
-                        mApplication,
-                        mTestActivity,
-                        mTestService,
-                        mTestProvider,
-                        mTestProvider2,
-                        mTestReceiver)
-                .run()
-                .expect(expected);
-    }
-
     public void testLibraryProjects() {
         // If a library project provides additional activities, it is not an error to
         // not register all of those here

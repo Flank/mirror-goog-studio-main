@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.AppVariant
+import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.scope.VariantScope
@@ -26,6 +27,7 @@ import org.gradle.api.Action
 import org.junit.Test
 import org.mockito.Mockito
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.pow
 
 /**
  * Tests for [VariantOperations]
@@ -33,54 +35,64 @@ import java.util.concurrent.atomic.AtomicInteger
 class VariantOperationsTest {
 
     @Test
-    fun unfilteredScopesTest() {
+    fun unfilteredActionsTest() {
         val counter = AtomicInteger(0)
-        val operations = VariantOperations<AppVariant>(VariantScopeTransformers.toVariant)
+        val operations = VariantOperations<AppVariant>()
         for (i in 1..5) {
-            operations.actions.add(Action { _ -> counter.incrementAndGet()})
+            operations.actions.add(Action { counter.getAndAdd(10.0.pow(i - 1).toInt())})
         }
-        val variantScopes = listOf(Mockito.mock(VariantScope::class.java),
-            Mockito.mock(VariantScope::class.java),
-            Mockito.mock(VariantScope::class.java))
+        val variant = createVariant(AppVariant::class.java)
 
-        variantScopes.forEach { variantScope ->
-            val baseVariantData = Mockito.mock(BaseVariantData::class.java)
-            Mockito.`when`(baseVariantData.publicVariantApi).thenReturn(
-                Mockito.mock(AppVariantImpl::class.java))
-            Mockito.`when`(variantScope.variantData).thenReturn(baseVariantData)
-        }
-
-        operations.executeOperations<AppVariant>(variantScopes)
-        Truth.assertThat(counter.get()).isEqualTo(15) // 5x3
+        operations.executeActions(variant)
+        Truth.assertThat(counter.get()).isEqualTo(11111)
     }
 
     @Test
-    fun singleFilteredScopesTest() {
-        val atomicCounter = AtomicInteger(0)
-        val variantOperation = VariantOperations<Variant<*>>(VariantScopeTransformers.toVariant)
-        variantOperation.addFilteredAction(FilteredVariantOperation(
-            specificType = Variant::class.java,
-            action = Action { atomicCounter.incrementAndGet() })
+    fun singleFilteredActionTest() {
+        val counter = AtomicInteger(0)
+        val operations = VariantOperations<AppVariant>()
+        operations.addFilteredAction(FilteredVariantOperation(
+            specificType = AppVariant::class.java,
+            action = Action { counter.incrementAndGet() })
         )
-        variantOperation.executeOperations<Variant<VariantProperties>>(listOf(createVariantScope()))
-        Truth.assertThat(atomicCounter.get()).isEqualTo(1)
+
+        val variant = createVariant(AppVariant::class.java)
+        operations.executeActions(variant)
+        Truth.assertThat(counter.get()).isEqualTo(1)
     }
 
     @Test
-    fun multipleFilteredScopesTest() {
-        val atomicCounter = AtomicInteger(0)
-        val variantOperation = VariantOperations<Variant<*>>(
-            VariantScopeTransformers.toVariant)
-        variantOperation.addFilteredAction(
+    fun multipleActionsTest() {
+        val counter = AtomicInteger(0)
+        val operations = VariantOperations<Variant<*>>()
+
+        operations.actions.add(Action { counter.incrementAndGet()})
+
+        operations.addFilteredAction(
             FilteredVariantOperation(
-                specificType = Variant::class.java,
-                action = Action { atomicCounter.incrementAndGet() }
+                specificType = LibraryVariant::class.java,
+                action = Action { counter.getAndAdd(10) }
             )
         )
-        variantOperation.executeOperations<Variant<VariantProperties>>(listOf(createVariantScope(),
-            createVariantScope(),
-            createVariantScope()))
-        Truth.assertThat(atomicCounter.get()).isEqualTo(3)
+
+        operations.addFilteredAction(
+            FilteredVariantOperation(
+                specificType = AppVariant::class.java,
+                action = Action { counter.getAndAdd(100) }
+            )
+        )
+
+        val variant = createVariant(AppVariant::class.java)
+        operations.executeActions(variant)
+
+        Truth.assertThat(counter.get()).isEqualTo(101)
+    }
+
+    private fun <T: Variant<*>> createVariant(
+        @Suppress("UNCHECKED_CAST") variantClass: Class<T> = Variant::class.java as Class<T>
+    ): T {
+        val variant = Mockito.mock(variantClass)
+        return variant
     }
 
     private fun createVariantScope(): VariantScope {

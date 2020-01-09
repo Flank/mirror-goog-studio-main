@@ -32,7 +32,6 @@ import com.android.ide.common.resources.configuration.FolderConfiguration
 import com.android.ide.common.resources.configuration.VersionQualifier
 import com.android.ide.common.resources.getLocales
 import com.android.ide.common.resources.usage.ResourceUsageModel
-import com.android.ide.common.resources.usage.ResourceUsageModel.getResourceFieldName
 import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceFolderType.VALUES
@@ -62,6 +61,7 @@ import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
 import com.android.tools.lint.detector.api.getLocaleAndRegion
 import com.android.utils.SdkUtils.fileNameToResourceName
+import com.android.utils.SdkUtils.getResourceFieldName
 import com.android.utils.SdkUtils.isServiceKey
 import com.android.utils.XmlUtils
 import com.google.common.collect.Lists
@@ -194,7 +194,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             assert(type != ID) { folderType }
             val name = fileNameToResourceName(file.name)
 
-            visitResource(context, type, name, null, null)
+            visitResource(context, type, name, name, null, null)
         }
     }
 
@@ -217,7 +217,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             assert(type != ID) { folderType }
             val name = fileNameToResourceName(file.name)
 
-            visitResource(context, type, name, root, null)
+            visitResource(context, type, name, name, root, null)
         } else {
             // For value files, and drawables and colors etc also pull in resource
             // references inside the context.file
@@ -259,8 +259,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             while (child != null) {
                 val type = ResourceType.fromXmlTag(child)
                 if (type != null && type != ID && type != PUBLIC && type != AAPT) {
-                    val name = getResourceFieldName(child)
-                    if (name.isNullOrBlank()) {
+                    val originalName = child.getAttribute(ATTR_NAME)
+                    if (originalName.isNullOrBlank()) {
                         if (!child.hasAttribute(ATTR_NAME)) {
                             val fix = fix().set().todo(null, ATTR_NAME).build()
                             context.report(
@@ -270,7 +270,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                             )
                         }
                     } else {
-                        visitResource(context, type, name, child, defaultLocale)
+                        val name = getResourceFieldName(originalName)
+                        visitResource(context, type, name, originalName, child, defaultLocale)
                     }
                 }
                 child = XmlUtils.getNextTag(child)
@@ -282,6 +283,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         context: ResourceContext,
         type: ResourceType,
         name: String,
+        originalName: String,
         element: Element?,
         defaultLocale: String?
     ) {
@@ -308,6 +310,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                         context,
                         type,
                         name,
+                        originalName,
                         element,
                         folderName,
                         defaultLocale
@@ -322,6 +325,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         context: ResourceContext,
         type: ResourceType,
         name: String,
+        originalName: String,
         element: Element?,
         folderName: String,
         defaultLocale: String?
@@ -334,8 +338,16 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         val resources = client
             .getResourceRepository(context.mainProject, true, false) ?: return
 
-        val items: List<ResourceItem> =
-            resources.getResources(context.project.resourceNamespace, type, name)
+        val namespace = context.project.resourceNamespace
+        // See https://issuetracker.google.com/147213347
+        var items: List<ResourceItem> = resources.getResources(namespace, type, originalName)
+        if (items.isEmpty() && originalName != name) { // name contains .'s, -'s, etc
+            items = resources.getResources(namespace, type, name)
+            if (items.isEmpty()) {
+                // Something is wrong with the resource repository; can't analyze here
+                return
+            }
+        }
         val hasDefault = items.filter { isDefaultFolder(it.configuration, null) }.any()
         if (!hasDefault) {
             reportExtraResource(type, name, context, element)

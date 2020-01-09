@@ -63,7 +63,7 @@ public class SigningReportTask extends DefaultTask {
 
         for (VariantScope variant : variants) {
             textOutput.withStyle(Identifier).text("Variant: ");
-            textOutput.withStyle(Description).text(variant.getFullVariantName());
+            textOutput.withStyle(Description).text(variant.getName());
             textOutput.println();
 
             // get the data

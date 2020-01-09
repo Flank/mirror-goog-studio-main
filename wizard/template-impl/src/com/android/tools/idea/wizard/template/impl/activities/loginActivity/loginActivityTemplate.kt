@@ -47,7 +47,7 @@ val loginActivityTemplate
 
     category = Category.Activity
     formFactor = FormFactor.Mobile
-    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry)
+    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry, WizardUiContext.NewProject)
 
     lateinit var layoutName: StringParameter
     val activityClass = stringParameter {
@@ -78,8 +78,8 @@ val loginActivityTemplate
       name = "Package name"
       default = "com.mycompany.myapp"
       constraints = listOf(PACKAGE)
+      suggest = { packageName }
     }
-
 
     widgets(
       TextFieldWidget(activityClass),

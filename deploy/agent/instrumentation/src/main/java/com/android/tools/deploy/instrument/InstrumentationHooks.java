@@ -82,12 +82,6 @@ public final class InstrumentationHooks {
 
     public static void handleDispatchPackageBroadcastEntry(
             Object activityThread, int cmd, String[] packages) {
-        Log.v(
-                TAG,
-                String.format(
-                        "Package broadcast entry hook { cmd=%d, time=%d, thread=%d }",
-                        cmd, LocalTime.now().toNanoOfDay(), Thread.currentThread().getId()));
-
         mActivityThread = activityThread;
         mCmd = cmd;
 
@@ -101,12 +95,6 @@ public final class InstrumentationHooks {
     }
 
     public static void handleDispatchPackageBroadcastExit() {
-        Log.v(
-                TAG,
-                String.format(
-                        "Package broadcast exit hook { cmd=%d, time=%d, thread=%d }",
-                        mCmd, LocalTime.now().toNanoOfDay(), Thread.currentThread().getId()));
-
         if (mCmd != PACKAGE_REPLACED) {
             return;
         }

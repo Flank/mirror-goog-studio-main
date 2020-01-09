@@ -16,22 +16,18 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.gradle.internal.BuildTypeData
-import com.android.build.gradle.internal.ProductFlavorData
-import com.android.build.gradle.internal.dsl.DefaultConfig
-import com.android.build.gradle.internal.dsl.ProductFlavor
-import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.scope.VariantScope
 
 /**
- * Provides information about the build types, product flavors and signing configurations.
+ * Model for the variants and their inputs.
+ *
+ * Can also compute the default variant to be used during sync.
  */
 interface VariantModel {
 
-    val defaultConfig: ProductFlavorData<DefaultConfig>
+    val inputs: VariantInputModel
 
-    val buildTypes: Map<String, BuildTypeData>
+    val variants: List<VariantScope>
 
-    val productFlavors: Map<String, ProductFlavorData<ProductFlavor>>
-
-    val signingConfigs: Map<String, SigningConfig>
+    val defaultVariant: String?
 }

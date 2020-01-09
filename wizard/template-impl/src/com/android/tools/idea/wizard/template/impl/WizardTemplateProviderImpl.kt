@@ -18,37 +18,69 @@ package com.android.tools.idea.wizard.template.impl
 
 import com.android.tools.idea.wizard.template.Template
 import com.android.tools.idea.wizard.template.WizardTemplateProvider
+import com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.androidTVActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.androidThingsActivity.androidThingsActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.basicActivity.basicActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.blankWearActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.bottomNavigationActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.composeActivity.composeActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.emptyActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.fullscreenActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.googleAdMobAdsActivity.googleAdMobAdsActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.googleMapsActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.googleMapsWearActivity.googleMapsWearActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.loginActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.masterDetailFlowTemplate
+import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.navigationDrawerActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.scrollActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.settingsActivity.settingsActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.tabbedActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.viewModelActivity.viewModelActivityTemplate
-import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.navigationDrawerActivityTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.blankFragment.blankFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.fullscreenFragmentTemplate
-import com.android.tools.idea.wizard.template.impl.fragments.googleMapsFragment.googleMapsFragmentTemplate
-import com.android.tools.idea.wizard.template.impl.fragments.loginFragment.loginFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.googleAdMobAdsFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.googleMapsFragment.googleMapsFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.listFragment.listFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.loginFragment.loginFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.modalBottomSheetTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.scrollFragment.scrollFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.settingsFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.viewModelFragmentTemplate
-import com.android.tools.idea.wizard.template.impl.fragments.scrollFragment.scrollFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.other.folders.folderTemplates
 
 /**
  * Implementation of the Android Wizard Template plugin extension point.
  */
 class WizardTemplateProviderImpl : WizardTemplateProvider() {
   override fun getTemplates(): List<Template> = listOf(
-    basicActivityTemplate, emptyActivityTemplate, tabbedActivityTemplate, viewModelActivityTemplate, loginActivityTemplate,
-    masterDetailFlowTemplate, fullscreenActivityTemplate, settingsActivityTemplate, scrollActivityTemplate,
-    navigationDrawerActivityTemplate, /*googleMapsActivityTemplate b/78621322,*/ bottomNavigationActivityTemplate, blankFragmentTemplate,
-    fullscreenFragmentTemplate, settingsFragmentTemplate, loginFragmentTemplate, viewModelFragmentTemplate, googleAdMobAdsFragmentTemplate,
-    scrollFragmentTemplate, listFragmentTemplate, modalBottomSheetTemplate, googleMapsFragmentTemplate)
+    androidThingsActivityTemplate,
+    androidTVActivityTemplate,
+    basicActivityTemplate,
+    blankWearActivityTemplate,
+    bottomNavigationActivityTemplate,
+    composeActivityTemplate,
+    emptyActivityTemplate,
+    fullscreenActivityTemplate,
+    googleAdMobAdsActivityTemplate,
+    googleMapsActivityTemplate,
+    googleMapsWearActivityTemplate,
+    loginActivityTemplate,
+    masterDetailFlowTemplate,
+    navigationDrawerActivityTemplate,
+    settingsActivityTemplate,
+    scrollActivityTemplate,
+    tabbedActivityTemplate,
+    viewModelActivityTemplate,
+
+    blankFragmentTemplate,
+    fullscreenFragmentTemplate,
+    googleAdMobAdsFragmentTemplate,
+    googleMapsFragmentTemplate,
+    listFragmentTemplate,
+    loginFragmentTemplate,
+    modalBottomSheetTemplate,
+    settingsFragmentTemplate,
+    scrollFragmentTemplate,
+    viewModelFragmentTemplate
+  ) + folderTemplates
 }

@@ -16,15 +16,12 @@
 
 package com.android.build.gradle.internal.ide
 
-import com.android.build.gradle.internal.errors.SyncIssueHandler
-import com.android.builder.errors.EvalIssueReporter.Severity
-import com.android.builder.errors.EvalIssueReporter.Type
-import com.android.builder.model.SyncIssue
+import com.android.builder.errors.IssueReporter
+import com.android.builder.errors.IssueReporter.Type
 import com.google.common.base.Splitter
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ListMultimap
-import java.util.function.BiConsumer
 import java.util.regex.Pattern
 
 private val pattern = Pattern.compile(".*any matches for (\\S*) .*", Pattern.DOTALL)
@@ -42,19 +39,19 @@ class DependencyFailureHandler {
         return this
     }
 
-    fun registerIssues(syncIssueHandler: SyncIssueHandler) {
+    fun registerIssues(issueReporter: IssueReporter) {
         for ((key, value) in failures.entries()) {
             processDependencyThrowable(
                 value,
                 { message -> checkForData(message) },
                 { data, messages ->
                     if (data != null) {
-                        syncIssueHandler.reportError(
+                        issueReporter.reportError(
                             Type.UNRESOLVED_DEPENDENCY,
                             "Unable to resolve dependency $data",
                             data)
                     } else {
-                        syncIssueHandler.reportError(
+                        issueReporter.reportError(
                             Type.UNRESOLVED_DEPENDENCY,
                             "Unable to resolve dependency for '$key': ${messages[0]}",
                             null,

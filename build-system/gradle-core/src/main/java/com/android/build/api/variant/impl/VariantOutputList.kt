@@ -22,7 +22,7 @@ import com.android.build.api.variant.VariantOutputConfiguration
 /**
  * Implementation of [List] of [VariantOutput] with added private services for AGP.
  */
-internal class VariantOutputList(
+class VariantOutputList(
     private val variantOutputs: List<VariantOutputImpl>): List<VariantOutputImpl> by variantOutputs {
 
     /**
@@ -34,7 +34,6 @@ internal class VariantOutputList(
      */
     fun getSplitsByType(outputType: VariantOutputConfiguration.OutputType): List<VariantOutputImpl> =
         variantOutputs.filter { it.outputType == outputType }
-
 
     /**
      * Returns the list of enabled [VariantOutput]

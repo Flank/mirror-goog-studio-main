@@ -280,7 +280,7 @@ public abstract class LintBaseTask extends DefaultTask {
         private final ConfigurableFileCollection allInputs;
 
         public VariantInputs(@NonNull VariantScope variantScope) {
-            name = variantScope.getFullVariantName();
+            name = variantScope.getName();
             allInputs = variantScope.getGlobalScope().getProject().files();
 
             Provider<RegularFile> localLintJarCollection;

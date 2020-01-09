@@ -339,8 +339,12 @@ class LeakDetector : Detector(), SourceCodeScanner {
             "android.content.Loader",
             "android.support.v4.content.Loader",
             "android.os.AsyncTask",
-            "android.arch.lifecycle.ViewModel"
+            "android.arch.lifecycle.ViewModel",
+            "androidx.lifecycle.ViewModel"
         )
+
+        private const val CLASS_LIFECYCLE = "androidx.lifecycle.Lifecycle"
+        private const val CLASS_LIFECYCLE_OLD = "android.arch.lifecycle.Lifecycle"
 
         private fun isAppContextName(cls: PsiClass, field: PsiField): Boolean {
             // Don't flag names like "sAppContext" or "applicationContext".
@@ -356,13 +360,15 @@ class LeakDetector : Detector(), SourceCodeScanner {
         }
 
         private fun isLeakCandidate(cls: PsiClass, evaluator: JavaEvaluator): Boolean {
-            return (evaluator.extendsClass(
-                cls,
-                CLASS_CONTEXT,
-                false
-            ) && !evaluator.extendsClass(cls, CLASS_APPLICATION, false) ||
+            return (evaluator.extendsClass(cls, CLASS_CONTEXT, false) &&
+                    !evaluator.extendsClass(cls, CLASS_APPLICATION, false)) ||
                     evaluator.extendsClass(cls, CLASS_VIEW, false) ||
-                    evaluator.extendsClass(cls, CLASS_FRAGMENT, false))
+                    evaluator.extendsClass(cls, CLASS_FRAGMENT, false) ||
+                    // From https://developer.android.com/topic/libraries/architecture/viewmodel:
+                    // Caution: A ViewModel must never reference a view, Lifecycle, or any
+                    // class that may hold a reference to the activity context
+                    evaluator.extendsClass(cls, CLASS_LIFECYCLE, false) ||
+                    evaluator.extendsClass(cls, CLASS_LIFECYCLE_OLD, false)
         }
     }
 }

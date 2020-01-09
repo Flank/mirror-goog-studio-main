@@ -14,7 +14,7 @@
     <orderEntry type="library" name="studio-grpc" level="project" />
     <orderEntry type="library" name="studio-proto" level="project" />
     <orderEntry type="library" name="transport-proto" level="project" />
-    <orderEntry type="library" scope="TEST" name="truth" level="project" />
+    <orderEntry type="library" name="truth" level="project" />
     <orderEntry type="library" scope="TEST" name="Guava" level="project" />
   </component>
 </module>

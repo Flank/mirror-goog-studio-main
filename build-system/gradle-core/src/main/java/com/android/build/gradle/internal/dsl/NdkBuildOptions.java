@@ -65,7 +65,7 @@ public class NdkBuildOptions
     }
 
     @Override
-    public void setBuildStagingDirectory(@NonNull File buildStagingDirectory) {
+    public void setBuildStagingDirectory(@Nullable File buildStagingDirectory) {
         this.buildStagingDirectory = dslScope.file(buildStagingDirectory);
     }
 
@@ -74,7 +74,7 @@ public class NdkBuildOptions
     }
 
     @Override
-    public void buildStagingDirectory(@NonNull Object buildStagingDirectory) {
+    public void buildStagingDirectory(@Nullable Object buildStagingDirectory) {
         this.buildStagingDirectory = dslScope.file(buildStagingDirectory);
     }
 }

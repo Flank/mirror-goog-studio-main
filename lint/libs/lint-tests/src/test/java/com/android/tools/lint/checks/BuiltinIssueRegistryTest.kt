@@ -32,7 +32,8 @@ class BuiltinIssueRegistryTest : TestCase() {
         val issues = registry.issues
         val issueCount = issues.size
         assertTrue(
-            Integer.toString(issueCount), BuiltinIssueRegistry.INITIAL_CAPACITY >= issueCount
+            "BuiltinIssueRegistry.INITIAL_CAPACITY should be at least " + issueCount,
+            BuiltinIssueRegistry.INITIAL_CAPACITY >= issueCount
         )
     }
 
@@ -102,7 +103,7 @@ class BuiltinIssueRegistryTest : TestCase() {
         val requiredSize = issuesForScope.size
         val capacity = registry.getIssueCapacity(scopeSet)
         if (requiredSize > capacity) {
-            TestCase.fail(
+            fail(
                 "For Scope set " +
                         scopeSet +
                         ": capacity " +

@@ -392,7 +392,6 @@ private class ProjectInitializer(
                     // One of the built-in constants? Desugaring.FULL etc
                     try {
                         val fieldName = option.toUpperCase()
-                        val instance = Desugaring.Companion
                         val cls = Desugaring::class.java
                         @Suppress("UNCHECKED_CAST")
                         val v =

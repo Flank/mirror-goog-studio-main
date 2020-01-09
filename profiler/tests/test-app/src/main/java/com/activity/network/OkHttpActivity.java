@@ -19,7 +19,7 @@ package com.activity.network;
 import android.tools.SimpleWebServer;
 import android.tools.SimpleWebServer.QueryParam;
 import android.tools.SimpleWebServer.RequestHandler;
-import com.activity.PerfdTestActivity;
+import com.activity.TransportTestActivity;
 import com.activity.network.NetworkUtils.ServerTest;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Interceptor;
@@ -33,7 +33,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-public final class OkHttpActivity extends PerfdTestActivity {
+@SuppressWarnings("unused") // Accessed via reflection by perf-test
+public final class OkHttpActivity extends TransportTestActivity {
 
     public OkHttpActivity() {
         super("OkHttp3 Activity");

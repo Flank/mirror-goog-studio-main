@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal
 
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
 import com.android.build.gradle.internal.cxx.stripping.createSymbolStripExecutableFinder
@@ -25,7 +23,7 @@ import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.repository.Revision
 import com.android.sdklib.AndroidVersion
 import com.android.sdklib.BuildToolInfo
@@ -43,7 +41,7 @@ open class SdkComponents(
     private val sdkLoadStrategy: SdkLoadingStrategy,
     private val sdkHandlerSupplier: Supplier<SdkHandler>,
     val ndkHandlerSupplier: Supplier<NdkHandler>,
-    private val evalIssueReporter: EvalIssueReporter) {
+    private val issueReporter: IssueReporter) {
 
     private val projectRootDir = project.rootDir
 
@@ -53,7 +51,7 @@ open class SdkComponents(
             projectOptions: ProjectOptions,
             extensionSupplier: Supplier<BaseExtension>,
             logger: ILogger,
-            evalIssueReporter: EvalIssueReporter): SdkComponents {
+            issueReporter: IssueReporter): SdkComponents {
 
             val sdkSourceSet = SdkLocationSourceSet(project.rootDir)
 
@@ -61,7 +59,7 @@ open class SdkComponents(
                 val sdkHandler = SdkHandler(
                     sdkSourceSet,
                     logger,
-                    evalIssueReporter)
+                    issueReporter)
                 sdkHandler.setSdkLibData(
                     SdkLibDataFactory(
                         !project.gradle.startParameter.isOffline && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD),
@@ -81,14 +79,14 @@ open class SdkComponents(
                 Supplier { extensionSupplier.get()?.compileSdkVersion },
                 Supplier { extensionSupplier.get()?.buildToolsRevision },
                 projectOptions.get(BooleanOption.USE_ANDROID_X),
-                evalIssueReporter)
+                issueReporter)
 
             val sdkLoadWithFallback = SdkLoadingStrategy(
                 directLoadingStrategy, fullScanLoadingStrategy)
 
             val ndkHandlerSupplier = Suppliers.memoize {
                 NdkHandler(
-                    evalIssueReporter,
+                    issueReporter,
                     projectOptions.get(BooleanOption.ENABLE_SIDE_BY_SIDE_NDK),
                     extensionSupplier.get()?.ndkVersion,
                     extensionSupplier.get()!!.compileSdkVersion!!,
@@ -100,7 +98,7 @@ open class SdkComponents(
                 sdkLoadWithFallback,
                 sdkHandlerSupplier,
                 ndkHandlerSupplier,
-                evalIssueReporter
+                issueReporter
             )
         }
     }
@@ -149,6 +147,6 @@ open class SdkComponents(
     }
 
     fun getSdkDirectory(): File {
-        return SdkLocator.getSdkDirectory(projectRootDir, evalIssueReporter)
+        return SdkLocator.getSdkDirectory(projectRootDir, issueReporter)
     }
 }

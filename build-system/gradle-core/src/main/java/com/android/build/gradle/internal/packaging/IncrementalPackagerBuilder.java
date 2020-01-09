@@ -206,7 +206,7 @@ public class IncrementalPackagerBuilder {
     @NonNull
     public IncrementalPackagerBuilder withSigning(
             @Nullable SigningConfigData signingConfig, int minSdk) {
-        return withSigning(signingConfig, minSdk, null);
+        return withSigning(signingConfig, minSdk, null, null);
     }
 
     /**
@@ -264,7 +264,10 @@ public class IncrementalPackagerBuilder {
      */
     @NonNull
     public IncrementalPackagerBuilder withSigning( //TODO change it to use dsl signingConfig class?
-            @Nullable SigningConfigData signingConfig, int minSdk, @Nullable Integer targetApi) {
+            @Nullable SigningConfigData signingConfig,
+            int minSdk,
+            @Nullable Integer targetApi,
+            @Nullable byte[] sdkDependencyData) {
         if (signingConfig == null) {
             return this;
         }
@@ -305,6 +308,7 @@ public class IncrementalPackagerBuilder {
                             .setV2SigningEnabled(enableV2Signing)
                             .setMinSdkVersion(minSdk)
                             .setValidation(computeValidation())
+                            .setSdkDependencyData(sdkDependencyData)
                             .setExecutor(
                                     provider -> {
                                         // noinspection CommonForkJoinPool

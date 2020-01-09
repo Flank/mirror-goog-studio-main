@@ -20,12 +20,14 @@ import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.builder.errors.EvalIssueException
+import com.google.common.truth.StringSubject
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 import kotlin.test.assertFailsWith
 
 /** Functional tests for the new Kotlin DSL. */
@@ -67,5 +69,53 @@ class KotlinDslTest {
                 Either move this call earlier, or use the variant API to customize individual variants.
                 """.trimIndent()
         )
+    }
+
+    @Test
+    fun `compileAgainst externalNativeBuild ndkBuild ImplClass`() {
+
+        val externalNativeBuild: com.android.build.gradle.internal.dsl.ExternalNativeBuild =
+            android.externalNativeBuild as com.android.build.gradle.internal.dsl.ExternalNativeBuild
+
+        externalNativeBuild.ndkBuild {
+
+            assertThat(path).isNull()
+            path = File("path1")
+            assertThatPath(path).endsWith("path1")
+            path("path2")
+            assertThatPath(path).endsWith("path2")
+            setPath("path3")
+            assertThatPath(path).endsWith("path3")
+
+            assertThat(buildStagingDirectory).isNull()
+            buildStagingDirectory = File("buildStagingDirectory1")
+            assertThatPath(buildStagingDirectory).endsWith("buildStagingDirectory1")
+            buildStagingDirectory("buildStagingDirectory2")
+            assertThatPath(buildStagingDirectory).endsWith("buildStagingDirectory2")
+            setBuildStagingDirectory("buildStagingDirectory3")
+            assertThatPath(buildStagingDirectory).endsWith("buildStagingDirectory3")
+        }
+
+        externalNativeBuild.cmake {
+            assertThat(path).isNull()
+            path = File("path1")
+            assertThatPath(path).endsWith("path1")
+            setPath("path3")
+            assertThatPath(path).endsWith("path3")
+
+            assertThat(buildStagingDirectory).isNull()
+            buildStagingDirectory = File("buildStagingDirectory1")
+            assertThatPath(buildStagingDirectory).endsWith("buildStagingDirectory1")
+            setBuildStagingDirectory("buildStagingDirectory3")
+            assertThatPath(buildStagingDirectory).endsWith("buildStagingDirectory3")
+
+            assertThat(version).isNull()
+            version = "version1"
+            assertThat(version).isEqualTo("version1")
+        }
+    }
+
+    private fun assertThatPath(file: File?): StringSubject {
+        return assertThat(file?.path)
     }
 }

@@ -19,7 +19,8 @@ package com.activity.energy;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 
-public class MyJobService extends JobService {
+@SuppressWarnings("unused") // Accessed via reflection by perf-test
+public final class MyJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         System.out.println("JOB STARTED");

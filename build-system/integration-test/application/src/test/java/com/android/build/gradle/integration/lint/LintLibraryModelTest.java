@@ -39,7 +39,7 @@ public class LintLibraryModelTest {
     public void checkLintLibraryModel() throws Exception {
         project.execute("clean", ":app:lintDebug");
         String expected =
-                FileUtils.join("src", "main", "java", "com", "android", "test", "lint", "lintmodel", "mylibrary", "MyLibrary.java") + ":5: Warning: Assertions are unreliable in Dalvik and unimplemented in ART. Use BuildConfig.DEBUG conditional checks instead. [Assert]\n"
+                FileUtils.join("src", "main", "java", "com", "android", "test", "lint", "lintmodel", "mylibrary", "MyLibrary.java") + ":5: Warning: Assertions are never enabled in Android. Use BuildConfig.DEBUG conditional checks instead [Assert]\n"
                         + "       assert arg > 5;\n"
                         + "       ~~~~~~\n"
                         + FileUtils.join("src", "main", "java", "com", "android", "test", "lint", "javalib", "JavaLib.java") + ":4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"

@@ -15,7 +15,6 @@
  */
 package com.android.tools.idea.wizard.template
 
-import com.google.common.io.Resources
 import java.io.File
 
 internal data class TemplateImpl(
@@ -24,28 +23,30 @@ internal data class TemplateImpl(
   override val description: String,
   override val minSdk: Int,
   override val minCompileSdk: Int,
-  override val requireAndroidX: Boolean,
   override val category: Category,
   override val formFactor: FormFactor,
   override val widgets: Collection<Widget<*>>,
   private val _thumb: () -> Thumb,
   override val recipe: Recipe,
-  override val uiContexts: Collection<WizardUiContext>
+  override val uiContexts: Collection<WizardUiContext>,
+  override val constraints: Collection<TemplateConstraint>
 ) : Template {
   override fun thumb(): Thumb = _thumb()
 }
 
-// TODO(qumeric): split into moduleTemplate and projectTemplate to facilitate using recipe without casting
+@DslMarker
+annotation class TemplateDSL
+
 fun template(block: TemplateBuilder.() -> Unit): Template = TemplateBuilder().apply(block).build()
 
 // TODO(qumeric): use Kotlin DSL annotations to limit visibility scope
+@TemplateDSL
 class TemplateBuilder {
   var revision: Int? = null
   var name: String? = null
   var description: String? = null
   var minApi: Int = 1
   var minBuildApi: Int = 1
-  var requireAndroidX: Boolean = false
   var category: Category? = null
   var formFactor: FormFactor? = null
   @Suppress("RedundantCompanionReference")
@@ -53,14 +54,18 @@ class TemplateBuilder {
   var recipe: Recipe? = null
   var screens: Collection<WizardUiContext> = listOf()
   var widgets = listOf<Widget<*>>()
+  var constraints = listOf<TemplateConstraint>()
 
   fun widgets(vararg widgets: Widget<*>) {
     this.widgets = widgets.toList()
   }
 
+  @TemplateDSL
+  class ThumbBuilder
+
   /** A wrapper for collection of [Thumb]s with an optional [get]ter. Implementations usually use [Parameter.value] to choose [Thumb]. */
-  fun thumb(block: () -> File) {
-    val res = findResource(this.javaClass, block())
+  fun thumb(block: ThumbBuilder.() -> File) {
+    val res = findResource(this.javaClass, ThumbBuilder().block())
     thumb = { Thumb(res) }
   }
 
@@ -78,13 +83,13 @@ class TemplateBuilder {
       description!!,
       minApi,
       minBuildApi,
-      requireAndroidX,
       category!!,
       formFactor!!,
       widgets,
       thumb,
       recipe!!,
-      screens
+      screens,
+      constraints
     )
   }
 }

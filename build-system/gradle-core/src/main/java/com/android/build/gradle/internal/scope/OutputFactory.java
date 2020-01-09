@@ -66,7 +66,7 @@ public class OutputFactory {
         ApkData mainOutput =
                 new Main(
                         variantDslInfo.getBaseName(),
-                        variantDslInfo.getFullName(),
+                        variantDslInfo.getVariantConfiguration().getName(),
                         defaultFilename);
         checkMainSplitExistenceAndAdd(mainOutput);
         return mainOutput;
@@ -328,6 +328,11 @@ public class OutputFactory {
                 sb.append(filter.getIdentifier()).append(File.separatorChar);
             }
             return sb.toString();
+        }
+
+        @Override
+        public boolean isUniversal() {
+            return false;
         }
 
         @Override

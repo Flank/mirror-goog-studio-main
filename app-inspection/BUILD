@@ -3,16 +3,17 @@ load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
 cc_library(
     name = "agent_command",
     srcs = [
-        "commands/app_inspection_agent_command.cc",
+        "native/src/commands/app_inspection_agent_command.cc",
     ],
     hdrs = [
-        "commands/app_inspection_agent_command.h",
+        "native/include/commands/app_inspection_agent_command.h",
     ],
     copts = ANDROID_COPTS + [
+        "-Itools/base/app-inspection/native/include/commands",
+        "-Itools/base/app-inspection/native",
         # TODO: Remove dependency when agent.h no longer includes
         # memory_component.h.
         "-Itools/base/profiler/native/agent",
-        "-Itools/base/app_inspection",
         "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
     ],
@@ -31,18 +32,19 @@ cc_library(
 cc_library(
     name = "jni",
     srcs = [
-        "app_inspection_java_jni.cc",
-        "app_inspection_service.cc",
+        "native/src/app_inspection_java_jni.cc",
+        "native/src/app_inspection_service.cc",
     ],
     hdrs = [
-        "app_inspection_service.h",
+        "native/include/app_inspection_service.h",
     ] + select({
         ":app_inspection_experimental": [
-            "app_inspection_transform.h",
+            "native/include/app_inspection_transform.h",
         ],
         "//conditions:default": [],
     }),
     copts = ANDROID_COPTS + [
+        "-Itools/base/app-inspection/native/include",
         # TODO: Remove dependency when agent.h no longer includes
         # memory_component.h.
         "-Itools/base/profiler/native/agent",

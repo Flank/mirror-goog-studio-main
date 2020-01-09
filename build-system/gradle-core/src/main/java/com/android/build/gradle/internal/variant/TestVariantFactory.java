@@ -20,11 +20,18 @@ import static com.android.build.gradle.internal.dependency.VariantDependencies.C
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_TESTED_APKS;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.VariantConfiguration;
+import com.android.build.api.variant.impl.TestVariantImpl;
+import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.TestAndroidConfig;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
@@ -47,6 +54,33 @@ public class TestVariantFactory extends ApplicationVariantFactory {
     @Override
     public boolean hasTestScope() {
         return false;
+    }
+
+    @NonNull
+    @Override
+    public VariantImpl createVariantObject(
+            @NonNull VariantConfiguration variantConfiguration,
+            @NonNull VariantDslInfo variantDslInfo) {
+        return globalScope
+                .getDslScope()
+                .getObjectFactory()
+                .newInstance(TestVariantImpl.class, variantConfiguration, variantDslInfo);
+    }
+
+    @NonNull
+    @Override
+    public VariantPropertiesImpl createVariantPropertiesObject(
+            @NonNull VariantConfiguration variantConfiguration,
+            @NonNull VariantScope variantScope) {
+        return globalScope
+                .getDslScope()
+                .getObjectFactory()
+                .newInstance(
+                        TestVariantPropertiesImpl.class,
+                        globalScope.getDslScope(),
+                        variantScope,
+                        variantScope.getArtifacts().getOperations(),
+                        variantConfiguration);
     }
 
     @Override

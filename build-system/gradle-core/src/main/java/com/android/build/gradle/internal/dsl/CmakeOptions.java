@@ -75,7 +75,7 @@ public class CmakeOptions implements CoreCmakeOptions, com.android.build.api.dsl
     }
 
     @Override
-    public void setPath(@NonNull File path) {
+    public void setPath(@Nullable File path) {
         this.path = path;
     }
 
@@ -119,7 +119,7 @@ public class CmakeOptions implements CoreCmakeOptions, com.android.build.api.dsl
     }
 
     @Override
-    public void setBuildStagingDirectory(@NonNull File buildStagingDirectory) {
+    public void setBuildStagingDirectory(@Nullable File buildStagingDirectory) {
         this.buildStagingDirectory = dslScope.file(buildStagingDirectory);
     }
 
@@ -168,7 +168,7 @@ public class CmakeOptions implements CoreCmakeOptions, com.android.build.api.dsl
     }
 
     @Override
-    public void setVersion(@NonNull String version) {
+    public void setVersion(@Nullable String version) {
         this.version = version;
     }
 

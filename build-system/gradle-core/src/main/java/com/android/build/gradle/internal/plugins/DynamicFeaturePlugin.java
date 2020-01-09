@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -29,6 +30,8 @@ import com.android.build.gradle.internal.dsl.DynamicFeatureExtensionImpl;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.variant.DynamicFeatureVariantFactory;
+import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
@@ -70,7 +73,7 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
     @NonNull
     @Override
     protected AppExtension createExtension(
-            @NonNull Project project,
+            @NonNull DslScope dslScope,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
@@ -84,7 +87,7 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
                 .create(
                         "android",
                         getExtensionClass(),
-                        project,
+                        dslScope,
                         projectOptions,
                         globalScope,
                         buildOutputs,
@@ -96,5 +99,11 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
                                 defaultConfig,
                                 productFlavorContainer,
                                 signingConfigContainer));
+    }
+
+    @NonNull
+    @Override
+    protected VariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
+        return new DynamicFeatureVariantFactory(globalScope);
     }
 }

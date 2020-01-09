@@ -67,7 +67,6 @@ class LintExtractAnnotations {
             throw UncheckedIOException(e)
         } finally {
             Disposer.dispose(parentDisposable)
-            UastEnvironment.ensureDisposed()
         }
     }
 }

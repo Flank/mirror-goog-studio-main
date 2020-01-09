@@ -19,10 +19,11 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DefaultConfig
+import com.android.build.api.variant.AppVariant
+import com.android.build.api.variant.AppVariantProperties
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantOperations
-import com.android.build.api.variant.impl.VariantScopeTransformers
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
@@ -32,12 +33,13 @@ import org.gradle.api.NamedDomainObjectContainer
 /** Internal implementation of the 'new' DSL interface */
 abstract class CommonExtensionImpl<
         BuildFeaturesT: BuildFeatures,
-        BuildTypeT : com.android.build.api.dsl.BuildType,
+        BuildTypeT: com.android.build.api.dsl.BuildType,
         DefaultConfigT: DefaultConfig,
-        ProductFlavorT : com.android.build.api.dsl.ProductFlavor,
-        SigningConfigT : com.android.build.api.dsl.SigningConfig,
-        VariantT : Variant<VariantPropertiesT>, VariantPropertiesT : VariantProperties>(
-    dslScope: DslScope,
+        ProductFlavorT: com.android.build.api.dsl.ProductFlavor,
+        SigningConfigT: com.android.build.api.dsl.SigningConfig,
+        VariantT: Variant<VariantPropertiesT>,
+        VariantPropertiesT: VariantProperties>(
+    protected val dslScope: DslScope,
     override val buildTypes: NamedDomainObjectContainer<BuildTypeT>,
     override val defaultConfig: DefaultConfigT,
     override val productFlavors: NamedDomainObjectContainer<ProductFlavorT>,
@@ -56,7 +58,7 @@ abstract class CommonExtensionImpl<
         TestOptions,
         TestOptions.UnitTestOptions,
         VariantT,
-        VariantPropertiesT> {
+        VariantPropertiesT>, ActionableVariantObjectOperationsExecutor<VariantT, VariantPropertiesT> {
 
     fun buildFeatures(action: Action<BuildFeaturesT>) {
         action.execute(buildFeatures)
@@ -66,11 +68,8 @@ abstract class CommonExtensionImpl<
         action(buildFeatures)
     }
 
-    protected val variantOperations =
-        VariantOperations<VariantT>(VariantScopeTransformers.toVariant)
-    protected val variantPropertiesOperations = VariantOperations<VariantPropertiesT>(
-        VariantScopeTransformers.toVariantProperties
-    )
+    protected val variantOperations = VariantOperations<VariantT>()
+    protected val variantPropertiesOperations = VariantOperations<VariantPropertiesT>()
 
     override val compileOptions: CompileOptions = dslScope.objectFactory.newInstance(CompileOptions::class.java)
 

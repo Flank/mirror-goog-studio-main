@@ -17,17 +17,14 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.variant.VariantConfiguration;
-import com.android.build.api.variant.impl.AppVariantImpl;
-import com.android.build.api.variant.impl.AppVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.VariantDslInfoImpl;
+import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.VariantType;
-import com.android.builder.profile.Recorder;
 import com.google.common.collect.Maps;
 import java.util.Map;
 
@@ -40,10 +37,19 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
     public ApplicationVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull VariantDslInfoImpl variantDslInfo,
-            @NonNull VariantSources variantSources,
-            @NonNull Recorder recorder) {
-        super(globalScope, taskManager, variantDslInfo, variantSources, recorder);
+            @NonNull VariantScope variantScope,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantImpl publicVariantApi,
+            @NonNull VariantPropertiesImpl publicVariantPropertiesApi,
+            @NonNull VariantSources variantSources) {
+        super(
+                globalScope,
+                taskManager,
+                variantScope,
+                variantDslInfo,
+                publicVariantApi,
+                publicVariantPropertiesApi,
+                variantSources);
         testVariants = Maps.newHashMap();
     }
 
@@ -58,24 +64,5 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
     @Override
     public TestVariantData getTestVariantData(@NonNull VariantType type) {
         return testVariants.get(type);
-    }
-
-    @Override
-    VariantImpl<?> instantiatePublicVariantObject(VariantConfiguration publicVariantConfiguration) {
-        return new AppVariantImpl(publicVariantConfiguration);
-    }
-
-    @Override
-    VariantPropertiesImpl instantiatePublicVariantPropertiesObject(
-            VariantConfiguration publicVariantConfiguration) {
-        return scope.getGlobalScope()
-                .getProject()
-                .getObjects()
-                .newInstance(
-                        AppVariantPropertiesImpl.class,
-                        scope.getGlobalScope().getDslScope(),
-                        scope,
-                        scope.getArtifacts().getOperations(),
-                        publicVariantConfiguration);
     }
 }

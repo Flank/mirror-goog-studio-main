@@ -18,9 +18,12 @@ package com.android.build.api.variant.impl
 import com.android.build.api.variant.AppVariant
 import com.android.build.api.variant.AppVariantProperties
 import com.android.build.api.variant.VariantConfiguration
+import com.android.build.gradle.internal.core.VariantDslInfo
+import javax.inject.Inject
 
-class AppVariantImpl(
-    variantConfiguration: VariantConfiguration
+open class AppVariantImpl @Inject constructor(
+    variantConfiguration: VariantConfiguration,
+    variantDslInfo: VariantDslInfo
 ) : VariantImpl<AppVariantProperties>(variantConfiguration), AppVariant {
-    override var minSdkVersion = 1
+    override var minSdkVersion = variantDslInfo.minSdkVersion.apiLevel
 }

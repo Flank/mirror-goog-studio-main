@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.api.dsl
 import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
@@ -29,17 +29,11 @@ import java.io.File
 /**
  * Scope of the DSL objects.
  *
- * This contains whatever is needed by all the DSL objects:
- * - the issue reporter
- * - the deprecation reporter
- * - the instantiator.
- * - a logger
- * - the [BuildFeatureValues]
- * - a file method (equivalent to project.file)
+ * This contains whatever is needed by all the DSL objects.
  */
 interface DslScope {
 
-    val issueReporter: EvalIssueReporter
+    val issueReporter: IssueReporter
 
     val deprecationReporter: DeprecationReporter
 

@@ -60,6 +60,8 @@ import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.java.JavaAnnotationArrayInitializerUCallExpression;
+import org.jetbrains.uast.kotlin.expressions.KotlinUCollectionLiteralExpression;
 
 /** Evaluates constant expressions */
 public class ResourceEvaluator {
@@ -457,10 +459,24 @@ public class ResourceEvaluator {
             if ((probablyCallExpression instanceof UCallExpression)) {
                 UCallExpression call = (UCallExpression) probablyCallExpression;
                 PsiMethod method = call.resolve();
-                PsiClass containingClass = UastUtils.getContainingClass(method);
-                if (method != null && containingClass != null) {
-                    EnumSet<ResourceType> types = getTypesFromAnnotations(method);
-                    if (types != null) {
+                if (method != null) {
+                    PsiClass containingClass = UastUtils.getContainingClass(method);
+                    if (containingClass != null) {
+                        EnumSet<ResourceType> types = getTypesFromAnnotations(method);
+                        if (types != null) {
+                            return types;
+                        }
+                    }
+                } else if (call instanceof JavaAnnotationArrayInitializerUCallExpression
+                        || call instanceof KotlinUCollectionLiteralExpression) {
+                    EnumSet<ResourceType> types = EnumSet.noneOf(ResourceType.class);
+                    for (UExpression argument : call.getValueArguments()) {
+                        EnumSet<ResourceType> resourceTypes = getResourceTypes(argument);
+                        if (resourceTypes != null && !resourceTypes.isEmpty()) {
+                            types.addAll(resourceTypes);
+                        }
+                    }
+                    if (!types.isEmpty()) {
                         return types;
                     }
                 }
@@ -721,7 +737,8 @@ public class ResourceEvaluator {
         return ResourceUrl.create(type, name, isFramework);
     }
 
-    private static EnumSet<ResourceType> getAnyRes() {
+    /** The set of all "real" resource types. */
+    public static EnumSet<ResourceType> getAnyRes() {
         EnumSet<ResourceType> types = EnumSet.allOf(ResourceType.class);
         types.remove(COLOR_INT_MARKER_TYPE);
         types.remove(DIMENSION_MARKER_TYPE);

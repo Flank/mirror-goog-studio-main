@@ -35,9 +35,13 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Earl
 
     @NonNull private final List<File> outputFolders;
     @NonNull private final List<ArtifactType> outputTypes;
+    private final int metadataFileVersion;
 
     public BuildOutputsSupplier(
-            @NonNull List<ArtifactType> outputTypes, @NonNull List<File> outputFolders) {
+            int metadataFileVersion,
+            @NonNull List<ArtifactType> outputTypes,
+            @NonNull List<File> outputFolders) {
+        this.metadataFileVersion = metadataFileVersion;
         this.outputFolders = outputFolders;
         this.outputTypes = outputTypes;
     }
@@ -52,7 +56,7 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Earl
                         return;
                     }
                     Collection<EarlySyncBuildOutput> previous =
-                            EarlySyncBuildOutput.load(outputFolder)
+                            EarlySyncBuildOutput.load(metadataFileVersion, outputFolder)
                                     .stream()
                                     .filter(
                                             buildOutput ->

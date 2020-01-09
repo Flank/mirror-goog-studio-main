@@ -24,9 +24,26 @@ import java.util.regex.Pattern
  * Filter for [Variant] or [VariantProperties] with a product flavor.
  */
 @Incubating
-interface FlavoredVariantFilterBuilder<T: ActionableVariantObject> {
+interface FlavoredVariantFilterBuilder<T: ActionableVariantObject>: BuildTypedVariantFilterBuilder<T> {
+    /**
+     * Filters [T] instances using a build type reference.
+     *
+     * @param buildType to filter [T] on
+     * @return an instance of [BuildTypedVariantFilterBuilder] to further filter variants.
+     */
+    fun withBuildType(buildType: String): BuildTypedVariantFilterBuilder<T>
+
     /**
      * Specifies the build type this filter should apply when filtering variants.
      */
     fun withBuildType(buildType: String, action: Action<T>)
+
+    /**
+     * Filters [T] instances using a build type reference and run a lambda of all the filtered
+     * instances.
+     *
+     * @param buildType to filter [T] on
+     * @param action lambda function to run on filtered [T]
+     */
+    fun withBuildType(buildType: String, action: T.() -> Unit)
 }

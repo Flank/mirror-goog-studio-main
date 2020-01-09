@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.ActionableVariantObject
+import com.android.build.api.variant.VariantConfiguration
 import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.Action
 
@@ -25,34 +26,25 @@ import org.gradle.api.Action
  * executing these actions.
  *
  * @param VariantObjectT is either a [com.android.build.api.variant.Variant] or
- * [com.android.build.api.variant.VariantProperties]´
- * @param transformer the function to transform a [VariantScope] into an instance of [VariantObjectT]
+ * [com.android.build.api.variant.VariantProperties]
  */
-class VariantOperations<VariantObjectT: ActionableVariantObject>(
-    val transformer: VariantScopeTransformers
-) {
+class VariantOperations<VariantObjectT> where VariantObjectT: ActionableVariantObject, VariantObjectT: VariantConfiguration {
     val actions= mutableListOf<Action<VariantObjectT>>()
-    val filteredActions= mutableListOf<FilteredVariantOperation<out VariantObjectT>>()
+    private val filteredActions= mutableListOf<FilteredVariantOperation<VariantObjectT>>()
 
     fun addFilteredAction(action: FilteredVariantOperation<out VariantObjectT>) {
-        filteredActions.add(action)
+        @Suppress("UNCHECKED_CAST")
+        filteredActions.add(action as FilteredVariantOperation<VariantObjectT>)
     }
 
-    /**
-     * Executes all registered actions provided the list of [VariantScope].
-     *
-     * @param variantScopes instances of [VariantScope] to get instances of [VariantObjectT] from.
-     */
-    inline fun <reified U : VariantObjectT> executeOperations(variantScopes: List<VariantScope>) {
-        variantScopes.forEach { variantScope ->
-            val variantObject = transformer.transform(variantScope, U::class.java)
-            if (variantObject != null) {
-                actions.forEach { action -> action.execute(variantObject) }
-            }
-        }
+    fun executeActions(variant: VariantObjectT) {
+        actions.forEach { action -> action.execute(variant) }
 
-        filteredActions.forEach { filteredAction ->
-            filteredAction.execute(transformer, variantScopes)
+        filteredActions.forEach {
+            if (it.specificType.isInstance(variant)) {
+                val castedVariant = it.specificType.cast(variant)
+                it.executeFor(castedVariant)
+            }
         }
     }
 }

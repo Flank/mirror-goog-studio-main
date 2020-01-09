@@ -51,24 +51,23 @@ val scrollFragmentTemplate
     val fragmentClass = stringParameter {
       name = "Fragment Name"
       default = "ScrollingFragment"
-      help = "The name of the fragment class to create "
+      help = "The name of the fragment class to create"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 
     val layoutName = stringParameter {
       name = "Layout Name"
       default = "fragment_scrolling"
-      help = "The name of the layout to create for the fragment "
+      help = "The name of the layout to create for the fragment"
       constraints = listOf(LAYOUT, UNIQUE, NONEMPTY)
       suggest = { fragmentToLayout(fragmentClass.value) }
     }
 
     val packageName = stringParameter {
       name = "Package name"
-      default = "com.mycompany.myapp "
+      default = "com.mycompany.myapp"
       constraints = listOf(PACKAGE)
     }
-
 
     widgets(
       TextFieldWidget(fragmentClass),

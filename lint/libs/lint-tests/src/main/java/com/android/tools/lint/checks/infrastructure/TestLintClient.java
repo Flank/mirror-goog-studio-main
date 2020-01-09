@@ -445,6 +445,9 @@ public class TestLintClient extends LintCliClient {
         if (task.customScope != null) {
             request = request.setScope(task.customScope);
         }
+        if (task.platforms != null) {
+            request.setPlatform(task.platforms);
+        }
 
         if (incrementalCheck != null) {
             File projectDir = findIncrementalProject(files);

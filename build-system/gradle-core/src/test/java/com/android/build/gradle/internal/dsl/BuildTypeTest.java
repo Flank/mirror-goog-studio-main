@@ -22,10 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.internal.api.dsl.DslScope;
-import com.android.build.gradle.internal.fixtures.FakeBuildFeatureValues;
-import com.android.build.gradle.internal.fixtures.FakeLogger;
-import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
-import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.plugins.AppPlugin;
 import com.android.build.gradle.internal.variant2.FakeDslScope;
 import com.android.builder.core.BuilderConstants;
@@ -42,14 +38,7 @@ public class BuildTypeTest {
 
     private Project project;
 
-    private DslScope dslScope =
-            FakeDslScope.createFakeDslScope(
-                    new NoOpIssueReporter(),
-                    new NoOpDeprecationReporter(),
-                    FakeObjectFactory.getFactory(),
-                    new FakeLogger(),
-                    new FakeBuildFeatureValues(),
-                    new FakeProviderFactory());
+    private DslScope dslScope = FakeDslScope.createFakeDslScope();
 
     @Before
     public void setUp() throws Exception {
@@ -91,6 +80,8 @@ public class BuildTypeTest {
                     original.getPostProcessingConfiguration();
                     // Covered by original.isDefault
                     original.getIsDefault();
+                    //noinspection deprecation
+                    original.getIsDefaultProp();
                 });
     }
 
@@ -101,7 +92,7 @@ public class BuildTypeTest {
                 .compileSdkVersion(SdkVersionInfo.HIGHEST_KNOWN_STABLE_API);
         return project.getPlugins()
                 .getPlugin(AppPlugin.class)
-                .getVariantManager()
+                .getVariantInputModel()
                 .getBuildTypes()
                 .get(name)
                 .getBuildType();

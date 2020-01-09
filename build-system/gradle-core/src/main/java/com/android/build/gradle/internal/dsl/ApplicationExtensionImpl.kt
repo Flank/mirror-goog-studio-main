@@ -61,30 +61,34 @@ class ApplicationExtensionImpl(
             ProductFlavor,
             SigningConfig,
             TestOptions,
-            TestOptions.UnitTestOptions>,
-    ActionableVariantObjectOperationsExecutor {
+            TestOptions.UnitTestOptions> {
 
     override val buildFeatures: ApplicationBuildFeatures =
         dslScope.objectFactory.newInstance(ApplicationBuildFeaturesImpl::class.java)
 
-    override fun executeVariantOperations(variantScopes: List<VariantScope>) {
-        variantOperations.executeOperations<AppVariant>(variantScopes)
+    override fun executeVariantOperations(variant: AppVariant) {
+        variantOperations.executeActions(variant)
     }
 
-    override fun executeVariantPropertiesOperations(variantScopes: List<VariantScope>) {
-        variantPropertiesOperations.executeOperations<AppVariantProperties>(variantScopes)
+    override fun executeVariantPropertiesOperations(variant: AppVariantProperties) {
+        variantPropertiesOperations.executeActions(variant)
     }
 
-    override fun onVariants(): GenericVariantFilterBuilder<AppVariant> {
-        return GenericVariantFilterBuilderImpl(
-            variantOperations, AppVariant::class.java
-        )
-    }
+    @Suppress("UNCHECKED_CAST")
+    override val onVariants: GenericVariantFilterBuilder<AppVariant>
+        get() = dslScope.objectFactory.newInstance(
+            GenericVariantFilterBuilderImpl::class.java,
+            dslScope,
+            variantOperations,
+            AppVariant::class.java
+        ) as GenericVariantFilterBuilder<AppVariant>
 
-    override fun onVariantProperties(): GenericVariantFilterBuilder<AppVariantProperties> {
-        return GenericVariantFilterBuilderImpl(
-            variantPropertiesOperations,
+    @Suppress("UNCHECKED_CAST")
+    override val onVariantProperties: GenericVariantFilterBuilder<AppVariantProperties>
+        get() =  dslScope.objectFactory.newInstance(
+            GenericVariantFilterBuilderImpl::class.java,
+            dslScope,
+            variantOperations,
             AppVariantProperties::class.java
-        )
-    }
+        ) as GenericVariantFilterBuilder<AppVariantProperties>
 }

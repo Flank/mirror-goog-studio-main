@@ -19,7 +19,7 @@ package com.activity.network;
 import android.tools.SimpleWebServer;
 import android.tools.SimpleWebServer.QueryParam;
 import android.tools.SimpleWebServer.RequestHandler;
-import com.activity.PerfdTestActivity;
+import com.activity.TransportTestActivity;
 import com.activity.network.NetworkUtils.ServerTest;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,7 +28,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 
-public final class HttpUrlActivity extends PerfdTestActivity {
+@SuppressWarnings("unused") // Accessed via reflection by perf-test
+public final class HttpUrlActivity extends TransportTestActivity {
     public HttpUrlActivity() {
         super("HttpUrl Activity");
     }

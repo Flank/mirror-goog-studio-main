@@ -47,14 +47,10 @@ if [[ -d "${DIST_DIR}" ]]; then
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
 
-  ${java} -jar "${bin_dir}/tools/base/bazel/perfgate_logs_collector_deploy.jar" \
-    "${testlogs_dir}" \
-    "${DIST_DIR}/bazel-${BUILD_NUMBER}.bes" \
-    "${DIST_DIR}/perfgate_data.zip" \
-    "${DIST_DIR}/logs/perfgate_logs_collector.log"
   ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \
     -bes "${DIST_DIR}/bazel-${BUILD_NUMBER}.bes" \
-    -testlogs "${DIST_DIR}/logs/junit"
+    -testlogs "${DIST_DIR}/logs/junit" \
+    -perfzip "${DIST_DIR}/perfgate_data.zip"
 
   cp -a ${bin_dir}/tools/idea/updater/updater_deploy.jar ${DIST_DIR}/android-studio-updater.jar
   cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${DIST_DIR}

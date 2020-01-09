@@ -33,14 +33,7 @@ public class SecurityDetectorTest extends AbstractCheckTest {
     }
 
     public void testBroken() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "AndroidManifest.xml:12: Warning: Exported service does not require permission [ExportedService]\n"
-                        + "        <service\n"
-                        + "         ~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -69,7 +62,23 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "</manifest>\n"
                                         + "\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expect(
+                        ""
+                                + "AndroidManifest.xml:12: Warning: Exported service does not require permission [ExportedService]\n"
+                                + "        <service\n"
+                                + "         ~~~~~~~\n"
+                                + "0 errors, 1 warnings\n")
+                .expectFixDiffs(
+                        ""
+                                + "Fix for AndroidManifest.xml line 12: Set permission:\n"
+                                + "@@ -16 +16\n"
+                                + "+             android:permission=\"[TODO]|\"\n"
+                                + "Fix for AndroidManifest.xml line 12: Set exported=\"false\":\n"
+                                + "@@ -14 +14\n"
+                                + "-             android:exported=\"true\"\n"
+                                + "+             android:exported=\"false\"");
     }
 
     public void testBroken2() throws Exception {

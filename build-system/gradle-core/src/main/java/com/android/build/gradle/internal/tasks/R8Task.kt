@@ -248,7 +248,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             task.minSdkVersion
                 .set(variantScope.variantDslInfo.minSdkVersionWithTargetDeviceApi.apiLevel)
             task.debuggable
-                .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
+                .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
             task.disableTreeShaking.set(disableTreeShaking)
             task.disableMinification.set(disableMinification)
             task.messageReceiver = variantScope.globalScope.messageReceiver
@@ -464,14 +464,14 @@ abstract class R8Task: ProguardConfigurableTask() {
                 MainDexListConfig()
             }
 
-            val bootClasspathInputs = referencedInputs + bootClasspath
             val outputKeepRulesFile = outputKeepRulesDir?.resolve("output")
             runR8(
                 classes.map { it.toPath() },
                 output.toPath(),
                 resources.map { it.toPath() },
                 outputResources.toPath(),
-                bootClasspathInputs.map { it.toPath() },
+                bootClasspath.map { it.toPath() },
+                referencedInputs.map { it.toPath() },
                 toolConfig,
                 proguardConfig,
                 mainDexListConfig,

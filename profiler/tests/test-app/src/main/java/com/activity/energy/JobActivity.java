@@ -25,9 +25,10 @@ import android.content.ComponentName;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.PersistableBundle;
-import com.activity.PerfdTestActivity;
+import com.activity.TransportTestActivity;
 
-public class JobActivity extends PerfdTestActivity {
+@SuppressWarnings("unused") // Accessed via reflection by perf-test
+public final class JobActivity extends TransportTestActivity {
     public JobActivity() {
         super("Job Activity");
     }

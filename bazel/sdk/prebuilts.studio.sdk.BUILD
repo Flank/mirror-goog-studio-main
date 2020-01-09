@@ -164,6 +164,8 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+# Use this target to compile against.
+# Note: these stubbed classes will not be available at runtime.
 java_import(
     name = "platforms/latest_jar",
     jars = sdk_path(["platforms/android-29/android.jar"]),
@@ -171,7 +173,19 @@ java_import(
     visibility = [
         "//tools/base/deploy/agent/instrumentation:__pkg__",
         "//tools/base/profiler/app:__pkg__",
+        "//tools/base/dynamic-layout-inspector:__pkg__",
         "//tools/base/experimental/live-sql-inspector:__pkg__",
+    ],
+)
+
+# Use this target for tests that need the presence of the android classes during test runs.
+# Note: these are stubbed classes.
+java_import(
+    name = "platforms/latest_runtime_jar",
+    jars = sdk_path(["platforms/android-29/android.jar"]),
+    testonly = 1,
+    visibility = [
+        "//tools/base/dynamic-layout-inspector:__pkg__",
     ],
 )
 

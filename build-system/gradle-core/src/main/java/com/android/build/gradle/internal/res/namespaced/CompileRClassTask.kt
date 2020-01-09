@@ -57,7 +57,7 @@ class CompileRClassTaskCreationAction(private val variantScope: VariantScope) :
     override fun configure(task: JavaCompile) {
         val taskContainer: MutableTaskContainer = variantScope.taskContainer
         task.dependsOn(taskContainer.preBuildTask)
-        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, variantScope.fullVariantName)
+        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, variantScope.name)
 
         task.classpath = task.project.files()
         task.source(variantScope.artifacts.getFinalProductAsFileCollection(RUNTIME_R_CLASS_SOURCES))

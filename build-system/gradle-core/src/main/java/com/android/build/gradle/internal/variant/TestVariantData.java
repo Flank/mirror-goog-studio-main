@@ -16,17 +16,14 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.variant.VariantConfiguration;
-import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.VariantType;
-import com.android.builder.profile.Recorder;
 import com.android.utils.StringHelper;
 
 /**
@@ -40,11 +37,20 @@ public class TestVariantData extends ApkVariantData {
     public TestVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull VariantDslInfoImpl variantDslInfo,
+            @NonNull VariantScope variantScope,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantImpl publicVariantApi,
+            @NonNull VariantPropertiesImpl publicVariantPropertiesApi,
             @NonNull VariantSources variantSources,
-            @NonNull TestedVariantData testedVariantData,
-            @NonNull Recorder recorder) {
-        super(globalScope, taskManager, variantDslInfo, variantSources, recorder);
+            @NonNull TestedVariantData testedVariantData) {
+        super(
+                globalScope,
+                taskManager,
+                variantScope,
+                variantDslInfo,
+                publicVariantApi,
+                publicVariantPropertiesApi,
+                variantSources);
         this.testedVariantData = testedVariantData;
 
         // create default output
@@ -73,36 +79,20 @@ public class TestVariantData extends ApkVariantData {
             StringBuilder sb = new StringBuilder(50);
             sb.append(prefix);
             sb.append(" for the ");
-            StringHelper.appendCapitalized(sb, variantDslInfo.getFlavorName());
-            StringHelper.appendCapitalized(sb, variantDslInfo.getBuildType());
+            StringHelper.appendCapitalized(
+                    sb, variantDslInfo.getVariantConfiguration().getFlavorName());
+            StringHelper.appendCapitalized(
+                    sb, variantDslInfo.getVariantConfiguration().getBuildType());
             sb.append(" build");
             return sb.toString();
         } else {
             StringBuilder sb = new StringBuilder(50);
             sb.append(prefix);
             sb.append(" for the ");
-            StringHelper.appendCapitalized(sb, variantDslInfo.getBuildType());
+            StringHelper.appendCapitalized(
+                    sb, variantDslInfo.getVariantConfiguration().getBuildType());
             sb.append(" build");
             return sb.toString();
         }
-    }
-
-    @Override
-    VariantImpl<?> instantiatePublicVariantObject(VariantConfiguration publicVariantConfiguration) {
-        return new com.android.build.api.variant.impl.TestVariantImpl(publicVariantConfiguration);
-    }
-
-    @Override
-    VariantPropertiesImpl instantiatePublicVariantPropertiesObject(
-            VariantConfiguration publicVariantConfiguration) {
-        return scope.getGlobalScope()
-                .getProject()
-                .getObjects()
-                .newInstance(
-                        TestVariantPropertiesImpl.class,
-                        scope.getGlobalScope().getDslScope(),
-                        scope,
-                        scope.getArtifacts().getOperations(),
-                        publicVariantConfiguration);
     }
 }

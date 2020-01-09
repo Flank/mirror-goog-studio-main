@@ -67,7 +67,7 @@ import org.gradle.tooling.events.ProgressListener;
 @SuppressWarnings("unchecked") // Returning this as <T> in most methods.
 public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
-    private static final long TIMEOUT_MINUTES = 5;
+    private static final long TIMEOUT_MINUTES = 10;
 
     private static Path jvmLogDir;
 

@@ -13,6 +13,7 @@ kotlin_library(
         "//tools/base/fakeandroid",
         "//tools/base/transport/proto:transport_java_proto",
         "//tools/idea/.idea/libraries:JUnit4",
+        "//tools/idea/.idea/libraries:truth",
     ],
 )
 

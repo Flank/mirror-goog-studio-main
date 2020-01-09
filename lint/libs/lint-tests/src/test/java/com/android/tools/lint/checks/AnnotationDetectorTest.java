@@ -779,6 +779,48 @@ public class AnnotationDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testWarnEnumMethod() {
+        // Regression test for https://issuetracker.google.com/116747166
+        //noinspection all // Sample code
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.support.annotation.DrawableRes;\n"
+                                        + "\n"
+                                        + "enum class MyEnum {\n"
+                                        + "    A, B, C, X\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "const val drawable_a: Int = 1\n"
+                                        + "const val drawable_b: Int = 2\n"
+                                        + "val drawable_c: Int = 3\n"
+                                        + "\n"
+                                        + "@DrawableRes\n"
+                                        + "private fun MyEnum.getDrawableRes() = when (this) {\n"
+                                        + "    MyEnum.A -> R.drawable.a\n"
+                                        + "    MyEnum.B -> R.drawable.b\n"
+                                        + "    MyEnum.C -> R.drawable.c\n"
+                                        + "    MyEnum.X -> throw IllegalArgumentException(\"Invalid\")\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "public final class R {\n"
+                                        + "    public static final class drawable {\n"
+                                        + "        public static final int a = 0x7f0a0000;\n"
+                                        + "        public static final int b = 0x7f0a0001;\n"
+                                        + "        public static final int c = 0x7f0a0002;\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        SUPPORT_ANNOTATIONS_CLASS_PATH,
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expectClean();
+    }
+
     public void testWarnHalfFloat() {
         //noinspection all // Sample code
         lint().files(

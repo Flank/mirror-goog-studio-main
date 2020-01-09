@@ -205,7 +205,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
             task.setDescription("Creates JaCoCo test coverage report from data gathered on the "
                     + "device.");
 
-            task.setReportName(scope.getVariantDslInfo().getFullName());
+            task.setReportName(scope.getName());
 
             checkNotNull(scope.getTestedVariantData());
             final VariantScope testedScope = scope.getTestedVariantData().getScope();

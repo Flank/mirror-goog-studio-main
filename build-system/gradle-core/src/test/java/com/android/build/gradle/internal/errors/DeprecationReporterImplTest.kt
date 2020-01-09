@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.errors
 
+import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.errors.FakeEvalIssueReporter
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth
 import org.junit.After
@@ -26,7 +26,7 @@ import org.junit.Test
 
 class DeprecationReporterImplTest {
 
-    private val issueReporter = FakeEvalIssueReporter()
+    private val issueReporter = FakeSyncIssueReporter()
     private val reporter =
         DeprecationReporterImpl(issueReporter, ProjectOptions(ImmutableMap.of()), "")
 

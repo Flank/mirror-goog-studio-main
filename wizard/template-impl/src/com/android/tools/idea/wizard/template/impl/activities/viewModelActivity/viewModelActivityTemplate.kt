@@ -48,19 +48,19 @@ val viewModelActivityTemplate
 
     category = Category.Activity
     formFactor = FormFactor.Mobile
-    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry)
+    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry, WizardUiContext.NewProject)
 
     val activityClass = stringParameter {
       name = "Activity Name"
       default = "MainActivity"
-      help = "The name of the activity class to create "
+      help = "The name of the activity class to create"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 
     val activityLayout = stringParameter {
       name = "Activity Layout Name"
       default = "main_activity"
-      help = "The name of the layout to create for the activity "
+      help = "The name of the layout to create for the activity"
       constraints = listOf(LAYOUT, UNIQUE, NONEMPTY)
       suggest = { "${classToResource(activityClass.value)}_activity" }
     }
@@ -92,19 +92,20 @@ val viewModelActivityTemplate
     val isLauncher = booleanParameter {
       name = "Launcher Activity"
       default = false
-      help = "If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher "
+      help = "If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher"
     }
 
     val packageName = stringParameter {
       name = "Package name"
-      default = "com.mycompany.myapp "
+      default = "com.mycompany.myapp"
       constraints = listOf(PACKAGE)
+      suggest = { packageName }
     }
 
     val fragmentPackage = stringParameter {
       name = "Fragment package path"
       default = "ui.main"
-      help = "The package path for the fragment and the view model "
+      help = "The package path for the fragment and the view model"
       constraints = listOf(PACKAGE)
       suggest = { "ui.${classToResource(fragmentClass.value).replace("_", "")}" }
     }

@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.api
 
 import com.android.build.api.variant.VariantFilter
 import com.android.build.gradle.internal.core.VariantBuilder.Companion.computeName
+import com.android.build.gradle.internal.variant.VariantCombination
 import com.android.builder.core.VariantType
 import com.android.builder.model.BuildType
 import com.android.builder.model.ProductFlavor
@@ -29,6 +30,7 @@ class VariantFilter(
     private val readOnlyObjectProvider: ReadOnlyObjectProvider
 ) : VariantFilter {
 
+    private lateinit var _variantCombination: VariantCombination
     private lateinit var _defaultConfig: ProductFlavor
     private lateinit var _buildType: BuildType
     private var _flavors: List<ProductFlavor>? = null
@@ -36,12 +38,14 @@ class VariantFilter(
     private var _name: String? = null
 
     fun reset(
+        variantCombination: VariantCombination,
         defaultConfig: ProductFlavor,
         buildType: BuildType,
         type: VariantType,
         flavors: List<ProductFlavor>?
     ) {
         ignore = false
+        _variantCombination = variantCombination
         _defaultConfig = defaultConfig
         _buildType = buildType
         _flavors = flavors
@@ -67,7 +71,7 @@ class VariantFilter(
         get() {
             val currentName = _name
             if (currentName == null) {
-                val newName = computeName(_type, _flavors, _buildType)
+                val newName = computeName(_variantCombination, _type)
                 _name = newName
                 return newName
             }

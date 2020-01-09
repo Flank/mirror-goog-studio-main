@@ -39,14 +39,13 @@ import com.android.build.api.attributes.VariantAttr;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
-import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.VariantType;
-import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.IssueReporter;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -120,7 +119,7 @@ public class VariantDependencies {
 
     public static final class Builder {
         @NonNull private final Project project;
-        @NonNull private final SyncIssueHandler errorReporter;
+        @NonNull private final IssueReporter issueReporter;
         @NonNull private final VariantDslInfo variantDslInfo;
         private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection;
 
@@ -141,10 +140,10 @@ public class VariantDependencies {
 
         protected Builder(
                 @NonNull Project project,
-                @NonNull SyncIssueHandler errorReporter,
+                @NonNull IssueReporter issueReporter,
                 @NonNull VariantDslInfo variantDslInfo) {
             this.project = project;
-            this.errorReporter = errorReporter;
+            this.issueReporter = issueReporter;
             this.variantDslInfo = variantDslInfo;
         }
 
@@ -211,9 +210,9 @@ public class VariantDependencies {
             final Usage reverseMetadataUsage =
                     factory.named(Usage.class, "android-reverse-meta-data");
 
-            String variantName = variantDslInfo.getFullName();
+            String variantName = variantDslInfo.getVariantConfiguration().getName();
             VariantType variantType = variantDslInfo.getVariantType();
-            String buildType = variantDslInfo.getBuildType();
+            String buildType = variantDslInfo.getVariantConfiguration().getBuildType();
             Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> consumptionFlavorMap =
                     getFlavorAttributes(flavorSelection);
 
@@ -300,7 +299,7 @@ public class VariantDependencies {
                     .get(BooleanOption.USE_ANDROID_X)) {
                 AndroidXDependencyCheck androidXDependencyCheck =
                         new AndroidXDependencyCheck(
-                                variantScope.getGlobalScope().getErrorHandler());
+                                variantScope.getGlobalScope().getDslScope().getIssueReporter());
                 compileClasspath.getIncoming().afterResolve(androidXDependencyCheck);
                 runtimeClasspath.getIncoming().afterResolve(androidXDependencyCheck);
             }
@@ -512,8 +511,8 @@ public class VariantDependencies {
                     }
 
                     if (!notFound.isEmpty()) {
-                        errorReporter.reportError(
-                                EvalIssueReporter.Type.GENERIC,
+                        issueReporter.reportError(
+                                IssueReporter.Type.GENERIC,
                                 "Unable to find matching projects for Dynamic Features: "
                                         + notFound);
                     }
@@ -634,14 +633,14 @@ public class VariantDependencies {
         @NonNull
         private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorAttributes(
                 @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection) {
-            List<ProductFlavor> productFlavors = variantDslInfo.getProductFlavors();
+            List<ProductFlavor> productFlavors = variantDslInfo.getProductFlavorList();
             Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> map = Maps.newHashMapWithExpectedSize(productFlavors.size());
 
             // during a sync, it's possible that the flavors don't have dimension names because
             // the variant manager is lenient about it.
             // In that case we're going to avoid resolving the dependencies anyway, so we can just
             // skip this.
-            if (errorReporter.hasSyncIssue(EvalIssueReporter.Type.UNNAMED_FLAVOR_DIMENSION)) {
+            if (issueReporter.hasIssue(IssueReporter.Type.UNNAMED_FLAVOR_DIMENSION)) {
                 return map;
             }
 
@@ -679,7 +678,7 @@ public class VariantDependencies {
 
     public static Builder builder(
             @NonNull Project project,
-            @NonNull SyncIssueHandler errorReporter,
+            @NonNull IssueReporter errorReporter,
             @NonNull VariantDslInfo variantDslInfo) {
         return new Builder(project, errorReporter, variantDslInfo);
     }

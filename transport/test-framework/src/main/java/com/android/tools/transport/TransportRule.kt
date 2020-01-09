@@ -17,13 +17,18 @@ package com.android.tools.transport
 
 import com.android.tools.fakeandroid.FakeAndroidDriver
 import com.android.tools.fakeandroid.ProcessRunner
+import com.android.tools.profiler.proto.Agent.AgentConfig
+import com.android.tools.profiler.proto.Commands
 import com.android.tools.profiler.proto.Common.CommonConfig
+import com.android.tools.profiler.proto.Transport
 import com.android.tools.profiler.proto.Transport.DaemonConfig
+import com.android.tools.profiler.proto.TransportServiceGrpc
 import com.android.tools.transport.device.DeviceProperties
 import com.android.tools.transport.device.SdkLevel
 import com.android.tools.transport.device.TransportDaemonRunner
 import com.android.tools.transport.device.supportsJvmti
 import com.android.tools.transport.grpc.Grpc
+import com.google.common.truth.Truth.assertThat
 import org.junit.rules.ExternalResource
 import org.junit.rules.RuleChain
 import org.junit.rules.TemporaryFolder
@@ -36,14 +41,30 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.regex.Pattern
 
-private const val LOCAL_HOST = "127.0.0.1"
-
 /**
  * A JUnit rule which handles management of test ports, processes, and basic rpc calls that are shared
  * between all transport tests.
  */
+class TransportRule @JvmOverloads constructor(
+        private val activityClass: String,
+        val sdkLevel: SdkLevel,
+        private val ruleConfig: Config = Config())
+    : ExternalResource() {
 
-class TransportRule(private val activityClass: String, private val sdkLevel: SdkLevel) : ExternalResource() {
+    companion object {
+        const val DUMMY_DEVICE_ID = 1234L
+    }
+
+    open class Config {
+        open fun initDaemonConfig(daemonConfig: CommonConfig.Builder) {}
+        open fun initAgentConfig(agentConfig: AgentConfig.Builder) {}
+        open fun onBeforeActivityLaunched(transportRule: TransportRule) {}
+    }
+
+    /**
+     * Folder to create temporary config files, which will be deleted at the test's end.
+     */
+    private val temporaryFolder = TemporaryFolder()
 
     /**
      * A class which provides access to gRPC, allowing tests to send and receive protobuf messages
@@ -59,17 +80,21 @@ class TransportRule(private val activityClass: String, private val sdkLevel: Sdk
     lateinit var androidDriver: FakeAndroidDriver
         private set
 
+    val commonConfig: CommonConfig by lazy {
+        CommonConfig.newBuilder()
+                .setServiceAddress("$LOCAL_HOST:$serverPort")
+                .apply { ruleConfig.initDaemonConfig(this) }
+                .build()
+    }
+
     /**
      * The target daemon that sits on the device and handles communication.
      */
     private lateinit var transportDaemon: TransportDaemonRunner
 
-    /**
-     * Folder to create temporary config files, which will be deleted at the test's end.
-     */
-    private val temporaryFolder = TemporaryFolder()
+    var pid = -1
+        private set
 
-    private var pid = -1
     private var serverPort = 0
 
     init {
@@ -86,6 +111,7 @@ class TransportRule(private val activityClass: String, private val sdkLevel: Sdk
         println("Start activity $activityClass with sdk level $sdkLevel")
         startDaemon()
         start(activityClass)
+        startAgent()
     }
 
     override fun after() {
@@ -103,20 +129,21 @@ class TransportRule(private val activityClass: String, private val sdkLevel: Sdk
      * proper dex(es) onto the device and launch the specified activity.
      */
     private fun start(activity: String) {
-        val isJvmtiDevice = sdkLevel.supportsJvmti()
-        if (isJvmtiDevice) {
-            copyFilesForJvmti()
-        }
         val daemonPort = transportDaemon.port
         androidDriver = FakeAndroidDriver(LOCAL_HOST, arrayOf())
         androidDriver.start()
         grpc = Grpc(LOCAL_HOST, daemonPort)
-        androidDriver.setProperty("transport.service.address", "${LOCAL_HOST}:$daemonPort")
 
-        val dexesProperty = if (isJvmtiDevice) SystemProperties.APP_DEXES_JVMTI else SystemProperties.APP_DEXES_NOJVMTI
+        val supportsJvmti = sdkLevel.supportsJvmti()
+        if (supportsJvmti) {
+            copyFilesForJvmti()
+        }
+        val dexesProperty = if (supportsJvmti) SystemProperties.APP_DEXES_JVMTI else SystemProperties.APP_DEXES_NOJVMTI
         System.getProperty(dexesProperty).split(':').forEach { path ->
             androidDriver.loadDex(ProcessRunner.getProcessPathRoot() + path)
         }
+
+        ruleConfig.onBeforeActivityLaunched(this)
 
         // Load our mock application, and launch our test activity.
         androidDriver.launchActivity(activity)
@@ -125,11 +152,12 @@ class TransportRule(private val activityClass: String, private val sdkLevel: Sdk
     }
 
     private fun copyFilesForJvmti() {
-        val libJvmtiAgentFile = File(ProcessRunner.getProcessPath(SystemProperties.TRANSPORT_AGENT_LOCATION))
-        Files.copy(
-                libJvmtiAgentFile.toPath(),
-                File("./libjvmtiagent.so").toPath(),
-                StandardCopyOption.REPLACE_EXISTING)
+        System.getProperty(SystemProperties.APP_LIBS).split(':').forEach { path ->
+            val from = File(ProcessRunner.getProcessPathRoot() + path)
+            // Copy to a file with the same name but in the current directory
+            val to = File(from.name)
+            Files.copy(from.toPath(), to.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        }
     }
 
     /** @return an available port to be used by the test framework. */
@@ -143,17 +171,11 @@ class TransportRule(private val activityClass: String, private val sdkLevel: Sdk
     private fun buildDaemonConfig(): File {
         val file = temporaryFolder.newFile()
         val outputStream = FileOutputStream(file)
-        val config = DaemonConfig.newBuilder().setCommon(buildCommonConfig()).build()
+        val config = DaemonConfig.newBuilder().setCommon(commonConfig).build()
         config.writeTo(outputStream)
         outputStream.flush()
         outputStream.close()
         return file
-    }
-
-    private fun buildCommonConfig(): CommonConfig {
-        return CommonConfig.newBuilder()
-                .setServiceAddress("$LOCAL_HOST:$serverPort")
-                .build()
     }
 
     /**
@@ -166,8 +188,46 @@ class TransportRule(private val activityClass: String, private val sdkLevel: Sdk
         while (!::transportDaemon.isInitialized || transportDaemon.port == 0) {
             serverPort = availablePort
             val daemonConfig = buildDaemonConfig()
-            transportDaemon = TransportDaemonRunner(daemonConfig.absolutePath)
+            // Specify a custom root dir to ensure it is writable; otherwise, the daemon defaults
+            // to a path which, under bazel tests, is read only
+            transportDaemon =
+                    TransportDaemonRunner(daemonConfig.absolutePath, "--file_system_root=${temporaryFolder.newFolder("daemon-root")}")
             transportDaemon.start()
         }
+    }
+
+    private fun startAgent() {
+        if (sdkLevel.supportsJvmti()) {
+            val transportStub = TransportServiceGrpc.newBlockingStub(grpc.channel)
+            transportStub.execute(
+                    Transport.ExecuteRequest.newBuilder()
+                            .setCommand(
+                                    Commands.Command.newBuilder()
+                                            .setType(Commands.Command.CommandType.ATTACH_AGENT)
+                                            .setPid(androidDriver.communicationPort)
+                                            .setStreamId(DUMMY_DEVICE_ID)
+                                            .setAttachAgent(
+                                                    Commands.AttachAgent.newBuilder()
+                                                            .setAgentLibFileName("libjvmtiagent.so")
+                                                            .setAgentConfigPath(buildAgentConfig().absolutePath))
+                                            .build())
+                            .build())
+
+            // Block until we can verify the agent was fully attached, which takes a while.
+            assertThat(androidDriver.waitForInput("Transport agent connected to daemon.")).isTrue()
+        }
+    }
+
+    private fun buildAgentConfig(): File {
+        val file = temporaryFolder.newFile()
+        FileOutputStream(file).use { outputStream ->
+            val agentConfig: AgentConfig = AgentConfig.newBuilder()
+                    .apply { ruleConfig.initAgentConfig(this) }
+                    .setCommon(commonConfig)
+                    .build()
+            agentConfig.writeTo(outputStream)
+            outputStream.flush()
+        }
+        return file
     }
 }

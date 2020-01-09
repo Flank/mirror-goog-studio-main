@@ -25,11 +25,9 @@ import java.util.Collection;
  */
 public interface TransformVariantScope {
 
-    /**
-     * Full name of the variant.
-     */
+    /** Full name of the variant. */
     @NonNull
-    String getFullVariantName();
+    String getName();
 
     @NonNull
     TransformGlobalScope getGlobalScope();

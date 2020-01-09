@@ -53,7 +53,7 @@ class BuildArtifactReportTaskTest {
         val task1 = project.tasks.register("task1")
 
         artifactsHolder.producesFile(
-            InternalArtifactType.COMPILE_LIBRARY_CLASSES,
+            InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR,
             task0,
             { output0 },
             "task0_output"
@@ -61,7 +61,7 @@ class BuildArtifactReportTaskTest {
 
 
         artifactsHolder.producesFile(
-            InternalArtifactType.COMPILE_LIBRARY_CLASSES,
+            InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR,
             task1,
             { output1 },
             "task1_output"
@@ -84,7 +84,7 @@ class BuildArtifactReportTaskTest {
         task.report()
 
         val report = BuildArtifactsHolder.parseReport(outputFile)
-        val javacArtifacts = report[InternalArtifactType.COMPILE_LIBRARY_CLASSES.name()] ?: throw NullPointerException()
+        val javacArtifacts = report[InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR.name()] ?: throw NullPointerException()
         assertThat(javacArtifacts.producers).hasSize(2)
         assertThat(javacArtifacts.producers[0].files[0]).endsWith("task0_output")
         assertThat(javacArtifacts.producers[0].builtBy).isEqualTo("task0")

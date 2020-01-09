@@ -9,7 +9,7 @@ apply plugin: 'kotlin-android-extensions'
 </#macro>
 
 <#macro addKotlinDependencies>
-<#if generateKotlin>${getConfigurationName("compile")} "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"</#if>
+<#if generateKotlin>${getConfigurationName("compile")} "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"</#if>
 </#macro>
 
 <#macro setKotlinVersion>
@@ -25,7 +25,7 @@ apply plugin: 'kotlin-android-extensions'
     <apply plugin="kotlin-android" />
     <apply plugin="kotlin-android-extensions" />
     <#if !hasDependency('org.jetbrains.kotlin:kotlin-stdlib')>
-        <dependency mavenUrl="org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"/>
+        <dependency mavenUrl="org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"/>
         <@setKotlinVersion />
     </#if>
   </#if>

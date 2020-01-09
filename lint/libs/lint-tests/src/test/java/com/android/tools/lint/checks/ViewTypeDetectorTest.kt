@@ -538,10 +538,10 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
         )
             .expectFixDiffs(
                 "" +
-                        "Fix for src/main/java/test/pkg/ImplicitCastTest2.java line 8: Add cast:\n" +
+                        "Fix for src/main/java/test/pkg/ImplicitCastTest2.java line 9: Add cast:\n" +
                         "@@ -9 +9\n" +
                         "-         checkNotNull1(findViewById(R.id.textView)).setAlpha(0.5f); // WARN\n" +
-                        "+         checkNotNull1((android.view.View)findViewById(R.id.textView)).setAlpha(0.5f); // WARN\n"
+                        "+         checkNotNull1((View)findViewById(R.id.textView)).setAlpha(0.5f); // WARN\n"
             )
     }
 

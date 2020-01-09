@@ -16,19 +16,16 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
-import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.errors.EvalIssueReporter.Severity.ERROR
-import com.android.builder.errors.EvalIssueReporter.Severity.WARNING
-import com.android.builder.errors.EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION
-import org.gradle.api.GradleException
+import com.android.builder.errors.IssueReporter
+import com.android.builder.errors.IssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION
 import org.gradle.api.logging.Logging
 
 /**
- * A logging environment that will report errors and warnings to an [EvalIssueReporter].
+ * A logging environment that will report errors and warnings to an [IssueReporter].
  * Messages are also logger to a standard [org.gradle.api.logging.Logger].
  */
 class IssueReporterLoggingEnvironment(
-    private val issueReporter : EvalIssueReporter) : PassThroughDeduplicatingLoggingEnvironment() {
+    private val issueReporter : IssueReporter) : PassThroughDeduplicatingLoggingEnvironment() {
     private val logger = Logging.getLogger(IssueReporterLoggingEnvironment::class.java)
 
     override fun log(message: LoggingMessage) {

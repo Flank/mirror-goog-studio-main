@@ -448,7 +448,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             variantScope.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
             task.setType(variantDslInfo.variantType)
-            task.debuggable.setDisallowChanges(variantData.publicVariantApi.isDebuggable)
+            task.debuggable.setDisallowChanges(variantData.variantDslInfo.isDebuggable)
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions.convert()
 
             task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)

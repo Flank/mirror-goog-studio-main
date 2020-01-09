@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
@@ -98,7 +99,11 @@ public class LibraryIntermediateArtifactPublishingTest {
         assertThatZip(fullJar).contains("com/example/helloworld/HelloWorld.class");
         assertThatZip(fullJar).contains("foo.txt");
 
-        File classesJar = project.getSubproject(":lib").getIntermediateFile("runtime_library_classes/debug/classes.jar");
+        File classesJar =
+                project.getSubproject(":lib")
+                        .getIntermediateFile(
+                                RUNTIME_LIBRARY_CLASSES_JAR.INSTANCE.getFolderName()
+                                        + "/debug/classes.jar");
         assertThatZip(classesJar).contains("com/example/helloworld/HelloWorld.class");
         assertThatZip(classesJar).doesNotContain("foo.txt");
 

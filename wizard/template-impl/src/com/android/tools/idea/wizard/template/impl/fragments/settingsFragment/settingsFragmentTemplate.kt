@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.settingsFragment
 
-
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.*
 import com.android.tools.idea.wizard.template.FormFactor
@@ -24,6 +23,7 @@ import com.android.tools.idea.wizard.template.LanguageWidget
 import com.android.tools.idea.wizard.template.PackageNameWidget
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.ModuleTemplateData
+import com.android.tools.idea.wizard.template.TemplateConstraint
 import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.template
@@ -38,7 +38,7 @@ val settingsFragmentTemplate
     description = "Creates a new fragment that allows a user to configure application settings"
     minApi = 14
     minBuildApi = 14
-    requireAndroidX = true
+    constraints = listOf(TemplateConstraint.AndroidX)
 
     category = Category.Fragment
     formFactor = FormFactor.Mobile

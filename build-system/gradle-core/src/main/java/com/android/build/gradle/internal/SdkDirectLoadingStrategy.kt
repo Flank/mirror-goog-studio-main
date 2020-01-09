@@ -17,10 +17,10 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants
-import com.android.builder.core.ToolsRevisionUtils
-import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.internal.compiler.RenderScriptProcessor
 import com.android.Version
+import com.android.builder.core.ToolsRevisionUtils
+import com.android.builder.errors.IssueReporter
+import com.android.builder.internal.compiler.RenderScriptProcessor
 import com.android.repository.Revision
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.AndroidVersion
@@ -49,7 +49,7 @@ class SdkDirectLoadingStrategy(
     private val platformTargetHashSupplier: Supplier<String?>,
     private val buildToolRevisionSupplier: Supplier<Revision?>,
     private val useAndroidX: Boolean,
-    private val evalIssueReporter: EvalIssueReporter) {
+    private val issueReporter: IssueReporter) {
 
     companion object {
         // We use Optional<> wrapper since ConcurrentHashMap don't support null values.
@@ -87,7 +87,7 @@ class SdkDirectLoadingStrategy(
     }
 
     private fun loadSdkComponents(targetHash: String, buildToolRevision: Revision): DirectLoadComponents? {
-        val sdkLocation = SdkLocator.getSdkLocation(sdkLocationSourceSet, evalIssueReporter)
+        val sdkLocation = SdkLocator.getSdkLocation(sdkLocationSourceSet, issueReporter)
         if (sdkLocation.type == SdkType.MISSING) {
             return null
         }
@@ -113,9 +113,9 @@ class SdkDirectLoadingStrategy(
 
     private fun checkBuildToolsRevision(revision: Revision): Revision {
         if (revision < ToolsRevisionUtils.MIN_BUILD_TOOLS_REV) {
-            evalIssueReporter
+            issueReporter
                 .reportWarning(
-                    EvalIssueReporter.Type.BUILD_TOOLS_TOO_LOW,
+                    IssueReporter.Type.BUILD_TOOLS_TOO_LOW,
                     String.format(
                         "The specified Android SDK Build Tools version (%1\$s) is "
                                 + "ignored, as it is below the minimum supported "

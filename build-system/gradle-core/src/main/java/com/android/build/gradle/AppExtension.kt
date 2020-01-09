@@ -18,6 +18,7 @@ package com.android.build.gradle
 
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.ProjectOptions
@@ -29,7 +30,7 @@ import org.gradle.api.Project
  * declaration is not possible.
  */
 abstract class AppExtension(
-        project: Project,
+        dslScope: DslScope,
         projectOptions: ProjectOptions,
         globalScope: GlobalScope,
         buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
@@ -37,7 +38,7 @@ abstract class AppExtension(
         extraModelInfo: ExtraModelInfo,
         isBaseModule: Boolean
 ) : AbstractAppExtension(
-        project,
+        dslScope,
         projectOptions,
         globalScope,
         buildOutputs,

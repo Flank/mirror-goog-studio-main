@@ -48,20 +48,20 @@ val fullscreenActivityTemplate
 
     category = Category.Activity
     formFactor = FormFactor.Mobile
-    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry)
+    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry, WizardUiContext.NewProject)
 
     lateinit var layoutName: StringParameter
     val activityClass = stringParameter {
       name = "Activity Name"
       default = "FullscreenActivity"
-      help = "The name of the activity class to create "
+      help = "The name of the activity class to create"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 
     layoutName = stringParameter {
       name = "Layout Name"
       default = "activity_fullscreen"
-      help = "The name of the layout to create for the activity "
+      help = "The name of the layout to create for the activity"
       constraints = listOf(LAYOUT, UNIQUE, NONEMPTY)
       suggest = { activityToLayout(activityClass.value) }
     }
@@ -69,7 +69,7 @@ val fullscreenActivityTemplate
     val activityTitle = stringParameter {
       name = "Title"
       default = "FullscreenActivity"
-      help = "The name of the activity."
+      help = "The name of the activity"
       visible = { false }
       constraints = listOf(NONEMPTY)
       suggest = { activityClass.value }
@@ -83,8 +83,9 @@ val fullscreenActivityTemplate
 
     val packageName = stringParameter {
       name = "Package name"
-      default = "com.mycompany.myapp "
+      default = "com.mycompany.myapp"
       constraints = listOf(PACKAGE)
+      suggest = { packageName }
     }
 
     widgets(

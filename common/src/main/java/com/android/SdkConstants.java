@@ -251,6 +251,12 @@ public final class SdkConstants {
     public static final String FN_LD_MIPS =
             "mipsel-linux-android-ld" + ext(".exe", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
+    /**
+     * 64 bit (host) renderscript support linker for all ABIs (with extension for the current OS)
+     */
+    public static final String FN_LLD =
+            "lld" + ext(".exe", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
     /** adb executable (with extension for the current OS) */
     public static final String FN_ADB =
             "adb" + ext(".exe", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -1245,6 +1251,7 @@ public final class SdkConstants {
     public static final String TAG_SELECTOR = "selector"; //$NON-NLS-1$
     public static final String TAG_TRANSITION = "transition"; //$NON-NLS-1$
     public static final String TAG_VECTOR = "vector"; //$NON-NLS-1$
+    public static final String TAG_LEVEL_LIST = "level-list";
 
     // Tags: Data-Binding
     public static final String TAG_LAYOUT = "layout"; //$NON-NLS-1$

@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity
 
-
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
 import com.android.tools.idea.wizard.template.Constraint.CLASS
@@ -29,6 +28,7 @@ import com.android.tools.idea.wizard.template.LanguageWidget
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.PackageNameWidget
 import com.android.tools.idea.wizard.template.StringParameter
+import com.android.tools.idea.wizard.template.TemplateConstraint
 import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
@@ -46,11 +46,11 @@ val googleMapsActivityTemplate
     description = "Creates a new activity with a Google Map"
     minApi = 14
     minBuildApi = 14
-    requireAndroidX = true
+    constraints = listOf(TemplateConstraint.AndroidX)
 
     category = Category.Google
     formFactor = FormFactor.Mobile
-    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry)
+    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry, WizardUiContext.NewProject)
 
     lateinit var layoutName: StringParameter
     val activityClass = stringParameter {
@@ -86,6 +86,7 @@ val googleMapsActivityTemplate
       name = "Package name"
       default = "com.mycompany.myapp"
       constraints = listOf(PACKAGE)
+      suggest = { packageName }
     }
 
     widgets(

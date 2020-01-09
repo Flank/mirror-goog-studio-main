@@ -20,10 +20,9 @@ import org.gradle.api.Incubating
 import org.gradle.api.Named
 
 /**
- * Variant Configuration encapsulates immutable variant properties.
+ * Variant Configuration represents the identify of a variant
  *
- * Those properties are usually calculated from the DSL and cannot be changed once the DSL objects
- * are locked.
+ * This is computed from the list of build type and flavors.
  */
 @Incubating
 interface VariantConfiguration: Named {
@@ -34,9 +33,17 @@ interface VariantConfiguration: Named {
 
     /**
      * List of flavor names, might be replaced with access to locked DSL objects once ready
+     *
+     * The order is properly sorted based on the associated dimension order
      */
-    val flavors: List<String>
+    val productFlavors: List<Pair<String, String>>
 
-    /** Whether this variant should generate a debuggable apk.  */
-    val isDebuggable: Boolean
+    /**
+     * The multi-flavor name of the variant.
+     *
+     * This does not include the build type. If no flavors are present, this is an empty string.
+     *
+     * The full name of the variant is queried via [getName]
+     */
+    val flavorName: String
 }

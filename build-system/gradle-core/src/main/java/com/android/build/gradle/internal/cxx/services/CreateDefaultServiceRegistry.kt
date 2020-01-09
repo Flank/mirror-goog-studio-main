@@ -36,7 +36,7 @@ fun createBuildModelServiceRegistry() : CxxServiceRegistry {
 fun createDefaultServiceRegistry(global : GlobalScope) : CxxServiceRegistry {
     val registry = CxxServiceRegistryBuilder()
     createProcessJunctionService(registry)
-    createEvalIssueReporterService(global, registry)
+    createIssueReporterService(global, registry)
     createModelDependencyService(global, registry)
     return registry.build()
 }

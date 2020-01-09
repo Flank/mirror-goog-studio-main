@@ -38,7 +38,7 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --test_tag_filters=%TESTTAGFILTERS% ^
  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
  --runs_per_test=5 ^
- -- //tools/base/bazel:perfgate_logs_collector_deploy.jar ^
+ -- //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar ^
  %TARGETS%
 
 SET EXITCODE=%errorlevel%
@@ -50,7 +50,9 @@ echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.co
 set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
 
 @rem Extract perfgate data
-%JAVA% -jar %BASEDIR%\bazel-bin\tools\base\bazel\perfgate_logs_collector_deploy.jar %BASEDIR%\bazel-testlogs %DISTDIR%\bazel-%BUILDNUMBER%.bes %DISTDIR%\perfgate_data.zip %DISTDIR%\logs\perfgate_logs_collector.log
+%JAVA% -jar %BASEDIR%\bazel-bin\tools\vendor\adt_infra_internal\rbe\logscollector\logs-collector_deploy.jar ^
+ -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
+ -perfzip %DISTDIR%\perfgate_data.zip
 
 :ENDSCRIPT
 @rem On windows we must explicitly shut down bazel. Otherwise file handles remain open.

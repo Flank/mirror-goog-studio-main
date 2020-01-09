@@ -16,15 +16,14 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.builder.errors.FakeEvalIssueReporter
+import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.google.common.truth.Truth.assertThat
-import org.junit.Before
 import org.junit.Test
 
 class LockablePropertyTest {
 
-    private val evalIssueReporter: FakeEvalIssueReporter = FakeEvalIssueReporter(throwOnError = false)
-    private val factory: DslVariableFactory = DslVariableFactory(evalIssueReporter)
+    private val issueReporter: FakeSyncIssueReporter = FakeSyncIssueReporter()
+    private val factory: DslVariableFactory = DslVariableFactory(issueReporter)
 
     @Test
     fun checkInitial() {
@@ -52,8 +51,8 @@ class LockablePropertyTest {
         factory.disableWrite()
         testObject.x = "set2"
         assertThat(testObject.x).isEqualTo("set1")
-        assertThat(evalIssueReporter.errors).hasSize(1)
-        assertThat(evalIssueReporter.errors[0]).isEqualTo("""
+        assertThat(issueReporter.errors).hasSize(1)
+        assertThat(issueReporter.errors[0]).isEqualTo("""
             It is too late to set property 'x' to 'set2'. (It has value 'set1')
             The DSL is now locked as the variants have been created.
             Either move this call earlier, or use the variant API to customize individual variants.

@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment
 
-
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
@@ -28,6 +27,7 @@ import com.android.tools.idea.wizard.template.FormFactor
 import com.android.tools.idea.wizard.template.LanguageWidget
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.PackageNameWidget
+import com.android.tools.idea.wizard.template.TemplateConstraint
 import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
@@ -50,10 +50,10 @@ val googleAdMobAdsFragmentTemplate
   get() = template {
     revision = 1
     name = "Google AdMob Ads Fragment"
-    requireAndroidX = true
+    constraints = listOf(TemplateConstraint.AndroidX)
     minApi = 14
     minBuildApi = 14
-    description = "Creates an fragment with AdMob Ad fragment."
+    description = "Creates an fragment with AdMob Ad fragment"
 
     category = Category.Fragment
     formFactor = FormFactor.Mobile
@@ -62,14 +62,14 @@ val googleAdMobAdsFragmentTemplate
     val fragmentClass = stringParameter {
       name = "Fragment Name"
       default = "AdMobFragment"
-      help = "The name of the AdMob fragment class to create "
+      help = "The name of the AdMob fragment class to create"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 
     val layoutName = stringParameter {
       name = "Layout Name"
       default = "fragment_admob"
-      help = "The name of the layout to create for the fragment "
+      help = "The name of the layout to create for the fragment"
       constraints = listOf(LAYOUT, UNIQUE, NONEMPTY)
       suggest = { fragmentToLayout(fragmentClass.value) }
     }
@@ -77,15 +77,14 @@ val googleAdMobAdsFragmentTemplate
     val adFormat = enumParameter<AdFormat> {
       name = "Ad Format"
       default = AdFormat.Interstitial
-      help = "Select Interstitial Ad or Banner Ad."
+      help = "Select Interstitial Ad or Banner Ad"
     }
 
     val packageName = stringParameter {
       name = "Package name"
-      default = "com.mycompany.myapp "
+      default = "com.mycompany.myapp"
       constraints = listOf(PACKAGE)
     }
-
 
     widgets(
       TextFieldWidget(fragmentClass),

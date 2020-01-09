@@ -98,8 +98,11 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteral
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.annotations.Contract
+import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry
+import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UCatchClause
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UFile
@@ -107,6 +110,7 @@ import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUFile
 import org.jetbrains.uast.java.JavaUImportStatement
+import org.jetbrains.uast.kotlin.KotlinUCatchClause
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -967,40 +971,6 @@ class LintDriver
             moduleCount++
         }
 
-        // Look up manifest information (but not for library projects)
-        if (project.isAndroidProject) {
-            for (manifestFile in project.manifestFiles) {
-                val parser = client.xmlParser
-                val context = createXmlContext(project, main, manifestFile, null, parser)
-                if (context != null) {
-                    try {
-                        project.readManifest(context.document)
-                        if ((!project.isLibrary || main != null &&
-                                    main.isMergingManifests) && scope.contains(Scope.MANIFEST)
-                        ) {
-                            val detectors = scopeDetectors[Scope.MANIFEST]
-                            if (detectors != null) {
-                                val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
-                                for (detector in detectors) {
-                                    if (detector is XmlScanner) {
-                                        xmlDetectors.add(detector)
-                                    }
-                                }
-
-                                val v = ResourceVisitor(parser, xmlDetectors, null)
-                                fireEvent(EventType.SCANNING_FILE, context)
-                                v.visitFile(context)
-                                fileCount++
-                                resourceFileCount++
-                            }
-                        }
-                    } finally {
-                        disposeXmlContext(context)
-                    }
-                }
-            }
-        }
-
         // Prepare Java/Kotlin compilation. We're not processing these files yet, but
         // we need to prepare to load various symbol tables such that class lookup
         // works from resource detectors
@@ -1036,6 +1006,40 @@ class LintDriver
 
         if (isCanceled) {
             return
+        }
+
+        // Look up manifest information (but not for library projects)
+        if (project.isAndroidProject) {
+            for (manifestFile in project.manifestFiles) {
+                val parser = client.xmlParser
+                val context = createXmlContext(project, main, manifestFile, null, parser)
+                if (context != null) {
+                    try {
+                        project.readManifest(context.document)
+                        if ((!project.isLibrary || main != null &&
+                                    main.isMergingManifests) && scope.contains(Scope.MANIFEST)
+                        ) {
+                            val detectors = scopeDetectors[Scope.MANIFEST]
+                            if (detectors != null) {
+                                val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
+                                for (detector in detectors) {
+                                    if (detector is XmlScanner) {
+                                        xmlDetectors.add(detector)
+                                    }
+                                }
+
+                                val v = ResourceVisitor(parser, xmlDetectors, null)
+                                fireEvent(EventType.SCANNING_FILE, context)
+                                v.visitFile(context)
+                                fileCount++
+                                resourceFileCount++
+                            }
+                        }
+                    } finally {
+                        disposeXmlContext(context)
+                    }
+                }
+            }
         }
 
         if (project.isAndroidProject) {
@@ -2711,6 +2715,42 @@ class LintDriver
                 }
             }
             currentScope = currentScope.uastParent
+        }
+
+        return false
+    }
+
+    fun isSuppressed(
+        context: JavaContext?,
+        issue: Issue,
+        clause: UCatchClause
+    ): Boolean {
+        for (parameter in clause.parameters) {
+            if (isSuppressed(context, issue, parameter as UElement)) {
+                return true
+            }
+        }
+
+        // Workaround: Kotlin AST is missing these annotations
+        if (clause is KotlinUCatchClause) {
+            clause.sourcePsi.catchParameter?.annotationEntries?.forEach { annotation ->
+                val argList = annotation.valueArgumentList
+                if (annotation.shortName?.asString() == SUPPRESS_LINT) {
+                    for (arg in annotation.valueArguments) {
+                        val expression = arg.getArgumentExpression()
+                        if (expression is KtStringTemplateExpression) {
+                            for (entry in expression.entries) {
+                                if (entry is KtLiteralStringTemplateEntry) {
+                                    val text = entry.text
+                                    if (issue.id == text) {
+                                        return true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return false

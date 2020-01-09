@@ -1796,11 +1796,17 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         val apiMessage =
                             getApiErrorMessage(minSdk, typeReference, api, "Exception", fqcn ?: "")
                         val message = "$apiMessage, and having a surrounding/preceding version " +
-                                "check **does** not help since prior to API level 19, just " +
+                                "check **does not** help since prior to API level 19, just " +
                                 "**loading** the class will cause a crash. Consider marking the " +
                                 "surrounding class with `RequiresApi(19)` to ensure that the " +
                                 "class is never loaded except when on API 19 or higher."
                         val fix = LintFix.create().data(api, PsiClass::class.java)
+
+                        val clause = typeReference.uastParent as? UCatchClause
+                        if (clause != null && context.driver.isSuppressed(context, UNSUPPORTED, clause)) {
+                            return
+                        }
+
                         report(UNSUPPORTED, typeReference, location, message, fix, signature)
                         return
                     } else {

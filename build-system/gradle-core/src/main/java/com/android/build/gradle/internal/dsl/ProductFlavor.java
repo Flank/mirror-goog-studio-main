@@ -153,6 +153,13 @@ public class ProductFlavor extends BaseFlavor implements com.android.build.api.d
         return isDefault;
     }
 
+    // Temp HACK. we need a way to access the Property<Boolean> from Kotlin
+    // DO NOT USE
+    @Deprecated
+    public Property<Boolean> getIsDefaultProp() {
+        return isDefault;
+    }
+
     @Override
     public boolean isDefault() {
         return isDefault.get();

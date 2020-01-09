@@ -112,11 +112,11 @@ public class PackageAndroidArtifactTest {
         ImmutableList<BuildOutput> outputFiles =
                 ImmutableList.of(
                         new BuildOutput(
-                                InternalArtifactType.APK.INSTANCE,
+                                InternalArtifactType.PROCESSED_RES.INSTANCE,
                                 ApkData.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), -1),
                                 new File("/tmp/file_main.out")),
                         new BuildOutput(
-                                InternalArtifactType.APK.INSTANCE,
+                                InternalArtifactType.PROCESSED_RES.INSTANCE,
                                 ApkData.of(
                                         VariantOutput.OutputType.FULL_SPLIT,
                                         ImmutableList.of(
@@ -126,7 +126,7 @@ public class PackageAndroidArtifactTest {
                                         -1),
                                 new File("/tmp/file_xxhdpi.out")),
                         new BuildOutput(
-                                InternalArtifactType.APK.INSTANCE,
+                                InternalArtifactType.PROCESSED_RES.INSTANCE,
                                 ApkData.of(
                                         VariantOutput.OutputType.FULL_SPLIT,
                                         ImmutableList.of(
@@ -135,7 +135,7 @@ public class PackageAndroidArtifactTest {
                                         -1),
                                 new File("/tmp/filefr.out")),
                         new BuildOutput(
-                                InternalArtifactType.APK.INSTANCE,
+                                InternalArtifactType.PROCESSED_RES.INSTANCE,
                                 ApkData.of(
                                         VariantOutput.OutputType.FULL_SPLIT,
                                         ImmutableList.of(

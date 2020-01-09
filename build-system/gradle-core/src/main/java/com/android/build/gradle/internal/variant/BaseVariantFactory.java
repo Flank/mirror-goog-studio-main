@@ -22,8 +22,8 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.builder.errors.EvalIssueReporter;
-import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.errors.IssueReporter;
+import com.android.builder.errors.IssueReporter.Type;
 import org.gradle.api.Project;
 
 /** Common superclass for all {@link VariantFactory} implementations. */
@@ -39,7 +39,8 @@ public abstract class BaseVariantFactory implements VariantFactory {
     public void preVariantWork(Project project) {
         if (project.getPluginManager().hasPlugin(ANDROID_APT_PLUGIN_NAME)) {
             globalScope
-                    .getErrorHandler()
+                    .getDslScope()
+                    .getIssueReporter()
                     .reportError(
                             Type.INCOMPATIBLE_PLUGIN,
                             "android-apt plugin is incompatible with the Android Gradle plugin.  "
@@ -50,14 +51,14 @@ public abstract class BaseVariantFactory implements VariantFactory {
     }
 
     @Override
-    public void validateModel(@NonNull VariantModel model) {
+    public void validateModel(@NonNull VariantInputModel model) {
         validateBuildConfig(model);
         validateResValues(model);
     }
 
-    void validateBuildConfig(@NonNull VariantModel model) {
+    void validateBuildConfig(@NonNull VariantInputModel model) {
         if (!globalScope.getBuildFeatures().getBuildConfig()) {
-            EvalIssueReporter issueReporter = globalScope.getErrorHandler();
+            IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
 
             if (!model.getDefaultConfig().getProductFlavor().getBuildConfigFields().isEmpty()) {
                 issueReporter.reportError(
@@ -87,9 +88,9 @@ public abstract class BaseVariantFactory implements VariantFactory {
         }
     }
 
-    void validateResValues(@NonNull VariantModel model) {
+    void validateResValues(@NonNull VariantInputModel model) {
         if (!globalScope.getBuildFeatures().getResValues()) {
-            EvalIssueReporter issueReporter = globalScope.getErrorHandler();
+            IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
 
             if (!model.getDefaultConfig().getProductFlavor().getResValues().isEmpty()) {
                 issueReporter.reportError(

@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.core
 
 import com.android.builder.core.AbstractProductFlavor
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.builder.model.ProductFlavor
 import com.google.common.collect.Lists
 
@@ -26,7 +26,7 @@ import com.google.common.collect.Lists
  * The merger of the default config and all of a variant's flavors (if any)
  */
 public class MergedFlavor(
-        name: String, val issueReporter: EvalIssueReporter) : AbstractProductFlavor(name) {
+        name: String, val issueReporter: IssueReporter) : AbstractProductFlavor(name) {
 
     companion object {
 
@@ -37,7 +37,7 @@ public class MergedFlavor(
          * @return a new MergedFlavor instance that is a clone of the flavor.
          */
         @JvmStatic
-        fun clone(productFlavor: ProductFlavor, issueReporter: EvalIssueReporter): MergedFlavor {
+        fun clone(productFlavor: ProductFlavor, issueReporter: IssueReporter): MergedFlavor {
             val mergedFlavor = MergedFlavor(productFlavor.name, issueReporter)
             mergedFlavor._initWith(productFlavor)
             return mergedFlavor
@@ -60,7 +60,7 @@ public class MergedFlavor(
         fun mergeFlavors(
                 lowestPriority: ProductFlavor,
                 flavors: List<ProductFlavor>,
-                issueReporter: EvalIssueReporter): MergedFlavor {
+                issueReporter: IssueReporter): MergedFlavor {
             val mergedFlavor = clone(lowestPriority, issueReporter)
             for (flavor in Lists.reverse(flavors)) {
                 mergedFlavor.mergeWithHigherPriorityFlavor(flavor)
@@ -110,17 +110,16 @@ public class MergedFlavor(
             fieldValue.toString()
         }
 
-        val message = """
-$fieldName cannot be set on a mergedFlavor directly.
-$outputFieldName can instead be set for variant outputs using the following syntax:
-android {
-    applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            output.$outputFieldName = $formattedFieldValue
-        }
-    }
-}"""
+        val message = """$fieldName cannot be set on a mergedFlavor directly.
+                |$outputFieldName can instead be set for variant outputs using the following syntax:
+                |android {
+                |    applicationVariants.all { variant ->
+                |        variant.outputs.each { output ->
+                |            output.$outputFieldName = $formattedFieldValue
+                |        }
+                |    }
+                |}""".trimMargin()
 
-        issueReporter.reportError(EvalIssueReporter.Type.GENERIC, message)
+        issueReporter.reportError(IssueReporter.Type.GENERIC, message)
     }
 }

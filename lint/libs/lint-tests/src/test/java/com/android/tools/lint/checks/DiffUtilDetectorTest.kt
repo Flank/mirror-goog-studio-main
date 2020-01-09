@@ -33,6 +33,7 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
     ).indented()
 
     fun testIdentityEqualsOkay() {
+        // Regression test for b/132234925
         lint().files(
             kotlin(
                 """
@@ -55,6 +56,53 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
 
                 public class Cheese {
                     public int id;
+                }
+                """
+            ).indented(),
+            diffUtilStub
+        ).run().expectClean()
+    }
+
+    fun testKotlinDataClasses() {
+        // Regression test for https://issuetracker.google.com/122928037
+        lint().files(
+            kotlin(
+                """
+                package com.squareup.cash.diffutil
+
+                import android.support.v7.util.DiffUtil
+                import com.squareup.cash.lib.Foo
+
+                class FooAdapter {
+                  private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Foo>() {
+                    override fun areItemsTheSame(
+                      oldItem: Foo,
+                      newItem: Foo
+                    ): Boolean {
+                      return oldItem.id == newItem.id
+                    }
+
+                    override fun areContentsTheSame(
+                      oldItem: Foo,
+                      newItem: Foo
+                    ): Boolean {
+                      return oldItem == newItem
+                    }
+                  }
+                }
+                """
+            ),
+            kotlin(
+                """
+                package com.squareup.cash.lib
+
+                interface Foo {
+                    val id: String
+                    override fun equals(other: Any?): Boolean
+
+                    data class Impl(
+                        override val id: String
+                    ) : Foo
                 }
                 """
             ).indented(),

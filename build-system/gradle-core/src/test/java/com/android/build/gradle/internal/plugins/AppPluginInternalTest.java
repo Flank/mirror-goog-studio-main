@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.SigningConfig;
 import com.google.common.collect.ImmutableMap;
@@ -68,12 +69,11 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks();
 
-        TestCase.assertEquals(2, plugin.getVariantManager().getBuildTypes().size());
-        TestCase.assertNotNull(
-                plugin.getVariantManager().getBuildTypes().get(BuilderConstants.DEBUG));
-        TestCase.assertNotNull(
-                plugin.getVariantManager().getBuildTypes().get(BuilderConstants.RELEASE));
-        TestCase.assertEquals(0, plugin.getVariantManager().getProductFlavors().size());
+        final VariantInputModel variantInputModel = plugin.getVariantInputModel();
+        TestCase.assertEquals(2, variantInputModel.getBuildTypes().size());
+        TestCase.assertNotNull(variantInputModel.getBuildTypes().get(BuilderConstants.DEBUG));
+        TestCase.assertNotNull(variantInputModel.getBuildTypes().get(BuilderConstants.RELEASE));
+        TestCase.assertEquals(0, variantInputModel.getProductFlavors().size());
 
         List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         VariantCheckers.checkDefaultVariants(variants);
@@ -152,7 +152,7 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks();
 
-        TestCase.assertEquals(3, plugin.getVariantManager().getBuildTypes().size());
+        TestCase.assertEquals(3, plugin.getVariantInputModel().getBuildTypes().size());
 
         List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
@@ -169,7 +169,9 @@ public class AppPluginInternalTest {
 
         BaseVariantData testVariant =
                 VariantCheckers.findVariantData(variants, "stagingAndroidTest");
-        TestCase.assertEquals("staging", testVariant.getVariantDslInfo().getBuildType());
+        TestCase.assertEquals(
+                "staging",
+                testVariant.getVariantDslInfo().getVariantConfiguration().getBuildType());
     }
     @Test
     public void testFlavors() {
@@ -192,7 +194,7 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks();
 
-        TestCase.assertEquals(2, plugin.getVariantManager().getProductFlavors().size());
+        TestCase.assertEquals(2, plugin.getVariantInputModel().getProductFlavors().size());
 
         List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
@@ -248,7 +250,7 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks();
 
-        TestCase.assertEquals(5, plugin.getVariantManager().getProductFlavors().size());
+        TestCase.assertEquals(5, plugin.getVariantInputModel().getProductFlavors().size());
 
         List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
@@ -416,13 +418,13 @@ public class AppPluginInternalTest {
 
         // check that the debug buildType has the updated debug signing config.
         BuildType buildType =
-                plugin.getVariantManager()
+                plugin.getVariantInputModel()
                         .getBuildTypes()
                         .get(BuilderConstants.DEBUG)
                         .getBuildType();
         SigningConfig signingConfig = buildType.getSigningConfig();
         TestCase.assertEquals(
-                plugin.getVariantManager().getSigningConfigs().get(BuilderConstants.DEBUG),
+                plugin.getVariantInputModel().getSigningConfigs().get(BuilderConstants.DEBUG),
                 signingConfig);
         TestCase.assertEquals("foo", signingConfig.getStorePassword());
     }
@@ -442,8 +444,8 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
 
         SigningConfig debugSC =
-                plugin.getVariantManager().getSigningConfigs().get(BuilderConstants.DEBUG);
-        SigningConfig fooSC = plugin.getVariantManager().getSigningConfigs().get("foo");
+                plugin.getVariantInputModel().getSigningConfigs().get(BuilderConstants.DEBUG);
+        SigningConfig fooSC = plugin.getVariantInputModel().getSigningConfigs().get("foo");
 
         TestCase.assertNotNull(fooSC);
 
@@ -470,7 +472,7 @@ public class AppPluginInternalTest {
         }
 
         TestCase.assertNotNull(recordedException);
-        TestCase.assertEquals(BadPluginException.class, recordedException.getClass());
+        TestCase.assertSame(BadPluginException.class, recordedException.getClass());
     }
 
     @Test

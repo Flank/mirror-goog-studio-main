@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIV
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.process.ProcessInfoBuilder
@@ -35,13 +36,18 @@ import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileTree
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.process.ExecOperations
 import java.io.File
@@ -61,7 +67,8 @@ import javax.inject.Inject
 @CacheableTask
 abstract class StripDebugSymbolsTask : IncrementalTask() {
 
-    @get:Classpath
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputDir: DirectoryProperty
 
     @get:OutputDirectory
@@ -85,6 +92,13 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
             stripToolFinderProvider.get().stripExecutables.toSortedMap()
         }
     }
+
+    // We need inputFiles in addition to inputDir because SkipWhenEmpty doesn't work for inputDir
+    // because it's a DirectoryProperty
+    @get:InputFiles
+    @get:SkipWhenEmpty
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val inputFiles: Property<FileTree>
 
     private lateinit var stripToolFinderProvider: Provider<SymbolStripExecutableFinder>
 
@@ -148,6 +162,11 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
                 variantScope.globalScope.extension.packagingOptions.doNotStrip.sorted()
             task.stripToolFinderProvider =
                 variantScope.globalScope.sdkComponents.stripExecutableFinderProvider
+            task.inputFiles.setDisallowChanges(
+                variantScope.globalScope.project.provider {
+                    variantScope.globalScope.project.layout.files(task.inputDir).asFileTree
+                }
+            )
         }
     }
 }

@@ -19,16 +19,16 @@ package com.android.tools.profiler.network;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.fakeandroid.FakeAndroidDriver;
-import com.android.tools.profiler.GrpcUtils;
-import com.android.tools.profiler.PerfDriver;
-import com.android.tools.profiler.TestUtils;
-import com.android.tools.profiler.proto.Common.*;
+import com.android.tools.profiler.ProfilerRule;
+import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpConnectionData;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsResponse;
-import com.android.tools.profiler.proto.Transport.*;
-import java.io.IOException;
+import com.android.tools.transport.TestUtils;
+import com.android.tools.transport.device.SdkLevel;
+import com.android.tools.transport.grpc.Grpc;
+import com.android.tools.transport.grpc.TransportStubWrapper;
 import java.util.Arrays;
 import java.util.Collection;
 import org.junit.Before;
@@ -41,27 +41,27 @@ import org.junit.runners.Parameterized;
 public class OkHttpTest {
 
     @Parameterized.Parameters
-    public static Collection<Integer> data() {
-        return Arrays.asList(24, 26, 28);
+    public static Collection<SdkLevel> parameters() {
+        return Arrays.asList(SdkLevel.N, SdkLevel.O, SdkLevel.P);
     }
 
     private static final String ACTIVITY_CLASS = "com.activity.network.OkHttpActivity";
 
-    @Rule public final PerfDriver myPerfDriver;
+    @Rule public final ProfilerRule myProfilerRule;
 
     private FakeAndroidDriver myAndroidDriver;
-    private GrpcUtils myGrpc;
+    private Grpc myGrpc;
     private Session mySession;
 
-    public OkHttpTest(int sdkLevel) {
-        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel);
+    public OkHttpTest(SdkLevel sdkLevel) {
+        myProfilerRule = new ProfilerRule(ACTIVITY_CLASS, sdkLevel);
     }
 
     @Before
-    public void before() throws IOException {
-        myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
-        myGrpc = myPerfDriver.getGrpc();
-        mySession = myPerfDriver.getSession();
+    public void before() {
+        myAndroidDriver = myProfilerRule.getTransportRule().getAndroidDriver();
+        myGrpc = myProfilerRule.getTransportRule().getGrpc();
+        mySession = myProfilerRule.getSession();
     }
 
     @Test
@@ -70,26 +70,25 @@ public class OkHttpTest {
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp3Get");
         assertThat(myAndroidDriver.waitForInput(okHttp3Get)).isTrue();
 
-        final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        NetworkStubWrapper networkStubWrapper = NetworkStubWrapper.create(myGrpc);
+        TransportStubWrapper transportStubWrapper = TransportStubWrapper.create(myGrpc);
+
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getNonEmptyHttpRange(mySession);
+                networkStubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
-        final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
-        HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
+        long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
+        HttpDetailsResponse requestDetails = networkStubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains("?method=" + okHttp3Get)).isTrue();
-        waitForResponseFields200(stubWrapper, connectionId);
+        waitForResponseFields200(networkStubWrapper, connectionId);
 
         HttpDetailsResponse threadDetails =
-                stubWrapper.getHttpDetails(connectionId, Type.ACCESSING_THREADS);
+                networkStubWrapper.getHttpDetails(connectionId, Type.ACCESSING_THREADS);
         assertThat(threadDetails.getAccessingThreads().getThreadList().size()).isEqualTo(1);
 
-        String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
+        String payloadId = networkStubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
-        BytesResponse bytesResponse =
-                myGrpc.getTransportStub()
-                        .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
-        assertThat(bytesResponse.getContents().toStringUtf8().contains(okHttp3Get)).isTrue();
+        assertThat(transportStubWrapper.toBytes(payloadId).contains(okHttp3Get)).isTrue();
     }
 
     @Test
@@ -98,22 +97,21 @@ public class OkHttpTest {
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp3Post");
         assertThat(myAndroidDriver.waitForInput(okHttp3Post)).isTrue();
 
-        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        NetworkStubWrapper networkStubWrapper = NetworkStubWrapper.create(myGrpc);
+        TransportStubWrapper transportStubWrapper = TransportStubWrapper.create(myGrpc);
+
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getNonEmptyHttpRange(mySession);
+                networkStubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
-        HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
+        HttpDetailsResponse requestDetails = networkStubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains("?method=" + okHttp3Post))
             .isTrue();
 
-        String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
+        String payloadId = networkStubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
-        BytesResponse bytesResponse =
-                myGrpc.getTransportStub()
-                        .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
-        assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("OkHttp3 request body");
+        assertThat(transportStubWrapper.toBytes(payloadId)).isEqualTo("OkHttp3 request body");
     }
 
     @Test
@@ -122,26 +120,25 @@ public class OkHttpTest {
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp2Get");
         assertThat(myAndroidDriver.waitForInput(okHttp2Get)).isTrue();
 
-        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        NetworkStubWrapper networkStubWrapper = NetworkStubWrapper.create(myGrpc);
+        TransportStubWrapper transportStubWrapper = TransportStubWrapper.create(myGrpc);
+
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getNonEmptyHttpRange(mySession);
+                networkStubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
-        HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
+        HttpDetailsResponse requestDetails = networkStubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains("?method=" + okHttp2Get)).isTrue();
-        waitForResponseFields200(stubWrapper, connectionId);
+        waitForResponseFields200(networkStubWrapper, connectionId);
 
         HttpDetailsResponse threadDetails =
-                stubWrapper.getHttpDetails(connectionId, Type.ACCESSING_THREADS);
+                networkStubWrapper.getHttpDetails(connectionId, Type.ACCESSING_THREADS);
         assertThat(threadDetails.getAccessingThreads().getThreadList().size()).isEqualTo(1);
 
-        String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
+        String payloadId = networkStubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
-        BytesResponse bytesResponse =
-                myGrpc.getTransportStub()
-                        .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
-        assertThat(bytesResponse.getContents().toStringUtf8().contains(okHttp2Get)).isTrue();
+        assertThat(transportStubWrapper.toBytes(payloadId).contains(okHttp2Get)).isTrue();
     }
 
     @Test
@@ -150,22 +147,21 @@ public class OkHttpTest {
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp2Post");
         assertThat(myAndroidDriver.waitForInput(okHttp2Post)).isTrue();
 
-        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        NetworkStubWrapper networkStubWrapper = NetworkStubWrapper.create(myGrpc);
+        TransportStubWrapper transportStubWrapper = TransportStubWrapper.create(myGrpc);
+
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getNonEmptyHttpRange(mySession);
+                networkStubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
-        HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
+        HttpDetailsResponse requestDetails = networkStubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains("?method=" + okHttp2Post))
             .isTrue();
 
-        String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
+        String payloadId = networkStubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
-        BytesResponse bytesResponse =
-                myGrpc.getTransportStub()
-                        .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
-        assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("OkHttp2 request body");
+        assertThat(transportStubWrapper.toBytes(payloadId)).isEqualTo("OkHttp2 request body");
     }
 
     @Test
@@ -174,48 +170,47 @@ public class OkHttpTest {
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp2AndOkHttp3Get");
         assertThat(myAndroidDriver.waitForInput(okhttp2AndOkHttp3Get)).isTrue();
 
-        final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        NetworkStubWrapper networkStubWrapper = NetworkStubWrapper.create(myGrpc);
+
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
                 TestUtils.waitForAndReturn(
-                        () -> stubWrapper.getNonEmptyHttpRange(mySession),
+                        () -> networkStubWrapper.getNonEmptyHttpRange(mySession),
                         resp -> resp.getDataList().size() == 2);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
-        HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
+        HttpDetailsResponse requestDetails = networkStubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         String urlQuery = "?method=" + okhttp2AndOkHttp3Get;
         assertThat(requestDetails.getRequest().getUrl().contains(urlQuery)).isTrue();
 
         connectionId = httpRangeResponse.getDataList().get(1).getConnId();
-        requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
+        requestDetails = networkStubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains(urlQuery)).isTrue();
     }
 
     @Test
-    public void testOkHttp2GetAbortedByError() throws Exception {
+    public void testOkHttp2GetAbortedByError() {
         String okHttp2Error = "OKHTTP2ERROR";
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp2GetAbortedByError");
         assertThat(myAndroidDriver.waitForInput(okHttp2Error)).isTrue();
 
-        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
-        assertNetworkErrorBehavior(stubWrapper);
+        assertNetworkErrorBehavior(NetworkStubWrapper.create(myGrpc));
     }
 
     @Test
-    public void testOkHttp3GetAbortedByError() throws Exception {
+    public void testOkHttp3GetAbortedByError() {
         String okHttp3Error = "OKHTTP3ERROR";
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp3GetAbortedByError");
         assertThat(myAndroidDriver.waitForInput(okHttp3Error)).isTrue();
 
-        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
-        assertNetworkErrorBehavior(stubWrapper);
+        assertNetworkErrorBehavior(NetworkStubWrapper.create(myGrpc));
     }
 
-    private void assertNetworkErrorBehavior(final NetworkStubWrapper stubWrapper) {
+    private void assertNetworkErrorBehavior(NetworkStubWrapper networkStubWrapper) {
         // Wait until get two responses: 1 aborted and 1 completed.
         // Both failed and successful requests should have valid time ranges.
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
                 TestUtils.waitForAndReturn(
-                        stubWrapper.getHttpRangeSupplier(mySession),
+                        networkStubWrapper.createHttpRangeSupplier(mySession),
                         resp ->
                                 resp.getDataList().size() == 2
                                         && resp.getDataList()
@@ -225,7 +220,7 @@ public class OkHttpTest {
         // The first request should have no response fields after being aborted
         HttpConnectionData connectionAborted = httpRangeResponse.getDataList().get(0);
         HttpDetailsResponse responseDetails =
-                stubWrapper.getHttpDetails(connectionAborted.getConnId(), Type.RESPONSE);
+                networkStubWrapper.getHttpDetails(connectionAborted.getConnId(), Type.RESPONSE);
         assertThat(responseDetails.getResponse().getFields()).isEmpty();
         // TODO(b/69328111): Once the error message is being propagated through, check it here.
 
@@ -233,22 +228,21 @@ public class OkHttpTest {
         TestUtils.waitFor(
                 () -> {
                     HttpDetailsResponse threadDetails =
-                            stubWrapper.getHttpDetails(
+                            networkStubWrapper.getHttpDetails(
                                     connectionAborted.getConnId(), Type.ACCESSING_THREADS);
                     return threadDetails.getAccessingThreads().getThreadList().size() == 1;
                 });
 
         // The second request should have completed normally
         HttpConnectionData connectionSuccess = httpRangeResponse.getDataList().get(1);
-        waitForResponseFields200(stubWrapper, connectionSuccess.getConnId());
+        waitForResponseFields200(networkStubWrapper, connectionSuccess.getConnId());
 
         // The successful connection should naturally start after the failed connection finished)
         assertThat(connectionAborted.getEndTimestamp())
                 .isLessThan(connectionSuccess.getStartTimestamp());
     }
 
-    private static void waitForResponseFields200(
-            final NetworkStubWrapper stubWrapper, final long connId) {
+    private static void waitForResponseFields200(NetworkStubWrapper stubWrapper, long connId) {
         TestUtils.waitFor(
                 () -> {
                     HttpDetailsResponse details = stubWrapper.getHttpDetails(connId, Type.RESPONSE);

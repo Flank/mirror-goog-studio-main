@@ -2,6 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../app-inspection/agent/app-inspection.agent.iml" filepath="$PROJECT_DIR$/../app-inspection/agent/app-inspection.agent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/test-inspector/app-inspection.test-inspector.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/test-inspector/app-inspection.test-inspector.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/app-inspection-test/app-inspection.tests.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/app-inspection-test/app-inspection.tests.iml" />
       <module fileurl="file://$PROJECT_DIR$/../fakeandroid/fakeandroid.iml" filepath="$PROJECT_DIR$/../fakeandroid/fakeandroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/../experimental/live-sql-inspector/live-sql-inspector.iml" filepath="$PROJECT_DIR$/../experimental/live-sql-inspector/live-sql-inspector.iml" />
       <module fileurl="file://$PROJECT_DIR$/test-framework/test-app/transport-test-app.iml" filepath="$PROJECT_DIR$/test-framework/test-app/transport-test-app.iml" />

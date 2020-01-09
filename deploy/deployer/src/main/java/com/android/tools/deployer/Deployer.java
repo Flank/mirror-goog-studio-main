@@ -194,7 +194,7 @@ public class Deployer {
         }
 
         Result deployResult = new Result();
-        deployResult.skippedInstall = sessionId.get().equals("<SKIPPED-INSTALLATION>");
+        deployResult.skippedInstall = sessionId.get().equals(ApkPreInstaller.SKIPPED_INSTALLATION);
         return deployResult;
     }
 }

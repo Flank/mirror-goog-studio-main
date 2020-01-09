@@ -24,6 +24,7 @@ import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctio
 import static com.android.build.gradle.internal.cxx.settings.CxxAbiModelCMakeSettingsRewriterKt.rewriteCxxAbiModelWithCMakeSettings;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
@@ -37,7 +38,7 @@ import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.DefaultIssueReporter;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.StringHelper;
@@ -58,7 +59,6 @@ import org.gradle.process.ExecOperations;
  * is left to the underlying build system.
  */
 public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
-    private EvalIssueReporter evalIssueReporter;
     private CxxVariantModel variant;
     private List<CxxAbiModel> abis;
     @NonNull private final ExecOperations execOperations;
@@ -71,7 +71,8 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
     @Override
     protected void doTaskAction() throws ProcessException, IOException {
         try (ThreadLoggingEnvironment ignore =
-                new IssueReporterLoggingEnvironment(evalIssueReporter)) {
+                new IssueReporterLoggingEnvironment(
+                        new DefaultIssueReporter(new LoggerWrapper(getLogger())))) {
             infoln("starting clean");
             infoln("finding existing JSONs");
 
@@ -176,7 +177,6 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
             super.configure(task);
             task.variant = variant;
             task.abis = abis;
-            task.evalIssueReporter = getVariantScope().getGlobalScope().getErrorHandler();
         }
     }
 }

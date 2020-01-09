@@ -17,165 +17,275 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.Variant
-import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.dsl.BuildType
-import com.android.build.gradle.internal.dsl.ProductFlavor
-import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.variant.BaseVariantData
-import com.google.common.truth.Truth.assertThat
+import com.android.testutils.AbstractGivenExpectReturnTest
+import com.android.testutils.AbstractGivenExpectTest
+import com.android.testutils.on
 import org.gradle.api.Action
 import org.junit.Test
 import org.mockito.Mockito
-import java.lang.RuntimeException
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
 import kotlin.test.fail
 
 /**
  * Tests for [FilteredVariantOperation]
  */
-class FilteredVariantOperationTest {
+class FilteredVariantOperationTest: AbstractGivenExpectReturnTest<Pair<FilteredVariantOperationTest.FilterInfo, FilteredVariantOperationTest.VariantInfo>, Boolean>() {
 
     @Test
-    fun testStringNameMatching() {
-        val atomicCounter = AtomicInteger(0)
-        val operation = FilteredVariantOperation(
-            specificType = Variant::class.java,
-            variantName = "foo",
-            action = Action {
-                assertThat(it.name).isEqualTo("foo")
-                atomicCounter.incrementAndGet()
+    fun `matching name`() {
+        given {
+            filteredOperation {
+                name = "foo"
+            } on variant {
+                name = "foo"
             }
-        )
-        val variantScopes = listOf(createVariantScope("bar"),
-            createVariantScope("foo"),
-            createVariantScope("foobar"))
-        operation.execute(VariantScopeTransformers.toVariant, variantScopes)
-        assertThat(atomicCounter.get()).isEqualTo(1)
+        }
+
+        expect { true }
     }
 
     @Test
-    fun testStringNameNotMatching() {
-        val operation = FilteredVariantOperation(
-            specificType = Variant::class.java,
-            variantName = "fooX",
-            action = Action {
-                fail("Action invoked")
+    fun `non matching name`() {
+        given {
+            filteredOperation {
+                name = "foo"
+            } on variant {
+                name = "bar"
             }
-        )
-        val variantScopes = listOf(createVariantScope("bar"),
-            createVariantScope("foo"),
-            createVariantScope("foobar"))
-        try {
-            operation.execute(VariantScopeTransformers.toVariant, variantScopes)
-        } catch(e: RuntimeException) {
-            val message = checkNotNull(e.message)
-            assertThat(message.contains("fooX"))
-            assertThat(message.contains("bar,foo,foobar"))
+        }
+
+        expect { false }
+    }
+
+    @Test
+    fun `partial name`() {
+        given {
+            filteredOperation {
+                name = "foo"
+            } on variant {
+                name = "foobar"
+            }
+        }
+
+        expect { false }
+    }
+
+    @Test
+    fun `matching pattern`() {
+        given {
+            filteredOperation {
+                namePattern = Pattern.compile("foo.*")
+            } on variant {
+                name = "foo"
+            }
+        }
+
+        expect { true }
+    }
+
+    @Test
+    fun `not matching pattern`() {
+        given {
+            filteredOperation {
+                namePattern = Pattern.compile("foo.*")
+            } on variant {
+                name = "bar"
+            }
+        }
+
+        expect { false }
+    }
+
+    @Test
+    fun `matching build type`() {
+        given {
+            filteredOperation {
+                buildType = "debug"
+            } on variant {
+                buildType = "debug"
+            }
+        }
+
+        expect { true }
+    }
+
+    @Test
+    fun `not matching build type`() {
+        given {
+            filteredOperation {
+                buildType = "debug"
+            } on variant {
+                buildType = "release"
+            }
+        }
+
+        expect { false }
+    }
+
+    @Test
+    fun `not matching build type when no-build-type variant`() {
+        given {
+            filteredOperation {
+                buildType = "debug"
+            } on variant {
+                buildType = null
+            }
+        }
+
+        expect { false }
+    }
+
+    @Test
+    fun `matching single flavor`() {
+        given {
+            filteredOperation {
+                productFlavors = listOf("one" to "flavor1")
+            } on variant {
+                productFlavors = listOf("one" to "flavor1")
+            }
+        }
+
+        expect { true }
+    }
+
+    @Test
+    fun `not matching single flavor`() {
+        given {
+            filteredOperation {
+                productFlavors = listOf("one" to "flavor1")
+            } on variant {
+                productFlavors = listOf("one" to "flavor2")
+            }
+        }
+
+        expect { false }
+    }
+
+    @Test
+    fun `matching all flavors`() {
+        given {
+            filteredOperation {
+                productFlavors = listOf("one" to "flavor1", "two" to "flavorA")
+            } on variant {
+                productFlavors = listOf("one" to "flavor1", "two" to "flavorA")
+            }
+        }
+
+        expect { true }
+    }
+
+    @Test
+    fun `matching no flavors`() {
+        given {
+            filteredOperation {
+                productFlavors = listOf("one" to "flavor1", "two" to "flavorA")
+            } on variant {
+                productFlavors = listOf("one" to "flavor2", "two" to "flavorB")
+            }
+        }
+
+        expect { false }
+    }
+
+    @Test
+    fun `not matching all flavors`() {
+        given {
+            filteredOperation {
+                productFlavors = listOf("one" to "flavor1", "two" to "flavorA")
+            } on variant {
+                productFlavors = listOf("one" to "flavor1", "two" to "flavorB")
+            }
+        }
+
+        expect { false }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
+    override fun defaultWhen(given: Pair<FilterInfo, VariantInfo>): Boolean? {
+        val atomicBoolean = AtomicBoolean(false)
+
+        val operation = with(given.first) {
+            FilteredVariantOperation(
+                specificType = Variant::class.java,
+                variantName = name,
+                variantNamePattern = namePattern,
+                buildType = buildType,
+                flavorToDimensionData = productFlavors ?: listOf(),
+                action = Action {
+                    atomicBoolean.set(true)
+                })
+        }
+
+        val variant = with(given.second) {
+            Mockito.mock(Variant::class.java).also { variant ->
+                name?.let { Mockito.`when`(variant.name).thenReturn(it) }
+                buildType?.let { Mockito.`when`(variant.buildType).thenReturn(it) }
+                Mockito.`when`(variant.productFlavors).thenReturn(productFlavors)
+            }
+        }
+
+        operation.executeFor(variant)
+
+        // return whether the variant ran
+        return atomicBoolean.get()
+    }
+
+    override fun compareResult(
+        expected: Boolean?,
+        actual: Boolean?,
+        given: Pair<FilterInfo, VariantInfo>
+    ) {
+        val actualB = actual ?: throw RuntimeException("actual should not be null")
+        val expectedB = expected ?: throw RuntimeException("expected should not be null")
+
+        if (actualB != expectedB) {
+            val header = if (expectedB) {
+                "FilteredVariantOperation expected to run but did not."
+            } else {
+                "FilteredVariantOperation expected to not run but did."
+            }
+
+            fail("""$header
+                |The following inputs were used:
+                |- ${given.first}
+                |- ${given.second}
+            """.trimMargin())
         }
     }
 
-    @Test
-    fun testStringNamePatternMatching() {
-        val atomicCounter = AtomicInteger(0)
-        val operation = FilteredVariantOperation(
-            specificType = Variant::class.java,
-            variantNamePattern = Pattern.compile("foo.*"),
-            action = Action {
-                assertThat(it.name).startsWith("foo")
-                atomicCounter.incrementAndGet()
-            }
-        )
-        val variantScopes = listOf(createVariantScope("bar"),
-            createVariantScope("foo"),
-            createVariantScope("foobar"))
-        operation.execute(VariantScopeTransformers.toVariant, variantScopes)
-        assertThat(atomicCounter.get()).isEqualTo(2)
-    }
+    class FilterInfo(
+        var name: String? = null,
+        var namePattern: Pattern? = null,
+        var buildType: String? = null,
+        var productFlavors: List<Pair<String, String>>? = null
 
-    @Test
-    fun testStringNamePatternNotMatching() {
-        val operation = FilteredVariantOperation(
-            specificType = Variant::class.java,
-            variantNamePattern = Pattern.compile("fooX.*"),
-            action = Action {
-                fail("Action invoked")
-            }
-        )
-        val variantScopes = listOf(createVariantScope("bar"),
-            createVariantScope("foo"),
-            createVariantScope("foobar"))
-        try {
-            operation.execute(VariantScopeTransformers.toVariant, variantScopes)
-        } catch(e: RuntimeException) {
-            val message = checkNotNull(e.message)
-            assertThat(message.contains("fooX"))
-            assertThat(message.contains("bar,foo,foobar"))
+
+    ) {
+        override fun toString(): String {
+            return "OperationFilter(name=$name, namePattern=$namePattern, buildType=$buildType, productFlavors=$productFlavors)"
         }
     }
 
-    @Test
-    fun testBuildTypeMatching() {
-        val atomicCounter = AtomicInteger(0)
-        val operation = FilteredVariantOperation(
-            specificType = Variant::class.java,
-            buildType = "Debug",
-            action = Action {
-                assertThat(it.name).isEqualTo("foo")
-                atomicCounter.incrementAndGet()
-            }
-        )
-        val variantScopes = listOf(
-            createVariantScope("bar", buildTypeName = "Release"),
-            createVariantScope("foo", buildTypeName = "Debug"),
-            createVariantScope("foobar", buildTypeName = "Other"))
-        operation.execute(VariantScopeTransformers.toVariant, variantScopes)
-        assertThat(atomicCounter.get()).isEqualTo(1)
+    private fun filteredOperation(action: FilterInfo.() -> Unit) = FilterInfo().also { action(it) }
+
+    /**
+     * Variant Info.
+     *
+     * Important to have some default that match the most common use case.
+     */
+    class VariantInfo(
+        var name: String = "some-name",
+        var buildType: String? = "some-build-type",
+        var productFlavors: List<Pair<String, String>> = listOf()
+    ) {
+        override fun toString(): String {
+            return "VariantInfo(name=$name, buildType=$buildType, productFlavors=$productFlavors)"
+        }
     }
 
-    @Test
-    fun testBuildFlavorMatching() {
-        val atomicCounter = AtomicInteger(0)
-        val operations = FilteredVariantOperation(
-            specificType = Variant::class.java,
-            flavorToDimensionData = listOf("f1" to "dim1"),
-            action = Action {
-                assertThat(it.name).isAnyOf("foo", "bar")
-                atomicCounter.incrementAndGet()
-            }
-        )
-        val variantScopes = listOf(
-            createVariantScope("bar", buildTypeName = "Release", flavorName = "f1"),
-            createVariantScope("foo", buildTypeName = "Debug", flavorName = "f1"),
-            createVariantScope("foobar", buildTypeName = "Other", flavorName = "f2"))
-        operations.execute(VariantScopeTransformers.toVariant, variantScopes)
-        assertThat(atomicCounter.get()).isEqualTo(2)
-    }
+    private fun variant(action: VariantInfo.() -> Unit) = VariantInfo().also { action(it) }
 
-    private fun createVariantScope(
-        name: String,
-        buildTypeName: String? = null,
-        flavorName: String? = null): VariantScope {
-        val variantScope = Mockito.mock(VariantScope::class.java)
-        val variantDslInfo = Mockito.mock(VariantDslInfo::class.java)
-        val variantData = Mockito.mock(BaseVariantData::class.java)
-        val publicVariantApi = Mockito.mock(VariantImpl::class.java)
-        Mockito.`when`(variantScope.variantData).thenReturn(variantData)
-        Mockito.`when`(variantScope.variantDslInfo).thenReturn(variantDslInfo)
-        Mockito.`when`(variantScope.fullVariantName).thenReturn(name)
-        Mockito.`when`(variantData.publicVariantApi).thenReturn(publicVariantApi)
-        Mockito.`when`(publicVariantApi.name).thenReturn(name)
-        if (buildTypeName != null) {
-            Mockito.`when`(variantDslInfo.buildType).thenReturn(buildTypeName)
-        }
-        val productFlavor = Mockito.mock(ProductFlavor::class.java)
-        Mockito.`when`(productFlavor.dimension).thenReturn("dim1")
-        Mockito.`when`(productFlavor.name).thenReturn(flavorName)
-        if (flavorName != null) {
-            Mockito.`when`(variantDslInfo.productFlavors).thenReturn(
-                listOf(productFlavor)
-            )
-        }
-        return variantScope
-    }
 }
+

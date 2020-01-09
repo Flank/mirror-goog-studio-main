@@ -17,7 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants.FORMAT_METHOD
-import com.android.tools.lint.checks.DateFormatDetector.LOCALE_CLS
+import com.android.tools.lint.checks.DateFormatDetector.Companion.LOCALE_CLS
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.TYPE_STRING
 import com.android.tools.lint.detector.api.Category
@@ -38,16 +38,15 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UField
 import org.jetbrains.uast.UThrowExpression
 import org.jetbrains.uast.getParentOfType
-import java.util.Arrays
 
 /**
  * Checks for errors related to locale handling
  */
-/** Constructs a new [LocaleDetector]  */
+/** Constructs a new [LocaleDetector] */
 class LocaleDetector : Detector(), SourceCodeScanner {
 
     override fun getApplicableMethodNames(): List<String>? {
-        return Arrays.asList(
+        return listOf(
             TO_LOWER_CASE,
             TO_UPPER_CASE,
             FORMAT_METHOD,
@@ -202,7 +201,7 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         }
     }
 
-    /** Returns true if the given node is a parameter to a Logging call  */
+    /** Returns true if the given node is a parameter to a Logging call */
     private fun isLoggingParameter(
         context: JavaContext,
         node: UCallExpression
@@ -232,7 +231,7 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         const val CAPITALIZE = "capitalize"
         const val DECAPITALIZE = "decapitalize"
 
-        /** Calling risky convenience methods  */
+        /** Calling risky convenience methods */
         @JvmField
         val STRING_LOCALE = Issue.create(
             id = "DefaultLocale",
@@ -257,7 +256,7 @@ class LocaleDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        /** Assuming locale doesn't change  */
+        /** Assuming locale doesn't change */
         @JvmField
         val FINAL_LOCALE = Issue.create(
             id = "ConstantLocale",

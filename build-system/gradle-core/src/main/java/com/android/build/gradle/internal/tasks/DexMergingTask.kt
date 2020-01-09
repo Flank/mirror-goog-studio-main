@@ -202,7 +202,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
             task.dexMerger = variantScope.dexMerger
             task.minSdkVersion = variantScope.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
             task.debuggable
-                .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
+                .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
             if (variantScope.globalScope.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
                 variantScope.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DUPLICATE_CLASSES_CHECK,

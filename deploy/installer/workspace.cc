@@ -19,7 +19,7 @@
 #include <fcntl.h>
 
 #include "tools/base/deploy/common/utils.h"
-#include "tools/base/deploy/installer/runas_executor.h"
+#include "tools/base/deploy/installer/executor/runas_executor.h"
 
 namespace deploy {
 

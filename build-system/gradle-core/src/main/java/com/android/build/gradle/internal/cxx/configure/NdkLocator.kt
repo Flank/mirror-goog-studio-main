@@ -32,7 +32,7 @@ import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLog
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
 import com.google.common.annotations.VisibleForTesting
@@ -453,13 +453,13 @@ data class NdkLocatorRecord(
  * NDK so that the gradle Sync can continue.
  */
 fun findNdkPath(
-    evalIssueReporter: EvalIssueReporter,
+    issueReporter: IssueReporter,
     ndkVersionFromDsl: String?,
     projectDir: File
 ): File? {
-    IssueReporterLoggingEnvironment(evalIssueReporter).use {
+    IssueReporterLoggingEnvironment(issueReporter).use {
         val properties = gradleLocalProperties(projectDir)
-        val sdkPath = SdkLocator.getSdkDirectory(projectDir, evalIssueReporter)
+        val sdkPath = SdkLocator.getSdkDirectory(projectDir, issueReporter)
         return findNdkPathImpl(
             ndkVersionFromDsl,
             properties.getProperty(NDK_DIR_PROPERTY),

@@ -18,31 +18,35 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.api.variant.VariantConfiguration
 import com.android.build.api.variant.impl.VariantConfigurationImpl
-import com.android.build.gradle.internal.errors.SyncIssueHandler
+import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.builder.core.VariantType
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
 import com.google.common.collect.ImmutableList
 
 /**
- * Computes the combination of variants from a [VariantModel] and returns a list of
+ * Computes the combination of variants from a [VariantInputModel] and returns a list of
  * [VariantConfiguration]
  */
 class VariantCombinator(
-    private val variantModel : VariantModel,
-    private val errorReporter: SyncIssueHandler,
+    private val variantInputModel : VariantInputModel,
+    private val errorReporter: IssueReporter,
     private val variantType: VariantType,
     private val flavorDimensionList: List<String>
 ) {
+    companion object {
+        // fake dimension in case a flavor does not have one
+        const val FAKE_DIMENSION = "agp-missing-dimension-for-sync-only"
+    }
 
     /**
      * Computes and returns the list of variants as [VariantConfiguration] objects.
      */
-    fun computeVariants() : List<VariantConfiguration> {
+    fun computeVariants() : List<VariantCombination> {
         // different paths for flavors or no flavors to optimize things a bit
 
-        if (variantModel.productFlavors.isEmpty()) {
+        if (variantInputModel.productFlavors.isEmpty()) {
             return computeFlavorlessVariants()
         }
 
@@ -52,21 +56,15 @@ class VariantCombinator(
     /**
      * Computes [VariantConfiguration] for the case where there are no flavors.
      */
-    private fun computeFlavorlessVariants() : List<VariantConfiguration> {
-        return if (variantModel.buildTypes.isEmpty()) {
-            ImmutableList.of(VariantConfigurationImpl(variantName = "main"))
+    private fun computeFlavorlessVariants() : List<VariantCombination> {
+        return if (variantInputModel.buildTypes.isEmpty()) {
+            ImmutableList.of(VariantCombinationImpl())
         } else {
-            val builder = ImmutableList.builder<VariantConfiguration>()
+            val builder = ImmutableList.builder<VariantCombination>()
 
-            for (buildType in variantModel.buildTypes.keys) {
-                val isDebuggable =
-                    variantModel.buildTypes[buildType]?.buildType?.isDebuggable ?: false
+            for (buildType in variantInputModel.buildTypes.keys) {
                 builder.add(
-                    VariantConfigurationImpl(
-                        variantName = buildType,
-                        buildType = buildType,
-                        isDebuggable = isDebuggable
-                    )
+                    VariantCombinationImpl(buildType = buildType)
                 )
             }
 
@@ -77,17 +75,17 @@ class VariantCombinator(
     /**
      * Computes [VariantConfiguration] for the case with flavors.
      */
-    private fun computeVariantsWithFlavors(): List<VariantConfiguration> {
+    private fun computeVariantsWithFlavors(): List<VariantCombination> {
         val flavorDimensionList = validateFlavorDimensions()
 
         // get a Map of (dimension, list of names) for the flavors
-        val flavorMap = variantModel.productFlavors.values
+        val flavorMap = variantInputModel.productFlavors.values
             .asSequence()
             .map { it.productFlavor }
             .groupBy({ it.dimension!! }, { it.name })
 
         // get the flavor combos and combine them with build types.
-        val builder = ImmutableList.builder<FlavorCombination>()
+        val builder = ImmutableList.builder<FlavorCombinationBuilder>()
         createProductFlavorCombinations(
             flavorDimensionList,
             flavorMap,
@@ -99,38 +97,25 @@ class VariantCombinator(
     }
 
     /**
-     * Computes [VariantConfiguration] from a list of [FlavorCombination] by combining them
+     * Computes [VariantConfiguration] from a list of [FlavorCombinationBuilder] by combining them
      * with build types.
      */
     private fun combineFlavorsAndBuildTypes(
-        flavorCombos: List<FlavorCombination>
-    ) : List<VariantConfiguration> {
-        if (variantModel.buildTypes.isEmpty()) {
+        flavorCombos: List<FlavorCombinationBuilder>
+    ) : List<VariantCombination> {
+        if (variantInputModel.buildTypes.isEmpty()) {
             // just convert the Accumulators to VariantConfiguration with no build type info
             return flavorCombos.map {
-                val flavorNames = it.getFlavorNames()
-                VariantConfigurationImpl(
-                    variantName = computeVariantName(
-                        flavorNames = flavorNames,
-                        buildType = null,
-                        type = variantType
-                    ),
-                    flavors = flavorNames
-                )
+                VariantCombinationImpl(productFlavors = it.flavorPairs)
             }
         } else {
-            val builder = ImmutableList.builder<VariantConfiguration>()
+            val builder = ImmutableList.builder<VariantCombination>()
 
-            for (buildType in variantModel.buildTypes.keys) {
+            for (buildType in variantInputModel.buildTypes.keys) {
                 builder.addAll(flavorCombos.map {
-                    val flavors = it.getFlavorNames()
-                    val isDebuggable =
-                        variantModel.buildTypes[buildType]?.buildType?.isDebuggable ?: false
-                    VariantConfigurationImpl(
-                        variantName = computeVariantName(flavors, buildType, variantType),
+                    VariantCombinationImpl(
                         buildType = buildType,
-                        flavors = flavors,
-                        isDebuggable = isDebuggable
+                        productFlavors = it.flavorPairs
                     )
                 })
             }
@@ -152,7 +137,7 @@ class VariantCombinator(
         if (flavorDimensionList.isEmpty()) {
             errorReporter
                 .reportError(
-                    EvalIssueReporter.Type.UNNAMED_FLAVOR_DIMENSION,
+                    IssueReporter.Type.UNNAMED_FLAVOR_DIMENSION,
                     "All flavors must now belong to a named flavor dimension."
                             + " Learn more at "
                             + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html"
@@ -172,21 +157,18 @@ class VariantCombinator(
             // Use a set to de-duplicate values quickly, since the order does not matter.
             val dimensions = mutableSetOf<String>()
 
-            // fake dimension in case a flavor does not have one
-            val fakeDimension = "agp-missing-dimension-for-sync-only"
-
-            for (flavor in variantModel.productFlavors.values) {
+            for (flavor in variantInputModel.productFlavors.values) {
                 val productFlavor = flavor.productFlavor
                 val dim = productFlavor.dimension
                 if (dim == null) {
-                    productFlavor.setDimension(fakeDimension)
+                    productFlavor.setDimension(FAKE_DIMENSION)
                 } else {
                     dimensions.add(dim)
                 }
             }
 
             if (dimensions.isEmpty()) {
-                dimensions.add(fakeDimension)
+                dimensions.add(FAKE_DIMENSION)
             }
 
             // convert to list, see comment above regarding the order.
@@ -195,7 +177,7 @@ class VariantCombinator(
         } else if (flavorDimensionList.size == 1) {
             // if there's only one dimension, auto-assign the dimension to all the flavors.
             val dimensionName = flavorDimensionList[0]
-            for (flavorData in variantModel.productFlavors.values) {
+            for (flavorData in variantInputModel.productFlavors.values) {
                 val flavor = flavorData.productFlavor
                 if (flavor.dimension == null) {
                     flavor.setDimension(dimensionName)
@@ -206,6 +188,30 @@ class VariantCombinator(
         return flavorDimensionList
     }
 }
+
+/**
+ * A combination of one (optional) build type and one flavor from each dimension.
+ */
+interface VariantCombination {
+    /**
+     * Build Type name, might be replaced with access to locked DSL object once ready
+     */
+    val buildType: String?
+
+    /**
+     * List of flavor names, might be replaced with access to locked DSL objects once ready
+     *
+     * The order is properly sorted based on the associated dimension order
+     */
+    val productFlavors: List<Pair<String, String>>
+
+}
+
+data class VariantCombinationImpl(
+    override val buildType: String? = null,
+    override val productFlavors: List<Pair<String, String>> = listOf()
+) : VariantCombination
+
 
 /**
  * Recursively creates all combinations of product flavors.
@@ -232,17 +238,17 @@ class VariantCombinator(
  *
  * @param flavorDimensionList the list of flavor dimension
  * @param flavorMap the map of (dimension, list of flavors)
- * @param comboList the list that receives the final (filled-up) [FlavorCombination] objects.
- * @param errorReporter a [SyncIssueHandler] to report errors.
+ * @param comboList the list that receives the final (filled-up) [FlavorCombinationBuilder] objects.
+ * @param errorReporter a [SyncIssueReporter] to report errors.
  * @param currentFlavorCombo the current accumulator containing pairs of (dimension, value) for already visited dimensions
  * @param dimensionIndex the index of the dimension this calls must handle
  */
 private fun createProductFlavorCombinations(
     flavorDimensionList: List<String>,
     flavorMap: Map<String, List<String>>,
-    comboList: ImmutableList.Builder<FlavorCombination>,
-    errorReporter: SyncIssueHandler,
-    currentFlavorCombo: FlavorCombination = FlavorCombination(),
+    comboList: ImmutableList.Builder<FlavorCombinationBuilder>,
+    errorReporter: IssueReporter,
+    currentFlavorCombo: FlavorCombinationBuilder = FlavorCombinationBuilder(),
     dimensionIndex: Int = 0
 )  {
     if (dimensionIndex == flavorDimensionList.size) {
@@ -261,7 +267,7 @@ private fun createProductFlavorCombinations(
     // indices.
     return if (flavorList == null || flavorList.isEmpty()) {
         errorReporter.reportError(
-            EvalIssueReporter.Type.GENERIC,
+            IssueReporter.Type.GENERIC,
             "No flavor is associated with flavor dimension '$dimension'."
         )
     } else {
@@ -286,68 +292,25 @@ private fun createProductFlavorCombinations(
  * This class is immutable. To add a new (dimension, value) pair to the list, use [add] that will
  * return a new instance.
  */
-private class FlavorCombination(
+private class FlavorCombinationBuilder(
     /**
      * The list of (dimension, value) pairs. The order is important and match the
      * dimension priority order.
      */
-    private val flavorPairs: ImmutableList<Pair<String, String>> = ImmutableList.of()) {
+    val flavorPairs: ImmutableList<Pair<String, String>> = ImmutableList.of()) {
 
     /**
      * Returns a new instance with the new pair information added to the existing list.
      */
-    fun add(dimension: String, name: String) : FlavorCombination {
+    fun add(dimension: String, name: String) : FlavorCombinationBuilder {
         val builder = ImmutableList.builder<Pair<String,String>>()
         builder.addAll(flavorPairs)
         builder.add(Pair(dimension, name))
 
-        return FlavorCombination(builder.build())
+        return FlavorCombinationBuilder(builder.build())
     }
-
-    /**
-     * Returns the list of flavor names, properly sorted based on the associated dimension order
-     */
-    fun getFlavorNames(): List<String> = flavorPairs.map { it.second }
 
     override fun toString(): String {
         return "FlavorCombination(flavorPairs=$flavorPairs)"
     }
-}
-
-/**
- * Returns the full, unique name of the variant in camel case (starting with a lower case),
- * including BuildType, Flavors and Test (if applicable).
- *
- *
- * This is to be used for the normal variant name. In case of Feature plugin, the library
- * side will be called the same as for library plugins, while the feature side will add
- * 'feature' to the name.
- *
- * @param flavorNames the ordered list of flavor names
- * @param buildType the build type
- * @param type the variant type
- * @return the name of the variant
- */
-private fun computeVariantName(
-    flavorNames: List<String>, buildType: String?, type: VariantType
-): String {
-    val sb = StringBuilder()
-
-    if (flavorNames.isNotEmpty()) {
-        sb.append(flavorNames.combineAsCamelCase())
-        if (buildType != null) {
-            sb.appendCapitalized(buildType)
-        }
-    } else if (buildType != null) {
-        sb.append(buildType)
-    } else {
-        // this should not happen so no need to use errorReporter
-        throw IllegalStateException("build type cannot be null with no flavors")
-    }
-
-    if (type.isTestComponent) {
-        sb.append(type.suffix)
-    }
-
-    return sb.toString()
 }

@@ -18,11 +18,13 @@ package com.android.build.gradle.internal
 
 import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.ide.DefaultAppBundleProjectBuildOutput
 import com.android.build.gradle.internal.ide.DefaultAppBundleVariantBuildOutput
 import com.android.build.gradle.internal.ide.ModelBuilder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.variant.VariantModel
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.google.common.collect.ImmutableList
@@ -34,17 +36,19 @@ import org.gradle.api.Project
  */
 class AppModelBuilder(
     globalScope: GlobalScope,
-    private val variantManager: VariantManager,
+    private val variantModel: VariantModel,
     taskManager: TaskManager,
     config: BaseAppModuleExtension,
     extraModelInfo: ExtraModelInfo,
+    syncIssueReporter: SyncIssueReporter,
     projectType: Int
 ) : ModelBuilder<BaseAppModuleExtension>(
     globalScope,
-    variantManager,
+    variantModel,
     taskManager,
     config,
     extraModelInfo,
+    syncIssueReporter,
     projectType
 ) {
     override fun isBaseSplit(): Boolean {
@@ -68,7 +72,7 @@ class AppModelBuilder(
     private fun buildMinimalisticModel(): Any {
         val variantsOutput = ImmutableList.builder<AppBundleVariantBuildOutput>()
 
-        for (variantScope in variantManager.variantScopes) {
+        for (variantScope in variantModel.variants) {
             val artifacts = variantScope.artifacts
 
             if (artifacts.hasFinalProduct(InternalArtifactType.BUNDLE)) {
@@ -76,7 +80,7 @@ class AppModelBuilder(
                 val apkFolder = artifacts.getFinalProduct(InternalArtifactType.EXTRACTED_APKS)
                 variantsOutput.add(
                         DefaultAppBundleVariantBuildOutput(
-                            variantScope.fullVariantName, bundleFile.get().asFile, apkFolder.get().asFile))
+                            variantScope.name, bundleFile.get().asFile, apkFolder.get().asFile))
             }
         }
 

@@ -48,15 +48,15 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class D8DesugaringTest {
 
-    @Parameterized.Parameters(name = "withIncrementalDesugaringV2_{0}")
+    @Parameterized.Parameters(name = "withIncrementalDexingV2_{0}")
     public static Iterable<Boolean> parameters() {
         return ImmutableList.of(true, false);
     }
 
-    private boolean withIncrementalDesugaringV2;
+    private boolean withIncrementalDexingV2;
 
-    public D8DesugaringTest(boolean withIncrementalDesugaringV2) {
-        this.withIncrementalDesugaringV2 = withIncrementalDesugaringV2;
+    public D8DesugaringTest(boolean withIncrementalDexingV2) {
+        this.withIncrementalDexingV2 = withIncrementalDexingV2;
     }
 
     @Rule
@@ -70,9 +70,9 @@ public class D8DesugaringTest {
                                             ":lib",
                                             new EmptyAndroidTestApp())))
                     .addGradleProperties(
-                            BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2.getPropertyName()
+                            BooleanOption.ENABLE_INCREMENTAL_DEXING_V2.getPropertyName()
                                     + "="
-                                    + withIncrementalDesugaringV2)
+                                    + withIncrementalDexingV2)
                     .create();
 
     @Before

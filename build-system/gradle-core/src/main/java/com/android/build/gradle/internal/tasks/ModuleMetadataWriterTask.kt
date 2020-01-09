@@ -92,7 +92,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
             super.configure(task)
             task.applicationId.set(variantProperties.applicationId)
             task.debuggable
-                .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
+                .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
             task.versionCode.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi
                 .outputs.getMainSplit().versionCode)
             task.versionName.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi

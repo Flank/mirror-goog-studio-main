@@ -79,76 +79,102 @@ fun launchProcessing(
     errStream: OutputStream,
     receiver: MessageReceiver
 ) {
+    val dexArchiveBuilder = getDexArchiveBuilder(
+        dexWorkActionParams,
+        outStream,
+        errStream,
+        receiver
+    )
+    if (dexWorkActionParams.dexSpec.isIncremental) {
+        processIncrementally(dexArchiveBuilder, dexWorkActionParams)
+    } else {
+        processNonIncrementally(dexArchiveBuilder, dexWorkActionParams)
+    }
+}
+
+private fun processIncrementally(
+    dexArchiveBuilder: DexArchiveBuilder,
+    dexWorkActionParams: DexWorkActionParams
+) {
     with(dexWorkActionParams.dexSpec) {
-        var canBeIncremental = isIncremental
-
-        // Desugaring graph is not null iff dexSpec.impactedFiles == null
-        val desugarGraph: MutableDependencyGraph<File>? =
-            if (impactedFiles == null) {
-                // Read the desugaring graph from disk or create a new, empty graph if this is a
-                // non-incremental build (or if the graph cannot be read for some reason).
-                if (canBeIncremental) {
-                    try {
-                        ObjectInputStream(FileInputStream(desugarGraphFile!!).buffered()).use {
-                            @Suppress("UNCHECKED_CAST")
-                            it.readObject() as MutableDependencyGraph<File>
-                        }
-                    } catch (e: Exception) {
-                        loggerWrapper.warning(
-                            "Failed to read dependency graph: ${e.message}." +
-                                    " Fall back to non-incremental mode."
-                        )
-                        canBeIncremental = false
-                        MutableDependencyGraph<File>()
-                    }
-                } else {
-                    MutableDependencyGraph()
-                }
-            } else {
-                null
+        val desugarGraph = desugarGraphFile?.let {
+            try {
+                readDesugarGraph(desugarGraphFile)
+            } catch (e: Exception) {
+                loggerWrapper.warning(
+                    "Failed to read desugaring graph." +
+                            " Cause: ${e.javaClass.simpleName}, message: ${e.message}.\n" +
+                            "Fall back to non-incremental mode."
+                )
+                processNonIncrementally(dexArchiveBuilder, dexWorkActionParams)
+                return@processIncrementally
             }
-
-        // Compute impacted files based on the desugaring graph and the changed (removed, modified,
-        // added) files, if they are not precomputed.
-        val changedAndImpactedFiles = if (canBeIncremental) {
-            val unchangedButImpactedFiles =
-                impactedFiles ?: desugarGraph!!.getAllDependents(changedFiles)
-            changedFiles + unchangedButImpactedFiles
-        } else {
-            // In non-incremental mode, this set must be null as we won't use it.
-            null
         }
 
-        // Remove stale nodes in the desugaring graph
-        if (impactedFiles == null && canBeIncremental) {
-            // Note that the `changedAndImpactedFiles` set may contain added files, which should not
+        // Compute impacted files based on the changed files and the desugaring graph (if they are
+        // not precomputed)
+        val unchangedButImpactedFiles =
+            impactedFiles ?: desugarGraph!!.getAllDependents(changedFiles)
+        val changedOrImpactedFiles = changedFiles + unchangedButImpactedFiles
+
+        // Remove stale nodes in the desugaring graph (stale dex outputs have been removed earlier
+        // before the workers are launched)
+        desugarGraph?.let { graph ->
+            // Note that the `changedOrImpactedFiles` set may contain added files, which should not
             // exist in the graph and will be ignored.
-            changedAndImpactedFiles!!.forEach { desugarGraph!!.removeNode(it) }
+            changedOrImpactedFiles.forEach { graph.removeNode(it) }
         }
 
-        // Process the class files and update the desugaring graph
+        // Process only input files that are modified, added, or unchanged-but-impacted
+        val filter: (File, String) -> Boolean = { rootPath: File, relativePath: String ->
+            // Note that the `changedOrImpactedFiles` set may contain removed files, but those files
+            // will not not be selected as candidates in the process() method and therefore will not
+            // make it to this filter.
+            rootPath in changedOrImpactedFiles /* for jars (we don't track class files in jars) */ ||
+                    rootPath.resolve(relativePath) in changedOrImpactedFiles /* for class files in dirs */
+        }
         process(
-            dexArchiveBuilder = getDexArchiveBuilder(
-                dexWorkActionParams,
-                outStream,
-                errStream,
-                receiver
-            ),
+            dexArchiveBuilder = dexArchiveBuilder,
             inputClassFiles = dexWorkActionParams.dexSpec.inputClassFiles,
+            inputFilter = filter,
             outputPath = dexWorkActionParams.dexSpec.outputPath,
-            desugarGraphUpdater = desugarGraph,
-            processIncrementally = canBeIncremental,
-            changedAndImpactedFiles = changedAndImpactedFiles
+            desugarGraphUpdater = desugarGraph
         )
 
         // Store the desugaring graph for use in the next build. If dexing failed earlier, it is
         // intended that we will not store the graph as the graph is only meant to contain info
         // about a previous successful build.
-        if (desugarGraph != null) {
-            FileUtils.mkdirs(desugarGraphFile!!.parentFile)
-            ObjectOutputStream(FileOutputStream(desugarGraphFile).buffered()).use {
-                it.writeObject(desugarGraph)
-            }
+        desugarGraphFile?.let {
+            writeDesugarGraph(it, desugarGraph!!)
+        }
+    }
+}
+
+private fun processNonIncrementally(
+    dexArchiveBuilder: DexArchiveBuilder,
+    dexWorkActionParams: DexWorkActionParams
+) {
+    // Dex outputs have been removed earlier before the workers are launched)
+
+    with(dexWorkActionParams.dexSpec) {
+        val desugarGraph = desugarGraphFile?.let {
+            MutableDependencyGraph<File>()
+        }
+
+        process(
+            dexArchiveBuilder = dexArchiveBuilder,
+            inputClassFiles = dexWorkActionParams.dexSpec.inputClassFiles,
+            inputFilter = { _, _ -> true },
+            outputPath = dexWorkActionParams.dexSpec.outputPath,
+            desugarGraphUpdater = desugarGraph
+        )
+
+        // Store the desugaring graph for use in the next build. If dexing failed earlier, it is
+        // intended that we will not store the graph as the graph is only meant to contain info
+        // about a previous successful build.
+        desugarGraphFile?.let {
+            FileUtils.mkdirs(it.parentFile)
+            writeDesugarGraph(it, desugarGraph!!)
         }
     }
 }
@@ -156,32 +182,15 @@ fun launchProcessing(
 private fun process(
     dexArchiveBuilder: DexArchiveBuilder,
     inputClassFiles: ClassBucket,
+    inputFilter: (File, String) -> Boolean,
     outputPath: File,
-    desugarGraphUpdater: DependencyGraphUpdater<File>?,
-    processIncrementally: Boolean,
-    // Not null iff processIncrementally == true.
-    // Note that this set may contain removed files, but the implementation below makes sure we
-    // won't process removed files.
-    changedAndImpactedFiles: Set<File>?
+    desugarGraphUpdater: DependencyGraphUpdater<File>?
 ) {
-    // Filter to select a subset of the class files to process:
-    //   - In incremental mode, process only changed (modified, added) or unchanged-but-impacted
-    //     files.
-    //   - In non-incremental mode, process all files.
-    fun shouldBeProcessed(rootPath: File, relativePath: String): Boolean {
-        return if (processIncrementally) {
-            rootPath in changedAndImpactedFiles!! /* for jars */ ||
-                    rootPath.resolve(relativePath) in changedAndImpactedFiles /* for dirs */
-        } else {
-            true
-        }
-    }
-
     val inputRoots = inputClassFiles.bucketGroup.getRoots()
     inputRoots.forEach { loggerWrapper.verbose("Dexing '${it.path}' to '${outputPath.path}'") }
     try {
         Closer.create().use { closer ->
-            inputClassFiles.getClassFiles(filter = ::shouldBeProcessed, closer = closer).use {
+            inputClassFiles.getClassFiles(filter = inputFilter, closer = closer).use {
                 dexArchiveBuilder.convert(it, outputPath.toPath(), desugarGraphUpdater)
             }
         }
@@ -222,7 +231,7 @@ private fun getDexArchiveBuilder(
                     dexPerClass = dexSpec.dexParams.dexPerClass,
                     withDesugaring = dexSpec.dexParams.withDesugaring,
                     desugarBootclasspath =
-                            DexArchiveBuilderTaskDelegate.sharedState.getService(dexSpec.dexParams.desugarBootclasspath).service,
+                    DexArchiveBuilderTaskDelegate.sharedState.getService(dexSpec.dexParams.desugarBootclasspath).service,
                     desugarClasspath =
                     DexArchiveBuilderTaskDelegate.sharedState.getService(dexSpec.dexParams.desugarClasspath).service,
                     coreLibDesugarConfig = dexSpec.dexParams.coreLibDesugarConfig,
@@ -235,6 +244,19 @@ private fun getDexArchiveBuilder(
         }
     }
     return dexArchiveBuilder
+}
+
+fun readDesugarGraph(desugarGraphFile: File): MutableDependencyGraph<File> {
+    return ObjectInputStream(FileInputStream(desugarGraphFile).buffered()).use {
+        @Suppress("UNCHECKED_CAST")
+        it.readObject() as MutableDependencyGraph<File>
+    }
+}
+
+fun writeDesugarGraph(desugarGraphFile: File, desugarGraph: MutableDependencyGraph<File>) {
+    ObjectOutputStream(FileOutputStream(desugarGraphFile).buffered()).use {
+        it.writeObject(desugarGraph)
+    }
 }
 
 private val loggerWrapper = LoggerWrapper.getLogger(DexWorkAction::class.java)

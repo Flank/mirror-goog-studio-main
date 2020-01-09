@@ -56,6 +56,7 @@ fun simpleLayoutXml(
     $appBarLayoutNameBlock
     tools:context="$packageName.$activityClass">
     $isNewBlock
+
   </$layout>
   """
 }

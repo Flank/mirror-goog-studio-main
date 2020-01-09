@@ -104,7 +104,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -175,7 +175,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -232,7 +232,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -303,7 +303,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -360,7 +360,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -430,7 +430,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -487,7 +487,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -557,7 +557,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -615,7 +615,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -683,7 +683,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -739,7 +739,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -809,7 +809,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -881,7 +881,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -960,7 +960,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -1068,7 +1068,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> classesTask =
                 transformManager
                         .addTransform(taskFactory, scope, classesTransform)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(classesTask.getName());
@@ -1179,7 +1179,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> classesTask =
                 transformManager
                         .addTransform(taskFactory, scope, classesTransform)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(classesTask.getName());
@@ -1242,7 +1242,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -1319,7 +1319,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -1406,7 +1406,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -1505,7 +1505,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -1578,7 +1578,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -1654,7 +1654,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -1718,7 +1718,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -1790,7 +1790,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -1933,7 +1933,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -2062,7 +2062,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, transform)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
 
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
@@ -2103,7 +2103,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -2163,7 +2163,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -2225,7 +2225,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -2275,7 +2275,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -2352,7 +2352,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -2410,7 +2410,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
@@ -2453,7 +2453,7 @@ public class TransformTaskTest extends TaskTestUtils {
         TaskProvider<TransformTask> task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
-                        .orElseThrow(mTransformTaskFailed);
+                        .orElseThrow(syncIssueToException);
         // and get the real gradle task object
         TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();

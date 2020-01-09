@@ -169,7 +169,7 @@ abstract class MergeNativeLibsTask
                         variantScope.globalScope.extension.packagingOptions)
             task.intermediateDir =
                     variantScope.getIncrementalDir(
-                        "${variantScope.fullVariantName}-mergeNativeLibs")
+                        "${variantScope.name}-mergeNativeLibs")
 
             val project = variantScope.globalScope.project
 

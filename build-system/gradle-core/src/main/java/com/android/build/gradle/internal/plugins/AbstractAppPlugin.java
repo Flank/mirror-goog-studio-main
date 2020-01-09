@@ -79,10 +79,4 @@ public abstract class AbstractAppPlugin extends BasePlugin {
                 toolingRegistry,
                 recorder);
     }
-
-    @NonNull
-    @Override
-    protected ApplicationVariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
-        return new ApplicationVariantFactory(globalScope);
-    }
 }

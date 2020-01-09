@@ -3687,6 +3687,75 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testConditionalAroundExceptionSuppress() {
+        // Regression test for https://issuetracker.google.com/140154274
+        lint().files(
+                        manifest().minSdk(17),
+                        kotlin(
+                                ""
+                                        + "@file:Suppress(\"unused\")\n"
+                                        + "\n"
+                                        + "package com.example.myapplication\n"
+                                        + "\n"
+                                        + "import android.annotation.SuppressLint\n"
+                                        + "import android.content.Context\n"
+                                        + "import android.hardware.camera2.CameraAccessException\n"
+                                        + "import android.hardware.camera2.CameraManager\n"
+                                        + "import android.os.Build\n"
+                                        + "\n"
+                                        + "class CameraTest {\n"
+                                        + "    fun hasCamera(context: Context): Boolean {\n"
+                                        + "        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {\n"
+                                        + "            val camerasIds: Array<String>\n"
+                                        + "            try {\n"
+                                        + "                val cameraManager =\n"
+                                        + "                    context.getSystemService(Context.CAMERA_SERVICE) as CameraManager\n"
+                                        + "                camerasIds = cameraManager.cameraIdList\n"
+                                        + "                return camerasIds.isNotEmpty()\n"
+                                        + "            } catch (@SuppressLint(\"NewApi\") e: CameraAccessException) {\n"
+                                        + "                e.printStackTrace()\n"
+                                        + "            }\n"
+                                        + "\n"
+                                        + "        }\n"
+                                        + "        val numberOfCameras = android.hardware.Camera.getNumberOfCameras()\n"
+                                        + "        return numberOfCameras > 0\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java(""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.annotation.SuppressLint;\n"
+                                        + "import android.content.Context;\n"
+                                        + "import android.hardware.camera2.CameraAccessException;\n"
+                                        + "import android.hardware.camera2.CameraManager;\n"
+                                        + "import android.os.Build;\n"
+                                        + "\n"
+                                        + "public class CameraTest2 {\n"
+                                        + "    boolean hasCamera(Context context) {\n"
+                                        + "        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {\n"
+                                        + "            String[] camerasIds;\n"
+                                        + "            try {\n"
+                                        + "                CameraManager cameraManager =\n"
+                                        + "                        (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);\n"
+                                        + "                if (cameraManager == null) {\n"
+                                        + "                    return false;\n"
+                                        + "                }\n"
+                                        + "                camerasIds = cameraManager.getCameraIdList();\n"
+                                        + "                return camerasIds.length > 0;\n"
+                                        + "            } catch (@SuppressLint(\"NewApi\") CameraAccessException e) {\n"
+                                        + "                e.printStackTrace();\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "        int numberOfCameras = android.hardware.Camera.getNumberOfCameras();\n"
+                                        + "        return numberOfCameras > 0;\n"
+                                        + "    }\n"
+                                        + "}\n")
+                                .indented())
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expectClean();
+    }
+
     public void testMethodReferences() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=219413
         String expected =
@@ -6287,6 +6356,39 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "1 errors, 0 warnings");
     }
 
+    public void testCheckSuper() {
+        // Regression test for issue 135460230
+        //noinspection all // Sample code
+        lint().files(
+                        manifest().minSdk(15),
+                        java(
+                                ""
+                                        + "import android.content.Context;\n"
+                                        + "import android.util.AttributeSet;\n"
+                                        + "import android.view.ViewGroup;\n"
+                                        + "\n"
+                                        + "public abstract class ViewPager extends ViewGroup {\n"
+                                        + "\n"
+                                        + "    public ViewPager(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {\n"
+                                        + "        super(context, attrs, defStyleAttr, defStyleRes);\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    @Override\n"
+                                        + "    public CharSequence getAccessibilityClassName() {\n"
+                                        + "        return super.getAccessibilityClassName();\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        mSupportClasspath,
+                        mSupportJar)
+                .run()
+                .expect(
+                        ""
+                                + "src/ViewPager.java:8: Error: Call requires API level 21 (current min is 15): new android.view.ViewGroup [NewApi]\n"
+                                + "        super(context, attrs, defStyleAttr, defStyleRes);\n"
+                                + "        ~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
     public void testSourceJars() {
         // Make sure that resolving files through srcjars is working properly
 
@@ -6471,6 +6573,29 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "        classLintTest(); // Should Fail\n"
                                 + "        ~~~~~~~~~~~~~\n"
                                 + "3 errors, 0 warnings");
+    }
+
+    public void testKotlinStdlibPlatformDependent() {
+        // Regression test for https://issuetracker.google.com/77187996
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "fun test1(map: MutableMap<String, String>) {\n"
+                                        + "    map.getOrDefault(\"a\", \"b\")\n"
+                                        + "    map.remove(\"a\", \"b\")\n"
+                                        + "}"))
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/test.kt:4: Error: Call requires API level 24 (current min is 1): java.util.Map#getOrDefault [NewApi]\n"
+                                + "    map.getOrDefault(\"a\", \"b\")\n"
+                                + "        ~~~~~~~~~~~~\n"
+                                + "src/test/pkg/test.kt:5: Error: Call requires API level 24 (current min is 1): java.util.Map#remove [NewApi]\n"
+                                + "    map.remove(\"a\", \"b\")\n"
+                                + "        ~~~~~~\n"
+                                + "2 errors, 0 warnings");
     }
 
     @Override

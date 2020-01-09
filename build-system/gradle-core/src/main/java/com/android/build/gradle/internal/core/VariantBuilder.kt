@@ -16,20 +16,22 @@
 
 package com.android.build.gradle.internal.core
 
+import com.android.build.api.variant.VariantConfiguration
+import com.android.build.api.variant.impl.VariantConfigurationImpl
 import com.android.build.gradle.internal.core.VariantBuilder.Companion.getBuilder
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
-import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.utils.toImmutableList
+import com.android.build.gradle.internal.variant.VariantCombination
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.ManifestAttributeSupplier
 import com.android.builder.core.VariantType
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
-import java.lang.RuntimeException
 import java.util.function.BooleanSupplier
 
 /** Builder for [VariantDslInfo].
@@ -40,6 +42,7 @@ import java.util.function.BooleanSupplier
  * Use [getBuilder] as an entry point.
  */
 abstract class VariantBuilder protected constructor(
+    protected val variantCombination: VariantCombination,
     val variantType: VariantType,
     protected val defaultConfig: DefaultConfig,
     protected val defaultSourceProvider: SourceProvider,
@@ -48,7 +51,7 @@ abstract class VariantBuilder protected constructor(
     protected val signingConfigOverride: SigningConfig?,
     protected val manifestAttributeSupplier: ManifestAttributeSupplier? = null,
     protected val projectOptions: ProjectOptions,
-    protected val issueReporter: EvalIssueReporter,
+    protected val issueReporter: IssueReporter,
     protected val isInExecutionPhase: BooleanSupplier
 ) {
 
@@ -58,6 +61,7 @@ abstract class VariantBuilder protected constructor(
          */
         @JvmStatic
         fun getBuilder(
+            variantCombination: VariantCombination,
             variantType: VariantType,
             defaultConfig: DefaultConfig,
             defaultSourceSet: SourceProvider,
@@ -66,13 +70,14 @@ abstract class VariantBuilder protected constructor(
             signingConfigOverride: SigningConfig? = null,
             manifestAttributeSupplier: ManifestAttributeSupplier? = null,
             projectOptions: ProjectOptions,
-            issueReporter: EvalIssueReporter,
+            issueReporter: IssueReporter,
             isInExecutionPhase: BooleanSupplier
 
         ): VariantBuilder {
             // if this is the test module, we have a slightly different builder
             return if (variantType.isForTesting && !variantType.isTestComponent) {
                 TestModuleConfigurationBuilder(
+                    variantCombination,
                     variantType,
                     defaultConfig,
                     defaultSourceSet,
@@ -87,6 +92,7 @@ abstract class VariantBuilder protected constructor(
                 )
             } else {
                 VariantConfigurationBuilder(
+                    variantCombination,
                     variantType,
                     defaultConfig,
                     defaultSourceSet,
@@ -114,32 +120,136 @@ abstract class VariantBuilder protected constructor(
         @JvmStatic
         @JvmOverloads
         fun computeName(
+            variantCombination: VariantCombination,
             variantType: VariantType,
-            flavors: List<com.android.builder.model.ProductFlavor>?,
-            buildType: com.android.builder.model.BuildType,
             flavorNameCallback: ((String) -> Unit)? = null
         ): String {
             // compute the flavor name
-            val flavorName = if (flavors.isNullOrEmpty()) {
+            val flavorName = if (variantCombination.productFlavors.isNullOrEmpty()) {
                 ""
             } else {
-                combineAsCamelCase(flavors, com.android.builder.model.ProductFlavor::getName)
+                combineAsCamelCase(variantCombination.productFlavors, Pair<String,String>::second)
             }
             flavorNameCallback?.let { it(flavorName) }
 
             val sb = StringBuilder()
+            val buildType = variantCombination.buildType
+            if (buildType == null) {
+                if (flavorName.isNotEmpty()) {
+                    sb.append(flavorName)
+                } else if (!variantType.isTestComponent) {
+                    sb.append("main")
+                }
+            } else {
+                if (flavorName.isNotEmpty()) {
+                    sb.append(flavorName)
+                    sb.appendCapitalized(buildType)
+                } else {
+                    sb.append(buildType)
+                }
+            }
+            if (variantType.isTestComponent) {
+                if (sb.isEmpty()) {
+                    // need the lower case version
+                    sb.append(variantType.prefix)
+                } else {
+                    sb.append(variantType.suffix)
+                }
+            }
+            return sb.toString()
+        }
+
+        /**
+         * Turns a string into a valid source set name for the given [VariantType], e.g.
+         * "fooBarUnitTest" becomes "testFooBar".
+         */
+        @JvmStatic
+        fun computeSourceSetName(
+            baseName: String,
+            variantType: VariantType
+        ): String {
+            var name = baseName
+            if (name.endsWith(variantType.suffix)) {
+                name = name.substring(0, name.length - variantType.suffix.length)
+            }
+            if (!variantType.prefix.isEmpty()) {
+                name = variantType.prefix.appendCapitalized(name)
+            }
+            return name
+        }
+
+        /**
+         * Returns the full, unique name of the variant, including BuildType, flavors and test, dash
+         * separated. (similar to full name but with dashes)
+         *
+         * @return the name of the variant
+         */
+        @JvmStatic
+        fun computeBaseName(
+            variantCombination: VariantCombination,
+            variantType: VariantType) : String {
+            val sb = StringBuilder()
+            if (variantCombination.productFlavors.isNotEmpty()) {
+                for ((_, name) in variantCombination.productFlavors) {
+                    if (sb.isNotEmpty()) {
+                        sb.append('-')
+                    }
+                    sb.append(name)
+                }
+            }
+
+            variantCombination.buildType?.let {
+                if (sb.isNotEmpty()) {
+                    sb.append('-')
+                }
+                sb.append(it)
+            }
+
+            if (variantType.isTestComponent) {
+                if (sb.isNotEmpty()) {
+                    sb.append('-')
+                }
+                sb.append(variantType.prefix)
+            }
+
+            if (sb.isEmpty()) {
+                sb.append("main")
+            }
+
+            return sb.toString()
+        }
+
+        /**
+         * Returns a full name that includes the given splits name.
+         *
+         * @param splitName the split name
+         * @return a unique name made up of the variant and split names.
+         */
+        @JvmStatic
+        fun computeFullNameWithSplits(
+            variantConfiguration: VariantConfiguration,
+            variantType: VariantType,
+            splitName: String): String {
+            val sb = StringBuilder()
+
+            val flavorName = variantConfiguration.flavorName
+
             if (flavorName.isNotEmpty()) {
                 sb.append(flavorName)
-                sb.appendCapitalized(buildType.name)
+                sb.appendCapitalized(splitName)
             } else {
-                sb.append(buildType.name)
+                sb.append(splitName)
             }
+
+            variantConfiguration.buildType?.let {
+                sb.appendCapitalized(it)
+            }
+
             if (variantType.isTestComponent) {
                 sb.append(variantType.suffix)
             }
             return sb.toString()
         }
-
     }
 
     private lateinit var variantName: String
@@ -198,11 +308,7 @@ abstract class VariantBuilder protected constructor(
      * computes the name for the variant and the multi-flavor combination
      */
     private fun computeNames() {
-        variantName = computeName(
-            variantType,
-            flavors.map { it.first },
-            buildType
-        ) {
+        variantName = computeName(variantCombination, variantType) {
             multiFlavorName = it
         }
     }
@@ -210,6 +316,7 @@ abstract class VariantBuilder protected constructor(
 
 /** Builder for non test plugin variant configurations  */
 private class VariantConfigurationBuilder(
+    variantCombination: VariantCombination,
     variantType: VariantType,
     defaultConfig: DefaultConfig,
     defaultSourceSet: SourceProvider,
@@ -218,9 +325,10 @@ private class VariantConfigurationBuilder(
     signingConfigOverride: SigningConfig?,
     manifestAttributeSupplier: ManifestAttributeSupplier? = null,
     projectOptions: ProjectOptions,
-    issueReporter: EvalIssueReporter,
+    issueReporter: IssueReporter,
     isInExecutionPhase: BooleanSupplier
 ) : VariantBuilder(
+    variantCombination,
     variantType,
     defaultConfig,
     defaultSourceSet,
@@ -234,9 +342,14 @@ private class VariantConfigurationBuilder(
 ) {
 
     override fun createVariantDslInfo(): VariantDslInfoImpl {
+
         return VariantDslInfoImpl(
-            name,
-            flavorName,
+            VariantConfigurationImpl(
+                name,
+                flavorName,
+                variantCombination.buildType,
+                variantCombination.productFlavors
+            ),
             variantType,
             defaultConfig,
             defaultSourceProvider.manifestFile,
@@ -263,6 +376,7 @@ private class VariantConfigurationBuilder(
  * is different.
  */
 private class TestModuleConfigurationBuilder(
+    variantCombination: VariantCombination,
     variantType: VariantType,
     defaultConfig: DefaultConfig,
     defaultSourceSet: SourceProvider,
@@ -271,9 +385,10 @@ private class TestModuleConfigurationBuilder(
     signingConfigOverride: SigningConfig?,
     manifestAttributeSupplier: ManifestAttributeSupplier? = null,
     projectOptions: ProjectOptions,
-    issueReporter: EvalIssueReporter,
+    issueReporter: IssueReporter,
     isInExecutionPhase: BooleanSupplier
 ) : VariantBuilder(
+    variantCombination,
     variantType,
     defaultConfig,
     defaultSourceSet,
@@ -288,8 +403,12 @@ private class TestModuleConfigurationBuilder(
 
     override fun createVariantDslInfo(): VariantDslInfoImpl {
         return object: VariantDslInfoImpl(
-            name,
-            flavorName,
+            VariantConfigurationImpl(
+                name,
+                flavorName,
+                variantCombination.buildType,
+                variantCombination.productFlavors
+            ),
             variantType,
             defaultConfig,
             defaultSourceProvider.manifestFile,

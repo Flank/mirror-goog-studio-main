@@ -18,15 +18,16 @@ package com.android.tools.profiler.network;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.tools.profiler.GrpcUtils;
-import com.android.tools.profiler.PerfDriver;
-import com.android.tools.profiler.TestUtils;
-import com.android.tools.profiler.proto.Common.*;
+import com.android.tools.fakeandroid.FakeAndroidDriver;
+import com.android.tools.profiler.ProfilerRule;
+import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsResponse;
-import com.android.tools.profiler.proto.Transport.*;
-import java.io.IOException;
+import com.android.tools.transport.TestUtils;
+import com.android.tools.transport.device.SdkLevel;
+import com.android.tools.transport.grpc.Grpc;
+import com.android.tools.transport.grpc.TransportStubWrapper;
 import java.util.Arrays;
 import java.util.Collection;
 import org.junit.Before;
@@ -36,99 +37,98 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class HttpUrlTest {
+public final class HttpUrlTest {
     @Parameterized.Parameters
-    public static Collection<Integer> data() {
-        return Arrays.asList(24, 26, 28);
+    public static Collection<SdkLevel> parameters() {
+        return Arrays.asList(SdkLevel.N, SdkLevel.O, SdkLevel.P);
     }
 
     private static final String ACTIVITY_CLASS = "com.activity.network.HttpUrlActivity";
 
-    @Rule public final PerfDriver myPerfDriver;
+    @Rule public final ProfilerRule myProfilerRule;
 
-    private GrpcUtils myGrpc;
+    private FakeAndroidDriver myAndroidDriver;
+    private Grpc myGrpc;
     private Session mySession;
 
-    public HttpUrlTest(int sdkLevel) {
-        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel);
+    public HttpUrlTest(SdkLevel sdkLevel) {
+        myProfilerRule = new ProfilerRule(ACTIVITY_CLASS, sdkLevel);
     }
 
     @Before
-    public void setup() throws Exception {
-        myGrpc = myPerfDriver.getGrpc();
-        mySession = myPerfDriver.getSession();
+    public void setup() {
+        myAndroidDriver = myProfilerRule.getTransportRule().getAndroidDriver();
+        myGrpc = myProfilerRule.getTransportRule().getGrpc();
+        mySession = myProfilerRule.getSession();
     }
 
     @Test
-    public void testHttpGet() throws IOException {
-        final String getSuccess = "HttpUrlGet SUCCESS";
-        myPerfDriver.getFakeAndroidDriver().triggerMethod(ACTIVITY_CLASS, "runGet");
-        assertThat(myPerfDriver.getFakeAndroidDriver().waitForInput(getSuccess)).isTrue();
+    public void testHttpGet() {
+        String getSuccess = "HttpUrlGet SUCCESS";
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runGet");
+        assertThat(myAndroidDriver.waitForInput(getSuccess)).isTrue();
 
-        final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        NetworkStubWrapper networkStubWrapper = NetworkStubWrapper.create(myGrpc);
+        TransportStubWrapper transportStubWrapper = TransportStubWrapper.create(myGrpc);
+
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getNonEmptyHttpRange(mySession);
+                networkStubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
-        final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
-        HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
+        long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
+        HttpDetailsResponse requestDetails = networkStubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains("?activity=HttpUrlGet")).isTrue();
         TestUtils.waitFor(
                 () -> {
                     HttpDetailsResponse details =
-                            stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
+                            networkStubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
                     return details.getResponse().getFields().contains("HTTP/1.0 200 OK");
                 });
 
-        String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
+        String payloadId = networkStubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
-        BytesResponse bytesResponse =
-                myGrpc.getTransportStub()
-                        .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
-        assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo(getSuccess);
+
+        assertThat(transportStubWrapper.toBytes(payloadId)).isEqualTo(getSuccess);
     }
 
     @Test
-    public void testHttpPost() throws IOException {
-        final String postSuccess = "HttpUrlPost SUCCESS";
-        myPerfDriver.getFakeAndroidDriver().triggerMethod(ACTIVITY_CLASS, "runPost");
-        assertThat(myPerfDriver.getFakeAndroidDriver().waitForInput(postSuccess)).isTrue();
+    public void testHttpPost() {
+        String postSuccess = "HttpUrlPost SUCCESS";
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runPost");
+        assertThat(myAndroidDriver.waitForInput(postSuccess)).isTrue();
 
-        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        NetworkStubWrapper networkStubWrapper = NetworkStubWrapper.create(myGrpc);
+        TransportStubWrapper transportStubWrapper = TransportStubWrapper.create(myGrpc);
+
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getNonEmptyHttpRange(mySession);
+                networkStubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
-        HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
+        HttpDetailsResponse requestDetails = networkStubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains("?activity=HttpUrlPost")).isTrue();
 
-        String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
+        String payloadId = networkStubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
-        BytesResponse bytesResponse =
-                myGrpc.getTransportStub()
-                        .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
-        assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("TestRequestBody");
+        assertThat(transportStubWrapper.toBytes(payloadId)).isEqualTo("TestRequestBody");
     }
 
     @Test
-    public void testHttpGet_CallResposeMethodBeforeConnect() throws IOException {
-        final String getSuccess = "HttpUrlGet SUCCESS";
-        myPerfDriver
-                .getFakeAndroidDriver()
-                .triggerMethod(ACTIVITY_CLASS, "runGet_CallResponseMethodBeforeConnect");
-        assertThat(myPerfDriver.getFakeAndroidDriver().waitForInput(getSuccess)).isTrue();
+    public void testHttpGet_CallResposeMethodBeforeConnect() {
+        String getSuccess = "HttpUrlGet SUCCESS";
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runGet_CallResponseMethodBeforeConnect");
+        assertThat(myAndroidDriver.waitForInput(getSuccess)).isTrue();
 
-        final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        NetworkStubWrapper networkStubWrapper = NetworkStubWrapper.create(myGrpc);
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getNonEmptyHttpRange(mySession);
+                networkStubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
-        final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
+        long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
         TestUtils.waitFor(
                 () -> {
                     HttpDetailsResponse details =
-                            stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
+                            networkStubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
                     return details.getResponse().getFields().contains("HTTP/1.0 200 OK");
                 });
         // If we got here, we're done - our response completed as expected

@@ -34,7 +34,7 @@ open class DependencyReportTask : DefaultTask() {
     @Throws(IOException::class)
     fun generate() {
         renderer.setOutput(services.get(StyledTextOutputFactory::class.java).create(javaClass))
-        val sortedVariants = variants.sortedWith(compareBy { it.fullVariantName })
+        val sortedVariants = variants.sortedWith(compareBy { it.name })
 
         for (variant in sortedVariants) {
             renderer.startVariant(variant)

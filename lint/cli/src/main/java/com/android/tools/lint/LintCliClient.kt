@@ -873,6 +873,11 @@ open class LintCliClient : LintClient {
     }
 
     private fun reportNonExistingIssueId(project: Project?, id: String) {
+        if (id == "MissingRegistered") {
+            // Recently renamed to MissingClass, but avoid complaining about leftover
+            // configuration
+            return
+        }
         val message = "Unknown issue id \"$id\""
         if (::driver.isInitialized && project != null && !isSuppressed(IssueRegistry.LINT_ERROR)) {
             val location = guessGradleLocation(this, project.dir, id)

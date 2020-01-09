@@ -219,8 +219,7 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
                 }
                 if (resolvedMethod != null) {
                     UReferenceExpression returnReference =
-                            ReturnReferenceExpressionFinder.find(
-                                    Lint.getUMethod(resolvedMethod));
+                            ReturnReferenceExpressionFinder.find(Lint.getUMethod(resolvedMethod));
                     if (returnReference != null) {
                         addParams(find(mContext, returnReference));
                     }

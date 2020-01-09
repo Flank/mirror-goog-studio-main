@@ -19,9 +19,10 @@ package com.activity.event;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputConnectionWrapper;
 import android.view.inputmethod.InputMethodManager;
-import com.activity.PerfdTestActivity;
+import com.activity.TransportTestActivity;
 
-public class EventActivity extends PerfdTestActivity {
+@SuppressWarnings("unused") // Accessed via reflection by perf-test
+public final class EventActivity extends TransportTestActivity {
     public EventActivity() {
         super("EventActivity");
     }

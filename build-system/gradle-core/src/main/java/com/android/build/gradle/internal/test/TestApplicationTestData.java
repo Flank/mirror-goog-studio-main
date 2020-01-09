@@ -18,6 +18,9 @@ package com.android.build.gradle.internal.test;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.BuiltArtifact;
+import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.BuildElements;
@@ -26,10 +29,10 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.testing.TestData;
 import com.android.builder.testing.api.DeviceConfigProvider;
-import com.android.ide.common.process.ProcessException;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +48,6 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
 
     private final Supplier<String> testApplicationId;
     private final Map<String, String> testedProperties;
-    private final VariantDslInfo variantDslInfo;
 
     public TestApplicationTestData(
             @NonNull VariantDslInfo variantDslInfo,
@@ -54,7 +56,6 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
             @NonNull Provider<Directory> testApkDir,
             @NonNull FileCollection testedApksDir) {
         super(variantDslInfo, variantSources, testApkDir, testedApksDir);
-        this.variantDslInfo = variantDslInfo;
         this.testedProperties = new HashMap<>();
         this.testApplicationId = testApplicationId;
     }
@@ -96,17 +97,21 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
     @NonNull
     @Override
     public List<File> getTestedApks(
-            @NonNull DeviceConfigProvider deviceConfigProvider, @NonNull ILogger logger)
-            throws ProcessException {
+            @NonNull DeviceConfigProvider deviceConfigProvider, @NonNull ILogger logger) {
 
         if (testedApksDir == null) {
             return ImmutableList.of();
         }
         // retrieve all the published files.
-        BuildElements testedApkFiles =
-                ExistingBuildElements.from(InternalArtifactType.APK.INSTANCE, testedApksDir);
-
-        return testedApkFiles.stream().map(BuildOutput::getOutputFile).collect(Collectors.toList());
+        @Nullable
+        BuiltArtifacts builtArtifacts = new BuiltArtifactsLoaderImpl().load(testedApksDir);
+        return builtArtifacts != null
+                ? builtArtifacts
+                        .getElements()
+                        .stream()
+                        .map(BuiltArtifact::getOutputFile)
+                        .map(Path::toFile)
+                        .collect(Collectors.toList())
+                : ImmutableList.of();
     }
-
 }

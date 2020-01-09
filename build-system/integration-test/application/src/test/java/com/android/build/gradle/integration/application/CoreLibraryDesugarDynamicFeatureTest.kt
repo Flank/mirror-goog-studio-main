@@ -71,6 +71,16 @@ class CoreLibraryDesugarDynamicFeatureTest {
     }
 
     @Test
+    fun testKeepRulePublicationFromFeatureModule() {
+        project.executor().run(":app:assembleRelease")
+        val appApk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.RELEASE)
+        val desugarLibDex = getDexWithSpecificClass(streamClass, appApk.allDexes)
+            ?: fail("Failed to find the dex with class name $streamClass")
+        DexSubject.assertThat(desugarLibDex).containsClasses(monthClass)
+        DexSubject.assertThat(desugarLibDex).doesNotContainClasses(yearClass)
+    }
+
+    @Test
     fun testKeepRuleConsumptionForMinifyBuild() {
         TestFileUtils.searchAndReplace(
             FileUtils.join(app.mainSrcDir, "com/example/helloworld/HelloWorld.java"),

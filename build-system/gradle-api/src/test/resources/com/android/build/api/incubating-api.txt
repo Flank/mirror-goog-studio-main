@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-2cab15285245a81fcb1625f07796f8a918a6a4db3e23dc041e4bbc21f47ae564
+67a8e1ba1719927088f6af2f1fc40d77d264a2ae3062005586383148a6e79000
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -55,6 +55,10 @@ com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.dsl.ApkExtension
 com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.AssetPackExtension
+com.android.build.api.dsl.AssetPackExtension.dynamicDelivery: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DynamicDelivery, kotlin.Unit>)
+com.android.build.api.dsl.AssetPackExtension.getDynamicDelivery: com.android.build.api.dsl.DynamicDelivery ()
+com.android.build.api.dsl.AssetPackExtension.getPackName: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.BuildFeatures implements org.gradle.api.plugins.ExtensionAware
 com.android.build.api.dsl.BuildFeatures.getAidl: java.lang.Boolean ()
 com.android.build.api.dsl.BuildFeatures.getBuildConfig: java.lang.Boolean ()
@@ -91,14 +95,14 @@ com.android.build.api.dsl.CommonExtension.getCompileSdkVersion: java.lang.String
 com.android.build.api.dsl.CommonExtension.getDefaultConfig: DefaultConfigT ()
 com.android.build.api.dsl.CommonExtension.getExternalNativeBuild: ExternalNativeBuildT ()
 com.android.build.api.dsl.CommonExtension.getJacoco: JacocoOptionsT ()
+com.android.build.api.dsl.CommonExtension.getOnVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<VariantPropertiesT> ()
+com.android.build.api.dsl.CommonExtension.getOnVariants: com.android.build.api.variant.GenericVariantFilterBuilder<VariantT> ()
 com.android.build.api.dsl.CommonExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<ProductFlavorT> ()
 com.android.build.api.dsl.CommonExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<SigningConfigT> ()
 com.android.build.api.dsl.CommonExtension.getTestOptions: TestOptionsT ()
 com.android.build.api.dsl.CommonExtension.jacoco: void (kotlin.jvm.functions.Function1<? super JacocoOptionsT, kotlin.Unit>)
-com.android.build.api.dsl.CommonExtension.onVariantProperties: com.android.build.api.variant.GenericVariantFilterBuilder<VariantPropertiesT> ()
 com.android.build.api.dsl.CommonExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super VariantPropertiesT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.onVariantProperties: void (org.gradle.api.Action<VariantPropertiesT>)
-com.android.build.api.dsl.CommonExtension.onVariants: com.android.build.api.variant.GenericVariantFilterBuilder<VariantT> ()
 com.android.build.api.dsl.CommonExtension.onVariants: void (kotlin.jvm.functions.Function1<? super VariantT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.onVariants: void (org.gradle.api.Action<VariantT>)
 com.android.build.api.dsl.CommonExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<ProductFlavorT>>)
@@ -107,6 +111,9 @@ com.android.build.api.dsl.CommonExtension.signingConfigs: void (org.gradle.api.A
 com.android.build.api.dsl.CommonExtension.testOptions: void (kotlin.jvm.functions.Function1<? super TestOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.DefaultConfig
+com.android.build.api.dsl.DynamicDelivery
+com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicFeatureBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.DynamicFeatureExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.ExternalNativeBuild
@@ -138,7 +145,7 @@ com.android.build.api.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Func
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.UnitTestOptions
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
-com.android.build.api.variant.ActionableVariantObject implements org.gradle.api.Named
+com.android.build.api.variant.ActionableVariantObject
 com.android.build.api.variant.AppVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.AppVariant.getMinSdkVersion: int ()
 com.android.build.api.variant.AppVariant.setMinSdkVersion: void (int)
@@ -147,6 +154,27 @@ com.android.build.api.variant.BuildTypedVariantFilterBuilder
 com.android.build.api.variant.BuildTypedVariantFilterBuilder.withFlavor: com.android.build.api.variant.BuildTypedVariantFilterBuilder<T> (kotlin.Pair<java.lang.String, java.lang.String>)
 com.android.build.api.variant.BuildTypedVariantFilterBuilder.withFlavor: void (kotlin.Pair<java.lang.String, java.lang.String>, kotlin.jvm.functions.Function1<? super T, kotlin.Unit>)
 com.android.build.api.variant.BuildTypedVariantFilterBuilder.withFlavor: void (kotlin.Pair<java.lang.String, java.lang.String>, org.gradle.api.Action<T>)
+com.android.build.api.variant.BuiltArtifact
+com.android.build.api.variant.BuiltArtifact.getFilters: java.util.Collection<com.android.build.api.variant.FilterConfiguration> ()
+com.android.build.api.variant.BuiltArtifact.getOutputFile: java.nio.file.Path ()
+com.android.build.api.variant.BuiltArtifact.getOutputType: com.android.build.api.variant.VariantOutputConfiguration$OutputType ()
+com.android.build.api.variant.BuiltArtifact.getProperties: java.util.Map<java.lang.String, java.lang.String> ()
+com.android.build.api.variant.BuiltArtifact.getVersionCode: int ()
+com.android.build.api.variant.BuiltArtifact.getVersionName: java.lang.String ()
+com.android.build.api.variant.BuiltArtifact.isEnabled: boolean ()
+com.android.build.api.variant.BuiltArtifacts
+com.android.build.api.variant.BuiltArtifacts$Companion
+com.android.build.api.variant.BuiltArtifacts$Companion.getLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
+com.android.build.api.variant.BuiltArtifacts.getApplicationId: java.lang.String ()
+com.android.build.api.variant.BuiltArtifacts.getArtifactType: com.android.build.api.artifact.ArtifactType<?> ()
+com.android.build.api.variant.BuiltArtifacts.getElements: java.util.Collection<com.android.build.api.variant.BuiltArtifact> ()
+com.android.build.api.variant.BuiltArtifacts.getLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
+com.android.build.api.variant.BuiltArtifacts.getVariantName: java.lang.String ()
+com.android.build.api.variant.BuiltArtifacts.save: void (org.gradle.api.file.Directory)
+com.android.build.api.variant.BuiltArtifacts.transform: com.android.build.api.variant.BuiltArtifacts (com.android.build.api.artifact.ArtifactType<?>, kotlin.jvm.functions.Function1<? super java.io.File, ? extends java.io.File>)
+com.android.build.api.variant.BuiltArtifactsLoader
+com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.Directory)
+com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.FileCollection)
 com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.DynamicFeatureVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.FilterConfiguration
@@ -163,7 +191,9 @@ com.android.build.api.variant.FilterConfiguration.getFilterType: com.android.bui
 com.android.build.api.variant.FilterConfiguration.getIdentifier: java.lang.String ()
 com.android.build.api.variant.FilterConfiguration.hashCode: int ()
 com.android.build.api.variant.FilterConfiguration.toString: java.lang.String ()
-com.android.build.api.variant.FlavoredVariantFilterBuilder
+com.android.build.api.variant.FlavoredVariantFilterBuilder implements com.android.build.api.variant.BuildTypedVariantFilterBuilder
+com.android.build.api.variant.FlavoredVariantFilterBuilder.withBuildType: com.android.build.api.variant.BuildTypedVariantFilterBuilder<T> (java.lang.String)
+com.android.build.api.variant.FlavoredVariantFilterBuilder.withBuildType: void (java.lang.String, kotlin.jvm.functions.Function1<? super T, kotlin.Unit>)
 com.android.build.api.variant.FlavoredVariantFilterBuilder.withBuildType: void (java.lang.String, org.gradle.api.Action<T>)
 com.android.build.api.variant.GenericVariantFilterBuilder implements com.android.build.api.variant.TypedVariantFilterBuilder
 com.android.build.api.variant.GenericVariantFilterBuilder.withType: com.android.build.api.variant.TypedVariantFilterBuilder<U> (java.lang.Class<U>)
@@ -187,8 +217,8 @@ com.android.build.api.variant.Variant.onProperties: void (org.gradle.api.Action<
 com.android.build.api.variant.Variant.setEnabled: void (boolean)
 com.android.build.api.variant.VariantConfiguration implements org.gradle.api.Named
 com.android.build.api.variant.VariantConfiguration.getBuildType: java.lang.String ()
-com.android.build.api.variant.VariantConfiguration.getFlavors: java.util.List<java.lang.String> ()
-com.android.build.api.variant.VariantConfiguration.isDebuggable: boolean ()
+com.android.build.api.variant.VariantConfiguration.getFlavorName: java.lang.String ()
+com.android.build.api.variant.VariantConfiguration.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
 com.android.build.api.variant.VariantInfo
 com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()
 com.android.build.api.variant.VariantInfo.getFlavorNames: com.google.common.collect.ImmutableList<java.lang.String> ()

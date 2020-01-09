@@ -24,19 +24,15 @@ import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
-import com.android.build.api.variant.VariantConfiguration;
-import com.android.build.api.variant.impl.VariantConfigurationImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.VariantOutputFactory;
-import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -44,12 +40,10 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.SourceProvider;
-import com.android.builder.profile.Recorder;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.SourceFile;
 import com.android.utils.StringHelper;
@@ -77,6 +71,7 @@ import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.Sync;
@@ -86,7 +81,7 @@ public abstract class BaseVariantData {
 
     @NonNull
     protected final TaskManager taskManager;
-    @NonNull private final VariantDslInfoImpl variantDslInfo;
+    @NonNull private final VariantDslInfo variantDslInfo;
     @NonNull private final VariantSources variantSources;
 
     private VariantDependencies variantDependency;
@@ -125,17 +120,21 @@ public abstract class BaseVariantData {
 
     private final MutableTaskContainer taskContainer;
     public TextResource applicationIdTextResource;
-    private final VariantConfiguration publicVariantConfiguration;
-    private VariantImpl publicVariantAPI;
-    private VariantPropertiesImpl publicVariantPropertiesImpl;
+    private final VariantImpl publicVariantApi;
+    private final VariantPropertiesImpl publicVariantPropertiesApi;
 
     public BaseVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull VariantDslInfoImpl variantDslInfo,
-            @NonNull VariantSources variantSources,
-            @NonNull Recorder recorder) {
+            @NonNull VariantScope variantScope,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantImpl publicVariantApi,
+            @NonNull VariantPropertiesImpl publicVariantPropertiesApi,
+            @NonNull VariantSources variantSources) {
+        this.scope = variantScope;
         this.variantDslInfo = variantDslInfo;
+        this.publicVariantApi = publicVariantApi;
+        this.publicVariantPropertiesApi = publicVariantPropertiesApi;
         this.variantSources = variantSources;
         this.taskManager = taskManager;
 
@@ -151,46 +150,23 @@ public abstract class BaseVariantData {
                     .warn(
                             String.format(
                                     "Variant %s requested removed pure splits support, reverted to full splits",
-                                    variantDslInfo.getFullName()));
+                                    publicVariantApi.getName()));
         }
-
-        final Project project = globalScope.getProject();
-        scope =
-                new VariantScopeImpl(
-                        globalScope,
-                        new TransformManager(
-                                globalScope.getProject(),
-                                globalScope.getErrorHandler(),
-                                recorder),
-                        this);
-
-        publicVariantConfiguration =
-                new VariantConfigurationImpl(
-                        variantDslInfo.getFullName(),
-                        variantDslInfo.getBuildType(),
-                        variantDslInfo.getFlavorNamesWithDimensionNames(),
-                        variantDslInfo.isDebuggable());
 
         outputFactory = new OutputFactory(globalScope.getProjectBaseName(), variantDslInfo);
 
-        TaskManager.configureScopeForNdk(scope);
-
         // this must be created immediately since the variant API happens after the task that
         // depends on this are created.
-        extraGeneratedResFolders = globalScope.getProject().files();
-        preJavacGeneratedBytecodeLatest = globalScope.getProject().files();
-        allPreJavacGeneratedBytecode = project.files();
-        allPostJavacGeneratedBytecode = project.files();
+        final ObjectFactory objectFactory = globalScope.getDslScope().getObjectFactory();
+        extraGeneratedResFolders = objectFactory.fileCollection();
+        preJavacGeneratedBytecodeLatest = objectFactory.fileCollection();
+        allPreJavacGeneratedBytecode = objectFactory.fileCollection();
+        allPostJavacGeneratedBytecode = objectFactory.fileCollection();
 
         taskContainer = scope.getTaskContainer();
-        applicationIdTextResource = project.getResources().getText().fromString("");
+        applicationIdTextResource =
+                globalScope.getProject().getResources().getText().fromString("");
     }
-
-    abstract VariantImpl<?> instantiatePublicVariantObject(
-            VariantConfiguration publicVariantConfiguration);
-
-    abstract VariantPropertiesImpl instantiatePublicVariantPropertiesObject(
-            VariantConfiguration publicVariantConfiguration);
 
     @NonNull
     public LayoutXmlProcessor getLayoutXmlProcessor() {
@@ -218,23 +194,6 @@ public abstract class BaseVariantData {
     }
 
     @NonNull
-    public synchronized VariantImpl<?> getPublicVariantApi() {
-        if (publicVariantAPI == null) {
-            publicVariantAPI = instantiatePublicVariantObject(publicVariantConfiguration);
-        }
-        return publicVariantAPI;
-    }
-
-    @NonNull
-    public synchronized VariantPropertiesImpl getPublicVariantPropertiesApi() {
-        if (publicVariantPropertiesImpl == null) {
-            publicVariantPropertiesImpl =
-                    instantiatePublicVariantPropertiesObject(publicVariantConfiguration);
-        }
-        return publicVariantPropertiesImpl;
-    }
-
-    @NonNull
     public TaskContainer getTaskContainer() {
         return taskContainer;
     }
@@ -249,10 +208,20 @@ public abstract class BaseVariantData {
         return variantDslInfo;
     }
 
+    @NonNull
+    public VariantImpl getPublicVariantApi() {
+        return publicVariantApi;
+    }
+
+    @NonNull
+    public VariantPropertiesImpl getPublicVariantPropertiesApi() {
+        return publicVariantPropertiesApi;
+    }
+
+    @NonNull
     public VariantSources getVariantSources() {
         return variantSources;
     }
-
 
     public void setVariantDependency(@NonNull VariantDependencies variantDependency) {
         this.variantDependency = variantDependency;
@@ -273,12 +242,12 @@ public abstract class BaseVariantData {
 
     @NonNull
     public String getName() {
-        return variantDslInfo.getFullName();
+        return publicVariantApi.getName();
     }
 
     @NonNull
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
-        return StringHelper.appendCapitalized(prefix, variantDslInfo.getFullName(), suffix);
+        return StringHelper.appendCapitalized(prefix, publicVariantApi.getName(), suffix);
     }
 
     @NonNull
@@ -696,7 +665,7 @@ public abstract class BaseVariantData {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).addValue(variantDslInfo.getFullName()).toString();
+        return MoreObjects.toStringHelper(this).addValue(publicVariantApi.getName()).toString();
     }
 
     @NonNull

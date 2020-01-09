@@ -84,6 +84,7 @@ enum class BooleanOption(
     PRECOMPILE_DEPENDENCIES_RESOURCES("android.precompileDependenciesResources", true, FeatureStage.Supported),
 
     ENABLE_PREFAB("android.enablePrefab", false, FeatureStage.Supported),
+    INCLUDE_DEPENDENCY_INFO_IN_APKS("android.includeDependencyInfoInApks", false, FeatureStage.Supported),
 
     /* ---------------------
      * EXPERIMENTAL FEATURES
@@ -150,7 +151,7 @@ enum class BooleanOption(
     USE_SAFE_PROPERTIES("android.variant.safe.properties", false, FeatureStage.Experimental),
 
     /** Incremental dexing with desugaring using D8's new API for desugaring graph computation. */
-    ENABLE_INCREMENTAL_DESUGARING_V2("android.enableIncrementalDesugaringV2", false, FeatureStage.Experimental),
+    ENABLE_INCREMENTAL_DEXING_V2("android.enableIncrementalDexingV2", false, FeatureStage.Experimental),
 
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES

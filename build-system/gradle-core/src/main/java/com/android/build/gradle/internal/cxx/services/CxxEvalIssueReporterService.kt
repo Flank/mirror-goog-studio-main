@@ -18,23 +18,23 @@ package com.android.build.gradle.internal.cxx.services
 
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 
 
 /**
- * Private service key for [EvalIssueReporter].
+ * Private service key for [IssueReporter].
  */
-private val EVAL_ISSUE_REPORTER_SERVICE_KEY = object : CxxServiceKey<EvalIssueReporter> {
-    override val type = EvalIssueReporter::class.java
+private val EVAL_ISSUE_REPORTER_SERVICE_KEY = object : CxxServiceKey<IssueReporter> {
+    override val type = IssueReporter::class.java
 }
 
-fun CxxModuleModel.evalIssueReporter() : EvalIssueReporter =
+fun CxxModuleModel.issueReporter() : IssueReporter =
     services[EVAL_ISSUE_REPORTER_SERVICE_KEY]
 
-internal fun createEvalIssueReporterService(
+internal fun createIssueReporterService(
     global: GlobalScope,
     services: CxxServiceRegistryBuilder) {
     services.registerFactory(EVAL_ISSUE_REPORTER_SERVICE_KEY) {
-        global.errorHandler
+        global.dslScope.issueReporter
     }
 }

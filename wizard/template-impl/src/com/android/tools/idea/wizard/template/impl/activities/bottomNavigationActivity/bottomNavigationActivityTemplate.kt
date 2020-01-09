@@ -48,7 +48,7 @@ val bottomNavigationActivityTemplate
 
     category = Category.Activity
     formFactor = FormFactor.Mobile
-    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry)
+    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry, WizardUiContext.NewProject)
 
     lateinit var layoutName: StringParameter
     val activityClass = stringParameter {
@@ -80,6 +80,7 @@ val bottomNavigationActivityTemplate
       name = "Package name"
       default = "com.mycompany.myapp"
       constraints = listOf(PACKAGE)
+      suggest = { packageName }
     }
 
     widgets(

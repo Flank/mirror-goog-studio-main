@@ -26,35 +26,52 @@ import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.variant2.createFakeDslScope
 import com.android.builder.core.BuilderConstants
+import com.google.common.collect.ImmutableList
+import org.gradle.api.Named
 import org.mockito.Mockito
 
 /**
- * Fixtures for creating variant model instance during tests.
+ * Basic DSL entry point for simulating a [VariantInputModel]
  *
- * This is likely temporary. Once all the DSL is kotlin based we should be able to run the code
- * that understand the DSL without all the Gradle infrastructure.
+ * This may later be replaced by the real DSL extension if they can be run without a full
+ * project/plugin
  */
-
-fun android(action: VariantModelBuilder.() -> Unit) : VariantModel {
-    val modelBuilder = VariantModelBuilder()
-    action(modelBuilder)
-    return modelBuilder.toModel()
+interface VariantInputModelDsl {
+    fun buildTypes(action: Container<BuildType>.() -> Unit)
+    fun productFlavors(action: Container<ProductFlavor>.() -> Unit)
 }
 
-class VariantModelBuilder {
-    private val dslScope: DslScope = createFakeDslScope()
-    val buildTypes: Container<BuildType> = Container { name -> BuildType(name, dslScope) }
-    val productFlavors: Container<ProductFlavor> = Container { name -> ProductFlavor(name, dslScope) }
+/**
+ * Fake DSL Container to simulate [VariantInputModel]
+ *
+ * This may later be replaced by the real DSL extension if they can be run without a full
+ * project/plugin
+ */
+interface Container<T: Named> {
+    fun create(name: String): T
+    fun create(name: String, action: T.() -> Unit): T
+}
 
-    fun buildTypes(action: Container<BuildType>.() -> Unit) {
+/**
+ * DSL-type builder to create instances of [VariantInputModel].
+ *
+ * After running the DSL, use [toModel]
+ */
+class VariantInputModelBuilder(
+    private val dslScope: DslScope = createFakeDslScope()
+): VariantInputModelDsl {
+    val buildTypes: ContainerImpl<BuildType> = ContainerImpl { name -> BuildType(name, dslScope) }
+    val productFlavors: ContainerImpl<ProductFlavor> = ContainerImpl { name -> ProductFlavor(name, dslScope) }
+
+    override fun buildTypes(action: Container<BuildType>.() -> Unit) {
         action(buildTypes)
     }
 
-    fun productFlavors(action: Container<ProductFlavor>.() -> Unit) {
+    override fun productFlavors(action: Container<ProductFlavor>.() -> Unit) {
         action(productFlavors)
     }
 
-    fun toModel() : VariantModel {
+    fun toModel() : TestVariantInputModel {
         val buildTypes = buildTypes.values.map {
             val mainSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
             val androidTestSourceSet = Mockito.mock(DefaultAndroidSourceSet::class.java)
@@ -79,29 +96,68 @@ class VariantModelBuilder {
             Mockito.mock(DefaultAndroidSourceSet::class.java)
         )
 
-        return FakeVariantModel(
+        // compute the implicit dimension list
+        val dimensionBuilder = ImmutableList.builder<String>()
+        val nameSet = mutableSetOf<String>()
+        for (flavor in productFlavors.values) {
+            val dim = flavor.dimension ?: continue
+            if (!nameSet.contains(dim)) {
+                nameSet.add(dim)
+                dimensionBuilder.add(dim)
+            }
+        }
+
+        return TestVariantInputModel(
             defaultConfig,
             buildTypes,
             flavors,
-            mapOf()
+            mapOf(),
+            dimensionBuilder.build()
         )
+    }
+
+    fun createDefaults() {
+        buildTypes {
+            create("debug") {
+                isDebuggable = true
+            }
+            create("release")
+        }
     }
 }
 
-class Container<T>(
+class ContainerImpl<T: Named>(
     private val factory: (String) -> T
-) {
+): Container<T> {
 
     val values: MutableList<T> = mutableListOf()
 
-    fun create(name: String) : T = factory(name).also { values.add(it) }
-    fun create(name: String, action: T.() -> Unit) = create(name).also { action(it) }
+    override fun create(name: String) : T = maybeCreate(name)
+    override fun create(name: String, action: T.() -> Unit) = maybeCreate(name).also { action(it) }
+
+    private fun maybeCreate(name: String): T {
+        val result = values.find { it.name == name }
+        if (result != null) {
+            return result
+        }
+
+        return factory(name).also { values.add(it) }
+    }
 }
 
-
-class FakeVariantModel(
+/**
+ * Implementation of [VariantInputModel] adding an implicit flavor dimension list.
+ */
+class TestVariantInputModel(
     override val defaultConfig: ProductFlavorData<DefaultConfig>,
     override val buildTypes: Map<String, BuildTypeData>,
     override val productFlavors: Map<String, ProductFlavorData<ProductFlavor>>,
-    override val signingConfigs: Map<String, SigningConfig>
-): VariantModel
+    override val signingConfigs: Map<String, SigningConfig>,
+    /**
+     * Implicit dimension list, gathered from looking at all the flavors in the order
+     * they were added.
+     * This allows not having to declare them during tests to simplify the fake DSL.
+     */
+    val implicitFlavorDimensions: List<String>
+): VariantInputModel
+

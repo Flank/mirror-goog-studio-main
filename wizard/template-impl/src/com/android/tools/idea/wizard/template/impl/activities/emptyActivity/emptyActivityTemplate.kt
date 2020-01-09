@@ -46,7 +46,7 @@ val emptyActivityTemplate get() = template {
 
   category = Category.Activity
   formFactor = FormFactor.Mobile
-  screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry)
+  screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry, WizardUiContext.NewProject)
 
   val generateLayout: BooleanParameter = booleanParameter {
     name = "Generate a Layout File"
@@ -84,6 +84,7 @@ val emptyActivityTemplate get() = template {
     visible = { !isNewModule }
     constraints = listOf(PACKAGE)
     default = "com.mycompany.myapp"
+    suggest = { packageName }
   }
 
   widgets(

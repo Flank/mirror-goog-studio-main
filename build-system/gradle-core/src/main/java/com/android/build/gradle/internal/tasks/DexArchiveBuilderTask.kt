@@ -125,7 +125,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     abstract val dxDexParams: DxDexParameterInputs
 
     @get:Input
-    abstract val incrementalDesugaringV2: Property<Boolean>
+    abstract val incrementalDexingV2: Property<Boolean>
 
     @get:LocalState
     @get:Optional
@@ -178,8 +178,8 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 dexParams.desugarClasspath
             ),
 
-            incrementalDesugaringV2 = incrementalDesugaringV2.get(),
-            desugarGraphDir = desugarGraphDir.get().asFile.takeIf { incrementalDesugaringV2.get() },
+            incrementalDexingV2 = incrementalDexingV2.get(),
+            desugarGraphDir = desugarGraphDir.get().asFile.takeIf { incrementalDexingV2.get() },
 
             projectVariant = projectVariant.get(),
             inputJarHashesFile = inputJarHashesFile.get().asFile,
@@ -366,9 +366,9 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.externalLibClasses.from(externalLibraryClasses)
             task.mixedScopeClasses.from(mixedScopeClasses)
 
-            task.incrementalDesugaringV2.setDisallowChanges(
+            task.incrementalDexingV2.setDisallowChanges(
                 variantScope.globalScope.project.provider {
-                    projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING_V2)
+                    projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2)
                 })
 
             val minSdkVersion = variantScope
@@ -399,10 +399,10 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
             )
             task.dexParams.debuggable.setDisallowChanges(
-                variantScope.variantData.publicVariantApi.isDebuggable
+                variantScope.variantDslInfo.isDebuggable
             )
             task.projectVariant.set(
-                "${variantScope.globalScope.project.name}:${variantScope.fullVariantName}"
+                "${variantScope.globalScope.project.name}:${variantScope.name}"
             )
             task.numberOfBuckets.set(
                 projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS) ?: DEFAULT_NUM_BUCKETS

@@ -1,45 +1,22 @@
-load("//tools/base/bazel:android.bzl", "dex_library", "ANDROID_COPTS", "ANDROID_LINKOPTS")
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "dex_library")
+load("//tools/base/transport/test-framework:transport_test.bzl", "transport_app")
 
 package(default_visibility = ["//visibility:public"])
 
-# Build a deploy jar that includes each library on which the binary depends. Unlike java_library,
-# src and dependences are built into a single jar. Because android-mock is set never linked, compile
-# dependency use android-mock but the built jar does not include it.
-java_binary(
-    name = "test-app_java",
-    srcs = glob([
-        "src/main/java/**/*.java",
-    ]),
-    create_executable = 0,
+transport_app(
+    name = "test-app",
+    srcs = glob(["src/main/java/**/*.java"]),
     deps = [
         "//prebuilts/tools/common/m2/repository/com/squareup/okhttp/okhttp/2.5.0:jar",
         "//prebuilts/tools/common/m2/repository/com/squareup/okhttp3/okhttp/3.3.0:jar",
         "//prebuilts/tools/common/m2/repository/com/squareup/okio/okio/1.6.0:jar",
-        "//tools/base/fakeandroid:android-mock",
+        "//tools/base/transport/test-framework/test-app:libtest-app",
     ],
-)
-
-dex_library(
-    name = "test-app",
-    jars = [":test-app_java_deploy.jar"],
 )
 
 cc_binary(
     name = "libmemorynativetest.so",
     srcs = ["src/main/cpp/jni_memory.cpp"],
-    copts = ANDROID_COPTS,
-    linkopts = ANDROID_LINKOPTS,
-    linkshared = 1,
-    tags = ["no_windows"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//prebuilts/studio/jdk:jni_headers",
-    ],
-)
-
-cc_binary(
-    name = "libjni.so",
-    srcs = ["src/main/cpp/jni.cpp"],
     copts = ANDROID_COPTS,
     linkopts = ANDROID_LINKOPTS,
     linkshared = 1,

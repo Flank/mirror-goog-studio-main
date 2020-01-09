@@ -282,7 +282,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 task.resOffset.disallowChanges()
             }
 
-            task.debuggable.setDisallowChanges(variantData.publicVariantApi.isDebuggable)
+            task.debuggable.setDisallowChanges(variantData.variantDslInfo.isDebuggable)
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions.convert()
 
             task.excludeResSourcesForReleaseBundles

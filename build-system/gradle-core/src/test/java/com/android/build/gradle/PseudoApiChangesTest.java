@@ -40,7 +40,6 @@ public class PseudoApiChangesTest {
                     "DslAdaptersKt",
                     "DslVariableFactory",
                     "NoOpDeprecationReporter",
-                    "NoOpIssueReporter",
                     "VariantOutputFactory");
 
     @Test

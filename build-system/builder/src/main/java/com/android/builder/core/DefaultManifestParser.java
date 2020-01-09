@@ -50,7 +50,7 @@ import static com.android.builder.core.DefaultManifestParser.Attribute.VERSION_N
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.IssueReporter;
 import com.android.manifmerger.PlaceholderHandler;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Joiner;
@@ -84,7 +84,7 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     @NonNull
     private final Map<Attribute, String> attributeValues = Maps.newEnumMap(Attribute.class);
 
-    private final EvalIssueReporter issueReporter;
+    private final IssueReporter issueReporter;
     private boolean initialized = false;
 
     @NonNull private BooleanSupplier canParseManifest;
@@ -98,13 +98,13 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
      * @param manifestFile manifest to be parsed.
      * @param canParseManifest whether the manifest can currently be parsed.
      * @param isManifestFileRequired whether the manifest file is required to exist
-     * @param issueReporter EvalIssueReporter
+     * @param issueReporter IssueReporter
      */
     public DefaultManifestParser(
             @NonNull File manifestFile,
             @NonNull BooleanSupplier canParseManifest,
             boolean isManifestFileRequired,
-            @Nullable EvalIssueReporter issueReporter) {
+            @Nullable IssueReporter issueReporter) {
         this.manifestFile = manifestFile;
         this.canParseManifest = canParseManifest;
         this.isManifestFileRequired = isManifestFileRequired;
@@ -301,7 +301,7 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
                 // Instead print the stack trace so that the developer will know how this occurred.
                 String stackTrace = Joiner.on("\n").join(Thread.currentThread().getStackTrace());
                 issueReporter.reportWarning(
-                        EvalIssueReporter.Type.MANIFEST_PARSED_DURING_CONFIGURATION,
+                        IssueReporter.Type.MANIFEST_PARSED_DURING_CONFIGURATION,
                         "The manifest is being parsed during configuration. Please "
                                 + "either remove android.disableConfigurationManifestParsing "
                                 + "from build.gradle or remove any build configuration rules "

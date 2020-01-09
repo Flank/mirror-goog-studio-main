@@ -113,7 +113,7 @@ class ParseIntegrityConfigTaskTest {
         Mockito.`when`(globalScope.extension).thenReturn(extension)
         Mockito.`when`(globalScope.projectOptions).thenReturn(projectOptions)
         Mockito.`when`(variantScope.type).thenReturn(variantType)
-        Mockito.`when`(variantScope.fullVariantName).thenReturn("variant")
+        Mockito.`when`(variantScope.name).thenReturn("variant")
         Mockito.`when`(variantScope.taskContainer).thenReturn(taskContainer)
         Mockito.`when`(taskContainer.preBuildTask).thenReturn(preBuildTask)
 

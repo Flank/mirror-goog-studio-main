@@ -32,7 +32,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 367;
+    public static final int INITIAL_CAPACITY = 369;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -74,7 +74,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(AppLinksValidDetector.TEST_URL);
         issues.add(AppLinksValidDetector.VALIDATION);
         issues.add(ArraySizeDetector.INCONSISTENT);
-        issues.add(AssertDetector.ISSUE);
+        issues.add(AssertDetector.DISABLED);
+        issues.add(AssertDetector.EXPENSIVE);
         issues.add(AutofillDetector.ISSUE);
         issues.add(BadHostnameVerifierDetector.ISSUE);
         issues.add(BatteryDetector.ISSUE);
@@ -112,6 +113,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(CutPasteDetector.ISSUE);
         issues.add(DataBindingDetector.ESCAPE_XML);
         issues.add(DateFormatDetector.DATE_FORMAT);
+        issues.add(DateFormatDetector.WEEK_YEAR);
         issues.add(DeletedProviderDetector.ISSUE);
         issues.add(DeprecationDetector.ISSUE);
         issues.add(DetectMissingPrefix.MISSING_NAMESPACE);
@@ -433,17 +435,17 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         } else {
             int initialSize = 12;
             if (scope.contains(Scope.RESOURCE_FILE)) {
-                initialSize += 107;
+                initialSize += 115;
             } else if (scope.contains(Scope.ALL_RESOURCE_FILES)) {
                 initialSize += 12;
             }
 
             if (scope.contains(Scope.JAVA_FILE)) {
-                initialSize += 127;
+                initialSize += 130;
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 16;
             } else if (scope.contains(Scope.MANIFEST)) {
-                initialSize += 54;
+                initialSize += 60;
             } else if (scope.contains(Scope.GRADLE_FILE)) {
                 initialSize += 15;
             }

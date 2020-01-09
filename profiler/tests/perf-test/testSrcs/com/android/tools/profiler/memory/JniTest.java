@@ -19,24 +19,36 @@ package com.android.tools.profiler.memory;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.fakeandroid.FakeAndroidDriver;
-import com.android.tools.profiler.MemoryPerfDriver;
-import com.android.tools.profiler.PerfDriver;
-import com.android.tools.profiler.TestUtils;
+import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Memory.*;
 import com.android.tools.profiler.proto.MemoryProfiler.MemoryData;
 import com.android.tools.profiler.proto.MemoryProfiler.TrackAllocationsResponse;
+import com.android.tools.transport.TestUtils;
+import com.android.tools.transport.device.SdkLevel;
+import com.android.tools.transport.grpc.Grpc;
 import java.util.HashSet;
 import java.util.List;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class JniTest {
-    private static final String ACTIVITY_CLASS = "com.activity.NativeCodeActivity";
+public final class JniTest {
+    private static final String ACTIVITY_CLASS = "com.activity.memory.NativeCodeActivity";
     private static final int RETRY_INTERVAL_MILLIS = 50;
 
     // We currently only test O+ test scenarios.
-    @Rule
-    public final PerfDriver myPerfDriver = new MemoryPerfDriver(ACTIVITY_CLASS, 26);
+    @Rule public final MemoryRule myMemoryRule = new MemoryRule(ACTIVITY_CLASS, SdkLevel.O);
+
+    private FakeAndroidDriver myAndroidDriver;
+    private Grpc myGrpc;
+    private Common.Session mySession;
+
+    @Before
+    public void setUp() {
+        myAndroidDriver = myMemoryRule.getTransportRule().getAndroidDriver();
+        myGrpc = myMemoryRule.getTransportRule().getGrpc();
+        mySession = myMemoryRule.getProfilerRule().getSession();
+    }
 
     private int findClassTag(List<BatchAllocationContexts> samples, String className) {
         for (BatchAllocationContexts sample : samples) {
@@ -67,24 +79,19 @@ public class JniTest {
     // Just create native activity and see that it can load native library.
     @Test
     public void countCreatedAndDeleteRefEvents() throws Exception {
-        FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();
-        MemoryStubWrapper stubWrapper =
-                new MemoryStubWrapper(myPerfDriver.getGrpc().getMemoryStub());
+        MemoryStubWrapper stubWrapper = MemoryStubWrapper.create(myGrpc);
 
         // Start memory tracking.
-        TrackAllocationsResponse trackResponse =
-                stubWrapper.startAllocationTracking(myPerfDriver.getSession());
+        TrackAllocationsResponse trackResponse = stubWrapper.startAllocationTracking(mySession);
         assertThat(trackResponse.getStatus().getStatus()).isEqualTo(TrackStatus.Status.SUCCESS);
         // Ensure the initialization process is finished.
-        assertThat(androidDriver.waitForInput("Tracking initialization")).isTrue();
+        assertThat(myAndroidDriver.waitForInput("Tracking initialization")).isTrue();
 
         // Find JNITestEntity class tag
         int testEntityId =
                 TestUtils.waitForAndReturn(
                         () -> {
-                            MemoryData data =
-                                    stubWrapper.getJvmtiData(
-                                            myPerfDriver.getSession(), 0, Long.MAX_VALUE);
+                            MemoryData data = stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE);
                             return findClassTag(
                                     data.getBatchAllocationContextsList(), "JNITestEntity");
                         },
@@ -92,12 +99,12 @@ public class JniTest {
         assertThat(testEntityId).isNotEqualTo(0);
 
         final int refCount = 10;
-        androidDriver.setProperty("jni.refcount", Integer.toString(refCount));
-        androidDriver.triggerMethod(ACTIVITY_CLASS, "createRefs");
-        assertThat(androidDriver.waitForInput("createRefs")).isTrue();
+        myAndroidDriver.setProperty("jni.refcount", Integer.toString(refCount));
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "createRefs");
+        assertThat(myAndroidDriver.waitForInput("createRefs")).isTrue();
 
-        androidDriver.triggerMethod(ACTIVITY_CLASS, "deleteRefs");
-        assertThat(androidDriver.waitForInput("deleteRefs")).isTrue();
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "deleteRefs");
+        assertThat(myAndroidDriver.waitForInput("deleteRefs")).isTrue();
 
         boolean allRefsAccounted = false;
         int refsReported = 0;
@@ -107,7 +114,7 @@ public class JniTest {
         long startTime = 0;
         while (!allRefsAccounted) {
             MemoryData jvmtiData =
-                    stubWrapper.getJvmtiData(myPerfDriver.getSession(), startTime, Long.MAX_VALUE);
+                    stubWrapper.getJvmtiData(mySession, startTime, Long.MAX_VALUE);
             System.out.printf(
                     "getJvmtiData, start time=%d, end time=%d, alloc entries=%d, jni entries=%d\n",
                     startTime,
@@ -146,7 +153,7 @@ public class JniTest {
                                 "Add JNI ref: %d tag:%d %d\n",
                                 refValue, event.getObjectTag(), event.getTimestamp());
                         String refRelatedOutput = String.format("JNI ref created %d", refValue);
-                        assertThat(androidDriver.waitForInput(refRelatedOutput)).isTrue();
+                        assertThat(myAndroidDriver.waitForInput(refRelatedOutput)).isTrue();
                         assertThat(refs.add(refValue)).isTrue();
                         refsReported++;
                     }
@@ -157,7 +164,7 @@ public class JniTest {
                                 "Remove JNI ref: %d tag:%d %d\n",
                                 refValue, event.getObjectTag(), event.getTimestamp());
                         String refRelatedOutput = String.format("JNI ref deleted %d", refValue);
-                        assertThat(androidDriver.waitForInput(refRelatedOutput)).isTrue();
+                        assertThat(myAndroidDriver.waitForInput(refRelatedOutput)).isTrue();
                         assertThat(tags.contains(event.getObjectTag())).isTrue();
                         refs.remove(refValue);
                         if (refs.isEmpty() && refsReported == refCount) {

@@ -404,7 +404,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
     public static final Issue NOTIFICATION_ICON_COMPATIBILITY =
             Issue.create(
                     "NotificationIconCompatibility",
-                    "Raster image is required for notification icon to support Android versions below 5.0 (API 21)",
+                    "Notification Icon Compatibility",
                     "Notification icons should define a raster image to support Android versions below 5.0 (API 21). "
                             + "Note that the way Lint decides whether an icon is a notification icon is based on the filename prefix "
                             + "`ic_stat_`. This corresponds to the naming convention documented in "

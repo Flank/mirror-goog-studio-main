@@ -122,7 +122,7 @@ data class StringParameter(
   private val _enabled: WizardParameterData.() -> Boolean = { true },
   override val defaultValue: String,
   val constraints: List<Constraint>,
-  private val _suggest: () -> String? = { null }
+  private val _suggest: WizardParameterData.() -> String? = { null }
 ) : DslParameter<String>(_visible, _enabled) {
   override var value: String = defaultValue
 
@@ -130,7 +130,7 @@ data class StringParameter(
    * Value suggested by the Studio. If it was evaluated to null, then [defaultValue] is used.
    * Often calculated using different parameters, e.g "activity_super" layout name generated from "SuperActivity".
    */
-  fun suggest() = _suggest()
+  fun suggest() = wizardParameterData._suggest()
 }
 
 /**

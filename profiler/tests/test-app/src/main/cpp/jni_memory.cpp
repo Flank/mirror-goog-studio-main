@@ -50,7 +50,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
         {(char*)"FreeGlobalRef", (char*)"(J)V", (void*)FreeGlobalRef},
     };
 
-    jclass cls = env->FindClass((char*)"com/activity/NativeCodeActivity");
+    jclass cls = env->FindClass((char*)"com/activity/memory/NativeCodeActivity");
     env->RegisterNatives(cls, methods.data(), methods.size());
 
     return JNI_VERSION_1_6;

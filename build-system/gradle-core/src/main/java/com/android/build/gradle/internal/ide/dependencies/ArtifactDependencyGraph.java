@@ -20,7 +20,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.ide.DependenciesImpl;
 import com.android.build.gradle.internal.ide.DependencyFailureHandler;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.DependencyType;
@@ -29,6 +28,7 @@ import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
 import com.android.build.gradle.internal.ide.level2.SimpleDependencyGraphsImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.builder.errors.IssueReporter;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
@@ -66,7 +66,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             @NonNull VariantScope variantScope,
             boolean withFullDependency,
             @NonNull ImmutableMap<String, String> buildMapping,
-            @NonNull SyncIssueHandler syncIssueHandler) {
+            @NonNull IssueReporter issueReporter) {
         // FIXME change the way we compare dependencies b/64387392
 
         try {
@@ -160,7 +160,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                     providedAddresses,
                     ImmutableList.of()); // FIXME: actually get skip list
         } finally {
-            dependencyFailureHandler.registerIssues(syncIssueHandler);
+            dependencyFailureHandler.registerIssues(issueReporter);
         }
     }
 
@@ -170,7 +170,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
     public DependenciesImpl createDependencies(
             @NonNull VariantScope variantScope,
             @NonNull ImmutableMap<String, String> buildMapping,
-            @NonNull SyncIssueHandler syncIssueHandler) {
+            @NonNull IssueReporter issueReporter) {
         // FIXME change the way we compare dependencies b/64387392
 
         try {
@@ -297,7 +297,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                     projects.build(),
                     runtimeOnlyClasspath);
         } finally {
-            dependencyFailureHandler.registerIssues(syncIssueHandler);
+            dependencyFailureHandler.registerIssues(issueReporter);
         }
     }
 

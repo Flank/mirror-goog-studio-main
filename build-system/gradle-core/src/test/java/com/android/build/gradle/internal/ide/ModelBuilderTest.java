@@ -22,14 +22,22 @@ import static org.mockito.Mockito.when;
 
 import com.android.AndroidProjectTypes;
 import com.android.build.OutputFile;
-import com.android.build.VariantOutput;
+import com.android.build.api.artifact.PublicArtifactType;
+import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.api.variant.FilterConfiguration;
+import com.android.build.api.variant.VariantConfiguration;
+import com.android.build.api.variant.VariantOutputConfiguration;
+import com.android.build.api.variant.impl.BuiltArtifactImpl;
+import com.android.build.api.variant.impl.BuiltArtifactsImpl;
+import com.android.build.api.variant.impl.VariantConfigurationImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.errors.SyncIssueHandler;
-import com.android.build.gradle.internal.errors.SyncIssueHandlerImpl;
+import com.android.build.gradle.internal.errors.SyncIssueReporter;
+import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
+import com.android.build.gradle.internal.fixtures.FakeGradleDirectory;
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
@@ -41,16 +49,21 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.VariantInputModelBuilder;
+import com.android.build.gradle.internal.variant.VariantModel;
+import com.android.build.gradle.internal.variant.VariantModelImpl;
+import com.android.build.gradle.internal.variant2.DslScopeImpl;
+import com.android.build.gradle.internal.variant2.FakeDslScope;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
-import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.IssueReporter;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.utils.FileUtils;
-import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
@@ -90,7 +103,7 @@ public class ModelBuilderTest {
 
     ModelBuilder modelBuilder;
     File apkLocation;
-    SyncIssueHandler syncIssueHandler;
+    SyncIssueReporter syncIssueReporter;
 
     @Before
     public void setUp() throws IOException {
@@ -106,19 +119,30 @@ public class ModelBuilderTest {
         when(gradle.getParent()).thenReturn(null);
         when(gradle.getIncludedBuilds()).thenReturn(ImmutableList.of());
 
-        syncIssueHandler =
-                new SyncIssueHandlerImpl(SyncOptions.EvaluationMode.IDE, new FakeLogger());
-        when(extraModelInfo.getSyncIssueHandler()).thenReturn(syncIssueHandler);
+        syncIssueReporter =
+                new SyncIssueReporterImpl(SyncOptions.EvaluationMode.IDE, new FakeLogger());
+
+        DslScopeImpl dslScope = FakeDslScope.createFakeDslScope(syncIssueReporter);
+        when(globalScope.getDslScope()).thenReturn(dslScope);
 
         apkLocation = temporaryFolder.newFolder("apk");
 
-        modelBuilder =
-                new ModelBuilder(
-                        globalScope,
+        // Register a builder for the custom tooling model
+        VariantModel variantModel =
+                new VariantModelImpl(
+                        new VariantInputModelBuilder(FakeDslScope.createFakeDslScope()).toModel(),
+                        extension::getTestBuildType,
                         variantManager,
+                        syncIssueReporter);
+
+        modelBuilder =
+                new ModelBuilder<>(
+                        globalScope,
+                        variantModel,
                         taskManager,
                         extension,
                         extraModelInfo,
+                        syncIssueReporter,
                         AndroidProjectTypes.PROJECT_TYPE_APP);
     }
 
@@ -171,16 +195,22 @@ public class ModelBuilderTest {
         Files.asCharSink(apkOutput, Charsets.UTF_8).write("some apk");
 
         OutputFactory outputFactory = new OutputFactory(PROJECT, variantDslInfo);
-        new BuildElements(
-                        BuildElements.METADATA_FILE_VERSION,
+
+        new BuiltArtifactsImpl(
+                        BuiltArtifacts.METADATA_FILE_VERSION,
+                        PublicArtifactType.APK.INSTANCE,
                         "com.android.test",
-                        VariantTypeImpl.BASE_APK.toString(),
+                        "debug",
                         ImmutableList.of(
-                                new BuildOutput(
-                                        InternalArtifactType.APK.INSTANCE,
-                                        outputFactory.addMainApk(),
-                                        apkOutput)))
-                .save(variantOutputFolder);
+                                new BuiltArtifactImpl(
+                                        apkOutput.toPath(),
+                                        ImmutableMap.of(),
+                                        123,
+                                        "version_name",
+                                        true,
+                                        VariantOutputConfiguration.OutputType.SINGLE,
+                                        ImmutableList.of())))
+                .save(new FakeGradleDirectory(variantOutputFolder));
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
         assertThat(projectBuildOutput).isNotNull();
@@ -222,26 +252,31 @@ public class ModelBuilderTest {
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
 
-        ImmutableList.Builder<BuildOutput> buildOutputBuilder = ImmutableList.builder();
+        ImmutableList.Builder<BuiltArtifactImpl> builtArtifactsBuilder = ImmutableList.builder();
 
         for (int i = 0; i < 5; i++) {
             File apkOutput = createApk(variantOutputFolder, "split_" + i + ".apk");
 
-            buildOutputBuilder.add(
-                    new BuildOutput(
-                            InternalArtifactType.APK.INSTANCE,
-                            outputFactory.addFullSplit(
-                                    ImmutableList.of(
-                                            Pair.of(VariantOutput.FilterType.DENSITY, "hdpi"))),
-                            apkOutput));
+            builtArtifactsBuilder.add(
+                    new BuiltArtifactImpl(
+                            apkOutput.toPath(),
+                            ImmutableMap.of(),
+                            123,
+                            "version_name",
+                            true,
+                            VariantOutputConfiguration.OutputType.ONE_OF_MANY,
+                            ImmutableList.of(
+                                    new FilterConfiguration(
+                                            FilterConfiguration.FilterType.DENSITY, "hdpi"))));
         }
 
-        new BuildElements(
-                        BuildElements.METADATA_FILE_VERSION,
+        new BuiltArtifactsImpl(
+                        BuiltArtifacts.METADATA_FILE_VERSION,
+                        PublicArtifactType.APK.INSTANCE,
                         "com.android.test",
-                        VariantTypeImpl.BASE_APK.toString(),
-                        buildOutputBuilder.build())
-                .save(variantOutputFolder);
+                        "debug",
+                        builtArtifactsBuilder.build())
+                .save(new FakeGradleDirectory(variantOutputFolder));
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
         assertThat(projectBuildOutput).isNotNull();
@@ -287,16 +322,22 @@ public class ModelBuilderTest {
             Files.asCharSink(apkOutput, Charsets.UTF_8).write("some apk");
 
             OutputFactory outputFactory = new OutputFactory(PROJECT, variantDslInfo);
-            new BuildElements(
-                            BuildElements.METADATA_FILE_VERSION,
+            new BuiltArtifactsImpl(
+                            BuiltArtifacts.METADATA_FILE_VERSION,
+                            PublicArtifactType.APK.INSTANCE,
                             "com.android.test",
-                            VariantTypeImpl.BASE_APK.toString(),
+                            "debug",
                             ImmutableList.of(
-                                    new BuildOutput(
-                                            InternalArtifactType.APK.INSTANCE,
-                                            outputFactory.addMainApk(),
-                                            apkOutput)))
-                    .save(variantOutputFolder);
+                                    new BuiltArtifactImpl(
+                                            apkOutput.toPath(),
+                                            ImmutableMap.of(),
+                                            123,
+                                            "version_name",
+                                            true,
+                                            VariantOutputConfiguration.OutputType.SINGLE,
+                                            ImmutableList.of())))
+                    .save(new FakeGradleDirectory(variantOutputFolder));
+
             scopes.add(variantScope);
         }
 
@@ -411,7 +452,7 @@ public class ModelBuilderTest {
         // This should lock down the issue handler.
         modelBuilder.buildAll("com.android.builder.model.ProjectSyncIssues", project);
         // And then trying to report anything after fetching the sync issues model should throw.
-        syncIssueHandler.reportWarning(EvalIssueReporter.Type.GENERIC, "Should Fail");
+        syncIssueReporter.reportWarning(IssueReporter.Type.GENERIC, "Should Fail");
     }
 
     private static BaseVariantData createVariantData(
@@ -430,10 +471,15 @@ public class ModelBuilderTest {
     private VariantScope createVariantScope(
             String variantName, String dirName, VariantDslInfo variantDslInfo) {
         VariantScope variantScope = Mockito.mock(VariantScope.class);
-        when(variantScope.getFullVariantName()).thenReturn(variantName);
+        when(variantScope.getName()).thenReturn(variantName);
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
         when(variantScope.getApkLocation()).thenReturn(new File(apkLocation, dirName));
         when(variantScope.getVariantDslInfo()).thenReturn(variantDslInfo);
+
+        VariantConfiguration variantConfig =
+                new VariantConfigurationImpl(
+                        variantName, "flavorName", "debug", ImmutableList.of());
+        when(variantDslInfo.getVariantConfiguration()).thenReturn(variantConfig);
 
         final VariantType type = variantDslInfo.getVariantType();
         when(variantScope.getType()).thenReturn(type);

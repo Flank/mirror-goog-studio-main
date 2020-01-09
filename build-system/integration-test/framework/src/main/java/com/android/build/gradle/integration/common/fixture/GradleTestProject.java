@@ -24,13 +24,14 @@ import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
 import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.cxx.configure.NdkLocatorKt;
 import com.android.build.gradle.internal.plugins.VersionCheckPlugin;
 import com.android.build.gradle.internal.scope.BuildElements;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.AndroidArtifact;
@@ -1282,24 +1283,34 @@ public final class GradleTestProject implements TestRule {
      *     artifact name) to the associated {@link BuildElements}
      */
     @Nullable
-    public Map<String, BuildElements> executeAndReturnOutputModels(String... tasks)
+    public Map<String, BuiltArtifacts> executeAndReturnOutputModels(String... tasks)
             throws IOException, InterruptedException {
         executor().run(tasks);
         ModelContainer<AndroidProject> androidProjectModelContainer =
                 model().ignoreSyncIssues().fetchAndroidProjects();
         AndroidProject onlyModel = androidProjectModelContainer.getOnlyModel();
-        ImmutableMap.Builder<String, BuildElements> mapOfVariantOutputs = ImmutableMap.builder();
+        ImmutableMap.Builder<String, BuiltArtifacts> mapOfVariantOutputs = ImmutableMap.builder();
         for (Variant variant : onlyModel.getVariants()) {
             String postModelFile = variant.getMainArtifact().getAssembleTaskOutputListingFile();
-            mapOfVariantOutputs.put(
-                    variant.getName(),
-                    ExistingBuildElements.from(new File(postModelFile).getParentFile()));
+            BuiltArtifacts builtArtifacts =
+                    BuiltArtifactsLoaderImpl.loadFromFile(
+                            new File(postModelFile),
+                            new File(postModelFile).getParentFile().toPath());
+            if (builtArtifacts != null) {
+                mapOfVariantOutputs.put(variant.getName(), builtArtifacts);
+            }
             for (AndroidArtifact extraAndroidArtifact : variant.getExtraAndroidArtifacts()) {
                 String extraModelFile = extraAndroidArtifact.getAssembleTaskOutputListingFile();
                 if (!extraModelFile.isEmpty()) {
-                    mapOfVariantOutputs.put(
-                            variant.getName() + extraAndroidArtifact.getName(),
-                            ExistingBuildElements.from(new File(extraModelFile).getParentFile()));
+                    BuiltArtifacts extraBuiltArtifacts =
+                            BuiltArtifactsLoaderImpl.loadFromFile(
+                                    new File(postModelFile),
+                                    new File(postModelFile).getParentFile().toPath());
+                    if (extraBuiltArtifacts != null) {
+                        mapOfVariantOutputs.put(
+                                variant.getName() + extraAndroidArtifact.getName(),
+                                extraBuiltArtifacts);
+                    }
                 }
             }
         }

@@ -16,12 +16,14 @@
 package com.android.build.gradle
 
 import com.android.build.api.dsl.LibraryBuildFeatures
+import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
@@ -55,7 +57,7 @@ import java.util.Collections
  * library</a>.
  */
 open class LibraryExtension(
-    project: Project,
+    dslScope: DslScope,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
@@ -63,7 +65,7 @@ open class LibraryExtension(
     extraModelInfo: ExtraModelInfo,
     private val publicExtensionImpl: LibraryExtensionImpl
 ) : TestedExtension(
-    project,
+    dslScope,
     projectOptions,
     globalScope,
     buildOutputs,
@@ -83,17 +85,17 @@ open class LibraryExtension(
             SigningConfig,
             TestOptions,
             TestOptions.UnitTestOptions> by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<com.android.build.api.variant.LibraryVariant, LibraryVariantProperties> by publicExtensionImpl {
 
     private val libraryVariantList: DomainObjectSet<LibraryVariant> =
-        project.objects.domainObjectSet(LibraryVariant::class.java)
+        dslScope.objectFactory.domainObjectSet(LibraryVariant::class.java)
 
     private var _packageBuildConfig = true
 
     private var _aidlPackageWhiteList: MutableCollection<String>? = null
 
     override val dataBinding: DataBindingOptions =
-        project.objects.newInstance(
+        dslScope.objectFactory.newInstance(
             DataBindingOptions::class.java,
             publicExtensionImpl.buildFeatures,
             projectOptions,
@@ -101,7 +103,7 @@ open class LibraryExtension(
         )
 
     override val viewBinding: ViewBindingOptions =
-        project.objects.newInstance(
+        dslScope.objectFactory.newInstance(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
             projectOptions,

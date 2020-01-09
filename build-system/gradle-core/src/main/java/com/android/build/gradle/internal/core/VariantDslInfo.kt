@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.core
 
+import com.android.build.api.variant.VariantConfiguration
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
@@ -45,19 +46,12 @@ import java.util.function.Supplier
  */
 interface VariantDslInfo {
 
-    val fullName: String
-
-    val flavorName: String
+    val variantConfiguration: VariantConfiguration
 
     val variantType: VariantType
 
-    /**
-     * The name of the build type
-     */
-    val buildType: String?
-
     /** The list of product flavors. Items earlier in the list override later items.  */
-    val productFlavors: List<ProductFlavor>
+    val productFlavorList: List<ProductFlavor>
 
     /**
      * Optional tested config in case this variant is used for testing another variant.

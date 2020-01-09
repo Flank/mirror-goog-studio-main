@@ -46,8 +46,11 @@ interface RecipeExecutor {
   /** Records a classpath dependency. */
   fun addClasspathDependency(mavenCoordinate: String)
 
-  /** Determines if a module/project already have a dependency. */
-  fun hasDependency(mavenCoordinate: String): Boolean
+  /**
+   * Determines if a module/project already have a dependency.
+   * @param moduleDir determines a module to check. The current module will be used if it is null.
+   */
+  fun hasDependency(mavenCoordinate: String, moduleDir: File? = null): Boolean
 
   /**
    * Records a library dependency
@@ -55,7 +58,8 @@ interface RecipeExecutor {
    *
    * @param mavenCoordinate coordinate of dependency to be added in Maven format (e.g androidx.appcompat:appcompat:1.1.0).
    * @param configuration Gradle configuration to use.
-   * */
+   * @param minRev If [minRev] is present, [minRev] or a higher number is used as the version of the dependency.
+   */
   fun addDependency(mavenCoordinate: String, configuration: String = "compile", minRev: String? = null)
 
   /**

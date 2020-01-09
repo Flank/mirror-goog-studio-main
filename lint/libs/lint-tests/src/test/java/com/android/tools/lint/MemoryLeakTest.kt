@@ -90,7 +90,7 @@ class MemoryLeakTest {
                     // Higher version to accidentally pick up recent 1.1 version from local cache
                     implementation 'androidx.appcompat:appcompat:5.0.2'
                 }
-            """.trimIndent()),
+            """).indented(),
 
             kotlin("""
                 package com.gharrma.sampleapp
@@ -112,7 +112,7 @@ class MemoryLeakTest {
                         }
                     }
                 }
-            """.trimIndent()),
+            """).indented(),
 
             java("""
                 package com.gharrma.sampleapp;
@@ -124,12 +124,11 @@ class MemoryLeakTest {
                         MainActivity.Companion.bar();
                     }
                 }
-            """.trimIndent()),
+            """).indented(),
 
             xml(
                 "res/layout/activity_main.xml",
                 """
-                <?xml version="1.0" encoding="utf-8"?>
                 <androidx.constraintlayout.widget.ConstraintLayout
                         xmlns:android="http://schemas.android.com/apk/res/android"
                         xmlns:tools="http://schemas.android.com/tools"
@@ -148,7 +147,17 @@ class MemoryLeakTest {
                             app:layout_constraintTop_toTopOf="parent"/>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
-            """.trimIndent())
+            """
+        ).indented(),
+            java(
+                """
+                // Stub to prevent MissingClass errors
+                package androidx.constraintlayout.widget;
+                public abstract class ConstraintLayout extends android.view.ViewGroup {
+                    public ConstraintLayout() { super(null); }
+                }
+                """
+            ).indented()
         )
             // Needed to allow PrivateResourceDetector to run.
             .modifyGradleMocks(PrivateResourceDetectorTest.mockModifier)

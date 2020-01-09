@@ -20,9 +20,14 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.FilterData
 import com.android.build.OutputFile
 import com.android.build.VariantOutput
+import com.android.build.api.variant.BuiltArtifacts
+import com.android.build.api.variant.VariantOutputConfiguration
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.google.common.collect.ImmutableList
+import org.gradle.api.model.ObjectFactory
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.IOException
 
 /**
@@ -54,20 +59,21 @@ data class EarlySyncBuildOutput(
 
     companion object {
         @JvmStatic
-        fun load(folder: File): Collection<EarlySyncBuildOutput> {
+        fun load(metadaFileVersion: Int, folder: File): Collection<EarlySyncBuildOutput> {
             val metadataFile = ExistingBuildElements.getMetadataFileIfPresent(folder)
             if (metadataFile == null || !metadataFile.exists()) {
                 return ImmutableList.of<EarlySyncBuildOutput>()
             }
 
             return try {
-                loadFile(metadataFile)
+                if (metadaFileVersion == 1) loadVersionOneFile(metadataFile)
+                else loadVersionTwoFile(metadataFile)
             } catch (e: IOException) {
                 ImmutableList.of<EarlySyncBuildOutput>()
             }
         }
 
-        private fun loadFile(metadataFile: File): Collection<EarlySyncBuildOutput> {
+        private fun loadVersionOneFile(metadataFile: File): Collection<EarlySyncBuildOutput> {
 
             // TODO : remove use of ApkInfo and replace with EarlySyncApkInfo.
             val buildElements = ExistingBuildElements.from(metadataFile.parentFile)
@@ -96,6 +102,36 @@ data class EarlySyncBuildOutput(
                                 projectPath.resolve(buildOutput.outputPath).toFile())
                     }
                     .toList()
+        }
+
+        private fun loadVersionTwoFile(metadataFile: File): Collection<EarlySyncBuildOutput> {
+
+            val builtArtifacts = BuiltArtifactsLoaderImpl.loadFromFile(
+                metadataFile, metadataFile.parentFile.toPath())
+                ?: throw FileNotFoundException("$metadataFile not found")
+
+            // resolve the file path to the current project location.
+            val projectPath = metadataFile.parentFile.toPath()
+            return builtArtifacts.elements
+                .asSequence()
+                .map { buildOutput ->
+
+                    val filterData = buildOutput.filters.map { filterConfiguration ->
+                        FilterDataImpl(
+                            filterConfiguration.filterType.toString(),
+                            filterConfiguration.identifier
+                        )
+                    }
+
+                    EarlySyncBuildOutput(
+                        builtArtifacts.artifactType,
+                        if (buildOutput.outputType == VariantOutputConfiguration.OutputType.SINGLE)
+                            VariantOutput.OutputType.MAIN else VariantOutput.OutputType.FULL_SPLIT,
+                        filterData,
+                        buildOutput.versionCode,
+                        projectPath.resolve(buildOutput.outputFile).toFile())
+                }
+                .toList()
         }
     }
 }

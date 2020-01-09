@@ -18,14 +18,15 @@ package com.android.tools.profiler.network;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.tools.profiler.GrpcUtils;
-import com.android.tools.profiler.PerfDriver;
-import com.android.tools.profiler.TransportStubWrapper;
-import com.android.tools.profiler.proto.Common;
+import com.android.tools.fakeandroid.FakeAndroidDriver;
+import com.android.tools.profiler.ProfilerConfig;
+import com.android.tools.profiler.ProfilerRule;
 import com.android.tools.profiler.proto.Common.Event;
 import com.android.tools.profiler.proto.Network;
-import com.android.tools.profiler.proto.Transport.BytesRequest;
-import com.android.tools.profiler.proto.Transport.BytesResponse;
+import com.android.tools.transport.device.SdkLevel;
+import com.android.tools.transport.grpc.Grpc;
+import com.android.tools.transport.grpc.TransportAsyncStubWrapper;
+import com.android.tools.transport.grpc.TransportStubWrapper;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -40,51 +41,60 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class UnifiedPipelineHttpUrlTest {
     @Parameterized.Parameters
-    public static Collection<Integer> data() {
-        // TODO the agent currently does not know about the unified pipeline flag pre-O, so the
-        // http data are not made available via the new GRPC calls. We need to pass in the flag
-        // via Gradle at compile-time.
-        return Arrays.asList(26, 28);
+    public static Collection<SdkLevel> parameters() {
+        // Unified pipeline only available O+
+        return Arrays.asList(SdkLevel.O, SdkLevel.P);
     }
 
     private static final String ACTIVITY_CLASS = "com.activity.network.HttpUrlActivity";
 
-    @Rule public final PerfDriver myPerfDriver;
+    @Rule public final ProfilerRule myProfilerRule;
 
-    private GrpcUtils myGrpc;
-    private TransportStubWrapper myTransportWrapper;
+    private FakeAndroidDriver myAndroidDriver;
+    private Grpc myGrpc;
 
-    public UnifiedPipelineHttpUrlTest(int sdkLevel) {
-        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel, true);
+    public UnifiedPipelineHttpUrlTest(SdkLevel sdkLevel) {
+        myProfilerRule =
+                new ProfilerRule(
+                        ACTIVITY_CLASS,
+                        sdkLevel,
+                        new ProfilerConfig() {
+                            @Override
+                            public boolean usesUnifiedPipeline() {
+                                return true;
+                            }
+                        });
     }
 
     @Before
-    public void setup() {
-        myGrpc = myPerfDriver.getGrpc();
-        myTransportWrapper = new TransportStubWrapper(myGrpc.getTransportAsyncStub());
+    public void before() {
+        myAndroidDriver = myProfilerRule.getTransportRule().getAndroidDriver();
+        myGrpc = myProfilerRule.getTransportRule().getGrpc();
     }
 
     @Test
-    public void testHttpGet() throws Exception {
+    public void testHttpGet() {
         final String getSuccess = "HttpUrlGet SUCCESS";
+
+        TransportStubWrapper transportStubWrapper = TransportStubWrapper.create(myGrpc);
+        TransportAsyncStubWrapper transportAsyncStubWrapper = TransportAsyncStubWrapper.create(myGrpc);
+
         Map<Long, List<Event>> httpEventsMap =
-                myTransportWrapper.getEvents(
+                transportAsyncStubWrapper.getEvents(
                         5,
-                        event ->
-                                event.getKind() == Common.Event.Kind.NETWORK_HTTP_CONNECTION
-                                        || event.getKind() == Common.Event.Kind.NETWORK_HTTP_THREAD,
-                        (unused) -> {
-                            myPerfDriver
-                                    .getFakeAndroidDriver()
-                                    .triggerMethod(ACTIVITY_CLASS, "runGet");
-                            assertThat(myPerfDriver.getFakeAndroidDriver().waitForInput(getSuccess))
-                                    .isTrue();
+                        event -> event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
+                                        || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
+                        () -> {
+                            myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runGet");
+                            assertThat(myAndroidDriver.waitForInput(getSuccess)).isTrue();
                         });
         assertThat(httpEventsMap).hasSize(1);
+
         for (List<Event> httpEvents : httpEventsMap.values()) {
             httpEvents = httpEvents.stream()
                     .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
                     .collect(Collectors.toList());
+
             // No request body in get test. So we only expect to get back 4 events instead of 5.
             assertThat(httpEvents).hasSize(4);
             Event requestStartedEvent = httpEvents.get(0);
@@ -98,33 +108,29 @@ public class UnifiedPipelineHttpUrlTest {
                     responseCompletedEvent.getNetworkHttpConnection().getHttpResponseCompleted();
             assertThat(responseData.getPayloadId())
                     .isEqualTo(responseCompletedEvent.getGroupId() + "_response");
-            BytesResponse bytesResponse =
-                    myGrpc.getTransportStub()
-                            .getBytes(
-                                    BytesRequest.newBuilder()
-                                            .setId(responseData.getPayloadId())
-                                            .build());
-            assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo(getSuccess);
+
+            assertThat(transportStubWrapper.toBytes(responseData.getPayloadId())).isEqualTo(getSuccess);
         }
     }
 
     @Test
-    public void testHttpPost() throws Exception {
+    public void testHttpPost() {
         final String getSuccess = "HttpUrlPost SUCCESS";
+
+        TransportStubWrapper transportStubWrapper = TransportStubWrapper.create(myGrpc);
+        TransportAsyncStubWrapper transportAsyncStubWrapper = TransportAsyncStubWrapper.create(myGrpc);
+
         Map<Long, List<Event>> httpEventsMap =
-                myTransportWrapper.getEvents(
+                transportAsyncStubWrapper.getEvents(
                         6,
-                        event ->
-                                event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
+                        event -> event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
                                         || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
-                        (unused) -> {
-                            myPerfDriver
-                                    .getFakeAndroidDriver()
-                                    .triggerMethod(ACTIVITY_CLASS, "runPost");
-                            assertThat(myPerfDriver.getFakeAndroidDriver().waitForInput(getSuccess))
-                                    .isTrue();
+                        () -> {
+                            myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runPost");
+                            assertThat(myAndroidDriver.waitForInput(getSuccess)).isTrue();
                         });
         assertThat(httpEventsMap).hasSize(1);
+
         for (List<Event> httpEvents : httpEventsMap.values()) {
             httpEvents = httpEvents.stream()
                     .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
@@ -141,52 +147,41 @@ public class UnifiedPipelineHttpUrlTest {
                     requestCompleteEvent.getNetworkHttpConnection().getHttpRequestCompleted();
             assertThat(requestData.getPayloadId())
                     .isEqualTo(requestCompleteEvent.getGroupId() + "_request");
-            BytesResponse bytesResponse =
-                    myGrpc.getTransportStub()
-                            .getBytes(
-                                    BytesRequest.newBuilder()
-                                            .setId(requestData.getPayloadId())
-                                            .build());
-            assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("TestRequestBody");
+
+            assertThat(transportStubWrapper.toBytes(requestData.getPayloadId())).isEqualTo("TestRequestBody");
 
             Event responseCompletedEvent = httpEvents.get(3);
             Network.NetworkHttpConnectionData.HttpResponseCompleted responseData =
                     responseCompletedEvent.getNetworkHttpConnection().getHttpResponseCompleted();
             assertThat(responseData.getPayloadId())
                     .isEqualTo(responseCompletedEvent.getGroupId() + "_response");
-            bytesResponse =
-                    myGrpc.getTransportStub()
-                            .getBytes(
-                                    BytesRequest.newBuilder()
-                                            .setId(responseData.getPayloadId())
-                                            .build());
-            assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo(getSuccess);
+
+            assertThat(transportStubWrapper.toBytes(responseData.getPayloadId())).isEqualTo(getSuccess);
         }
     }
 
     @Test
-    public void testHttpGet_CallResposeMethodBeforeConnect() throws Exception {
+    public void testHttpGet_CallResposeMethodBeforeConnect() {
         final String getSuccess = "HttpUrlGet SUCCESS";
+
+        TransportAsyncStubWrapper transportAsyncStubWrapper = TransportAsyncStubWrapper.create(myGrpc);
+
         Map<Long, List<Event>> httpEventsMap =
-                myTransportWrapper.getEvents(
+                transportAsyncStubWrapper.getEvents(
                         5,
-                        event ->
-                                event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
+                        event -> event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
                                         || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
-                        (unused) -> {
-                            myPerfDriver
-                                    .getFakeAndroidDriver()
-                                    .triggerMethod(
-                                            ACTIVITY_CLASS,
-                                            "runGet_CallResponseMethodBeforeConnect");
-                            assertThat(myPerfDriver.getFakeAndroidDriver().waitForInput(getSuccess))
-                                    .isTrue();
+                        () -> {
+                            myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runGet_CallResponseMethodBeforeConnect");
+                            assertThat(myAndroidDriver.waitForInput(getSuccess)).isTrue();
                         });
         assertThat(httpEventsMap).hasSize(1);
+
         for (List<Event> httpEvents : httpEventsMap.values()) {
             httpEvents = httpEvents.stream()
                     .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
                     .collect(Collectors.toList());
+
             // No request body in get test. So we only expect to get back 4 events instead of 5.
             assertThat(httpEvents).hasSize(4);
             Event requestStartedEvent = httpEvents.get(0);

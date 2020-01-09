@@ -18,9 +18,13 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 import com.android.build.api.dsl.DynamicFeatureExtension
+import com.android.build.api.variant.AppVariant
+import com.android.build.api.variant.AppVariantProperties
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.DynamicFeatureVariantProperties
 import com.android.build.api.variant.GenericVariantFilterBuilder
+import com.android.build.api.variant.LibraryVariant
+import com.android.build.api.variant.TestVariantProperties
 import com.android.build.api.variant.impl.GenericVariantFilterBuilderImpl
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.api.dsl.DslScope
@@ -61,27 +65,34 @@ class DynamicFeatureExtensionImpl(
             ProductFlavor,
             SigningConfig,
             TestOptions,
-            TestOptions.UnitTestOptions>,
-    ActionableVariantObjectOperationsExecutor {
+            TestOptions.UnitTestOptions> {
 
     override val buildFeatures: DynamicFeatureBuildFeatures =
         dslScope.objectFactory.newInstance(DynamicFeatureBuildFeaturesImpl::class.java)
 
-    override fun executeVariantOperations(variantScopes: List<VariantScope>) {
-        variantOperations.executeOperations<DynamicFeatureVariant>(variantScopes)
+    override fun executeVariantOperations(variant: DynamicFeatureVariant) {
+        variantOperations.executeActions(variant)
     }
 
-    override fun executeVariantPropertiesOperations(variantScopes: List<VariantScope>) {
-        variantPropertiesOperations.executeOperations<DynamicFeatureVariantProperties>(variantScopes)
+    override fun executeVariantPropertiesOperations(variant: DynamicFeatureVariantProperties) {
+        variantPropertiesOperations.executeActions(variant)
     }
 
-    override fun onVariants(): GenericVariantFilterBuilder<DynamicFeatureVariant> {
-        return GenericVariantFilterBuilderImpl(
-            variantOperations, DynamicFeatureVariant::class.java)
-    }
+    @Suppress("UNCHECKED_CAST")
+    override val onVariants: GenericVariantFilterBuilder<DynamicFeatureVariant>
+        get() = dslScope.objectFactory.newInstance(
+            GenericVariantFilterBuilderImpl::class.java,
+            dslScope,
+            variantOperations,
+            DynamicFeatureVariant::class.java
+        ) as GenericVariantFilterBuilder<DynamicFeatureVariant>
 
-    override fun onVariantProperties(): GenericVariantFilterBuilder<DynamicFeatureVariantProperties> {
-        return GenericVariantFilterBuilderImpl(
-            variantPropertiesOperations, DynamicFeatureVariantProperties::class.java)
-    }
+    @Suppress("UNCHECKED_CAST")
+    override val onVariantProperties: GenericVariantFilterBuilder<DynamicFeatureVariantProperties>
+        get() = dslScope.objectFactory.newInstance(
+            GenericVariantFilterBuilderImpl::class.java,
+            dslScope,
+            variantOperations,
+            DynamicFeatureVariantProperties::class.java
+        ) as GenericVariantFilterBuilder<DynamicFeatureVariantProperties>
 }

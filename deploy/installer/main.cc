@@ -35,8 +35,8 @@
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/dump.h"
-#include "tools/base/deploy/installer/executor_impl.h"
-#include "tools/base/deploy/installer/redirect_executor.h"
+#include "tools/base/deploy/installer/executor/executor_impl.h"
+#include "tools/base/deploy/installer/executor/redirect_executor.h"
 #include "tools/base/deploy/installer/workspace.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 

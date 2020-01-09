@@ -183,7 +183,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
         override fun configure(task: DexFileDependenciesTask) {
             super.configure(task)
             task.debuggable
-                .setDisallowChanges(variantScope.variantData.publicVariantApi.isDebuggable)
+                .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
             task.classes.from(
                 variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

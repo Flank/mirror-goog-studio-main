@@ -164,7 +164,7 @@ class BuildElementsTest {
                         + "\"path\":\"/foo/bar/AndroidManifest.xml\","
                         + "\"properties\":{\"packageId\":\"com.android.tests.basic.debug\","
                         + "\"split\":\"\"}}]}")
-        assertThat(ExistingBuildElements.from(APK, outputFile)).isEmpty()
+        assertThat(ExistingBuildElements.from(PROCESSED_RES, outputFile)).isEmpty()
         val buildOutputs = ExistingBuildElements.from(MERGED_MANIFESTS, folder)
         assertThat(buildOutputs).hasSize(1)
         val buildOutput = buildOutputs.iterator().next()
@@ -211,7 +211,7 @@ class BuildElementsTest {
         assertTrue(outputFolder.mkdirs())
         val apk = File(outputFolder, "location.apk")
         Files.asCharSink(apk, Charsets.UTF_8, FileWriteMode.APPEND).write("content")
-        val buildOutput = BuildOutput(APK, apkInfo, apk)
+        val buildOutput = BuildOutput(PROCESSED_RES, apkInfo, apk)
 
         assertThat(buildOutput.outputFile.absolutePath).contains(temporaryFolder.root.absolutePath)
 
@@ -227,7 +227,7 @@ class BuildElementsTest {
         val newProjectLocation = temporaryFolder.newFolder()
         val loadedBuildOutputs = ExistingBuildElements.load(
                 newProjectLocation.toPath(),
-                APK,
+                PROCESSED_RES,
                 StringReader(gsonOutput))
 
         assertThat(loadedBuildOutputs).hasSize(1)

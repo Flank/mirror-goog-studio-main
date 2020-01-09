@@ -42,6 +42,7 @@ inline fun <reified T : Enum<T>> enumParameter(noinline block: EnumParameterBuil
 fun <T : Enum<T>> enumParameter(klass: KClass<T>, block: EnumParameterBuilder<T>.() -> Unit): EnumParameter<T> =
   EnumParameterBuilder(klass).apply(block).build()
 
+@TemplateDSL
 data class BooleanParameterBuilder(
   override var name: String? = null,
   override var help: String? = null,
@@ -55,6 +56,7 @@ data class BooleanParameterBuilder(
   }
 }
 
+@TemplateDSL
 data class StringParameterBuilder(
   override var name: String? = null,
   override var help: String? = null,
@@ -62,7 +64,7 @@ data class StringParameterBuilder(
   override var enabled: WizardParameterData.() -> Boolean = { true },
   override var default: String? = null,
   var constraints: List<Constraint> = listOf(),
-  var suggest: () -> String? = { null }
+  var suggest: WizardParameterData.() -> String? = { null }
 ) : ParameterBuilder<String> {
   override fun build(): StringParameter {
     validate()
@@ -70,6 +72,7 @@ data class StringParameterBuilder(
   }
 }
 
+@TemplateDSL
 data class EnumParameterBuilder<T : Enum<T>>(
   val enum: KClass<T>,
   override var name: String? = null,

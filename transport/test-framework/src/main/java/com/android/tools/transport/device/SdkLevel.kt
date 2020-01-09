@@ -26,6 +26,9 @@ class SdkLevel(private val value: Int): Comparable<SdkLevel> {
 
         @JvmField
         val O = SdkLevel(26)
+
+        @JvmField
+        val P = SdkLevel(28)
     }
 
     override fun toString(): String {

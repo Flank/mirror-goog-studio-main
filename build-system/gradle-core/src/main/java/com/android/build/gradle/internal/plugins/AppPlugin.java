@@ -22,7 +22,7 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.AppModelBuilder;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.ApplicationExtensionImpl;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -32,6 +32,8 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
+import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.ProjectOptions;
 import javax.inject.Inject;
 import org.gradle.api.Action;
@@ -57,16 +59,17 @@ public class AppPlugin extends AbstractAppPlugin {
     protected void registerModelBuilder(
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
-            @NonNull VariantManager variantManager,
+            @NonNull VariantModel variantModel,
             @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
         registry.register(
                 new AppModelBuilder(
                         globalScope,
-                        variantManager,
+                        variantModel,
                         taskManager,
                         (BaseAppModuleExtension) extension,
                         extraModelInfo,
+                        syncIssueHandler,
                         getProjectType()));
     }
 
@@ -79,7 +82,7 @@ public class AppPlugin extends AbstractAppPlugin {
     @NonNull
     @Override
     protected AppExtension createExtension(
-            @NonNull Project project,
+            @NonNull DslScope dslScope,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
@@ -93,7 +96,7 @@ public class AppPlugin extends AbstractAppPlugin {
                 .create(
                         "android",
                         getExtensionClass(),
-                        project,
+                        dslScope,
                         projectOptions,
                         globalScope,
                         buildOutputs,
@@ -133,5 +136,11 @@ public class AppPlugin extends AbstractAppPlugin {
                         newDslElement, configName, target);
             }
         }
+    }
+
+    @NonNull
+    @Override
+    protected ApplicationVariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
+        return new ApplicationVariantFactory(globalScope);
     }
 }

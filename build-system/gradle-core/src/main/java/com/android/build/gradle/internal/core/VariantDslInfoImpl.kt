@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.core
 
+import com.android.build.api.variant.VariantConfiguration
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
@@ -28,6 +29,7 @@ import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.variant.VariantCombination
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
@@ -38,7 +40,7 @@ import com.android.builder.core.ManifestAttributeSupplier
 import com.android.builder.core.VariantAttributesProvider
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.BaseConfig
@@ -46,7 +48,6 @@ import com.android.builder.model.ClassField
 import com.android.builder.model.CodeShrinker
 import com.android.builder.model.VectorDrawablesOptions
 import com.android.sdklib.AndroidVersion
-import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
@@ -71,8 +72,7 @@ import java.util.function.Supplier
  *
  */
 open class VariantDslInfoImpl internal constructor(
-    override val fullName: String,
-    override val flavorName: String,
+    override val variantConfiguration: VariantConfiguration,
     override val variantType: VariantType,
     private val defaultConfig: DefaultConfig,
     manifestFile: File,
@@ -81,24 +81,26 @@ open class VariantDslInfoImpl internal constructor(
      */
      val buildTypeObj: BuildType,
     /** The list of product flavors. Items earlier in the list override later items.  */
-    override val productFlavors: List<ProductFlavor>,
+    override val productFlavorList: List<ProductFlavor>,
     private val signingConfigOverride: SigningConfig? = null,
     manifestAttributeSupplier: ManifestAttributeSupplier? = null,
     private val testedVariantImpl: VariantDslInfoImpl? = null,
     private val projectOptions: ProjectOptions,
-    private val issueReporter: EvalIssueReporter,
+    private val issueReporter: IssueReporter,
     isInExecutionPhase: BooleanSupplier
-): VariantDslInfo {
+): VariantDslInfo, VariantCombination {
 
     override val buildType: String?
-        get() = buildTypeObj.name
+        get() = variantConfiguration.buildType
+    override val productFlavors: List<Pair<String, String>>
+        get() = variantConfiguration.productFlavors
     /**
      * This should be mostly private and not used outside of this class.
      * Unfortunately there are a few cases where this cannot happen.
      *
      * Still, DO NOT USE. You should mostly use [VariantDslInfo] which does not give access to this.
      */
-    val mergedFlavor: MergedFlavor = mergeFlavors(defaultConfig, productFlavors, issueReporter)
+    val mergedFlavor: MergedFlavor = mergeFlavors(defaultConfig, productFlavorList, issueReporter)
 
     /** Variant-specific build Config fields.  */
     private val mBuildConfigFields: MutableMap<String, ClassField> = Maps.newTreeMap()
@@ -140,7 +142,7 @@ open class VariantDslInfoImpl internal constructor(
             variantType.isTestComponent,
             manifestParser,
             manifestFile,
-            fullName
+            variantConfiguration.name
         )
         mergeOptions()
     }
@@ -153,19 +155,11 @@ open class VariantDslInfoImpl internal constructor(
      * @return a unique name made up of the variant and split names.
      */
     override fun computeFullNameWithSplits(splitName: String): String {
-        val sb = StringBuilder()
-        val flavorName = flavorName
-        if (!flavorName.isEmpty()) {
-            sb.append(flavorName)
-            sb.appendCapitalized(splitName)
-        } else {
-            sb.append(splitName)
-        }
-        sb.appendCapitalized(buildTypeObj.name)
-        if (variantType.isTestComponent) {
-            sb.append(variantType.suffix)
-        }
-        return sb.toString()
+        return VariantBuilder.computeFullNameWithSplits(
+            variantConfiguration,
+            variantType,
+            splitName
+        )
     }
 
     /**
@@ -175,18 +169,7 @@ open class VariantDslInfoImpl internal constructor(
      * @return the name of the variant
      */
     override val baseName : String by lazy {
-        val sb = StringBuilder()
-        if (productFlavors.isNotEmpty()) {
-            for (pf in productFlavors) {
-                sb.append(pf.name).append('-')
-            }
-        }
-        sb.append(buildTypeObj.name)
-        if (variantType.isTestComponent) {
-            sb.append('-').append(variantType.prefix)
-        }
-
-        sb.toString()
+        VariantBuilder.computeBaseName(this, variantType)
     }
 
     /**
@@ -197,8 +180,8 @@ open class VariantDslInfoImpl internal constructor(
      */
     override fun computeBaseNameWithSplits(splitName: String): String {
         val sb = StringBuilder()
-        if (productFlavors.isNotEmpty()) {
-            for (pf in productFlavors) {
+        if (productFlavorList.isNotEmpty()) {
+            for (pf in productFlavorList) {
                 sb.append(pf.name).append('-')
             }
         }
@@ -235,10 +218,10 @@ open class VariantDslInfoImpl internal constructor(
         if (variantType.isTestComponent) {
             builder.add(variantType.prefix)
         }
-        if (productFlavors.isNotEmpty()) {
+        if (productFlavorList.isNotEmpty()) {
             builder.add(
                 combineAsCamelCase(
-                    productFlavors, ProductFlavor::getName
+                    productFlavorList, ProductFlavor::getName
                 )
             )
         }
@@ -260,8 +243,8 @@ open class VariantDslInfoImpl internal constructor(
         if (variantType.isTestComponent) {
             sb.append(variantType.prefix).append("/")
         }
-        if (productFlavors.isNotEmpty()) {
-            for (flavor in productFlavors) {
+        if (productFlavorList.isNotEmpty()) {
+            for (flavor in productFlavorList) {
                 sb.append(flavor.name)
             }
             sb.append('/')
@@ -283,27 +266,27 @@ open class VariantDslInfoImpl internal constructor(
      */
     override val flavorNamesWithDimensionNames: List<String>
         get() {
-            if (productFlavors.isEmpty()) {
+            if (productFlavorList.isEmpty()) {
                 return emptyList()
             }
             val names: List<String>
-            val count = productFlavors.size
+            val count = productFlavorList.size
             if (count > 1) {
                 names =
                     Lists.newArrayListWithCapacity(count * 2)
                 for (i in 0 until count) {
-                    names.add(productFlavors[i].name)
-                    names.add(productFlavors[i].dimension)
+                    names.add(productFlavorList[i].name)
+                    names.add(productFlavorList[i].dimension)
                 }
             } else {
-                names = listOf(productFlavors[0].name)
+                names = listOf(productFlavorList[0].name)
             }
             return names
         }
 
 
     override fun hasFlavors(): Boolean {
-        return productFlavors.isNotEmpty()
+        return productFlavorList.isNotEmpty()
     }
 
     private val testedPackage: String
@@ -618,7 +601,7 @@ open class VariantDslInfoImpl internal constructor(
                 fullList.add("Fields from build type: " + buildTypeObj.name)
                 fillFieldList(fullList, usedFieldNames, list)
             }
-            for (flavor in productFlavors) {
+            for (flavor in productFlavorList) {
                 list = flavor.buildConfigFields.values
                 if (!list.isEmpty()) {
                     fullList.add("Fields from product flavor: " + flavor.name)
@@ -650,8 +633,8 @@ open class VariantDslInfoImpl internal constructor(
             // start from the lowest priority and just add it all. Higher priority fields
             // will replace lower priority ones.
             mergedMap.putAll(defaultConfig.buildConfigFields)
-            for (i in productFlavors.indices.reversed()) {
-                mergedMap.putAll(productFlavors[i].buildConfigFields)
+            for (i in productFlavorList.indices.reversed()) {
+                mergedMap.putAll(productFlavorList[i].buildConfigFields)
             }
             mergedMap.putAll(buildTypeObj.buildConfigFields)
             mergedMap.putAll(mBuildConfigFields)
@@ -673,8 +656,8 @@ open class VariantDslInfoImpl internal constructor(
             // will replace lower priority ones.
             val mergedMap: MutableMap<String, ClassField> = Maps.newHashMap()
             mergedMap.putAll(defaultConfig.resValues)
-            for (i in productFlavors.indices.reversed()) {
-                mergedMap.putAll(productFlavors[i].resValues)
+            for (i in productFlavorList.indices.reversed()) {
+                mergedMap.putAll(productFlavorList[i].resValues)
             }
             mergedMap.putAll(buildTypeObj.resValues)
             mergedMap.putAll(mResValues)
@@ -708,7 +691,7 @@ open class VariantDslInfoImpl internal constructor(
                 fullList.add("Values from build type: " + buildTypeObj.name)
                 fillFieldList(fullList, usedFieldNames, list)
             }
-            for (flavor in productFlavors) {
+            for (flavor in productFlavorList) {
                 list = flavor.resValues.values
                 if (!list.isEmpty()) {
                     fullList.add("Values from product flavor: " + flavor.name)
@@ -801,7 +784,7 @@ open class VariantDslInfoImpl internal constructor(
             ) {
                 issueReporter
                     .reportWarning(
-                        EvalIssueReporter.Type.GENERIC,
+                        IssueReporter.Type.GENERIC,
                         "Native multidex is always used for dynamic features. Please "
                                 + "remove 'multiDexEnabled true|false' from your "
                                 + "build.gradle file."
@@ -897,7 +880,7 @@ open class VariantDslInfoImpl internal constructor(
 
     override fun gatherProguardFiles(type: ProguardFileType): List<File> {
         val result: MutableList<File> = ArrayList(defaultConfig.getProguardFiles(type))
-        for (flavor in productFlavors) {
+        for (flavor in productFlavorList) {
             result.addAll(flavor.getProguardFiles(type))
         }
         return result
@@ -933,8 +916,8 @@ open class VariantDslInfoImpl internal constructor(
             mergedOption.append(defaultOption)
         }
         // reverse loop for proper order
-        for (i in productFlavors.indices.reversed()) {
-            val flavorOption = productFlavors[i].getFlavorOption()
+        for (i in productFlavorList.indices.reversed()) {
+            val flavorOption = productFlavorList[i].getFlavorOption()
             if (flavorOption != null) {
                 mergedOption.append(flavorOption)
             }
@@ -990,8 +973,8 @@ open class VariantDslInfoImpl internal constructor(
             }
             // cant use merge flavor as it's not a prop on the base class.
             // reverse loop for proper order
-            for (i in productFlavors.indices.reversed()) {
-                for (option in productFlavors[i].shaders.glslcArgs) {
+            for (i in productFlavorList.indices.reversed()) {
+                for (option in productFlavorList[i].shaders.glslcArgs) {
                     optionMap[getKey(option)] = option
                 }
             }
@@ -1025,12 +1008,12 @@ open class VariantDslInfoImpl internal constructor(
                 // 2. the flavors.
                 // cant use merge flavor as it's not a prop on the base class.
                 // reverse loop for proper order
-                for (i in productFlavors.indices.reversed()) { // global
-                    for (option in productFlavors[i].shaders.glslcArgs) {
+                for (i in productFlavorList.indices.reversed()) { // global
+                    for (option in productFlavorList[i].shaders.glslcArgs) {
                         optionMap[getKey(option)] = option
                     }
                     // scoped.
-                    for (option in productFlavors[i].shaders.scopedGlslcArgs[key]) {
+                    for (option in productFlavorList[i].shaders.scopedGlslcArgs[key]) {
                         optionMap[getKey(option)] = option
                     }
                 }
@@ -1053,7 +1036,7 @@ open class VariantDslInfoImpl internal constructor(
             val keys: MutableSet<String> =
                 Sets.newHashSet()
             keys.addAll(defaultConfig.shaders.scopedGlslcArgs.keySet())
-            for (flavor in productFlavors) {
+            for (flavor in productFlavorList) {
                 keys.addAll(flavor.shaders.scopedGlslcArgs.keySet())
             }
             keys.addAll(buildTypeObj.shaders.scopedGlslcArgs.keySet())

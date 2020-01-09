@@ -41,7 +41,7 @@ val masterDetailFlowTemplate
 
     category = Category.Activity
     formFactor = FormFactor.Mobile
-    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry)
+    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry, WizardUiContext.NewProject)
 
     val objectKind = stringParameter {
       name = "Object Kind"
@@ -75,6 +75,7 @@ val masterDetailFlowTemplate
       name = "Package name"
       default = "com.mycompany.myapp"
       constraints = listOf(PACKAGE)
+      suggest = { packageName }
     }
 
     widgets(

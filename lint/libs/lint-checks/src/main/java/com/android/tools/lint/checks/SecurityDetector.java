@@ -343,13 +343,16 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
                 && isUnprotectedByPermission(element)
                 && !isWearableListenerServiceAction(element)) {
             // No declared permission for this exported service: complain
-            LintFix fix = LintFix.create().set().todo(ANDROID_URI, ATTR_PERMISSION).build();
+            LintFix fix1 = LintFix.create().set().todo(ANDROID_URI, ATTR_PERMISSION).build();
+            LintFix fix2 = LintFix.create().set(ANDROID_URI, ATTR_EXPORTED, VALUE_FALSE).build();
+            LintFix both = LintFix.create().alternatives(fix1, fix2);
+
             context.report(
                     EXPORTED_SERVICE,
                     element,
                     context.getNameLocation(element),
                     "Exported service does not require permission",
-                    fix);
+                    both);
         }
     }
 

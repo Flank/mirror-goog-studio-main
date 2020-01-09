@@ -16,11 +16,13 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantProperties
 
-interface ActionableVariantObjectOperationsExecutor {
+interface ActionableVariantObjectOperationsExecutor<VariantT: Variant<VariantPropertiesT>,
+        VariantPropertiesT: VariantProperties> {
 
-    fun executeVariantOperations(variantScopes: List<VariantScope>);
+    fun executeVariantOperations(variant: VariantT)
 
-    fun executeVariantPropertiesOperations(variantScopes: List<VariantScope>)
+    fun executeVariantPropertiesOperations(variant: VariantPropertiesT)
 }

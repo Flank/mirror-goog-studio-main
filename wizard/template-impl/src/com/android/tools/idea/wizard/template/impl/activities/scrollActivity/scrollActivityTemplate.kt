@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.scrollActivity
 
-
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
 import com.android.tools.idea.wizard.template.Constraint.CLASS
@@ -50,7 +49,7 @@ val scrollActivityTemplate
 
     category = Category.Activity
     formFactor = FormFactor.Mobile
-    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry)
+    screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry, WizardUiContext.NewProject)
 
     lateinit var layoutName: StringParameter
     val activityClass = stringParameter {
@@ -105,8 +104,8 @@ val scrollActivityTemplate
       name = "Package name"
       default = "com.mycompany.myapp"
       constraints = listOf(PACKAGE)
+      suggest = { packageName }
     }
-
 
     widgets(
       TextFieldWidget(activityClass),

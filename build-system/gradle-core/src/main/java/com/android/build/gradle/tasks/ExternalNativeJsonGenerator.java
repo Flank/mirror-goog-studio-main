@@ -34,7 +34,7 @@ import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.shouldGe
 import static com.android.build.gradle.internal.cxx.model.GetCxxBuildModelKt.getCxxBuildModel;
 import static com.android.build.gradle.internal.cxx.services.CxxBuildModelListenerServiceKt.executeListenersOnceBeforeJsonGeneration;
 import static com.android.build.gradle.internal.cxx.services.CxxCompleteModelServiceKt.registerAbi;
-import static com.android.build.gradle.internal.cxx.services.CxxEvalIssueReporterServiceKt.evalIssueReporter;
+import static com.android.build.gradle.internal.cxx.services.CxxEvalIssueReporterServiceKt.issueReporter;
 import static com.android.build.gradle.internal.cxx.services.CxxModelDependencyServiceKt.jsonGenerationInputDependencyFileCollection;
 import static com.android.build.gradle.internal.cxx.services.CxxSyncListenerServiceKt.executeListenersOnceAfterJsonGeneration;
 import static com.android.build.gradle.internal.cxx.settings.CxxAbiModelCMakeSettingsRewriterKt.getBuildCommandArguments;
@@ -199,8 +199,7 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation,
             @NonNull Function<Action<? super JavaExecSpec>, ExecResult> javaExecOperation) {
         try (ThreadLoggingEnvironment ignore =
-                new IssueReporterLoggingEnvironment(
-                        evalIssueReporter(abi.getVariant().getModule()))) {
+                new IssueReporterLoggingEnvironment(issueReporter(abi.getVariant().getModule()))) {
             try {
                 buildForOneConfiguration(
                         forceJsonGeneration, abi, execOperation, javaExecOperation);
@@ -532,7 +531,7 @@ public abstract class ExternalNativeJsonGenerator {
     public static ExternalNativeJsonGenerator create(
             @NonNull CxxModuleModel module, @NonNull VariantScope scope) {
         try (ThreadLoggingEnvironment ignore =
-                new IssueReporterLoggingEnvironment(evalIssueReporter(module))) {
+                new IssueReporterLoggingEnvironment(issueReporter(module))) {
             return createImpl(module, scope);
         }
     }
@@ -563,7 +562,7 @@ public abstract class ExternalNativeJsonGenerator {
 
         GradleBuildVariant.Builder stats =
                 ProcessProfileWriter.getOrCreateVariant(
-                        module.getGradleModulePathName(), scope.getFullVariantName());
+                        module.getGradleModulePathName(), scope.getName());
 
         switch (module.getBuildSystem()) {
             case NDK_BUILD:
@@ -596,7 +595,7 @@ public abstract class ExternalNativeJsonGenerator {
     public void forEachNativeBuildConfiguration(@NonNull Consumer<JsonReader> callback)
             throws IOException {
         try (ThreadLoggingEnvironment ignore =
-                new IssueReporterLoggingEnvironment(evalIssueReporter(variant.getModule()))) {
+                new IssueReporterLoggingEnvironment(issueReporter(variant.getModule()))) {
             List<File> files = getNativeBuildConfigurationsJsons();
             infoln("streaming %s JSON files", files.size());
             for (File file : getNativeBuildConfigurationsJsons()) {

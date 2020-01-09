@@ -26,7 +26,12 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.variant.FilterConfiguration;
+import com.android.build.api.variant.VariantOutputConfiguration;
+import com.android.build.api.variant.impl.BuiltArtifactImpl;
+import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.VariantDslInfo;
@@ -86,6 +91,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -191,6 +197,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @Incremental
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract DirectoryProperty getAssets();
+
+    @InputFile
+    @Nullable
+    @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public abstract RegularFileProperty getDependencyDataFile();
 
     @Input
     public abstract Property<String> getCreatedBy();
@@ -384,19 +396,74 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             }
         }
 
-        ExistingBuildElements.from(taskInputType, getResourceFiles())
-                .transform(
-                        getWorkerFacadeWithWorkers(),
-                        IncrementalSplitterRunnable.class,
-                        (apkInfo, inputFile) ->
-                                new SplitterParams(
-                                        apkInfo,
-                                        inputFile,
-                                        changedResourceFiles.contains(inputFile),
-                                        changes,
-                                        this,
-                                        apkCreatorType))
-                .into(getInternalArtifactType(), getOutputDirectory().get().getAsFile());
+        // TODO: provide a BuiltArtifacts API that can handle workers.
+        BuildElements apkBuiltElements =
+                ExistingBuildElements.from(taskInputType, getResourceFiles())
+                        .transform(
+                                getWorkerFacadeWithWorkers(),
+                                IncrementalSplitterRunnable.class,
+                                (apkInfo, inputFile) ->
+                                        new SplitterParams(
+                                                apkInfo,
+                                                inputFile,
+                                                changedResourceFiles.contains(inputFile),
+                                                changes,
+                                                this,
+                                                apkCreatorType))
+                        .into(getInternalArtifactType());
+
+        List<BuiltArtifactImpl> builtArtifactList =
+                apkBuiltElements
+                        .stream()
+                        .map(
+                                builtElement -> {
+                                    List<FilterConfiguration> filters =
+                                            builtElement
+                                                    .getApkData()
+                                                    .getFilters()
+                                                    .stream()
+                                                    .map(
+                                                            filterData ->
+                                                                    new FilterConfiguration(
+                                                                            FilterConfiguration
+                                                                                    .FilterType
+                                                                                    .valueOf(
+                                                                                            filterData
+                                                                                                    .getFilterType()),
+                                                                            filterData
+                                                                                    .getIdentifier()))
+                                                    .collect(Collectors.toList());
+
+                                    return new BuiltArtifactImpl(
+                                            builtElement.getOutputFile().toPath(),
+                                            builtElement.getProperties(),
+                                            builtElement.getVersionCode(),
+                                            String.valueOf(builtElement.getVersionCode()),
+                                            true,
+                                            builtElement.getApkData().isUniversal()
+                                                    ? VariantOutputConfiguration.OutputType
+                                                            .UNIVERSAL
+                                                    : builtElement
+                                                                    .getOutputType()
+                                                                    .equals(
+                                                                            VariantOutput.OutputType
+                                                                                    .MAIN
+                                                                                    .toString())
+                                                            ? VariantOutputConfiguration.OutputType
+                                                                    .SINGLE
+                                                            : VariantOutputConfiguration.OutputType
+                                                                    .ONE_OF_MANY,
+                                            filters);
+                                })
+                        .collect(Collectors.toList());
+
+        new BuiltArtifactsImpl(
+                        BuildElements.METADATA_FILE_VERSION,
+                        InternalArtifactType.APK.INSTANCE,
+                        getApplicationId().get(),
+                        getVariantName(),
+                        builtArtifactList)
+                .save(getOutputDirectory().get());
     }
 
     private void checkFileNameUniqueness() {
@@ -473,6 +540,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @Nullable protected final Integer targetApi;
         @NonNull protected final IncrementalPackagerBuilder.BuildType packagerMode;
         @NonNull protected final ApkCreatorType apkCreatorType;
+        @Nullable protected File dependencyDataFile;
 
         SplitterParams(
                 @NonNull ApkData apkInfo,
@@ -531,6 +599,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             isDebuggableBuild = task.getDebugBuild().get();
             isJniDebuggableBuild = task.getJniDebugBuild();
             targetApi = task.getTargetApi();
+            dependencyDataFile =
+                    task.getDependencyDataFile().map(RegularFile::getAsFile).getOrElse(null);
             packagerMode =
                     changes.isIncremental()
                             ? IncrementalPackagerBuilder.BuildType.INCREMENTAL
@@ -630,13 +700,19 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         ManifestAttributeSupplier manifest =
                 new DefaultManifestParser(manifestForSplit.getOutputFile(), () -> true, true, null);
 
+        byte[] dependencyData =
+                params.dependencyDataFile != null
+                        ? Files.readAllBytes(params.dependencyDataFile.toPath())
+                        : null;
+
         try (IncrementalPackager packager =
                 new IncrementalPackagerBuilder(params.apkFormat, params.packagerMode)
                         .withOutputFile(outputFile)
                         .withSigning(
                                 params.signingConfig.resolve(),
                                 params.minSdkVersion,
-                                params.targetApi)
+                                params.targetApi,
+                                dependencyData)
                         .withCreatedBy(params.createdBy)
                         // TODO: allow extra metadata to be saved in the split scope to avoid
                         // reparsing
@@ -967,7 +1043,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact.setJniDebugBuild(variantDslInfo.isJniDebuggable());
             packageAndroidArtifact
                     .getDebugBuild()
-                    .set(variantScope.getVariantData().getPublicVariantApi().isDebuggable());
+                    .set(variantScope.getVariantDslInfo().isDebuggable());
             packageAndroidArtifact.getDebugBuild().disallowChanges();
 
             ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
@@ -1004,6 +1080,17 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact.apkCreatorType = variantScope.getApkCreatorType();
 
             packageAndroidArtifact.getCreatedBy().set(globalScope.getCreatedBy());
+
+            if (variantScope.getType().isBaseModule() && variantScope.getGlobalScope()
+                .getProjectOptions()
+                .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
+                variantScope
+                    .getArtifacts()
+                    .setTaskInputToFinalProduct(
+                        InternalArtifactType.SDK_DEPENDENCY_DATA.INSTANCE,
+                        packageAndroidArtifact.getDependencyDataFile());
+            }
+
             finalConfigure(packageAndroidArtifact);
         }
 

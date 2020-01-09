@@ -216,63 +216,63 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             // would get imported at the top of the compilation unit and shortened names
             // used here
             """
-            Fix for src/test/pkg/Test.java line 9: Annotate @NonNull:
+            Fix for src/test/pkg/Test.java line 10: Annotate @NonNull:
             @@ -10 +10
             -     public Object error1(Integer error2, int[] error3) { return null; }
-            +     @android.support.annotation.NonNull public Object error1(Integer error2, int[] error3) { return null; }
-            Fix for src/test/pkg/Test.java line 9: Annotate @Nullable:
+            +     @NonNull public Object error1(Integer error2, int[] error3) { return null; }
+            Fix for src/test/pkg/Test.java line 10: Annotate @Nullable:
             @@ -10 +10
             -     public Object error1(Integer error2, int[] error3) { return null; }
-            +     @android.support.annotation.Nullable public Object error1(Integer error2, int[] error3) { return null; }
-            Fix for src/test/pkg/Test.java line 9: Annotate @NonNull:
+            +     @Nullable public Object error1(Integer error2, int[] error3) { return null; }
+            Fix for src/test/pkg/Test.java line 10: Annotate @NonNull:
             @@ -10 +10
             -     public Object error1(Integer error2, int[] error3) { return null; }
-            +     public Object error1(@android.support.annotation.NonNull Integer error2, int[] error3) { return null; }
-            Fix for src/test/pkg/Test.java line 9: Annotate @Nullable:
+            +     public Object error1(@NonNull Integer error2, int[] error3) { return null; }
+            Fix for src/test/pkg/Test.java line 10: Annotate @Nullable:
             @@ -10 +10
             -     public Object error1(Integer error2, int[] error3) { return null; }
-            +     public Object error1(@android.support.annotation.Nullable Integer error2, int[] error3) { return null; }
-            Fix for src/test/pkg/Test.java line 9: Annotate @NonNull:
+            +     public Object error1(@Nullable Integer error2, int[] error3) { return null; }
+            Fix for src/test/pkg/Test.java line 10: Annotate @NonNull:
             @@ -10 +10
             -     public Object error1(Integer error2, int[] error3) { return null; }
-            +     public Object error1(Integer error2, @android.support.annotation.NonNull int[] error3) { return null; }
-            Fix for src/test/pkg/Test.java line 9: Annotate @Nullable:
+            +     public Object error1(Integer error2, @NonNull int[] error3) { return null; }
+            Fix for src/test/pkg/Test.java line 10: Annotate @Nullable:
             @@ -10 +10
             -     public Object error1(Integer error2, int[] error3) { return null; }
-            +     public Object error1(Integer error2, @android.support.annotation.Nullable int[] error3) { return null; }
-            Fix for src/test/pkg/Test.java line 13: Annotate @NonNull:
+            +     public Object error1(Integer error2, @Nullable int[] error3) { return null; }
+            Fix for src/test/pkg/Test.java line 14: Annotate @NonNull:
             @@ -14 +14
             -     public Float error4;
-            +     @android.support.annotation.NonNull public Float error4;
-            Fix for src/test/pkg/Test.java line 13: Annotate @Nullable:
+            +     @NonNull public Float error4;
+            Fix for src/test/pkg/Test.java line 14: Annotate @Nullable:
             @@ -14 +14
             -     public Float error4;
-            +     @android.support.annotation.Nullable public Float error4;
-            Fix for src/test/pkg/Test.java line 15: Annotate @NonNull:
+            +     @Nullable public Float error4;
+            Fix for src/test/pkg/Test.java line 16: Annotate @NonNull:
             @@ -16 +16
             -     public Float error5;
-            +     @android.support.annotation.NonNull public Float error5;
-            Fix for src/test/pkg/Test.java line 15: Annotate @Nullable:
+            +     @NonNull public Float error5;
+            Fix for src/test/pkg/Test.java line 16: Annotate @Nullable:
             @@ -16 +16
             -     public Float error5;
-            +     @android.support.annotation.Nullable public Float error5;
-            Fix for src/test/pkg/Test.java line 17: Annotate @NonNull:
-            @@ -18 +18
-            -     public Object error6() { return null; }
-            +     @android.support.annotation.NonNull public Object error6() { return null; }
-            Fix for src/test/pkg/Test.java line 17: Annotate @Nullable:
-            @@ -18 +18
-            -     public Object error6() { return null; }
-            +     @android.support.annotation.Nullable public Object error6() { return null; }
+            +     @Nullable public Float error5;
             Fix for src/test/pkg/Test.java line 18: Annotate @NonNull:
-            @@ -19 +19
-            -     protected Float error7;
-            +     @android.support.annotation.NonNull protected Float error7;
+            @@ -18 +18
+            -     public Object error6() { return null; }
+            +     @NonNull public Object error6() { return null; }
             Fix for src/test/pkg/Test.java line 18: Annotate @Nullable:
+            @@ -18 +18
+            -     public Object error6() { return null; }
+            +     @Nullable public Object error6() { return null; }
+            Fix for src/test/pkg/Test.java line 19: Annotate @NonNull:
             @@ -19 +19
             -     protected Float error7;
-            +     @android.support.annotation.Nullable protected Float error7;
-                """
+            +     @NonNull protected Float error7;
+            Fix for src/test/pkg/Test.java line 19: Annotate @Nullable:
+            @@ -19 +19
+            -     protected Float error7;
+            +     @Nullable protected Float error7;
+            """
         )
     }
 

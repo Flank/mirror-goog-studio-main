@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.errors.EvalIssueException;
-import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.IssueReporter;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -43,8 +43,8 @@ public final class SyncIssueImpl implements SyncIssue, Serializable {
     @Nullable private final List<String> multiLineMessage;
 
     public SyncIssueImpl(
-            @NonNull EvalIssueReporter.Type type,
-            @NonNull EvalIssueReporter.Severity severity,
+            @NonNull IssueReporter.Type type,
+            @NonNull IssueReporter.Severity severity,
             @NonNull EvalIssueException exception) {
         this(
                 type,
@@ -55,8 +55,8 @@ public final class SyncIssueImpl implements SyncIssue, Serializable {
     }
 
     public SyncIssueImpl(
-            @NonNull EvalIssueReporter.Type type,
-            @NonNull EvalIssueReporter.Severity severity,
+            @NonNull IssueReporter.Type type,
+            @NonNull IssueReporter.Severity severity,
             @Nullable String data,
             @NonNull String message,
             List<String> multiLineMessage) {

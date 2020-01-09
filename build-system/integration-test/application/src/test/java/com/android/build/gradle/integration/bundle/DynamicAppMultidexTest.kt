@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.bundle
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject.assertThat
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
 import org.junit.Rule
 import org.junit.Test
@@ -39,7 +39,7 @@ class DynamicAppMultidexTest {
 
         assertThat(container).rootBuild().project(":feature1")
             .hasSingleIssue(
-                EvalIssueReporter.Severity.WARNING.severity,
+                IssueReporter.Severity.WARNING.severity,
                 SyncIssue.TYPE_GENERIC,
                 null,
                 "Native multidex is always used for dynamic features. Please remove " +
