@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment
 
-
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
@@ -31,6 +30,7 @@ import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.fragmentToLayout
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import fullscreenFragmentRecipe
@@ -41,8 +41,8 @@ val fullscreenFragmentTemplate
     revision = 1
     name = "Fullscreen Fragment"
     description = "Creates a new fragment that toggles the visibility of the system UI (status and navigation bars) and action bar upon user interaction."
-    minApi = 14
-    minBuildApi = 16
+    minApi = MIN_API
+    minBuildApi = MIN_API
     category = Category.Fragment
     formFactor = FormFactor.Mobile
     screens = listOf(WizardUiContext.FragmentGallery, WizardUiContext.MenuEntry)

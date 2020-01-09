@@ -28,6 +28,7 @@ import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.classToResource
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import com.android.tools.idea.wizard.template.underscoreToCamelCase
@@ -39,8 +40,8 @@ val viewModelFragmentTemplate
     revision = 1
     name = "Fragment (with ViewModel)"
     description = "Creates a Fragment with a ViewModel."
-    minApi = 14
-    minBuildApi = 14
+    minApi = MIN_API
+    minBuildApi = MIN_API
 
     category = Category.Fragment
     formFactor = FormFactor.Mobile

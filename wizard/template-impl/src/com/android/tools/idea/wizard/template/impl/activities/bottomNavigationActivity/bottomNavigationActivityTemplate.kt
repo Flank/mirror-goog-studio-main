@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity
 
-
 import bottomNavigationActivityRecipe
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
@@ -33,6 +32,7 @@ import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.activityToLayout
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
@@ -43,8 +43,8 @@ val bottomNavigationActivityTemplate
     revision = 1
     name = "Bottom Navigation Activity"
     description = "Creates a new activity with bottom navigation"
-    minApi = 14
-    minBuildApi = 14
+    minApi = MIN_API
+    minBuildApi = MIN_API
 
     category = Category.Activity
     formFactor = FormFactor.Mobile

@@ -27,6 +27,7 @@ import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.booleanParameter
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
@@ -36,8 +37,8 @@ private fun getSourceSetFolderTemplate(
 ) = template {
   revision = 1
   name = _name
-  minApi = 16
-  minBuildApi = 16
+  minApi = MIN_API
+  minBuildApi = MIN_API
   description = _description
 
   category = Category.Folder
@@ -94,8 +95,8 @@ private fun getSimpleFolderTemplate(
 ) = template {
   revision = 1
   name = _name
-  minApi = 16
-  minBuildApi = 16
+  minApi = MIN_API
+  minBuildApi = MIN_API
   description = _description
 
   category = Category.Folder

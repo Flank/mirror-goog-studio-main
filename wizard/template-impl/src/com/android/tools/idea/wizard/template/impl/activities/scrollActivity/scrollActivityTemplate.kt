@@ -34,6 +34,7 @@ import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.classToResource
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import scrollActivityRecipe
@@ -43,7 +44,7 @@ val scrollActivityTemplate
   get() = template {
     revision = 1
     name = "Scrolling Activity"
-    minApi = 9
+    minApi = MIN_API
     minBuildApi = 22
     description = "Creates a new vertical scrolling activity."
 

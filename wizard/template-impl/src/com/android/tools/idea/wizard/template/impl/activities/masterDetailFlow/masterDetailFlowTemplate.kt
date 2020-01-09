@@ -27,6 +27,7 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.booleanParameter
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.template
 import com.android.tools.idea.wizard.template.stringParameter
 import masterDetailFlowRecipe
@@ -36,7 +37,8 @@ val masterDetailFlowTemplate
   get() = template {
     revision = 1
     name = "Master/Detail Flow"
-    minApi = 14
+    minApi = MIN_API
+    minBuildApi = MIN_API
     description = "Creates a new master/detail flow, allowing users to view a collection of objects as well as details for each object. This flow is presented using two columns on tablet-size screens and one column on handsets and smaller screens. This template creates two activities, a master fragment, and a detail fragment."
 
     category = Category.Activity

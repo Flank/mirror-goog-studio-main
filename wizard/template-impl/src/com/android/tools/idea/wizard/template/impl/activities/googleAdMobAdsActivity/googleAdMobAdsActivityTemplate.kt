@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.googleAdMobAdsActivity
 
-
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
 import com.android.tools.idea.wizard.template.Constraint.CLASS
@@ -38,6 +37,7 @@ import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.classToResource
 import com.android.tools.idea.wizard.template.enumParameter
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.AdFormat
 import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
@@ -50,8 +50,8 @@ val googleAdMobAdsActivityTemplate
     revision = 1
     name = "Google AdMob Ads Activity"
     constraints = listOf(TemplateConstraint.AndroidX)
-    minApi = 14
-    minBuildApi = 14
+    minApi = MIN_API
+    minBuildApi = MIN_API
     description = "Creates an activity with AdMob Ad fragment."
 
     category = Category.Google

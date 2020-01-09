@@ -31,6 +31,7 @@ import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.classToResource
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.template
 import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
@@ -39,8 +40,8 @@ import java.io.File
 val basicActivityTemplate get() = template {
   revision = 1
   name = "Basic Activity"
-  minApi = 14
-  minBuildApi = 16
+  minApi = MIN_API
+  minBuildApi = MIN_API
   description = "Creates a new basic activity with the Navigation component."
 
   category = Category.Activity

@@ -33,6 +33,7 @@ import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import fullscreenActivityRecipe
@@ -43,8 +44,8 @@ val fullscreenActivityTemplate
     revision = 1
     name = "Fullscreen Activity"
     description = "Creates a new activity that toggles the visibility of the system UI (status and navigation bars) and action bar upon user interaction."
-    minApi = 14
-    minBuildApi = 16
+    minApi = MIN_API
+    minBuildApi = MIN_API
 
     category = Category.Activity
     formFactor = FormFactor.Mobile

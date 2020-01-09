@@ -29,6 +29,7 @@ import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
@@ -37,8 +38,8 @@ import java.io.File
 val navigationDrawerActivityTemplate = template {
   revision = 1
   name = "Navigation Drawer Activity"
-  minApi = 14
-  minBuildApi = 14
+  minApi = MIN_API
+  minBuildApi = MIN_API
   description = "Creates a new Activity with a Navigation Drawer."
 
   category = Category.Activity

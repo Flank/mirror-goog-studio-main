@@ -32,6 +32,7 @@ import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.classToResource
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import com.android.tools.idea.wizard.template.underscoreToCamelCase
@@ -42,8 +43,8 @@ val viewModelActivityTemplate
   get() = template {
     revision = 1
     name = "Fragment + ViewModel"
-    minApi = 14
-    minBuildApi = 14
+    minApi = MIN_API
+    minBuildApi = MIN_API
     description = "Creates a new activity and a fragment with view model"
 
     category = Category.Activity

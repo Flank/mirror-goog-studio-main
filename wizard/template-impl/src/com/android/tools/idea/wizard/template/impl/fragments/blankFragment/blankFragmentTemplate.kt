@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.blankFragment
 
-
 import blankFragmentRecipe
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
@@ -30,6 +29,7 @@ import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.fragmentToLayout
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
@@ -39,8 +39,8 @@ val blankFragmentTemplate
     revision = 1
     name = "Fragment (Blank)"
     description = "Creates a blank fragment that is compatible back to API level 14."
-    minApi = 14
-    minBuildApi = 14
+    minApi = MIN_API
+    minBuildApi = MIN_API
 
     category = Category.Fragment
     formFactor = FormFactor.Mobile

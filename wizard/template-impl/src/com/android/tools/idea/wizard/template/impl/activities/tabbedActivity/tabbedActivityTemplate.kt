@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.tabbedActivity
 
-
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
 import com.android.tools.idea.wizard.template.Constraint.*
@@ -31,6 +30,7 @@ import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.classToResource
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.template
 import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
@@ -41,8 +41,8 @@ val tabbedActivityTemplate
   get() = template {
     revision = 1
     name = "Tabbed Activity"
-    minApi = 14
-    minBuildApi = 14
+    minApi = MIN_API
+    minBuildApi = MIN_API
     description = "Creates a new blank activity with tabs."
 
     category = Category.Activity

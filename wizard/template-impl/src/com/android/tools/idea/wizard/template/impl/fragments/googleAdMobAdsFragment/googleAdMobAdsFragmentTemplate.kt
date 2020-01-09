@@ -33,6 +33,7 @@ import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.enumParameter
 import com.android.tools.idea.wizard.template.fragmentToLayout
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import googleAdMobAdsFragmentRecipe
@@ -51,8 +52,8 @@ val googleAdMobAdsFragmentTemplate
     revision = 1
     name = "Google AdMob Ads Fragment"
     constraints = listOf(TemplateConstraint.AndroidX)
-    minApi = 14
-    minBuildApi = 14
+    minApi = MIN_API
+    minBuildApi = MIN_API
     description = "Creates an fragment with AdMob Ad fragment"
 
     category = Category.Fragment

@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet
 
-
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
@@ -34,6 +33,7 @@ import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.enumParameter
 import com.android.tools.idea.wizard.template.extractLetters
 import com.android.tools.idea.wizard.template.fragmentToLayout
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.impl.fragments.listFragment.ColumnCount
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
@@ -44,8 +44,8 @@ val modalBottomSheetTemplate
     revision = 1
     name = "Modal Bottom Sheet"
     description = "Creates a new modal bottom sheet fragment containing a list that can be rendered as a grid. Compatible back to API level 14."
-    minApi = 14
-    minBuildApi = 14
+    minApi = MIN_API
+    minBuildApi = MIN_API
 
     category = Category.Fragment
     formFactor = FormFactor.Mobile

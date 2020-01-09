@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.scrollFragment
 
-
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
@@ -31,6 +30,7 @@ import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.fragmentToLayout
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import scrollFragmentRecipe
@@ -40,7 +40,7 @@ val scrollFragmentTemplate
   get() = template {
     revision = 1
     name = "Scrolling Fragment"
-    minApi = 14
+    minApi = MIN_API
     minBuildApi = 22
     description = "Creates a new vertical scrolling fragment."
 

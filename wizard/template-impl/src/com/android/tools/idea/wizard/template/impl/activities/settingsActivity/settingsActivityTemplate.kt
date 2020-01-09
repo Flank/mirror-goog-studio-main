@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.settingsActivity
 
-
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
 import com.android.tools.idea.wizard.template.Constraint.CLASS
@@ -32,6 +31,7 @@ import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.booleanParameter
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import settingsActivityRecipe
@@ -42,8 +42,8 @@ val settingsActivityTemplate
     revision = 1
     name = "Settings Activity"
     description = "Creates a new activity that allows a user to configure application settings"
-    minApi = 14
-    minBuildApi = 14
+    minApi = MIN_API
+    minBuildApi = MIN_API
     constraints = listOf(TemplateConstraint.AndroidX)
 
     category = Category.Activity

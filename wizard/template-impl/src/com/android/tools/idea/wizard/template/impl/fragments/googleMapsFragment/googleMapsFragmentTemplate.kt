@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.googleMapsFragment
 
-
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
@@ -32,6 +31,7 @@ import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.fragmentToLayout
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import googleMapsFragmentRecipe
@@ -42,8 +42,8 @@ val googleMapsFragmentTemplate
     revision = 1
     name = "Google Maps Fragment"
     description = "Creates a new fragment with a Google Map"
-    minApi = 14
-    minBuildApi = 14
+    minApi = MIN_API
+    minBuildApi = MIN_API
     constraints = listOf(TemplateConstraint.AndroidX)
 
     category = Category.Fragment

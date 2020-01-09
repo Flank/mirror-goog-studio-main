@@ -33,6 +33,7 @@ import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.enumParameter
 import com.android.tools.idea.wizard.template.extractLetters
 import com.android.tools.idea.wizard.template.fragmentToLayout
+import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import listFragmentRecipe
@@ -51,8 +52,8 @@ val listFragmentTemplate
     revision = 1
     name = "Fragment (List)"
     description = "Creates a new empty fragment containing a list that can be rendered as a grid. Compatible back to API level 14."
-    minApi = 14
-    minBuildApi = 14
+    minApi = MIN_API
+    minBuildApi = MIN_API
 
     category = Category.Fragment
     formFactor = FormFactor.Mobile
