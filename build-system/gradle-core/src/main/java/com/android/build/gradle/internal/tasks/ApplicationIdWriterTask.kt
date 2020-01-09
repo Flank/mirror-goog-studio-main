@@ -93,7 +93,7 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
                 // a bit dynamic.
                 // TODO replace this with Property<String> which can be fed from the published artifact directly.
                 // b/141650037
-                task.appMetadata.from(variantScope.getArtifactFileCollection(
+                task.appMetadata.from(variantScope.variantDependencies.getArtifactFileCollection(
                     COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA
                 ))
             } else {

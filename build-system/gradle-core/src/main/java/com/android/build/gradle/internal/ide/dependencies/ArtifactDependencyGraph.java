@@ -87,10 +87,12 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                 // Instead just get all the jars to get all the dependencies.
                 // Note: Query for JAR instead of PROCESSED_JAR due to b/110054209
                 ArtifactCollection runtimeArtifactCollection =
-                        variantScope.getArtifactCollectionForToolingModel(
-                                RUNTIME_CLASSPATH,
-                                AndroidArtifacts.ArtifactScope.ALL,
-                                AndroidArtifacts.ArtifactType.JAR);
+                        variantScope
+                                .getVariantDependencies()
+                                .getArtifactCollectionForToolingModel(
+                                        RUNTIME_CLASSPATH,
+                                        AndroidArtifacts.ArtifactScope.ALL,
+                                        AndroidArtifacts.ArtifactType.JAR);
 
                 // build a list of the runtime ComponentIdentifiers
                 final Set<ResolvedArtifactResult> runtimeArtifacts =
@@ -263,17 +265,21 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             // might not exist yet.
             ImmutableMultimap<ComponentIdentifier, ResolvedArtifactResult> projectRuntime =
                     ArtifactUtils.asMultiMap(
-                            variantScope.getArtifactCollectionForToolingModel(
-                                    RUNTIME_CLASSPATH,
-                                    AndroidArtifacts.ArtifactScope.PROJECT,
-                                    AndroidArtifacts.ArtifactType.JAR));
+                            variantScope
+                                    .getVariantDependencies()
+                                    .getArtifactCollectionForToolingModel(
+                                            RUNTIME_CLASSPATH,
+                                            AndroidArtifacts.ArtifactScope.PROJECT,
+                                            AndroidArtifacts.ArtifactType.JAR));
 
             ImmutableMultimap<ComponentIdentifier, ResolvedArtifactResult> externalRuntime =
                     ArtifactUtils.asMultiMap(
-                            variantScope.getArtifactCollectionForToolingModel(
-                                    RUNTIME_CLASSPATH,
-                                    AndroidArtifacts.ArtifactScope.EXTERNAL,
-                                    AndroidArtifacts.ArtifactType.PROCESSED_JAR));
+                            variantScope
+                                    .getVariantDependencies()
+                                    .getArtifactCollectionForToolingModel(
+                                            RUNTIME_CLASSPATH,
+                                            AndroidArtifacts.ArtifactScope.EXTERNAL,
+                                            AndroidArtifacts.ArtifactType.PROCESSED_JAR));
 
             ImmutableList.Builder<File> runtimeOnlyClasspathBuilder = ImmutableList.builder();
             for (ComponentIdentifier runtimeIdentifier : runtimeIdentifiers) {
@@ -307,10 +313,12 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
         // need to call getAllArtifacts() which computes a lot more many things.
         // Instead just get all the jars to get all the dependencies.
         ArtifactCollection runtimeArtifactCollection =
-                variantScope.getArtifactCollectionForToolingModel(
-                        RUNTIME_CLASSPATH,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.AAR_OR_JAR);
+                variantScope
+                        .getVariantDependencies()
+                        .getArtifactCollectionForToolingModel(
+                                RUNTIME_CLASSPATH,
+                                AndroidArtifacts.ArtifactScope.ALL,
+                                AndroidArtifacts.ArtifactType.AAR_OR_JAR);
         // ImmutableSet also preserves order.
         ImmutableSet.Builder<ComponentIdentifier> runtimeIdentifiersBuilder =
                 ImmutableSet.builder();

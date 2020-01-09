@@ -232,7 +232,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                             } else {
                                 AndroidArtifacts.ArtifactScope.EXTERNAL
                             }
-                             variantScope.getArtifactFileCollection(
+                             variantScope.variantDependencies.getArtifactFileCollection(
                                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                                 artifactScope,
                                 AndroidArtifacts.ArtifactType.DEX,
@@ -244,7 +244,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                     }
                     DexMergingAction.MERGE_LIBRARY_PROJECTS -> {
                         return if (dexingUsingArtifactTransforms) {
-                            variantScope.getArtifactFileCollection(
+                            variantScope.variantDependencies.getArtifactFileCollection(
                                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                                 AndroidArtifacts.ArtifactScope.PROJECT,
                                 AndroidArtifacts.ArtifactType.DEX,

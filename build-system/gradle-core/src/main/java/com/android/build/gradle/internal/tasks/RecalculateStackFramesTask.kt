@@ -89,7 +89,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
             val globalScope = variantScope.globalScope
 
             val classesToFix = globalScope.project.files(
-                variantScope.getArtifactFileCollection(
+                variantScope.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.EXTERNAL,
                     AndroidArtifacts.ArtifactType.CLASSES_JAR))
@@ -105,7 +105,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
 
             val referencedClasses = globalScope.project.files(variantScope.providedOnlyClasspath)
 
-            referencedClasses.from(variantScope.getArtifactFileCollection(
+            referencedClasses.from(variantScope.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.PROJECT,
                 AndroidArtifacts.ArtifactType.CLASSES_JAR))
@@ -131,7 +131,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
                 )
 
                 referencedClasses.from(
-                    testedVariantScope.getArtifactCollection(
+                    testedVariantScope.variantDependencies.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.CLASSES_JAR

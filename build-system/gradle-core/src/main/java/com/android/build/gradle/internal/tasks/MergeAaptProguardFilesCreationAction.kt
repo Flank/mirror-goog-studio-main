@@ -51,7 +51,7 @@ class MergeAaptProguardFilesCreationAction(variantScope: VariantScope) :
             project
                 .files(
                     variantScope.artifacts.getFinalProduct(InternalArtifactType.AAPT_PROGUARD_FILE),
-                    variantScope.getArtifactFileCollection(
+                    variantScope.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.AAPT_PROGUARD_RULES

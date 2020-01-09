@@ -257,7 +257,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
             if (variantScope.isPrecompileDependenciesResourcesEnabled) {
                 task.compiledDependenciesResources.fromDisallowChanges(
-                    variantScope.getArtifactFileCollection(
+                    variantScope.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES

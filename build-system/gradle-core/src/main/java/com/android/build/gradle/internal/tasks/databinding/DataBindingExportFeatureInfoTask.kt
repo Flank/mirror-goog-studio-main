@@ -99,7 +99,7 @@ abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
         override fun configure(task: DataBindingExportFeatureInfoTask) {
             super.configure(task)
 
-            task.directDependencies = variantScope.getArtifactFileCollection(
+            task.directDependencies = variantScope.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT)

@@ -75,7 +75,7 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
             super.configure(task)
 
             task.classesArtifacts =
-                    variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES_JAR)
+                    variantScope.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES_JAR)
         }
     }
 }

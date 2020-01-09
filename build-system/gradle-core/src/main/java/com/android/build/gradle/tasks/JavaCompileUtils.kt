@@ -112,7 +112,7 @@ fun JavaCompile.configurePropertiesForAnnotationProcessing(
  * @see [JavaCompile.configurePropertiesForAnnotationProcessing]
  */
 fun JavaCompile.configureAnnotationProcessorPath(scope: VariantScope) {
-    var processorPath = scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR)
+    var processorPath = scope.variantDependencies.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR)
     this.options.annotationProcessorPath = processorPath
 }
 

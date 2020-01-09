@@ -86,7 +86,7 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
         override fun configure(task: DataBindingExportFeatureApplicationIdsTask) {
             super.configure(task)
 
-            task.featureDeclarations = variantScope.getArtifactFileCollection(
+            task.featureDeclarations = variantScope.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.REVERSE_METADATA_FEATURE_DECLARATION

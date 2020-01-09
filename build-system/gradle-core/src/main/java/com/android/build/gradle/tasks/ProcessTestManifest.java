@@ -594,7 +594,9 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             task.getTestLabel().disallowChanges();
 
             task.manifests =
-                    getVariantScope().getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
+                    getVariantScope()
+                            .getVariantDependencies()
+                            .getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             task.getPlaceholdersValues()
                     .set(project.provider(variantDslInfo::getManifestPlaceholders));
@@ -608,6 +610,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                 task.navigationJsons =
                         project.files(
                                 getVariantScope()
+                                        .getVariantDependencies()
                                         .getArtifactFileCollection(
                                                 RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
             }

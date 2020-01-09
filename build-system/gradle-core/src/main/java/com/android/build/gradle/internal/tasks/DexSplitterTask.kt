@@ -120,7 +120,7 @@ abstract class DexSplitterTask : NonIncrementalTask() {
             val artifacts = variantScope.artifacts
 
             task.featureJars =
-                variantScope.getArtifactFileCollection(REVERSE_METADATA_VALUES, PROJECT, REVERSE_METADATA_CLASSES)
+                variantScope.variantDependencies.getArtifactFileCollection(REVERSE_METADATA_VALUES, PROJECT, REVERSE_METADATA_CLASSES)
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,

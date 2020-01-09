@@ -158,7 +158,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                     task.thisRClassClasses
                 )
-                task.dependencyRClassClasses = variantScope.getArtifactFileCollection(
+                task.dependencyRClassClasses = variantScope.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     ALL,
                     COMPILE_ONLY_NAMESPACED_R_CLASS_JAR

@@ -21,7 +21,6 @@ import static com.android.SdkConstants.FD_COMPILED;
 import static com.android.SdkConstants.FD_MERGED;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR;
@@ -58,28 +57,19 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.PostProcessingOptions;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.dependency.AndroidTestResourceArtifactCollection;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
-import com.android.build.gradle.internal.dependency.FilteredArtifactCollection;
-import com.android.build.gradle.internal.dependency.FilteringSpec;
 import com.android.build.gradle.internal.dependency.ProvidedClasspath;
-import com.android.build.gradle.internal.dependency.SubtractingArtifactCollection;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.build.gradle.internal.publishing.PublishingSpecs.OutputSpec;
-import com.android.build.gradle.internal.publishing.PublishingSpecs.VariantSpec;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
-import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
@@ -116,17 +106,11 @@ import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
-import org.gradle.api.artifacts.component.ComponentIdentifier;
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
-import org.gradle.api.attributes.Attribute;
-import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.Directory;
@@ -134,7 +118,6 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.specs.Spec;
 
 /** A scope containing data for a specific variant. */
 public class VariantScopeImpl implements VariantScope {
@@ -657,7 +640,8 @@ public class VariantScopeImpl implements VariantScope {
             @NonNull ConsumedConfigType configType,
             @NonNull ArtifactType classesType,
             @Nullable Object generatedBytecodeKey) {
-        FileCollection mainCollection = getArtifactFileCollection(configType, ALL, classesType);
+        FileCollection mainCollection =
+                getVariantDependencies().getArtifactFileCollection(configType, ALL, classesType);
 
         mainCollection =
                 mainCollection.plus(variantData.getGeneratedBytecode(generatedBytecodeKey));
@@ -677,6 +661,8 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     @NonNull
     public FileCollection getCompiledRClasses(@NonNull ConsumedConfigType configType) {
+        VariantDependencies variantDependencies = getVariantDependencies();
+
         FileCollection mainCollection = getProject().files();
         BaseVariantData tested = getTestedVariantData();
 
@@ -690,10 +676,12 @@ public class VariantScopeImpl implements VariantScope {
             mainCollection = mainCollection.plus(fileTree);
             mainCollection =
                     mainCollection.plus(
-                            getArtifactFileCollection(
+                            variantDependencies.getArtifactFileCollection(
                                     configType, ALL, COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             mainCollection =
-                    mainCollection.plus(getArtifactFileCollection(configType, ALL, SHARED_CLASSES));
+                    mainCollection.plus(
+                            variantDependencies.getArtifactFileCollection(
+                                    configType, ALL, SHARED_CLASSES));
 
             if (globalScope
                     .getProjectOptions()
@@ -775,7 +763,8 @@ public class VariantScopeImpl implements VariantScope {
             @NonNull ConsumedConfigType configType,
             @NonNull ArtifactType classesType,
             @Nullable Object generatedBytecodeKey) {
-        ArtifactCollection mainCollection = getArtifactCollection(configType, ALL, classesType);
+        ArtifactCollection mainCollection =
+                getVariantDependencies().getArtifactCollection(configType, ALL, classesType);
 
         return ArtifactCollectionWithExtraArtifact.makeExtraCollection(
                 mainCollection,
@@ -787,248 +776,6 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public BuildArtifactsHolder getArtifacts() {
         return artifacts;
-    }
-
-    @Override
-    @NonNull
-    public FileCollection getArtifactFileCollection(
-            @NonNull ConsumedConfigType configType,
-            @NonNull ArtifactScope scope,
-            @NonNull ArtifactType artifactType) {
-        return getArtifactFileCollection(configType, scope, artifactType, null);
-    }
-
-    @Override
-    @NonNull
-    public FileCollection getArtifactFileCollection(
-            @NonNull ConsumedConfigType configType,
-            @NonNull ArtifactScope scope,
-            @NonNull ArtifactType artifactType,
-            @Nullable Map<Attribute<String>, String> attributeMap) {
-        if (configType.needsTestedComponents()) {
-            return getArtifactCollection(configType, scope, artifactType, attributeMap)
-                    .getArtifactFiles();
-        }
-        ArtifactCollection artifacts =
-                computeArtifactCollection(configType, scope, artifactType, attributeMap);
-
-        FileCollection fileCollection;
-
-        if (configType == RUNTIME_CLASSPATH
-                && getType().isDynamicFeature()
-                && artifactType != ArtifactType.PACKAGED_DEPENDENCIES) {
-
-            FileCollection excludedDirectories =
-                    computeArtifactCollection(
-                                    RUNTIME_CLASSPATH,
-                                    PROJECT,
-                                    ArtifactType.PACKAGED_DEPENDENCIES,
-                                    attributeMap)
-                            .getArtifactFiles();
-
-            fileCollection =
-                    new FilteringSpec(artifacts, excludedDirectories)
-                            .getFilteredFileCollection(getProject());
-
-        } else {
-            fileCollection = artifacts.getArtifactFiles();
-        }
-
-        return fileCollection;
-    }
-
-    @Override
-    @NonNull
-    public ArtifactCollection getArtifactCollection(
-            @NonNull ConsumedConfigType configType,
-            @NonNull ArtifactScope scope,
-            @NonNull ArtifactType artifactType) {
-        return getArtifactCollection(configType, scope, artifactType, null);
-    }
-
-    @NonNull
-    @Override
-    public ArtifactCollection getArtifactCollection(
-            @NonNull ConsumedConfigType configType,
-            @NonNull ArtifactScope scope,
-            @NonNull ArtifactType artifactType,
-            @Nullable Map<Attribute<String>, String> attributeMap) {
-        ArtifactCollection artifacts =
-                computeArtifactCollection(configType, scope, artifactType, attributeMap);
-
-        if (configType == RUNTIME_CLASSPATH
-                && getType().isDynamicFeature()
-                && artifactType != ArtifactType.PACKAGED_DEPENDENCIES) {
-
-            FileCollection excludedDirectories =
-                    computeArtifactCollection(
-                                    RUNTIME_CLASSPATH,
-                                    PROJECT,
-                                    ArtifactType.PACKAGED_DEPENDENCIES,
-                                    null)
-                            .getArtifactFiles();
-            artifacts =
-                    new FilteredArtifactCollection(
-                            getProject(), new FilteringSpec(artifacts, excludedDirectories));
-        }
-
-        if (!configType.needsTestedComponents() || !getType().isTestComponent()) {
-            return artifacts;
-        }
-
-        // get the matching file collection for the tested variant, if any.
-        if (!(variantData instanceof TestVariantData)) {
-            return artifacts;
-        }
-
-        TestedVariantData tested = ((TestVariantData) variantData).getTestedVariantData();
-        final VariantScope testedScope = tested.getScope();
-
-        // we only add the tested component to the PROJECT | ALL scopes.
-        if (scope == ArtifactScope.PROJECT || scope == ALL) {
-            VariantSpec testedSpec = testedScope.getPublishingSpec().getTestingSpec(getType());
-
-            // get the OutputPublishingSpec from the ArtifactType for this particular variant
-            // spec
-            OutputSpec taskOutputSpec =
-                    testedSpec.getSpec(artifactType, configType.getPublishedTo());
-
-            if (taskOutputSpec != null) {
-                Collection<PublishedConfigType> publishedConfigs =
-                        taskOutputSpec.getPublishedConfigTypes();
-
-                // check that we are querying for a config type that the tested artifact
-                // was published to.
-                if (publishedConfigs.contains(configType.getPublishedTo())) {
-                    // if it's the case then we add the tested artifact.
-                    final SingleArtifactType<? extends FileSystemLocation> taskOutputType =
-                            taskOutputSpec.getOutputType();
-                    BuildArtifactsHolder testedArtifacts = testedScope.getArtifacts();
-                    artifacts =
-                            ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
-                                    artifacts,
-                                    testedArtifacts
-                                            .getFinalProductAsFileCollection(taskOutputType)
-                                            .get(),
-                                    getProject().getPath(),
-                                    testedScope.getName());
-                }
-            }
-        }
-
-        // We remove the transitive dependencies coming from the
-        // tested app to avoid having the same artifact on each app and tested app.
-        // This applies only to the package scope since we do want these in the compile
-        // scope in order to compile.
-        // We only do this for the AndroidTest.
-        // We do have to however keep the Android resources.
-        if (tested instanceof ApplicationVariantData
-                && configType == RUNTIME_CLASSPATH
-                && getType().isApk()) {
-            if (artifactType == ArtifactType.ANDROID_RES
-                    || artifactType == ArtifactType.COMPILED_DEPENDENCIES_RESOURCES) {
-                artifacts =
-                        new AndroidTestResourceArtifactCollection(
-                                artifacts,
-                                getVariantDependencies().getIncomingRuntimeDependencies(),
-                                getVariantDependencies().getRuntimeClasspath().getIncoming());
-            } else {
-                ArtifactCollection testedArtifactCollection =
-                        testedScope.getArtifactCollection(
-                                configType, scope, artifactType, attributeMap);
-                artifacts = new SubtractingArtifactCollection(artifacts, testedArtifactCollection);
-            }
-        }
-
-        return artifacts;
-
-    }
-
-    @NonNull
-    private Configuration getConfiguration(@NonNull ConsumedConfigType configType) {
-        switch (configType) {
-            case COMPILE_CLASSPATH:
-                return getVariantDependencies().getCompileClasspath();
-            case RUNTIME_CLASSPATH:
-                return getVariantDependencies().getRuntimeClasspath();
-            case ANNOTATION_PROCESSOR:
-                return getVariantDependencies().getAnnotationProcessorConfiguration();
-            case REVERSE_METADATA_VALUES:
-                return Preconditions.checkNotNull(
-                        getVariantDependencies().getReverseMetadataValuesConfiguration());
-            default:
-                throw new RuntimeException("unknown ConfigType value " + configType);
-        }
-    }
-
-    @NonNull
-    @Override
-    public ArtifactCollection getArtifactCollectionForToolingModel(
-            @NonNull ConsumedConfigType configType,
-            @NonNull ArtifactScope scope,
-            @NonNull ArtifactType artifactType) {
-        return computeArtifactCollection(configType, scope, artifactType, null);
-    }
-
-    @NonNull
-    private ArtifactCollection computeArtifactCollection(
-            @NonNull ConsumedConfigType configType,
-            @NonNull ArtifactScope scope,
-            @NonNull ArtifactType artifactType,
-            @Nullable Map<Attribute<String>, String> attributeMap) {
-
-        Configuration configuration = getConfiguration(configType);
-
-        Action<AttributeContainer> attributes =
-                container -> {
-                    container.attribute(ARTIFACT_TYPE, artifactType.getType());
-                    if (attributeMap != null) {
-                        for (Attribute<String> attribute : attributeMap.keySet()) {
-                            container.attribute(attribute, attributeMap.get(attribute));
-                        }
-                    }
-                };
-
-        Spec<ComponentIdentifier> filter = getComponentFilter(scope);
-
-        boolean lenientMode =
-                Boolean.TRUE.equals(
-                        globalScope.getProjectOptions().get(BooleanOption.IDE_BUILD_MODEL_ONLY));
-
-        return configuration
-                .getIncoming()
-                .artifactView(
-                        config -> {
-                            config.attributes(attributes);
-                            if (filter != null) {
-                                config.componentFilter(filter);
-                            }
-                            // TODO somehow read the unresolved dependencies?
-                            config.lenient(lenientMode);
-                        })
-                .getArtifacts();
-    }
-
-    @Nullable
-    private static Spec<ComponentIdentifier> getComponentFilter(
-            @NonNull AndroidArtifacts.ArtifactScope scope) {
-        switch (scope) {
-            case ALL:
-                return null;
-            case EXTERNAL:
-                // since we want both Module dependencies and file based dependencies in this case
-                // the best thing to do is search for non ProjectComponentIdentifier.
-                return id -> !(id instanceof ProjectComponentIdentifier);
-            case PROJECT:
-                return id -> id instanceof ProjectComponentIdentifier;
-            case REPOSITORY_MODULE:
-                return id -> id instanceof ModuleComponentIdentifier;
-            case FILE:
-                return id ->
-                        !(id instanceof ProjectComponentIdentifier
-                                || id instanceof ModuleComponentIdentifier);
-        }
-        throw new RuntimeException("unknown ArtifactScope value");
     }
 
     /**
@@ -1087,8 +834,11 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public FileCollection getProvidedOnlyClasspath() {
-        ArtifactCollection compile = getArtifactCollection(COMPILE_CLASSPATH, ALL, CLASSES_JAR);
-        ArtifactCollection runtime = getArtifactCollection(RUNTIME_CLASSPATH, ALL, CLASSES_JAR);
+        VariantDependencies variantDependencies = getVariantDependencies();
+        ArtifactCollection compile =
+                variantDependencies.getArtifactCollection(COMPILE_CLASSPATH, ALL, CLASSES_JAR);
+        ArtifactCollection runtime =
+                variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, CLASSES_JAR);
 
         return ProvidedClasspath.getProvidedClasspath(compile, runtime);
     }
@@ -1480,10 +1230,11 @@ public class VariantScopeImpl implements VariantScope {
     private Provider<FeatureSetMetadata> getFeatureSetProvider() {
         if (featureSetProvider == null) {
             FileCollection fc =
-                    getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            PROJECT,
-                            FEATURE_SET_METADATA);
+                    getVariantDependencies()
+                            .getArtifactFileCollection(
+                                    AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                                    PROJECT,
+                                    FEATURE_SET_METADATA);
             featureSetProvider =
                     fc.getElements()
                             .map(

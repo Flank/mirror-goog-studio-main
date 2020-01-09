@@ -172,7 +172,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
                 .getFinalProductAsFileCollection(AnchorOutputType.ALL_CLASSES)
 
             task.externalArtifactCollection = scope
-                .getArtifactCollection(
+                .variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.CLASSES_JAR)

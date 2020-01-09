@@ -55,6 +55,7 @@ import com.android.build.gradle.internal.dependency.DexingArtifactConfiguration;
 import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder;
 import com.android.build.gradle.internal.dependency.VersionedCodeShrinker;
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -279,9 +280,10 @@ public class VariantManager {
             // If the variant being tested is a library variant, VariantDependencies must be
             // computed after the tasks for the tested variant is created.  Therefore, the
             // VariantDependencies is computed here instead of when the VariantData was created.
-            VariantDependencies.Builder builder =
-                    VariantDependencies.builder(
+            VariantDependenciesBuilder builder =
+                    VariantDependenciesBuilder.builder(
                                     project,
+                                    projectOptions,
                                     variantScope.getGlobalScope().getDslScope().getIssueReporter(),
                                     variantDslInfo)
                             .addSourceSets(testVariantSourceSets)
@@ -638,9 +640,10 @@ public class VariantManager {
 
         variantScope.setVariantData(variantData);
 
-        VariantDependencies.Builder builder =
-                VariantDependencies.builder(
+        VariantDependenciesBuilder builder =
+                VariantDependenciesBuilder.builder(
                                 project,
+                                projectOptions,
                                 variantScope.getGlobalScope().getDslScope().getIssueReporter(),
                                 variantDslInfo)
                         .setFlavorSelection(getFlavorSelection(variantDslInfo))

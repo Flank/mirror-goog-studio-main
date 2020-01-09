@@ -170,7 +170,8 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
             VariantScope scope = getVariantScope();
 
             task.init(
-                    scope.getArtifactCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR),
+                    scope.getVariantDependencies()
+                            .getArtifactCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR),
                     scope.getVariantDslInfo()
                             .getJavaCompileOptions()
                             .getAnnotationProcessorOptions());

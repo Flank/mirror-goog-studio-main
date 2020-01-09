@@ -248,14 +248,14 @@ fun getProjectNativeLibs(scope: VariantScope): FileCollection {
 fun getSubProjectNativeLibs(scope: VariantScope): FileCollection {
     val nativeLibs = scope.globalScope.project.files()
     nativeLibs.from(
-        scope.getArtifactFileCollection(
+        scope.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.PROJECT,
             AndroidArtifacts.ArtifactType.JAVA_RES
         )
     )
     nativeLibs.from(
-        scope.getArtifactFileCollection(
+        scope.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.PROJECT,
             AndroidArtifacts.ArtifactType.JNI
@@ -267,14 +267,14 @@ fun getSubProjectNativeLibs(scope: VariantScope): FileCollection {
 fun getExternalNativeLibs(scope: VariantScope): FileCollection {
     val nativeLibs = scope.globalScope.project.files()
     nativeLibs.from(
-        scope.getArtifactFileCollection(
+        scope.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.EXTERNAL,
             AndroidArtifacts.ArtifactType.JAVA_RES
         )
     )
     nativeLibs.from(
-        scope.getArtifactFileCollection(
+        scope.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.EXTERNAL,
             AndroidArtifacts.ArtifactType.JNI

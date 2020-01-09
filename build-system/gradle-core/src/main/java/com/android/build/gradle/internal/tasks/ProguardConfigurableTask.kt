@@ -218,7 +218,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 )
             } else if (isTestApplication) {
                 task.testedMappingFile.from(
-                    variantScope.getArtifactFileCollection(
+                    variantScope.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.APK_MAPPING
@@ -255,7 +255,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
                         Callable<Collection<File>> { testedScope.testProguardFiles },
-                        variantScope.getArtifactFileCollection(
+                        variantScope.variantDependencies.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,
                             ALL,
                             FILTERED_PROGUARD_RULES,
@@ -271,7 +271,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
                         Callable<Collection<File>> { variantScope.testProguardFiles },
-                        variantScope.getArtifactFileCollection(
+                        variantScope.variantDependencies.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,
                             ALL,
                             FILTERED_PROGUARD_RULES,
@@ -325,7 +325,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 proguardConfigFiles,
                 aaptProguardFile,
                 variantScope.artifacts.getFinalProduct(GENERATED_PROGUARD_FILE),
-                variantScope.getArtifactFileCollection(
+                variantScope.variantDependencies.getArtifactFileCollection(
                     RUNTIME_CLASSPATH,
                     ALL,
                     FILTERED_PROGUARD_RULES,
@@ -354,7 +354,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
         private fun addFeatureProguardRules(configurationFiles: ConfigurableFileCollection) {
             configurationFiles.from(
-                variantScope.getArtifactFileCollection(
+                variantScope.variantDependencies.getArtifactFileCollection(
                     REVERSE_METADATA_VALUES,
                     PROJECT,
                     FILTERED_PROGUARD_RULES,

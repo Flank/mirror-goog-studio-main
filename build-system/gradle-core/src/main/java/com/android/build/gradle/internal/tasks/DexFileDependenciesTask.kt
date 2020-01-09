@@ -185,7 +185,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
             task.debuggable
                 .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
             task.classes.from(
-                variantScope.getArtifactFileCollection(
+                variantScope.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.FILE,
                     AndroidArtifacts.ArtifactType.PROCESSED_JAR
@@ -196,7 +196,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
             task.minSdkVersion.setDisallowChanges(minSdkVersion)
             if (minSdkVersion < AndroidVersion.VersionCodes.N) {
                 task.classpath.from(
-                    variantScope.getArtifactFileCollection(
+                    variantScope.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.REPOSITORY_MODULE,
                         AndroidArtifacts.ArtifactType.PROCESSED_JAR

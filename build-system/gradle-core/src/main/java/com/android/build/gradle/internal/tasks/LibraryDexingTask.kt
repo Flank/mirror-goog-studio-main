@@ -132,7 +132,7 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
                 if (minSdkVersion < AndroidVersion.VersionCodes.N) {
                     task.bootClasspath.from(scope.globalScope.bootClasspath)
                     task.classpath.from(
-                        scope.getArtifactFileCollection(
+                        scope.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.CLASSES_JAR

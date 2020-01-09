@@ -119,7 +119,7 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
             )
             if (variantScope.type.isDynamicFeature) {
                 task.inputFiles.from(
-                    variantScope.getArtifactFileCollection(
+                    variantScope.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.UNFILTERED_PROGUARD_RULES

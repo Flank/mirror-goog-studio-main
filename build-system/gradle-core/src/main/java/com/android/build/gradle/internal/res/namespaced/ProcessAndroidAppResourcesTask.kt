@@ -170,7 +170,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
                 task.thisSubProjectStaticLibrary
             )
             task.libraryDependencies =
-                    variantScope.getArtifactFileCollection(
+                    variantScope.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
@@ -181,7 +181,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
                     task.convertedLibraryDependencies)
             }
             task.sharedLibraryDependencies =
-                    variantScope.getArtifactFileCollection(
+                    variantScope.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)

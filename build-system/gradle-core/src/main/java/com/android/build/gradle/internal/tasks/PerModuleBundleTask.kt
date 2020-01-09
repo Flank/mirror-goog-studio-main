@@ -244,7 +244,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             task.dexFiles.from(programDexFiles.plus(desugarLibDexFile))
 
             task.featureDexFiles.from(
-                variantScope.getArtifactFileCollection(
+                variantScope.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,

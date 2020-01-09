@@ -222,7 +222,7 @@ abstract class MergeJavaResourceTask
 
             if (mergeScopes.contains(SUB_PROJECTS)) {
                 task.subProjectJavaRes =
-                    variantScope.getArtifactFileCollection(
+                    variantScope.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.JAVA_RES
@@ -236,7 +236,7 @@ abstract class MergeJavaResourceTask
 
             if (mergeScopes.contains(FEATURES)) {
                 task.featureJavaRes =
-                    variantScope.getArtifactFileCollection(
+                    variantScope.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.REVERSE_METADATA_JAVA_RES
@@ -296,7 +296,7 @@ private fun getExternalLibJavaRes(scope: VariantScope, mergeScopes: Collection<S
     val externalLibJavaRes = scope.globalScope.project.files()
     if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
         externalLibJavaRes.from(
-            scope.getArtifactFileCollection(
+            scope.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.EXTERNAL,
                 AndroidArtifacts.ArtifactType.JAVA_RES

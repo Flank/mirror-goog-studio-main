@@ -293,7 +293,9 @@ public abstract class LintBaseTask extends DefaultTask {
             FileCollection dependencyLintJarCollection;
             allInputs.from(
                     dependencyLintJarCollection =
-                            variantScope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, LINT));
+                            variantScope
+                                    .getVariantDependencies()
+                                    .getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, LINT));
 
             lintRuleJars = variantScope.getGlobalScope().getProject().files(
                     localLintJarCollection,

@@ -195,7 +195,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
 
             task.projectClasses.from(projectClasses)
             task.subProjectClasses.from(
-                variantScope.getArtifactFileCollection(
+                variantScope.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.CLASSES_JAR
@@ -218,7 +218,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 )
 
                 task.desugaringClasspath.from(
-                    testedVariantScope.getArtifactCollection(
+                    testedVariantScope.variantDependencies.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.CLASSES_JAR

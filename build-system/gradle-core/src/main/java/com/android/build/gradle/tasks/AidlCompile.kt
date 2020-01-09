@@ -228,7 +228,7 @@ abstract class AidlCompile : NonIncrementalTask() {
                     })
             task.sourceFiles.disallowChanges()
 
-            task.importDirs = scope.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL)
+            task.importDirs = scope.variantDependencies.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL)
 
             if (variantDslInfo.variantType.isAar) {
                 task.packageWhitelist = globalScope.extension.aidlPackageWhiteList

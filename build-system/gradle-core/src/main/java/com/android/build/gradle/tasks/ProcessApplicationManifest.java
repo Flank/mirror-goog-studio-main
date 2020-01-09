@@ -671,7 +671,10 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             Project project = globalScope.getProject();
 
             // This includes the dependent libraries.
-            task.manifests = variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
+            task.manifests =
+                    variantScope
+                            .getVariantDependencies()
+                            .getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             // Also include rewritten auto-namespaced manifests if there are any
             if (variantType
@@ -746,22 +749,28 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             // set optional inputs per module type
             if (variantType.isBaseModule()) {
                 task.featureManifests =
-                        variantScope.getArtifactCollection(
-                                REVERSE_METADATA_VALUES,
-                                PROJECT,
-                                REVERSE_METADATA_FEATURE_MANIFEST);
+                        variantScope
+                                .getVariantDependencies()
+                                .getArtifactCollection(
+                                        REVERSE_METADATA_VALUES,
+                                        PROJECT,
+                                        REVERSE_METADATA_FEATURE_MANIFEST);
 
             } else if (variantType.isDynamicFeature()) {
                 task.getFeatureName().set(variantScope.getFeatureName());
                 task.getFeatureName().disallowChanges();
 
                 task.packageManifest =
-                        variantScope.getArtifactFileCollection(
-                                COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA);
+                        variantScope
+                                .getVariantDependencies()
+                                .getArtifactFileCollection(
+                                        COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA);
 
                 task.dependencyFeatureNameArtifacts =
-                        variantScope.getArtifactFileCollection(
-                                RUNTIME_CLASSPATH, PROJECT, FEATURE_NAME);
+                        variantScope
+                                .getVariantDependencies()
+                                .getArtifactFileCollection(
+                                        RUNTIME_CLASSPATH, PROJECT, FEATURE_NAME);
             }
 
             if (!globalScope.getExtension().getAaptOptions().getNamespaced()) {
@@ -771,8 +780,10 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                         .getArtifacts()
                                         .getFinalProduct(
                                                 InternalArtifactType.NAVIGATION_JSON.INSTANCE),
-                                variantScope.getArtifactFileCollection(
-                                        RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
+                                variantScope
+                                        .getVariantDependencies()
+                                        .getArtifactFileCollection(
+                                                RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
             }
             task.packageOverride.set(componentProperties.getApplicationId());
             task.packageOverride.disallowChanges();

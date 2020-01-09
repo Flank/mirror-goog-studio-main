@@ -356,7 +356,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             }
 
             if (includeDependencies) {
-                task.libraryCollection = scope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ASSETS)
+                task.libraryCollection = scope.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ASSETS)
             }
 
             task.dependsOn(scope.taskContainer.assetGenTask)

@@ -228,7 +228,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
         override fun configure(task: PerModuleReportDependenciesTask) {
             super.configure(task)
             task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
-            task.runtimeClasspathArtifacts = variantScope.getArtifactCollection(
+            task.runtimeClasspathArtifacts = variantScope.variantDependencies.getArtifactCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.EXTERNAL,
                 // Normally we would query for PROCESSED_JAR, but JAR is probably sufficient here

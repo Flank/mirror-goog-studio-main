@@ -137,7 +137,7 @@ class SigningConfigProvider(
                     // Otherwise, get it from the published artifact
                     SigningConfigProvider(
                         signingConfigData = null,
-                        signingConfigFileCollection = variantScope.getArtifactFileCollection(
+                        signingConfigFileCollection = variantScope.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.PROJECT,
                             AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG

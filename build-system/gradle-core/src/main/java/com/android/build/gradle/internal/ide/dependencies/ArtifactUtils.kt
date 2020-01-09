@@ -56,20 +56,20 @@ class ArtifactCollections(
      *
      * This captures dependencies without transforming them using `AttributeCompatibilityRule`s.
      **/
-    val all: ArtifactCollection = variantScope.getArtifactCollectionForToolingModel(
+    val all: ArtifactCollection = variantScope.variantDependencies.getArtifactCollectionForToolingModel(
         consumedConfigType,
         AndroidArtifacts.ArtifactScope.ALL,
         AndroidArtifacts.ArtifactType.AAR_OR_JAR
     )
 
-    val manifests: ArtifactCollection = variantScope.getArtifactCollectionForToolingModel(
+    val manifests: ArtifactCollection = variantScope.variantDependencies.getArtifactCollectionForToolingModel(
         consumedConfigType,
         AndroidArtifacts.ArtifactScope.ALL,
         AndroidArtifacts.ArtifactType.MANIFEST
     )
     val nonNamespacedManifests: ArtifactCollection? =
         if (variantScope.globalScope.extension.aaptOptions.namespaced) {
-            variantScope.getArtifactCollectionForToolingModel(
+            variantScope.variantDependencies.getArtifactCollectionForToolingModel(
                 consumedConfigType,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.NON_NAMESPACED_MANIFEST
@@ -84,7 +84,7 @@ class ArtifactCollections(
     // This is why we query for Scope.ALL
     // But we also simply need the exploded AARs for external Android dependencies so that
     // Studio can access the content.
-    val explodedAars: ArtifactCollection = variantScope.getArtifactCollectionForToolingModel(
+    val explodedAars: ArtifactCollection = variantScope.variantDependencies.getArtifactCollectionForToolingModel(
         consumedConfigType,
         AndroidArtifacts.ArtifactScope.ALL,
         AndroidArtifacts.ArtifactType.EXPLODED_AAR
@@ -92,7 +92,7 @@ class ArtifactCollections(
 
     // Note: Query for JAR instead of PROCESSED_JAR for project dependencies due to b/110054209
     // With a solution to that projectJars and externalJars could be merged.
-    val projectJars: ArtifactCollection = variantScope.getArtifactCollectionForToolingModel(
+    val projectJars: ArtifactCollection = variantScope.variantDependencies.getArtifactCollectionForToolingModel(
         consumedConfigType,
         AndroidArtifacts.ArtifactScope.PROJECT,
         AndroidArtifacts.ArtifactType.JAR

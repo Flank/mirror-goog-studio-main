@@ -158,7 +158,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                 variantScope.artifacts.getOperations().getAll(
                     MultipleArtifactType.RES_COMPILED_FLAT_FILES))
             task.libraryDependencies =
-                    variantScope.getArtifactFileCollection(
+                    variantScope.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
@@ -169,7 +169,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                     task.convertedLibraryDependencies)
             }
             task.sharedLibraryDependencies =
-                    variantScope.getArtifactFileCollection(
+                    variantScope.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)

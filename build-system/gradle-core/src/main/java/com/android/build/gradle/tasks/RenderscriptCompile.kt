@@ -301,7 +301,7 @@ abstract class RenderscriptCompile : NdkTask() {
             task.sourceDirs = globalScope
                 .project
                 .files(Callable { variantSources.renderscriptSourceList })
-            task.importDirs = scope.getArtifactFileCollection(
+            task.importDirs = scope.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH, ALL, RENDERSCRIPT
             )
 

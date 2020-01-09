@@ -268,7 +268,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                     } else {
                         RUNTIME_CLASSPATH
                     }
-                task.dependencies.from(variantScope.getArtifactFileCollection(
+                task.dependencies.from(variantScope.variantDependencies.getArtifactFileCollection(
                     consumedConfigType,
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
@@ -330,7 +330,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             // for android test, and in the case of transitive R classes, we also need them
             // to include them in the local R class.
             task.dependencies.fromDisallowChanges(
-                    variantScope.getArtifactFileCollection(
+                    variantScope.variantDependencies.getArtifactFileCollection(
                         RUNTIME_CLASSPATH,
                         ALL,
                         AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME

@@ -168,38 +168,6 @@ public interface VariantScope extends TransformVariantScope {
     BuildArtifactsHolder getArtifacts();
 
     @NonNull
-    FileCollection getArtifactFileCollection(
-            @NonNull AndroidArtifacts.ConsumedConfigType configType,
-            @NonNull AndroidArtifacts.ArtifactScope scope,
-            @NonNull ArtifactType artifactType,
-            @Nullable Map<Attribute<String>, String> attributeMap);
-
-    @NonNull
-    FileCollection getArtifactFileCollection(
-            @NonNull AndroidArtifacts.ConsumedConfigType configType,
-            @NonNull AndroidArtifacts.ArtifactScope scope,
-            @NonNull ArtifactType artifactType);
-
-    @NonNull
-    ArtifactCollection getArtifactCollection(
-            @NonNull AndroidArtifacts.ConsumedConfigType configType,
-            @NonNull AndroidArtifacts.ArtifactScope scope,
-            @NonNull ArtifactType artifactType);
-
-    @NonNull
-    ArtifactCollection getArtifactCollection(
-            @NonNull AndroidArtifacts.ConsumedConfigType configType,
-            @NonNull AndroidArtifacts.ArtifactScope scope,
-            @NonNull ArtifactType artifactType,
-            @Nullable Map<Attribute<String>, String> attributeMap);
-
-    @NonNull
-    ArtifactCollection getArtifactCollectionForToolingModel(
-            @NonNull AndroidArtifacts.ConsumedConfigType configType,
-            @NonNull AndroidArtifacts.ArtifactScope scope,
-            @NonNull ArtifactType artifactType);
-
-    @NonNull
     FileCollection getLocalPackagedJars();
 
     /**

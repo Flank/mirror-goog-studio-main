@@ -156,7 +156,7 @@ class DependencyResourcesComputer {
         validateEnabled = !globalScope.projectOptions.get(BooleanOption.DISABLE_RESOURCE_VALIDATION)
 
         if (includeDependencies) {
-            this.libraries = variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
+            this.libraries = variantScope.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
         }
 
         resources = variantData.androidResources

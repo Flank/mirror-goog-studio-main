@@ -129,7 +129,7 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
 
             task.minSdkVersion = variantScope.minSdkVersion.apiLevel
 
-            task.inputFiles = variantScope.getArtifactFileCollection(
+            task.inputFiles = variantScope.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.PROJECT,
                 AndroidArtifacts.ArtifactType.REVERSE_METADATA_FEATURE_DECLARATION

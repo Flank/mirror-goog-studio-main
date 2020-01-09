@@ -81,7 +81,7 @@ fun createCxxVariantModel(
         }
 
         override val prefabPackageDirectoryList: List<File> by lazy {
-            variantScope.getArtifactCollection(
+            variantScope.variantDependencies.getArtifactCollection(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.PREFAB_PACKAGE

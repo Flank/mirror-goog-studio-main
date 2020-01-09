@@ -353,7 +353,9 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
             task.classpath = variantScope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR);
 
             task.libraries =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, EXTERNAL, CLASSES_JAR);
+                    variantScope
+                            .getVariantDependencies()
+                            .getArtifactCollection(COMPILE_CLASSPATH, EXTERNAL, CLASSES_JAR);
 
             GlobalScope globalScope = variantScope.getGlobalScope();
 

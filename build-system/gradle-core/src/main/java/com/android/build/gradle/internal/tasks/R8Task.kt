@@ -285,7 +285,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                     task.baseJar
                 )
                 task.featureJars.from(
-                    variantScope.getArtifactFileCollection(
+                    variantScope.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.REVERSE_METADATA_CLASSES

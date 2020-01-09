@@ -98,12 +98,12 @@ abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
         override fun configure(task: DataBindingMergeDependencyArtifactsTask) {
             super.configure(task)
 
-            task.runtimeDependencies = variantScope.getArtifactFileCollection(
+            task.runtimeDependencies = variantScope.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT
             )
-            task.compileTimeDependencies = variantScope.getArtifactFileCollection(
+            task.compileTimeDependencies = variantScope.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT

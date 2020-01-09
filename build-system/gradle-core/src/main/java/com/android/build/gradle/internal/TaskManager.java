@@ -632,8 +632,10 @@ public abstract class TaskManager {
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setArtifactCollection(
-                                variantScope.getArtifactCollection(
-                                        RUNTIME_CLASSPATH, EXTERNAL, CLASSES_JAR))
+                                variantScope
+                                        .getVariantDependencies()
+                                        .getArtifactCollection(
+                                                RUNTIME_CLASSPATH, EXTERNAL, CLASSES_JAR))
                         .build());
 
         // Add stream of external java resources if EXTERNAL_LIBRARIES isn't in the set of java res
@@ -644,8 +646,10 @@ public abstract class TaskManager {
                             .addContentTypes(RESOURCES)
                             .addScope(Scope.EXTERNAL_LIBRARIES)
                             .setArtifactCollection(
-                                    variantScope.getArtifactCollection(
-                                            RUNTIME_CLASSPATH, EXTERNAL, JAVA_RES))
+                                    variantScope
+                                            .getVariantDependencies()
+                                            .getArtifactCollection(
+                                                    RUNTIME_CLASSPATH, EXTERNAL, JAVA_RES))
                             .build());
         }
 
@@ -655,8 +659,10 @@ public abstract class TaskManager {
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.SUB_PROJECTS)
                         .setArtifactCollection(
-                                variantScope.getArtifactCollection(
-                                        RUNTIME_CLASSPATH, PROJECT, CLASSES_JAR))
+                                variantScope
+                                        .getVariantDependencies()
+                                        .getArtifactCollection(
+                                                RUNTIME_CLASSPATH, PROJECT, CLASSES_JAR))
                         .build());
 
         // same for the java resources, if SUB_PROJECTS isn't in the set of java res merging scopes.
@@ -666,8 +672,10 @@ public abstract class TaskManager {
                             .addContentTypes(RESOURCES)
                             .addScope(Scope.SUB_PROJECTS)
                             .setArtifactCollection(
-                                    variantScope.getArtifactCollection(
-                                            RUNTIME_CLASSPATH, PROJECT, JAVA_RES))
+                                    variantScope
+                                            .getVariantDependencies()
+                                            .getArtifactCollection(
+                                                    RUNTIME_CLASSPATH, PROJECT, JAVA_RES))
                             .build());
         }
 
@@ -681,10 +689,12 @@ public abstract class TaskManager {
                             .addContentTypes(TransformManager.CONTENT_CLASS)
                             .addScope(InternalScope.FEATURES)
                             .setArtifactCollection(
-                                    variantScope.getArtifactCollection(
-                                            REVERSE_METADATA_VALUES,
-                                            PROJECT,
-                                            REVERSE_METADATA_CLASSES))
+                                    variantScope
+                                            .getVariantDependencies()
+                                            .getArtifactCollection(
+                                                    REVERSE_METADATA_VALUES,
+                                                    PROJECT,
+                                                    REVERSE_METADATA_CLASSES))
                             .build());
         }
 
@@ -740,8 +750,10 @@ public abstract class TaskManager {
                             .addContentTypes(DefaultContentType.CLASSES)
                             .addScope(Scope.TESTED_CODE)
                             .setArtifactCollection(
-                                    testedVariantScope.getArtifactCollection(
-                                            RUNTIME_CLASSPATH, ALL, CLASSES_JAR))
+                                    testedVariantScope
+                                            .getVariantDependencies()
+                                            .getArtifactCollection(
+                                                    RUNTIME_CLASSPATH, ALL, CLASSES_JAR))
                             .build());
         }
     }
@@ -1828,6 +1840,7 @@ public abstract class TaskManager {
                             FeatureSplitUtils.getFeatureName(globalScope.getProject().getPath()),
                             baseVariantData
                                     .getScope()
+                                    .getVariantDependencies()
                                     .getArtifactFileCollection(
                                             RUNTIME_CLASSPATH, PROJECT, APKS_FROM_BUNDLE));
         } else {

@@ -91,13 +91,13 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
             super.configure(task)
 
             task.compileManifests =
-                variantScope.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST)
-            task.compileNonNamespacedManifests = variantScope.getArtifactCollection(
+                variantScope.variantDependencies.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST)
+            task.compileNonNamespacedManifests = variantScope.variantDependencies.getArtifactCollection(
                 COMPILE_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST
             )
             task.runtimeManifests =
-                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST)
-            task.runtimeNonNamespacedManifests = variantScope.getArtifactCollection(
+                variantScope.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST)
+            task.runtimeNonNamespacedManifests = variantScope.variantDependencies.getArtifactCollection(
                 RUNTIME_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST
             )
 

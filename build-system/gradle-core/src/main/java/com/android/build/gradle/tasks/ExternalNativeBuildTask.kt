@@ -470,7 +470,7 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
             val scope = variantScope
 
             task.dependsOn(
-                generateTask, scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI)
+                generateTask, scope.variantDependencies.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI)
             )
 
             task.generator = generator

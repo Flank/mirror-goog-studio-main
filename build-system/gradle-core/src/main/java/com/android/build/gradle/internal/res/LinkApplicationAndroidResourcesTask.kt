@@ -465,7 +465,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.featureResourcePackages = if (variantType.isForTesting)
                 null
             else
-                variantScope.getArtifactFileCollection(
+                variantScope.variantDependencies.getArtifactFileCollection(
                     COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG
                 )
 
@@ -556,7 +556,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             super.configure(task)
 
             task.dependenciesFileCollection = variantScope
-                .getArtifactFileCollection(
+                .variantDependencies.getArtifactFileCollection(
                     RUNTIME_CLASSPATH,
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
@@ -568,7 +568,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             if (variantScope.isPrecompileDependenciesResourcesEnabled) {
                 task.compiledDependenciesResources =
-                    variantScope.getArtifactCollection(
+                    variantScope.variantDependencies.getArtifactCollection(
                         RUNTIME_CLASSPATH,
                         ALL,
                         AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES
@@ -611,7 +611,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         InternalArtifactType.RES_STATIC_LIBRARY))
             )
             dependencies.add(
-                variantScope.getArtifactFileCollection(
+                variantScope.variantDependencies.getArtifactFileCollection(
                     RUNTIME_CLASSPATH,
                     ALL,
                     AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY
@@ -629,7 +629,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.dependenciesFileCollection =
                 variantScope.globalScope.project.files(dependencies)
 
-            task.sharedLibraryDependencies = variantScope.getArtifactFileCollection(
+            task.sharedLibraryDependencies = variantScope.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY

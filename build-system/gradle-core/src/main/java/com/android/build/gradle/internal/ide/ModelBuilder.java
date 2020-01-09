@@ -696,6 +696,7 @@ public class ModelBuilder<Extension extends BaseExtension>
             ArtifactCollection apkArtifacts =
                     variantData
                             .getScope()
+                            .getVariantDependencies()
                             .getArtifactCollection(
                                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                                     AndroidArtifacts.ArtifactScope.ALL,

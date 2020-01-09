@@ -106,7 +106,7 @@ abstract class CheckMultiApkLibrariesTask : NonIncrementalTask() {
             super.configure(task)
 
             task.featureTransitiveDeps =
-                    variantScope.getArtifactCollection(
+                    variantScope.variantDependencies.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES

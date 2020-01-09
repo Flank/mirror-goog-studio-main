@@ -274,7 +274,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 task.getInputResourcesDir()
             )
 
-            task.featureResourcePackages = variantScope.getArtifactFileCollection(
+            task.featureResourcePackages = variantScope.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG)
 
             if (variantScope.type.isDynamicFeature) {
@@ -312,7 +312,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             )
 
             if (variantScope.isPrecompileDependenciesResourcesEnabled) {
-                task.compiledDependenciesResources = variantScope.getArtifactCollection(
+                task.compiledDependenciesResources = variantScope.variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES

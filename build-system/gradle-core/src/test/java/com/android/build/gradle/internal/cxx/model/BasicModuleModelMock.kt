@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
+import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
 import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.CoreNdkOptions
@@ -233,11 +234,14 @@ open class BasicModuleModelMock {
         doReturn(splits).`when`(extension).splits
 
         doReturn(baseVariantData).`when`(variantScope).variantData
-        doReturn(prefabArtifactCollection).`when`(variantScope).getArtifactCollection(
+
+        val variantDependencies = Mockito.mock(VariantDependencies::class.java)
+        doReturn(prefabArtifactCollection).`when`(variantDependencies).getArtifactCollection(
             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
             AndroidArtifacts.ArtifactScope.ALL,
             AndroidArtifacts.ArtifactType.PREFAB_PACKAGE
         )
+        doReturn(variantDependencies).`when`(variantScope).variantDependencies
         doReturn(prefabFileCollection).`when`(prefabArtifactCollection).artifactFiles
         doReturn(emptyList<File>().iterator()).`when`(prefabFileCollection).iterator()
         doReturn(variantDslInfo).`when`(baseVariantData).variantDslInfo

@@ -426,7 +426,8 @@ public abstract class BaseVariantData {
             FileCollection allRes = project.files().builtBy(builtBy);
 
             FileCollection libraries =
-                    scope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
+                    scope.getVariantDependencies()
+                            .getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
                             .getArtifactFiles();
             allRes = allRes.plus(libraries);
 

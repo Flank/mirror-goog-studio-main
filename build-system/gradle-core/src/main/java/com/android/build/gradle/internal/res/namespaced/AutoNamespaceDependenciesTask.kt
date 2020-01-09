@@ -460,25 +460,25 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
         override fun configure(task: AutoNamespaceDependenciesTask) {
             super.configure(task)
 
-            task.rFiles = variantScope.getArtifactCollection(
+            task.rFiles = variantScope.variantDependencies.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,
                 ArtifactScope.EXTERNAL,
                 ArtifactType.DEFINED_ONLY_SYMBOL_LIST
             )
 
-            task.jarFiles = variantScope.getArtifactCollection(
+            task.jarFiles = variantScope.variantDependencies.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,
                 ArtifactScope.EXTERNAL,
                 ArtifactType.NON_NAMESPACED_CLASSES
             )
 
-            task.nonNamespacedManifests = variantScope.getArtifactCollection(
+            task.nonNamespacedManifests = variantScope.variantDependencies.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,
                 ArtifactScope.EXTERNAL,
                 ArtifactType.NON_NAMESPACED_MANIFEST
             )
 
-            task.publicFiles = variantScope.getArtifactCollection(
+            task.publicFiles = variantScope.variantDependencies.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,
                 ArtifactScope.EXTERNAL,
                 ArtifactType.PUBLIC_RES
@@ -487,13 +487,13 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
             task.dependencies =
                 variantScope.variantData.variantDependency.runtimeClasspath.incoming
 
-            task.externalNotNamespacedResources = variantScope.getArtifactCollection(
+            task.externalNotNamespacedResources = variantScope.variantDependencies.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,
                 ArtifactScope.EXTERNAL,
                 ArtifactType.ANDROID_RES
             )
 
-            task.externalResStaticLibraries = variantScope.getArtifactCollection(
+            task.externalResStaticLibraries = variantScope.variantDependencies.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,
                 ArtifactScope.EXTERNAL,
                 ArtifactType.RES_STATIC_LIBRARY

@@ -133,7 +133,7 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             task.dependsOn(task.runtimeAarOrJarDeps.artifactFiles)
 
             task.transitivePackagedDeps =
-                variantScope.getArtifactCollection(
+                variantScope.variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES)

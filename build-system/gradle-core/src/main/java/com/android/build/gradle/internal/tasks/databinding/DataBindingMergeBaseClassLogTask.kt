@@ -83,13 +83,13 @@ abstract class DataBindingMergeBaseClassLogTask: IncrementalTask() {
             super.configure(task)
 
             // data binding related artifacts for external libs
-            task.moduleClassLog = variantScope.getArtifactFileCollection(
+            task.moduleClassLog = variantScope.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH,
                 PROJECT,
                 ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
             )
 
-            task.externalClassLog = variantScope.getArtifactFileCollection(
+            task.externalClassLog = variantScope.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH,
                 EXTERNAL,
                 ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
