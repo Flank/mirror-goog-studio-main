@@ -88,65 +88,39 @@ public class TestOptions
         return unitTests;
     }
 
-    /** Name of the results directory. */
+    @Override
     @Nullable
     public String getResultsDir() {
         return resultsDir;
     }
 
+    @Override
     public void setResultsDir(@Nullable String resultsDir) {
         this.resultsDir = resultsDir;
     }
 
-    /** Name of the reports directory. */
+    @Override
     @Nullable
     public String getReportDir() {
         return reportDir;
     }
 
+    @Override
     public void setReportDir(@Nullable String reportDir) {
         this.reportDir = reportDir;
     }
 
-    /**
-     * Disables animations during instrumented tests you run from the cammand line.
-     *
-     * <p>If you set this property to {@code true}, running instrumented tests with Gradle from the
-     * command line executes {@code am instrument} with the {@code --no-window-animation} flag.
-     * By default, this property is set to {@code false}.</p>
-     *
-     * <p>This property does not affect tests that you run using Android Studio. To learn more about
-     * running tests from the command line, see
-     * <a href="https://d.android.com/studio/test/command-line.html">Test from the Command Line</a>.
-     * </p>
-     */
+    @Override
     public boolean getAnimationsDisabled() {
         return animationsDisabled;
     }
 
+    @Override
     public void setAnimationsDisabled(boolean animationsDisabled) {
         this.animationsDisabled = animationsDisabled;
     }
 
-    /**
-     * Specifies whether to use on-device test orchestration.
-     *
-     * <p>If you want to <a
-     * href="https://developer.android.com/training/testing/junit-runner.html#using-android-test-orchestrator">use
-     * Android Test Orchestrator</a>, you need to specify <code>"ANDROID_TEST_ORCHESTRATOR"</code>,
-     * as shown below. By default, this property is set to <code>"HOST"</code>, which disables
-     * on-device orchestration.
-     *
-     * <pre>
-     * android {
-     *   testOptions {
-     *     execution 'ANDROID_TEST_ORCHESTRATOR'
-     *   }
-     * }
-     * </pre>
-     *
-     * @since 3.0.0
-     */
+    @Override
     @NonNull
     public String getExecution() {
         return Verify.verifyNotNull(
@@ -159,6 +133,7 @@ public class TestOptions
         return execution;
     }
 
+    @Override
     public void setExecution(@NonNull String execution) {
         this.execution =
                 Preconditions.checkNotNull(

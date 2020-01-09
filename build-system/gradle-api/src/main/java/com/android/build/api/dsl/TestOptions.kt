@@ -23,7 +23,45 @@ import org.gradle.api.Incubating
 interface TestOptions<UnitTestOptionsT: UnitTestOptions> {
     /** Options for controlling unit tests execution. */
     val unitTests: UnitTestOptionsT
+
     /** Options for controlling unit tests execution. */
     fun unitTests(action: UnitTestOptionsT.() -> Unit)
-    // TODO(b/140406102)
+
+    /** Name of the results directory. */
+    var resultsDir: String?
+
+    /** Name of the reports directory. */
+    var reportDir: String?
+
+    /**
+     * Disables animations during instrumented tests you run from the command line.
+     *
+     * If you set this property to `true`, running instrumented tests with Gradle from the command
+     * line executes `am instrument` with the `--no-window-animation` flag.
+     * By default, this property is set to `false`.
+     *
+     * This property does not affect tests that you run using Android Studio. To learn more about
+     * running tests from the command line, see
+     * [Test from the Command Line](https://d.android.com/studio/test/command-line.html).
+     */
+    var animationsDisabled: Boolean
+
+    /**
+     * Specifies whether to use on-device test orchestration.
+     *
+     * If you want to [use Android Test Orchestrator](https://developer.android.com/training/testing/junit-runner.html#using-android-test-orchestrator)
+     * you need to specify `"ANDROID_TEST_ORCHESTRATOR"`, as shown below.
+     * By default, this property is set to `"HOST"`, which disables on-device orchestration.
+     *
+     * ```
+     * android {
+     *   testOptions {
+     *     execution 'ANDROID_TEST_ORCHESTRATOR'
+     *   }
+     * }
+     * ```
+     *
+     * @since 3.0.0
+     */
+    var execution: String
 }

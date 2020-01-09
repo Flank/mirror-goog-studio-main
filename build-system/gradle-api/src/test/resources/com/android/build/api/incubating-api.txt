@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-ae600217fb4cf402d74c9a071ae0644ea05c599454884cbeb371939c9a59e1b2
+d8ea17a4f863ebc8a742fcd80b9441efd709a141d39bfad577b4bc3930ae07ce
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -140,7 +140,15 @@ com.android.build.api.dsl.SigningConfig implements org.gradle.api.Named
 com.android.build.api.dsl.TestBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestOptions
+com.android.build.api.dsl.TestOptions.getAnimationsDisabled: boolean ()
+com.android.build.api.dsl.TestOptions.getExecution: java.lang.String ()
+com.android.build.api.dsl.TestOptions.getReportDir: java.lang.String ()
+com.android.build.api.dsl.TestOptions.getResultsDir: java.lang.String ()
 com.android.build.api.dsl.TestOptions.getUnitTests: UnitTestOptionsT ()
+com.android.build.api.dsl.TestOptions.setAnimationsDisabled: void (boolean)
+com.android.build.api.dsl.TestOptions.setExecution: void (java.lang.String)
+com.android.build.api.dsl.TestOptions.setReportDir: void (java.lang.String)
+com.android.build.api.dsl.TestOptions.setResultsDir: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super UnitTestOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.UnitTestOptions
