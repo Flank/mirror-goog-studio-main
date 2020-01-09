@@ -103,6 +103,11 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
         private set
 
     override fun doTaskAction(inputChanges: InputChanges) {
+        val incrementalChanges = if (inputChanges.isIncremental) {
+            inputChanges.getFileChanges(classes)
+        } else {
+            emptyList()
+        }
         getWorkerFacadeWithWorkers().use {
             it.submit(
                 BundleLibraryClassesRunnable::class.java,
@@ -119,7 +124,7 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
                     // Ignore non-existent files (without this, ResourceNamespaceTest would fail).
                     input = classes.files.filter { file -> file.exists() }.toSet(),
                     incremental = inputChanges.isIncremental,
-                    inputChanges = inputChanges.getFileChanges(classes).toSerializable(),
+                    inputChanges = incrementalChanges.toSerializable(),
                     packageRClass = packageRClass.get(),
                     jarCreatorType = jarCreatorType
                 )
