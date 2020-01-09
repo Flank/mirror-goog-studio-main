@@ -85,7 +85,8 @@ val masterDetailFlowTemplate
       TextFieldWidget(objectKindPlural),
       CheckBoxWidget(isLauncher),
       PackageNameWidget(packageName),
-      LanguageWidget()
+      LanguageWidget(),
+      TextFieldWidget(activityTitle)
     )
 
     thumb { File("template_master_detail.png") }
