@@ -54,7 +54,6 @@ import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
@@ -865,12 +864,6 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         SourceProviders sourceProviders = determineSourceProviders(componentProperties);
 
-        // get the outputs
-        BuildOutputSupplier<Collection<EarlySyncBuildOutput>> splitOutputsProxy =
-                getBuildOutputSupplier(componentProperties);
-        BuildOutputSupplier<Collection<EarlySyncBuildOutput>> manifestsProxy =
-                getManifestsSupplier(componentProperties);
-
         InstantRunImpl instantRun =
                 new InstantRunImpl(
                         globalScope.getProject().file("build_info_removed"),
@@ -958,8 +951,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                 variantDslInfo.getMergedBuildConfigFields(),
                 variantDslInfo.getMergedResValues(),
                 instantRun,
-                splitOutputsProxy,
-                manifestsProxy,
                 testOptions,
                 taskContainer.getConnectedTask() == null
                         ? null
@@ -1072,41 +1063,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                                                     .iterator()
                                                     .next()));
                         };
-            default:
-                throw new RuntimeException(
-                        "Unhandled build type " + componentProperties.getVariantType());
-        }
-    }
-
-    // is it still used by IDE ? at this point, it becomes impossible to set this up accurately.
-    private BuildOutputSupplier<Collection<EarlySyncBuildOutput>> getManifestsSupplier(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-
-        VariantTypeImpl variantType = (VariantTypeImpl) componentProperties.getVariantType();
-
-        switch (variantType) {
-            case BASE_APK:
-            case OPTIONAL_APK:
-            case ANDROID_TEST:
-            case TEST_APK:
-                return new BuildOutputsSupplier(
-                        BuildElements.METADATA_FILE_VERSION,
-                        ImmutableList.of(InternalArtifactType.MERGED_MANIFESTS.INSTANCE),
-                        ImmutableList.of(
-                                componentProperties.getPaths().getManifestOutputDirectory()));
-            case LIBRARY:
-                return BuildOutputSupplier.of(
-                        ImmutableList.of(
-                                new EarlySyncBuildOutput(
-                                        InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-                                        VariantOutput.OutputType.MAIN,
-                                        ImmutableList.of(),
-                                        0,
-                                        new File(
-                                                componentProperties
-                                                        .getPaths()
-                                                        .getManifestOutputDirectory(),
-                                                SdkConstants.ANDROID_MANIFEST_XML))));
             default:
                 throw new RuntimeException(
                         "Unhandled build type " + componentProperties.getVariantType());
