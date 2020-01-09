@@ -38,7 +38,6 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
  --discard_analysis_cache ^
  -- ^
- //tools/base/bazel:perfgate_logs_collector_deploy.jar ^
  //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar ^
  %TARGETS%
 

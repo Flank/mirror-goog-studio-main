@@ -138,17 +138,6 @@ java_binary(
 )
 
 java_binary(
-    name = "perfgate_logs_collector",
-    srcs = ["src/com/android/tools/binaries/PerfgateLogsCollector.java"],
-    main_class = "com.android.tools.binaries.PerfgateLogsCollector",
-    visibility = ["//visibility:public"],
-    deps = [
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party/bazel-bes:bes_proto",
-    ],
-)
-
-java_binary(
     name = "singlejar",
     main_class = "com.android.tools.utils.SingleJar",
     visibility = ["//visibility:public"],

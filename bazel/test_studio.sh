@@ -50,7 +50,6 @@ readonly invocation_id="$(uuidgen)"
   --profile="${DIST_DIR:-/tmp}/profile-${BUILD_NUMBER}.json.gz" \
   -- \
   //tools/idea/updater:updater_deploy.jar \
-  //tools/base/bazel:perfgate_logs_collector_deploy.jar \
   //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
   $(< "${script_dir}/targets")
 
