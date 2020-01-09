@@ -5,6 +5,8 @@
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/lint-psi/intellij-core/intellij-core.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/lint-psi/intellij-core/intellij-core-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>

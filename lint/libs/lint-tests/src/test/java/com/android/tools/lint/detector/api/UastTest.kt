@@ -446,7 +446,7 @@ class UastTest : TestCase() {
 
                 public final class Test : android.app.Activity {
                     public fun Test() = UastEmptyExpression
-                    fun setUi() {
+                    fun setUi() : void {
                         var z: int = x + y
                     }
                 }
@@ -459,7 +459,7 @@ class UastTest : TestCase() {
                     UImportStatement (isOnDemand = false) [import android.widget.TextView]
                     UClass (name = Test) [public final class Test : android.app.Activity {...}]
                         UMethod (name = Test) [public fun Test() = UastEmptyExpression]
-                        UMethod (name = setUi) [fun setUi() {...}]
+                        UMethod (name = setUi) [fun setUi() : void {...}]
                             UBlockExpression [{...}] : PsiType:void
                                 UDeclarationsExpression [var z: int = x + y]
                                     ULocalVariable (name = z) [var z: int = x + y]
@@ -470,6 +470,71 @@ class UastTest : TestCase() {
                 """.trimIndent(),
                 file.asLogTypes()
             )
+        })
+    }
+
+    fun testReifiedTypes() {
+        // Regression test for
+        // https://youtrack.jetbrains.com/issue/KT-35610:
+        // UAST: Some reified methods nave null returnType
+        val source = kotlin(
+            """
+            package test.pkg
+            inline fun <T> function1(t: T) { }                  // return type void (PsiPrimitiveType)
+            inline fun <T> function2(t: T): T = t               // return type T (PsiClassReferenceType)
+            inline fun <reified T> function3(t: T) { }          // return type null
+            inline fun <reified T> function4(t: T): T = t       // return type null
+            inline fun <reified T> function5(t: T): Int = 42    // return type null
+            // Other variations that also have a null return type
+            inline fun <reified T : Activity> T.function6(t: T): T = t
+            inline fun <reified T> function7(t: T): T = t
+            private inline fun <reified T> function8(t: T): T = t
+            internal inline fun <reified T> function9(t: T): T = t
+            public inline fun <reified T> function10(t: T): T = t
+            inline fun <reified T> T.function11(t: T): T = t
+            """
+        ).indented()
+
+        check(source, { file ->
+            assertEquals(
+                """
+                package test.pkg
+
+                public final class TestKt {
+                    public static final fun function1(@org.jetbrains.annotations.Nullable t: T) : void {
+                    }
+                    public static final fun function2(@org.jetbrains.annotations.Nullable t: T) : T {
+                        return t
+                    }
+                    fun function3() : void {
+                    }
+                    fun function4() : T {
+                        return t
+                    }
+                    fun function5() : int {
+                        return 42
+                    }
+                    fun function6() : T {
+                        return t
+                    }
+                    fun function7() : T {
+                        return t
+                    }
+                    fun function8() : T {
+                        return t
+                    }
+                    fun function9() : T {
+                        return t
+                    }
+                    fun function10() : T {
+                        return t
+                    }
+                    fun function11() : T {
+                        return t
+                    }
+                }
+
+                """.trimIndent(), file.asSourceString())
         })
     }
 
