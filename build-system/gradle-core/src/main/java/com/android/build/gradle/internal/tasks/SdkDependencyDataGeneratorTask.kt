@@ -55,7 +55,7 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
 
   public override fun doTaskAction() {
     FileOutputStream(sdkDependencyData.get().asFile).use {
-      it.write(encrypt(compress(addSalt(Files.readAllBytes(dependencies.get().asFile.toPath())))))
+      it.write(encrypt(addSalt(compress(Files.readAllBytes(dependencies.get().asFile.toPath())))))
     }
   }
 
