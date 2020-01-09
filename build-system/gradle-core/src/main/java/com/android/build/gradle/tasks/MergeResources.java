@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.tasks.Blocks;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.model.VectorDrawablesOptions;
@@ -718,6 +719,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             VariantScope variantScope = getVariantScope();
             GlobalScope globalScope = variantScope.getGlobalScope();
             BaseVariantData variantData = variantScope.getVariantData();
+            VariantPathHelper paths = variantScope.getPaths();
 
             task.getMinSdk()
                     .set(
@@ -735,11 +737,11 @@ public abstract class MergeResources extends ResourceAwareTask {
                     Aapt2MavenUtils.getAapt2FromMavenAndVersion(globalScope);
             task.getAapt2FromMaven().from(aapt2AndVersion.getFirst());
             task.aapt2Version = aapt2AndVersion.getSecond();
-            task.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
+            task.setIncrementalFolder(paths.getIncrementalDir(getName()));
             // Libraries use this task twice, once for compilation (with dependencies),
             // where blame is useful, and once for packaging where it is not.
             if (includeDependencies) {
-                task.setBlameLogFolder(variantScope.getResourceBlameLogDir());
+                task.setBlameLogFolder(paths.getResourceBlameLogDir());
             }
             task.processResources = processResources;
             task.crunchPng = variantScope.isCrunchPngs();
@@ -763,7 +765,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.getResourcesComputer().initFromVariantScope(variantScope, includeDependencies);
 
             if (!task.disableVectorDrawables) {
-                task.generatedPngsOutputDir = variantScope.getGeneratedPngsOutputDir();
+                task.generatedPngsOutputDir = paths.getGeneratedPngsOutputDir();
             }
 
             final BuildFeatureValues features = globalScope.getBuildFeatures();

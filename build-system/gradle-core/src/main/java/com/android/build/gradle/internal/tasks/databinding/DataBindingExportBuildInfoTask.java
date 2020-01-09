@@ -112,7 +112,7 @@ public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask 
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.USE_ANDROID_X);
-            task.emptyClassOutDir = variantScope.getClassOutputForDataBinding();
+            task.emptyClassOutDir = variantScope.getPaths().getClassOutputForDataBinding();
 
             task.dependsOn(variantScope.getTaskContainer().getSourceGenTask());
         }

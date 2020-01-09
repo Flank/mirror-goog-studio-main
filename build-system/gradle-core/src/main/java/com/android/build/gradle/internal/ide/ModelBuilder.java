@@ -981,7 +981,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 return new BuildOutputsSupplier(
                         BuiltArtifacts.METADATA_FILE_VERSION,
                         ImmutableList.of(PublicArtifactType.APK.INSTANCE),
-                        ImmutableList.of(variantScope.getApkLocation()));
+                        ImmutableList.of(variantScope.getPaths().getApkLocation()));
             case LIBRARY:
                 return BuildOutputSupplier.of(
                         ImmutableList.of(
@@ -1059,7 +1059,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                 return new BuildOutputsSupplier(
                         BuildElements.METADATA_FILE_VERSION,
                         ImmutableList.of(InternalArtifactType.MERGED_MANIFESTS.INSTANCE),
-                        ImmutableList.of(variantData.getScope().getManifestOutputDirectory()));
+                        ImmutableList.of(
+                                variantData.getScope().getPaths().getManifestOutputDirectory()));
             case LIBRARY:
                 return BuildOutputSupplier.of(
                         ImmutableList.of(
@@ -1069,7 +1070,10 @@ public class ModelBuilder<Extension extends BaseExtension>
                                         ImmutableList.of(),
                                         0,
                                         new File(
-                                                variantData.getScope().getManifestOutputDirectory(),
+                                                variantData
+                                                        .getScope()
+                                                        .getPaths()
+                                                        .getManifestOutputDirectory(),
                                                 SdkConstants.ANDROID_MANIFEST_XML))));
             default:
                 throw new RuntimeException("Unhandled build type " + variantData.getType());
@@ -1154,7 +1158,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (aidlSources != null) {
             folders.add(aidlSources.getAsFile());
         }
-        folders.add(scope.getBuildConfigSourceOutputDir());
+        folders.add(scope.getPaths().getBuildConfigSourceOutputDir());
         boolean ndkMode = variantData.getVariantDslInfo().getRenderscriptNdkModeEnabled();
         if (!ndkMode) {
             Directory renderscriptSources =
@@ -1191,7 +1195,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         VariantScope scope = variantData.getScope();
 
-        result.add(scope.getRenderscriptResOutputDir());
+        result.add(scope.getPaths().getRenderscriptResOutputDir());
 
         return result;
     }

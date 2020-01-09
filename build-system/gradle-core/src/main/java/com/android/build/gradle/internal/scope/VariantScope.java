@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
@@ -39,10 +40,8 @@ import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Predicate;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.attributes.Attribute;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
@@ -54,6 +53,9 @@ public interface VariantScope extends TransformVariantScope {
     @Override
     @NonNull
     GlobalScope getGlobalScope();
+
+    @NonNull
+    VariantPathHelper getPaths();
 
     @NonNull
     VariantDslInfo getVariantDslInfo();
@@ -135,9 +137,6 @@ public interface VariantScope extends TransformVariantScope {
     @NonNull
     TransformManager getTransformManager();
 
-    @Nullable
-    File getNdkDebuggableLibraryFolders(@NonNull Abi abi);
-
     void addNdkDebuggableLibraryFolders(@NonNull Abi abi, @NonNull File searchPath);
 
     @Nullable
@@ -187,73 +186,10 @@ public interface VariantScope extends TransformVariantScope {
     Provider<RegularFile> getRJarForUnitTests();
 
     @NonNull
-    File getDefaultMergeResourcesOutputDir();
-
-    @NonNull
-    File getCompiledResourcesOutputDir();
-
-    @NonNull
-    File getResourceBlameLogDir();
-
-    @NonNull
-    File getBuildConfigSourceOutputDir();
-
-    @NonNull
-    File getGeneratedResOutputDir();
-
-    @NonNull
-    File getGeneratedPngsOutputDir();
-
-    @NonNull
-    File getRenderscriptResOutputDir();
-
-    @NonNull
-    File getRenderscriptObjOutputDir();
-
-    /**
-     * Returns a place to store incremental build data. The {@code name} argument has to be unique
-     * per task, ideally generated with {@link
-     * com.android.build.gradle.internal.tasks.factory.TaskInformation#getName()}.
-     */
-    @NonNull
-    File getIncrementalDir(String name);
-
-    @NonNull
-    File getCoverageReportDir();
-
-    @NonNull
-    File getClassOutputForDataBinding();
-
-    @NonNull
-    File getGeneratedClassListOutputFileForDataBinding();
-
-    @NonNull
-    File getFullApkPackagesOutputDirectory();
-
-    @NonNull
-    File getMicroApkManifestFile();
-
-    @NonNull
-    File getMicroApkResDirectory();
-
-    @NonNull
-    File getAarLocation();
-
-    @NonNull
-    File getManifestOutputDirectory();
-
-    @NonNull
-    File getApkLocation();
-
-    @NonNull
     MutableTaskContainer getTaskContainer();
 
     @NonNull
     VariantDependencies getVariantDependencies();
-
-    @NonNull
-    File getIntermediateDir(
-            @NonNull com.android.build.api.artifact.ArtifactType<Directory> taskOutputType);
 
     enum Java8LangSupport {
         INVALID,
@@ -281,9 +217,6 @@ public interface VariantScope extends TransformVariantScope {
 
     @NonNull
     InternalArtifactType<Directory> getManifestArtifactType();
-
-    @NonNull
-    File getSymbolTableFile();
 
     @NonNull
     JarCreatorType getJarCreatorType();

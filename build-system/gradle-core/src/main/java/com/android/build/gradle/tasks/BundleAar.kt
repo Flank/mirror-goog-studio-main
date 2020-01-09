@@ -111,7 +111,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
 
             task.archiveFileName.set(variantScope.variantData.publicVariantPropertiesApi
                 .outputs.getMainSplit().apkData.outputFileName)
-            task.destinationDirectory.set(File(variantScope.aarLocation.absolutePath))
+            task.destinationDirectory.set(File(variantScope.paths.aarLocation.absolutePath))
             task.archiveExtension.set(BuilderConstants.EXT_LIB_ARCHIVE)
 
             if (buildFeatures.aidl) {

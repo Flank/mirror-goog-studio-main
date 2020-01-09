@@ -152,6 +152,7 @@ class DependencyResourcesComputer {
         val globalScope = variantScope.globalScope
         val variantData = variantScope.variantData
         val project = globalScope.project
+        val paths = variantScope.paths
 
         validateEnabled = !globalScope.projectOptions.get(BooleanOption.DISABLE_RESOURCE_VALIDATION)
 
@@ -162,13 +163,13 @@ class DependencyResourcesComputer {
         resources = variantData.androidResources
 
         extraGeneratedResFolders = variantData.extraGeneratedResFolders
-        renderscriptResOutputDir = project.files(variantScope.renderscriptResOutputDir)
+        renderscriptResOutputDir = project.files(paths.renderscriptResOutputDir)
 
-        generatedResOutputDir = project.files(variantScope.generatedResOutputDir)
+        generatedResOutputDir = project.files(paths.generatedResOutputDir)
 
         if (variantScope.taskContainer.microApkTask != null &&
             variantData.variantDslInfo.isEmbedMicroApp) {
-            microApkResDirectory = project.files(variantScope.microApkResDirectory)
+            microApkResDirectory = project.files(paths.microApkResDirectory)
         }
     }
 }

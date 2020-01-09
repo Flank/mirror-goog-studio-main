@@ -1010,8 +1010,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .getIncrementalFolder()
                     .set(
                             new File(
-                                    variantScope.getIncrementalDir(
-                                            packageAndroidArtifact.getName()),
+                                    variantScope
+                                            .getPaths()
+                                            .getIncrementalDir(packageAndroidArtifact.getName()),
                                     "tmp"));
 
             variantScope

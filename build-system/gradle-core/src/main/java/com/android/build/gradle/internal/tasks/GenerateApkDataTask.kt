@@ -239,7 +239,7 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
             val variantData = scope.variantData as ApkVariantData
             val variantDslInfo = variantData.variantDslInfo
 
-            task.resOutputDir.set(scope.microApkResDirectory)
+            task.resOutputDir.set(scope.paths.microApkResDirectory)
             task.resOutputDir.disallowChanges()
 
             if (apkFileCollection != null) {
@@ -249,7 +249,7 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
 
             task.hasDependency.setDisallowChanges(apkFileCollection != null)
 
-            task.manifestFile.set(scope.microApkManifestFile)
+            task.manifestFile.set(scope.paths.microApkManifestFile)
             task.manifestFile.disallowChanges()
 
             task.mainPkgName.setDisallowChanges(componentProperties.applicationId)

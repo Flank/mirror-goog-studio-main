@@ -17,10 +17,6 @@
 package com.android.build.gradle.internal.scope;
 
 import static com.android.SdkConstants.DOT_JAR;
-import static com.android.SdkConstants.FD_COMPILED;
-import static com.android.SdkConstants.FD_MERGED;
-import static com.android.SdkConstants.FD_RES;
-import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR;
@@ -41,8 +37,6 @@ import static com.android.build.gradle.options.BooleanOption.USE_NEW_JAR_CREATOR
 import static com.android.build.gradle.options.OptionalBooleanOption.ENABLE_R8;
 import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
 import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
-import static com.android.builder.model.AndroidProject.FD_GENERATED;
-import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.android.builder.model.CodeShrinker.PROGUARD;
 import static com.android.builder.model.CodeShrinker.R8;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -70,12 +64,12 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
+import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
-import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
@@ -87,7 +81,6 @@ import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
-import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -131,6 +124,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull private BaseVariantData variantData;
     @NonNull private final TransformManager transformManager;
     @NonNull private final VariantDslInfo variantDslInfo;
+    @NonNull private final VariantPathHelper pathHelper;
     @NonNull private final VariantType type;
     @NonNull private final Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
 
@@ -146,10 +140,12 @@ public class VariantScopeImpl implements VariantScope {
             @NonNull GlobalScope globalScope,
             @NonNull TransformManager transformManager,
             @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantPathHelper pathHelper,
             @NonNull VariantType type) {
         this.globalScope = globalScope;
         this.transformManager = transformManager;
         this.variantDslInfo = variantDslInfo;
+        this.pathHelper = pathHelper;
         this.type = type;
         this.variantPublishingSpec = PublishingSpecs.getVariantSpec(type);
 
@@ -164,7 +160,7 @@ public class VariantScopeImpl implements VariantScope {
                                 getProject()
                                         .files(
                                                 FileUtils.join(
-                                                        globalScope.getIntermediatesDir(),
+                                                        pathHelper.getIntermediatesDir(),
                                                         "processing-tools",
                                                         "runtime-deps",
                                                         variantDslInfo.getDirName(),
@@ -178,7 +174,7 @@ public class VariantScopeImpl implements VariantScope {
     private void configureNdk() {
         File objFolder =
                 new File(
-                        globalScope.getIntermediatesDir(),
+                        pathHelper.getIntermediatesDir(),
                         "ndk/" + variantDslInfo.getDirName() + "/obj");
         for (Abi abi : Abi.values()) {
             addNdkDebuggableLibraryFolders(abi, new File(objFolder, "local/" + abi.getTag()));
@@ -187,6 +183,12 @@ public class VariantScopeImpl implements VariantScope {
 
     protected Project getProject() {
         return globalScope.getProject();
+    }
+
+    @Override
+    @NonNull
+    public VariantPathHelper getPaths() {
+        return pathHelper;
     }
 
     @Override
@@ -603,15 +605,6 @@ public class VariantScopeImpl implements VariantScope {
         return variantData.getTaskName(prefix, suffix);
     }
 
-    /**
-     * Return the folder containing the shared object with debugging symbol for the specified ABI.
-     */
-    @Override
-    @Nullable
-    public File getNdkDebuggableLibraryFolders(@NonNull Abi abi) {
-        return ndkDebuggableLibraryFolders.get(abi);
-    }
-
     @Override
     public void addNdkDebuggableLibraryFolders(@NonNull Abi abi, @NonNull File searchPath) {
         this.ndkDebuggableLibraryFolders.put(abi, searchPath);
@@ -866,210 +859,6 @@ public class VariantScopeImpl implements VariantScope {
         }
     }
 
-    /**
-     * An intermediate directory for this variant.
-     *
-     * <p>Of the form build/intermediates/dirName/variant/
-     */
-    @NonNull
-    private File intermediate(@NonNull String directoryName) {
-        return FileUtils.join(globalScope.getIntermediatesDir(), directoryName, getDirName());
-    }
-
-    /**
-     * An intermediate file for this variant.
-     *
-     * <p>Of the form build/intermediates/directoryName/variant/filename
-     */
-    @NonNull
-    private File intermediate(@NonNull String directoryName, @NonNull String fileName) {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(), directoryName, getDirName(), fileName);
-    }
-
-    @Override
-    @NonNull
-    public File getDefaultMergeResourcesOutputDir() {
-        return FileUtils.join(globalScope.getIntermediatesDir(), FD_RES, FD_MERGED, getDirName());
-    }
-
-    @Override
-    @NonNull
-    public File getCompiledResourcesOutputDir() {
-        return FileUtils.join(globalScope.getIntermediatesDir(), FD_RES, FD_COMPILED, getDirName());
-    }
-
-    @NonNull
-    @Override
-    public File getResourceBlameLogDir() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                StringHelper.toStrings(
-                        "blame", "res", getDirectorySegments()));
-    }
-
-    @Override
-    @NonNull
-    public File getBuildConfigSourceOutputDir() {
-        return new File(
-                globalScope.getBuildDir()
-                        + "/"
-                        + FD_GENERATED
-                        + "/source/buildConfig/"
-                        + getDirName());
-    }
-
-    @NonNull
-    private File getGeneratedResourcesDir(String name) {
-        return FileUtils.join(
-                globalScope.getGeneratedDir(),
-                StringHelper.toStrings(
-                        "res",
-                        name,
-                        getDirectorySegments()));
-    }
-
-    @Override
-    @NonNull
-    public File getGeneratedResOutputDir() {
-        return getGeneratedResourcesDir("resValues");
-    }
-
-    @Override
-    @NonNull
-    public File getGeneratedPngsOutputDir() {
-        return getGeneratedResourcesDir("pngs");
-    }
-
-    @Override
-    @NonNull
-    public File getRenderscriptResOutputDir() {
-        return getGeneratedResourcesDir("rs");
-    }
-
-    @NonNull
-    @Override
-    public File getRenderscriptObjOutputDir() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                StringHelper.toStrings(
-                        "rs",
-                        getDirectorySegments(),
-                        "obj"));
-    }
-
-    @Override
-    @NonNull
-    public File getIncrementalDir(String name) {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "incremental",
-                name);
-    }
-
-    @NonNull
-    @Override
-    public File getCoverageReportDir() {
-        return new File(globalScope.getReportsDir(), "coverage/" + getDirName());
-    }
-
-    @Override
-    @NonNull
-    public File getClassOutputForDataBinding() {
-        return new File(
-                globalScope.getGeneratedDir(), "source/dataBinding/trigger/" + getDirName());
-    }
-
-    @Override
-    @NonNull
-    public File getGeneratedClassListOutputFileForDataBinding() {
-        return new File(dataBindingIntermediate("class-list"), "_generated.txt");
-    }
-
-    private File dataBindingIntermediate(String name) {
-        return intermediate("data-binding", name);
-    }
-
-    @NonNull
-    @Override
-    public File getFullApkPackagesOutputDirectory() {
-        return new File(
-                globalScope.getBuildDir(),
-                FileUtils.join(FD_OUTPUTS, "splits", "full", getDirName()));
-    }
-
-    @NonNull
-    @Override
-    public File getIntermediateDir(
-            @NonNull com.android.build.api.artifact.ArtifactType<Directory> taskOutputType) {
-        return intermediate(taskOutputType.name().toLowerCase(Locale.US));
-    }
-
-    @NonNull
-    @Override
-    public File getMicroApkManifestFile() {
-        return FileUtils.join(
-                globalScope.getGeneratedDir(),
-                "manifests",
-                "microapk",
-                getDirName(),
-                FN_ANDROID_MANIFEST_XML);
-    }
-
-    @NonNull
-    @Override
-    public File getMicroApkResDirectory() {
-        return FileUtils.join(globalScope.getGeneratedDir(), "res", "microapk", getDirName());
-    }
-
-    @NonNull
-    @Override
-    public File getManifestOutputDirectory() {
-        final VariantType variantType = getType();
-
-        if (variantType.isTestComponent()) {
-            if (variantType.isApk()) { // ANDROID_TEST
-                return FileUtils.join(globalScope.getIntermediatesDir(), "manifest", getDirName());
-            }
-        } else {
-            return FileUtils.join(
-                    globalScope.getIntermediatesDir(), "manifests", "full", getDirName());
-        }
-
-        throw new RuntimeException("getManifestOutputDirectory called for an unexpected variant.");
-    }
-
-    /**
-     * Obtains the location where APKs should be placed.
-     *
-     * @return the location for APKs
-     */
-    @NonNull
-    @Override
-    public File getApkLocation() {
-        String override = globalScope.getProjectOptions().get(StringOption.IDE_APK_LOCATION);
-        File baseDirectory =
-                override != null ? getProject().file(override) : getDefaultApkLocation();
-
-        return new File(baseDirectory, getDirName());
-    }
-
-    /**
-     * Obtains the default location for APKs.
-     *
-     * @return the default location for APKs
-     */
-    @NonNull
-    private File getDefaultApkLocation() {
-        return FileUtils.join(globalScope.getBuildDir(), FD_OUTPUTS, "apk");
-    }
-
-    @NonNull
-    @Override
-    public File getAarLocation() {
-        return FileUtils.join(globalScope.getOutputsDir(), BuilderConstants.EXT_LIB_ARCHIVE);
-    }
-
     @NonNull
     @Override
     public VariantDependencies getVariantDependencies() {
@@ -1195,13 +984,6 @@ public class VariantScopeImpl implements VariantScope {
         return globalScope.getProjectOptions().get(BooleanOption.IDE_DEPLOY_AS_INSTANT_APP)
                 ? InternalArtifactType.INSTANT_APP_MANIFEST.INSTANCE
                 : InternalArtifactType.MERGED_MANIFESTS.INSTANCE;
-    }
-
-    @NonNull
-    @Override
-    public File getSymbolTableFile() {
-        return new File(
-                globalScope.getIntermediatesDir(), "symbols/" + variantDslInfo.getDirName());
     }
 
     @NonNull

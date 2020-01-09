@@ -52,6 +52,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantInputModelBuilder;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.internal.variant.VariantModelImpl;
+import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.build.gradle.internal.variant2.FakeDslScope;
 import com.android.build.gradle.options.SyncOptions;
@@ -479,7 +480,9 @@ public class ModelBuilderTest {
         VariantScope variantScope = Mockito.mock(VariantScope.class);
         when(variantScope.getName()).thenReturn(variantName);
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
-        when(variantScope.getApkLocation()).thenReturn(new File(apkLocation, dirName));
+        VariantPathHelper paths = Mockito.mock(VariantPathHelper.class);
+        when(paths.getApkLocation()).thenReturn(new File(apkLocation, dirName));
+        when(variantScope.getPaths()).thenReturn(paths);
         when(variantScope.getVariantDslInfo()).thenReturn(variantDslInfo);
 
         ComponentIdentity variantConfig =

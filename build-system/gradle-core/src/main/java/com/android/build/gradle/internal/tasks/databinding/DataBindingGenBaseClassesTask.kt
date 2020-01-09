@@ -190,7 +190,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             )
             artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS, task.v1Artifacts)
-            task.logOutFolder = variantScope.getIncrementalDir(task.name)
+            task.logOutFolder = variantScope.paths.getIncrementalDir(task.name)
             task.useAndroidX = variantScope.globalScope.projectOptions[BooleanOption.USE_ANDROID_X]
             // needed to decide whether data binding should encode errors or not
             task.encodeErrors = variantScope.globalScope

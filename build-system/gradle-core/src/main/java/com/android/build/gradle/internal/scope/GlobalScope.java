@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.scope;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MOCKABLE_JAR_RETURN_DEFAULT_VALUES;
 import static com.android.builder.core.BuilderConstants.FD_REPORTS;
-import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -150,11 +149,6 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull
     public File getIntermediatesDir() {
         return new File(getBuildDir(), FD_INTERMEDIATES);
-    }
-
-    @NonNull
-    public File getGeneratedDir() {
-        return new File(getBuildDir(), FD_GENERATED);
     }
 
     @NonNull

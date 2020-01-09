@@ -229,7 +229,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
                                                             .getVariantData()
                                                             .getJavaSourceFoldersForCoverage());
 
-            task.setReportDir(testedScope.getCoverageReportDir());
+            task.setReportDir(testedScope.getPaths().getCoverageReportDir());
         }
     }
 

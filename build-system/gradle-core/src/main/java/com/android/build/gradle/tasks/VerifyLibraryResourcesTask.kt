@@ -231,7 +231,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 task.inputDirectory
             )
 
-            task.compiledDirectory = variantScope.compiledResourcesOutputDir
+            task.compiledDirectory = variantScope.paths.compiledResourcesOutputDir
 
             val aaptFriendlyManifestsFilePresent = variantScope.artifacts
                 .hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
@@ -245,7 +245,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
 
-            task.mergeBlameFolder = variantScope.resourceBlameLogDir
+            task.mergeBlameFolder = variantScope.paths.resourceBlameLogDir
 
             task.manifestMergeBlameFile = variantScope.artifacts.getFinalProduct(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE

@@ -556,7 +556,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
 
             task.setTmpDir(
                     FileUtils.join(
-                            getVariantScope().getGlobalScope().getIntermediatesDir(),
+                            getVariantScope().getPaths().getIntermediatesDir(),
                             "tmp",
                             "manifest",
                             getVariantScope().getDirName()));

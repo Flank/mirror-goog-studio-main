@@ -168,7 +168,7 @@ abstract class MergeNativeLibsTask
                     SerializablePackagingOptions(
                         variantScope.globalScope.extension.packagingOptions)
             task.intermediateDir =
-                    variantScope.getIncrementalDir(
+                    variantScope.paths.getIncrementalDir(
                         "${variantScope.name}-mergeNativeLibs")
 
             val project = variantScope.globalScope.project

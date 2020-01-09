@@ -931,7 +931,8 @@ public abstract class TaskManager {
                         mergeResourcesTask,
                         MergeResources::getOutputDir,
                         MoreObjects.firstNonNull(
-                                        outputLocation, scope.getDefaultMergeResourcesOutputDir())
+                                        outputLocation,
+                                        scope.getPaths().getDefaultMergeResourcesOutputDir())
                                 .getAbsolutePath(),
                         "");
 
@@ -2473,7 +2474,7 @@ public abstract class TaskManager {
                 taskFactory.register(
                         new PackageApplication.CreationAction(
                                 variantScope,
-                                variantScope.getApkLocation(),
+                                variantScope.getPaths().getApkLocation(),
                                 resourceFilesInputType,
                                 manifests,
                                 manifestType,

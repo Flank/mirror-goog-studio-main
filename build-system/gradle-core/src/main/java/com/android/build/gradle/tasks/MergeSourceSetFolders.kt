@@ -299,7 +299,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             super.configure(task)
             val scope = variantScope
 
-            task.incrementalFolder = scope.getIncrementalDir(name)
+            task.incrementalFolder = scope.paths.getIncrementalDir(name)
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(scope.globalScope.projectOptions)
         }

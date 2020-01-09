@@ -459,7 +459,9 @@ public class LibraryTaskManager extends TaskManager {
         basicCreateMergeResourcesTask(
                 variantScope,
                 MergeType.PACKAGE,
-                variantScope.getIntermediateDir(InternalArtifactType.PACKAGED_RES.INSTANCE),
+                variantScope
+                        .getPaths()
+                        .getIntermediateDir(InternalArtifactType.PACKAGED_RES.INSTANCE),
                 false,
                 false,
                 false,
@@ -510,7 +512,9 @@ public class LibraryTaskManager extends TaskManager {
         return () -> {
             File excludeFile =
                     variantScope.getVariantData().getType().isExportDataBindingClassList()
-                            ? variantScope.getGeneratedClassListOutputFileForDataBinding()
+                            ? variantScope
+                                    .getPaths()
+                                    .getGeneratedClassListOutputFileForDataBinding()
                             : null;
             File dependencyArtifactsDir =
                     variantScope

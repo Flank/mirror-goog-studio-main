@@ -97,7 +97,7 @@ abstract class GenerateResValues : NonIncrementalTask() {
                 variantScope.variantDslInfo.resValues
             })
 
-            task.resOutputDir = variantScope.generatedResOutputDir
+            task.resOutputDir = variantScope.paths.generatedResOutputDir
         }
     }
 }

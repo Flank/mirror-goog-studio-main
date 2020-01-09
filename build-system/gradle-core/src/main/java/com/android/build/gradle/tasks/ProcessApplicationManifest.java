@@ -693,7 +693,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             // optional manifest files too.
             if (variantScope.getTaskContainer().getMicroApkTask() != null
                     && variantDslInfo.isEmbedMicroApp()) {
-                task.microApkManifest = project.files(variantScope.getMicroApkManifestFile());
+                task.microApkManifest =
+                        project.files(variantScope.getPaths().getMicroApkManifestFile());
             }
             BuildArtifactsHolder artifacts = variantScope.getArtifacts();
             artifacts.setTaskInputToFinalProduct(

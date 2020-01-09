@@ -499,7 +499,7 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
                 ArtifactType.RES_STATIC_LIBRARY
             )
 
-            task.intermediateDirectory = variantScope.getIncrementalDir(name)
+            task.intermediateDirectory = variantScope.paths.getIncrementalDir(name)
 
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)

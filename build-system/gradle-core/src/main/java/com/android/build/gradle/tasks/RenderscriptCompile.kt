@@ -305,8 +305,8 @@ abstract class RenderscriptCompile : NdkTask() {
                 COMPILE_CLASSPATH, ALL, RENDERSCRIPT
             )
 
-            task.resOutputDir = scope.renderscriptResOutputDir
-            task.objOutputDir = scope.renderscriptObjOutputDir
+            task.resOutputDir = scope.paths.renderscriptResOutputDir
+            task.objOutputDir = scope.paths.renderscriptObjOutputDir
 
             task.ndkConfig = variantDslInfo.ndkConfig
 

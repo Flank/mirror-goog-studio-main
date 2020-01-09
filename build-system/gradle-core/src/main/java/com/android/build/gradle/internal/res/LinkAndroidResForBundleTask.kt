@@ -257,7 +257,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             val projectOptions = variantScope.globalScope.projectOptions
             val variantDslInfo = variantData.variantDslInfo
 
-            task.incrementalFolder = variantScope.getIncrementalDir(name)
+            task.incrementalFolder = variantScope.paths.getIncrementalDir(name)
 
             val mainSplit = variantData.publicVariantPropertiesApi.outputs.getMainSplit()
             task.versionCode.setDisallowChanges(mainSplit.versionCode)
@@ -293,7 +293,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.buildTargetDensity =
                     projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
-            task.mergeBlameLogFolder = variantScope.resourceBlameLogDir
+            task.mergeBlameLogFolder = variantScope.paths.resourceBlameLogDir
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version

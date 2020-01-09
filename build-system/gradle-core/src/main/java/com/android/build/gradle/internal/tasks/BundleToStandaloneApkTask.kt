@@ -195,7 +195,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
             val (aapt2FromMaven,aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
-            task.tempDirectory = variantScope.getIncrementalDir(name)
+            task.tempDirectory = variantScope.paths.getIncrementalDir(name)
             task.signingConfig = SigningConfigProvider.create(variantScope)
         }
     }

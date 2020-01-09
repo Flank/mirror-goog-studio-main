@@ -404,7 +404,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             val project = variantScope.globalScope.project
             task.applicationId.setDisallowChanges(componentProperties.applicationId)
 
-            task.incrementalFolder = variantScope.getIncrementalDir(name)
+            task.incrementalFolder = variantScope.paths.getIncrementalDir(name)
             if (variantData.type.canHaveSplits) {
                 val splits = variantScope.globalScope.extension.splits
 
@@ -455,7 +455,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.useMinimalKeepRules = projectOptions.get(BooleanOption.MINIMAL_KEEP_RULES)
             task.canHaveSplits.set(variantScope.type.canHaveSplits)
 
-            task.setMergeBlameLogFolder(variantScope.resourceBlameLogDir)
+            task.setMergeBlameLogFolder(variantScope.paths.resourceBlameLogDir)
 
             val variantType = variantScope.type
 

@@ -176,7 +176,7 @@ class DataBindingCompilerArguments constructor(
                 ),
                 featureInfoDir = artifacts.getFinalProduct(FEATURE_DATA_BINDING_FEATURE_INFO),
                 aarOutDir = artifacts.getFinalProduct(InternalArtifactType.DATA_BINDING_ARTIFACT),
-                exportClassListOutFile = variantScope.generatedClassListOutputFileForDataBinding
+                exportClassListOutFile = variantScope.paths.generatedClassListOutputFileForDataBinding
                     .takeIf { variantData.type.isExportDataBindingClassList },
                 enableDebugLogs = enableDebugLogs,
                 printEncodedErrorLogs = printEncodedErrorLogs,

@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.core.VariantBuilder;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
@@ -79,6 +80,7 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.internal.variant.VariantInputModel;
+import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
@@ -522,6 +524,7 @@ public class VariantManager {
         // entry point for a given buildType/Flavors/VariantType combo.
         // Need to run the new variant API to selectively ignore variants.
         // in order to do this, we need access to the VariantDslInfo, to create a
+        DslScope dslScope = globalScope.getDslScope();
 
         final ProductFlavorData<DefaultConfig> defaultConfig = variantInputModel.getDefaultConfig();
         DefaultAndroidSourceSet defaultConfigSourceProvider = defaultConfig.getSourceSet();
@@ -539,7 +542,7 @@ public class VariantManager {
                                 defaultConfigSourceProvider.getManifestFile(),
                                 variantType.getRequiresManifest()),
                         globalScope.getProjectOptions(),
-                        globalScope.getDslScope().getIssueReporter(),
+                        dslScope.getIssueReporter(),
                         this::canParseManifest);
 
         // We must first add the flavors to the variant config, in order to get the proper
@@ -614,15 +617,15 @@ public class VariantManager {
 
         // Done. Create the (too) many variant objects
 
+        VariantPathHelper pathHelper = new VariantPathHelper(project, variantDslInfo, dslScope);
+
         final Project project = globalScope.getProject();
         VariantScopeImpl variantScope =
                 new VariantScopeImpl(
                         globalScope,
-                        new TransformManager(
-                                globalScope.getProject(),
-                                globalScope.getDslScope().getIssueReporter(),
-                                recorder),
+                        new TransformManager(project, dslScope.getIssueReporter(), recorder),
                         variantDslInfo,
+                        pathHelper,
                         variantType);
 
         VariantPropertiesImpl variantProperties =
@@ -733,6 +736,7 @@ public class VariantManager {
         // The constructor does a runtime check on the instances so we should be safe.
         final DefaultAndroidSourceSet testSourceSet =
                 variantInputModel.getDefaultConfig().getTestSourceSet(type);
+        DslScope dslScope = globalScope.getDslScope();
         @SuppressWarnings("ConstantConditions")
         VariantBuilder variantBuilder =
                 VariantBuilder.getBuilder(
@@ -748,7 +752,7 @@ public class VariantManager {
                                         testSourceSet.getManifestFile(), type.getRequiresManifest())
                                 : null,
                         globalScope.getProjectOptions(),
-                        globalScope.getDslScope().getIssueReporter(),
+                        dslScope.getIssueReporter(),
                         this::canParseManifest);
 
         VariantDslInfoImpl testedVariantDslInfo =
@@ -803,14 +807,14 @@ public class VariantManager {
         // now that we have the result of the filter, we can continue configuring the variant
         createCompoundSourceSets(productFlavorDataList, variantBuilder, sourceSetManager);
 
+        VariantPathHelper pathHelper = new VariantPathHelper(project, variantDslInfo, dslScope);
+
         VariantScopeImpl variantScope =
                 new VariantScopeImpl(
                         globalScope,
-                        new TransformManager(
-                                globalScope.getProject(),
-                                globalScope.getDslScope().getIssueReporter(),
-                                recorder),
+                        new TransformManager(project, dslScope.getIssueReporter(), recorder),
                         variantDslInfo,
+                        pathHelper,
                         type);
 
 

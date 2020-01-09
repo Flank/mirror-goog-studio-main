@@ -410,10 +410,6 @@ public class ApplicationTaskManager extends TaskManager {
 
     }
 
-    private static File getIncrementalFolder(VariantScope variantScope, String taskName) {
-        return new File(variantScope.getIncrementalDir(taskName), variantScope.getDirName());
-    }
-
     private void createDynamicBundleTask(@NonNull VariantScope scope) {
 
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
@@ -468,7 +464,9 @@ public class ApplicationTaskManager extends TaskManager {
             basicCreateMergeResourcesTask(
                     variantScope,
                     MergeType.PACKAGE,
-                    variantScope.getIntermediateDir(InternalArtifactType.PACKAGED_RES.INSTANCE),
+                    variantScope
+                            .getPaths()
+                            .getIntermediateDir(InternalArtifactType.PACKAGED_RES.INSTANCE),
                     false,
                     false,
                     false,

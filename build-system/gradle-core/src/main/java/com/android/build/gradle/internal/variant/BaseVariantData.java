@@ -171,14 +171,16 @@ public abstract class BaseVariantData {
     @NonNull
     public LayoutXmlProcessor getLayoutXmlProcessor() {
         if (layoutXmlProcessor == null) {
-            File resourceBlameLogDir = scope.getResourceBlameLogDir();
+            VariantPathHelper pathHelper = scope.getPaths();
+            File resourceBlameLogDir = pathHelper.getResourceBlameLogDir();
             final MergingLog mergingLog = new MergingLog(resourceBlameLogDir);
             layoutXmlProcessor =
                     new LayoutXmlProcessor(
                             getVariantDslInfo().getOriginalApplicationId(),
                             taskManager
                                     .getDataBindingBuilder()
-                                    .createJavaFileWriter(scope.getClassOutputForDataBinding()),
+                                    .createJavaFileWriter(
+                                            pathHelper.getClassOutputForDataBinding()),
                             file -> {
                                 SourceFile input = new SourceFile(file);
                                 SourceFile original = mergingLog.find(input);
@@ -433,11 +435,12 @@ public abstract class BaseVariantData {
 
             Iterator<FileCollection> sourceSets = getAndroidResources().values().iterator();
             FileCollection mainSourceSet = sourceSets.next();
+            VariantPathHelper pathHelper = scope.getPaths();
             FileCollection generated =
                     project.files(
-                            scope.getRenderscriptResOutputDir(),
-                            scope.getGeneratedResOutputDir(),
-                            scope.getMicroApkResDirectory(),
+                            pathHelper.getRenderscriptResOutputDir(),
+                            pathHelper.getGeneratedResOutputDir(),
+                            pathHelper.getMicroApkResDirectory(),
                             extraGeneratedResFolders);
             allRes = allRes.plus(mainSourceSet.plus(generated));
 
@@ -580,10 +583,12 @@ public abstract class BaseVariantData {
                 }
             }
 
+            VariantPathHelper pathHelper = scope.getPaths();
+
             // for the other, there's no duplicate so no issue.
             if (taskContainer.getGenerateBuildConfigTask() != null) {
                 sourceSets.add(
-                        project.fileTree(scope.getBuildConfigSourceOutputDir())
+                        project.fileTree(pathHelper.getBuildConfigSourceOutputDir())
                                 .builtBy(taskContainer.getGenerateBuildConfigTask().getName()));
             }
 
@@ -599,7 +604,7 @@ public abstract class BaseVariantData {
             if (features.getDataBinding() || features.getViewBinding()) {
                 if (scope.getTaskContainer().getDataBindingExportBuildInfoTask() != null) {
                     sourceSets.add(
-                            project.fileTree(scope.getClassOutputForDataBinding())
+                            project.fileTree(pathHelper.getClassOutputForDataBinding())
                                     .builtBy(
                                             scope.getTaskContainer()
                                                     .getDataBindingExportBuildInfoTask()));

@@ -239,7 +239,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             task.items.set(project.provider { variantDslInfo.buildConfigItems })
             task.items.disallowChanges()
 
-            task.sourceOutputDir = variantScope.buildConfigSourceOutputDir
+            task.sourceOutputDir = variantScope.paths.buildConfigSourceOutputDir
 
             if (variantScope.variantDslInfo.variantType.isTestComponent) {
                 variantScope.artifacts.setTaskInputToFinalProduct(
