@@ -181,10 +181,13 @@ public class ImlToIr {
                     // across systems. Choose alphabetical always:
                     Collections.sort(files);
                     for (File file : files) {
-                        // "KotlinPlugin" is the library that upstream IntelliJ uses that points
-                        // to files under idea/build that we never create. Instead, Android Studio
-                        // has its own library, called "kotlin-plugin" that points to files in
-                        // prebuilts. Here we ignore "KotinPlugin".
+                        // "KotlinPlugin" is the library that upstream IntelliJ uses that points to
+                        // files under idea/build that we usually don't create, they are copied
+                        // there by build_studio.sh that most developers don't run. Instead, Android
+                        // Studio has its own library, called "kotlin-plugin" that points to files
+                        // in prebuilts. Here we ignore entries in the "KotlinPlugin" library that
+                        // point to non-existing files. If the files exists, they are ignored later
+                        // in IrToBazel.
                         if (!file.exists() && !"KotlinPlugin".equals(library.getName())) {
                             String libraryName = library.getName();
                             String dependencyDescription;

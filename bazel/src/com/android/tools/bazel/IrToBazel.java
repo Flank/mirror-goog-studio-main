@@ -140,8 +140,18 @@ public class IrToBazel {
                         }
                     }
                     for (File file : library.getFiles()) {
-
                         String relJar = workspace.relativize(file.toPath()).toString();
+
+                        if (relJar.startsWith("tools/idea/build/dependencies/build/kotlin")) {
+                            // These files are used by the "KotlinPlugin" library and get copied
+                            // there by build_studio.sh that most Studio developers don't run
+                            // locally. They are not needed for our build, because Android Studio
+                            // has its own library, called "kotlin-plugin", that points to files in
+                            // prebuilts. Here we ignore these files, so that output of iml_to_build
+                            // doesn't depend on whether build_studio.sh was run or not.
+                            continue;
+                        }
+
                         BazelRule jarRule = jarRules.get(relJar);
                         if (jarRule == null) {
                             if (isGenFile(relJar)) {
