@@ -101,8 +101,7 @@ val modalBottomSheetTemplate
       LanguageWidget()
     )
 
-    //TODO: Replace with a proper thumbnail for modal bottom sheet
-    thumb { File("template_blank_fragment.png") }
+    thumb { File("template_modal_bottom_sheet_fragment.png") }
 
     recipe = { data: TemplateData ->
       modalBottomSheetRecipe(data as ModuleTemplateData, packageName.value, objectKind.value, fragmentClass.value, columnCount.value,
