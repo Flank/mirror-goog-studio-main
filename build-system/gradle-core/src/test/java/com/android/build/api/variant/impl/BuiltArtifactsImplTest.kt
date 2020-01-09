@@ -20,13 +20,19 @@ import com.android.build.api.artifact.PublicArtifactType
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
-import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
+import com.android.build.gradle.internal.fixtures.FakeLogger
+import com.android.ide.common.build.GenericBuiltArtifactsLoader
+import com.android.utils.ILogger
+import com.android.utils.NullLogger
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 
+/**
+ * Tests for [BuiltArtifactsImpl]
+ */
 class BuiltArtifactsImplTest {
 
     @get:Rule
@@ -233,5 +239,79 @@ class BuiltArtifactsImplTest {
     }
   ]
 }""")
+    }
+
+    @Test
+    fun testStudioLoading() {
+        val outputFolder = tmpFolder.newFolder("some_folder")
+        BuiltArtifactsImpl(
+            artifactType = PublicArtifactType.APK,
+            applicationId = "com.android.test",
+            variantName = "debug",
+            elements = listOf(
+                BuiltArtifactImpl(
+                    outputFile = File(outputFolder, "file1.apk").toPath(),
+                    properties = mapOf("key1" to "value1", "key2" to "value2"),
+                    versionCode = 123,
+                    versionName = "version_name",
+                    isEnabled = true,
+                    outputType = VariantOutputConfiguration.OutputType.ONE_OF_MANY,
+                    filters = listOf(
+                        FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xhdpi")
+                    )
+                ),
+                BuiltArtifactImpl(
+                    outputFile = File(outputFolder, "file2.apk").toPath(),
+                    properties = mapOf("key1" to "value1", "key2" to "value2"),
+                    versionCode = 124,
+                    versionName = "version_name",
+                    isEnabled = true,
+                    outputType = VariantOutputConfiguration.OutputType.ONE_OF_MANY,
+                    filters = listOf(
+                        FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xxhdpi")
+                    )
+                )
+            )
+        ).save(FakeGradleDirectory(outputFolder))
+
+        val builtArtifacts = GenericBuiltArtifactsLoader.loadFromFile(
+            File(outputFolder, BuiltArtifactsImpl.METADATA_FILE_NAME),
+            NullLogger()
+        )
+
+        Truth.assertThat(builtArtifacts).isNotNull()
+        Truth.assertThat(builtArtifacts!!.version).isEqualTo(
+            com.android.build.api.variant.BuiltArtifacts.METADATA_FILE_VERSION)
+        Truth.assertThat(builtArtifacts.artifactType.type).isEqualTo(
+            PublicArtifactType.APK.name()
+        )
+        Truth.assertThat(builtArtifacts.artifactType.kind).isEqualTo(
+            PublicArtifactType.APK.kind.dataType().simpleName
+        )
+        Truth.assertThat(builtArtifacts.applicationId).isEqualTo("com.android.test")
+        Truth.assertThat(builtArtifacts.version).isEqualTo(
+            com.android.build.api.variant.BuiltArtifacts.METADATA_FILE_VERSION)
+        val builtArtifactsList = builtArtifacts.elements
+        Truth.assertThat(builtArtifactsList.size).isEqualTo(2)
+        builtArtifactsList.forEach { builtArtifact ->
+            Truth.assertThat(builtArtifact.outputFile.fileName.toString())
+                .isAnyOf("file1.apk", "file2.apk")
+            Truth.assertThat(builtArtifact.versionCode).isAnyOf(123,124)
+            Truth.assertThat(builtArtifact.versionName).isEqualTo("version_name")
+            Truth.assertThat(builtArtifact.isEnabled).isTrue()
+            Truth.assertThat(builtArtifact.outputType).isEqualTo("ONE_OF_MANY")
+            val filters = builtArtifact.filters
+            Truth.assertThat(filters).hasSize(1)
+            filters.forEach { filter ->
+                Truth.assertThat(filter.filterType).isEqualTo("DENSITY")
+                Truth.assertThat(filter.identifier).isAnyOf("xxhdpi", "xhdpi")
+            }
+            val properties = builtArtifact.properties
+            Truth.assertThat(properties).hasSize(2)
+            properties.forEach {
+                Truth.assertThat(it.key).isAnyOf("key1", "key2")
+                Truth.assertThat(it.value).isAnyOf("value1", "value2")
+            }
+        }
     }
 }

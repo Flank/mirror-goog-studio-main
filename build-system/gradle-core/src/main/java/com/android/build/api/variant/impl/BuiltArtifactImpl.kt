@@ -21,13 +21,13 @@ import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.gradle.internal.api.artifact.toArtifactType
+import com.android.ide.common.build.CommonBuiltArtifact
+import com.android.ide.common.build.CommonBuiltArtifactTypeAdapter
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableMap
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import java.io.IOException
-import java.nio.file.FileSystems
 import java.nio.file.Path
 
 data class BuiltArtifactImpl(
@@ -38,22 +38,16 @@ data class BuiltArtifactImpl(
     override val isEnabled: Boolean,
     override val outputType: VariantOutputConfiguration.OutputType,
     override val filters: Collection<FilterConfiguration>
-) : BuiltArtifact {
+) : BuiltArtifact, CommonBuiltArtifact {
     fun newOutput(newOutputFile: Path): BuiltArtifactImpl {
         return BuiltArtifactImpl(newOutputFile,
             properties, versionCode, versionName, isEnabled, outputType, filters)
     }
 }
 
-internal class BuiltArtifactTypeAdapter: TypeAdapter<BuiltArtifact>() {
+internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArtifactImpl>() {
 
-    @Throws(IOException::class)
-    override fun write(out: JsonWriter, value: BuiltArtifact?) {
-        if (value == null) {
-            out.nullValue()
-            return
-        }
-        out.beginObject()
+    override fun writeSpecificAttributes(out: JsonWriter, value: BuiltArtifactImpl) {
         out.name("type").value(value.outputType.toString())
         out.name("filters").beginArray()
         for (filter in value.filters) {
@@ -63,53 +57,33 @@ internal class BuiltArtifactTypeAdapter: TypeAdapter<BuiltArtifact>() {
             out.endObject()
         }
         out.endArray()
-        out.name("properties").beginArray()
-        for (entry in value.properties.entries) {
-            out.beginObject()
-            out.name("key").value(entry.key)
-            out.name("value").value(entry.value)
-            out.endObject()
-        }
-        out.endArray()
-        out.name("versionCode").value(value.versionCode)
-        out.name("versionName").value(value.versionName)
-        out.name("enabled").value(value.isEnabled)
-        out.name("outputFile").value(value.outputFile.toString())
-        out.endObject()
     }
 
     @Throws(IOException::class)
-    override fun read(reader: JsonReader): BuiltArtifact {
-        reader.beginObject()
+    override fun read(reader: JsonReader): BuiltArtifactImpl {
         var outputType: String? = null
-        val filters = ImmutableList.builder<FilterConfiguration>()
-        val properties = ImmutableMap.Builder<String, String>()
-        var versionCode= 0
-        var versionName: String? = null
-        var outputFile: String? = null
-        var isEnabled = true
-
-        while (reader.hasNext()) {
-            when (reader.nextName()) {
-                "type" -> outputType = reader.nextString()
-                "filters" -> readFilters(reader, filters)
-                "properties" -> readProperties(reader, properties)
-                "versionCode" -> versionCode = reader.nextInt()
-                "versionName" -> versionName = reader.nextString()
-                "outputFile" -> outputFile = reader.nextString()
-                "enabled" -> isEnabled = reader.nextBoolean()
-            }
-        }
-        reader.endObject()
-
-        return BuiltArtifactImpl(
-            outputFile = FileSystems.getDefault().getPath(outputFile!!),
-            properties = properties.build(),
-            versionCode = versionCode,
-            versionName = versionName.orEmpty(),
-            isEnabled = isEnabled,
-            outputType = VariantOutputConfiguration.OutputType.valueOf(outputType!!),
-            filters = filters.build())
+        val filters = ImmutableList.Builder<FilterConfiguration>()
+        return super.read(reader,
+            { attributeName: String ->
+                when(attributeName) {
+                    "type" -> outputType = reader.nextString()
+                    "filters" -> readFilters(reader, filters)
+                }
+            },
+            { outputFile: Path,
+                properties: Map<String, String>,
+                versionCode: Int,
+                versionName: String,
+                isEnabled: Boolean ->
+                BuiltArtifactImpl(
+                    outputType = VariantOutputConfiguration.OutputType.valueOf(outputType!!),
+                    filters = filters.build(),
+                    outputFile = outputFile,
+                    properties = properties,
+                    versionCode = versionCode,
+                    versionName = versionName,
+                    isEnabled = isEnabled)
+            })
     }
 
     @Throws(IOException::class)
@@ -128,28 +102,6 @@ internal class BuiltArtifactTypeAdapter: TypeAdapter<BuiltArtifact>() {
             }
             if (filterType != null && value != null) {
                 filters.add(FilterConfiguration(filterType, value))
-            }
-            reader.endObject()
-        }
-        reader.endArray()
-    }
-
-    @Throws(IOException::class)
-    private fun readProperties(reader: JsonReader, properties: ImmutableMap.Builder<String, String>) {
-
-        reader.beginArray()
-        while (reader.hasNext()) {
-            reader.beginObject()
-            var key: String? = null
-            var value: String? = null
-            while (reader.hasNext()) {
-                when (reader.nextName()) {
-                    "key" -> key = reader.nextString()
-                    "value" -> value = reader.nextString()
-                }
-            }
-            if (key != null) {
-                properties.put(key, value.orEmpty())
             }
             reader.endObject()
         }

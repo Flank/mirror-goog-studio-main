@@ -17,21 +17,20 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
-import com.android.build.gradle.internal.scope.BuildElements
+import com.android.ide.common.build.CommonBuiltArtifacts
 import com.google.gson.GsonBuilder
 import org.gradle.api.file.Directory
-import org.gradle.api.file.RegularFile
 import java.io.File
 import java.nio.file.Path
 
 class BuiltArtifactsImpl(
-    val version: Int = BuiltArtifacts.METADATA_FILE_VERSION,
+    override val version: Int = BuiltArtifacts.METADATA_FILE_VERSION,
     override val artifactType: ArtifactType<*>,
     override val applicationId: String,
     override val variantName: String,
-    override val elements: Collection<BuiltArtifactImpl>) : BuiltArtifacts {
+    override val elements: Collection<BuiltArtifactImpl>)
+    : CommonBuiltArtifacts, BuiltArtifacts {
 
     companion object {
         const val METADATA_FILE_NAME = "output.json"

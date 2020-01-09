@@ -28,6 +28,9 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 
+/**
+ * Tests for [BuiltArtifactsLoaderImpl]
+ */
 class BuiltArtifactsLoaderImplTest {
 
     @get:Rule
