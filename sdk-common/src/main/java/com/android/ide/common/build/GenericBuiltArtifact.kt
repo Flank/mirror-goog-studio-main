@@ -35,11 +35,11 @@ data class GenericBuiltArtifact(
      *
      * @return list of [GenericFilterConfiguration] for this output.
      */
-    val filters: Collection<GenericFilterConfiguration>,
+    val filters: Collection<GenericFilterConfiguration> = listOf(),
 
-    override val versionCode: Int,
-    override val versionName: String,
-    override val isEnabled: Boolean,
+    override val versionCode: Int = -1,
+    override val versionName: String = "",
+    override val isEnabled: Boolean = true,
     override val outputFile: Path,
-    override val properties: Map<String, String>
+    override val properties: Map<String, String> = mapOf()
 ): CommonBuiltArtifact

@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.internal.test.SplitOutputMatcher;
+import com.android.build.gradle.internal.test.BuiltArtifactsSplitOutputMatcher;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.internal.InstallUtils;
@@ -131,7 +131,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
                     device, minSkdVersion, iLogger, projectName, variantName)) {
                 // When InstallUtils.checkDeviceApiLevel returns false, it logs the reason.
                 final List<File> apkFiles =
-                        SplitOutputMatcher.INSTANCE.computeBestOutput(
+                        BuiltArtifactsSplitOutputMatcher.INSTANCE.computeBestOutput(
                                 new DeviceConfigProviderImpl(device),
                                 builtArtifacts,
                                 supportedAbis);

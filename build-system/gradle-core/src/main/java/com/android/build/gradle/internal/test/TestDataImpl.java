@@ -116,7 +116,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
             return ImmutableList.of();
         }
         apks.addAll(
-                SplitOutputMatcher.INSTANCE.computeBestOutput(
+                BuiltArtifactsSplitOutputMatcher.INSTANCE.computeBestOutput(
                         deviceConfigProvider,
                         builtArtifacts,
                         testedVariantData.getVariantDslInfo().getSupportedAbis()));

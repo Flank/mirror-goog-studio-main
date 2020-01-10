@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.internal.test
+package com.android.ide.common.build
 
-import com.android.build.api.variant.BuiltArtifact
-import com.android.build.api.variant.BuiltArtifacts
-import com.android.build.api.variant.FilterConfiguration
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.resources.Density
 import com.google.common.base.Strings
@@ -27,7 +24,7 @@ import java.io.File
 import java.util.ArrayList
 import java.util.Collections
 
-object SplitOutputMatcher {
+object GenericBuiltArtifactsSplitOutputMatcher {
 
     /**
      * Determines and return the list of APKs to use based on given device density and abis.
@@ -41,18 +38,18 @@ object SplitOutputMatcher {
      */
     fun computeBestOutput(
         deviceConfigProvider: DeviceConfigProvider,
-        builtArtifacts: BuiltArtifacts,
+        builtArtifacts: GenericBuiltArtifacts,
         variantAbiFilters: Collection<String?>?
     ): List<File> {
         val apkFiles: MutableList<File> =
             ArrayList()
         // now look for a matching output file
         return computeBestOutput(
-                builtArtifacts,
-                variantAbiFilters,
-                deviceConfigProvider.density,
-                deviceConfigProvider.abis
-            )
+            builtArtifacts,
+            variantAbiFilters,
+            deviceConfigProvider.density,
+            deviceConfigProvider.abis
+        )
     }
 
     /**
@@ -71,7 +68,7 @@ object SplitOutputMatcher {
      * @return the list of APKs to install or null if none are compatible.
      */
     fun computeBestOutput(
-        outputs: BuiltArtifacts,
+        outputs: GenericBuiltArtifacts,
         variantAbiFilters: Collection<String?>?,
         deviceDensity: Int,
         deviceAbis: List<String?>
@@ -80,14 +77,14 @@ object SplitOutputMatcher {
         val densityValue: String?
         densityValue = densityEnum?.resourceValue
         // gather all compatible matches.
-        val matches: MutableList<BuiltArtifact> =
+        val matches: MutableList<GenericBuiltArtifact> =
             Lists.newArrayList()
         // find a matching output.
         for (builtArtifact in outputs.elements) {
             val densityFilter =
-                getFilter(builtArtifact, FilterConfiguration.FilterType.DENSITY)
+                getFilter(builtArtifact, "DENSITY")
             val abiFilter =
-                getFilter(builtArtifact, FilterConfiguration.FilterType.ABI)
+                getFilter(builtArtifact, "ABI")
             if (densityFilter != null && densityFilter != densityValue) {
                 continue
             }
@@ -101,7 +98,7 @@ object SplitOutputMatcher {
         }
         val match = Collections.max(
             matches
-        ) { splitOutput: BuiltArtifact, splitOutput2: BuiltArtifact ->
+        ) { splitOutput: GenericBuiltArtifact, splitOutput2: GenericBuiltArtifact ->
             val rc = splitOutput.versionCode - splitOutput2.versionCode
             if (rc != 0) {
                 return@max rc
@@ -125,10 +122,10 @@ object SplitOutputMatcher {
      * the specified deviceAbi is the same.
      */
     private fun getAbiPreferenceOrder(
-        builtArtifact: BuiltArtifact,
+        builtArtifact: GenericBuiltArtifact,
         deviceAbi: List<String?>
     ): Int {
-        val abiFilter = getFilter(builtArtifact, FilterConfiguration.FilterType.ABI)
+        val abiFilter = getFilter(builtArtifact, "ABI")
         if (Strings.isNullOrEmpty(abiFilter)) { // Null or empty imply a universal APK, which would return the second highest score.
             return deviceAbi.size - 1
         }
@@ -147,11 +144,11 @@ object SplitOutputMatcher {
     }
 
     private fun isMainApkCompatibleWithDevice(
-        mainBuiltArtifact: BuiltArtifact,
+        mainBuiltArtifact: GenericBuiltArtifact,
         variantAbiFilters: Collection<String?>?,
         deviceAbis: Collection<String?>
     ): Boolean { // so far, we are not dealing with the pure split files...
-        if (getFilter(mainBuiltArtifact, FilterConfiguration.FilterType.ABI)
+        if (getFilter(mainBuiltArtifact, "ABI")
             == null && variantAbiFilters != null && !variantAbiFilters.isEmpty()
         ) { // if we have a match that has no abi filter, and we have variant-level filters, then
 // we need to make sure that the variant filters are compatible with the device abis.
@@ -166,7 +163,7 @@ object SplitOutputMatcher {
     }
 
     private fun getFilter(
-        variantOutput: BuiltArtifact, filterType: FilterConfiguration.FilterType
+        variantOutput: GenericBuiltArtifact, filterType: String
     ): String? =
         variantOutput.filters.firstOrNull { it.filterType == filterType }?.identifier
 }
