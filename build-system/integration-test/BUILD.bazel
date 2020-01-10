@@ -25,6 +25,19 @@ filegroup(
         "databindingIncremental",
         "databindingMultiModule",
         "databindingWithDynamicFeatures",
+        "dynamicApp",
+        "lintBaseline",
+        "lintCustomLocalAndPublishRules",
+        "lintCustomRules",
+        "lintDeps",
+        "lintKotlin",
+        "lintLibraryModel",
+        "lintLibrarySkipDeps",
+        "lintMultipleLintJars",
+        "lintResourceResolve",
+        "lintStandalone",
+        "lintStandaloneCustomRules",
+        "lintStandaloneVital",
     ]
 ]
 
