@@ -150,6 +150,7 @@ TEST_DATA = [
     "//tools/base/build-system/integration-test:test-projects/pkgOverride",
     "//tools/base/build-system/integration-test:test-projects/placeholderInLibsTest",
     "//tools/base/build-system/integration-test:test-projects/prefabApp",
+    "//tools/base/build-system/integration-test:test-projects/prefabPublishing",
     "//tools/base/build-system/integration-test:test-projects/privateResources",
     "//tools/base/build-system/integration-test:test-projects/projectWithClassifierDep",
     "//tools/base/build-system/integration-test:test-projects/projectWithIvyDependency",

@@ -206,6 +206,7 @@ public class PackagingOptions
     private Set<String> merges = Sets.newHashSet();
     private Set<String> doNotStrip = Sets.newHashSet();
 
+    /** Returns the list of excluded paths. */
     @Override
     @NonNull
     @Input

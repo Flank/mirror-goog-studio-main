@@ -228,6 +228,9 @@ InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // the outputs folder if creating an APK instead of an app bundle.
     object MERGED_NATIVE_DEBUG_METADATA: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS, "native-debug-symbols"), Replaceable
 
+    // Assembled prefab directory to be packaged in the AAR.
+    object PREFAB_PACKAGE: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+
     // Assets created by compiling shader
     object SHADER_ASSETS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 

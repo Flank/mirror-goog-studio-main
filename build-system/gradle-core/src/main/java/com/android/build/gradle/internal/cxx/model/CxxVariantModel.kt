@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.ndk.Stl
+import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils
 import java.io.File
 
@@ -110,5 +112,52 @@ interface CxxVariantModel {
 val CxxVariantModel.soFolder: File
     get() = FileUtils.join(module.intermediatesFolder, module.buildSystem.tag, variantName, "lib")
 
+sealed class DetermineUsedStlResult {
+    data class Success(val stl: Stl) : DetermineUsedStlResult()
+    data class Failure(val error: String) : DetermineUsedStlResult()
+}
 
+fun CxxVariantModel.determineUsedStl(): DetermineUsedStlResult {
+    // Arguments passed on the command line take precedence.
+    val stlArgumentPrefix = when (module.buildSystem) {
+        NativeBuildSystem.NDK_BUILD -> "APP_STL="
+        NativeBuildSystem.CMAKE -> "-DANDROID_STL="
+    }
+    val stlFromArgument =
+        buildSystemArgumentList.findLast { it.startsWith(stlArgumentPrefix) }?.split("=", limit = 2)
+            ?.last()
+    if (stlFromArgument != null) {
+        val parsedStl =
+            Stl.fromArgumentName(stlFromArgument) ?: return DetermineUsedStlResult.Failure(
+                "Unable to parse STL from build.gradle arguments: $stlFromArgument"
+            )
+        return DetermineUsedStlResult.Success(parsedStl)
+    }
 
+    // For ndk-build, the STL may also be specified in the project's Application.mk.
+    if (module.buildSystem == NativeBuildSystem.NDK_BUILD) {
+        // Try parsing the user's STL from their Application.mk, and emit an error if we can't. If
+        // we can't parse it the user will need to take some action (alter their Application.mk such
+        // that APP_STL becomes trivially parsable, or define it in their build.gradle instead.
+        var appStl: String? = null
+        val applicationMk = module.makeFile.resolveSibling("Application.mk")
+        if (applicationMk.exists()) {
+            for (line in applicationMk.readText().lines()) {
+                val match = Regex("^APP_STL\\s*:?=\\s*(.*)$").find(line.trim()) ?: continue
+                val appStlMatch = match.groups[1]
+                require(appStlMatch != null) // Should be impossible.
+                appStl = appStlMatch.value.takeIf { it.isNotEmpty() }
+            }
+
+            if (appStl != null) {
+                val stl = Stl.fromArgumentName(appStl) ?: return DetermineUsedStlResult.Failure(
+                    "Unable to parse APP_STL from $applicationMk: $appStl"
+                )
+                return DetermineUsedStlResult.Success(stl)
+            }
+        }
+    }
+
+    // Otherwise the default it used.
+    return DetermineUsedStlResult.Success(module.ndkDefaultStl)
+}

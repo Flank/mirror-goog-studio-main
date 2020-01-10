@@ -69,6 +69,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.NATIVE_SYMBO
 import com.android.build.gradle.internal.scope.InternalArtifactType.NAVIGATION_JSON
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_DEPENDENCIES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
+import com.android.build.gradle.internal.scope.InternalArtifactType.PREFAB_PACKAGE
 import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLIC_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_HEADERS
 import com.android.build.gradle.internal.scope.InternalArtifactType.RES_STATIC_LIBRARY
@@ -207,6 +208,7 @@ class PublishingSpecs {
                 api(AIDL_PARCELABLE, ArtifactType.AIDL)
                 api(RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT)
                 api(COMPILE_LIBRARY_CLASSES_JAR, ArtifactType.CLASSES_JAR)
+                api(PREFAB_PACKAGE, ArtifactType.PREFAB_PACKAGE)
 
                 // manifest is published to both to compare and detect provided-only library
                 // dependencies.

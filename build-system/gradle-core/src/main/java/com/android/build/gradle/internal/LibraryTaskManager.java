@@ -37,6 +37,7 @@ import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -66,25 +67,33 @@ import com.android.build.gradle.internal.tasks.AarMetadataTask;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.BundleAar;
 import com.android.build.gradle.tasks.CompileLibraryResourcesTask;
+import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
+import com.android.build.gradle.tasks.PrefabModuleTaskData;
+import com.android.build.gradle.tasks.PrefabPackageTask;
 import com.android.build.gradle.tasks.ProcessLibraryManifest;
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
+import com.android.builder.model.PrefabPackagingOptions;
 import com.android.builder.profile.Recorder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import java.io.File;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -219,6 +228,8 @@ public class LibraryTaskManager
 
         taskFactory.register(
                 new ExportConsumerProguardFilesTask.CreationAction(libVariantProperties));
+
+        createPrefabTasks(libVariantProperties);
 
         // Some versions of retrolambda remove the actions from the extract annotations task.
         // TODO: remove this hack once tests are moved to a version that doesn't do this
@@ -520,6 +531,50 @@ public class LibraryTaskManager
     public void createLibraryAssetsTask(@NonNull VariantPropertiesImpl variantProperties) {
         taskFactory.register(
                 new MergeSourceSetFolders.LibraryAssetCreationAction(variantProperties));
+    }
+
+    public void createPrefabTasks(@NonNull LibraryVariantPropertiesImpl variantProperties) {
+        if (!variantProperties.getBuildFeatures().getPrefabPublishing()) {
+            return;
+        }
+
+        Provider<ExternalNativeJsonGenerator> generator =
+                variantProperties.getTaskContainer().getExternalNativeJsonGenerator();
+        if (generator == null) {
+            // No external native build, so definitely no prefab tasks.
+            return;
+        }
+
+        LibraryExtension extension = (LibraryExtension) globalScope.getExtension();
+        List<PrefabModuleTaskData> modules = Lists.newArrayList();
+        for (PrefabPackagingOptions options : extension.getPrefab()) {
+            String name = options.getName();
+            if (name == null) {
+                throw new InvalidUserDataException("prefab modules must specify a name");
+            }
+            File headers = null;
+            if (options.getHeaders() != null) {
+                headers =
+                        project.getLayout()
+                                .getProjectDirectory()
+                                .dir(options.getHeaders())
+                                .getAsFile();
+            }
+            modules.add(new PrefabModuleTaskData(name, headers, options.getLibraryName()));
+        }
+
+        if (!modules.isEmpty()) {
+            TaskProvider<PrefabPackageTask> packageTask =
+                    taskFactory.register(
+                            new PrefabPackageTask.CreationAction(
+                                    modules,
+                                    generator.get().getVariant(),
+                                    generator.get().getAbis(),
+                                    variantProperties));
+            packageTask
+                    .get()
+                    .dependsOn(variantProperties.getTaskContainer().getExternalNativeBuildTask());
+        }
     }
 
     @NonNull

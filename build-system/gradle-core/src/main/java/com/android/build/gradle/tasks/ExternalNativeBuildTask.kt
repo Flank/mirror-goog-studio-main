@@ -345,6 +345,7 @@ abstract class ExternalNativeBuildTask : UnsafeOutputsTask("External Native Buil
                 }
 
                 when (Files.getFileExtension(output.name)) {
+                    "a" -> infoln("building target library ${libraryValue.artifactName!!} because no targets are specified.")
                     "so" -> infoln("building target library ${libraryValue.artifactName!!} because no targets are specified.")
                     "" -> infoln("building target executable ${libraryValue.artifactName!!} because no targets are specified.")
                     else -> {

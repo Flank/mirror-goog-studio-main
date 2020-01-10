@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.api.dsl.BuildFeatures
+import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 
@@ -60,6 +61,11 @@ class BuildFeatureValuesImpl constructor(
     // Library flags
 
     override val buildType: Boolean = true
+
+    override val prefabPublishing: Boolean = when (buildFeatures) {
+        is LibraryBuildFeatures -> buildFeatures.prefabPublishing ?: false
+        else -> false
+    }
 
     // ------------------
     // Test flags

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,14 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.LibraryBuildFeatures
+import com.android.build.gradle.internal.services.DslServices
+import org.gradle.api.NamedDomainObjectFactory
 
-abstract class LibraryBuildFeaturesImpl : BuildFeaturesImpl(), LibraryBuildFeatures {
-    override var androidResources: Boolean? = null
-    override var dataBinding: Boolean? = null
-    override var mlModelBinding: Boolean? = false
-    override var prefabPublishing: Boolean? = false
+/** Factory to create BuildType object using an [ObjectFactory] to add the DSL methods.  */
+class PrefabModuleFactory(private val dslServices: DslServices) :
+    NamedDomainObjectFactory<PrefabPackagingOptions> {
+
+    override fun create(name: String): PrefabPackagingOptions {
+        return dslServices.newInstance(PrefabPackagingOptions::class.java, name)
+    }
 }

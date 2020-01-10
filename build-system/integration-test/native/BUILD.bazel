@@ -280,6 +280,14 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
+    name = "PrefabPublishingTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
+    data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/prefabPublishing"],
+    maven_repos = MAVEN_REPOS,
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
     name = "RenderscriptNdkTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK + ["//tools/base/build-system/integration-test:test-projects/renderscriptNdk"],

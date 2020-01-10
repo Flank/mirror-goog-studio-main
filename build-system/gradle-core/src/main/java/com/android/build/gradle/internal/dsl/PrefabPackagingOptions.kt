@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,20 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.LibraryBuildFeatures
+import com.android.builder.model.PrefabPackagingOptions
+import java.io.Serializable
+import javax.inject.Inject
 
-abstract class LibraryBuildFeaturesImpl : BuildFeaturesImpl(), LibraryBuildFeatures {
-    override var androidResources: Boolean? = null
-    override var dataBinding: Boolean? = null
-    override var mlModelBinding: Boolean? = false
-    override var prefabPublishing: Boolean? = false
+open class PrefabPackagingOptions @Inject constructor(override var name: String) :
+    PrefabPackagingOptions, Serializable {
+
+    override var headers: String? = null
+    open fun headers(headers: String) {
+        this.headers = headers
+    }
+
+    override var libraryName: String? = null
+    open fun libraryName(libraryName: String) {
+        this.libraryName = libraryName
+    }
 }

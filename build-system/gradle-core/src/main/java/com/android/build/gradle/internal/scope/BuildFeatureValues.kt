@@ -54,6 +54,7 @@ interface BuildFeatureValues {
 
     val buildType: Boolean
     val androidResources: Boolean
+    val prefabPublishing: Boolean
 
     // ------------------
     // Test flags

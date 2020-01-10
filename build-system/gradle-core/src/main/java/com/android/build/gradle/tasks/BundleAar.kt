@@ -186,6 +186,14 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.from(creationConfig.operations.get(InternalArtifactType.LINT_PUBLISH_JAR))
             task.from(operations.get(InternalArtifactType.ANNOTATIONS_ZIP))
             task.from(operations.get(InternalArtifactType.AAR_MAIN_JAR))
+
+            if (buildFeatures.prefabPublishing) {
+                task.from(
+                    operations.get(InternalArtifactType.PREFAB_PACKAGE),
+                    prependToCopyPath(SdkConstants.FD_PREFAB_PACKAGE)
+                )
+            }
+
             task.from(
                 operations.get(InternalArtifactType.AAR_LIBS_DIRECTORY),
                 prependToCopyPath(SdkConstants.LIBS_FOLDER)

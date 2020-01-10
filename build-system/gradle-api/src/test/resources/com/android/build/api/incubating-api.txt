@@ -499,9 +499,11 @@ com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.
 com.android.build.api.dsl.LibraryBuildFeatures.getAndroidResources: java.lang.Boolean ()
 com.android.build.api.dsl.LibraryBuildFeatures.getDataBinding: java.lang.Boolean ()
 com.android.build.api.dsl.LibraryBuildFeatures.getMlModelBinding: java.lang.Boolean ()
+com.android.build.api.dsl.LibraryBuildFeatures.getPrefabPublishing: java.lang.Boolean ()
 com.android.build.api.dsl.LibraryBuildFeatures.setAndroidResources: void (java.lang.Boolean)
 com.android.build.api.dsl.LibraryBuildFeatures.setDataBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.LibraryBuildFeatures.setMlModelBinding: void (java.lang.Boolean)
+com.android.build.api.dsl.LibraryBuildFeatures.setPrefabPublishing: void (java.lang.Boolean)
 com.android.build.api.dsl.LibraryBuildType implements com.android.build.api.dsl.BuildType, com.android.build.api.dsl.LibraryVariantDimension
 com.android.build.api.dsl.LibraryBuildType.isDefault: boolean ()
 com.android.build.api.dsl.LibraryBuildType.setDefault: void (boolean)

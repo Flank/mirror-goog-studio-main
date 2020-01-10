@@ -18,6 +18,7 @@ package com.android.build.api.dsl
 
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
+import com.android.builder.model.PrefabPackagingOptions
 import org.gradle.api.Incubating
 
 /**
@@ -32,7 +33,8 @@ interface LibraryExtension<
         BuildTypeT : LibraryBuildType<SigningConfigT>,
         DefaultConfigT : LibraryDefaultConfig<SigningConfigT>,
         ProductFlavorT : LibraryProductFlavor<SigningConfigT>,
-        SigningConfigT : SigningConfig> :
+        SigningConfigT : SigningConfig,
+        PrefabOptionsT : PrefabPackagingOptions> :
     CommonExtension<
         AndroidSourceSetT,
         LibraryBuildFeatures,

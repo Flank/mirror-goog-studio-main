@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.scope
 
-import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.ArtifactKind
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.google.gson.JsonParser

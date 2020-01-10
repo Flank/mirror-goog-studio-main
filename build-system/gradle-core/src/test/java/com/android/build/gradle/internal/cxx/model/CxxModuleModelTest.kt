@@ -61,7 +61,8 @@ private val ALLOWED_PARAMETER_AND_RETURN_TYPES = setOf(
     Revision::class.java,
     Set::class.java,
     String::class.java,
-    UUID::class.java
+    UUID::class.java,
+    DetermineUsedStlResult::class.java
 )
 
 class CxxModuleModelTest {
@@ -163,7 +164,7 @@ class CxxModuleModelTest {
         if (type.toGenericString().contains("Test")) return
         if (type.toGenericString().contains("Mock")) return
         val typeName = type.toGenericString()
-        val isFinal = Modifier.isFinal(type.modifiers)
+        val isFinal = Modifier.isFinal(type.modifiers) || type.kotlin.isSealed
         val isPublic = Modifier.isPublic(type.modifiers)
         when {
             // No need to check private because they can't expose functionality
@@ -187,6 +188,9 @@ class CxxModuleModelTest {
                     }
                 }
                 if (typeName.endsWith("PrefabConfigurationState")) {
+                    return
+                }
+                if (typeName.endsWith("DetermineUsedStlResult")) {
                     return
                 }
                 fail(type.toGenericString())
