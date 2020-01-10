@@ -101,6 +101,22 @@ coverage_report(
     ],
 )
 
+coverage_report(
+    name = "motion-editor",
+    srcpath_exclude = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion/attributeEditor",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion/MotionLayoutAttributePanel.java",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion/MotionLayoutTimelineHelper.java",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion/MotionLayoutTimelinePanel.java",
+    ],
+    srcpath_include = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion",
+    ],
+    tests = [
+        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+    ],
+)
+
 # Coverage report for the split editor feature in design tools.
 # The editor covers most CUJs in both layout and navigation editors,
 # so we run both targets and exclude unrelated directories.
