@@ -79,11 +79,6 @@ enum class StringOption(
         ApiStage.Deprecated(DeprecationReporter.DeprecationTarget.AGP_BUILD_CACHE)
     ),
 
-    // Used to specify which native debug metadata get packaged in the bundle. Allowable options are
-    // NONE (default, no native debug metadata packaged), FULL (debug info and symbol table will be
-    // packaged), and SYMBOL_TABLE (only the symbol table will be packaged).
-    BUNDLE_NATIVE_DEBUG_METADATA("android.bundle.includeNativeDebugMetadata", ApiStage.Experimental),
-
     ;
 
     override val status = stage.status

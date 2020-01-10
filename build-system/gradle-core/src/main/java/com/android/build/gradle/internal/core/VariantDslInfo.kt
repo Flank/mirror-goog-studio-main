@@ -19,7 +19,6 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
-import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.builder.core.AbstractProductFlavor
@@ -376,7 +375,7 @@ interface VariantDslInfo {
      */
     val minSdkVersionWithTargetDeviceApi: AndroidVersion
 
-    val ndkConfig: CoreNdkOptions
+    val ndkConfig: MergedNdkConfig
 
     val externalNativeBuildOptions: CoreExternalNativeBuildOptions
 

@@ -41,4 +41,7 @@ public interface CoreNdkOptions {
 
     @Nullable
     Integer getJobs();
+
+    @Nullable
+    String getDebugSymbolLevel();
 }

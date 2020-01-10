@@ -950,6 +950,7 @@ com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions.getTarge
 com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions.getcFlags: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.CoreNdkOptions
 com.android.build.gradle.internal.dsl.CoreNdkOptions.getAbiFilters: java.util.Set<java.lang.String> ()
+com.android.build.gradle.internal.dsl.CoreNdkOptions.getDebugSymbolLevel: java.lang.String ()
 com.android.build.gradle.internal.dsl.CoreNdkOptions.getJobs: java.lang.Integer ()
 com.android.build.gradle.internal.dsl.CoreNdkOptions.getLdLibs: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.CoreNdkOptions.getModuleName: java.lang.String ()
@@ -1219,12 +1220,16 @@ com.android.build.gradle.internal.dsl.NdkBuildOptions.setBuildStagingDirectory: 
 com.android.build.gradle.internal.dsl.NdkBuildOptions.setPath: void (java.io.File)
 com.android.build.gradle.internal.dsl.NdkBuildOptions.setPath: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.NdkOptions implements com.android.build.gradle.internal.dsl.CoreNdkOptions, java.io.Serializable, com.android.build.api.dsl.Ndk
+com.android.build.gradle.internal.dsl.NdkOptions$DebugSymbolLevel extends java.lang.Enum
+com.android.build.gradle.internal.dsl.NdkOptions$DebugSymbolLevel.valueOf: com.android.build.gradle.internal.dsl.NdkOptions$DebugSymbolLevel (java.lang.String)
+com.android.build.gradle.internal.dsl.NdkOptions$DebugSymbolLevel.values: com.android.build.gradle.internal.dsl.NdkOptions$DebugSymbolLevel[] ()
 com.android.build.gradle.internal.dsl.NdkOptions.<init>: com.android.build.gradle.internal.dsl.NdkOptions ()
 com.android.build.gradle.internal.dsl.NdkOptions._initWith: void (com.android.build.gradle.internal.dsl.CoreNdkOptions)
 com.android.build.gradle.internal.dsl.NdkOptions.abiFilter: com.android.build.gradle.internal.dsl.NdkOptions (java.lang.String)
 com.android.build.gradle.internal.dsl.NdkOptions.abiFilters: com.android.build.gradle.internal.dsl.NdkOptions (java.lang.String[])
 com.android.build.gradle.internal.dsl.NdkOptions.getAbiFilters: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.NdkOptions.getCFlags: java.lang.String ()
+com.android.build.gradle.internal.dsl.NdkOptions.getDebugSymbolLevel: java.lang.String ()
 com.android.build.gradle.internal.dsl.NdkOptions.getJobs: java.lang.Integer ()
 com.android.build.gradle.internal.dsl.NdkOptions.getLdLibs: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.NdkOptions.getModuleName: java.lang.String ()
@@ -1235,6 +1240,7 @@ com.android.build.gradle.internal.dsl.NdkOptions.ldLibs: com.android.build.gradl
 com.android.build.gradle.internal.dsl.NdkOptions.setAbiFilters: com.android.build.gradle.internal.dsl.NdkOptions (java.util.Collection<java.lang.String>)
 com.android.build.gradle.internal.dsl.NdkOptions.setAbiFilters: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.NdkOptions.setCFlags: void (java.lang.String)
+com.android.build.gradle.internal.dsl.NdkOptions.setDebugSymbolLevel: void (java.lang.String)
 com.android.build.gradle.internal.dsl.NdkOptions.setJobs: void (java.lang.Integer)
 com.android.build.gradle.internal.dsl.NdkOptions.setLdLibs: com.android.build.gradle.internal.dsl.NdkOptions (java.util.Collection<java.lang.String>)
 com.android.build.gradle.internal.dsl.NdkOptions.setModuleName: void (java.lang.String)

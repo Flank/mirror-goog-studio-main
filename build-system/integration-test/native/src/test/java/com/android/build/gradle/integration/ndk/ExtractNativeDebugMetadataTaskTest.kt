@@ -24,13 +24,12 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.DEF
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.integration.common.utils.getVariantByName
+import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
+import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel.FULL
+import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel.NONE
+import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel.SYMBOL_TABLE
 import com.android.build.gradle.internal.tasks.ExtractNativeDebugMetadataTask
 import com.android.build.gradle.internal.tasks.PackageBundleTask
-import com.android.build.gradle.internal.tasks.PackageBundleTask.NativeDebugSymbolLevel
-import com.android.build.gradle.internal.tasks.PackageBundleTask.NativeDebugSymbolLevel.FULL
-import com.android.build.gradle.internal.tasks.PackageBundleTask.NativeDebugSymbolLevel.NONE
-import com.android.build.gradle.internal.tasks.PackageBundleTask.NativeDebugSymbolLevel.SYMBOL_TABLE
-import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.testutils.apk.Zip
@@ -40,6 +39,7 @@ import com.google.common.base.Throwables
 import com.google.common.truth.Truth.assertThat
 import org.gradle.tooling.BuildException
 import org.junit.Assume
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -49,11 +49,11 @@ import kotlin.test.fail
 
 /** Test behavior of [ExtractNativeDebugMetadataTask] and [PackageBundleTask]*/
 @RunWith(FilterableParameterized::class)
-class ExtractNativeDebugMetadataTaskTest(private val mode: NativeDebugSymbolLevel?) {
+class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbolLevel?) {
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "nativeDebugMetadataMode_{0}")
+        @Parameterized.Parameters(name = "debugSymbolLevel_{0}")
         fun params() = listOf(null, NONE, SYMBOL_TABLE, FULL)
     }
 
@@ -63,6 +63,23 @@ class ExtractNativeDebugMetadataTaskTest(private val mode: NativeDebugSymbolLeve
             .fromTestProject("dynamicApp")
             .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
             .create()
+
+    @Before
+    fun setUp() {
+        // use lowercase and uppercase for different cases because both are supported
+        val debugSymbolLevel =
+            when (debugSymbolLevel) {
+                null -> return
+                NONE -> debugSymbolLevel.name
+                SYMBOL_TABLE -> debugSymbolLevel.name.toLowerCase()
+                FULL -> debugSymbolLevel.name.toUpperCase()
+            }
+        project.getSubproject(":app").buildFile.appendText(
+            """
+                android.buildTypes.release.ndk.debugSymbolLevel '$debugSymbolLevel'
+                """.trimIndent()
+        )
+    }
 
     @Test
     fun testNativeDebugMetadataInBundle() {
@@ -75,7 +92,7 @@ class ExtractNativeDebugMetadataTaskTest(private val mode: NativeDebugSymbolLeve
         }
 
         val bundleTaskName = getBundleTaskName("release")
-        executor().run("app:$bundleTaskName")
+        project.executor().run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
         assertThat(bundleFile).exists()
@@ -104,7 +121,7 @@ class ExtractNativeDebugMetadataTaskTest(private val mode: NativeDebugSymbolLeve
             "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature2.so.sym"
         )
         Zip(bundleFile).use { zip ->
-            when (mode) {
+            when (debugSymbolLevel) {
                 null -> {
                     assertThat(zip.entries.map { it.toString() })
                         .containsNoneIn(expectedFullEntries)
@@ -135,7 +152,7 @@ class ExtractNativeDebugMetadataTaskTest(private val mode: NativeDebugSymbolLeve
 
     @Test
     fun testErrorIfCollidingNativeLibs() {
-        Assume.assumeTrue(mode == SYMBOL_TABLE || mode == FULL)
+        Assume.assumeTrue(debugSymbolLevel == SYMBOL_TABLE || debugSymbolLevel == FULL)
         // add native libs to app and feature modules
         listOf("app", "feature1").forEach {
             val subProject = project.getSubproject(":$it")
@@ -144,7 +161,7 @@ class ExtractNativeDebugMetadataTaskTest(private val mode: NativeDebugSymbolLeve
 
         val bundleTaskName = getBundleTaskName("release")
         try {
-            executor().run("app:$bundleTaskName")
+            project.executor().run("app:$bundleTaskName")
         } catch (e: BuildException) {
             assertThat(Throwables.getRootCause(e).message).startsWith(
                 "Multiple entries with same key"
@@ -158,9 +175,9 @@ class ExtractNativeDebugMetadataTaskTest(private val mode: NativeDebugSymbolLeve
     fun testTaskSkippedWhenNoNativeLibs() {
         // first test that the task is skipped in all modules when there are no native libraries.
         val bundleTaskName = getBundleTaskName("release")
-        val result1 = executor().run("app:$bundleTaskName")
+        val result1 = project.executor().run("app:$bundleTaskName")
         // if mode is NONE or null, the task should not be part of the task graph at all.
-        if (mode == null || mode == NONE) {
+        if (debugSymbolLevel == null || debugSymbolLevel == NONE) {
             assertThat(result1.tasks).containsNoneIn(
                 listOf(
                     ":app:extractReleaseNativeDebugMetadata",
@@ -180,7 +197,7 @@ class ExtractNativeDebugMetadataTaskTest(private val mode: NativeDebugSymbolLeve
         )
         // then test that the task only does work for modules with native libraries.
         createAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "feature1.so")
-        val result2 = executor().run("app:$bundleTaskName")
+        val result2 = project.executor().run("app:$bundleTaskName")
         assertThat(result2.skippedTasks).containsAtLeastElementsIn(
             listOf(
                 ":app:extractReleaseNativeDebugMetadata",
@@ -190,6 +207,26 @@ class ExtractNativeDebugMetadataTaskTest(private val mode: NativeDebugSymbolLeve
         assertThat(result2.didWorkTasks).containsAtLeastElementsIn(
             listOf(":feature1:extractReleaseNativeDebugMetadata")
         )
+    }
+
+    @Test
+    fun testErrorWhenInvalidString() {
+        Assume.assumeTrue(debugSymbolLevel == null)
+        project.getSubproject(":app").buildFile.appendText(
+            """
+                android.defaultConfig.ndk.debugSymbolLevel 'INVALID'
+                """.trimIndent()
+        )
+        try {
+            project.executor().run("app:assembleDebug")
+        } catch (e: Exception) {
+            assertThat(Throwables.getRootCause(e).message).startsWith(
+                "Unknown DebugSymbolLevel value 'INVALID'. Possible values are 'full', " +
+                        "'symbol_table', 'none'."
+            )
+            return
+        }
+        fail("expected error because of invalid debugSymbolLevel value.")
     }
 
     private fun getBundleTaskName(name: String): String {
@@ -227,20 +264,4 @@ class ExtractNativeDebugMetadataTaskTest(private val mode: NativeDebugSymbolLeve
             }
         }
     }
-
-    private fun executor() =
-        when (mode) {
-            null -> project.executor()
-            NONE -> project.executor().with(StringOption.BUNDLE_NATIVE_DEBUG_METADATA, mode.name)
-            SYMBOL_TABLE ->
-                project.executor().with(
-                    StringOption.BUNDLE_NATIVE_DEBUG_METADATA,
-                    mode.name.toLowerCase()
-                )
-            FULL ->
-                project.executor().with(
-                    StringOption.BUNDLE_NATIVE_DEBUG_METADATA,
-                    mode.name.toUpperCase()
-                )
-        }
 }

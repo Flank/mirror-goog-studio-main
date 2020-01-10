@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
-import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -852,7 +851,7 @@ open class VariantDslInfoImpl internal constructor(
         )
     }
 
-    override val ndkConfig: CoreNdkOptions
+    override val ndkConfig: MergedNdkConfig
         get() = mergedNdkConfig
 
     override val externalNativeBuildOptions: CoreExternalNativeBuildOptions

@@ -16,15 +16,13 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.StringOption
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
 import com.android.tools.build.bundletool.commands.BuildBundleCommand
@@ -35,7 +33,6 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
@@ -48,7 +45,6 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Path
-import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -95,7 +91,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     abstract val nativeDebugMetadataDirs: ConfigurableFileCollection
 
     @get:Input
-    abstract val nativeDebugSymbolLevel: Property<NativeDebugSymbolLevel>
+    lateinit var debugSymbolLevel: DebugSymbolLevel
+        private set
 
     @get:Input
     lateinit var aaptOptionsNoCompress: Collection<String>
@@ -117,7 +114,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         get() = bundleFile.get().asFile.name
 
     @get:Input
-    abstract val debuggable: Property<Boolean>
+    var debuggable: Boolean = false
+        private set
 
     @get:Input
     var bundleNeedsFusedStandaloneConfig: Boolean = false
@@ -146,9 +144,9 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     bundleDeps = if(bundleDeps.isPresent) bundleDeps.get().asFile else null,
                     // do not compress the bundle in debug builds where it will be only used as an
                     // intermediate artifact
-                    uncompressBundle = debuggable.get(),
+                    uncompressBundle = debuggable,
                     bundleNeedsFusedStandaloneConfig = bundleNeedsFusedStandaloneConfig,
-                    nativeDebugSymbolLevel = nativeDebugSymbolLevel.get()
+                    debugSymbolLevel = debugSymbolLevel
                 )
             )
         }
@@ -169,7 +167,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val bundleDeps: File?,
         val uncompressBundle: Boolean,
         val bundleNeedsFusedStandaloneConfig: Boolean,
-        val nativeDebugSymbolLevel: NativeDebugSymbolLevel
+        val debugSymbolLevel: DebugSymbolLevel
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params) : Runnable {
@@ -271,11 +269,11 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             }
 
             val nativeDebugMetadataPredicate = { file: File ->
-                when (params.nativeDebugSymbolLevel) {
-                    NativeDebugSymbolLevel.NONE -> false
-                    NativeDebugSymbolLevel.SYMBOL_TABLE ->
+                when (params.debugSymbolLevel) {
+                    DebugSymbolLevel.NONE -> false
+                    DebugSymbolLevel.SYMBOL_TABLE ->
                         file.name.endsWith(".so.sym", ignoreCase = true)
-                    NativeDebugSymbolLevel.FULL ->
+                    DebugSymbolLevel.FULL ->
                         file.name.endsWith(".so.dbg", ignoreCase = true)
                 }
             }
@@ -320,15 +318,6 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         @get:Input
         val enableUncompressedNativeLibs: Boolean
     ) : Serializable
-
-    enum class NativeDebugSymbolLevel {
-        /** Package native debug info *and* native symbol table */
-        FULL,
-        /** Package native symbol table but not native debug info */
-        SYMBOL_TABLE,
-        /** Don't package native debug info or native symbol table */
-        NONE
-    }
 
     /**
      * CreateAction for a Task that will pack the bundle artifact.
@@ -387,30 +376,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 task.integrityConfigFile
             )
 
-            task.debuggable
-                .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+            task.debuggable = creationConfig.variantDslInfo.isDebuggable
 
-            val nativeDebugSymbolLevel =
-                creationConfig.globalScope.projectOptions[StringOption.BUNDLE_NATIVE_DEBUG_METADATA]
-            task.nativeDebugSymbolLevel.set(
-                if (nativeDebugSymbolLevel == null || task.debuggable.get()) {
-                    NativeDebugSymbolLevel.NONE
-                } else {
-                    try {
-                        NativeDebugSymbolLevel.valueOf(
-                            nativeDebugSymbolLevel.toUpperCase(Locale.US)
-                        )
-                    } catch (e: IllegalArgumentException) {
-                        NativeDebugSymbolLevel.NONE
-                        throw RuntimeException(
-                            "Unsupported value for ${StringOption.BUNDLE_NATIVE_DEBUG_METADATA}: " +
-                                    "$nativeDebugSymbolLevel. Supported values are " +
-                                    "${NativeDebugSymbolLevel.values().joinToString()}."
-                        )
-                    }
-                }
-            )
-            if (task.nativeDebugSymbolLevel.get() != NativeDebugSymbolLevel.NONE) {
+            task.debugSymbolLevel = creationConfig.variantDslInfo.ndkConfig.debugSymbolLevelEnum
+            if (task.debugSymbolLevel != DebugSymbolLevel.NONE) {
                 task.nativeDebugMetadataDirs.from(
                     creationConfig.artifacts.getFinalProduct(
                         InternalArtifactType.NATIVE_DEBUG_METADATA

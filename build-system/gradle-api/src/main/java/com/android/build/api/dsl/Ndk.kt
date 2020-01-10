@@ -72,4 +72,27 @@ interface Ndk {
      * Number of parallel threads to spawn.
      */
     var jobs: Int?
+
+    /**
+     * The type of debug metadata which will be packaged in the app bundle.
+     *
+     * <p>Supported values are 'none' (default, no native debug metadata will be packaged),
+     * 'symbol_table' (only the symbol tables will be packaged), and 'full' (the debug info and
+     * symbol tables will be packaged).
+     *
+     * <p>Example usage:
+     *
+     * <pre>
+     * android {
+     *     buildTypes {
+     *         release {
+     *             ndk {
+     *                 debugSymbolLevel 'symbol_table'
+     *             }
+     *         }
+     *     }
+     * }
+     * </pre>
+     */
+    var debugSymbolLevel: String?
 }
