@@ -42,6 +42,8 @@ public class GradleProcessExecutor implements ProcessExecutor {
 
     @NonNull private final Function<Action<? super ExecSpec>, ExecResult> execOperations;
 
+    // Lambda is stored but not compared
+    @SuppressWarnings("ImplicitSamInstance")
     public GradleProcessExecutor(
             @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperations) {
         this.execOperations = execOperations;

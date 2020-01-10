@@ -92,19 +92,19 @@ class JavaEvaluator {
     abstract fun extendsClass(
         cls: PsiClass?,
         className: String,
-        strict: Boolean
+        strict: Boolean = false
     ): Boolean
 
     abstract fun implementsInterface(
         cls: PsiClass,
         interfaceName: String,
-        strict: Boolean
+        strict: Boolean = false
     ): Boolean
 
     open fun isMemberInSubClassOf(
         member: PsiMember,
         className: String,
-        strict: Boolean
+        strict: Boolean = false
     ): Boolean {
         val containingClass = member.containingClass
         return containingClass != null && extendsClass(containingClass, className, strict)
@@ -132,7 +132,7 @@ class JavaEvaluator {
     open fun inheritsFrom(
         cls: PsiClass?,
         className: String,
-        strict: Boolean
+        strict: Boolean = false
     ): Boolean {
         cls ?: return false
         return extendsClass(cls, className, strict) || implementsInterface(cls, className, strict)

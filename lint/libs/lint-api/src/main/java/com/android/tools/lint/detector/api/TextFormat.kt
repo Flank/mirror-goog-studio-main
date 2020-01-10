@@ -377,22 +377,10 @@ enum class TextFormat {
                 (text.startsWith(HTTP_PREFIX, i) || text.startsWith(HTTPS_PREFIX, i)) &&
                 !Character.isLetterOrDigit(prev)
             ) {
-                // Find url end
                 val length = if (text.startsWith(HTTP_PREFIX, i))
                     HTTP_PREFIX.length
                 else HTTPS_PREFIX.length
-                var end = i + length
-                while (end < n) {
-                    val d = text[end]
-                    if (terminatesUrl(d)) {
-                        break
-                    }
-                    end++
-                }
-                val last = text[end - 1]
-                if (last == '.' || last == ')' || last == '!') {
-                    end--
-                }
+                val end = findUrlEnd(text, i)
                 if (end > i + length) {
                     if (i > flushIndex) {
                         appendEscapedText(sb, text, true, flushIndex, i, escapeUnicode)
@@ -424,6 +412,43 @@ enum class TextFormat {
     }
 
     companion object {
+        const val HTTP_PREFIX = "http://"
+        const val HTTPS_PREFIX = "https://"
+
+        /**
+         * Given an http URL starting at [start] in [text], find the position right after the
+         * URL end
+         */
+        fun findUrlEnd(text: String, start: Int): Int {
+            // Find url end
+            val length = if (text.startsWith(HTTP_PREFIX, start))
+                HTTP_PREFIX.length
+            else HTTPS_PREFIX.length
+            var end = start + length
+            val n = text.length
+            while (end < n) {
+                val d = text[end]
+                if (terminatesUrl(d)) {
+                    break
+                }
+                end++
+            }
+            val last = text[end - 1]
+            if (last == '.' || last == ')' || last == '!') {
+                end--
+            }
+            return end
+        }
+
+        private fun terminatesUrl(c: Char): Boolean {
+            return when (c) {
+                in 'a'..'z' -> false
+                in 'A'..'Z' -> false
+                in '0'..'9' -> false
+                '-', '_', '.', '*', '+', '%', '/', '#' -> false
+                else -> true
+            }
+        }
 
         private fun textToRaw(message: String): String {
             var mustEscape = false
@@ -450,19 +475,6 @@ enum class TextFormat {
             }
 
             return sb.toString()
-        }
-
-        private const val HTTP_PREFIX = "http://"
-        private const val HTTPS_PREFIX = "https://"
-
-        private fun terminatesUrl(c: Char): Boolean {
-            return when (c) {
-                in 'a'..'z' -> false
-                in 'A'..'Z' -> false
-                in '0'..'9' -> false
-                '-', '_', '.', '*', '+', '%', '/', '#' -> false
-                else -> true
-            }
         }
 
         private fun removeNumericEntities(html: String): String {

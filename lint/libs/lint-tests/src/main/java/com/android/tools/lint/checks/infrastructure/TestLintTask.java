@@ -60,6 +60,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -795,8 +796,11 @@ public class TestLintTask {
         for (TestFile fp : testFiles) {
             if (fp instanceof GradleTestFile || fp.targetRelativePath.endsWith(DOT_GRADLE)) {
                 haveGradle = true;
+                break;
             }
         }
+
+        List<String> jars = new ArrayList<>();
 
         for (TestFile fp : testFiles) {
             if (haveGradle) {
@@ -813,6 +817,11 @@ public class TestLintTask {
                         && fp.targetRootFolder.equals("src")) {
                     fp.within("src/main/kotlin");
                 }
+            }
+
+            if (fp instanceof TestFiles.LibraryReferenceTestFile) {
+                jars.add(((TestFiles.LibraryReferenceTestFile) fp).file.getPath());
+                continue;
             }
 
             fp.createFile(projectDir);
@@ -833,6 +842,12 @@ public class TestLintTask {
                 } catch (IOException ignore) {
                 }
             }
+        }
+
+        if (!jars.isEmpty()) {
+            // TODO: Make sure there's no existing class path file!
+            TestFile classpath = TestFiles.classpath(jars.toArray(new String[0]));
+            classpath.createFile(projectDir);
         }
 
         File manifest;

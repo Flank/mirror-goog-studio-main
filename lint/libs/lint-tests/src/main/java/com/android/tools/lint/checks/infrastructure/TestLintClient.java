@@ -780,8 +780,10 @@ public class TestLintClient extends LintCliClient {
             Warning prev = null;
             for (Warning warning : getWarnings()) {
                 assertNotSame(warning, prev);
-                assert prev == null || !warning.equals(prev)
-                        : "Warning (message, location) reported more than once: " + warning;
+                //noinspection PointlessNullCheck
+                assertTrue(
+                        "Warning (message, location) reported more than once: " + warning,
+                        prev == null || !warning.equals(prev));
                 prev = warning;
             }
         }
@@ -809,7 +811,10 @@ public class TestLintClient extends LintCliClient {
                                         + "\" in \""
                                         + locationRange
                                         + "\" as suggested in the quickfix for issue "
-                                        + issue);
+                                        + issue
+                                        + " (text in range was \""
+                                        + locationRange
+                                        + "\")");
                     }
                 }
             } else if (oldPattern != null) {

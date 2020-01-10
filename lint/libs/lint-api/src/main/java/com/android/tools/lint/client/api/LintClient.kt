@@ -662,6 +662,11 @@ abstract class LintClient {
                             val folder = File(projectDir, path)
                             if (folder.exists()) {
                                 addTo.add(folder)
+                            } else {
+                                val file = File(path)
+                                if (file.isAbsolute && file.exists()) {
+                                    addTo.add(file)
+                                }
                             }
                         }
                         i++

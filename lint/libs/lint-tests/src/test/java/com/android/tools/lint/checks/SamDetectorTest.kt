@@ -213,4 +213,71 @@ class SamDetectorTest : AbstractCheckTest() {
             """
         ).expectFixDiffs("")
     }
+
+    fun testAidlCompileTestCase() {
+        // Tests that we can suppress this lint check not just at the lambda site but
+        // at the target method as well. Based on a scenario first encountered in
+        // AidlCompile in AGP.
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+                abstract class AidlCompile {
+                    abstract val execOperations: ExecOperations
+                    fun doTaskAction() {
+                        val processor = GradleProcessExecutor(execOperations::exec)
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                import java.util.function.Function;
+                public class GradleProcessExecutor {
+                    private final Function<Action<? super ExecSpec>, ExecResult> execOperations;
+
+                    // Lambda is stored but not compared
+                    @SuppressWarnings("ImplicitSamInstance")
+                    public GradleProcessExecutor(
+                            Function<Action<? super ExecSpec>, ExecResult> execOperations) {
+                        this.execOperations = execOperations;
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test.pkg;
+                public interface Action<T> {
+                    void execute(T var1);
+                }
+                """
+            ),
+            java(
+                """
+                package test.pkg;
+                public interface ExecOperations {
+                    ExecResult exec(Action<? super ExecSpec> var1);
+                    ExecResult javaexec(Action<? super ExecSpec> var1);
+                }
+                """
+            ),
+            java(
+                """
+                package test.pkg;
+                public interface ExecResult { }
+                """
+            ),
+            java(
+                """
+                package test.pkg;
+                import java.util.List;
+                public interface ExecSpec {
+                    void setCommandLine(List<String> var1);
+                }
+                """
+            )
+        ).run().expectClean()
+    }
 }

@@ -302,17 +302,13 @@ class LintBaseline(
         // To prevent this, the baseline mechanism will call this method to check if
         // two messages represent the same error, and if so, we'll continue to match them.
         // This jump table should record the various changes in error messages over time.
-        when (issue.id) {
-            "InvalidPackage" -> {
-                val i1 = new.indexOf("not included in")
-                val i2 = old.indexOf("not included in")
-                return i1 != -1 && i2 != -1 && new.regionMatches(i1, old, i2, new.length - i1, false)
-            }
+        return when (issue.id) {
+            "InvalidPackage" -> sameSuffixFrom("not included in", new, old)
             // See https://issuetracker.google.com/68802305
-            "IconDensities" -> return true
-
-            // Sometimes we just append
-            else -> return new.startsWith(old) || old.startsWith(new)
+            "IconDensities" -> true
+            // Sometimes we just append (or remove trailing period in error messages, now
+            // flagged by lint)
+            else -> stringsEquivalent(old, new)
         }
     }
 
@@ -739,6 +735,60 @@ class LintBaseline(
             }
 
             return path
+        }
+
+        /** Checks whether two strings end in the same way, from the given start string */
+        private fun sameSuffixFrom(
+            target: String,
+            new: String,
+            old: String
+        ): Boolean {
+            val i1 = new.indexOf(target)
+            val i2 = old.indexOf(target)
+            return i1 != -1 && i2 != -1 && stringsEquivalent(new, old, i1 + target.length, i2 + target.length)
+        }
+
+        /**
+         * Compares two string messages from lint and returns true if they're equivalent,
+         * which will be true if they only vary by suffix or presence of ` characters.
+         * This is done to to handle the case where we tweak the message format over time
+         * to either append extra information or to add better formatting (e.g. to put backticks
+         * around symbols) or to remove trailing periods from single sentence error messages.
+         * Lint is recently suggesting these edits to lint checks -- and we want baselines to
+         * continue to match in the presence of these edits.
+         */
+        fun stringsEquivalent(s1: String, s2: String, start1: Int = 0, start2: Int = 0): Boolean {
+            var i1 = start1
+            var i2 = start2
+            val n1 = s1.length
+            val n2 = s2.length
+
+            if (start1 == n1 || start2 == n2) {
+                return true
+            }
+            while (true) {
+                val c1 = s1[i1]
+                val c2 = s2[i2]
+                if (c1 != c2) {
+                    while (i1 < n1 && s1[i1] == '`') {
+                        i1++
+                    }
+                    while (i2 < n2 && s2[i2] == '`') {
+                        i2++
+                    }
+                    if (i1 == n1 || i2 == n2) {
+                        return true
+                    }
+                    if (s1[i1] != s2[i2]) {
+                        return false
+                    }
+                }
+                i1++
+                i2++
+                if (i1 == n1 || i2 == n2) {
+                    return true
+                }
+            }
         }
 
         @Throws(IOException::class)

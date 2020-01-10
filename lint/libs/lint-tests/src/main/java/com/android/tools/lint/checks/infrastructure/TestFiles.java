@@ -29,7 +29,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import org.intellij.lang.annotations.Language;
@@ -281,5 +283,45 @@ public class TestFiles {
 
     public static TestFile.ImageTestFile image(@NonNull String to, int width, int height) {
         return new TestFile.ImageTestFile(to, width, height);
+    }
+
+    public static TestFile[] getLintClassPath() {
+        String classPath = System.getProperty("java.class.path");
+        List<TestFile> paths = new ArrayList<>();
+        for (String path : classPath.split(":")) { // ; on Windows?
+            File file = new File(path);
+            String name = file.getName();
+            if (name.startsWith("lint-")
+                    || name.startsWith("kotlin-compiler-")
+                    || name.startsWith("uast-")
+                    || name.startsWith("intellij-core")
+                    || name.endsWith(".lint-api-base") // IJ
+                    || name.endsWith("lint-api.jar") // blaze
+                    || name.endsWith(".lint.checks-base") // IJ
+                    || name.endsWith("lint-checks.jar")
+                    || name.endsWith(".testutils")
+                    || name.endsWith("testutils.jar")
+                    || name.endsWith(".lint.tests")
+                    || name.endsWith("lint-tests.jar")
+                    || name.endsWith(".lint.cli")) {
+                TestFile testFile = new LibraryReferenceTestFile(file);
+                paths.add(testFile);
+            }
+        }
+
+        return paths.toArray(new TestFile[0]);
+    }
+
+    public static class LibraryReferenceTestFile extends TestFile {
+        public final File file;
+
+        public LibraryReferenceTestFile(@NonNull File file) {
+            this(file.getName(), file);
+        }
+
+        public LibraryReferenceTestFile(@NonNull String to, @NonNull File file) {
+            this.targetRelativePath = to;
+            this.file = file;
+        }
     }
 }

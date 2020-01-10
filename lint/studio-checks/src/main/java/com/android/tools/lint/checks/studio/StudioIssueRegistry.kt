@@ -16,12 +16,37 @@
 
 package com.android.tools.lint.checks.studio
 
+import com.android.tools.lint.checks.AssertDetector
+import com.android.tools.lint.checks.CommentDetector
+import com.android.tools.lint.checks.InteroperabilityDetector
+import com.android.tools.lint.checks.SamDetector
 import com.android.tools.lint.client.api.IssueRegistry
+import com.android.tools.lint.client.api.LintClient.Companion.isStudio
 import com.android.tools.lint.detector.api.CURRENT_API
 
 class StudioIssueRegistry : IssueRegistry() {
 
     override val api = CURRENT_API
+
+    init {
+        // Turn on some checks that are off by default but which we want run in Studio:
+        LintDetectorDetector.UNEXPECTED_DOMAIN.setEnabledByDefault(true)
+        if (isStudio) {
+            LintDetectorDetector.PSI_COMPARE.setEnabledByDefault(true)
+        }
+
+        // A few other standard lint checks disabled by default which we want enforced
+        // in our codebase
+        SamDetector.ISSUE.setEnabledByDefault(true)
+        CommentDetector.EASTER_EGG.setEnabledByDefault(true)
+        CommentDetector.STOP_SHIP.setEnabledByDefault(true)
+        if (isStudio) { // not enforced in PSQ but give guidance in the IDE
+            AssertDetector.EXPENSIVE.setEnabledByDefault(true)
+            InteroperabilityDetector.NO_HARD_KOTLIN_KEYWORDS.setEnabledByDefault(true)
+            InteroperabilityDetector.LAMBDA_LAST.setEnabledByDefault(true)
+            InteroperabilityDetector.KOTLIN_PROPERTY.setEnabledByDefault(true)
+        }
+    }
 
     override val issues = listOf(
         ExternalAnnotationsDetector.ISSUE,
@@ -33,10 +58,17 @@ class StudioIssueRegistry : IssueRegistry() {
         RegexpPathDetector.ISSUE,
         SwingUtilitiesDetector.ISSUE,
         SwingWorkerDetector.ISSUE,
-        GradleApiUsageDetector.ISSUE
+        GradleApiUsageDetector.ISSUE,
+        LintDetectorDetector.ID,
+        LintDetectorDetector.PSI_COMPARE,
+        LintDetectorDetector.CHECK_URL,
+        LintDetectorDetector.UNEXPECTED_DOMAIN,
+        LintDetectorDetector.TEXT_FORMAT,
+        LintDetectorDetector.TRIM_INDENT,
+        LintDetectorDetector.USE_KOTLIN,
+        LintDetectorDetector.USE_UAST
     )
 
-// TODO other checks:
-// TODO: Creating file writer without UTF-8!
-// TODO: Creating file reader without UTF-8!
+    // TODO other checks:
+    // TODO: Creating file reader or writer without UTF-8!
 }

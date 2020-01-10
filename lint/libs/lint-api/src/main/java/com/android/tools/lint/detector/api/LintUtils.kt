@@ -2092,12 +2092,23 @@ fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
         for ((parameterDescriptor, valueArgument) in valueArguments) {
             for (argument in valueArgument.arguments) {
                 val expression = argument.getArgumentExpression() ?: continue
+                // cast only needed to avoid Kotlin compiler frontend bug KT-24309.
                 @Suppress("USELESS_CAST")
                 val arg = elementMap[expression as PsiElement]
-                    ?: continue // cast only needed to avoid Kotlin compiler frontend bug KT-24309.
                 val index = firstParameterIndex + parameterDescriptor.index
                 if (index < parameters.size) {
-                    mapping[arg] = parameters[index]
+                    if (arg != null) {
+                        mapping[arg] = parameters[index]
+                    } else {
+                        // Somehow the argument we received as the argument child isn't present;
+                        // try to find it in some other way
+                        for ((a, b) in elementMap) {
+                            if (mapping[b] == null && a.parent === expression) {
+                                mapping[b] = parameters[index]
+                                break
+                            }
+                        }
+                    }
                 }
             }
         }

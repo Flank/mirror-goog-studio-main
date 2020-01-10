@@ -161,7 +161,8 @@ class SamDetector : Detector(), SourceCodeScanner {
         val map = evaluator.computeArgumentMapping(call, psiMethod)
         val psiParameter = map[argument] ?: return
         val method = psiMethod.toUElement(UMethod::class.java) ?: return
-        if (storesLambda(method, psiParameter)) {
+        if (storesLambda(method, psiParameter) &&
+            !context.driver.isSuppressed(context, ISSUE, method as UElement)) {
             val typeString = psiParameter.type.canonicalText
             reportError(context, lambda, typeString, argument)
         }

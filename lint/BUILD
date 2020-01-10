@@ -354,6 +354,7 @@ kotlin_library(
     visibility = ["//visibility:public"],
     deps = [
         ":tools.lint-api",
+        ":tools.lint-checks",
         "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
@@ -380,7 +381,9 @@ kotlin_test(
     deps = [
         ":studio-checks",
         ":tools.lint-api",
+        ":tools.lint-checks",
         "//tools/base/lint/libs/lint-tests",
+        "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
     ],
 )
