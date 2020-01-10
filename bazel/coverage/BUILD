@@ -422,3 +422,14 @@ coverage_report(
         #"//tools/vendor/google/android-ndk:android-ndk_tests",
     ],
 )
+
+# Coverage report for R8 rule files editor.
+coverage_report(
+    name = "r8-editing",
+    srcpath_include = [
+        "tools/adt/idea/android-lang/src/com/android/tools/idea/lang/proguardR8",
+    ],
+    tests = [
+        "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
+    ],
+)
