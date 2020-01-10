@@ -8,6 +8,7 @@ kotlin_test(
     name = "agent_tests",
     testonly = 1,
     srcs = ["src/test"],
+    coverage = True,
     data = select({
         "windows": [],
         "mac": [":libjni-test.dylib"],

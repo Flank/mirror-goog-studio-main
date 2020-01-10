@@ -123,6 +123,18 @@ coverage_report(
     tests = ["//tools/adt/idea/build-attribution:intellij.android.build-attribution.tests_tests"],
 )
 
+coverage_report(
+    name = "dynamic-layout-inspector",
+    srcpath_include = [
+        "tools/adt/idea/layout-inspector/src",
+        "tools/base/dynamic-layout-inspector/src/main",
+    ],
+    tests = [
+        "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
+        "//tools/base/dynamic-layout-inspector:agent_tests.test",
+    ],
+)
+
 # Coverage report for the split editor feature in design tools.
 # The editor covers most CUJs in both layout and navigation editors,
 # so we run both targets and exclude unrelated directories.
@@ -437,6 +449,7 @@ coverage_report(
         "//tools/base/deploy/deployer:deployer.tests",
         "//tools/base/deploy/deployer:studio.android.sdktools.deployer_tests",
         "//tools/base/draw9patch:studio.android.sdktools.draw9patch_tests",
+        "//tools/base/dynamic-layout-inspector:agent_tests.test",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver_tests",
         "//tools/base/fakeadbserver:tools.tests",
         "//tools/base/flags:studio.android.sdktools.flags_tests",
