@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -94,11 +95,14 @@ abstract class CheckMultiApkLibrariesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<CheckMultiApkLibrariesTask>(variantScope, dependsOnPreBuildTask = false) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<CheckMultiApkLibrariesTask>(
+            componentProperties,
+            dependsOnPreBuildTask = false
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("check", "Libraries")
+            get() = component.computeTaskName("check", "Libraries")
         override val type: Class<CheckMultiApkLibrariesTask>
             get() = CheckMultiApkLibrariesTask::class.java
 

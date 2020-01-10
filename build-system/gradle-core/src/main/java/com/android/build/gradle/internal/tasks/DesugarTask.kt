@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
@@ -104,9 +105,11 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
         ).doProcess()
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<DesugarTask>(variantScope) {
-        override val name: String = variantScope.getTaskName("desugar")
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<DesugarTask>(
+            componentProperties
+        ) {
+        override val name: String = component.computeTaskName("desugar")
         override val type: Class<DesugarTask> = DesugarTask::class.java
 
         private val projectClasses: FileCollection
@@ -185,7 +188,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
              * Jacoco, see http://b/62623509.
              */
             val enableDesugarBugFixForJacoco = try {
-                val current = GradleVersion.parse(JacocoTask.getJacocoVersion(variantScope))
+                val current = GradleVersion.parse(JacocoTask.getJacocoVersion(component))
                 JacocoConfigurations.MIN_WITHOUT_BROKEN_BYTECODE > current
             } catch (ignored: Throwable) {
                 // Cannot determine using version comparison, avoid passing the flag.
@@ -208,17 +211,16 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
 
             task.desugaringClasspath.from(variantScope.providedOnlyClasspath)
             task.bootClasspath.from(variantScope.bootClasspath)
-            variantScope.testedVariantData?.let {
-                val testedVariantScope = it.scope
 
+            component.onTestedVariant {
                 task.desugaringClasspath.from(
-                    variantScope.artifacts.getFinalProduct(
+                    component.artifacts.getFinalProduct(
                         InternalArtifactType.TESTED_CODE_CLASSES
                     )
                 )
 
                 task.desugaringClasspath.from(
-                    testedVariantScope.variantDependencies.getArtifactCollection(
+                    it.variantDependencies.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.CLASSES_JAR

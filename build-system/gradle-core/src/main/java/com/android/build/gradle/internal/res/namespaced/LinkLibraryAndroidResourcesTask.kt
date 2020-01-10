@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
@@ -128,11 +129,13 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<LinkLibraryAndroidResourcesTask>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<LinkLibraryAndroidResourcesTask>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("link", "Resources")
+            get() = component.computeTaskName("link", "Resources")
         override val type: Class<LinkLibraryAndroidResourcesTask>
             get() = LinkLibraryAndroidResourcesTask::class.java
 
@@ -174,9 +177,8 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
 
-            val testedScope = variantScope.testedVariantData?.scope
-            if (testedScope != null) {
-                testedScope.artifacts.setTaskInputToFinalProduct(
+            component.onTestedVariant {
+                it.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RES_STATIC_LIBRARY,
                     task.tested
                 )

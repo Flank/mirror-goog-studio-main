@@ -34,14 +34,4 @@ public interface TestedVariantData {
 
     @Nullable
     TestVariantData getTestVariantData(VariantType type);
-
-    @NonNull
-    VariantDslInfo getVariantDslInfo();
-
-    @NonNull
-    VariantSources getVariantSources();
-
-    VariantScope getScope();
-
-    TaskContainer getTaskContainer();
 }

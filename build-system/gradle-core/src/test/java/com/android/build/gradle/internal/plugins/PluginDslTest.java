@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.Version;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.TestVariant;
@@ -31,7 +32,6 @@ import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.SyncIssue;
@@ -106,7 +106,7 @@ public class PluginDslTest {
     @Test
     public void testBasic() {
         plugin.createAndroidTasks();
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
+        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getComponents());
 
         // we can now call this since the variants/tasks have been created
         Set<BaseTestedVariant> variants = checker.getVariants();
@@ -129,7 +129,7 @@ public class PluginDslTest {
                         + "'\n        }\n");
 
         plugin.createAndroidTasks();
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
+        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getComponents());
 
         // we can now call this since the variants/tasks have been created
         Set<BaseTestedVariant> variants = checker.getVariants();
@@ -178,7 +178,7 @@ public class PluginDslTest {
         map.put("unitTest", 3);
         map.put("androidTests", 1);
         assertThat(VariantCheckers.countVariants(map))
-                .isEqualTo(plugin.getVariantManager().getVariantScopes().size());
+                .isEqualTo(plugin.getVariantManager().getComponents().size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -219,7 +219,7 @@ public class PluginDslTest {
         map.put("unitTest", 4);
         map.put("androidTests", 2);
         assertThat(VariantCheckers.countVariants(map))
-                .isEqualTo(plugin.getVariantManager().getVariantScopes().size());
+                .isEqualTo(plugin.getVariantManager().getComponents().size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -277,7 +277,7 @@ public class PluginDslTest {
         ImmutableMap<String, Integer> map =
                 ImmutableMap.of("appVariants", 12, "unitTests", 12, "androidTests", 6);
         assertThat(VariantCheckers.countVariants(map))
-                .isEqualTo(plugin.getVariantManager().getVariantScopes().size());
+                .isEqualTo(plugin.getVariantManager().getComponents().size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -295,13 +295,13 @@ public class PluginDslTest {
         checker.checkTestedVariant("f2FbDebug", "f2FbDebugAndroidTest", variants, testVariants);
         checker.checkTestedVariant("f2FcDebug", "f2FcDebugAndroidTest", variants, testVariants);
 
-        Map<String, VariantScope> variantMap = getVariantMap();
+        Map<String, ComponentPropertiesImpl> componentMap = getComponentMap();
 
         for (String dim1 : ImmutableList.of("f1", "f2")) {
             for (String dim2 : ImmutableList.of("fa", "fb", "fc")) {
                 String variantName =
                         StringHelper.combineAsCamelCase(ImmutableList.of(dim1, dim2, "debug"));
-                VariantDslInfo variant = variantMap.get(variantName).getVariantDslInfo();
+                VariantDslInfo variant = componentMap.get(variantName).getVariantDslInfo();
                 assertThat(
                                 variant.getJavaCompileOptions()
                                         .getAnnotationProcessorOptions()
@@ -348,7 +348,7 @@ public class PluginDslTest {
                         + "}\n");
 
         plugin.createAndroidTasks();
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
+        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getComponents());
 
         // we can now call this since the variants/tasks have been created
 
@@ -544,8 +544,9 @@ public class PluginDslTest {
         android.setCompileSdkVersion(
                 "Google Inc.:Google APIs:" + TestConstants.COMPILE_SDK_VERSION_WITH_GOOGLE_APIS);
         plugin.createAndroidTasks();
-        Map<String, VariantScope> variantMap = getVariantMap();
-        Map.Entry<String, VariantScope> vsentry = variantMap.entrySet().iterator().next();
+        Map<String, ComponentPropertiesImpl> componentMap = getComponentMap();
+        Map.Entry<String, ComponentPropertiesImpl> vsentry =
+                componentMap.entrySet().iterator().next();
         File mockableJarFile =
                 vsentry.getValue().getGlobalScope().getMockableJarArtifact().getSingleFile();
         assertThat(mockableJarFile).isNotNull();
@@ -615,7 +616,7 @@ public class PluginDslTest {
                         + "}\n");
         plugin.createAndroidTasks();
 
-        Map<String, VariantScope> variantMap = getVariantMap();
+        Map<String, ComponentPropertiesImpl> componentMap = getComponentMap();
 
         Map<String, Map<String, String>> expected =
                 ImmutableMap.of(
@@ -631,7 +632,7 @@ public class PluginDslTest {
         expected.forEach(
                 (variant, args) ->
                         assertThat(
-                                        variantMap
+                                        componentMap
                                                 .get(variant)
                                                 .getVariantDslInfo()
                                                 .getInstrumentationRunnerArguments())
@@ -708,12 +709,13 @@ public class PluginDslTest {
     }
 
     public void checkProguardFiles(Map<String, List<String>> expected) {
-        Map<String, VariantScope> variantMap = getVariantMap();
+        Map<String, ComponentPropertiesImpl> componentMap = getComponentMap();
         for (Map.Entry<String, List<String>> entry : expected.entrySet()) {
             String variantName = entry.getKey();
             Set<File> proguardFiles =
-                    variantMap
+                    componentMap
                             .get(variantName)
+                            .getVariantScope()
                             .getProguardFiles()
                             .stream()
                             .map(File::getAbsoluteFile)
@@ -726,10 +728,11 @@ public class PluginDslTest {
         }
     }
 
-    public Map<String, VariantScope> getVariantMap() {
-        Map<String, VariantScope> result = new HashMap<>();
-        for (VariantScope variantScope : plugin.getVariantManager().getVariantScopes()) {
-            result.put(variantScope.getName(), variantScope);
+    public Map<String, ComponentPropertiesImpl> getComponentMap() {
+        Map<String, ComponentPropertiesImpl> result = new HashMap<>();
+        for (ComponentPropertiesImpl componentProperties :
+                plugin.getVariantManager().getComponents()) {
+            result.put(componentProperties.getName(), componentProperties);
         }
         return result;
     }

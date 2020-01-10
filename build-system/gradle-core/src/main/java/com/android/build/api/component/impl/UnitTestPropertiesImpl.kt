@@ -16,18 +16,50 @@
 
 package com.android.build.api.component.impl
 
-import com.android.build.api.artifact.Operations
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTestProperties
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.VariantPathHelper
 import javax.inject.Inject
 
-internal open class UnitTestPropertiesImpl @Inject constructor(
-    dslScope: DslScope,
+open class UnitTestPropertiesImpl @Inject constructor(
+    componentIdentity: ComponentIdentity,
+    variantDslInfo: VariantDslInfo,
+    variantDependencies: VariantDependencies,
+    variantSources: VariantSources,
+    paths: VariantPathHelper,
+    artifacts: BuildArtifactsHolder,
     variantScope: VariantScope,
-    operations: Operations,
-    configuration: ComponentIdentity
-) : ComponentPropertiesImpl(dslScope, variantScope, operations, configuration),
-    UnitTestProperties {
+    variantData: BaseVariantData,
+    testedVariant: VariantPropertiesImpl,
+    dslScope: DslScope
+) : TestComponentPropertiesImpl(
+    componentIdentity,
+    variantDslInfo,
+    variantDependencies,
+    variantSources,
+    paths,
+    artifacts,
+    variantScope,
+    variantData,
+    testedVariant,
+    dslScope
+), UnitTestProperties {
+
+    // ---------------------------------------------------------------------------------------------
+    // PUBLIC API
+    // ---------------------------------------------------------------------------------------------
+
+
+    // ---------------------------------------------------------------------------------------------
+    // INTERNAL API
+    // ---------------------------------------------------------------------------------------------
+
 }

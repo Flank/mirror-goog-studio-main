@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
 import com.android.build.VariantOutput
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.VariantScope
@@ -123,10 +124,12 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
         throw RuntimeException(sb.toString())
     }
 
-    class CreationAction(scope: VariantScope) :
-        VariantTaskCreationAction<PackageForUnitTest>(scope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<PackageForUnitTest>(
+            componentProperties
+        ) {
 
-        override val name = variantScope.getTaskName("package", "ForUnitTest")
+        override val name = component.computeTaskName("package", "ForUnitTest")
 
         override val type = PackageForUnitTest::class.java
 

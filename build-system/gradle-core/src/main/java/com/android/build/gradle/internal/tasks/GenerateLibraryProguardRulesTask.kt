@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -118,11 +119,13 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope
-    ): VariantTaskCreationAction<GenerateLibraryProguardRulesTask>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ): VariantTaskCreationAction<GenerateLibraryProguardRulesTask>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("generate", "LibraryProguardRules")
+            get() = component.computeTaskName("generate", "LibraryProguardRules")
         override val type: Class<GenerateLibraryProguardRulesTask>
             get() = GenerateLibraryProguardRulesTask::class.java
 

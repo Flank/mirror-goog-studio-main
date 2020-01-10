@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST
@@ -74,15 +75,15 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
         }
     }
 
-    private class EmptyCreationAction(variantScope: VariantScope) :
-        TaskManager.AbstractPreBuildCreationAction<AndroidVariantTask>(variantScope) {
+    private class EmptyCreationAction(componentProperties: ComponentPropertiesImpl) :
+        TaskManager.AbstractPreBuildCreationAction<AndroidVariantTask>(componentProperties) {
 
         override val type: Class<AndroidVariantTask>
             get() = AndroidVariantTask::class.java
     }
 
-    private class CheckCreationAction(variantScope: VariantScope) :
-        TaskManager.AbstractPreBuildCreationAction<AppPreBuildTask>(variantScope) {
+    private class CheckCreationAction(componentProperties: ComponentPropertiesImpl) :
+        TaskManager.AbstractPreBuildCreationAction<AppPreBuildTask>(componentProperties) {
 
         override val type: Class<AppPreBuildTask>
             get() = AppPreBuildTask::class.java
@@ -111,11 +112,12 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
     companion object {
         @JvmStatic
         fun getCreationAction(
-            variantScope: VariantScope
+            componentProperties: ComponentPropertiesImpl
         ): TaskManager.AbstractPreBuildCreationAction<*> {
+            val variantScope = componentProperties.variantScope
             return if (variantScope.type.isBaseModule && variantScope.globalScope.hasDynamicFeatures()) {
-                CheckCreationAction(variantScope)
-            } else EmptyCreationAction(variantScope)
+                CheckCreationAction(componentProperties)
+            } else EmptyCreationAction(componentProperties)
 
         }
     }

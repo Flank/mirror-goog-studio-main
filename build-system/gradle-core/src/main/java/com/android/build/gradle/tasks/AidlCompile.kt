@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AIDL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
@@ -167,15 +168,19 @@ abstract class AidlCompile : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(scope: VariantScope) : VariantTaskCreationAction<AidlCompile>(scope) {
+    class CreationAction(
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<AidlCompile>(
+        componentProperties
+    ) {
 
-        override val name: String = variantScope.getTaskName("compile", "Aidl")
+        override val name: String = component.computeTaskName("compile", "Aidl")
 
         override val type: Class<AidlCompile> = AidlCompile::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out AidlCompile>) {
             super.handleProvider(taskProvider)
-            variantScope.taskContainer.aidlCompileTask = taskProvider
+            component.taskContainer.aidlCompileTask = taskProvider
             variantScope
                 .artifacts
                 .producesDir(

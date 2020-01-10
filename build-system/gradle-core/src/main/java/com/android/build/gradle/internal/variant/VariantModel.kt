@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 
 /**
  * Model for the variants and their inputs.
@@ -27,7 +27,7 @@ interface VariantModel {
 
     val inputs: VariantInputModel
 
-    val variants: List<VariantScope>
+    val components: List<ComponentPropertiesImpl>
 
     val defaultVariant: String?
 }

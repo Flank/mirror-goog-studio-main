@@ -21,31 +21,43 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.android.AndroidProjectTypes;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.api.artifact.PublicArtifactType;
 import com.android.build.api.component.ComponentIdentity;
+import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentIdentityImpl;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.VariantOutputConfiguration;
+import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
+import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory;
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
+import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -160,10 +172,14 @@ public class ModelBuilderTest {
         when(variantDslInfo.getDirName()).thenReturn("variant/name");
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
 
-        VariantScope variantScope =
-                createVariantScope("variantName", "variant/name", variantDslInfo);
-        createVariantData(variantScope, variantDslInfo);
-        when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
+        ComponentPropertiesImpl componentProperties =
+                createComponentProperties(
+                        "variantName",
+                        "variant/name",
+                        variantDslInfo,
+                        ApplicationVariantPropertiesImpl.class,
+                        null);
+        when(variantManager.getComponents()).thenReturn(ImmutableList.of(componentProperties));
 
         assertThat(modelBuilder.buildMinimalisticModel()).isNotNull();
         Collection<VariantBuildOutput> variantsBuildOutput =
@@ -184,11 +200,15 @@ public class ModelBuilderTest {
         when(variantDslInfo.getDirName()).thenReturn("variant/name");
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
 
-        VariantScope variantScope =
-                createVariantScope("variantName", "variant/name", variantDslInfo);
-        createVariantData(variantScope, variantDslInfo);
+        ComponentPropertiesImpl componentProperties =
+                createComponentProperties(
+                        "variantName",
+                        "variant/name",
+                        variantDslInfo,
+                        ApplicationVariantPropertiesImpl.class,
+                        null);
 
-        when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
+        when(variantManager.getComponents()).thenReturn(ImmutableList.of(componentProperties));
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
         File apkOutput = new File(variantOutputFolder, "main.apk");
@@ -245,11 +265,15 @@ public class ModelBuilderTest {
         when(variantDslInfo.getDirName()).thenReturn("variant/name");
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
 
-        VariantScope variantScope =
-                createVariantScope("variantName", "variant/name", variantDslInfo);
-        createVariantData(variantScope, variantDslInfo);
+        ComponentPropertiesImpl componentProperties =
+                createComponentProperties(
+                        "variantName",
+                        "variant/name",
+                        variantDslInfo,
+                        ApplicationVariantPropertiesImpl.class,
+                        null);
 
-        when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
+        when(variantManager.getComponents()).thenReturn(ImmutableList.of(componentProperties));
 
         OutputFactory outputFactory = new OutputFactory(PROJECT, variantDslInfo);
 
@@ -309,17 +333,21 @@ public class ModelBuilderTest {
     public void testMultipleVariantWithOutputMinimalisticModel() throws IOException {
 
         List<String> expectedVariantNames = new ArrayList<>();
-        ImmutableList.Builder<VariantScope> scopes = ImmutableList.builder();
+        ImmutableList.Builder<ComponentPropertiesImpl> components = ImmutableList.builder();
         for (int i = 0; i < 5; i++) {
             VariantDslInfo variantDslInfo = Mockito.mock(VariantDslInfo.class);
             when(variantDslInfo.getDirName()).thenReturn("variant/name" + i);
             when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
 
             String variantName = "variantName" + i;
-            VariantScope variantScope =
-                    createVariantScope(variantName, "variant/name" + i, variantDslInfo);
+            ComponentPropertiesImpl componentProperties =
+                    createComponentProperties(
+                            variantName,
+                            "variant/name" + i,
+                            variantDslInfo,
+                            ApplicationVariantPropertiesImpl.class,
+                            null);
             expectedVariantNames.add(variantName);
-            createVariantData(variantScope, variantDslInfo);
 
             File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name" + i));
             File apkOutput = new File(variantOutputFolder, "main.apk");
@@ -345,10 +373,10 @@ public class ModelBuilderTest {
                                             "fullName")))
                     .save(new FakeGradleDirectory(variantOutputFolder));
 
-            scopes.add(variantScope);
+            components.add(componentProperties);
         }
 
-        when(variantManager.getVariantScopes()).thenReturn(scopes.build());
+        when(variantManager.getComponents()).thenReturn(components.build());
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
         assertThat(projectBuildOutput).isNotNull();
@@ -383,36 +411,39 @@ public class ModelBuilderTest {
         when(variantDslInfo.getDirName()).thenReturn("variant/name");
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.LIBRARY);
 
-        VariantScope variantScope =
-                createVariantScope("variantName", "variant/name", variantDslInfo);
-        when(variantScope.getArtifacts()).thenReturn(artifacts);
-        BaseVariantData variantData = createVariantData(variantScope, variantDslInfo);
+        LibraryVariantPropertiesImpl libProperties =
+                createComponentProperties(
+                        "variantName",
+                        "variant/name",
+                        variantDslInfo,
+                        LibraryVariantPropertiesImpl.class,
+                        null);
 
         RegularFile regularFileMock = Mockito.mock(RegularFile.class);
         when(regularFileMock.getAsFile()).thenReturn(temporaryFolder.getRoot());
         when(artifacts.getFinalProduct(InternalArtifactType.AAR.INSTANCE))
                 .thenReturn(new FakeGradleProvider<>(regularFileMock));
 
-        VariantDslInfo testVariantConfiguration = Mockito.mock(VariantDslInfo.class);
-        when(testVariantConfiguration.getDirName()).thenReturn("test/name");
-        when(testVariantConfiguration.getVariantType()).thenReturn(VariantTypeImpl.UNIT_TEST);
+        VariantDslInfo testVariantDslInfo = Mockito.mock(VariantDslInfo.class);
+        when(testVariantDslInfo.getDirName()).thenReturn("test/name");
+        when(testVariantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.UNIT_TEST);
 
-        VariantScope testVariantScope =
-                createVariantScope("testVariant", "test/name", testVariantConfiguration);
-        BaseVariantData testVariantData =
-                createVariantData(testVariantScope, testVariantConfiguration);
-        when(testVariantData.getType()).thenReturn(VariantTypeImpl.UNIT_TEST);
-        when(testVariantScope.getTestedVariantData()).thenReturn(variantData);
+        UnitTestPropertiesImpl unitTestProperties =
+                createComponentProperties(
+                        "testVariant",
+                        "test/name",
+                        testVariantDslInfo,
+                        UnitTestPropertiesImpl.class,
+                        libProperties);
 
-        when(testVariantScope.getArtifacts()).thenReturn(artifacts);
         FileCollection testBuildableArtifact = Mockito.mock(FileCollection.class);
         when(artifacts.getFinalProductAsFileCollection(any()))
                 .thenReturn(new FakeGradleProvider(testBuildableArtifact));
         when(testBuildableArtifact.iterator())
                 .thenReturn(ImmutableSet.of(temporaryFolder.getRoot()).iterator());
 
-        when(variantManager.getVariantScopes())
-                .thenReturn(ImmutableList.of(variantScope, testVariantScope));
+        when(variantManager.getComponents())
+                .thenReturn(ImmutableList.of(libProperties, unitTestProperties));
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
         File apkOutput = new File(variantOutputFolder, "main.apk");
@@ -462,42 +493,76 @@ public class ModelBuilderTest {
         syncIssueReporter.reportWarning(IssueReporter.Type.GENERIC, "Should Fail");
     }
 
-    private static BaseVariantData createVariantData(
-            VariantScope variantScope, VariantDslInfo variantDslInfo) {
-        BaseVariantData variantData = Mockito.mock(BaseVariantData.class);
+    private <ComponentT extends ComponentPropertiesImpl> ComponentT createComponentProperties(
+            @NonNull String variantName,
+            @NonNull String dirName,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull Class<ComponentT> componentClass,
+            @Nullable VariantPropertiesImpl testedVariant) {
+        // prepare the objects required for the constructor
         final VariantType type = variantDslInfo.getVariantType();
-        when(variantData.getType()).thenReturn(type);
-        when(variantData.getScope()).thenReturn(variantScope);
-        when(variantData.getVariantDslInfo()).thenReturn(variantDslInfo);
+        DslScopeImpl dslScope = FakeDslScope.createFakeDslScope();
 
-        when(variantScope.getVariantData()).thenReturn(variantData);
+        ComponentIdentity componentIdentity =
+                new ComponentIdentityImpl(variantName, "flavorName", "debug", ImmutableList.of());
 
-        return variantData;
-    }
+        when(variantDslInfo.getComponentIdentity()).thenReturn(componentIdentity);
 
-    private VariantScope createVariantScope(
-            String variantName, String dirName, VariantDslInfo variantDslInfo) {
-        VariantScope variantScope = Mockito.mock(VariantScope.class);
-        when(variantScope.getName()).thenReturn(variantName);
-        when(variantScope.getGlobalScope()).thenReturn(globalScope);
+        VariantDependencies variantDependencies = Mockito.mock(VariantDependencies.class);
+        VariantSources variantSources = Mockito.mock(VariantSources.class);
+
         VariantPathHelper paths = Mockito.mock(VariantPathHelper.class);
         when(paths.getApkLocation()).thenReturn(new File(apkLocation, dirName));
-        when(variantScope.getPaths()).thenReturn(paths);
-        when(variantScope.getVariantDslInfo()).thenReturn(variantDslInfo);
 
-        ComponentIdentity variantConfig =
-                new ComponentIdentityImpl(variantName, "flavorName", "debug", ImmutableList.of());
-        when(variantDslInfo.getComponentIdentity()).thenReturn(variantConfig);
-
-        final VariantType type = variantDslInfo.getVariantType();
+        VariantScope variantScope = Mockito.mock(VariantScope.class);
         when(variantScope.getType()).thenReturn(type);
+        when(variantScope.getPublishingSpec()).thenReturn(PublishingSpecs.getVariantSpec(type));
+        when(variantScope.getGlobalScope()).thenReturn(globalScope);
+        when(variantScope.getTransformManager()).thenReturn(Mockito.mock(TransformManager.class));
 
-        //noinspection ConstantConditions
-        if (type != null) {
-            when(variantScope.getPublishingSpec()).thenReturn(PublishingSpecs.getVariantSpec(type));
+        BaseVariantData variantData = Mockito.mock(BaseVariantData.class);
+        when(variantData.getVariantDslInfo()).thenReturn(variantDslInfo);
+        when(variantData.getTaskContainer()).thenReturn(new MutableTaskContainer());
+
+        if (componentClass.equals(UnitTestPropertiesImpl.class)
+                || componentClass.equals(AndroidTestPropertiesImpl.class)) {
+            assertThat(testedVariant).named("tested variant").isNotNull();
+            ComponentT unitTestComponent =
+                    dslScope.getObjectFactory()
+                            .newInstance(
+                                    componentClass,
+                                    componentIdentity,
+                                    variantDslInfo,
+                                    variantDependencies,
+                                    variantSources,
+                                    paths,
+                                    artifacts,
+                                    variantScope,
+                                    variantData,
+                                    testedVariant,
+                                    dslScope);
+
+            testedVariant
+                    .getTestComponents()
+                    .put(variantDslInfo.getVariantType(), unitTestComponent);
+
+            return unitTestComponent;
         }
 
-        return variantScope;
+        assertThat(testedVariant).named("tested variant").isNull();
+
+        return dslScope.getObjectFactory()
+                .newInstance(
+                        componentClass,
+                        componentIdentity,
+                        variantDslInfo,
+                        variantDependencies,
+                        variantSources,
+                        paths,
+                        artifacts,
+                        variantScope,
+                        variantData,
+                        dslScope);
     }
 
     private static File createApk(File variantOutputFolder, String fileName) throws IOException {

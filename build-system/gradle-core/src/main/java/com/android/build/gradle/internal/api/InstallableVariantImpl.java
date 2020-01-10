@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.InstallableVariant;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
@@ -42,10 +43,11 @@ import org.gradle.api.tasks.TaskProvider;
 public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl implements InstallableVariant {
 
     protected InstallableVariantImpl(
+            @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull ObjectFactory objectFactory,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(objectFactory, immutableObjectProvider, outputs);
+        super(componentProperties, objectFactory, immutableObjectProvider, outputs);
     }
 
     @NonNull
@@ -56,7 +58,6 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     public DefaultTask getInstall() {
         BaseVariantData variantData = getVariantData();
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -86,7 +87,6 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     public DefaultTask getUninstall() {
         BaseVariantData variantData = getVariantData();
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -124,7 +124,7 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     @Incubating
     public Provider<FileCollection> getFinalArtifact(
             @NonNull ArtifactType<? extends FileSystemLocation> artifactType) {
-        BuildArtifactsHolder artifacts = getVariantData().getScope().getArtifacts();
+        BuildArtifactsHolder artifacts = getVariantData().getArtifacts();
         return artifacts.getFinalProductAsFileCollection((InternalArtifactType) artifactType);
     }
 }

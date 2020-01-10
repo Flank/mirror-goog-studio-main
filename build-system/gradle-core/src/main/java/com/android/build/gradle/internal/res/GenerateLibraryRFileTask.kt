@@ -200,20 +200,19 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                 SymbolTable.builder().tablePackage("android").build()
     }
 
-
     internal class CreationAction(
         componentProperties: ComponentPropertiesImpl,
         val isLibrary: Boolean)
-        : VariantTaskCreationAction<GenerateLibraryRFileTask>(componentProperties.variantScope) {
+        : VariantTaskCreationAction<GenerateLibraryRFileTask>(componentProperties) {
 
         override val name: String
-            get() = variantScope.getTaskName("generate", "RFile")
+            get() = component.computeTaskName("generate", "RFile")
         override val type: Class<GenerateLibraryRFileTask>
             get() = GenerateLibraryRFileTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out GenerateLibraryRFileTask>) {
             super.handleProvider(taskProvider)
-            variantScope.taskContainer.processAndroidResTask = taskProvider
+            component.taskContainer.processAndroidResTask = taskProvider
 
             variantScope.artifacts.producesFile(
                 InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
@@ -268,7 +267,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                     } else {
                         RUNTIME_CLASSPATH
                     }
-                task.dependencies.from(variantScope.variantDependencies.getArtifactFileCollection(
+                task.dependencies.from(component.variantDependencies.getArtifactFileCollection(
                     consumedConfigType,
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
@@ -286,7 +285,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
 
-            task.mainSplit = variantScope.variantData.publicVariantPropertiesApi.outputs.getMainSplit().apkData
+            task.mainSplit = component.outputs.getMainSplit().apkData
 
             // This task can produce R classes with either constant IDs ("0") or sequential IDs
             // mimicking the way AAPT2 numbers IDs. If we're generating a compile time only R class
@@ -304,9 +303,11 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
     }
 
     internal class TestRuntimeStubRClassCreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<GenerateLibraryRFileTask>(componentProperties.variantScope) {
+        VariantTaskCreationAction<GenerateLibraryRFileTask>(
+            componentProperties
+        ) {
 
-        override val name: String = variantScope.getTaskName("generate", "StubRFile")
+        override val name: String = component.computeTaskName("generate", "StubRFile")
         override val type: Class<GenerateLibraryRFileTask> = GenerateLibraryRFileTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out GenerateLibraryRFileTask>) {
@@ -321,16 +322,15 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
 
         override fun configure(task: GenerateLibraryRFileTask) {
             super.configure(task)
-            val testedScope = variantScope.testedVariantData!!.scope
-            val projectOptions = variantScope.globalScope.projectOptions
+            val projectOptions = component.globalScope.projectOptions
 
-            task.platformAttrRTxt.fromDisallowChanges(variantScope.globalScope.platformAttrs)
+            task.platformAttrRTxt.fromDisallowChanges(component.globalScope.platformAttrs)
 
             // We need the runtime dependencies for generating a set of consistent runtime R classes
             // for android test, and in the case of transitive R classes, we also need them
             // to include them in the local R class.
             task.dependencies.fromDisallowChanges(
-                    variantScope.variantDependencies.getArtifactFileCollection(
+                    component.variantDependencies.getArtifactFileCollection(
                         RUNTIME_CLASSPATH,
                         ALL,
                         AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
@@ -342,16 +342,19 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task.packageForR.setDisallowChanges(task.project.provider {
                 Strings.nullToEmpty(variantScope.variantDslInfo.originalApplicationId)
             })
-            testedScope.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles
-            )
-            task.mainSplit = variantScope.variantData.publicVariantPropertiesApi.outputs.getMainSplit().apkData
+            task.mainSplit = component.outputs.getMainSplit().apkData
             task.useConstantIds.setDisallowChanges(false)
 
-            testedScope.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
-                task.localResourcesFile
-            )
+            component.onTestedVariant {
+                it.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles
+                )
+
+                it.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
+                    task.localResourcesFile
+                )
+            }
         }
     }
 }

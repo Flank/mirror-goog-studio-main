@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
@@ -94,18 +95,21 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(scope: VariantScope) :
-        VariantTaskCreationAction<BundleLibraryJavaRes>(scope) {
+    class CreationAction(
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<BundleLibraryJavaRes>(
+        componentProperties
+    ) {
 
-        private val projectJavaResFromStreams = if (variantScope.needsJavaResStreams) {
+        private val projectJavaResFromStreams = if (this.variantScope.needsJavaResStreams) {
             // Because ordering matters for TransformAPI, we need to fetch java res from the
             // transform pipeline as soon as this creation action is instantiated, in needed.
-            variantScope.transformManager.getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
+            this.variantScope.transformManager.getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
         } else {
             null
         }
 
-        override val name: String = scope.getTaskName("bundleLibRes")
+        override val name: String = component.computeTaskName("bundleLibRes")
 
         override val type: Class<BundleLibraryJavaRes> = BundleLibraryJavaRes::class.java
 
@@ -127,7 +131,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
                 task.resourcesAsJars = projectJavaResFromStreams
                 task.unfilteredResources = projectJavaResFromStreams
             } else {
-                val projectJavaRes = getProjectJavaRes(variantScope)
+                val projectJavaRes = getProjectJavaRes(component)
                 task.unfilteredResources = projectJavaRes
                 task.resources = projectJavaRes.asFileTree.filter(MergeJavaResourceTask.spec)
             }

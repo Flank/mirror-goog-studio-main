@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants.FD_RES_VALUES
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 
@@ -148,16 +149,16 @@ class DependencyResourcesComputer {
         return builder.build()
     }
 
-    fun initFromVariantScope(variantScope: VariantScope, includeDependencies: Boolean) {
-        val globalScope = variantScope.globalScope
-        val variantData = variantScope.variantData
+    fun initFromVariantScope(componentProperties: ComponentPropertiesImpl, includeDependencies: Boolean) {
+        val globalScope = componentProperties.globalScope
+        val variantData = componentProperties.variantData
         val project = globalScope.project
-        val paths = variantScope.paths
+        val paths = componentProperties.paths
 
         validateEnabled = !globalScope.projectOptions.get(BooleanOption.DISABLE_RESOURCE_VALIDATION)
 
         if (includeDependencies) {
-            this.libraries = variantScope.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
+            this.libraries = componentProperties.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
         }
 
         resources = variantData.androidResources
@@ -167,8 +168,8 @@ class DependencyResourcesComputer {
 
         generatedResOutputDir = project.files(paths.generatedResOutputDir)
 
-        if (variantScope.taskContainer.microApkTask != null &&
-            variantData.variantDslInfo.isEmbedMicroApp) {
+        if (componentProperties.taskContainer.microApkTask != null &&
+            componentProperties.variantDslInfo.isEmbedMicroApp) {
             microApkResDirectory = project.files(paths.microApkResDirectory)
         }
     }

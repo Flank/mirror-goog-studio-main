@@ -25,8 +25,11 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -35,7 +38,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ApkZipPackagingTask;
 import com.android.build.gradle.internal.tasks.AppClasspathCheckTask;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
@@ -68,8 +70,6 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTas
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.PackagedDependenciesWriterTask;
-import com.android.build.gradle.internal.variant.ApkVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -128,74 +128,75 @@ public class ApplicationTaskManager extends TaskManager {
 
     @Override
     public void createTasksForVariantScope(
-            @NonNull final VariantScope variantScope,
-            @NonNull List<VariantScope> variantScopesForLint) {
-        createAnchorTasks(variantScope);
+            @NonNull VariantPropertiesImpl appVariantProperties,
+            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
+        createAnchorTasks(appVariantProperties);
 
-        taskFactory.register(new ExtractDeepLinksTask.CreationAction(variantScope));
+        taskFactory.register(new ExtractDeepLinksTask.CreationAction(appVariantProperties));
 
-        handleMicroApp(variantScope);
+        handleMicroApp(appVariantProperties);
 
         // Create all current streams (dependencies mostly at this point)
-        createDependencyStreams(variantScope);
+        createDependencyStreams(appVariantProperties);
 
         // Add a task to publish the applicationId.
-        createApplicationIdWriterTask(variantScope);
+        createApplicationIdWriterTask(appVariantProperties);
 
-        createBuildArtifactReportTask(variantScope);
+        createBuildArtifactReportTask(appVariantProperties);
 
         // Add a task to check the manifest
-        taskFactory.register(new CheckManifest.CreationAction(variantScope));
+        taskFactory.register(new CheckManifest.CreationAction(appVariantProperties));
 
         // Add a task to process the manifest(s)
-        createMergeApkManifestsTask(variantScope);
+        createMergeApkManifestsTask(appVariantProperties);
 
         // Add a task to create the res values
-        createGenerateResValuesTask(variantScope);
+        createGenerateResValuesTask(appVariantProperties);
 
         // Add a task to compile renderscript files.
-        createRenderscriptTask(variantScope);
+        createRenderscriptTask(appVariantProperties);
 
         // Add a task to merge the resource folders
-        createMergeResourcesTasks(variantScope);
+        createMergeResourcesTasks(appVariantProperties);
 
         // Add tasks to compile shader
-        createShaderTask(variantScope);
+        createShaderTask(appVariantProperties);
 
         // Add a task to merge the asset folders
-        createMergeAssetsTask(variantScope);
+        createMergeAssetsTask(appVariantProperties);
 
         // Add a task to create the BuildConfig class
-        createBuildConfigTask(variantScope);
+        createBuildConfigTask(appVariantProperties);
 
         // Add a task to process the Android Resources and generate source files
-        createApkProcessResTask(variantScope);
+        createApkProcessResTask(appVariantProperties);
 
-        registerRClassTransformStream(variantScope);
+        registerRClassTransformStream(appVariantProperties);
 
         // Add a task to process the java resources
-        createProcessJavaResTask(variantScope);
+        createProcessJavaResTask(appVariantProperties);
 
-        createAidlTask(variantScope);
+        createAidlTask(appVariantProperties);
 
         // Add external native build tasks
-        createExternalNativeBuildJsonGenerators(variantScope);
-        createExternalNativeBuildTasks(variantScope);
+        createExternalNativeBuildJsonGenerators(appVariantProperties);
+        createExternalNativeBuildTasks(appVariantProperties);
 
         // Add a task to merge the jni libs folders
-        createMergeJniLibFoldersTasks(variantScope);
+        createMergeJniLibFoldersTasks(appVariantProperties);
 
         // Add feature related tasks if necessary
-        if (variantScope.getType().isBaseModule()) {
+        if (appVariantProperties.getVariantType().isBaseModule()) {
             // Base feature specific tasks.
-            taskFactory.register(new FeatureSetMetadataWriterTask.CreationAction(variantScope));
+            taskFactory.register(
+                    new FeatureSetMetadataWriterTask.CreationAction(appVariantProperties));
 
-            createValidateSigningTask(variantScope);
+            createValidateSigningTask(appVariantProperties);
             // Add a task to produce the signing config file.
-            taskFactory.register(new SigningConfigWriterTask.CreationAction(variantScope));
+            taskFactory.register(new SigningConfigWriterTask.CreationAction(appVariantProperties));
 
             if (!(((BaseAppModuleExtension) extension).getAssetPacks().isEmpty())) {
-                createAssetPackTasks(variantScope);
+                createAssetPackTasks(appVariantProperties);
             }
 
             if (globalScope.getBuildFeatures().getDataBinding()) {
@@ -206,61 +207,63 @@ public class ApplicationTaskManager extends TaskManager {
                 // <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
                 taskFactory.register(
                         new DataBindingExportFeatureApplicationIdsTask.CreationAction(
-                                variantScope));
+                                appVariantProperties));
 
             }
         } else {
             // Non-base feature specific task.
             // Task will produce artifacts consumed by the base feature
             taskFactory.register(
-                    new FeatureSplitDeclarationWriterTask.CreationAction(variantScope));
+                    new FeatureSplitDeclarationWriterTask.CreationAction(appVariantProperties));
             if (globalScope.getBuildFeatures().getDataBinding()) {
                 // Create a task that will package necessary information about the feature into a
                 // file which is passed into the Data Binding annotation processor.
                 taskFactory.register(
-                        new DataBindingExportFeatureInfoTask.CreationAction(variantScope));
+                        new DataBindingExportFeatureInfoTask.CreationAction(appVariantProperties));
             }
-            taskFactory.register(new ExportConsumerProguardFilesTask.CreationAction(variantScope));
-            taskFactory.register(new FeatureNameWriterTask.CreationAction(variantScope));
+            taskFactory.register(
+                    new ExportConsumerProguardFilesTask.CreationAction(appVariantProperties));
+            taskFactory.register(new FeatureNameWriterTask.CreationAction(appVariantProperties));
         }
 
         // Add data binding tasks if enabled
-        createDataBindingTasksIfNecessary(variantScope);
+        createDataBindingTasksIfNecessary(appVariantProperties);
 
         // Add a compile task
-        createCompileTask(variantScope);
+        createCompileTask(appVariantProperties);
 
-        taskFactory.register(new StripDebugSymbolsTask.CreationAction(variantScope));
+        taskFactory.register(new StripDebugSymbolsTask.CreationAction(appVariantProperties));
 
-        createPackagingTask(variantScope);
+        createPackagingTask(appVariantProperties);
 
-        maybeCreateLintVitalTask(
-                (ApkVariantData) variantScope.getVariantData(), variantScopesForLint);
+        maybeCreateLintVitalTask(appVariantProperties, allComponentsWithLint);
 
         // Create the lint tasks, if enabled
-        createLintTasks(variantScope, variantScopesForLint);
+        createLintTasks(appVariantProperties, allComponentsWithLint);
 
-        taskFactory.register(new PackagedDependenciesWriterTask.CreationAction(variantScope));
+        taskFactory.register(
+                new PackagedDependenciesWriterTask.CreationAction(appVariantProperties));
 
-        createDynamicBundleTask(variantScope);
+        createDynamicBundleTask(appVariantProperties);
 
-        taskFactory.register(new ApkZipPackagingTask.CreationAction(variantScope));
+        taskFactory.register(new ApkZipPackagingTask.CreationAction(appVariantProperties));
 
         // do not publish the APK(s) if there are dynamic feature.
-        if (!variantScope.getGlobalScope().hasDynamicFeatures()) {
-            createSoftwareComponent(variantScope, "_apk", APK_PUBLICATION);
+        if (!appVariantProperties.getGlobalScope().hasDynamicFeatures()) {
+            createSoftwareComponent(appVariantProperties, "_apk", APK_PUBLICATION);
         }
-        createSoftwareComponent(variantScope, "_aab", AAB_PUBLICATION);
+        createSoftwareComponent(appVariantProperties, "_aab", AAB_PUBLICATION);
     }
 
     private void createSoftwareComponent(
-            @NonNull VariantScope variantScope,
+            @NonNull VariantPropertiesImpl variantProperties,
             @NonNull String suffix,
             @NonNull AndroidArtifacts.PublishedConfigType publication) {
         AdhocComponentWithVariants component =
-                globalScope.getComponentFactory().adhoc(variantScope.getName() + suffix);
+                globalScope.getComponentFactory().adhoc(variantProperties.getName() + suffix);
 
-        final Configuration config = variantScope.getVariantDependencies().getElements(publication);
+        final Configuration config =
+                variantProperties.getVariantDependencies().getElements(publication);
 
         component.addVariantsFromConfiguration(config, details -> {});
 
@@ -268,8 +271,8 @@ public class ApplicationTaskManager extends TaskManager {
     }
 
     @Override
-    protected void createInstallTask(VariantScope variantScope) {
-        final VariantType variantType = variantScope.getType();
+    protected void createInstallTask(@NonNull ComponentPropertiesImpl componentProperties) {
+        final VariantType variantType = componentProperties.getVariantType();
 
         // dynamic feature modules do not have their own install tasks
         if (variantType.isDynamicFeature()) {
@@ -283,95 +286,104 @@ public class ApplicationTaskManager extends TaskManager {
         if (variantType.isForTesting()
                 || !(extension instanceof BaseAppModuleExtension)
                 || ((BaseAppModuleExtension) extension).getDynamicFeatures().isEmpty()) {
-            super.createInstallTask(variantScope);
+            super.createInstallTask(componentProperties);
 
         } else {
             // use the install task that uses the App Bundle
-            taskFactory.register(new InstallVariantViaBundleTask.CreationAction(variantScope));
+            taskFactory.register(
+                    new InstallVariantViaBundleTask.CreationAction(componentProperties));
         }
     }
 
     @Override
-    protected void postJavacCreation(@NonNull VariantScope scope) {
+    protected void postJavacCreation(@NonNull ComponentPropertiesImpl componentProperties) {
         final Provider<Directory> javacOutput =
-                scope.getArtifacts().getFinalProduct(JAVAC.INSTANCE);
+                componentProperties.getArtifacts().getFinalProduct(JAVAC.INSTANCE);
         final FileCollection preJavacGeneratedBytecode =
-                scope.getVariantData().getAllPreJavacGeneratedBytecode();
+                componentProperties.getVariantData().getAllPreJavacGeneratedBytecode();
         final FileCollection postJavacGeneratedBytecode =
-                scope.getVariantData().getAllPostJavacGeneratedBytecode();
+                componentProperties.getVariantData().getAllPostJavacGeneratedBytecode();
 
-        taskFactory.register(new BundleAllClasses.CreationAction(scope));
+        taskFactory.register(new BundleAllClasses.CreationAction(componentProperties));
 
         // create a lighter weight version for usage inside the same module (unit tests basically)
         ConfigurableFileCollection files =
-                scope.getGlobalScope()
+                componentProperties
+                        .getGlobalScope()
                         .getProject()
                         .files(javacOutput, preJavacGeneratedBytecode, postJavacGeneratedBytecode);
-        scope.getArtifacts().appendToAllClasses(files);
+        componentProperties.getArtifacts().appendToAllClasses(files);
     }
 
     @Override
-    protected void createVariantPreBuildTask(@NonNull VariantScope scope) {
-        final VariantType variantType = scope.getVariantDslInfo().getVariantType();
+    protected void createVariantPreBuildTask(@NonNull ComponentPropertiesImpl componentProperties) {
+        final VariantType variantType = componentProperties.getVariantType();
 
         if (variantType.isApk()) {
             boolean useDependencyConstraints =
-                    scope.getGlobalScope()
+                    componentProperties
+                            .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS);
 
             TaskProvider<? extends Task> task;
 
             if (variantType.isTestComponent()) {
-                task = taskFactory.register(new TestPreBuildTask.CreationAction(scope));
+                task =
+                        taskFactory.register(
+                                new TestPreBuildTask.CreationAction(
+                                        (TestComponentPropertiesImpl) componentProperties));
                 if (useDependencyConstraints) {
                     task.configure(t -> t.setEnabled(false));
                 }
             } else {
                 //noinspection unchecked
-                task = taskFactory.register(AppPreBuildTask.getCreationAction(scope));
+                task = taskFactory.register(AppPreBuildTask.getCreationAction(componentProperties));
             }
 
             if (!useDependencyConstraints) {
                 TaskProvider<AppClasspathCheckTask> classpathCheck =
-                        taskFactory.register(new AppClasspathCheckTask.CreationAction(scope));
+                        taskFactory.register(
+                                new AppClasspathCheckTask.CreationAction(componentProperties));
                 TaskFactoryUtils.dependsOn(task, classpathCheck);
             }
 
             if (variantType.isBaseModule() && globalScope.hasDynamicFeatures()) {
                 TaskProvider<CheckMultiApkLibrariesTask> checkMultiApkLibrariesTask =
-                        taskFactory.register(new CheckMultiApkLibrariesTask.CreationAction(scope));
+                        taskFactory.register(
+                                new CheckMultiApkLibrariesTask.CreationAction(componentProperties));
 
                 TaskFactoryUtils.dependsOn(task, checkMultiApkLibrariesTask);
             }
             return;
         }
 
-        super.createVariantPreBuildTask(scope);
+        super.createVariantPreBuildTask(componentProperties);
     }
 
     @NonNull
     @Override
     protected Set<ScopeType> getJavaResMergingScopes(
-            @NonNull VariantScope variantScope, @NonNull QualifiedContent.ContentType contentType) {
-        if (variantScope.consumesFeatureJars() && contentType == RESOURCES) {
+            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull QualifiedContent.ContentType contentType) {
+        if (componentProperties.getVariantScope().consumesFeatureJars()
+                && contentType == RESOURCES) {
             return TransformManager.SCOPE_FULL_WITH_FEATURES;
         }
         return TransformManager.SCOPE_FULL_PROJECT;
     }
 
     /** Configure variantData to generate embedded wear application. */
-    private void handleMicroApp(@NonNull VariantScope scope) {
-        BaseVariantData variantData = scope.getVariantData();
-        VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
-        final VariantType variantType = scope.getType();
+    private void handleMicroApp(@NonNull VariantPropertiesImpl variantProperties) {
+        VariantDslInfo variantDslInfo = variantProperties.getVariantDslInfo();
+        final VariantType variantType = variantProperties.getVariantType();
 
         if (variantType.isBaseModule()) {
             Boolean unbundledWearApp = variantDslInfo.isWearAppUnbundled();
 
             if (!Boolean.TRUE.equals(unbundledWearApp) && variantDslInfo.isEmbedMicroApp()) {
                 Configuration wearApp =
-                        variantData.getVariantDependency().getWearAppConfiguration();
+                        variantProperties.getVariantDependencies().getWearAppConfiguration();
                 assert wearApp != null : "Wear app with no wearApp configuration";
                 if (!wearApp.getAllDependencies().isEmpty()) {
                     Action<AttributeContainer> setApkArtifact =
@@ -380,91 +392,92 @@ public class ApplicationTaskManager extends TaskManager {
                             wearApp.getIncoming()
                                     .artifactView(config -> config.attributes(setApkArtifact))
                                     .getFiles();
-                    createGenerateMicroApkDataTask(scope, files);
+                    createGenerateMicroApkDataTask(variantProperties, files);
                 }
             } else {
                 if (Boolean.TRUE.equals(unbundledWearApp)) {
-                    createGenerateMicroApkDataTask(scope, null);
+                    createGenerateMicroApkDataTask(variantProperties, null);
                 }
             }
         }
     }
 
-    private void createApplicationIdWriterTask(@NonNull VariantScope variantScope) {
-        if (variantScope.getType().isBaseModule()) {
-            taskFactory.register(
-                    new ModuleMetadataWriterTask.CreationAction(
-                            variantScope.getVariantData().getPublicVariantPropertiesApi()));
+    private void createApplicationIdWriterTask(@NonNull VariantPropertiesImpl variantProperties) {
+        if (variantProperties.getVariantType().isBaseModule()) {
+            taskFactory.register(new ModuleMetadataWriterTask.CreationAction(variantProperties));
         }
 
         // TODO b/141650037 - Only the base App should create this task.
         TaskProvider<? extends Task> applicationIdWriterTask =
-                taskFactory.register(
-                        new ApplicationIdWriterTask.CreationAction(
-                                variantScope.getVariantData().getPublicVariantPropertiesApi()));
+                taskFactory.register(new ApplicationIdWriterTask.CreationAction(variantProperties));
 
         TextResourceFactory resources = project.getResources().getText();
         // this builds the dependencies from the task, and its output is the textResource.
-        variantScope.getVariantData().applicationIdTextResource =
+        variantProperties.getVariantData().applicationIdTextResource =
                 resources.fromFile(applicationIdWriterTask);
-
     }
 
-    private void createDynamicBundleTask(@NonNull VariantScope scope) {
+    private void createDynamicBundleTask(@NonNull VariantPropertiesImpl variantProperties) {
 
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
         // and the bundle can't be created. For now, just don't add the bundle task.
         // TODO(b/111168382): Remove this
-        if (scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
+        if (variantProperties.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             return;
         }
 
         taskFactory.register(
                 new PerModuleBundleTask.CreationAction(
-                        scope, packagesCustomClassDependencies(scope, projectOptions)));
-        if (addBundleDependenciesTask(scope)) {
-            taskFactory.register(new PerModuleReportDependenciesTask.CreationAction(scope));
+                        variantProperties,
+                        packagesCustomClassDependencies(variantProperties, projectOptions)));
+        if (addBundleDependenciesTask(variantProperties)) {
+            taskFactory.register(
+                    new PerModuleReportDependenciesTask.CreationAction(variantProperties));
         }
 
-        if (scope.getType().isBaseModule()) {
-            taskFactory.register(new ParseIntegrityConfigTask.CreationAction(scope));
-            taskFactory.register(new PackageBundleTask.CreationAction(scope));
-            taskFactory.register(new FinalizeBundleTask.CreationAction(scope));
-            if (addBundleDependenciesTask(scope)) {
-                taskFactory.register(new BundleReportDependenciesTask.CreationAction(scope));
-                if (scope.getGlobalScope()
+        if (variantProperties.getVariantType().isBaseModule()) {
+            taskFactory.register(new ParseIntegrityConfigTask.CreationAction(variantProperties));
+            taskFactory.register(new PackageBundleTask.CreationAction(variantProperties));
+            taskFactory.register(new FinalizeBundleTask.CreationAction(variantProperties));
+            if (addBundleDependenciesTask(variantProperties)) {
+                taskFactory.register(new BundleReportDependenciesTask.CreationAction(variantProperties));
+                if (variantProperties.getGlobalScope()
                         .getProjectOptions()
                         .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
-                    taskFactory.register(new SdkDependencyDataGeneratorTask.CreationAction(scope));
+                    taskFactory.register(new SdkDependencyDataGeneratorTask.CreationAction(variantProperties));
                 }
             }
 
-            taskFactory.register(new BundleToApkTask.CreationAction(scope));
-            taskFactory.register(new BundleToStandaloneApkTask.CreationAction(scope));
+            taskFactory.register(new BundleToApkTask.CreationAction(variantProperties));
+            taskFactory.register(new BundleToStandaloneApkTask.CreationAction(variantProperties));
 
-            taskFactory.register(new ExtractApksTask.CreationAction(scope));
+            taskFactory.register(new ExtractApksTask.CreationAction(variantProperties));
         }
     }
 
-    private void createMergeResourcesTasks(@NonNull VariantScope variantScope) {
+    private void createMergeResourcesTasks(@NonNull VariantPropertiesImpl variantProperties) {
         // The "big merge" of all resources, will merge and compile resources that will later
         // be used for linking.
         createMergeResourcesTask(
-                variantScope,
+                variantProperties,
                 true,
                 Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
 
         // TODO(b/138780301): Also use it in android tests.
         if (projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
-                && !variantScope.getType().isForTesting()
-                && !variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
+                && !variantProperties.getVariantType().isForTesting()
+                && !variantProperties
+                        .getGlobalScope()
+                        .getExtension()
+                        .getAaptOptions()
+                        .getNamespaced()) {
             // The "small merge" of only the app's local resources (can be multiple source-sets, but
             // most of the time it's just one). This is used by the Process for generating the local
             // R-def.txt file containing a list of resources defined in this module.
             basicCreateMergeResourcesTask(
-                    variantScope,
+                    variantProperties,
                     MergeType.PACKAGE,
-                    variantScope
+                    variantProperties
                             .getPaths()
                             .getIntermediateDir(InternalArtifactType.PACKAGED_RES.INSTANCE),
                     false,
@@ -475,11 +488,12 @@ public class ApplicationTaskManager extends TaskManager {
         }
     }
 
-    private static boolean addBundleDependenciesTask(@NonNull VariantScope scope) {
-        return !scope.getVariantDslInfo().isDebuggable();
+    private static boolean addBundleDependenciesTask(
+            @NonNull VariantPropertiesImpl variantProperties) {
+        return !variantProperties.getVariantDslInfo().isDebuggable();
     }
 
-    private void createAssetPackTasks(@NonNull VariantScope variantScope) {
+    private void createAssetPackTasks(@NonNull VariantPropertiesImpl variantProperties) {
         DependencyHandler depHandler = project.getDependencies();
         List<String> notFound = new ArrayList<>();
         Configuration assetPackFilesConfiguration =
@@ -512,7 +526,7 @@ public class ApplicationTaskManager extends TaskManager {
 
             taskFactory.register(
                     new ProcessAssetPackManifestTask.CreationAction(
-                            variantScope.getVariantData().getPublicVariantPropertiesApi(),
+                            variantProperties,
                             assetPackManifest,
                             assetPacks
                                     .stream()
@@ -520,9 +534,10 @@ public class ApplicationTaskManager extends TaskManager {
                                             assetPackName ->
                                                     assetPackName.replace(":", File.separator))
                                     .collect(Collectors.toSet())));
-            taskFactory.register(new LinkManifestForAssetPackTask.CreationAction(variantScope));
             taskFactory.register(
-                    new AssetPackPreBundleTask.CreationAction(variantScope, assetFiles));
+                    new LinkManifestForAssetPackTask.CreationAction(variantProperties));
+            taskFactory.register(
+                    new AssetPackPreBundleTask.CreationAction(variantProperties, assetFiles));
         }
 
         if (!notFound.isEmpty()) {

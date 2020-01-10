@@ -25,6 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
@@ -36,7 +37,6 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputProperty;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.manifmerger.ManifestMerger2;
@@ -479,15 +479,16 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         @NonNull private final FileCollection testTargetMetadata;
 
         public CreationAction(
-                @NonNull VariantScope scope, @NonNull FileCollection testTargetMetadata) {
-            super(scope);
+                @NonNull ComponentPropertiesImpl componentProperties,
+                @NonNull FileCollection testTargetMetadata) {
+            super(componentProperties);
             this.testTargetMetadata = testTargetMetadata;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("process", "Manifest");
+            return getComponent().computeTaskName("process", "Manifest");
         }
 
         @NonNull
@@ -510,7 +511,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessTestManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setProcessManifestTask(taskProvider);
+            getComponent().getTaskContainer().setProcessManifestTask(taskProvider);
 
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.producesDir(
@@ -543,15 +544,9 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                     .set(project.provider(variantSources::getMainManifestIfExists));
             task.getTestManifestFile().disallowChanges();
 
-            task.apkData =
-                    getVariantScope()
-                            .getVariantData()
-                            .getPublicVariantPropertiesApi()
-                            .getOutputs()
-                            .getMainSplit()
-                            .getApkData();
+            task.apkData = getComponent().getOutputs().getMainSplit().getApkData();
 
-            task.getVariantType().set(getVariantScope().getVariantData().getType().toString());
+            task.getVariantType().set(getComponent().getVariantType().toString());
             task.getVariantType().disallowChanges();
 
             task.setTmpDir(
@@ -559,7 +554,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                             getVariantScope().getPaths().getIntermediatesDir(),
                             "tmp",
                             "manifest",
-                            getVariantScope().getDirName()));
+                            getComponent().getVariantDslInfo().getDirName()));
 
             task.getMinSdkVersion()
                     .set(project.provider(() -> variantDslInfo.getMinSdkVersion().getApiString()));

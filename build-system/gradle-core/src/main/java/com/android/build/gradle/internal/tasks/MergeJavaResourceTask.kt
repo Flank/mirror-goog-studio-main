@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
 import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
@@ -170,13 +171,15 @@ abstract class MergeJavaResourceTask
 
     class CreationAction(
         private val mergeScopes: Collection<ScopeType>,
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<MergeJavaResourceTask>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<MergeJavaResourceTask>(
+        componentProperties
+    ) {
 
         private val projectJavaResFromStreams: FileCollection?
 
         override val name: String
-            get() = variantScope.getTaskName("merge", "JavaResource")
+            get() = component.computeTaskName("merge", "JavaResource")
 
         override val type: Class<MergeJavaResourceTask>
             get() = MergeJavaResourceTask::class.java
@@ -215,7 +218,7 @@ abstract class MergeJavaResourceTask
                 task.projectJavaResAsJars = projectJavaResFromStreams
                 task.unfilteredProjectJavaRes = projectJavaResFromStreams
             } else {
-                val projectJavaRes = getProjectJavaRes(variantScope)
+                val projectJavaRes = getProjectJavaRes(component)
                 task.unfilteredProjectJavaRes = projectJavaRes
                 task.projectJavaRes = projectJavaRes.asFileTree.filter(spec)
             }
@@ -249,7 +252,7 @@ abstract class MergeJavaResourceTask
                     variantScope.globalScope.extension.packagingOptions
                 )
             task.intermediateDir =
-                variantScope.paths.getIncrementalDir("${variantScope.name}-mergeJavaRes")
+                variantScope.paths.getIncrementalDir("${component.name}-mergeJavaRes")
             task.cacheDir = File(task.intermediateDir, "zip-cache")
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
             task.noCompress =
@@ -271,24 +274,24 @@ abstract class MergeJavaResourceTask
 }
 
 fun getProjectJavaRes(
-    scope: VariantScope
+    componentProperties: ComponentPropertiesImpl
 ): FileCollection {
-    val javaRes = scope.globalScope.project.files()
-    javaRes.from(scope.artifacts.getFinalProduct(JAVA_RES))
+    val javaRes = componentProperties.globalScope.project.files()
+    javaRes.from(componentProperties.artifacts.getFinalProduct(JAVA_RES))
     // use lazy file collection here in case an annotationProcessor dependency is add via
     // Configuration.defaultDependencies(), for example.
     javaRes.from(
         Callable {
-            if (projectHasAnnotationProcessors(scope)) {
-                scope.artifacts.getFinalProduct(JAVAC)
+            if (projectHasAnnotationProcessors(componentProperties)) {
+                componentProperties.artifacts.getFinalProduct(JAVAC)
             } else {
                 listOf<File>()
             }
         }
     )
-    javaRes.from(scope.variantData.allPreJavacGeneratedBytecode)
-    javaRes.from(scope.variantData.allPostJavacGeneratedBytecode)
-    javaRes.from(scope.artifacts.getFinalProductAsFileCollection(RUNTIME_R_CLASS_CLASSES))
+    javaRes.from(componentProperties.variantData.allPreJavacGeneratedBytecode)
+    javaRes.from(componentProperties.variantData.allPostJavacGeneratedBytecode)
+    javaRes.from(componentProperties.artifacts.getFinalProductAsFileCollection(RUNTIME_R_CLASS_CLASSES))
     return javaRes
 }
 
@@ -310,7 +313,7 @@ private fun getExternalLibJavaRes(scope: VariantScope, mergeScopes: Collection<S
 }
 
 /** Returns true if anything's been added to the annotation processor configuration. */
-fun projectHasAnnotationProcessors(scope: VariantScope): Boolean {
-    val config = scope.variantDependencies.annotationProcessorConfiguration
+fun projectHasAnnotationProcessors(componentProperties: ComponentPropertiesImpl): Boolean {
+    val config = componentProperties.variantDependencies.annotationProcessorConfiguration
     return config.incoming.dependencies.isNotEmpty()
 }

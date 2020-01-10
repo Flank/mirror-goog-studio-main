@@ -17,15 +17,14 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.variant.impl.VariantImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.component.ComponentIdentity;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.core.BuilderConstants;
+import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.builder.core.VariantType;
 import com.android.utils.StringHelper;
 import com.google.common.collect.Maps;
@@ -40,41 +39,32 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
     private final Map<VariantType, TestVariantData> testVariants;
 
     public LibraryVariantData(
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull VariantScope variantScope,
-            @NonNull VariantDslInfoImpl variantDslInfo,
-            @NonNull VariantImpl publicVariantApi,
-            @NonNull VariantPropertiesImpl publicVariantPropertiesApi,
-            @NonNull VariantSources variantSources) {
-
+            @NonNull MutableTaskContainer taskContainer) {
         super(
+                componentIdentity,
+                variantDslInfo,
+                variantDependencies,
+                variantSources,
+                paths,
+                artifacts,
                 globalScope,
                 taskManager,
-                variantScope,
-                variantDslInfo,
-                publicVariantApi,
-                publicVariantPropertiesApi,
-                variantSources);
-        testVariants = Maps.newHashMap();
+                taskContainer);
 
-        // create default output
-        getPublicVariantPropertiesApi()
-                .addVariantOutput(
-                        getOutputFactory()
-                                .addMainOutput(
-                                        globalScope.getProjectBaseName()
-                                                + "-"
-                                                + getVariantDslInfo().getBaseName()
-                                                + "."
-                                                + BuilderConstants.EXT_LIB_ARCHIVE));
+        testVariants = Maps.newHashMap();
     }
 
     @Override
     @NonNull
     public String getDescription() {
-        final VariantDslInfo variantDslInfo = getVariantDslInfo();
-
         if (variantDslInfo.hasFlavors()) {
             StringBuilder sb = new StringBuilder(50);
             StringHelper.appendCapitalized(
@@ -106,10 +96,10 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
     public void registerJavaGeneratingTask(
             @NonNull Task task, @NonNull File... generatedSourceFolders) {
         super.registerJavaGeneratingTask(task, generatedSourceFolders);
-        if (scope.getTaskContainer().getGenerateAnnotationsTask() != null) {
+        if (taskContainer.getGenerateAnnotationsTask() != null) {
             for (File f : generatedSourceFolders) {
                 // FIXME we need to revise this API as it force-configure the tasks
-                scope.getTaskContainer().getGenerateAnnotationsTask().get().source(f);
+                taskContainer.getGenerateAnnotationsTask().get().source(f);
             }
         }
     }
@@ -119,10 +109,10 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
     public void registerJavaGeneratingTask(
             @NonNull Task task, @NonNull Collection<File> generatedSourceFolders) {
         super.registerJavaGeneratingTask(task, generatedSourceFolders);
-        if (scope.getTaskContainer().getGenerateAnnotationsTask() != null) {
+        if (taskContainer.getGenerateAnnotationsTask() != null) {
             for (File f : generatedSourceFolders) {
                 // FIXME we need to revise this API as it force-configure the tasks
-                scope.getTaskContainer().getGenerateAnnotationsTask().get().source(f);
+                taskContainer.getGenerateAnnotationsTask().get().source(f);
             }
         }
     }

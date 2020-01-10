@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
 import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.api.transform.QualifiedContent.ScopeType
@@ -218,10 +219,12 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         private val dexOptions: DexOptions,
         enableDexingArtifactTransform: Boolean,
         private val userLevelCache: FileCache?,
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<DexArchiveBuilderTask>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<DexArchiveBuilderTask>(
+        componentProperties
+    ) {
 
-        override val name = variantScope.getTaskName("dexBuilder")
+        override val name = componentProperties.computeTaskName("dexBuilder")
 
         private val projectClasses: FileCollection
         private val subProjectsClasses: FileCollection
@@ -402,7 +405,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 variantScope.variantDslInfo.isDebuggable
             )
             task.projectVariant.set(
-                "${variantScope.globalScope.project.name}:${variantScope.name}"
+                "${variantScope.globalScope.project.name}:${component.name}"
             )
             task.numberOfBuckets.set(
                 projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS) ?: DEFAULT_NUM_BUCKETS

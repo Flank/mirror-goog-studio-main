@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.manifest.ManifestHelperKt;
 import com.android.builder.model.ApiVersion;
@@ -366,21 +365,16 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
     public static class CreationAction extends VariantTaskCreationAction<ProcessLibraryManifest> {
 
         private final ComponentPropertiesImpl componentProperties;
-        /**
-         * {@code EagerTaskCreationAction} for the library process manifest task.
-         *
-         * @param scope The library variant scope.
-         */
-        public CreationAction(
-                @NonNull ComponentPropertiesImpl componentProperties, @NonNull VariantScope scope) {
-            super(scope);
+        /** {@code EagerTaskCreationAction} for the library process manifest task. */
+        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
             this.componentProperties = componentProperties;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("process", "Manifest");
+            return getComponent().computeTaskName("process", "Manifest");
         }
 
         @NonNull
@@ -393,7 +387,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessLibraryManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setProcessManifestTask(taskProvider);
+            getComponent().getTaskContainer().setProcessManifestTask(taskProvider);
 
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.producesDir(
@@ -462,13 +456,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             task.getMaxSdkVersion().disallowChanges();
 
             task.mainSplit.set(
-                    project.provider(
-                            getVariantScope()
-                                            .getVariantData()
-                                            .getPublicVariantPropertiesApi()
-                                            .getOutputs()
-                                            .getMainSplit()
-                                    ::getApkData));
+                    project.provider(getComponent().getOutputs().getMainSplit()::getApkData));
             task.mainSplit.disallowChanges();
 
             task.isNamespaced =
@@ -491,7 +479,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             task.manifestOverlays.set(
                     task.getProject().provider(variantSources::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
-            task.getVariantType().set(getVariantScope().getVariantData().getType().toString());
+            task.getVariantType().set(getComponent().getVariantType().toString());
             task.getVariantType().disallowChanges();
         }
     }

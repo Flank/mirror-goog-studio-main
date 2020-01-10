@@ -21,6 +21,8 @@ import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
 
 import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl;
@@ -32,9 +34,8 @@ import com.android.build.gradle.internal.api.TestedVariant;
 import com.android.build.gradle.internal.api.UnitTestVariantImpl;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dsl.VariantOutputFactory;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import org.gradle.api.model.ObjectFactory;
 
@@ -44,7 +45,7 @@ import org.gradle.api.model.ObjectFactory;
 public class ApiObjectFactory {
     @NonNull private final BaseExtension extension;
     @NonNull private final VariantFactory variantFactory;
-    @NonNull private final ObjectFactory objectFactory;
+    @NonNull private final GlobalScope globalScope;
 
     @NonNull
     private final ReadOnlyObjectProvider readOnlyObjectProvider = new ReadOnlyObjectProvider();
@@ -52,78 +53,75 @@ public class ApiObjectFactory {
     public ApiObjectFactory(
             @NonNull BaseExtension extension,
             @NonNull VariantFactory variantFactory,
-            @NonNull ObjectFactory objectFactory) {
+            @NonNull GlobalScope globalScope) {
         this.extension = extension;
         this.variantFactory = variantFactory;
-        this.objectFactory = objectFactory;
+        this.globalScope = globalScope;
     }
 
-    public BaseVariantImpl create(BaseVariantData variantData) {
-        if (variantData.getType().isTestComponent()) {
+    public BaseVariantImpl create(@NonNull ComponentPropertiesImpl componentProperties) {
+        BaseVariantData variantData = componentProperties.getVariantData();
+        if (componentProperties.getVariantType().isTestComponent()) {
             // Testing variants are handled together with their "owners".
-            createVariantOutput(variantData, null);
+            createVariantOutput(componentProperties, null);
             return null;
         }
 
         BaseVariantImpl variantApi =
                 variantFactory.createVariantApi(
-                        objectFactory,
-                        variantData,
-                        readOnlyObjectProvider);
+                        globalScope, componentProperties, variantData, readOnlyObjectProvider);
         if (variantApi == null) {
             return null;
         }
 
-        if (variantFactory.hasTestScope()) {
-            TestVariantData androidTestVariantData =
-                    ((TestedVariantData) variantData).getTestVariantData(ANDROID_TEST);
+        ObjectFactory objectFactory = globalScope.getDslScope().getObjectFactory();
 
-            if (androidTestVariantData != null) {
+        if (variantFactory.hasTestScope()) {
+            VariantPropertiesImpl variantProperties = (VariantPropertiesImpl) componentProperties;
+            ComponentPropertiesImpl androidTestVariantProperties =
+                    variantProperties.getTestComponents().get(ANDROID_TEST);
+
+            if (androidTestVariantProperties != null) {
                 TestVariantImpl androidTestVariant =
                         objectFactory.newInstance(
                                 TestVariantImpl.class,
-                                androidTestVariantData,
+                                androidTestVariantProperties.getVariantData(),
+                                androidTestVariantProperties,
                                 variantApi,
                                 objectFactory,
                                 readOnlyObjectProvider,
-                                variantData
-                                        .getScope()
-                                        .getGlobalScope()
-                                        .getProject()
-                                        .container(VariantOutput.class));
-                createVariantOutput(androidTestVariantData, androidTestVariant);
+                                globalScope.getProject().container(VariantOutput.class));
+                createVariantOutput(androidTestVariantProperties, androidTestVariant);
 
                 ((TestedAndroidConfig) extension).getTestVariants().add(androidTestVariant);
                 ((TestedVariant) variantApi).setTestVariant(androidTestVariant);
             }
 
-            TestVariantData unitTestVariantData =
-                    ((TestedVariantData) variantData).getTestVariantData(UNIT_TEST);
-            if (unitTestVariantData != null) {
+            ComponentPropertiesImpl unitTestVariantProperties =
+                    variantProperties.getTestComponents().get(UNIT_TEST);
+
+            if (unitTestVariantProperties != null) {
                 UnitTestVariantImpl unitTestVariant =
                         objectFactory.newInstance(
                                 UnitTestVariantImpl.class,
-                                unitTestVariantData,
+                                unitTestVariantProperties.getVariantData(),
+                                unitTestVariantProperties,
                                 variantApi,
                                 objectFactory,
                                 readOnlyObjectProvider,
-                                variantData
-                                        .getScope()
-                                        .getGlobalScope()
-                                        .getProject()
-                                        .container(VariantOutput.class));
+                                globalScope.getProject().container(VariantOutput.class));
 
                 ((TestedAndroidConfig) extension).getUnitTestVariants().add(unitTestVariant);
                 ((TestedVariant) variantApi).setUnitTestVariant(unitTestVariant);
             }
         }
 
-        createVariantOutput(variantData, variantApi);
+        createVariantOutput(componentProperties, variantApi);
 
         try {
             // Only add the variant API object to the domain object set once it's been fully
             // initialized.
-            extension.addVariant(variantApi, variantData.getScope());
+            extension.addVariant(variantApi);
         } catch (Throwable t) {
             // Adding variant to the collection will trigger user-supplied callbacks
             throw new ExternalApiUsageException(t);
@@ -132,29 +130,31 @@ public class ApiObjectFactory {
         return variantApi;
     }
 
-    private void createVariantOutput(BaseVariantData variantData, BaseVariantImpl variantApi) {
-        variantData.variantOutputFactory =
+    private void createVariantOutput(
+            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull BaseVariantImpl variantApi) {
+        ObjectFactory objectFactory = globalScope.getDslScope().getObjectFactory();
+
+        componentProperties.getVariantData().variantOutputFactory =
                 new VariantOutputFactory(
-                        (variantData.getType().isAar())
+                        (componentProperties.getVariantType().isAar())
                                 ? LibraryVariantOutputImpl.class
                                 : ApkVariantOutputImpl.class,
                         objectFactory,
                         extension,
                         variantApi,
-                        variantData.getTaskContainer(),
-                        variantData
-                                .getScope()
-                                .getGlobalScope()
-                                .getDslScope()
-                                .getDeprecationReporter());
+                        componentProperties.getTaskContainer(),
+                        globalScope.getDslScope().getDeprecationReporter());
 
-        variantData
-                .getPublicVariantPropertiesApi()
+        componentProperties
                 .getOutputs()
                 .forEach(
                         variantOutput ->
                                 // pass the new api variant output object so the override method can
                                 // delegate to the new location.
-                                variantData.variantOutputFactory.create(variantOutput));
+                                componentProperties
+                                        .getVariantData()
+                                        .variantOutputFactory
+                                        .create(variantOutput));
     }
 }

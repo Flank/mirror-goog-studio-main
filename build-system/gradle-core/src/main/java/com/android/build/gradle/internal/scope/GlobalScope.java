@@ -48,14 +48,13 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** A scope containing data for the Android plugin. */
-public class GlobalScope implements TransformGlobalScope {
+public class GlobalScope {
 
     @NonNull private final Project project;
     @NonNull private BaseExtension extension;
     @NonNull private final SdkComponents sdkComponents;
     @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
-    @NonNull private final ProjectOptions projectOptions;
     @Nullable private final FileCache buildCache;
     @NonNull private final MessageReceiver messageReceiver;
     @NonNull private final SoftwareComponentFactory componentFactory;
@@ -75,7 +74,6 @@ public class GlobalScope implements TransformGlobalScope {
     public GlobalScope(
             @NonNull Project project,
             @NonNull String createdBy,
-            @NonNull ProjectOptions projectOptions,
             @NonNull DslScope dslScope,
             @NonNull SdkComponents sdkComponents,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
@@ -89,8 +87,8 @@ public class GlobalScope implements TransformGlobalScope {
         this.dslScope = checkNotNull(dslScope);
         this.sdkComponents = checkNotNull(sdkComponents);
         this.toolingRegistry = checkNotNull(toolingRegistry);
-        this.optionalCompilationSteps = checkNotNull(projectOptions.getOptionalCompilationSteps());
-        this.projectOptions = checkNotNull(projectOptions);
+        this.optionalCompilationSteps =
+                checkNotNull(dslScope.getProjectOptions().getOptionalCompilationSteps());
         this.buildCache = buildCache;
         this.messageReceiver = messageReceiver;
         this.componentFactory = componentFactory;
@@ -110,7 +108,6 @@ public class GlobalScope implements TransformGlobalScope {
     }
 
     @NonNull
-    @Override
     public Project getProject() {
         return project;
     }
@@ -141,7 +138,6 @@ public class GlobalScope implements TransformGlobalScope {
     }
 
     @NonNull
-    @Override
     public File getBuildDir() {
         return project.getBuildDir();
     }
@@ -174,7 +170,6 @@ public class GlobalScope implements TransformGlobalScope {
         return new File(getBuildDir(), FD_OUTPUTS);
     }
 
-    @Override
     public boolean isActive(OptionalCompilationStep step) {
         return optionalCompilationSteps.contains(step);
     }
@@ -195,13 +190,11 @@ public class GlobalScope implements TransformGlobalScope {
     }
 
     @NonNull
-    @Override
     public ProjectOptions getProjectOptions() {
-        return projectOptions;
+        return dslScope.getProjectOptions();
     }
 
     @Nullable
-    @Override
     public FileCache getBuildCache() {
         return buildCache;
     }

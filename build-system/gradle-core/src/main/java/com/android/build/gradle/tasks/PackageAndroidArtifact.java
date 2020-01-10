@@ -28,6 +28,7 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.VariantOutputConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
@@ -962,13 +963,13 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         private final boolean packageCustomClassDependencies;
 
         public CreationAction(
-                @NonNull VariantScope variantScope,
+                @NonNull ComponentPropertiesImpl componentProperties,
                 @NonNull SingleArtifactType<Directory> inputResourceFilesType,
                 @NonNull Provider<Directory> manifests,
                 @NonNull ArtifactType<Directory> manifestType,
                 boolean packageCustomClassDependencies) {
-            super(variantScope);
-            this.project = variantScope.getGlobalScope().getProject();
+            super(componentProperties);
+            this.project = componentProperties.getVariantScope().getGlobalScope().getProject();
             this.inputResourceFilesType = inputResourceFilesType;
             this.manifests = manifests;
             this.manifestType = manifestType;
@@ -991,13 +992,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                     .getProject()
                                     .provider(() -> variantScope.getMinSdkVersion().getApiLevel()));
             packageAndroidArtifact.getMinSdkVersion().disallowChanges();
-            packageAndroidArtifact
-                    .getApplicationId()
-                    .set(
-                            variantScope
-                                    .getVariantData()
-                                    .getPublicVariantPropertiesApi()
-                                    .getApplicationId());
+            packageAndroidArtifact.getApplicationId().set(getComponent().getApplicationId());
             packageAndroidArtifact.getApplicationId().disallowChanges();
 
             packageAndroidArtifact
@@ -1015,9 +1010,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                             .getIncrementalDir(packageAndroidArtifact.getName()),
                                     "tmp"));
 
-            variantScope
-                    .getVariantData()
-                    .getPublicVariantPropertiesApi()
+            getComponent()
                     .getOutputs()
                     .forEach(
                             variantOutput -> {
@@ -1107,7 +1100,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             PerModuleBundleTaskKt.getNativeLibsFiles(
                                     variantScope, packageCustomClassDependencies));
 
-            task.setSigningConfig(SigningConfigProvider.create(variantScope));
+            task.setSigningConfig(SigningConfigProvider.create(getComponent()));
         }
 
         @NonNull

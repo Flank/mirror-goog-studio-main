@@ -51,13 +51,13 @@ class CMakeSettingsJsonPropertiesGoldenFileTest {
                     )!!
                     val variant = createCxxVariantModel(
                         module,
-                        it.variantScope
+                        it.componentProperties
                     )
                     val abi = createCxxAbiModel(
                         variant,
                         Abi.X86_64,
                         it.global,
-                        it.baseVariantData
+                        it.componentProperties
                     )
                     Macro.values()
                         .toList()

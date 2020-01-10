@@ -27,6 +27,9 @@ import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -43,8 +46,6 @@ import com.android.build.gradle.internal.testing.ShardedTestRunner;
 import com.android.build.gradle.internal.testing.SimpleTestRunnable;
 import com.android.build.gradle.internal.testing.SimpleTestRunner;
 import com.android.build.gradle.internal.testing.TestRunner;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -418,12 +419,12 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         }
 
         public CreationAction(
-                @NonNull VariantScope scope,
+                @NonNull ComponentPropertiesImpl componentProperties,
                 @NonNull DeviceProvider deviceProvider,
                 @NonNull Type type,
                 @NonNull AbstractTestDataImpl testData,
                 @NonNull FileCollection testTargetManifests) {
-            super(scope);
+            super(componentProperties);
             this.deviceProvider = deviceProvider;
             this.type = type;
             this.testData = testData;
@@ -433,7 +434,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName(deviceProvider.getName());
+            return getComponent().computeTaskName(deviceProvider.getName());
         }
 
         @NonNull
@@ -494,14 +495,13 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 deviceProvider.getName());
             }
 
-            VariantScope scope = getVariantScope();
-            if (scope.getVariantData() instanceof TestVariantData) {
+            if (getComponent() instanceof TestComponentPropertiesImpl) {
                 if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
-                    scope.getTaskContainer().setConnectedTestTask(taskProvider);
+                    getComponent().getTaskContainer().setConnectedTestTask(taskProvider);
                     // possible redundant with setConnectedTestTask?
-                    scope.getTaskContainer().setConnectedTask(taskProvider);
+                    getComponent().getTaskContainer().setConnectedTask(taskProvider);
                 } else {
-                    scope.getTaskContainer().getProviderTestTaskList().add(taskProvider);
+                    getComponent().getTaskContainer().getProviderTestTaskList().add(taskProvider);
                 }
             }
         }
@@ -514,12 +514,11 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             Project project = scope.getGlobalScope().getProject();
             ProjectOptions projectOptions = scope.getGlobalScope().getProjectOptions();
 
-            BaseVariantData testedVariantData = scope.getTestedVariantData();
+            // this can be null for test plugin
+            VariantPropertiesImpl testedVariant = getComponent().getTestedVariant();
 
             String variantName =
-                    testedVariantData != null
-                            ? testedVariantData.getName()
-                            : scope.getVariantData().getName();
+                    testedVariant != null ? testedVariant.getName() : getComponent().getName();
             if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
                 task.setDescription("Installs and runs the tests for " + variantName +
                         " on connected devices.");

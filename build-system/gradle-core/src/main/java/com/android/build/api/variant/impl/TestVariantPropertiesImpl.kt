@@ -16,18 +16,47 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.Operations
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.TestVariantProperties
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.VariantPathHelper
 import javax.inject.Inject
 
 internal open class TestVariantPropertiesImpl @Inject constructor(
-    dslScope: DslScope,
+    componentIdentity: ComponentIdentity,
+    variantDslInfo: VariantDslInfo,
+    variantDependencies: VariantDependencies,
+    variantSources: VariantSources,
+    paths: VariantPathHelper,
+    artifacts: BuildArtifactsHolder,
     variantScope: VariantScope,
-    override val operations: Operations,
-    publicVariantConfiguration: ComponentIdentity
-):
-    VariantPropertiesImpl(dslScope, variantScope, operations, publicVariantConfiguration), TestVariantProperties{
+    variantData: BaseVariantData,
+    dslScope: DslScope
+) : VariantPropertiesImpl(
+    componentIdentity,
+    variantDslInfo,
+    variantDependencies,
+    variantSources,
+    paths,
+    artifacts,
+    variantScope,
+    variantData,
+    dslScope
+), TestVariantProperties {
+
+    // ---------------------------------------------------------------------------------------------
+    // PUBLIC API
+    // ---------------------------------------------------------------------------------------------
+
+
+    // ---------------------------------------------------------------------------------------------
+    // INTERNAL API
+    // ---------------------------------------------------------------------------------------------
+
 }

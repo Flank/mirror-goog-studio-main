@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurationKey
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator
@@ -31,13 +32,13 @@ import java.io.File
  */
 fun createCxxVariantModel(
     module: CxxModuleModel,
-    variantScope: VariantScope) : CxxVariantModel {
-    val baseVariantData = variantScope.variantData
+    componentProperties: ComponentPropertiesImpl) : CxxVariantModel {
+
     return object : CxxVariantModel {
         private val buildSystem by lazy {
             createNativeBuildSystemVariantConfig(
                 module.buildSystem,
-                baseVariantData.variantDslInfo
+                componentProperties.variantDslInfo
             )
         }
         private val intermediatesFolder by lazy {
@@ -48,7 +49,7 @@ fun createCxxVariantModel(
         override val buildSystemArgumentList get() = buildSystem.arguments
         override val cFlagsList get() = buildSystem.cFlags
         override val cppFlagsList get() = buildSystem.cppFlags
-        override val variantName get() = baseVariantData.name
+        override val variantName get() = componentProperties.name
         override val cmakeSettingsConfiguration
             // TODO remove this after configuration has been added to DSL
             // If CMakeSettings.json has a configuration with this exact name then
@@ -63,7 +64,7 @@ fun createCxxVariantModel(
                 join(intermediatesFolder, "obj")
             }
         override val isDebuggableEnabled
-            get() = baseVariantData.variantDslInfo.isDebuggable
+            get() = componentProperties.variantDslInfo.isDebuggable
         override val validAbiList by lazy {
             CachingEnvironment(module.cxxFolder).use {
                 AbiConfigurator(
@@ -81,7 +82,7 @@ fun createCxxVariantModel(
         }
 
         override val prefabPackageDirectoryList: List<File> by lazy {
-            variantScope.variantDependencies.getArtifactCollection(
+            componentProperties.variantDependencies.getArtifactCollection(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.PREFAB_PACKAGE

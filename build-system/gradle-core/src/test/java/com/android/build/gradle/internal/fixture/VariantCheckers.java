@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.ApkVariant;
@@ -29,7 +30,6 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.api.TestedVariant;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.utils.StringHelper;
 import com.google.common.collect.Lists;
@@ -63,8 +63,8 @@ public class VariantCheckers {
         return variants.values().stream().mapToInt(Integer::intValue).sum();
     }
 
-    public static void checkDefaultVariants(List<VariantScope> variants) {
-        assertThat(Lists.transform(variants, VariantScope::getName))
+    public static void checkDefaultVariants(List<ComponentPropertiesImpl> components) {
+        assertThat(Lists.transform(components, ComponentPropertiesImpl::getName))
                 .containsExactly(
                         "release", "debug", "debugAndroidTest", "releaseUnitTest", "debugUnitTest");
     }
@@ -112,21 +112,20 @@ public class VariantCheckers {
     /**
      * Returns the variant data with the given name. Fails if there is no such variant.
      *
-     * @param variants the item collection to search for a match
+     * @param components the item collection to search for a match
      * @param name the name of the item to return
      * @return the found variant
      */
-    public static <T extends BaseVariantData> T findVariantData(
-            @NonNull Collection<VariantScope> variants, @NonNull String name) {
-        Optional<?> result =
-                variants.stream()
+    public static BaseVariantData findVariantData(
+            @NonNull Collection<ComponentPropertiesImpl> components, @NonNull String name) {
+        Optional<BaseVariantData> result =
+                components
+                        .stream()
                         .filter(t -> t.getName().equals(name))
-                        .map(VariantScope::getVariantData)
+                        .map(component -> component.getVariantData())
                         .findAny();
-        //noinspection unchecked: too much hassle with BaseVariantData generics, not worth it for test code.
-        return (T)
-                result.orElseThrow(
-                        () -> new AssertionError("Variant data for " + name + " not found."));
+        return result.orElseThrow(
+                () -> new AssertionError("Variant data for " + name + " not found."));
     }
 
     private static class AppVariantChecker implements VariantChecker {

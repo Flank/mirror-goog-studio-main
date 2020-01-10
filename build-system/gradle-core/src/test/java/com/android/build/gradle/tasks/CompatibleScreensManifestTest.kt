@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant2.createFakeDslScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
@@ -80,12 +81,20 @@ class CompatibleScreensManifestTest {
 
         task = project.tasks.create("test", CompatibleScreensManifest::class.java)
 
+        var dslScope = createFakeDslScope()
+
         MockitoAnnotations.initMocks(this)
-        `when`(scope.name).thenReturn("fullVariantName")
-        `when`(scope.variantDslInfo).thenReturn(variantDslInfo)
-        `when`(scope.globalScope).thenReturn(globalScope)
-        `when`(scope.artifacts).thenReturn(buildArtifactsHolder)
-        `when`(scope.taskContainer).thenReturn(taskContainer)
+        `when`(variantProperties.name).thenReturn("fullVariantName")
+        `when`(variantProperties.variantDslInfo).thenReturn(variantDslInfo)
+        `when`(variantProperties.globalScope).thenReturn(globalScope)
+        `when`(variantProperties.artifacts).thenReturn(buildArtifactsHolder)
+        `when`(variantProperties.taskContainer).thenReturn(taskContainer)
+        `when`(variantProperties.variantScope).thenReturn(scope)
+        `when`(variantProperties.variantType).thenReturn(VariantTypeImpl.BASE_APK)
+        `when`(variantProperties.variantData).thenReturn(variantData)
+        `when`(variantProperties.dslScope).thenReturn(dslScope)
+
+
         `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
         task.outputFolder.set(temporaryFolder.root)
         `when`<AndroidVersion>(variantDslInfo.minSdkVersion).thenReturn(AndroidVersion(21))
@@ -106,19 +115,16 @@ class CompatibleScreensManifestTest {
                 )
             )
         )
-        `when`(scope.variantData).thenReturn(variantData)
-        `when`(variantData.publicVariantPropertiesApi).thenReturn(variantProperties)
         val applicationId = project.objects.property(String::class.java)
         applicationId.set("com.foo")
         `when`(variantProperties.applicationId).thenReturn(applicationId)
-        `when`(variantData.type).thenReturn(VariantTypeImpl.BASE_APK)
     }
 
     @Test
     fun testConfigAction() {
 
         val configAction = CompatibleScreensManifest.CreationAction(
-                scope, setOf("xxhpi", "xxxhdpi")
+                variantProperties, setOf("xxhpi", "xxxhdpi")
         )
         val outputFactory = OutputFactory(PROJECT, variantDslInfo)
         val variantOutputList = VariantOutputList(

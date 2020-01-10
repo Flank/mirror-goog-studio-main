@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -64,12 +65,14 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         private val userCache: FileCache?,
         private val isTestCoverageEnabled: Boolean) :
-        VariantTaskCreationAction<RecalculateStackFramesTask>(variantScope) {
+        VariantTaskCreationAction<RecalculateStackFramesTask>(
+            componentProperties
+        ) {
 
-        override val name = variantScope.getTaskName("fixStackFrames")
+        override val name = component.computeTaskName("fixStackFrames")
         override val type = RecalculateStackFramesTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out RecalculateStackFramesTask>) {
@@ -121,9 +124,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
                 referencedClasses.from(variantScope.artifacts.getAllClasses())
             }
 
-            variantScope.testedVariantData?.let {
-                val testedVariantScope = it.scope
-
+            component.onTestedVariant {
                 referencedClasses.from(
                     variantScope.artifacts.getFinalProduct(
                         InternalArtifactType.TESTED_CODE_CLASSES
@@ -131,12 +132,13 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
                 )
 
                 referencedClasses.from(
-                    testedVariantScope.variantDependencies.getArtifactCollection(
+                    it.variantDependencies.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.CLASSES_JAR
                     ).artifactFiles
                 )
+
             }
 
             task.classesToFix = classesToFix

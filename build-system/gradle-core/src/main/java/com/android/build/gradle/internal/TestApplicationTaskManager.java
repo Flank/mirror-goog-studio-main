@@ -24,16 +24,15 @@ import static com.android.build.gradle.internal.variant.TestVariantFactory.getTe
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
-import com.android.build.gradle.internal.variant.ApkVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.CheckTestedAppObfuscation;
@@ -84,16 +83,19 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
     @Override
     public void createTasksForVariantScope(
-            @NonNull VariantScope variantScope, @NonNull List<VariantScope> variantScopesForLint) {
+            @NonNull VariantPropertiesImpl testVariantProperties,
+            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
 
-        super.createTasksForVariantScope(variantScope, variantScopesForLint);
+        super.createTasksForVariantScope(testVariantProperties, allComponentsWithLint);
 
         Configuration testedApksConfig =
                 project.getConfigurations()
-                        .getByName(getTestedApksConfigurationName(variantScope.getName()));
+                        .getByName(getTestedApksConfigurationName(testVariantProperties.getName()));
 
         Provider<Directory> testingApk =
-                variantScope.getArtifacts().getFinalProduct(InternalArtifactType.APK.INSTANCE);
+                testVariantProperties
+                        .getArtifacts()
+                        .getFinalProduct(InternalArtifactType.APK.INSTANCE);
 
         // create a FileCollection that will contain the APKs to be tested.
         // FULL_APK is published only to the runtime configuration
@@ -109,14 +111,13 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                         .getFiles();
 
         // same for the manifests.
-        FileCollection testedManifestMetadata =
-                getTestedManifestMetadata(variantScope.getVariantData());
+        FileCollection testedManifestMetadata = getTestedManifestMetadata(testVariantProperties);
 
         TestApplicationTestData testData =
                 new TestApplicationTestData(
-                        variantScope.getVariantDslInfo(),
-                        variantScope.getVariantSources(),
-                        variantScope.getVariantDslInfo()::getApplicationId,
+                        testVariantProperties.getVariantDslInfo(),
+                        testVariantProperties.getVariantSources(),
+                        testVariantProperties.getVariantDslInfo()::getApplicationId,
                         testingApk,
                         testedApks);
 
@@ -126,7 +127,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         TaskProvider<DeviceProviderInstrumentTestTask> instrumentTestTask =
                 taskFactory.register(
                         new DeviceProviderInstrumentTestTask.CreationAction(
-                                variantScope,
+                                testVariantProperties,
                                 new ConnectedDeviceProvider(
                                         () ->
                                                 globalScope
@@ -155,18 +156,21 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     }
 
     @Override
-    protected void postJavacCreation(@NonNull VariantScope scope) {
+    protected void postJavacCreation(@NonNull ComponentPropertiesImpl componentProperties) {
         // do nothing.
     }
 
     @Override
-    public void createLintTasks(VariantScope scope, @NonNull List<VariantScope> variantScopes) {
+    public void createLintTasks(
+            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
         // do nothing
     }
 
     @Override
     public void maybeCreateLintVitalTask(
-            @NonNull ApkVariantData variantData, @NonNull List<VariantScope> variantScopes) {
+            @NonNull VariantPropertiesImpl appVariant,
+            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
         // do nothing
     }
 
@@ -176,32 +180,35 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     }
 
     @Override
-    public void configureGlobalLintTask(@NonNull Collection<VariantScope> variants) {
+    public void configureGlobalLintTask(@NonNull Collection<ComponentPropertiesImpl> components) {
         // do nothing
     }
 
     @Nullable
     @Override
-    protected CodeShrinker maybeCreateJavaCodeShrinkerTask(@NonNull VariantScope variantScope) {
-        if (variantScope.getCodeShrinker() != null) {
+    protected CodeShrinker maybeCreateJavaCodeShrinkerTask(
+            @NonNull ComponentPropertiesImpl componentProperties) {
+        final CodeShrinker codeShrinker = componentProperties.getVariantScope().getCodeShrinker();
+        if (codeShrinker != null) {
             return doCreateJavaCodeShrinkerTask(
-                    variantScope, Objects.requireNonNull(variantScope.getCodeShrinker()), true);
+                    componentProperties, Objects.requireNonNull(codeShrinker), true);
         } else {
             TaskProvider<CheckTestedAppObfuscation> checkObfuscation =
                     taskFactory.register(
-                            new CheckTestedAppObfuscation.CreationAction(variantScope));
-            Preconditions.checkNotNull(variantScope.getTaskContainer().getJavacTask());
+                            new CheckTestedAppObfuscation.CreationAction(componentProperties));
+            Preconditions.checkNotNull(componentProperties.getTaskContainer().getJavacTask());
             TaskFactoryUtils.dependsOn(
-                    variantScope.getTaskContainer().getJavacTask(), checkObfuscation);
+                    componentProperties.getTaskContainer().getJavacTask(), checkObfuscation);
             return null;
         }
     }
 
     /** Returns the manifest configuration of the tested application */
     @NonNull
-    private FileCollection getTestedManifestMetadata(@NonNull BaseVariantData variantData) {
-        return variantData
-                .getVariantDependency()
+    private FileCollection getTestedManifestMetadata(
+            @NonNull ComponentPropertiesImpl componentProperties) {
+        return componentProperties
+                .getVariantDependencies()
                 .getCompileClasspath()
                 .getIncoming()
                 .artifactView(
@@ -218,15 +225,15 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     @Override
     @NonNull
     protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTask(
-            @NonNull VariantScope variantScope) {
+            @NonNull ComponentPropertiesImpl componentProperties) {
 
         return taskFactory.register(
                 new ProcessTestManifest.CreationAction(
-                        variantScope, getTestedManifestMetadata(variantScope.getVariantData())));
+                        componentProperties, getTestedManifestMetadata(componentProperties)));
     }
 
     @Override
-    protected void createVariantPreBuildTask(@NonNull VariantScope scope) {
-        createDefaultPreBuildTask(scope);
+    protected void createVariantPreBuildTask(@NonNull ComponentPropertiesImpl componentProperties) {
+        createDefaultPreBuildTask(componentProperties);
     }
 }

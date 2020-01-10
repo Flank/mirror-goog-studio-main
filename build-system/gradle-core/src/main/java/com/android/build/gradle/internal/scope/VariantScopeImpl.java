@@ -44,6 +44,8 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.ComponentIdentity;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
@@ -51,7 +53,6 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.PostProcessingOptions;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
 import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
@@ -62,8 +63,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
@@ -118,57 +117,105 @@ public class VariantScopeImpl implements VariantScope {
     private static final String PUBLISH_ERROR_MSG =
             "Publishing to %1$s with no %1$s configuration object. VariantType: %2$s";
 
-    @NonNull private final PublishingSpecs.VariantSpec variantPublishingSpec;
-
-    @NonNull private final GlobalScope globalScope;
-    @NonNull private BaseVariantData variantData;
-    @NonNull private final TransformManager transformManager;
+    // Variant specific Data
+    @NonNull private final ComponentIdentity componentIdentity;
     @NonNull private final VariantDslInfo variantDslInfo;
+    @NonNull private final VariantSources variantSources;
     @NonNull private final VariantPathHelper pathHelper;
-    @NonNull private final VariantType type;
+    @NonNull private final BuildArtifactsHolder artifacts;
+    @NonNull private final VariantDependencies variantDependencies;
+
+    @NonNull private final PublishingSpecs.VariantSpec variantPublishingSpec;
+    @Nullable private final VariantPropertiesImpl testedVariantProperties;
+
+    // Global Data
+    @NonNull private final GlobalScope globalScope;
+    @NonNull private final TransformManager transformManager;
+
+    // other
+
     @NonNull private final Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
-
-    @NonNull private BuildArtifactsHolder artifacts;
-
-    private final MutableTaskContainer taskContainer = new MutableTaskContainer();
 
     private final Supplier<ConfigurableFileCollection> desugarTryWithResourcesRuntimeJar;
 
     @NonNull private final PostProcessingOptions postProcessingOptions;
 
     public VariantScopeImpl(
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantPathHelper pathHelper,
+            @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
             @NonNull TransformManager transformManager,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantPathHelper pathHelper,
-            @NonNull VariantType type) {
+            @Nullable VariantPropertiesImpl testedVariantProperties) {
+        this.componentIdentity = componentIdentity;
+        this.variantDslInfo = variantDslInfo;
+        this.variantSources = variantSources;
+        this.variantDependencies = variantDependencies;
+        this.pathHelper = pathHelper;
+        this.artifacts = artifacts;
         this.globalScope = globalScope;
         this.transformManager = transformManager;
-        this.variantDslInfo = variantDslInfo;
-        this.pathHelper = pathHelper;
-        this.type = type;
-        this.variantPublishingSpec = PublishingSpecs.getVariantSpec(type);
+        this.variantPublishingSpec =
+                PublishingSpecs.getVariantSpec(variantDslInfo.getVariantType());
+        this.testedVariantProperties = testedVariantProperties;
 
         if (globalScope.isActive(OptionalCompilationStep.INSTANT_DEV)) {
             throw new RuntimeException("InstantRun mode is not supported");
         }
-        this.artifacts =
-                new VariantBuildArtifactsHolder(getProject(), getName(), globalScope.getBuildDir());
+        Project project = globalScope.getProject();
+
         this.desugarTryWithResourcesRuntimeJar =
                 Suppliers.memoize(
                         () ->
-                                getProject()
-                                        .files(
-                                                FileUtils.join(
-                                                        pathHelper.getIntermediatesDir(),
-                                                        "processing-tools",
-                                                        "runtime-deps",
-                                                        variantDslInfo.getDirName(),
-                                                        "desugar_try_with_resources.jar")));
-        this.postProcessingOptions =
-                variantDslInfo.createPostProcessingOptions(globalScope.getProject());
+                                project.files(
+                                        FileUtils.join(
+                                                pathHelper.getIntermediatesDir(),
+                                                "processing-tools",
+                                                "runtime-deps",
+                                                variantDslInfo.getDirName(),
+                                                "desugar_try_with_resources.jar")));
+        this.postProcessingOptions = variantDslInfo.createPostProcessingOptions(project);
 
         configureNdk();
+    }
+
+    @NonNull
+    @Override
+    public VariantType getType() {
+        return variantDslInfo.getVariantType();
+    }
+
+    @Override
+    @NonNull
+    public VariantDslInfo getVariantDslInfo() {
+        return variantDslInfo;
+    }
+
+    @Override
+    @NonNull
+    public VariantSources getVariantSources() {
+        return variantSources;
+    }
+
+    @Override
+    @NonNull
+    public VariantPathHelper getPaths() {
+        return pathHelper;
+    }
+
+    @Override
+    @NonNull
+    public VariantDependencies getVariantDependencies() {
+        return variantDependencies;
+    }
+
+    @Override
+    @NonNull
+    public GlobalScope getGlobalScope() {
+        return globalScope;
     }
 
     private void configureNdk() {
@@ -181,26 +228,10 @@ public class VariantScopeImpl implements VariantScope {
         }
     }
 
-    protected Project getProject() {
-        return globalScope.getProject();
-    }
-
-    @Override
-    @NonNull
-    public VariantPathHelper getPaths() {
-        return pathHelper;
-    }
-
     @Override
     @NonNull
     public PublishingSpecs.VariantSpec getPublishingSpec() {
         return variantPublishingSpec;
-    }
-
-    @NonNull
-    @Override
-    public MutableTaskContainer getTaskContainer() {
-        return taskContainer;
     }
 
     /**
@@ -218,18 +249,17 @@ public class VariantScopeImpl implements VariantScope {
 
         Preconditions.checkState(!configTypes.isEmpty());
 
-        // FIXME this needs to be parameterized based on the variant's publishing type.
-        final VariantDependencies variantDependency = getVariantDependencies();
-
         for (PublishedConfigType configType : PublishedConfigType.values()) {
             if (configTypes.contains(configType)) {
-                Configuration config = variantDependency.getElements(configType);
+                Configuration config = variantDependencies.getElements(configType);
                 Preconditions.checkNotNull(
-                        config, String.format(PUBLISH_ERROR_MSG, configType, getType()));
+                        config,
+                        String.format(
+                                PUBLISH_ERROR_MSG, configType, variantDslInfo.getVariantType()));
                 if (configType.isPublicationConfig()) {
                     String classifier = null;
                     if (configType.isClassifierRequired()) {
-                        classifier = getName();
+                        classifier = componentIdentity.getName();
                     }
                     publishArtifactToDefaultVariant(config, artifact, artifactType, classifier);
                 } else {
@@ -240,48 +270,15 @@ public class VariantScopeImpl implements VariantScope {
     }
 
     @Override
-    @NonNull
-    public GlobalScope getGlobalScope() {
-        return globalScope;
-    }
-
-    @Override
-    @NonNull
-    public BaseVariantData getVariantData() {
-        return variantData;
-    }
-
-    public void setVariantData(@NonNull BaseVariantData variantData) {
-        this.variantData = variantData;
-    }
-
-    @Override
-    @NonNull
-    public VariantDslInfo getVariantDslInfo() {
-        return variantDslInfo;
-    }
-
-    @NonNull
-    @Override
-    public VariantSources getVariantSources() {
-        return variantData.getVariantSources();
-    }
-
-    @NonNull
-    @Override
-    public String getName() {
-        return variantDslInfo.getComponentIdentity().getName();
-    }
-
-    @Override
     public boolean useResourceShrinker() {
-        if (getType().isForTesting()
-                || !postProcessingOptions.resourcesShrinkingEnabled()) {
+        VariantType variantType = variantDslInfo.getVariantType();
+
+        if (variantType.isForTesting() || !postProcessingOptions.resourcesShrinkingEnabled()) {
             return false;
         }
 
         // TODO: support resource shrinking for multi-apk applications http://b/78119690
-        if (getType().isDynamicFeature() || globalScope.hasDynamicFeatures()) {
+        if (variantType.isDynamicFeature() || globalScope.hasDynamicFeatures()) {
             globalScope
                     .getDslScope()
                     .getIssueReporter()
@@ -291,8 +288,8 @@ public class VariantScopeImpl implements VariantScope {
             return false;
         }
 
-        if (getType().isAar()) {
-            if (!getProject().getPlugins().hasPlugin("com.android.feature")) {
+        if (variantType.isAar()) {
+            if (!globalScope.getProject().getPlugins().hasPlugin("com.android.feature")) {
                 globalScope
                         .getDslScope()
                         .getIssueReporter()
@@ -347,7 +344,7 @@ public class VariantScopeImpl implements VariantScope {
 
     @Override
     public boolean consumesFeatureJars() {
-        return getType().isBaseModule()
+        return variantDslInfo.getVariantType().isBaseModule()
                 && variantDslInfo.isMinifyEnabled()
                 && globalScope.hasDynamicFeatures();
     }
@@ -356,21 +353,22 @@ public class VariantScopeImpl implements VariantScope {
     public boolean getNeedsJavaResStreams() {
         // We need to create original java resource stream only if we're in a library module with
         // custom transforms.
-        return getType().isAar() && !getGlobalScope().getExtension().getTransforms().isEmpty();
+        return variantDslInfo.getVariantType().isAar()
+                && !globalScope.getExtension().getTransforms().isEmpty();
     }
 
     @Override
     public boolean getNeedsMergedJavaResStream() {
         // We need to create a stream from the merged java resources if we're in a library module,
         // or if we're in an app/feature module which uses the transform pipeline.
-        return getType().isAar()
-                || !getGlobalScope().getExtension().getTransforms().isEmpty()
+        return variantDslInfo.getVariantType().isAar()
+                || !globalScope.getExtension().getTransforms().isEmpty()
                 || getCodeShrinker() != null;
     }
 
     @Override
     public boolean getNeedsMainDexListForBundle() {
-        return getType().isBaseModule()
+        return variantDslInfo.getVariantType().isBaseModule()
                 && globalScope.hasDynamicFeatures()
                 && variantDslInfo.getDexingType().getNeedsMainDexList();
     }
@@ -378,10 +376,12 @@ public class VariantScopeImpl implements VariantScope {
     @Nullable
     @Override
     public CodeShrinker getCodeShrinker() {
-        boolean isTestComponent = getType().isTestComponent();
+        boolean isTestComponent = variantDslInfo.getVariantType().isTestComponent();
 
         //noinspection ConstantConditions - getType() will not return null for a testing variant.
-        if (isTestComponent && getTestedVariantData().getType().isAar()) {
+        if (isTestComponent
+                && testedVariantProperties != null
+                && testedVariantProperties.getVariantType().isAar()) {
             // For now we seem to include the production library code as both program and library
             // input to the test ProGuard run, which confuses it.
             return null;
@@ -438,7 +438,7 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public List<File> getConsumerProguardFilesForFeatures() {
         // We include proguardFiles if we're in a dynamic-feature module.
-        final boolean includeProguardFiles = getType().isDynamicFeature();
+        final boolean includeProguardFiles = variantDslInfo.getVariantType().isDynamicFeature();
         final Collection<File> consumerProguardFiles = getConsumerProguardFiles();
         if (includeProguardFiles) {
             consumerProguardFiles.addAll(getExplicitProguardFiles());
@@ -554,12 +554,6 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public VariantType getType() {
-        return type;
-    }
-
-    @NonNull
-    @Override
     public DexingType getDexingType() {
         return variantDslInfo.getDexingType();
     }
@@ -577,32 +571,8 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public String getDirName() {
-        return variantDslInfo.getDirName();
-    }
-
-    @NonNull
-    @Override
-    public Collection<String> getDirectorySegments() {
-        return variantDslInfo.getDirectorySegments();
-    }
-
-    @NonNull
-    @Override
     public TransformManager getTransformManager() {
         return transformManager;
-    }
-
-    @Override
-    @NonNull
-    public String getTaskName(@NonNull String prefix) {
-        return getTaskName(prefix, "");
-    }
-
-    @Override
-    @NonNull
-    public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
-        return variantData.getTaskName(prefix, suffix);
     }
 
     @Override
@@ -610,54 +580,13 @@ public class VariantScopeImpl implements VariantScope {
         this.ndkDebuggableLibraryFolders.put(abi, searchPath);
     }
 
-    @Override
-    @Nullable
-    public BaseVariantData getTestedVariantData() {
-        return variantData instanceof TestVariantData ?
-                (BaseVariantData) ((TestVariantData) variantData).getTestedVariantData() :
-                null;
-    }
-
     // Precomputed file paths.
 
     @Override
     @NonNull
-    public FileCollection getJavaClasspath(
-            @NonNull ConsumedConfigType configType, @NonNull ArtifactType classesType) {
-        return getJavaClasspath(configType, classesType, null);
-    }
-
-    @Override
-    @NonNull
-    public FileCollection getJavaClasspath(
-            @NonNull ConsumedConfigType configType,
-            @NonNull ArtifactType classesType,
-            @Nullable Object generatedBytecodeKey) {
-        FileCollection mainCollection =
-                getVariantDependencies().getArtifactFileCollection(configType, ALL, classesType);
-
-        mainCollection =
-                mainCollection.plus(variantData.getGeneratedBytecode(generatedBytecodeKey));
-
-        // Add R class jars to the front of the classpath as libraries might also export
-        // compile-only classes. This behavior is verified in CompileRClassFlowTest
-        // While relying on this order seems brittle, it avoids doubling the number of
-        // files on the compilation classpath by exporting the R class separately or
-        // and is much simpler than having two different outputs from each library, with
-        // and without the R class, as AGP publishing code assumes there is exactly one
-        // artifact for each publication.
-        mainCollection = getProject().files(getCompiledRClasses(configType), mainCollection);
-
-        return mainCollection;
-    }
-
-    @Override
-    @NonNull
     public FileCollection getCompiledRClasses(@NonNull ConsumedConfigType configType) {
-        VariantDependencies variantDependencies = getVariantDependencies();
-
-        FileCollection mainCollection = getProject().files();
-        BaseVariantData tested = getTestedVariantData();
+        Project project = globalScope.getProject();
+        FileCollection mainCollection = project.files();
 
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
             Provider<RegularFile> namespacedRClassJar =
@@ -665,7 +594,7 @@ public class VariantScopeImpl implements VariantScope {
                             InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR.INSTANCE);
 
             ConfigurableFileTree fileTree =
-                    getProject().fileTree(namespacedRClassJar).builtBy(namespacedRClassJar);
+                    project.fileTree(namespacedRClassJar).builtBy(namespacedRClassJar);
             mainCollection = mainCollection.plus(fileTree);
             mainCollection =
                     mainCollection.plus(
@@ -689,80 +618,64 @@ public class VariantScopeImpl implements VariantScope {
 
                 mainCollection =
                         mainCollection.plus(
-                                getProject()
-                                        .files(
-                                                artifacts.getFinalProduct(
-                                                        InternalArtifactType
-                                                                .COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR
-                                                                .INSTANCE)));
+                                project.files(
+                                        artifacts.getFinalProduct(
+                                                InternalArtifactType
+                                                        .COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR
+                                                        .INSTANCE)));
             }
 
-            if (tested != null) {
+            if (testedVariantProperties != null) {
                 mainCollection =
-                        getProject()
-                                .files(
-                                        mainCollection,
-                                        tested.getScope()
-                                                .getArtifacts()
-                                                .getFinalProduct(
-                                                        InternalArtifactType
-                                                                .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
-                                                                .INSTANCE)
-                                                .get());
+                        project.files(
+                                mainCollection,
+                                testedVariantProperties
+                                        .getArtifacts()
+                                        .getFinalProduct(
+                                                InternalArtifactType
+                                                        .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
+                                                        .INSTANCE)
+                                        .get());
             }
         } else {
             //noinspection VariableNotUsedInsideIf
-            if (tested == null) {
+            VariantType variantType = variantDslInfo.getVariantType();
+            if (testedVariantProperties == null) {
                 // TODO(b/138780301): Also use it in android tests.
                 boolean useCompileRClassInApp =
                         globalScope
                                         .getProjectOptions()
                                         .get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
-                                && !getType().isForTesting();
+                                && !variantType.isForTesting();
 
-                if (getType().isAar() || useCompileRClassInApp) {
+                if (variantType.isAar() || useCompileRClassInApp) {
                     Provider<RegularFile> rJar =
                             artifacts.getFinalProduct(
                                     COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-                    mainCollection = getProject().files(rJar);
+                    mainCollection = project.files(rJar);
                 } else {
-                    checkState(getType().isApk(), "Expected APK type but found: " + getType());
+                    checkState(variantType.isApk(), "Expected APK type but found: " + variantType);
                     Provider<FileCollection> rJar =
                             artifacts.getFinalProductAsFileCollection(
                                     COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-                    mainCollection = getProject().files(rJar);
+                    mainCollection = project.files(rJar);
                 }
             } else { // Android test or unit test
                 if (!globalScope.getProjectOptions().get(BooleanOption.GENERATE_R_JAVA)) {
                     Provider<RegularFile> rJar;
-                    if (getType() == ANDROID_TEST) {
+                    if (variantType == ANDROID_TEST) {
                         rJar =
                                 artifacts.getFinalProduct(
                                         COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
                     } else {
                         rJar = getRJarForUnitTests();
                     }
-                    mainCollection = getProject().files(rJar);
+                    mainCollection = project.files(rJar);
                 }
             }
         }
 
         return mainCollection;
-    }
-
-    @NonNull
-    @Override
-    public ArtifactCollection getJavaClasspathArtifacts(
-            @NonNull ConsumedConfigType configType,
-            @NonNull ArtifactType classesType,
-            @Nullable Object generatedBytecodeKey) {
-        ArtifactCollection mainCollection =
-                getVariantDependencies().getArtifactCollection(configType, ALL, classesType);
-
-        return ArtifactCollectionWithExtraArtifact.makeExtraCollection(
-                mainCollection,
-                variantData.getGeneratedBytecode(generatedBytecodeKey),
-                getProject().getPath());
     }
 
     @NonNull
@@ -793,7 +706,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public FileCollection getLocalFileDependencies(Predicate<File> filePredicate) {
-        Configuration configuration = getVariantDependencies().getRuntimeClasspath();
+        Configuration configuration = variantDependencies.getRuntimeClasspath();
 
         // Get a list of local file dependencies. There is currently no API to filter the
         // files here, so we need to filter it in the return statement below. That means that if,
@@ -811,7 +724,8 @@ public class VariantScopeImpl implements VariantScope {
                                 .collect(ImmutableList.toImmutableList());
 
         // Create a file collection builtBy the dependencies.  The files are resolved later.
-        return getProject()
+        return globalScope
+                .getProject()
                 .files(
                         (Callable<Collection<File>>)
                                 () ->
@@ -827,7 +741,6 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public FileCollection getProvidedOnlyClasspath() {
-        VariantDependencies variantDependencies = getVariantDependencies();
         ArtifactCollection compile =
                 variantDependencies.getArtifactCollection(COMPILE_CLASSPATH, ALL, CLASSES_JAR);
         ArtifactCollection runtime =
@@ -839,30 +752,23 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public Provider<RegularFile> getRJarForUnitTests() {
-        VariantScope testedScope =
-                checkNotNull(
-                                getTestedVariantData(),
-                                "Variant type does not have a tested variant: " + getType())
-                        .getScope();
-        checkState(getType() == UNIT_TEST, "Expected unit test type but found: " + getType());
+        VariantType variantType = variantDslInfo.getVariantType();
+        checkNotNull(
+                testedVariantProperties,
+                "Variant type does not have a tested variant: " + variantType);
+        checkState(variantType == UNIT_TEST, "Expected unit test type but found: " + variantType);
 
-        if (testedScope.getType().isAar()) {
+        if (testedVariantProperties.getVariantType().isAar()) {
             return this.getArtifacts()
                     .getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
         } else {
             checkState(
-                    testedScope.getType().isApk(),
-                    "Expected APK type but found: " + testedScope.getType());
-            return testedScope
+                    testedVariantProperties.getVariantType().isApk(),
+                    "Expected APK type but found: " + testedVariantProperties.getVariantType());
+            return testedVariantProperties
                     .getArtifacts()
                     .getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
         }
-    }
-
-    @NonNull
-    @Override
-    public VariantDependencies getVariantDependencies() {
-        return variantData.getVariantDependency();
     }
 
     @NonNull
@@ -877,7 +783,7 @@ public class VariantScopeImpl implements VariantScope {
             return Java8LangSupport.UNUSED;
         }
 
-        if (getProject().getPlugins().hasPlugin("me.tatarka.retrolambda")) {
+        if (globalScope.getProject().getPlugins().hasPlugin("me.tatarka.retrolambda")) {
             return Java8LangSupport.RETROLAMBDA;
         }
 
@@ -949,7 +855,7 @@ public class VariantScopeImpl implements VariantScope {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).addValue(getName()).toString();
+        return MoreObjects.toStringHelper(this).addValue(componentIdentity.getName()).toString();
     }
 
     @NonNull
@@ -1012,11 +918,10 @@ public class VariantScopeImpl implements VariantScope {
     private Provider<FeatureSetMetadata> getFeatureSetProvider() {
         if (featureSetProvider == null) {
             FileCollection fc =
-                    getVariantDependencies()
-                            .getArtifactFileCollection(
-                                    AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                                    PROJECT,
-                                    FEATURE_SET_METADATA);
+                    variantDependencies.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                            PROJECT,
+                            FEATURE_SET_METADATA);
             featureSetProvider =
                     fc.getElements()
                             .map(

@@ -28,9 +28,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.AndroidXDependency;
@@ -295,14 +295,14 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
     public static class CreationAction extends VariantTaskCreationAction<ExtractAnnotations> {
 
 
-        public CreationAction(@NonNull VariantScope variantScope) {
-            super(variantScope);
+        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("extract", "Annotations");
+            return getComponent().computeTaskName("extract", "Annotations");
         }
 
         @NonNull
@@ -315,7 +315,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ExtractAnnotations> taskProvider) {
             super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setGenerateAnnotationsTask(taskProvider);
+            getComponent().getTaskContainer().setGenerateAnnotationsTask(taskProvider);
 
             getVariantScope()
                     .getArtifacts()
@@ -337,27 +337,26 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
         @Override
         public void configure(@NonNull ExtractAnnotations task) {
             super.configure(task);
-            VariantScope variantScope = getVariantScope();
-
+            ComponentPropertiesImpl component = getComponent();
             task.setDescription(
                     "Extracts Android annotations for the "
-                            + variantScope.getName()
+                            + component.getName()
                             + " variant into the archive file");
             task.setGroup(BasePlugin.BUILD_GROUP);
 
-            task.setClassDir(variantScope.getArtifacts().getAllClasses());
+            task.setClassDir(component.getArtifacts().getAllClasses());
 
-            task.source(variantScope.getVariantData().getJavaSources());
+            task.source(component.getVariantData().getJavaSources());
             task.setEncoding(
-                    variantScope.getGlobalScope().getExtension().getCompileOptions().getEncoding());
-            task.classpath = variantScope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR);
+                    component.getGlobalScope().getExtension().getCompileOptions().getEncoding());
+            task.classpath = component.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR);
 
             task.libraries =
-                    variantScope
+                    component
                             .getVariantDependencies()
                             .getArtifactCollection(COMPILE_CLASSPATH, EXTERNAL, CLASSES_JAR);
 
-            GlobalScope globalScope = variantScope.getGlobalScope();
+            GlobalScope globalScope = component.getGlobalScope();
 
             // Setup the boot classpath just before the task actually runs since this will
             // force the sdk to be parsed. (Same as in compileTask)

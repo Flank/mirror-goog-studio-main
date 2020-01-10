@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.ide.dependencies
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.ide.DependenciesImpl
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.errors.IssueReporter
@@ -27,7 +28,7 @@ interface DependencyGraphBuilder {
 
     /** Create a level 1 dependency list.  */
     fun createDependencies(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         buildMapping: ImmutableMap<String, String>,
         issueReporter: IssueReporter
     ): DependenciesImpl
@@ -38,7 +39,7 @@ interface DependencyGraphBuilder {
      * @see AndroidProject#MODEL_LEVEL_4_NEW_DEP_MODEL
      */
     fun createLevel4DependencyGraph(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         withFullDependency: Boolean,
         buildMapping: ImmutableMap<String, String>,
         issueReporter: IssueReporter

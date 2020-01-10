@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -102,14 +103,16 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(val scope: VariantScope) :
-        VariantTaskCreationAction<LibraryDexingTask>(scope) {
-        override val name = scope.getTaskName("dex")
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<LibraryDexingTask>(
+            componentProperties
+        ) {
+        override val name = component.computeTaskName("dex")
         override val type = LibraryDexingTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out LibraryDexingTask>) {
             super.handleProvider(taskProvider)
-            scope.artifacts.getOperations().append(
+            variantScope.artifacts.getOperations().append(
                 taskProvider,
                 LibraryDexingTask::output
             ).on(MultipleArtifactType.DEX)
@@ -117,22 +120,22 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
 
         override fun configure(task: LibraryDexingTask) {
             super.configure(task)
-            scope.artifacts.setTaskInputToFinalProduct(
+            variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR,
                 task.classes
             )
             val minSdkVersion =
-                scope.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
+                variantScope.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
             task.minSdkVersion = minSdkVersion
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
-            if (scope.java8LangSupportType == VariantScope.Java8LangSupport.D8) {
+            if (variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8) {
                 task.enableDesugaring.set(true)
 
                 if (minSdkVersion < AndroidVersion.VersionCodes.N) {
-                    task.bootClasspath.from(scope.globalScope.bootClasspath)
+                    task.bootClasspath.from(variantScope.globalScope.bootClasspath)
                     task.classpath.from(
-                        scope.variantDependencies.getArtifactFileCollection(
+                        variantScope.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.CLASSES_JAR

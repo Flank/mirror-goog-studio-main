@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
+import com.android.build.gradle.internal.ide.DefaultInstantAppVariantBuildOutput
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -69,18 +71,20 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
         declaration.save(outputFile.get().asFile)
     }
 
-    internal class CreationAction(private val componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ModuleMetadataWriterTask>(componentProperties.variantScope) {
+    internal class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<ModuleMetadataWriterTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("write", "ModuleMetadata")
+            get() = component.computeTaskName("write", "ModuleMetadata")
         override val type: Class<ModuleMetadataWriterTask>
             get() = ModuleMetadataWriterTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out ModuleMetadataWriterTask>) {
             super.handleProvider(taskProvider)
             // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.BASE_MODULE_METADATA,
                 taskProvider,
                 ModuleMetadataWriterTask::outputFile,
@@ -90,14 +94,11 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
 
         override fun configure(task: ModuleMetadataWriterTask) {
             super.configure(task)
-            task.applicationId.set(componentProperties.applicationId)
+            task.applicationId.set(component.applicationId)
             task.debuggable
-                .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
-            task.versionCode.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi
-                .outputs.getMainSplit().versionCode)
-            task.versionName.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi
-                .outputs.getMainSplit().versionName)
-
+                .setDisallowChanges(component.variantDslInfo.isDebuggable)
+            task.versionCode.setDisallowChanges(component.outputs.getMainSplit().versionCode)
+            task.versionName.setDisallowChanges(component.outputs.getMainSplit().versionName)
         }
     }
 }

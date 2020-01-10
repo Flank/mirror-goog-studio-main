@@ -44,7 +44,7 @@ fun createFakeDslScope(
     objectFactory: ObjectFactory = FakeObjectFactory.factory,
     logger: Logger = FakeLogger(),
     buildFeatures: BuildFeatureValues = FakeBuildFeatureValues(),
-    providerFactory: ProviderFactory = FakeProviderFactory(),
+    providerFactory: ProviderFactory = FakeProviderFactory.factory,
     dslVariableFactory: DslVariableFactory = DslVariableFactory(issueReporter),
     projectLayout: ProjectLayout = ProjectFactory.project.layout,
     projectOptions: ProjectOptions = ProjectOptions(ImmutableMap.of()),

@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI
 import com.android.build.gradle.internal.scope.VariantScope
@@ -73,17 +74,19 @@ abstract class BundleAar : Zip(), VariantAwareTask {
         }
 
     class CreationAction(
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<BundleAar>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<BundleAar>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("bundle", "Aar")
+            get() = component.computeTaskName("bundle", "Aar")
         override val type: Class<BundleAar>
             get() = BundleAar::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out BundleAar>) {
             super.handleProvider(taskProvider)
-            variantScope.taskContainer.bundleLibraryTask = taskProvider
+            component.taskContainer.bundleLibraryTask = taskProvider
             variantScope.artifacts.producesFile(
                 InternalArtifactType.AAR,
                 taskProvider,
@@ -109,8 +112,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                     + variantScope.variantDslInfo.componentIdentity.name
                     + ".")
 
-            task.archiveFileName.set(variantScope.variantData.publicVariantPropertiesApi
-                .outputs.getMainSplit().apkData.outputFileName)
+            task.archiveFileName.set(component.outputs.getMainSplit().apkData.outputFileName)
             task.destinationDirectory.set(File(variantScope.paths.aarLocation.absolutePath))
             task.archiveExtension.set(BuilderConstants.EXT_LIB_ARCHIVE)
 

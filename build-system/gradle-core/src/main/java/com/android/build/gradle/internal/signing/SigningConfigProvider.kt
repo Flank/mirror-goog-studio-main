@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.signing
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -83,12 +84,11 @@ class SigningConfigProvider(
     companion object {
 
         @JvmStatic
-        fun create(variantScope: VariantScope): SigningConfigProvider {
+        fun create(componentProperties: ComponentPropertiesImpl): SigningConfigProvider {
             val isInDynamicFeature =
-                variantScope.type.isDynamicFeature
-                        || (variantScope.type.isTestComponent
-                                && variantScope.testedVariantData!!.variantDslInfo.variantType
-                                        .isDynamicFeature)
+                componentProperties.variantType.isDynamicFeature
+                        || (componentProperties.variantType.isTestComponent
+                                && componentProperties.testedVariant!!.variantType.isDynamicFeature)
 
             // We want to avoid writing the signing config information to disk to protect sensitive
             // data (see bug 137210434), so we'll attempt to get this information directly from
@@ -96,18 +96,18 @@ class SigningConfigProvider(
             return if (!isInDynamicFeature) {
                 // Get it from the variant scope
                 SigningConfigProvider(
-                    signingConfigData = variantScope.variantDslInfo.signingConfig?.let {
+                    signingConfigData = componentProperties.variantDslInfo.signingConfig?.let {
                         SigningConfigData.fromSigningConfig(it)
                     },
                     signingConfigFileCollection = null,
-                    signingConfigValidationResultDir = variantScope.artifacts.getFinalProduct(
+                    signingConfigValidationResultDir = componentProperties.artifacts.getFinalProduct(
                         InternalArtifactType.VALIDATE_SIGNING_CONFIG
                     )
                 )
             } else {
                 // Get it from the injected properties passed from the IDE
                 val signingOptions =
-                    SigningOptions.readSigningOptions(variantScope.globalScope.projectOptions)
+                    SigningOptions.readSigningOptions(componentProperties.globalScope.projectOptions)
                 return if (signingOptions != null
                     && signingOptions.v1Enabled != null && signingOptions.v2Enabled != null
                 ) {
@@ -137,7 +137,7 @@ class SigningConfigProvider(
                     // Otherwise, get it from the published artifact
                     SigningConfigProvider(
                         signingConfigData = null,
-                        signingConfigFileCollection = variantScope.variantDependencies.getArtifactFileCollection(
+                        signingConfigFileCollection = componentProperties.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.PROJECT,
                             AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG

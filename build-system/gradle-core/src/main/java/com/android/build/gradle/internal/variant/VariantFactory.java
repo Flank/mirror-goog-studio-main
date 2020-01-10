@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.internal.variant;
 
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -31,11 +31,14 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.VariantType;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -64,24 +67,50 @@ public interface VariantFactory {
 
     @NonNull
     VariantPropertiesImpl createVariantPropertiesObject(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope);
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantScope variantScope,
+            @NonNull BaseVariantData variantData);
 
     @NonNull
     UnitTestPropertiesImpl createUnitTestProperties(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope);
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantScope variantScope,
+            @NonNull TestVariantData variantData,
+            @NonNull VariantPropertiesImpl testedVariantProperties);
 
     @NonNull
     AndroidTestPropertiesImpl createAndroidTestProperties(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope);
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantScope variantScope,
+            @NonNull TestVariantData variantData,
+            @NonNull VariantPropertiesImpl testedVariantProperties);
 
     @NonNull
     BaseVariantData createVariantData(
-            @NonNull VariantScope variantScope,
-            @NonNull VariantDslInfoImpl variantDslInfo,
-            @NonNull VariantImpl publicVariantApi,
-            @NonNull VariantPropertiesImpl publicVariantPropertiesApi,
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
-            @NonNull TaskManager taskManager);
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull GlobalScope globalScope,
+            @NonNull TaskManager taskManager,
+            @NonNull MutableTaskContainer taskContainer);
 
     @NonNull
     Class<? extends BaseVariantImpl> getVariantImplementationClass(
@@ -89,22 +118,22 @@ public interface VariantFactory {
 
     @Nullable
     default BaseVariantImpl createVariantApi(
-            @NonNull ObjectFactory objectFactory,
+            @NonNull GlobalScope globalScope,
+            @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull BaseVariantData variantData,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
         Class<? extends BaseVariantImpl> implementationClass =
                 getVariantImplementationClass(variantData);
 
+        ObjectFactory objectFactory = globalScope.getDslScope().getObjectFactory();
+
         return objectFactory.newInstance(
                 implementationClass,
                 variantData,
+                componentProperties,
                 objectFactory,
                 readOnlyObjectProvider,
-                variantData
-                        .getScope()
-                        .getGlobalScope()
-                        .getProject()
-                        .container(VariantOutput.class));
+                globalScope.getProject().container(VariantOutput.class));
     }
 
     @NonNull

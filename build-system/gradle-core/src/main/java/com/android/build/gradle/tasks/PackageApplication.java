@@ -19,10 +19,10 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactType;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.SingleArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics;
 import java.io.File;
@@ -86,14 +86,14 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
         private final File outputDirectory;
 
         public CreationAction(
-                @NonNull VariantScope packagingScope,
+                @NonNull ComponentPropertiesImpl componentProperties,
                 @NonNull File outputDirectory,
                 @NonNull SingleArtifactType<Directory> inputResourceFilesType,
                 @NonNull Provider<Directory> manifests,
                 @NonNull ArtifactType<Directory> manifestType,
                 boolean packageCustomClassDependencies) {
             super(
-                    packagingScope,
+                    componentProperties,
                     inputResourceFilesType,
                     manifests,
                     manifestType,
@@ -104,7 +104,7 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("package");
+            return getComponent().computeTaskName("package");
         }
 
         @NonNull
@@ -117,7 +117,7 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
         public void handleProvider(
                 @NonNull TaskProvider<? extends PackageApplication> taskProvider) {
             super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setPackageAndroidTask(taskProvider);
+            getComponent().getTaskContainer().setPackageAndroidTask(taskProvider);
             getVariantScope()
                     .getArtifacts()
                     .producesDir(

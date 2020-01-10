@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FD_DEX
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter
@@ -177,12 +178,14 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     private fun hasFeatureDexFiles() = featureDexFiles.files.isNotEmpty()
 
     class CreationAction(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         private val packageCustomClassDependencies: Boolean
-    ) : VariantTaskCreationAction<PerModuleBundleTask>(variantScope) {
+    ) : VariantTaskCreationAction<PerModuleBundleTask>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("build", "PreBundle")
+            get() = component.computeTaskName("build", "PreBundle")
         override val type: Class<PerModuleBundleTask>
             get() = PerModuleBundleTask::class.java
 

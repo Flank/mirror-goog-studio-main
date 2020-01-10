@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.DOT_AAR
 import com.android.SdkConstants.DOT_JAR
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.VariantScope
@@ -117,9 +118,11 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
     }
 
     abstract class CreationAction(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         val artifactType: InternalArtifactType<Directory>
-    ) : VariantTaskCreationAction<LibraryJniLibsTask>(variantScope) {
+    ) : VariantTaskCreationAction<LibraryJniLibsTask>(
+        componentProperties
+    ) {
         override val type = LibraryJniLibsTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out LibraryJniLibsTask>) {
@@ -139,10 +142,10 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
     }
 
     class ProjectOnlyCreationAction(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         artifactType: InternalArtifactType<Directory>
-    ): CreationAction(variantScope, artifactType) {
-        override val name: String = variantScope.getTaskName("copy", "JniLibsProjectOnly")
+    ): CreationAction(componentProperties, artifactType) {
+        override val name: String = component.computeTaskName("copy", "JniLibsProjectOnly")
 
         override fun configure(task: LibraryJniLibsTask) {
             super.configure(task)
@@ -151,10 +154,10 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
     }
 
     class ProjectAndLocalJarsCreationAction(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         artifactType: InternalArtifactType<Directory>
-    ) : CreationAction(variantScope, artifactType) {
-        override val name: String = variantScope.getTaskName("copy", "JniLibsProjectAndLocalJars")
+    ) : CreationAction(componentProperties, artifactType) {
+        override val name: String = component.computeTaskName("copy", "JniLibsProjectAndLocalJars")
 
         override fun configure(task: LibraryJniLibsTask) {
             super.configure(task)

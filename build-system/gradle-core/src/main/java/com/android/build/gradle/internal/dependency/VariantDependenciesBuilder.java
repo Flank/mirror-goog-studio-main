@@ -35,14 +35,14 @@ import com.android.annotations.Nullable;
 import com.android.build.api.attributes.BuildTypeAttr;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.attributes.VariantAttr;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
-import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
-import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantType;
@@ -105,7 +105,7 @@ public class VariantDependenciesBuilder {
     private final Set<Configuration> runtimeClasspaths = Sets.newLinkedHashSet();
     private final Set<Configuration> annotationConfigs = Sets.newLinkedHashSet();
     private final Set<Configuration> wearAppConfigs = Sets.newLinkedHashSet();
-    private VariantScope testedVariantScope;
+    private VariantPropertiesImpl testedVariant;
 
     @Nullable private Set<String> featureList;
 
@@ -136,9 +136,9 @@ public class VariantDependenciesBuilder {
         return this;
     }
 
-    public VariantDependenciesBuilder setTestedVariantScope(
-            @NonNull VariantScope testedVariantScope) {
-        this.testedVariantScope = testedVariantScope;
+    public VariantDependenciesBuilder setTestedVariant(
+            @NonNull VariantPropertiesImpl testedVariant) {
+        this.testedVariant = testedVariant;
         return this;
     }
 
@@ -180,7 +180,7 @@ public class VariantDependenciesBuilder {
         return this;
     }
 
-    public VariantDependencies build(@NonNull VariantScope variantScope) {
+    public VariantDependencies build(@NonNull GlobalScope globalScope) {
         ObjectFactory factory = project.getObjects();
 
         final Usage apiUsage = factory.named(Usage.class, Usage.JAVA_API);
@@ -201,9 +201,9 @@ public class VariantDependenciesBuilder {
         compileClasspath.setDescription(
                 "Resolved configuration for compilation for variant: " + variantName);
         compileClasspath.setExtendsFrom(compileClasspaths);
-        if (testedVariantScope != null) {
+        if (testedVariant != null) {
             for (Configuration configuration :
-                    testedVariantScope
+                    testedVariant
                             .getVariantDependencies()
                             .getSourceSetImplementationConfigurations()) {
                 compileClasspath.extendsFrom(configuration);
@@ -236,11 +236,9 @@ public class VariantDependenciesBuilder {
         runtimeClasspath.setDescription(
                 "Resolved configuration for runtime for variant: " + variantName);
         runtimeClasspath.setExtendsFrom(runtimeClasspaths);
-        if (testedVariantScope != null) {
+        if (testedVariant != null) {
             for (Configuration configuration :
-                    testedVariantScope
-                            .getVariantDependencies()
-                            .getSourceSetRuntimeConfigurations()) {
+                    testedVariant.getVariantDependencies().getSourceSetRuntimeConfigurations()) {
                 runtimeClasspath.extendsFrom(configuration);
             }
         }
@@ -252,10 +250,7 @@ public class VariantDependenciesBuilder {
         applyVariantAttributes(runtimeAttributes, buildType, consumptionFlavorMap);
         runtimeAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
 
-        if (variantScope
-                .getGlobalScope()
-                .getProjectOptions()
-                .get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS)) {
+        if (projectOptions.get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS)) {
             // make compileClasspath match runtimeClasspath
             compileClasspath
                     .getIncoming()
@@ -266,9 +261,9 @@ public class VariantDependenciesBuilder {
                                     false));
 
             // if this is a test App, then also synchronize the 2 runtime classpaths
-            if (variantType.isApk() && testedVariantScope != null) {
+            if (variantType.isApk() && testedVariant != null) {
                 Configuration testedRuntimeClasspath =
-                        testedVariantScope.getVariantDependencies().getRuntimeClasspath();
+                        testedVariant.getVariantDependencies().getRuntimeClasspath();
                 runtimeClasspath
                         .getIncoming()
                         .beforeResolve(
@@ -279,10 +274,9 @@ public class VariantDependenciesBuilder {
             }
         }
 
-        if (!variantScope.getGlobalScope().getProjectOptions().get(BooleanOption.USE_ANDROID_X)) {
+        if (!projectOptions.get(BooleanOption.USE_ANDROID_X)) {
             AndroidXDependencyCheck androidXDependencyCheck =
-                    new AndroidXDependencyCheck(
-                            variantScope.getGlobalScope().getDslScope().getIssueReporter());
+                    new AndroidXDependencyCheck(issueReporter);
             compileClasspath.getIncoming().afterResolve(androidXDependencyCheck);
             runtimeClasspath.getIncoming().afterResolve(androidXDependencyCheck);
         }
@@ -517,11 +511,6 @@ public class VariantDependenciesBuilder {
         checkOldConfigurations(configurations, "_" + variantName + "Apk", runtimeClasspathName);
         checkOldConfigurations(configurations, "_" + variantName + "Publish", runtimeClasspathName);
 
-        TestedVariantData testedVariantData = null;
-        if (testedVariantScope != null) {
-            testedVariantData = (TestedVariantData) testedVariantScope.getVariantData();
-        }
-
         return new VariantDependencies(
                 variantName,
                 variantDslInfo.getVariantType(),
@@ -533,7 +522,7 @@ public class VariantDependenciesBuilder {
                 annotationProcessor,
                 reverseMetadataValues,
                 wearApp,
-                testedVariantData,
+                testedVariant,
                 project,
                 projectOptions);
     }

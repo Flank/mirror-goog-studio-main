@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.ComponentProperties
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -124,10 +126,10 @@ abstract class ProguardTask : ProguardConfigurableTask() {
 
     }
 
-    class CreationAction(variantScope: VariantScope, isTestApplication: Boolean) :
-        ProguardConfigurableTask.CreationAction<ProguardTask>(variantScope, isTestApplication) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl, isTestApplication: Boolean) :
+        ProguardConfigurableTask.CreationAction<ProguardTask>(componentProperties, isTestApplication) {
 
-        override val name = variantScope.getTaskName("minify", "WithProguard")
+        override val name = component.computeTaskName("minify", "WithProguard")
         override val type = ProguardTask::class.java
 
         private val keepRules = mutableListOf<String>()

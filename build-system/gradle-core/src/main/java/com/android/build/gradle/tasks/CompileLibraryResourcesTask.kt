@@ -17,11 +17,11 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.FD_RES_VALUES
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.aapt.SharedExecutorResourceCompilationService
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService
@@ -212,10 +212,13 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
         }
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<CompileLibraryResourcesTask>(variantScope) {
+    class CreationAction(
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<CompileLibraryResourcesTask>(
+        componentProperties
+    ) {
         override val name: String
-            get() = variantScope.getTaskName("compile", "LibraryResources")
+            get() = component.computeTaskName("compile", "LibraryResources")
         override val type: Class<CompileLibraryResourcesTask>
             get() = CompileLibraryResourcesTask::class.java
 
@@ -242,7 +245,6 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
             task.aapt2Version = aapt2Version
 
             task.pseudoLocalesEnabled = variantScope
-                .variantData
                 .variantDslInfo
                 .isPseudoLocalesEnabled
 

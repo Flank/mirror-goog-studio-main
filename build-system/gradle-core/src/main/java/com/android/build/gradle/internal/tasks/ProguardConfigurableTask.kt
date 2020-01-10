@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.QualifiedContent.Scope
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.VariantManager
@@ -41,7 +43,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE
-import com.android.build.gradle.internal.variant.BaseVariantData
 import com.google.common.base.Preconditions
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.RegularFileProperty
@@ -99,13 +100,15 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
     abstract class CreationAction<T : ProguardConfigurableTask>
     @JvmOverloads
     internal constructor(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         private val isTestApplication: Boolean = false
-    ) : VariantTaskCreationAction<T>(variantScope) {
+    ) : VariantTaskCreationAction<T>(
+        componentProperties
+    ) {
 
         private val includeFeaturesInScopes: Boolean = variantScope.consumesFeatureJars()
-        protected val variantType: VariantType = variantScope.variantData.type
-        private val testedVariantData: BaseVariantData? = variantScope.testedVariantData
+        protected val variantType: VariantType = componentProperties.variantType
+        private val testedVariant = componentProperties.testedVariant
 
         // Override to make this true in proguard
         protected open val defaultObfuscate: Boolean = false
@@ -209,10 +212,9 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         override fun configure(task: T) {
             super.configure(task)
 
-            if (testedVariantData?.scope?.artifacts?.hasFinalProduct(APK_MAPPING) == true) {
+            if (testedVariant?.artifacts?.hasFinalProduct(APK_MAPPING) == true) {
                 task.testedMappingFile.from(
-                    testedVariantData
-                        .scope
+                    testedVariant
                         .artifacts
                         .getFinalProduct(APK_MAPPING)
                 )
@@ -238,23 +240,22 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
             task.referencedResources.from(referencedResources)
 
-            applyProguardRules(task, task.testedMappingFile, testedVariantData)
+            applyProguardRules(task, task.testedMappingFile, testedVariant)
         }
 
         private fun applyProguardRules(
             task: ProguardConfigurableTask,
             inputProguardMapping: FileCollection?,
-            testedVariantData: BaseVariantData?
+            testedVariant: VariantPropertiesImpl?
         ) {
             when {
-                testedVariantData != null -> {
-                    val testedScope = testedVariantData.scope
+                testedVariant != null -> {
                     // This is an androidTest variant inside an app/library.
                     applyProguardDefaultsForTest(task)
 
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
-                        Callable<Collection<File>> { testedScope.testProguardFiles },
+                        Callable<Collection<File>> { testedVariant.variantScope.testProguardFiles },
                         variantScope.variantDependencies.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,
                             ALL,
@@ -338,7 +339,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             }
             task.configurationFiles.from(configurationFiles)
 
-            if (variantScope.variantData.type.isAar) {
+            if (component.variantType.isAar) {
                 keep("class **.R")
                 keep("class **.R$*")
             }

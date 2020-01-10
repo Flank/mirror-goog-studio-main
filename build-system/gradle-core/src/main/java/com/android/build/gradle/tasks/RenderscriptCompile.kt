@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -244,11 +245,14 @@ abstract class RenderscriptCompile : NdkTask() {
 
     // ----- CreationAction -----
 
-    class CreationAction(scope: VariantScope) :
-        VariantTaskCreationAction<RenderscriptCompile>(scope) {
+    class CreationAction(
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<RenderscriptCompile>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("compile", "Renderscript")
+            get() = component.computeTaskName("compile", "Renderscript")
 
         override val type: Class<RenderscriptCompile>
             get() = RenderscriptCompile::class.java
@@ -257,7 +261,7 @@ abstract class RenderscriptCompile : NdkTask() {
             taskProvider: TaskProvider<out RenderscriptCompile>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.taskContainer.renderscriptCompileTask = taskProvider
+            component.taskContainer.renderscriptCompileTask = taskProvider
             variantScope
                 .artifacts
                 .producesDir(
@@ -314,7 +318,7 @@ abstract class RenderscriptCompile : NdkTask() {
                 globalScope.sdkComponents.buildToolInfoProvider
 
             if (variantDslInfo.variantType.isTestComponent) {
-                task.dependsOn(scope.taskContainer.processManifestTask!!)
+                task.dependsOn(component.taskContainer.processManifestTask!!)
             }
         }
     }

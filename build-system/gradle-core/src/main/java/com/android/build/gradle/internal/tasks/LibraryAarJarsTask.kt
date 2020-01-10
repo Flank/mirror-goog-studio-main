@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
@@ -278,11 +279,13 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         private val excludeListProvider: Supplier<List<String>> =  Supplier { listOf<String>() }
-    ) : VariantTaskCreationAction<LibraryAarJarsTask>(variantScope) {
+    ) : VariantTaskCreationAction<LibraryAarJarsTask>(
+        componentProperties
+    ) {
         override val type = LibraryAarJarsTask::class.java
-        override val name =  variantScope.getTaskName("sync", "LibJars")
+        override val name =  component.computeTaskName("sync", "LibJars")
 
         override fun handleProvider(taskProvider: TaskProvider<out LibraryAarJarsTask>) {
             super.handleProvider(taskProvider)

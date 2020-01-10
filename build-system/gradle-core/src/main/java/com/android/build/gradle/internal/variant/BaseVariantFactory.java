@@ -24,9 +24,13 @@ import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.errors.IssueReporter;
@@ -65,31 +69,69 @@ public abstract class BaseVariantFactory implements VariantFactory {
     @NonNull
     @Override
     public UnitTestPropertiesImpl createUnitTestProperties(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope) {
-        return globalScope
-                .getDslScope()
-                .getObjectFactory()
-                .newInstance(
-                        UnitTestPropertiesImpl.class,
-                        globalScope.getDslScope(),
-                        variantScope,
-                        variantScope.getArtifacts().getOperations(),
-                        componentIdentity);
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantScope variantScope,
+            @NonNull TestVariantData variantData,
+            @NonNull VariantPropertiesImpl testedVariantProperties) {
+        UnitTestPropertiesImpl unitTestProperties =
+                globalScope
+                        .getDslScope()
+                        .getObjectFactory()
+                        .newInstance(
+                                UnitTestPropertiesImpl.class,
+                                componentIdentity,
+                                variantDslInfo,
+                                variantDependencies,
+                                variantSources,
+                                paths,
+                                artifacts,
+                                variantScope,
+                                variantData,
+                                testedVariantProperties,
+                                globalScope.getDslScope());
+
+        unitTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
+
+        return unitTestProperties;
     }
 
     @NonNull
     @Override
     public AndroidTestPropertiesImpl createAndroidTestProperties(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope) {
-        return globalScope
-                .getDslScope()
-                .getObjectFactory()
-                .newInstance(
-                        AndroidTestPropertiesImpl.class,
-                        globalScope.getDslScope(),
-                        variantScope,
-                        variantScope.getArtifacts().getOperations(),
-                        componentIdentity);
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantScope variantScope,
+            @NonNull TestVariantData variantData,
+            @NonNull VariantPropertiesImpl testedVariantProperties) {
+        AndroidTestPropertiesImpl androidTestProperties =
+                globalScope
+                        .getDslScope()
+                        .getObjectFactory()
+                        .newInstance(
+                                AndroidTestPropertiesImpl.class,
+                                componentIdentity,
+                                variantDslInfo,
+                                variantDependencies,
+                                variantSources,
+                                paths,
+                                artifacts,
+                                variantScope,
+                                variantData,
+                                testedVariantProperties,
+                                globalScope.getDslScope());
+
+        androidTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
+
+        return androidTestProperties;
     }
 
     @Override

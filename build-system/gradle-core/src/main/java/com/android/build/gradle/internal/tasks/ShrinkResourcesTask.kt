@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType
@@ -147,10 +148,12 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<ShrinkResourcesTask>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<ShrinkResourcesTask>(
+        componentProperties
+    ) {
         override val type = ShrinkResourcesTask::class.java
-        override val name = variantScope.getTaskName("shrink", "Res")
+        override val name = component.computeTaskName("shrink", "Res")
 
         private val classes = variantScope.transformManager
             .getPipelineOutputAsFileCollection { contentTypes, scopes ->
@@ -171,10 +174,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         }
 
         override fun configure(task: ShrinkResourcesTask) {
-
             super.configure(task)
-
-            val variantData = variantScope.variantData
 
             val artifacts = variantScope.artifacts
 
@@ -213,11 +213,11 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions
 
-            task.buildTypeName = variantData.variantDslInfo.componentIdentity.buildType
+            task.buildTypeName = variantScope.variantDslInfo.componentIdentity.buildType
 
-            task.variantTypeName.setDisallowChanges(variantData.type.name)
+            task.variantTypeName.setDisallowChanges(component.variantType.name)
 
-            task.debuggableBuildType.setDisallowChanges(variantData.variantDslInfo.isDebuggable)
+            task.debuggableBuildType.setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
 
             task.enableRTxtResourceShrinking.set(variantScope
                 .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING])

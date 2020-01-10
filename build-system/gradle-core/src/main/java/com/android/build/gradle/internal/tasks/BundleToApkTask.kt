@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -112,11 +113,13 @@ abstract class BundleToApkTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<BundleToApkTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<BundleToApkTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("makeApkFromBundleFor")
+            get() = component.computeTaskName("makeApkFromBundleFor")
         override val type: Class<BundleToApkTask>
             get() = BundleToApkTask::class.java
 
@@ -138,7 +141,7 @@ abstract class BundleToApkTask : NonIncrementalTask() {
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
-            task.signingConfig = SigningConfigProvider.create(variantScope)
+            task.signingConfig = SigningConfigProvider.create(component)
         }
     }
 }

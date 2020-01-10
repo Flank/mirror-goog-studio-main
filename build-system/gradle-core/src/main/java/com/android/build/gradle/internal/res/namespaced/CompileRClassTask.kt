@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_SOURCES
@@ -32,13 +33,13 @@ import org.gradle.api.tasks.compile.JavaCompile
  *
  * In the future, this might not call javac at all, but it needs to be profiled first.
  */
-class CompileRClassTaskCreationAction(private val variantScope: VariantScope) :
+class CompileRClassTaskCreationAction(private val component: ComponentPropertiesImpl) :
     TaskCreationAction<JavaCompile>() {
 
-    private val output = variantScope.globalScope.project.objects.directoryProperty()
+    private val output = component.globalScope.project.objects.directoryProperty()
 
     override val name: String
-        get() = variantScope.getTaskName("compile", "FinalRClass")
+        get() = component.computeTaskName("compile", "FinalRClass")
 
     override val type: Class<JavaCompile>
         get() = JavaCompile::class.java
@@ -46,7 +47,7 @@ class CompileRClassTaskCreationAction(private val variantScope: VariantScope) :
     override fun handleProvider(taskProvider: TaskProvider<out JavaCompile>) {
         super.handleProvider(taskProvider)
 
-        variantScope.artifacts.producesDir(
+        component.artifacts.producesDir(
             RUNTIME_R_CLASS_CLASSES,
             taskProvider,
             { output },
@@ -55,12 +56,12 @@ class CompileRClassTaskCreationAction(private val variantScope: VariantScope) :
     }
 
     override fun configure(task: JavaCompile) {
-        val taskContainer: MutableTaskContainer = variantScope.taskContainer
+        val taskContainer: MutableTaskContainer = component.taskContainer
         task.dependsOn(taskContainer.preBuildTask)
-        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, variantScope.name)
+        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, component.name)
 
         task.classpath = task.project.files()
-        task.source(variantScope.artifacts.getFinalProductAsFileCollection(RUNTIME_R_CLASS_SOURCES))
+        task.source(component.artifacts.getFinalProductAsFileCollection(RUNTIME_R_CLASS_SOURCES))
         task.setDestinationDir(output.asFile)
 
         // manually declare our output directory as a Task output since it's not annotated as

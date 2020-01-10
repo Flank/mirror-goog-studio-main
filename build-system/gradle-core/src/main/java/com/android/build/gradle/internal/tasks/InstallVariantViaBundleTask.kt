@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -182,18 +183,20 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
         }
      }
 
-    internal class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<InstallVariantViaBundleTask>(variantScope) {
+    internal class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<InstallVariantViaBundleTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("install")
+            get() = component.computeTaskName("install")
         override val type: Class<InstallVariantViaBundleTask>
             get() = InstallVariantViaBundleTask::class.java
 
         override fun configure(task: InstallVariantViaBundleTask) {
             super.configure(task)
 
-            task.description = "Installs the " + variantScope.variantData.description + ""
+            task.description = "Installs the " + component.variantData.description + ""
             task.group = TaskManager.INSTALL_GROUP
 
             variantScope.variantDslInfo.minSdkVersion.let {
@@ -216,7 +219,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out InstallVariantViaBundleTask>) {
             super.handleProvider(taskProvider)
-            variantScope.taskContainer.installTask = taskProvider
+            component.taskContainer.installTask = taskProvider
         }
     }
 }

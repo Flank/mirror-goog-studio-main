@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.KeymaestroHybridEncrypter
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.tools.build.libraries.metadata.AppDependencies
 import org.gradle.api.tasks.OutputFile
 import com.google.common.io.BaseEncoding
 import java.io.FileOutputStream
@@ -29,9 +29,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
-import java.io.FileInputStream
 import java.nio.file.Files;
 import java.util.zip.DeflaterOutputStream
 import kotlin.random.Random
@@ -78,9 +76,11 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
   }
 
   class CreationAction(
-    variantScope: VariantScope
-  ) : VariantTaskCreationAction<SdkDependencyDataGeneratorTask>(variantScope) {
-    override val name: String = variantScope.getTaskName("sdk", "DependencyData")
+    componentProperties: ComponentPropertiesImpl
+  ) : VariantTaskCreationAction<SdkDependencyDataGeneratorTask>(
+      componentProperties
+  ) {
+    override val name: String = component.computeTaskName("sdk", "DependencyData")
     override val type: Class<SdkDependencyDataGeneratorTask> = SdkDependencyDataGeneratorTask::class.java
 
     override fun handleProvider(taskProvider: TaskProvider<out SdkDependencyDataGeneratorTask>) {

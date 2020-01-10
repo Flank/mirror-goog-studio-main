@@ -34,13 +34,15 @@ import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.ApkData;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
@@ -87,43 +89,63 @@ public class ApplicationVariantFactory extends BaseVariantFactory {
     @NonNull
     @Override
     public VariantPropertiesImpl createVariantPropertiesObject(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope) {
-        return globalScope
-                .getDslScope()
-                .getObjectFactory()
-                .newInstance(
-                        ApplicationVariantPropertiesImpl.class,
-                        globalScope.getDslScope(),
-                        variantScope,
-                        variantScope.getArtifacts().getOperations(),
-                        componentIdentity);
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantScope variantScope,
+            @NonNull BaseVariantData variantData) {
+        ApplicationVariantPropertiesImpl variantProperties =
+                globalScope
+                        .getDslScope()
+                        .getObjectFactory()
+                        .newInstance(
+                                ApplicationVariantPropertiesImpl.class,
+                                componentIdentity,
+                                variantDslInfo,
+                                variantDependencies,
+                                variantSources,
+                                paths,
+                                artifacts,
+                                variantScope,
+                                variantData,
+                                globalScope.getDslScope());
+
+        computeOutputs(variantProperties, (ApplicationVariantData) variantData, true);
+
+        return variantProperties;
     }
 
     @Override
     @NonNull
     public BaseVariantData createVariantData(
-            @NonNull VariantScope variantScope,
-            @NonNull VariantDslInfoImpl variantDslInfo,
-            @NonNull VariantImpl publicVariantApi,
-            @NonNull VariantPropertiesImpl publicVariantPropertiesApi,
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
-            @NonNull TaskManager taskManager) {
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull GlobalScope globalScope,
+            @NonNull TaskManager taskManager,
+            @NonNull MutableTaskContainer taskContainer) {
         ApplicationVariantData variant =
                 new ApplicationVariantData(
+                        componentIdentity,
+                        variantDslInfo,
+                        variantDependencies,
+                        variantSources,
+                        paths,
+                        artifacts,
                         globalScope,
                         taskManager,
-                        variantScope,
-                        variantDslInfo,
-                        publicVariantApi,
-                        publicVariantPropertiesApi,
-                        variantSources);
-        computeOutputs(variantDslInfo, variant, true);
-
+                        taskContainer);
         return variant;
     }
 
-    protected void computeOutputs(
-            @NonNull VariantDslInfo variantDslInfo,
+    private void computeOutputs(
+            @NonNull VariantPropertiesImpl variantProperties,
             @NonNull ApplicationVariantData variant,
             boolean includeMainApk) {
         BaseExtension extension = globalScope.getExtension();
@@ -132,7 +154,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory {
         Set<String> densities = variant.getFilters(OutputFile.FilterType.DENSITY);
         Set<String> abis = variant.getFilters(OutputFile.FilterType.ABI);
 
-        checkSplitsConflicts(variant, abis);
+        checkSplitsConflicts(variantProperties.getVariantDslInfo(), variant, abis);
 
         if (!densities.isEmpty()) {
             variant.setCompatibleScreens(extension.getSplits().getDensity()
@@ -142,14 +164,10 @@ public class ApplicationVariantFactory extends BaseVariantFactory {
         OutputFactory outputFactory = variant.getOutputFactory();
         populateMultiApkOutputs(abis, densities, outputFactory, includeMainApk);
 
-        outputFactory
-                .finalizeApkDataList()
-                .forEach(
-                        apkData ->
-                                variant.getPublicVariantPropertiesApi().addVariantOutput(apkData));
+        outputFactory.finalizeApkDataList().forEach(variantProperties::addVariantOutput);
 
         restrictEnabledOutputs(
-                variantDslInfo, variant.getPublicVariantPropertiesApi().getOutputs());
+                variantProperties.getVariantDslInfo(), variantProperties.getOutputs());
     }
 
     private void populateMultiApkOutputs(
@@ -202,7 +220,9 @@ public class ApplicationVariantFactory extends BaseVariantFactory {
     }
 
     private void checkSplitsConflicts(
-            @NonNull ApplicationVariantData variantData, @NonNull Set<String> abiFilters) {
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull ApplicationVariantData variantData,
+            @NonNull Set<String> abiFilters) {
 
         // if we don't have any ABI splits, nothing is conflicting.
         if (abiFilters.isEmpty()) {
@@ -215,8 +235,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory {
         }
 
         // check supportedAbis in Ndk configuration versus ABI splits.
-        Set<String> ndkConfigAbiFilters =
-                variantData.getVariantDslInfo().getNdkConfig().getAbiFilters();
+        Set<String> ndkConfigAbiFilters = variantDslInfo.getNdkConfig().getAbiFilters();
         if (ndkConfigAbiFilters == null || ndkConfigAbiFilters.isEmpty()) {
             return;
         }

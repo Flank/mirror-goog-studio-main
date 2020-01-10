@@ -7,7 +7,6 @@ import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
@@ -64,7 +63,7 @@ abstract class AbstractAppExtension(
     val applicationVariants: DomainObjectSet<ApplicationVariant> =
         dslScope.objectFactory.domainObjectSet(ApplicationVariant::class.java)
 
-    override fun addVariant(variant: BaseVariant, variantScope: VariantScope) {
+    override fun addVariant(variant: BaseVariant) {
         applicationVariants.add(variant as ApplicationVariant)
     }
 }

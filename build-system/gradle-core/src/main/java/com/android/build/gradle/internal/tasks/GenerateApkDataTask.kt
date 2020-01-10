@@ -24,6 +24,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
+import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.ApkVariantData
@@ -219,46 +220,47 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
     internal class CreationAction(
         private val componentProperties: ComponentPropertiesImpl,
         private val apkFileCollection: FileCollection?
-    ) : VariantTaskCreationAction<GenerateApkDataTask>(componentProperties.variantScope) {
+    ) : VariantTaskCreationAction<GenerateApkDataTask>(
+        componentProperties
+    ) {
 
-        override val name: String = variantScope.getTaskName("handle", "MicroApk")
+        override val name: String = component.computeTaskName("handle", "MicroApk")
 
         override val type: Class<GenerateApkDataTask> = GenerateApkDataTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out GenerateApkDataTask>) {
             super.handleProvider(taskProvider)
-            variantScope.taskContainer.microApkTask = taskProvider
-            variantScope.taskContainer.generateApkDataTask = taskProvider
+            component.taskContainer.microApkTask = taskProvider
+            component.taskContainer.generateApkDataTask = taskProvider
         }
 
         override fun configure(task: GenerateApkDataTask) {
             super.configure(task)
 
-            val scope = variantScope
+            val variantDslInfo = component.variantDslInfo
 
-            val variantData = scope.variantData as ApkVariantData
-            val variantDslInfo = variantData.variantDslInfo
+            val paths = component.paths
 
-            task.resOutputDir.set(scope.paths.microApkResDirectory)
+            task.resOutputDir.set(paths.microApkResDirectory)
             task.resOutputDir.disallowChanges()
 
-            if (apkFileCollection != null) {
-                task.apkFileCollection.from(apkFileCollection)
+            apkFileCollection?.let {
+                task.apkFileCollection.from(it)
             }
             task.apkFileCollection.disallowChanges()
 
             task.hasDependency.setDisallowChanges(apkFileCollection != null)
 
-            task.manifestFile.set(scope.paths.microApkManifestFile)
+            task.manifestFile.set(paths.microApkManifestFile)
             task.manifestFile.disallowChanges()
 
-            task.mainPkgName.setDisallowChanges(componentProperties.applicationId)
+            task.mainPkgName.setDisallowChanges(component.applicationId)
 
             task.minSdkVersion.setDisallowChanges(variantDslInfo.minSdkVersion.apiLevel)
 
             task.targetSdkVersion.setDisallowChanges(variantDslInfo.targetSdkVersion.apiLevel)
 
-            val aapt2AndVersion = getAapt2FromMavenAndVersion(scope.globalScope)
+            val aapt2AndVersion = getAapt2FromMavenAndVersion(component.globalScope)
             task.aapt2Executable.from(aapt2AndVersion.first)
             task.aapt2Executable.disallowChanges()
 

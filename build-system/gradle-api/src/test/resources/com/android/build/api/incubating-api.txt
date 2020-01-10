@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-9c45ae7f2279e5115fc6bc9464114f3268c737c74e19babaa32f3193e8ba4fe1
+dbf90ff1f6f145009defb05c5c940bf5703cb32cb8d9a0a535defe4d60143629
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -53,7 +53,7 @@ com.android.build.api.artifact.ReplaceRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.TransformRequest
 com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.component.ActionableComponentObject
-com.android.build.api.component.AndroidTestProperties implements com.android.build.api.component.ComponentProperties
+com.android.build.api.component.AndroidTestProperties implements com.android.build.api.component.TestComponentProperties
 com.android.build.api.component.BuildTypedComponentActionRegistrar
 com.android.build.api.component.BuildTypedComponentActionRegistrar.withFlavor: com.android.build.api.component.BuildTypedComponentActionRegistrar<ComponentT> (kotlin.Pair<java.lang.String, java.lang.String>)
 com.android.build.api.component.BuildTypedComponentActionRegistrar.withFlavor: void (kotlin.Pair<java.lang.String, java.lang.String>, kotlin.jvm.functions.Function1<? super ComponentT, kotlin.Unit>)
@@ -88,7 +88,9 @@ com.android.build.api.component.GenericFilteredComponentActionRegistrar implemen
 com.android.build.api.component.GenericFilteredComponentActionRegistrar.withType: com.android.build.api.component.FilteredComponentActionRegistrar<NewTypeT> (java.lang.Class<NewTypeT>)
 com.android.build.api.component.GenericFilteredComponentActionRegistrar.withType: void (java.lang.Class<NewTypeT>, kotlin.jvm.functions.Function1<? super NewTypeT, kotlin.Unit>)
 com.android.build.api.component.GenericFilteredComponentActionRegistrar.withType: void (java.lang.Class<NewTypeT>, org.gradle.api.Action<NewTypeT>)
-com.android.build.api.component.UnitTestProperties implements com.android.build.api.component.ComponentProperties
+com.android.build.api.component.TestComponentProperties implements com.android.build.api.component.ComponentProperties
+com.android.build.api.component.TestComponentProperties.getTestedVariant: com.android.build.api.variant.VariantProperties ()
+com.android.build.api.component.UnitTestProperties implements com.android.build.api.component.TestComponentProperties
 com.android.build.api.dsl.AaptOptions
 com.android.build.api.dsl.AdbOptions
 com.android.build.api.dsl.ApkExtension

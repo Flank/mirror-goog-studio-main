@@ -41,13 +41,11 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
 import com.google.common.collect.Lists
 import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
 import org.gradle.api.internal.DefaultDomainObjectSet
 import java.util.Collections
 
@@ -139,7 +137,7 @@ open class LibraryExtension(
     val libraryVariants: DefaultDomainObjectSet<LibraryVariant>
         get() = libraryVariantList as DefaultDomainObjectSet<LibraryVariant>
 
-    override fun addVariant(variant: BaseVariant, variantScope: VariantScope) {
+    override fun addVariant(variant: BaseVariant) {
         libraryVariantList.add(variant as LibraryVariant)
     }
 

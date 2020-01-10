@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.tools.build.libraries.metadata.AppDependencies
 import com.android.tools.build.libraries.metadata.Library
 import com.android.tools.build.libraries.metadata.LibraryDependencies
@@ -39,7 +39,6 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -52,7 +51,6 @@ import java.security.MessageDigest
 import java.util.Dictionary
 import java.util.Hashtable
 import java.util.LinkedList
-import java.util.function.Supplier
 import javax.inject.Inject
 
 /**
@@ -209,9 +207,11 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
 
 
     class CreationAction(
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<PerModuleReportDependenciesTask>(variantScope) {
-        override val name: String = variantScope.getTaskName("collect", "Dependencies")
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<PerModuleReportDependenciesTask>(
+        componentProperties
+    ) {
+        override val name: String = component.computeTaskName("collect", "Dependencies")
         override val type: Class<PerModuleReportDependenciesTask> = PerModuleReportDependenciesTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out PerModuleReportDependenciesTask>) {

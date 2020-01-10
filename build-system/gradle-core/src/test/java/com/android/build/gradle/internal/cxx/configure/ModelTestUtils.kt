@@ -17,6 +17,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.Abi
@@ -53,9 +54,11 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val sdkComponents = Mockito.mock(SdkComponents::class.java)
     val ndkHandler = Mockito.mock(NdkHandler::class.java)
     val ndkPlatform = NdkInstallStatus.Valid(Mockito.mock(NdkPlatform::class.java))
+    val componentPropertiesImpl = Mockito.mock(ComponentPropertiesImpl::class.java)
     val baseVariantData = Mockito.mock(BaseVariantData::class.java)
     val variantScope = Mockito.mock(VariantScope::class.java)
-    Mockito.doReturn(baseVariantData).`when`(variantScope).variantData
+    Mockito.doReturn(variantScope).`when`(componentPropertiesImpl).variantScope
+    Mockito.doReturn(baseVariantData).`when`(componentPropertiesImpl).variantData
     projectParentFolder.create()
     val projectDir = projectParentFolder.newFolder("project")
     val moduleDir = join(projectDir, "module")
@@ -83,13 +86,13 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(ndkPlatform).`when`(ndkHandler).ndkPlatform
     Mockito.doReturn(buildDir).`when`(project).buildDir
     Mockito.doReturn(ndkFolder).`when`(ndkPlatform.getOrThrow()).ndkDirectory
-    Mockito.doReturn("debug").`when`(baseVariantData).name
+    Mockito.doReturn("debug").`when`(componentPropertiesImpl).name
     Mockito.doReturn(false).`when`(projectOptions).get(BooleanOption.ENABLE_PREFAB)
     val module = tryCreateCxxModuleModel(global)!!
-    val variant = createCxxVariantModel(module, variantScope)
+    val variant = createCxxVariantModel(module, componentPropertiesImpl)
     return createCxxAbiModel(
         variant,
         Abi.X86,
         global,
-        baseVariantData)
+        componentPropertiesImpl)
 }

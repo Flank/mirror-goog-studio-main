@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.utils.DESUGAR_LIB_DEX
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
@@ -94,17 +95,17 @@ data class DesugarLibConfiguration(
     }
 }
 
-fun getDesugarLibConfigurations(scopes: Collection<VariantScope>): Set<DesugarLibConfiguration> {
-    return scopes
-        .filter { it.isCoreLibraryDesugaringEnabled }
+fun getDesugarLibConfigurations(components: Collection<ComponentPropertiesImpl>): Set<DesugarLibConfiguration> {
+    return components
+        .filter { it.variantScope.isCoreLibraryDesugaringEnabled }
         .map { getDesugarLibConfiguration(it) }
         .toSet()
 }
 
-private fun getDesugarLibConfiguration(scope: VariantScope): DesugarLibConfiguration {
-    val libConfiguration = getDesugarLibConfig(scope.globalScope.project)
-    val bootClasspath = scope.bootClasspath.filter { it.name == SdkConstants.FN_FRAMEWORK_LIBRARY }
-    val minSdkVersion = scope.variantDslInfo.minSdkVersionWithTargetDeviceApi.apiLevel
+private fun getDesugarLibConfiguration(component: ComponentPropertiesImpl): DesugarLibConfiguration {
+    val libConfiguration = getDesugarLibConfig(component.globalScope.project)
+    val bootClasspath = component.variantScope.bootClasspath.filter { it.name == SdkConstants.FN_FRAMEWORK_LIBRARY }
+    val minSdkVersion = component.variantDslInfo.minSdkVersionWithTargetDeviceApi.apiLevel
 
     return DesugarLibConfiguration(libConfiguration, bootClasspath, minSdkVersion)
 }

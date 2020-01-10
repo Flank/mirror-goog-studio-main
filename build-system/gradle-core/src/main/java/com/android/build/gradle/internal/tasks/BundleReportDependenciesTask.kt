@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -124,9 +125,11 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
 
 
     class CreationAction(
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<BundleReportDependenciesTask>(variantScope) {
-        override val name: String = variantScope.getTaskName("configure", "Dependencies")
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<BundleReportDependenciesTask>(
+        componentProperties
+    ) {
+        override val name: String = component.computeTaskName("configure", "Dependencies")
         override val type: Class<BundleReportDependenciesTask> = BundleReportDependenciesTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out BundleReportDependenciesTask>) {

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -104,11 +105,13 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
     }
 
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<ParseIntegrityConfigTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<ParseIntegrityConfigTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("parse", "IntegrityConfig")
+            get() = component.computeTaskName("parse", "IntegrityConfig")
 
         override val type: Class<ParseIntegrityConfigTask>
             get() = ParseIntegrityConfigTask::class.java
@@ -129,7 +132,7 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
         }
 
         private fun getIntegrityConfigFolder(): Provider<out Directory> =
-            (variantScope.globalScope.extension as BaseAppModuleExtension).bundle.integrityConfigDir
+            (component.globalScope.extension as BaseAppModuleExtension).bundle.integrityConfigDir
     }
 }
 

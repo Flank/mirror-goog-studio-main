@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_CLASSES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES
@@ -91,10 +92,12 @@ abstract class DexSplitterTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<DexSplitterTask>(variantScope)  {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<DexSplitterTask>(
+        componentProperties
+    )  {
         override val type = DexSplitterTask::class.java
-        override val name =  variantScope.getTaskName("split", "Dex")
+        override val name =  component.computeTaskName("split", "Dex")
 
         override fun handleProvider(taskProvider: TaskProvider<out DexSplitterTask>) {
             super.handleProvider(taskProvider)

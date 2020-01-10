@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.AaptOptions
-import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.AdbOptions
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.ComposeOptions
@@ -51,8 +50,8 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
+
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.LibraryRequest
 import com.android.builder.core.ToolsRevisionUtils
@@ -67,7 +66,6 @@ import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Incubating
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
@@ -500,7 +498,7 @@ abstract class BaseExtension protected constructor(
         _resourcePrefix = prefix
     }
 
-    abstract fun addVariant(variant: BaseVariant, variantScope: VariantScope)
+    abstract fun addVariant(variant: BaseVariant)
 
     fun registerArtifactType(name: String, isTest: Boolean, artifactType: Int) {
         extraModelInfo.registerArtifactType(name, isTest, artifactType)

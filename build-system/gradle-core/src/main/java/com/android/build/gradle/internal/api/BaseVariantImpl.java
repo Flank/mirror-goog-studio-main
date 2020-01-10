@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.attributes.ProductFlavorAttr;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
@@ -33,7 +34,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.tasks.AidlCompile;
@@ -85,6 +85,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public static final String USE_PROPERTIES_DEPRECATION_URL =
             "https://d.android.com/r/tools/use-properties";
 
+    @NonNull private final ComponentPropertiesImpl componentProperties;
     @NonNull private final ObjectFactory objectFactory;
 
     @NonNull protected final ReadOnlyObjectProvider readOnlyObjectProvider;
@@ -92,9 +93,11 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull protected final NamedDomainObjectContainer<BaseVariantOutput> outputs;
 
     BaseVariantImpl(
+            @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull ObjectFactory objectFactory,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
+        this.componentProperties = componentProperties;
         this.objectFactory = objectFactory;
         this.readOnlyObjectProvider = readOnlyObjectProvider;
         this.outputs = outputs;
@@ -191,7 +194,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
                 return getVariantData().getJavaSources();
             default:
                 getVariantData()
-                        .getScope()
                         .getGlobalScope()
                         .getDslScope()
                         .getIssueReporter()
@@ -206,31 +208,28 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     @Override
     public Configuration getCompileConfiguration() {
-        return getVariantData().getVariantDependency().getCompileClasspath();
+        return getVariantData().getVariantDependencies().getCompileClasspath();
     }
 
     @NonNull
     @Override
     public Configuration getRuntimeConfiguration() {
-        return getVariantData().getVariantDependency().getRuntimeClasspath();
+        return getVariantData().getVariantDependencies().getRuntimeClasspath();
     }
 
     @NonNull
     @Override
     public Configuration getAnnotationProcessorConfiguration() {
-        return getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
+        return getVariantData().getVariantDependencies().getAnnotationProcessorConfiguration();
     }
 
     @Override
     @NonNull
     public String getApplicationId() {
-        BaseVariantData variantData = getVariantData();
-
         // this getter cannot work for dynamic features as the applicationId comes from somewhere
         // else and cannot be known at config time.
-        if (variantData.getType().isDynamicFeature()) {
-            variantData
-                    .getScope()
+        if (componentProperties.getVariantType().isDynamicFeature()) {
+            componentProperties
                     .getGlobalScope()
                     .getDslScope()
                     .getIssueReporter()
@@ -239,7 +238,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                             "variant.getApplicationId() is not supported by dynamic-feature plugins as it cannot handle delayed setting of the application ID. Please use getApplicationIdTextResource() instead.");
         }
 
-        return variantData.getVariantDslInfo().getApplicationId();
+        return componentProperties.getVariantDslInfo().getApplicationId();
     }
 
     @Override
@@ -253,7 +252,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public Task getPreBuild() {
         BaseVariantData variantData = getVariantData();
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -277,7 +275,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public Task getCheckManifest() {
         BaseVariantData variantData = getVariantData();
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -302,7 +299,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     public AidlCompile getAidlCompile() {
         BaseVariantData variantData = getVariantData();
-        GlobalScope globalScope = variantData.getScope().getGlobalScope();
+        GlobalScope globalScope = variantData.getGlobalScope();
 
         if (!globalScope.getBuildFeatures().getAidl()) {
             globalScope
@@ -328,7 +325,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public TaskProvider<AidlCompile> getAidlCompileProvider() {
-        final GlobalScope globalScope = getVariantData().getScope().getGlobalScope();
+        final GlobalScope globalScope = getVariantData().getGlobalScope();
 
         if (!globalScope.getBuildFeatures().getAidl()) {
             globalScope
@@ -348,7 +345,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     public RenderscriptCompile getRenderscriptCompile() {
         BaseVariantData variantData = getVariantData();
-        GlobalScope globalScope = variantData.getScope().getGlobalScope();
+        GlobalScope globalScope = variantData.getGlobalScope();
 
         if (!globalScope.getBuildFeatures().getRenderScript()) {
             globalScope
@@ -374,7 +371,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider() {
-        final GlobalScope globalScope = getVariantData().getScope().getGlobalScope();
+        final GlobalScope globalScope = getVariantData().getGlobalScope();
         if (!globalScope.getBuildFeatures().getRenderScript()) {
             globalScope
                     .getDslScope()
@@ -394,7 +391,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public MergeResources getMergeResources() {
         BaseVariantData variantData = getVariantData();
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -418,7 +414,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public MergeSourceSetFolders getMergeAssets() {
         BaseVariantData variantData = getVariantData();
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -442,7 +437,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public GenerateBuildConfig getGenerateBuildConfig() {
         BaseVariantData variantData = getVariantData();
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -467,7 +461,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public JavaCompile getJavaCompile() {
         BaseVariantData variantData = getVariantData();
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -491,7 +484,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public Task getJavaCompiler() {
         BaseVariantData variantData = getVariantData();
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -508,7 +500,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public Collection<ExternalNativeBuildTask> getExternalNativeBuildTasks() {
         BaseVariantData variantData = getVariantData();
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -551,7 +542,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public File getMappingFile() {
         BaseVariantData variantData = getVariantData();
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -560,7 +550,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getMappingFile()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        BuildArtifactsHolder artifacts = getVariantData().getScope().getArtifacts();
+        BuildArtifactsHolder artifacts = getVariantData().getArtifacts();
         if (artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE)) {
             //     bypass the configuration time resolution check as some calls this API during
             // configuration.
@@ -576,7 +566,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public Provider<FileCollection> getMappingFileProvider() {
         return getVariantData()
-                .getScope()
                 .getArtifacts()
                 .getFinalProductAsFileCollection(InternalArtifactType.APK_MAPPING.INSTANCE);
     }
@@ -586,7 +575,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public Sync getProcessJavaResources() {
         BaseVariantData variantData = getVariantData();
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -612,7 +600,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public Task getAssemble() {
         BaseVariantData variantData = getVariantData();
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -692,23 +679,19 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     @Override
     public FileCollection getCompileClasspath(@Nullable Object generatorKey) {
-        return getVariantData()
-                .getScope()
-                .getJavaClasspath(
-                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                        AndroidArtifacts.ArtifactType.CLASSES_JAR,
-                        generatorKey);
+        return componentProperties.getJavaClasspath(
+                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                AndroidArtifacts.ArtifactType.CLASSES_JAR,
+                generatorKey);
     }
 
     @NonNull
     @Override
     public ArtifactCollection getCompileClasspathArtifacts(@Nullable Object generatorKey) {
-        return getVariantData()
-                .getScope()
-                .getJavaClasspathArtifacts(
-                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                        AndroidArtifacts.ArtifactType.CLASSES_JAR,
-                        generatorKey);
+        return componentProperties.getJavaClasspathArtifacts(
+                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                AndroidArtifacts.ArtifactType.CLASSES_JAR,
+                generatorKey);
     }
 
     @Override
@@ -743,7 +726,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     private void _missingDimensionStrategy(
             @NonNull String dimension, @NonNull ImmutableList<String> alternatedValues) {
-        final VariantScope variantScope = getVariantData().getScope();
 
         // First, setup the requested value, which isn't the actual requested value, but
         // the variant name, modified
@@ -754,7 +736,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         final ProductFlavorAttr attributeValue =
                 objectFactory.named(ProductFlavorAttr.class, requestedValue);
 
-        VariantDependencies dependencies = variantScope.getVariantDependencies();
+        VariantDependencies dependencies = getVariantData().getVariantDependencies();
         dependencies.getCompileClasspath().getAttributes().attribute(attributeKey, attributeValue);
         dependencies.getRuntimeClasspath().getAttributes().attribute(attributeKey, attributeValue);
         dependencies
@@ -764,7 +746,11 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
         // then add the fallbacks which contain the actual requested value
         AttributesSchema schema =
-                variantScope.getGlobalScope().getProject().getDependencies().getAttributesSchema();
+                getVariantData()
+                        .getGlobalScope()
+                        .getProject()
+                        .getDependencies()
+                        .getAttributesSchema();
 
         DependencyConfigurator.addFlavorStrategy(
                 schema, dimension, ImmutableMap.of(requestedValue, alternatedValues));
@@ -788,7 +774,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     @Override
     public void register(Task task) {
-        MutableTaskContainer taskContainer = getVariantData().getScope().getTaskContainer();
+        MutableTaskContainer taskContainer = getVariantData().getTaskContainer();
         TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), task);
         TaskProvider<? extends Task> bundleTask = taskContainer.getBundleTask();
         if (bundleTask != null) {

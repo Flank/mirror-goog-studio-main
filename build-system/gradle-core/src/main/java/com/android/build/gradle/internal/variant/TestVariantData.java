@@ -16,13 +16,14 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentImpl;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.ComponentIdentity;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.builder.core.VariantType;
 import com.android.utils.StringHelper;
 
@@ -35,27 +36,27 @@ public class TestVariantData extends ApkVariantData {
     private final TestedVariantData testedVariantData;
 
     public TestVariantData(
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull TestedVariantData testedVariantData,
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull VariantScope variantScope,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull ComponentImpl publicVariantApi,
-            @NonNull ComponentPropertiesImpl publicVariantPropertiesApi,
-            @NonNull VariantSources variantSources,
-            @NonNull TestedVariantData testedVariantData) {
+            @NonNull MutableTaskContainer taskContainer) {
         super(
+                componentIdentity,
+                variantDslInfo,
+                variantDependencies,
+                variantSources,
+                paths,
+                artifacts,
                 globalScope,
                 taskManager,
-                variantScope,
-                variantDslInfo,
-                publicVariantApi,
-                publicVariantPropertiesApi,
-                variantSources);
+                taskContainer);
         this.testedVariantData = testedVariantData;
-
-        // create default output
-
-        getPublicVariantPropertiesApi().addVariantOutput(getOutputFactory().addMainApk());
     }
 
     @NonNull
@@ -67,14 +68,12 @@ public class TestVariantData extends ApkVariantData {
     @NonNull
     public String getDescription() {
         String prefix;
-        VariantType variantType = getType();
+        VariantType variantType = variantDslInfo.getVariantType();
         if (variantType.isApk()) {
             prefix = "android (on device) tests";
         } else {
             prefix = "unit tests";
         }
-
-        final VariantDslInfo variantDslInfo = getVariantDslInfo();
 
         if (variantDslInfo.hasFlavors()) {
             StringBuilder sb = new StringBuilder(50);

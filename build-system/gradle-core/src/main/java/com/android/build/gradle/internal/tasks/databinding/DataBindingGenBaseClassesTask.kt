@@ -21,8 +21,8 @@ import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.processing.ScopedException
 import android.databinding.tool.store.LayoutInfoInput
 import android.databinding.tool.util.L
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
@@ -153,11 +153,13 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
         )
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<DataBindingGenBaseClassesTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<DataBindingGenBaseClassesTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("dataBindingGenBaseClasses")
+            get() = component.computeTaskName("dataBindingGenBaseClasses")
         override val type: Class<DataBindingGenBaseClassesTask>
             get() = DataBindingGenBaseClassesTask::class.java
 
@@ -179,11 +181,10 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(
-                DataBindingCompilerArguments.getLayoutInfoArtifactType(variantScope),
+                DataBindingCompilerArguments.getLayoutInfoArtifactType(component),
                 task.layoutInfoDirectory)
-            val variantData = variantScope.variantData
             val artifacts = variantScope.artifacts
-            task.packageNameSupplier = { variantData.variantDslInfo.originalApplicationId }
+            task.packageNameSupplier = { variantScope.variantDslInfo.originalApplicationId }
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
                 task.mergedArtifactsFromDependencies

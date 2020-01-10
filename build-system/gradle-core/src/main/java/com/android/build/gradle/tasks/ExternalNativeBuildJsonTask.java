@@ -17,13 +17,13 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.errors.DefaultIssueReporter;
@@ -77,9 +77,9 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
 
     @NonNull
     public static VariantTaskCreationAction<ExternalNativeBuildJsonTask> createTaskConfigAction(
-            @NonNull final Provider<ExternalNativeJsonGenerator> generator,
-            @NonNull final VariantScope scope) {
-        return new CreationAction(scope, generator);
+            @NonNull Provider<ExternalNativeJsonGenerator> generator,
+            @NonNull ComponentPropertiesImpl componentProperties) {
+        return new CreationAction(componentProperties, generator);
     }
 
     private static class CreationAction
@@ -88,15 +88,16 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
         private final Provider<ExternalNativeJsonGenerator> generator;
 
         private CreationAction(
-                VariantScope scope, Provider<ExternalNativeJsonGenerator> generator) {
-            super(scope);
+                @NonNull ComponentPropertiesImpl componentProperties,
+                Provider<ExternalNativeJsonGenerator> generator) {
+            super(componentProperties);
             this.generator = generator;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("generateJsonModel");
+            return getComponent().computeTaskName("generateJsonModel");
         }
 
         @NonNull

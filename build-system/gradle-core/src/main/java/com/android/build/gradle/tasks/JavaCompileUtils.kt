@@ -18,6 +18,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR
@@ -66,11 +67,11 @@ const val DEFAULT_INCREMENTAL_COMPILATION = true
  *
  * @see [JavaCompile.configurePropertiesForAnnotationProcessing]
  */
-fun JavaCompile.configureProperties(scope: VariantScope) {
-    val compileOptions = scope.globalScope.extension.compileOptions
+fun JavaCompile.configureProperties(componentProperties: ComponentPropertiesImpl) {
+    val compileOptions = componentProperties.globalScope.extension.compileOptions
 
-    this.options.bootstrapClasspath = scope.bootClasspath
-    this.classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR)
+    this.options.bootstrapClasspath = componentProperties.variantScope.bootClasspath
+    this.classpath = componentProperties.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR)
 
     this.sourceCompatibility = compileOptions.sourceCompatibility.toString()
     this.targetCompatibility = compileOptions.targetCompatibility.toString()

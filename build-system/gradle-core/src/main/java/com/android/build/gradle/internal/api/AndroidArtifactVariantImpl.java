@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.api.AndroidArtifactVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
@@ -33,10 +34,11 @@ import org.gradle.api.model.ObjectFactory;
 public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl implements AndroidArtifactVariant {
 
     protected AndroidArtifactVariantImpl(
+            @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull ObjectFactory objectFactory,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(objectFactory, immutableObjectProvider, outputs);
+        super(componentProperties, objectFactory, immutableObjectProvider, outputs);
     }
 
     @NonNull
@@ -51,7 +53,7 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl impleme
 
     @Override
     public boolean isSigningReady() {
-        return getVariantData().isSigned();
+        return getVariantData().getVariantDslInfo().isSigningReady();
     }
 
     @Nullable

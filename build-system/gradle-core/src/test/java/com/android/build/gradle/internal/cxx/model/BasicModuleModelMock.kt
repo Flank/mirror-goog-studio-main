@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
@@ -120,8 +121,9 @@ open class BasicModuleModelMock {
         GlobalScope::class.java,
         throwUnmocked
     )
-    val variantScope = mock(
-        VariantScope::class.java,
+
+    val componentProperties: ComponentPropertiesImpl = mock(
+        ComponentPropertiesImpl::class.java,
         throwUnmocked
     )
 
@@ -142,10 +144,6 @@ open class BasicModuleModelMock {
             NdkPlatform::class.java,
             throwUnmocked
     ))
-    val baseVariantData = mock(
-            BaseVariantData::class.java,
-            throwUnmocked
-    )
     val coreExternalNativeBuildOptions = mock(
         ExternalNativeBuildOptions::class.java,
         throwUnmocked
@@ -233,7 +231,18 @@ open class BasicModuleModelMock {
 
         doReturn(splits).`when`(extension).splits
 
-        doReturn(baseVariantData).`when`(variantScope).variantData
+        val variantScope: VariantScope = mock(
+            VariantScope::class.java,
+            throwUnmocked
+        )
+
+        val baseVariantData = mock(
+            BaseVariantData::class.java,
+            throwUnmocked
+        )
+
+        doReturn(variantScope).`when`(componentProperties).variantScope
+        doReturn(baseVariantData).`when`(componentProperties).variantData
 
         val variantDependencies = Mockito.mock(VariantDependencies::class.java)
         doReturn(prefabArtifactCollection).`when`(variantDependencies).getArtifactCollection(
@@ -241,17 +250,16 @@ open class BasicModuleModelMock {
             AndroidArtifacts.ArtifactScope.ALL,
             AndroidArtifacts.ArtifactType.PREFAB_PACKAGE
         )
-        doReturn(variantDependencies).`when`(variantScope).variantDependencies
+        doReturn(variantDependencies).`when`(componentProperties).variantDependencies
         doReturn(prefabFileCollection).`when`(prefabArtifactCollection).artifactFiles
         doReturn(emptyList<File>().iterator()).`when`(prefabFileCollection).iterator()
-        doReturn(variantDslInfo).`when`(baseVariantData).variantDslInfo
+        doReturn(variantDslInfo).`when`(componentProperties).variantDslInfo
         doReturn(coreExternalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
         doReturn(coreNdkOptions).`when`(variantDslInfo).ndkConfig
         doReturn(true).`when`(variantDslInfo).isDebuggable
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
-        doReturn(variantImpl).`when`(baseVariantData).publicVariantApi
         doReturn(minSdkVersion).`when`(variantDslInfo).minSdkVersion
         doReturn(":$appName").`when`(project).path
         return appFolder
@@ -292,7 +300,7 @@ open class BasicModuleModelMock {
         doReturn(null).`when`(cmake).buildStagingDirectory
         doReturn(null).`when`(ndkBuild).buildStagingDirectory
         doReturn(setOf<String>()).`when`(coreNdkOptions).abiFilters
-        doReturn("debug").`when`(baseVariantData).name
+        doReturn("debug").`when`(componentProperties).name
 
         projectRootDir.mkdirs()
         sdkDir.mkdirs()

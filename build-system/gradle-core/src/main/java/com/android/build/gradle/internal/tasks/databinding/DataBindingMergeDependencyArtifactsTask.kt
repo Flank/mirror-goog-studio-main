@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.DataBindingBuilder
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -78,11 +79,13 @@ abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<DataBindingMergeDependencyArtifactsTask>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<DataBindingMergeDependencyArtifactsTask>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("dataBindingMergeDependencyArtifacts")
+            get() = component.computeTaskName("dataBindingMergeDependencyArtifacts")
         override val type: Class<DataBindingMergeDependencyArtifactsTask>
             get() = DataBindingMergeDependencyArtifactsTask::class.java
 

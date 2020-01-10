@@ -20,9 +20,7 @@ import com.android.build.api.artifact.PublicArtifactType
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
-import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.ide.common.build.GenericBuiltArtifactsLoader
-import com.android.utils.ILogger
 import com.android.utils.NullLogger
 import com.google.common.truth.Truth
 import org.junit.Rule

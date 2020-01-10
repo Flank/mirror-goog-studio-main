@@ -24,8 +24,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.ComponentIdentity;
-import com.android.build.api.component.impl.ComponentIdentityImpl;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
@@ -78,7 +77,7 @@ public class TaskTestUtils {
     protected static final String TASK_NAME = "task name";
 
     protected TaskFactory taskFactory;
-    protected VariantScope scope;
+    protected ComponentPropertiesImpl componentProperties;
     protected TransformManager transformManager;
     protected FakeSyncIssueReporter issueReporter;
 
@@ -90,7 +89,7 @@ public class TaskTestUtils {
         File projectDirectory = temporaryFolder.newFolder();
         FileUtils.mkdirs(projectDirectory);
         project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
-        scope = getScope();
+        componentProperties = getComponentProperties();
         issueReporter = new FakeSyncIssueReporter();
         transformManager = new TransformManager(project, issueReporter, new NoOpRecorder());
         taskFactory = new TaskFactoryImpl(project.getTasks());
@@ -276,26 +275,28 @@ public class TaskTestUtils {
     }
 
     @NonNull
-    private static VariantScope getScope() {
+    private static ComponentPropertiesImpl getComponentProperties() {
         GlobalScope globalScope = mock(GlobalScope.class);
         when(globalScope.getBuildDir()).thenReturn(new File("build dir"));
         when(globalScope.getProjectOptions()).thenReturn(new ProjectOptions(ImmutableMap.of()));
 
+        ComponentPropertiesImpl componentProperties = mock(ComponentPropertiesImpl.class);
+        when(componentProperties.getGlobalScope()).thenReturn(globalScope);
+        when(componentProperties.getName()).thenReturn("theVariantName");
+        when(componentProperties.getFlavorName()).thenReturn("theFlavorName");
+        when(componentProperties.getBuildType()).thenReturn("debug");
+        when(componentProperties.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
+
         VariantScope scope = mock(VariantScope.class);
-        when(scope.getDirName()).thenReturn("config dir name");
-        when(scope.getGlobalScope()).thenReturn(globalScope);
-        when(scope.getTaskName(Mockito.anyString())).thenReturn(TASK_NAME);
-        when(scope.getName()).thenReturn("theVariantName");
+        when(componentProperties.getVariantScope()).thenReturn(scope);
+        when(componentProperties.computeTaskName(Mockito.anyString())).thenReturn(TASK_NAME);
 
         VariantDslInfo variantDslInfo = mock(VariantDslInfo.class);
+        when(componentProperties.getVariantDslInfo()).thenReturn(variantDslInfo);
+        when(variantDslInfo.getDirName()).thenReturn("config dir name");
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
         when(variantDslInfo.isDebuggable()).thenReturn(true);
-        ComponentIdentity varConfig =
-                new ComponentIdentityImpl(
-                        "theVariantName", "theFlavorName", "debug", ImmutableList.of());
-        when(variantDslInfo.getComponentIdentity()).thenReturn(varConfig);
-        when(scope.getVariantDslInfo()).thenReturn(variantDslInfo);
-        return scope;
+        return componentProperties;
     }
 
     /**

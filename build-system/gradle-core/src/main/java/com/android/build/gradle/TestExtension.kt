@@ -27,12 +27,10 @@ import com.android.build.gradle.internal.dsl.TestExtensionImpl
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
 import org.gradle.api.internal.DefaultDomainObjectSet
 
 /** {@code android} extension for {@code com.android.test} projects. */
@@ -97,7 +95,7 @@ open class TestExtension(
     val applicationVariants: DefaultDomainObjectSet<ApplicationVariant>
         get() = applicationVariantList as DefaultDomainObjectSet<ApplicationVariant>
 
-    override fun addVariant(variant: BaseVariant, variantScope: VariantScope) {
+    override fun addVariant(variant: BaseVariant) {
         applicationVariantList.add(variant as ApplicationVariant)
     }
 

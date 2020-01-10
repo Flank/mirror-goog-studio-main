@@ -24,29 +24,95 @@ import com.android.build.api.variant.impl.GradleProperty
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
+import com.android.builder.core.VariantType
+import com.android.utils.FileUtils
+import com.android.utils.appendCapitalized
+import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
+import java.io.File
 
 abstract class ComponentPropertiesImpl(
-    val dslScope: DslScope,
+    componentIdentity: ComponentIdentity,
+    val variantDslInfo: VariantDslInfo,
+    val variantDependencies: VariantDependencies,
+    val variantSources: VariantSources,
+    val paths: VariantPathHelper,
+    val artifacts: BuildArtifactsHolder,
     val variantScope: VariantScope,
-    override val operations: Operations,
-    configuration: ComponentIdentity
-): ComponentProperties, ComponentIdentity by configuration {
+    val variantData: BaseVariantData,
+    val dslScope: DslScope
+): ComponentProperties, ComponentIdentity by componentIdentity {
 
-    protected val variantDslInfo = variantScope.variantDslInfo
-
-    private val variantOutputs= mutableListOf<VariantOutputImpl>()
+    // ---------------------------------------------------------------------------------------------
+    // PUBLIC API
+    // ---------------------------------------------------------------------------------------------
 
     override val outputs: VariantOutputList
         get() = VariantOutputList(variantOutputs.toList())
 
     override val applicationId: Property<String> = dslScope.objectFactory.property(String::class.java).apply {
         setDisallowChanges(dslScope.providerFactory.provider { variantDslInfo.applicationId })
+    }
+
+    override val operations: Operations
+        get() = artifacts.getOperations()
+
+    // ---------------------------------------------------------------------------------------------
+    // INTERNAL API
+    // ---------------------------------------------------------------------------------------------
+
+    val globalScope: GlobalScope = variantScope.globalScope
+
+    val taskContainer = variantData.taskContainer
+    val transformManager = variantScope.transformManager
+
+    private val variantOutputs= mutableListOf<VariantOutputImpl>()
+
+    val variantType: VariantType
+        get() = variantDslInfo.variantType
+
+    /**
+     * Returns the tested variant. This is null for [VariantPropertiesImpl] instances
+     *
+
+     * This declares is again, even though the public interfaces only have it via
+     * [TestComponentProperties]. This is to facilitate places where one cannot use
+     * [TestComponentPropertiesImpl].
+     *
+     * see [onTestedVariant] for a utility function helping deal with nullability
+     */
+    open val testedVariant: VariantPropertiesImpl? = null
+
+    /**
+     * Runs an action on the tested variant and return the results of the action.
+     *
+     * if there is no tested variant this does nothing and returns null.
+     */
+    fun <T> onTestedVariant(action: (VariantPropertiesImpl) -> T): T? {
+        if (variantType.isTestComponent) {
+            val tested = testedVariant ?: throw RuntimeException("testedVariant null with type $variantType")
+            return action(tested)
+        }
+
+        return null
     }
 
     fun addVariantOutput(apkData: ApkData): VariantOutputImpl {
@@ -93,11 +159,64 @@ abstract class ComponentPropertiesImpl(
     }
 
     protected fun <T> initializeProperty(type: Class<T>, id: String): Property<T> {
-        return if (variantScope.globalScope.projectOptions[BooleanOption.USE_SAFE_PROPERTIES]) {
+        return if (dslScope.projectOptions[BooleanOption.USE_SAFE_PROPERTIES]) {
             GradleProperty.safeReadingBeforeExecution(id, dslScope.objectFactory.property(type))
         } else {
             dslScope.objectFactory.property(type)
         }
+    }
+
+    @JvmOverloads
+    fun computeTaskName(prefix: String, suffix: String = ""): String =
+        prefix.appendCapitalized(name, suffix)
+
+    // -------------------------
+    // File location computation. Previously located in VariantScope, these are here
+    // temporarily until we fully move away from them.
+
+    val generatedResOutputDir: File
+        get() = getGeneratedResourcesDir("resValues")
+
+    private fun getGeneratedResourcesDir(name: String): File {
+        return FileUtils.join(
+            paths.generatedDir,
+            listOf("res", name) + variantDslInfo.directorySegments)
+    }
+
+    // Precomputed file paths.
+    @JvmOverloads
+    fun getJavaClasspath(
+        configType: ConsumedConfigType,
+        classesType: AndroidArtifacts.ArtifactType,
+        generatedBytecodeKey: Any? = null
+    ): FileCollection {
+        var mainCollection = variantDependencies
+            .getArtifactFileCollection(configType, ArtifactScope.ALL, classesType)
+        mainCollection = mainCollection.plus(variantData.getGeneratedBytecode(generatedBytecodeKey))
+        // Add R class jars to the front of the classpath as libraries might also export
+        // compile-only classes. This behavior is verified in CompileRClassFlowTest
+        // While relying on this order seems brittle, it avoids doubling the number of
+        // files on the compilation classpath by exporting the R class separately or
+        // and is much simpler than having two different outputs from each library, with
+        // and without the R class, as AGP publishing code assumes there is exactly one
+        // artifact for each publication.
+        mainCollection =
+            globalScope.project.files(variantScope.getCompiledRClasses(configType), mainCollection)
+        return mainCollection
+    }
+
+    fun getJavaClasspathArtifacts(
+        configType: ConsumedConfigType,
+        classesType: AndroidArtifacts.ArtifactType,
+        generatedBytecodeKey: Any?
+    ): ArtifactCollection {
+        val mainCollection =
+            variantDependencies.getArtifactCollection(configType, ArtifactScope.ALL, classesType)
+        return ArtifactCollectionWithExtraArtifact.makeExtraCollection(
+            mainCollection,
+            variantData.getGeneratedBytecode(generatedBytecodeKey),
+            globalScope.project.path
+        )
     }
 
 }

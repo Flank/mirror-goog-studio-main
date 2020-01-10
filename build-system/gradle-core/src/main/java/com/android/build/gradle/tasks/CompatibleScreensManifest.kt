@@ -18,12 +18,10 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
-import com.android.build.gradle.internal.scope.ExistingBuildElements
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -34,17 +32,13 @@ import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Files
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.tooling.BuildException
 import java.io.File
@@ -143,11 +137,13 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
         return density
     }
 
-    class CreationAction(variantScope: VariantScope, private val screenSizes: Set<String>) :
-        VariantTaskCreationAction<CompatibleScreensManifest>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl, private val screenSizes: Set<String>) :
+        VariantTaskCreationAction<CompatibleScreensManifest>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("create", "CompatibleScreenManifests")
+            get() = component.computeTaskName("create", "CompatibleScreenManifests")
         override val type: Class<CompatibleScreensManifest>
             get() = CompatibleScreensManifest::class.java
 
@@ -164,20 +160,19 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             super.configure(task)
 
             task.screenSizes = screenSizes
-            val variantProperties = variantScope.variantData.publicVariantPropertiesApi
-            task.applicationId.setDisallowChanges(variantProperties.applicationId)
+            task.applicationId.setDisallowChanges(component.applicationId)
 
-            task.variantType.set(variantScope.variantData.type.toString())
+            task.variantType.set(component.variantType.toString())
             task.variantType.disallowChanges()
 
-            variantProperties.outputs.getEnabledVariantOutputs().forEach {
+            component.outputs.getEnabledVariantOutputs().forEach {
                 task.apkDataList.add(it.apkData)
             }
             task.apkDataList.disallowChanges()
 
             task.minSdkVersion.set(
                 task.project.provider {
-                    variantScope.variantDslInfo.minSdkVersion.apiString
+                    component.variantDslInfo.minSdkVersion.apiString
                 }
             )
             task.minSdkVersion.disallowChanges()

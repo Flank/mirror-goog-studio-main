@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -90,11 +91,13 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         private val enableDexingArtifactTransform: Boolean,
         private val separateFileDependenciesDexingTask: Boolean
-    ) : VariantTaskCreationAction<L8DexDesugarLibTask>(variantScope) {
-        override val name = variantScope.getTaskName("l8DexDesugarLib")
+    ) : VariantTaskCreationAction<L8DexDesugarLibTask>(
+        componentProperties
+    ) {
+        override val name = component.computeTaskName("l8DexDesugarLib")
         override val type = L8DexDesugarLibTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out L8DexDesugarLibTask>) {
@@ -112,7 +115,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             task.minSdkVersion.set(
                 variantScope.variantDslInfo.minSdkVersionWithTargetDeviceApi.apiLevel)
 
-            val attributes = getDexingArtifactConfiguration(variantScope).getAttributes()
+            val attributes = getDexingArtifactConfiguration(component).getAttributes()
 
             val subProjectKeepRules =
                 if (enableDexingArtifactTransform) {

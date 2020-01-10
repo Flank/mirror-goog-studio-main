@@ -20,8 +20,6 @@ import com.android.build.api.component.impl.FilteredComponentAction
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.Variant
-import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.variant.BaseVariantData
 import com.google.common.truth.Truth
 import org.gradle.api.Action
 import org.junit.Test
@@ -94,14 +92,5 @@ class VariantOperationsTest {
     ): T {
         val variant = Mockito.mock(variantClass)
         return variant
-    }
-
-    private fun createVariantScope(): VariantScope {
-        val variantScope = Mockito.mock(VariantScope::class.java)
-        val variantData = Mockito.mock(BaseVariantData::class.java)
-        val publicVariantApi = Mockito.mock(VariantImpl::class.java)
-        Mockito.`when`(variantScope.variantData).thenReturn(variantData)
-        Mockito.`when`(variantData.publicVariantApi).thenReturn(publicVariantApi)
-        return variantScope
     }
 }

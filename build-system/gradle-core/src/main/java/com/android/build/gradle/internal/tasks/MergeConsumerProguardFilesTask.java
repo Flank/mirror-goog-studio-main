@@ -20,9 +20,9 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.GENER
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.errors.EvalIssueException;
 import java.io.IOException;
@@ -76,14 +76,14 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
     public static class CreationAction
             extends VariantTaskCreationAction<MergeConsumerProguardFilesTask> {
 
-        public CreationAction(@NonNull VariantScope variantScope) {
-            super(variantScope);
+        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("merge", "ConsumerProguardFiles");
+            return getComponent().computeTaskName("merge", "ConsumerProguardFiles");
         }
 
         @NonNull

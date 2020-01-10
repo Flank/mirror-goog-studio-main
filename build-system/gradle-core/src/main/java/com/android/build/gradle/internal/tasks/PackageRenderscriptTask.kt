@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -41,11 +42,13 @@ abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
     @Internal
     override lateinit var variantName: String
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<PackageRenderscriptTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<PackageRenderscriptTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("package", "Renderscript")
+            get() = component.computeTaskName("package", "Renderscript")
         override val type: Class<PackageRenderscriptTask>
             get() = PackageRenderscriptTask::class.java
 

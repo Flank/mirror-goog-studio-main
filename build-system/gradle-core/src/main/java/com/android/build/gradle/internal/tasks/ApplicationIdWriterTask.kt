@@ -65,11 +65,13 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
         }
     }
 
-    internal class CreationAction(private val componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ApplicationIdWriterTask>(componentProperties.variantScope) {
+    internal class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<ApplicationIdWriterTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("write", "ApplicationId")
+            get() = component.computeTaskName("write", "ApplicationId")
         override val type: Class<ApplicationIdWriterTask>
             get() = ApplicationIdWriterTask::class.java
 
@@ -97,7 +99,7 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
                     COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA
                 ))
             } else {
-                task.applicationId.setDisallowChanges(componentProperties.applicationId)
+                task.applicationId.setDisallowChanges(component.applicationId)
             }
             task.appMetadata.disallowChanges()
             task.applicationId.disallowChanges()

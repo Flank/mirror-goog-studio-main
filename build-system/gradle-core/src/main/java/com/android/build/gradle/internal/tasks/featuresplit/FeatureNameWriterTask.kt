@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -23,7 +24,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
@@ -50,11 +50,13 @@ abstract class FeatureNameWriterTask : NonIncrementalTask() {
         FileUtils.write(outputFile.asFile.get(), featureName.get())
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<FeatureNameWriterTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<FeatureNameWriterTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("write", "FeatureName")
+            get() = component.computeTaskName("write", "FeatureName")
 
         override val type: Class<FeatureNameWriterTask>
             get() = FeatureNameWriterTask::class.java

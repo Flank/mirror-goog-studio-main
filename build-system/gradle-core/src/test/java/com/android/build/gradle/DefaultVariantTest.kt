@@ -18,10 +18,10 @@ package com.android.build.gradle
 
 import com.android.build.api.variant.VariantFilter
 import com.android.build.api.component.impl.ComponentIdentityImpl
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.core.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.AbstractVariantInputModelTest
 import com.android.build.gradle.internal.variant.TestVariantInputModel
 import com.android.build.gradle.internal.variant.DimensionCombinator
@@ -485,7 +485,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         )
 
         // convert to mock VariantScope
-        val variantScopes = mutableListOf<VariantScope>()
+        val components = mutableListOf<ComponentPropertiesImpl>()
 
         for (variant in variantComputer.computeVariants()) {
             val name = VariantBuilder.computeName(variant, variantType)
@@ -512,29 +512,22 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             // if not ignored, get the VariantScope
             // FIXME this should be simpler when we remove VariantData|Scope to use newer objects only.
             if (!ignore) {
-                val variantScope = Mockito.mock(VariantScope::class.java)
-                variantScopes.add(variantScope)
+                val component = Mockito.mock(ComponentPropertiesImpl::class.java)
+                components.add(component)
 
-                val varConfig =
-                    ComponentIdentityImpl(
-                        name,
-                        "",
-                        variant.buildType,
-                        variant.productFlavors
-                    )
-
-                Mockito.`when`(variantScope.name).thenReturn(name)
-                Mockito.`when`(variantScope.type).thenReturn(variantType)
+                Mockito.`when`(component.name).thenReturn(name)
+                Mockito.`when`(component.variantType).thenReturn(variantType)
+                Mockito.`when`(component.buildType).thenReturn(variant.buildType)
+                Mockito.`when`(component.productFlavors).thenReturn(variant.productFlavors)
 
                 val variantDslInfo = Mockito.mock(VariantDslInfo::class.java)
-                Mockito.`when`(variantScope.variantDslInfo).thenReturn(variantDslInfo)
-                Mockito.`when`(variantDslInfo.componentIdentity).thenReturn(varConfig)
+                Mockito.`when`(component.variantDslInfo).thenReturn(variantDslInfo)
                 Mockito.`when`(variantDslInfo.productFlavorList).thenReturn(flavors)
             }
         }
 
         val variantManager = Mockito.mock(VariantManager::class.java).also {
-            Mockito.`when`(it.variantScopes).thenReturn(variantScopes)
+            Mockito.`when`(it.components).thenReturn(components)
         }
 
         // finally get the computed default variant

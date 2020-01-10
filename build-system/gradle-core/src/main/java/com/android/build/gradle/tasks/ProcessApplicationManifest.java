@@ -573,7 +573,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                 @NonNull ComponentPropertiesImpl componentProperties,
                 // TODO : remove this variable and find ways to access it from scope.
                 boolean isAdvancedProfilingOn) {
-            super(componentProperties.getVariantScope());
+            super(componentProperties);
             this.componentProperties = componentProperties;
             this.isAdvancedProfilingOn = isAdvancedProfilingOn;
         }
@@ -581,7 +581,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("process", "Manifest");
+            return getComponent().computeTaskName("process", "Manifest");
         }
 
         @NonNull
@@ -607,7 +607,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessApplicationManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setProcessManifestTask(taskProvider);
+            getComponent().getTaskContainer().setProcessManifestTask(taskProvider);
 
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.producesDir(
@@ -661,18 +661,19 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         public void configure(@NonNull ProcessApplicationManifest task) {
             super.configure(task);
 
-            final VariantScope variantScope = getVariantScope();
-            final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
-            final VariantSources variantSources = variantScope.getVariantSources();
+            ComponentPropertiesImpl component = getComponent();
+            final VariantScope variantScope = component.getVariantScope();
+            final VariantDslInfo variantDslInfo = component.getVariantDslInfo();
+            final VariantSources variantSources = component.getVariantSources();
             final GlobalScope globalScope = variantScope.getGlobalScope();
 
-            VariantType variantType = variantScope.getType();
+            VariantType variantType = component.getVariantType();
 
             Project project = globalScope.getProject();
 
             // This includes the dependent libraries.
             task.manifests =
-                    variantScope
+                    component
                             .getVariantDependencies()
                             .getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
@@ -683,7 +684,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     && globalScope
                             .getProjectOptions()
                             .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-                variantScope
+                component
                         .getArtifacts()
                         .setTaskInputToFinalProduct(
                                 InternalArtifactType.NAMESPACED_MANIFESTS.INSTANCE,
@@ -691,25 +692,20 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             }
 
             // optional manifest files too.
-            if (variantScope.getTaskContainer().getMicroApkTask() != null
+            if (component.getTaskContainer().getMicroApkTask() != null
                     && variantDslInfo.isEmbedMicroApp()) {
                 task.microApkManifest =
-                        project.files(variantScope.getPaths().getMicroApkManifestFile());
+                        project.files(component.getPaths().getMicroApkManifestFile());
             }
-            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+            BuildArtifactsHolder artifacts = component.getArtifacts();
             artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
                     task.getCompatibleScreensManifest());
 
-            task.getApplicationId()
-                    .set(
-                            variantScope
-                                    .getVariantData()
-                                    .getPublicVariantPropertiesApi()
-                                    .getApplicationId());
+            task.getApplicationId().set(component.getApplicationId());
             task.getApplicationId().disallowChanges();
 
-            task.getVariantType().set(variantScope.getVariantData().getType().toString());
+            task.getVariantType().set(component.getVariantType().toString());
             task.getVariantType().disallowChanges();
 
             task.getMinSdkVersion()
@@ -738,9 +734,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                                     variantScope, isAdvancedProfilingOn)));
             task.getOptionalFeatures().disallowChanges();
 
-            variantScope
-                    .getVariantData()
-                    .getPublicVariantPropertiesApi()
+            component
                     .getOutputs()
                     .getEnabledVariantOutputs()
                     .forEach(
@@ -750,7 +744,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             // set optional inputs per module type
             if (variantType.isBaseModule()) {
                 task.featureManifests =
-                        variantScope
+                        component
                                 .getVariantDependencies()
                                 .getArtifactCollection(
                                         REVERSE_METADATA_VALUES,
@@ -762,13 +756,13 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                 task.getFeatureName().disallowChanges();
 
                 task.packageManifest =
-                        variantScope
+                        component
                                 .getVariantDependencies()
                                 .getArtifactFileCollection(
                                         COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA);
 
                 task.dependencyFeatureNameArtifacts =
-                        variantScope
+                        component
                                 .getVariantDependencies()
                                 .getArtifactFileCollection(
                                         RUNTIME_CLASSPATH, PROJECT, FEATURE_NAME);
@@ -777,11 +771,11 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             if (!globalScope.getExtension().getAaptOptions().getNamespaced()) {
                 task.navigationJsons =
                         project.files(
-                                variantScope
+                                component
                                         .getArtifacts()
                                         .getFinalProduct(
                                                 InternalArtifactType.NAVIGATION_JSON.INSTANCE),
-                                variantScope
+                                component
                                         .getVariantDependencies()
                                         .getArtifactFileCollection(
                                                 RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));

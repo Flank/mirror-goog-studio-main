@@ -43,6 +43,7 @@ import static com.android.build.gradle.tasks.GeneratePrefabPackagesKt.generatePr
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidationState;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
@@ -60,7 +61,6 @@ import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModelKt;
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -529,26 +529,29 @@ public abstract class ExternalNativeJsonGenerator {
 
     @NonNull
     public static ExternalNativeJsonGenerator create(
-            @NonNull CxxModuleModel module, @NonNull VariantScope scope) {
+            @NonNull CxxModuleModel module, @NonNull ComponentPropertiesImpl componentProperties) {
         try (ThreadLoggingEnvironment ignore =
                 new IssueReporterLoggingEnvironment(issueReporter(module))) {
-            return createImpl(module, scope);
+            return createImpl(module, componentProperties);
         }
     }
 
     @NonNull
     private static ExternalNativeJsonGenerator createImpl(
-            @NonNull CxxModuleModel module, @NonNull VariantScope scope) {
-        CxxVariantModel variant = createCxxVariantModel(module, scope);
+            @NonNull CxxModuleModel module, @NonNull ComponentPropertiesImpl componentProperties) {
+        CxxVariantModel variant = createCxxVariantModel(module, componentProperties);
         List<CxxAbiModel> abis = Lists.newArrayList();
 
         CxxBuildModel cxxBuildModel =
-                getCxxBuildModel(scope.getGlobalScope().getProject().getGradle());
+                getCxxBuildModel(componentProperties.getGlobalScope().getProject().getGradle());
         for (Abi abi : variant.getValidAbiList()) {
             CxxAbiModel model =
                     rewriteCxxAbiModelWithCMakeSettings(
                             createCxxAbiModel(
-                                    variant, abi, scope.getGlobalScope(), scope.getVariantData()));
+                                    variant,
+                                    abi,
+                                    componentProperties.getGlobalScope(),
+                                    componentProperties));
             abis.add(model);
 
             // Register this ABI with the complete build model.
@@ -562,7 +565,7 @@ public abstract class ExternalNativeJsonGenerator {
 
         GradleBuildVariant.Builder stats =
                 ProcessProfileWriter.getOrCreateVariant(
-                        module.getGradleModulePathName(), scope.getName());
+                        module.getGradleModulePathName(), componentProperties.getName());
 
         switch (module.getBuildSystem()) {
             case NDK_BUILD:

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -49,11 +50,13 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<StaticLibraryManifestTask>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<StaticLibraryManifestTask>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("create", "StaticLibraryManifest")
+            get() = component.computeTaskName("create", "StaticLibraryManifest")
         override val type: Class<StaticLibraryManifestTask>
             get() = StaticLibraryManifestTask::class.java
 

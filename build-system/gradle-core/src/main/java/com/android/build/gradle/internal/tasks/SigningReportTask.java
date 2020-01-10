@@ -22,13 +22,13 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Normal;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -38,9 +38,9 @@ import java.security.cert.CertificateEncodingException;
 import java.text.DateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.logging.text.StyledTextOutput;
@@ -51,7 +51,7 @@ import org.gradle.internal.logging.text.StyledTextOutputFactory;
  */
 public class SigningReportTask extends DefaultTask {
 
-    private Set<VariantScope> variants = Sets.newHashSet();
+    private List<ComponentPropertiesImpl> components;
 
     @TaskAction
     public void generate() throws IOException {
@@ -61,13 +61,13 @@ public class SigningReportTask extends DefaultTask {
 
         Map<SigningConfig, SigningInfo> cache = Maps.newHashMap();
 
-        for (VariantScope variant : variants) {
+        for (ComponentPropertiesImpl component : components) {
             textOutput.withStyle(Identifier).text("Variant: ");
-            textOutput.withStyle(Description).text(variant.getName());
+            textOutput.withStyle(Description).text(component.getName());
             textOutput.println();
 
             // get the data
-            SigningConfig signingConfig = variant.getVariantDslInfo().getSigningConfig();
+            SigningConfig signingConfig = component.getVariantDslInfo().getSigningConfig();
             if (signingConfig == null) {
                 textOutput.withStyle(Identifier).text("Config: ");
                 textOutput.withStyle(Normal).text("none");
@@ -120,8 +120,8 @@ public class SigningReportTask extends DefaultTask {
     }
 
     /** Sets the configurations to generate the report for. */
-    public void setVariants(@NonNull Collection<VariantScope> variants) {
-        this.variants.addAll(variants);
+    public void setComponents(@NonNull Collection<ComponentPropertiesImpl> components) {
+        this.components = ImmutableList.copyOf(components);
     }
 
     private static SigningInfo getSigningInfo(

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.VariantDslInfo;
@@ -28,7 +29,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
@@ -41,7 +41,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
-import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
@@ -49,19 +48,7 @@ import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 
 /** A scope containing data for a specific variant. */
-public interface VariantScope extends TransformVariantScope {
-    @Override
-    @NonNull
-    GlobalScope getGlobalScope();
-
-    @NonNull
-    VariantPathHelper getPaths();
-
-    @NonNull
-    VariantDslInfo getVariantDslInfo();
-
-    @NonNull
-    VariantSources getVariantSources();
+public interface VariantScope {
 
     @NonNull
     PublishingSpecs.VariantSpec getPublishingSpec();
@@ -72,13 +59,33 @@ public interface VariantScope extends TransformVariantScope {
             @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes);
 
     @NonNull
-    BaseVariantData getVariantData();
+    VariantType getType();
 
     @Nullable
     CodeShrinker getCodeShrinker();
 
     @NonNull
     List<File> getProguardFiles();
+
+    @NonNull
+    BuildArtifactsHolder getArtifacts();
+
+    @NonNull
+    VariantDslInfo getVariantDslInfo();
+
+    @NonNull
+    VariantSources getVariantSources();
+
+    @NonNull
+    VariantPathHelper getPaths();
+
+    @NonNull
+    VariantDependencies getVariantDependencies();
+
+    /** @deprecated Use {@link ComponentPropertiesImpl#getGlobalScope()} */
+    @Deprecated
+    @NonNull
+    GlobalScope getGlobalScope();
 
     /**
      * Returns the proguardFiles explicitly specified in the build.gradle. This method differs from
@@ -124,9 +131,6 @@ public interface VariantScope extends TransformVariantScope {
     boolean getNeedsShrinkDesugarLibrary();
 
     @NonNull
-    VariantType getType();
-
-    @NonNull
     DexingType getDexingType();
 
     boolean getNeedsMainDexList();
@@ -139,32 +143,9 @@ public interface VariantScope extends TransformVariantScope {
 
     void addNdkDebuggableLibraryFolders(@NonNull Abi abi, @NonNull File searchPath);
 
-    @Nullable
-    BaseVariantData getTestedVariantData();
-
-    @NonNull
-    FileCollection getJavaClasspath(
-            @NonNull AndroidArtifacts.ConsumedConfigType configType,
-            @NonNull ArtifactType classesType);
-
-    @NonNull
-    FileCollection getJavaClasspath(
-            @NonNull AndroidArtifacts.ConsumedConfigType configType,
-            @NonNull ArtifactType classesType,
-            @Nullable Object generatedBytecodeKey);
-
     /** Returns the path(s) to compiled R classes (R.jar). */
     @NonNull
     FileCollection getCompiledRClasses(@NonNull AndroidArtifacts.ConsumedConfigType configType);
-
-    @NonNull
-    ArtifactCollection getJavaClasspathArtifacts(
-            @NonNull AndroidArtifacts.ConsumedConfigType configType,
-            @NonNull ArtifactType classesType,
-            @Nullable Object generatedBytecodeKey);
-
-    @NonNull
-    BuildArtifactsHolder getArtifacts();
 
     @NonNull
     FileCollection getLocalPackagedJars();
@@ -184,12 +165,6 @@ public interface VariantScope extends TransformVariantScope {
 
     @NonNull
     Provider<RegularFile> getRJarForUnitTests();
-
-    @NonNull
-    MutableTaskContainer getTaskContainer();
-
-    @NonNull
-    VariantDependencies getVariantDependencies();
 
     enum Java8LangSupport {
         INVALID,

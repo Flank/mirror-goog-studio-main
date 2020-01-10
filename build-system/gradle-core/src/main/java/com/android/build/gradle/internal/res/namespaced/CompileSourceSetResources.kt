@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
@@ -192,8 +193,10 @@ abstract class CompileSourceSetResources : IncrementalTask() {
     class CreationAction(
         override val name: String,
         private val inputDirectories: FileCollection,
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<CompileSourceSetResources>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<CompileSourceSetResources>(
+        componentProperties
+    ) {
 
         override val type: Class<CompileSourceSetResources>
             get() = CompileSourceSetResources::class.java
@@ -218,13 +221,13 @@ abstract class CompileSourceSetResources : IncrementalTask() {
             task.inputDirectories = inputDirectories
             task.isPngCrunching = variantScope.isCrunchPngs
             task.isPseudoLocalize =
-                    variantScope.variantData.variantDslInfo.isPseudoLocalesEnabled
+                    variantScope.variantDslInfo.isPseudoLocalesEnabled
 
             val (aapt2FromMaven,aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
-            task.dependsOn(variantScope.taskContainer.resourceGenTask)
+            task.dependsOn(component.taskContainer.resourceGenTask)
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 variantScope.globalScope.projectOptions

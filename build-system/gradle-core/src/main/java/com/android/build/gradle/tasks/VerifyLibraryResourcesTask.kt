@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.aaptcompiler.canCompileResourceInJvm
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
@@ -210,11 +211,13 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<VerifyLibraryResourcesTask>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<VerifyLibraryResourcesTask>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("verify", "Resources")
+            get() = component.computeTaskName("verify", "Resources")
         override val type: Class<VerifyLibraryResourcesTask>
             get() = VerifyLibraryResourcesTask::class.java
 

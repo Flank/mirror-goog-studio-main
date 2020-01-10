@@ -17,17 +17,21 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.dexing.isProguardRule
 import org.gradle.api.tasks.TaskProvider
 
-class MergeGeneratedProguardFilesCreationAction(variantScope: VariantScope)
-    : VariantTaskCreationAction<MergeFileTask>(variantScope) {
+class MergeGeneratedProguardFilesCreationAction(
+    componentProperties: ComponentPropertiesImpl
+) : VariantTaskCreationAction<MergeFileTask>(
+    componentProperties
+) {
 
     override val name: String
-        get() = variantScope.getTaskName("merge", "GeneratedProguardFiles")
+            get() = component.computeTaskName("merge", "GeneratedProguardFiles")
     override val type: Class<MergeFileTask>
         get() = MergeFileTask::class.java
 

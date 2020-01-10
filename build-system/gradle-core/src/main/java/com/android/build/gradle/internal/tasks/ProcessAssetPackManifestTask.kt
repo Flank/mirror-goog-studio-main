@@ -66,12 +66,14 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
     }
 
     internal class CreationAction(
-        private val componentProperties: ComponentPropertiesImpl,
+        componentProperties: ComponentPropertiesImpl,
         private val assetPackManifestFileCollection: FileCollection,
         private val assetPackNames: Set<String>
-    ) : VariantTaskCreationAction<ProcessAssetPackManifestTask>(componentProperties.variantScope) {
+    ) : VariantTaskCreationAction<ProcessAssetPackManifestTask>(
+        componentProperties
+    ) {
         override val type = ProcessAssetPackManifestTask::class.java
-        override val name = variantScope.getTaskName("process", "AssetPackManifests")
+        override val name = component.computeTaskName("process", "AssetPackManifests")
 
         override fun handleProvider(taskProvider: TaskProvider<out ProcessAssetPackManifestTask>) {
             super.handleProvider(taskProvider)
@@ -85,7 +87,7 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
         override fun configure(task: ProcessAssetPackManifestTask) {
             super.configure(task)
 
-            task.applicationId = componentProperties.applicationId
+            task.applicationId = component.applicationId
             task.assetPackManifests.from(assetPackManifestFileCollection)
             task.assetPackNames = assetPackNames
         }

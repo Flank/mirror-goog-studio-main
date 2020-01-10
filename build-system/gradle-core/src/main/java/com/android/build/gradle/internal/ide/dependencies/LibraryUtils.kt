@@ -22,6 +22,7 @@ import com.android.SdkConstants.FD_AAR_LIBS
 import com.android.SdkConstants.FD_JARS
 import com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY
 import com.android.build.api.attributes.VariantAttr
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.dependency.ConfigurationDependencyGraphs
 import com.android.build.gradle.internal.ide.DependenciesImpl
 import com.android.build.gradle.internal.ide.level2.AndroidLibraryImpl
@@ -163,19 +164,19 @@ private fun instantiateLibrary(artifact: ResolvedArtifact): Library {
 }
 
 fun findResStaticLibrary(
-    variantScope: VariantScope, explodedAar: ResolvedArtifact
+    componentProperties: ComponentPropertiesImpl, explodedAar: ResolvedArtifact
 ): File? {
     val file = findResStaticLibrary(explodedAar)
     if (file != null) {
         return file
     }
 
-    if (variantScope.globalScope.extension.aaptOptions.namespaced && variantScope
+    if (componentProperties.globalScope.extension.aaptOptions.namespaced && componentProperties
             .globalScope
             .projectOptions
             .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)
     ) {
-        val artifacts = variantScope.artifacts
+        val artifacts = componentProperties.artifacts
         val convertedDirectory =
             artifacts.getFinalProduct(InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES)
         if (convertedDirectory.isPresent) {

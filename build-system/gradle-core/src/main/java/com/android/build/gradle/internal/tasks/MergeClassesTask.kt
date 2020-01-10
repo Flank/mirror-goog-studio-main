@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.DOT_JAR
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.packaging.JarCreatorType
@@ -97,10 +98,12 @@ abstract class MergeClassesTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<MergeClassesTask>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<MergeClassesTask>(
+        componentProperties
+    ) {
         override val type = MergeClassesTask::class.java
-        override val name: String = variantScope.getTaskName("merge", "Classes")
+        override val name: String = component.computeTaskName("merge", "Classes")
 
         // Because ordering matters for the transform pipeline, we need to fetch the classes as soon
         // as this creation action is instantiated.

@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
@@ -130,11 +131,13 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<ProcessAndroidAppResourcesTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<ProcessAndroidAppResourcesTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("process", "NamespacedResources")
+            get() = component.computeTaskName("process", "NamespacedResources")
         override val type: Class<ProcessAndroidAppResourcesTask>
             get() = ProcessAndroidAppResourcesTask::class.java
 

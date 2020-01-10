@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -84,11 +85,13 @@ abstract class AssetPackPreBundleTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         private val assetFileCollection: FileCollection
-    ) : VariantTaskCreationAction<AssetPackPreBundleTask>(variantScope) {
+    ) : VariantTaskCreationAction<AssetPackPreBundleTask>(
+        componentProperties
+    ) {
         override val type = AssetPackPreBundleTask::class.java
-        override val name = variantScope.getTaskName("assetPack", "PreBundleTask")
+        override val name = component.computeTaskName("assetPack", "PreBundleTask")
 
         override fun handleProvider(taskProvider: TaskProvider<out AssetPackPreBundleTask>) {
             super.handleProvider(taskProvider)

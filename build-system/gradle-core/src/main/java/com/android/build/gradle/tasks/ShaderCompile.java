@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
@@ -201,14 +202,14 @@ public abstract class ShaderCompile extends NonIncrementalTask {
 
     public static class CreationAction extends VariantTaskCreationAction<ShaderCompile> {
 
-        public CreationAction(@NonNull VariantScope scope) {
-            super(scope);
+        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
         }
 
         @Override
         @NonNull
         public String getName() {
-            return getVariantScope().getTaskName("compile", "Shaders");
+            return getComponent().computeTaskName("compile", "Shaders");
         }
 
         @Override

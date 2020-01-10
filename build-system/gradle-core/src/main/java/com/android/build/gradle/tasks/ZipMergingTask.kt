@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.FN_INTERMEDIATE_FULL_JAR
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -88,11 +89,13 @@ abstract class ZipMergingTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<ZipMergingTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<ZipMergingTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("createFullJar")
+            get() = component.computeTaskName("createFullJar")
         override val type: Class<ZipMergingTask>
             get() = ZipMergingTask::class.java
 

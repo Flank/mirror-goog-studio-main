@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
@@ -142,11 +143,13 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
     }
 
     class CreateAction(
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<ParseLibraryResourcesTask>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<ParseLibraryResourcesTask>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("parse", "LocalResources")
+            get() = component.computeTaskName("parse", "LocalResources")
         override val type: Class<ParseLibraryResourcesTask>
             get() = ParseLibraryResourcesTask::class.java
 

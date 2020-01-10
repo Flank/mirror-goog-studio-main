@@ -29,7 +29,7 @@ class CreateCxxVariantModelTest {
             val module = tryCreateCxxModuleModel(it.global)!!
             createCxxVariantModel(
                 module,
-                it.variantScope
+                it.componentProperties
             )
         }
     }
@@ -39,7 +39,7 @@ class CreateCxxVariantModelTest {
         BasicCmakeMock().let {
             // Walk all vals in the model and invoke them
             val module = tryCreateCxxModuleModel(it.global)!!
-            val variant = createCxxVariantModel(module, it.variantScope)
+            val variant = createCxxVariantModel(module, it.componentProperties)
             CxxVariantModel::class.java.methods.toList().onEach { method ->
                 val result = method.invoke(variant)
                 if (result is File) {

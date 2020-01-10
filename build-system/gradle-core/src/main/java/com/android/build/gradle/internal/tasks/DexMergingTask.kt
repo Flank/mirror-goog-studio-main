@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.TransformException
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.crash.PluginCrashReporter
@@ -160,19 +161,21 @@ abstract class DexMergingTask : NonIncrementalTask() {
     }
 
     class CreationAction @JvmOverloads constructor(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         private val action: DexMergingAction,
         private val dexingType: DexingType,
         private val dexingUsingArtifactTransforms: Boolean = true,
         private val separateFileDependenciesDexingTask: Boolean = false,
         private val outputType: MultipleArtifactType<Directory> = MultipleArtifactType.DEX
-    ) : VariantTaskCreationAction<DexMergingTask>(variantScope) {
+    ) : VariantTaskCreationAction<DexMergingTask>(
+        componentProperties
+    ) {
 
         private val internalName: String = when (action) {
-            DexMergingAction.MERGE_LIBRARY_PROJECTS -> variantScope.getTaskName("mergeLibDex")
-            DexMergingAction.MERGE_EXTERNAL_LIBS -> variantScope.getTaskName("mergeExtDex")
-            DexMergingAction.MERGE_PROJECT -> variantScope.getTaskName("mergeProjectDex")
-            DexMergingAction.MERGE_ALL -> variantScope.getTaskName("mergeDex")
+            DexMergingAction.MERGE_LIBRARY_PROJECTS -> componentProperties.computeTaskName("mergeLibDex")
+            DexMergingAction.MERGE_EXTERNAL_LIBS -> componentProperties.computeTaskName("mergeExtDex")
+            DexMergingAction.MERGE_PROJECT -> componentProperties.computeTaskName("mergeProjectDex")
+            DexMergingAction.MERGE_ALL -> componentProperties.computeTaskName("mergeDex")
         }
 
         override val name = internalName
@@ -220,7 +223,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
         }
 
         private fun getDexFiles(action: DexMergingAction): FileCollection {
-            val attributes = getDexingArtifactConfiguration(variantScope).getAttributes()
+            val attributes = getDexingArtifactConfiguration(component).getAttributes()
 
             fun forAction(action: DexMergingAction): FileCollection {
                 when (action) {
@@ -262,18 +265,18 @@ abstract class DexMergingTask : NonIncrementalTask() {
                             )
 
                         val variantType = variantScope.type
-                        if (variantType.isTestComponent && variantType.isApk) {
-                            val testedVariantData =
-                                checkNotNull(variantScope.testedVariantData) { "Test component without testedVariantData" }
-                            if (dexingUsingArtifactTransforms && testedVariantData.type.isAar) {
-                                // If dexing using artifact transforms, library production code will
-                                // be dex'ed in a task, so we need to fetch the output directly.
-                                // Otherwise, it will be in the dex'ed in the dex builder transform.
-                                files.from(
-                                    testedVariantData.scope.artifacts.getOperations().getAll(
-                                        MultipleArtifactType.DEX
+                        if (variantType.isApk) {
+                            component.onTestedVariant {
+                                if (dexingUsingArtifactTransforms && it.variantType.isAar) {
+                                    // If dexing using artifact transforms, library production code will
+                                    // be dex'ed in a task, so we need to fetch the output directly.
+                                    // Otherwise, it will be in the dex'ed in the dex builder transform.
+                                    files.from(
+                                        it.artifacts.getOperations().getAll(
+                                            MultipleArtifactType.DEX
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
 

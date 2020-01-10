@@ -16,12 +16,15 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BundleOptions
 import com.android.build.gradle.internal.dsl.NoOpDeprecationReporter
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.variant2.createFakeDslScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantType
@@ -78,9 +81,9 @@ class ParseIntegrityConfigTaskTest {
 
         val bundleOptions = BundleOptions(project.objects, NoOpDeprecationReporter())
         bundleOptions.integrityConfigDir.set(configDirectory)
-        val variantScope = createScopeFromBundleOptions(bundleOptions)
+        val componentProperties = createScopeFromBundleOptions(bundleOptions)
 
-        val taskAction = ParseIntegrityConfigTask.CreationAction(variantScope)
+        val taskAction = ParseIntegrityConfigTask.CreationAction(componentProperties)
         taskAction.preConfigure(task.name)
 
         // Under test
@@ -94,29 +97,36 @@ class ParseIntegrityConfigTaskTest {
         FileSubject.assertThat(configFile).contains("<integrity_config/>")
     }
 
-    private fun createScopeFromBundleOptions(bundleOptions: BundleOptions): VariantScope {
+    private fun createScopeFromBundleOptions(bundleOptions: BundleOptions): ComponentPropertiesImpl {
+        val dslScope: DslScope = createFakeDslScope(
+            projectOptions = ProjectOptions(
+                ImmutableMap.of<String, Any>(
+                    BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
+                    false
+                )
+            )
+        )
+
+        val componentProperties = Mockito.mock(ComponentPropertiesImpl::class.java)
         val variantType = Mockito.mock(VariantType::class.java)
         val extension = Mockito.mock(BaseAppModuleExtension::class.java)
         val globalScope = Mockito.mock(GlobalScope::class.java)
         val variantScope = Mockito.mock(VariantScope::class.java)
         val taskContainer = Mockito.mock(MutableTaskContainer::class.java)
         val preBuildTask = Mockito.mock(TaskProvider::class.java)
-        val projectOptions = ProjectOptions(
-            ImmutableMap.of<String, Any>(
-                BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
-                false
-            )
-        )
 
-        Mockito.`when`(variantScope.globalScope).thenReturn(globalScope)
+        Mockito.`when`(componentProperties.dslScope).thenReturn(dslScope)
+        Mockito.`when`(componentProperties.variantType).thenReturn(variantType)
+        Mockito.`when`(componentProperties.name).thenReturn("variant")
+        Mockito.`when`(componentProperties.taskContainer).thenReturn(taskContainer)
+        Mockito.`when`(componentProperties.globalScope).thenReturn(globalScope)
+        Mockito.`when`(componentProperties.variantScope).thenReturn(variantScope)
         Mockito.`when`(extension.bundle).thenReturn(bundleOptions)
         Mockito.`when`(globalScope.extension).thenReturn(extension)
-        Mockito.`when`(globalScope.projectOptions).thenReturn(projectOptions)
-        Mockito.`when`(variantScope.type).thenReturn(variantType)
-        Mockito.`when`(variantScope.name).thenReturn("variant")
-        Mockito.`when`(variantScope.taskContainer).thenReturn(taskContainer)
+        Mockito.`when`(globalScope.dslScope).thenReturn(dslScope)
+        Mockito.`when`(globalScope.projectOptions).thenReturn(dslScope.projectOptions)
         Mockito.`when`(taskContainer.preBuildTask).thenReturn(preBuildTask)
 
-        return variantScope
+        return componentProperties
     }
 }

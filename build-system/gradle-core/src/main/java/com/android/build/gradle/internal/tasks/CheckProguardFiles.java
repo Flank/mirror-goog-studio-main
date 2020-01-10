@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.ProguardFiles.ProguardFile;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import java.io.File;
 import java.util.HashMap;
@@ -71,14 +71,14 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
 
     public static class CreationAction extends VariantTaskCreationAction<CheckProguardFiles> {
 
-        public CreationAction(VariantScope scope) {
-            super(scope);
+        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("check", "ProguardFiles");
+            return getComponent().computeTaskName("check", "ProguardFiles");
         }
 
         @NonNull

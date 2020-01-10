@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.transforms
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -174,10 +175,12 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<ShrinkBundleResourcesTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<ShrinkBundleResourcesTask>(
+            componentProperties
+        ) {
 
-        override val name: String = variantScope.getTaskName("shrink", "Resources")
+        override val name: String = component.computeTaskName("shrink", "Resources")
         override val type: Class<ShrinkBundleResourcesTask>
             get() = ShrinkBundleResourcesTask::class.java
 
@@ -198,7 +201,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE,
                 task.uncompressedResources
             )
-            task.mainSplit = variantScope.variantData.publicVariantPropertiesApi.outputs.getMainSplit().apkData
+            task.mainSplit = component.outputs.getMainSplit().apkData
 
             task.dex = if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
                 variantScope

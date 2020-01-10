@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
@@ -41,14 +42,20 @@ class EmptyGlobalMock {
         GlobalScope::class.java,
         throwUnmocked
     )
-    val variant: VariantScope = Mockito.mock(
-        VariantScope::class.java,
+
+    val componentProperties: ComponentPropertiesImpl = Mockito.mock(
+        ComponentPropertiesImpl::class.java,
         throwUnmocked
     )
-    val baseVariantData: BaseVariantData = Mockito.mock(
-        BaseVariantData::class.java,
-        throwUnmocked
-    )
+
+//    val variantScope: VariantScope = Mockito.mock(
+//        VariantScope::class.java,
+//        throwUnmocked
+//    )
+//    val baseVariantData: BaseVariantData = Mockito.mock(
+//        BaseVariantData::class.java,
+//        throwUnmocked
+//    )
     val extension: BaseExtension = Mockito.mock(
         BaseExtension::class.java,
         throwUnmocked

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.feature
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -124,11 +125,13 @@ abstract class BundleAllClasses : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<BundleAllClasses>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<BundleAllClasses>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("bundle", "Classes")
+            get() = component.computeTaskName("bundle", "Classes")
         override val type: Class<BundleAllClasses>
             get() = BundleAllClasses::class.java
 
@@ -148,9 +151,9 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                 InternalArtifactType.JAVAC,
                 task.javacClasses
             )
-            task.preJavacClasses = variantScope.variantData.allPreJavacGeneratedBytecode
-            task.postJavacClasses = variantScope.variantData.allPostJavacGeneratedBytecode
-            val globalScope = variantScope.globalScope
+            task.preJavacClasses = component.variantData.allPreJavacGeneratedBytecode
+            task.postJavacClasses = component.variantData.allPostJavacGeneratedBytecode
+            val globalScope = component.globalScope
             task.modulePath = globalScope.project.path
             task.jarCreatorType = variantScope.jarCreatorType
             if (globalScope.extension.aaptOptions.namespaced) {
@@ -158,7 +161,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                     task.thisRClassClasses
                 )
-                task.dependencyRClassClasses = variantScope.variantDependencies.getArtifactFileCollection(
+                task.dependencyRClassClasses = component.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     ALL,
                     COMPILE_ONLY_NAMESPACED_R_CLASS_JAR

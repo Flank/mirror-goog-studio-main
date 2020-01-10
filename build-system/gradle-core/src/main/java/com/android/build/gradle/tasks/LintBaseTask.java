@@ -30,6 +30,8 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
@@ -42,10 +44,7 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
-import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.builder.core.VariantType;
 import com.android.repository.Revision;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
@@ -246,26 +245,28 @@ public abstract class LintBaseTask extends DefaultTask {
      * would make sure they are resolved before starting the task.
      */
     protected static void addModelArtifactsToInputs(
-            @NonNull ConfigurableFileCollection inputs, @NonNull VariantScope variantScope) {
+            @NonNull ConfigurableFileCollection inputs,
+            @NonNull ComponentPropertiesImpl componentProperties) {
 
         inputs.from(
                 (Callable<Collection<ArtifactCollection>>)
                         () ->
-                                new ArtifactCollections(variantScope, COMPILE_CLASSPATH)
+                                new ArtifactCollections(componentProperties, COMPILE_CLASSPATH)
                                         .getAllCollections());
         inputs.from(
                 (Callable<Collection<ArtifactCollection>>)
                         () ->
-                                new ArtifactCollections(variantScope, RUNTIME_CLASSPATH)
+                                new ArtifactCollections(componentProperties, RUNTIME_CLASSPATH)
                                         .getAllCollections());
 
-        if (variantScope.getVariantData() instanceof TestedVariantData) {
+        if (componentProperties instanceof VariantPropertiesImpl) {
+            VariantPropertiesImpl variantProperties = (VariantPropertiesImpl) componentProperties;
+
             for (VariantType variantType : VariantType.Companion.getTestComponents()) {
-                TestVariantData testVariantData =
-                        ((TestedVariantData) variantScope.getVariantData())
-                                .getTestVariantData(variantType);
-                if (testVariantData != null) {
-                    addModelArtifactsToInputs(inputs, testVariantData.getScope());
+                ComponentPropertiesImpl testVariant =
+                        variantProperties.getTestComponents().get(variantType);
+                if (testVariant != null) {
+                    addModelArtifactsToInputs(inputs, testVariant);
                 }
             }
         }
@@ -279,29 +280,31 @@ public abstract class LintBaseTask extends DefaultTask {
 
         private final ConfigurableFileCollection allInputs;
 
-        public VariantInputs(@NonNull VariantScope variantScope) {
-            name = variantScope.getName();
-            allInputs = variantScope.getGlobalScope().getProject().files();
+        public VariantInputs(@NonNull ComponentPropertiesImpl componentProperties) {
+            name = componentProperties.getName();
+            allInputs = componentProperties.getGlobalScope().getProject().files();
 
             Provider<RegularFile> localLintJarCollection;
             allInputs.from(
                     localLintJarCollection =
-                            variantScope
+                            componentProperties
                                     .getGlobalScope()
                                     .getArtifacts()
                                     .getFinalProduct(LINT_JAR.INSTANCE));
             FileCollection dependencyLintJarCollection;
             allInputs.from(
                     dependencyLintJarCollection =
-                            variantScope
+                            componentProperties
                                     .getVariantDependencies()
                                     .getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, LINT));
 
-            lintRuleJars = variantScope.getGlobalScope().getProject().files(
-                    localLintJarCollection,
-                    dependencyLintJarCollection);
+            lintRuleJars =
+                    componentProperties
+                            .getGlobalScope()
+                            .getProject()
+                            .files(localLintJarCollection, dependencyLintJarCollection);
 
-            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+            BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
             Provider<? extends FileSystemLocation> tmpMergedManifest =
                     artifacts.getFinalProduct(MERGED_MANIFESTS.INSTANCE);
             if (!tmpMergedManifest.isPresent()) {
@@ -310,7 +313,7 @@ public abstract class LintBaseTask extends DefaultTask {
             if (!tmpMergedManifest.isPresent()) {
                 throw new RuntimeException(
                         "VariantInputs initialized with no merged manifest on: "
-                                + variantScope.getVariantDslInfo().getVariantType());
+                                + componentProperties.getVariantType());
             }
             mergedManifest = tmpMergedManifest;
             allInputs.from(mergedManifest);
@@ -321,14 +324,14 @@ public abstract class LintBaseTask extends DefaultTask {
             } else {
                 throw new RuntimeException(
                         "VariantInputs initialized with no merged manifest report on: "
-                                + variantScope.getVariantDslInfo().getVariantType());
+                                + componentProperties.getVariantType());
             }
 
             // these inputs are only there to ensure that the lint task runs after these build
             // intermediates are built.
             allInputs.from(artifacts.getAllClasses());
 
-            addModelArtifactsToInputs(allInputs, variantScope);
+            addModelArtifactsToInputs(allInputs, componentProperties);
         }
 
         @NonNull
@@ -406,7 +409,7 @@ public abstract class LintBaseTask extends DefaultTask {
     public abstract static class BaseCreationAction<T extends LintBaseTask>
             extends TaskCreationAction<T> {
 
-        @NonNull private final GlobalScope globalScope;
+        @NonNull protected final GlobalScope globalScope;
 
         public BaseCreationAction(@NonNull GlobalScope globalScope) {
             this.globalScope = globalScope;

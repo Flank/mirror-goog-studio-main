@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.ide
 
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator
 import com.android.builder.model.ModelBuilderParameter
@@ -37,7 +38,7 @@ import java.util.concurrent.Executors
  */
 class NativeModelBuilder(
     private val globalScope: GlobalScope,
-    private val variantManager: VariantManager
+    private val variantManager: VariantModel
 ) : ParameterizedToolingModelBuilder<ModelBuilderParameter> {
     private val nativeAndroidProjectClass = NativeAndroidProject::class.java.name
     private val nativeVariantAbiClass = NativeVariantAbi::class.java.name
@@ -46,7 +47,7 @@ class NativeModelBuilder(
         projectOptions.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL)
     private val enableParallelNativeJsonGen get() =
         projectOptions.get(BooleanOption.ENABLE_PARALLEL_NATIVE_JSON_GEN)
-    private val scopes get() = variantManager.variantScopes
+    private val scopes get() = variantManager.components
         .filter { it.taskContainer.externalNativeJsonGenerator != null }
         .filterNotNull()
     private val generators get() = scopes.map { it.taskContainer.externalNativeJsonGenerator!!.get() }
@@ -214,8 +215,8 @@ class NativeModelBuilder(
             val threadNumber = Math.min(cpuCores, 8)
             val nativeJsonGenExecutor = Executors.newFixedThreadPool(threadNumber)
             val buildSteps = ArrayList<Callable<Void>>()
-            for (variantScope in variantManager.variantScopes) {
-                val generator = variantScope
+            for (component in variantManager.components) {
+                val generator = component
                     .taskContainer
                     .externalNativeJsonGenerator?.orNull
                 if (generator != null) {

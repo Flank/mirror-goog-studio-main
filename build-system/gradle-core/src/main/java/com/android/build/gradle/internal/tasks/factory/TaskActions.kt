@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.factory
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.VariantAwareTask
@@ -60,20 +61,26 @@ abstract class TaskCreationAction<T : Task> : TaskInformation<T>, PreConfigActio
  * and actions to configure the task ([preConfigure], [configure], [handleProvider])
  */
 abstract class VariantTaskCreationAction<T>(
-    protected val variantScope: VariantScope, private val dependsOnPreBuildTask: Boolean
+    protected val component: ComponentPropertiesImpl,
+    private val dependsOnPreBuildTask: Boolean
 ) : TaskCreationAction<T>() where T: Task, T: VariantAwareTask {
 
-    constructor(variantScope: VariantScope): this(variantScope, true)
+    @Deprecated("Use getComponent() instead")
+    protected val variantScope: VariantScope = component.variantScope
+
+    constructor(
+        component: ComponentPropertiesImpl
+    ): this(component, true)
 
     override fun configure(task: T) {
         if (dependsOnPreBuildTask) {
-            val taskContainer: MutableTaskContainer = variantScope.taskContainer
+            val taskContainer: MutableTaskContainer = component.taskContainer
             task.dependsOn(taskContainer.preBuildTask)
         }
 
-        task.variantName = variantScope.name
+        task.variantName = component.name
         task.enableGradleWorkers.set(
-            variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS)
+            component.dslScope.projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS)
         )
     }
 }

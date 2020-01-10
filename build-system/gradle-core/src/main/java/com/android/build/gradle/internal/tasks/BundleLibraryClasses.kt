@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.FN_CLASSES_JAR
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.dependency.getClassesDirFormat
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
@@ -28,7 +29,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ClassesDirF
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ClassesDirFormat.CONTAINS_SINGLE_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -133,12 +133,13 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
     }
 
     class CreationAction(
-        scope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         private val publishedType: PublishedConfigType,
         private val outputType: AndroidArtifacts.ArtifactType,
         private val toIgnoreRegExps: Supplier<List<String>> = Supplier { emptyList<String>() }
-    ) :
-        VariantTaskCreationAction<BundleLibraryClasses>(scope) {
+    ) : VariantTaskCreationAction<BundleLibraryClasses>(
+        componentProperties
+    ) {
 
         private val inputs: FileCollection
 
@@ -154,7 +155,7 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
             // Because ordering matters for TransformAPI, we need to fetch classes from the
             // transform pipeline as soon as this creation action is instantiated.
             inputs = if (publishedType == PublishedConfigType.RUNTIME_ELEMENTS) {
-                scope.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
+                variantScope.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
                     types.contains(QualifiedContent.DefaultContentType.CLASSES)
                             && scopes.size == 1 && scopes.contains(QualifiedContent.Scope.PROJECT)
                 }
@@ -164,7 +165,7 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
         }
 
         override val name: String =
-            scope.getTaskName(
+            componentProperties.computeTaskName(
                 if (publishedType == PublishedConfigType.API_ELEMENTS) {
                     check(outputType == CLASSES_JAR) {
                         "Expected CLASSES_JAR output type but found ${outputType.name}"

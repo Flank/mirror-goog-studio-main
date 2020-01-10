@@ -17,8 +17,8 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import java.io.File;
@@ -68,14 +68,14 @@ public abstract class CheckTestedAppObfuscation extends NonIncrementalTask {
     public static class CreationAction
             extends VariantTaskCreationAction<CheckTestedAppObfuscation> {
 
-        public CreationAction(VariantScope scope) {
-            super(scope);
+        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("checkTestedAppObfuscation");
+            return getComponent().computeTaskName("checkTestedAppObfuscation");
         }
 
         @NonNull

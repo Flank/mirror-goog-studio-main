@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.dexing.readDesugarGraph
 import com.android.build.gradle.internal.dexing.writeDesugarGraph
@@ -321,18 +322,18 @@ abstract class DexingWithClasspathTransform : BaseDexingTransform() {
     override fun computeClasspathFiles() = classpath.files.map(File::toPath)
 }
 
-fun getDexingArtifactConfigurations(scopes: Collection<VariantScope>): Set<DexingArtifactConfiguration> {
-    return scopes.map { getDexingArtifactConfiguration(it) }.toSet()
+fun getDexingArtifactConfigurations(components: Collection<ComponentPropertiesImpl>): Set<DexingArtifactConfiguration> {
+    return components.map { getDexingArtifactConfiguration(it) }.toSet()
 }
 
-fun getDexingArtifactConfiguration(scope: VariantScope): DexingArtifactConfiguration {
+fun getDexingArtifactConfiguration(component: ComponentPropertiesImpl): DexingArtifactConfiguration {
     return DexingArtifactConfiguration(
-        minSdk = scope.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel,
-        isDebuggable = scope.variantDslInfo.isDebuggable,
-        enableDesugaring = scope.java8LangSupportType == VariantScope.Java8LangSupport.D8,
-        enableCoreLibraryDesugaring = scope.isCoreLibraryDesugaringEnabled,
-        needsShrinkDesugarLibrary = scope.needsShrinkDesugarLibrary,
-        incrementalDexingV2 = scope.globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2)
+        minSdk = component.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel,
+        isDebuggable = component.variantDslInfo.isDebuggable,
+        enableDesugaring = component.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8,
+        enableCoreLibraryDesugaring = component.variantScope.isCoreLibraryDesugaringEnabled,
+        needsShrinkDesugarLibrary = component.variantScope.needsShrinkDesugarLibrary,
+        incrementalDexingV2 = component.globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2)
     )
 }
 

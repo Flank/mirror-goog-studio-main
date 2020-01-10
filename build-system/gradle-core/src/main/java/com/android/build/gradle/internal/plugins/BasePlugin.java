@@ -23,6 +23,7 @@ import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.gradle.BaseExtension;
@@ -69,11 +70,9 @@ import com.android.build.gradle.internal.profile.RecordingBuildListener;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.Aapt2Daemon;
 import com.android.build.gradle.internal.services.Aapt2Workers;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.build.gradle.internal.variant.VariantInputModelImpl;
@@ -345,7 +344,6 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                 new GlobalScope(
                         project,
                         creator,
-                        projectOptions,
                         dslScope,
                         sdkComponents,
                         registry,
@@ -532,7 +530,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         registerModelBuilder(registry, globalScope, variantModel, extension, extraModelInfo);
 
         // Register a builder for the native tooling model
-        NativeModelBuilder nativeModelBuilder = new NativeModelBuilder(globalScope, variantManager);
+        NativeModelBuilder nativeModelBuilder = new NativeModelBuilder(globalScope, variantModel);
         registry.register(nativeModelBuilder);
     }
 
@@ -669,17 +667,16 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         }
         AnalyticsUtil.recordFirebasePerformancePluginVersion(project);
 
-        List<VariantScope> variantScopes = variantManager.createVariantsAndTasks();
+        List<ComponentPropertiesImpl> components = variantManager.createVariantsAndTasks();
 
         new DependencyConfigurator(project, project.getName(), globalScope, variantInputModel)
                 .configureDependencies();
 
         // Run the old Variant API, after the variants and tasks have been created.
         ApiObjectFactory apiObjectFactory =
-                new ApiObjectFactory(extension, variantFactory, project.getObjects());
-        for (VariantScope variantScope : variantScopes) {
-            BaseVariantData variantData = variantScope.getVariantData();
-            apiObjectFactory.create(variantData);
+                new ApiObjectFactory(extension, variantFactory, globalScope);
+        for (ComponentPropertiesImpl component : components) {
+            apiObjectFactory.create(component);
         }
 
         // Make sure no SourceSets were added through the DSL without being properly configured
@@ -691,15 +688,13 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                 globalScope.getBuildFeatures().getViewBinding(),
                 globalScope.getBuildFeatures().getDataBinding(),
                 extension.getDataBinding(),
-                variantManager.getVariantScopes());
-
+                components);
 
         // configure compose related tasks.
-        taskManager.configureKotlinPluginTasksForComposeIfNecessary(
-                globalScope, variantManager.getVariantScopes());
+        taskManager.configureKotlinPluginTasksForComposeIfNecessary(globalScope, components);
 
         // create the global lint task that depends on all the variants
-        taskManager.configureGlobalLintTask(variantManager.getVariantScopes());
+        taskManager.configureGlobalLintTask(components);
 
         int flavorDimensionCount = 0;
         if (extension.getFlavorDimensionList() != null) {
@@ -707,11 +702,11 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         }
 
         taskManager.createAnchorAssembleTasks(
-                variantScopes, extension.getProductFlavors().size(), flavorDimensionCount);
+                components, extension.getProductFlavors().size(), flavorDimensionCount);
 
         // now publish all variant artifacts.
-        for (VariantScope variantScope : variantManager.getVariantScopes()) {
-            variantManager.publishBuildArtifacts(variantScope);
+        for (ComponentPropertiesImpl component : components) {
+            variantManager.publishBuildArtifacts(component);
         }
 
         checkSplitConfiguration();

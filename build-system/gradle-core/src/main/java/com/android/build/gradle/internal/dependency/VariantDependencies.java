@@ -23,17 +23,16 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.SingleArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.variant.ApplicationVariantData;
-import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -88,18 +87,20 @@ public class VariantDependencies {
 
     @NonNull private final String variantName;
     @NonNull private final VariantType variantType;
+
+    @Nullable private final VariantPropertiesImpl testedVariant;
+
     @NonNull private final Configuration compileClasspath;
     @NonNull private final Configuration runtimeClasspath;
     @NonNull private final Collection<Configuration> sourceSetRuntimeConfigurations;
     @NonNull private final Collection<Configuration> sourceSetImplementationConfigurations;
 
-    @NonNull private final ImmutableMap<PublishedConfigType, Configuration> elements;
-
     @NonNull private final Configuration annotationProcessorConfiguration;
-
     @Nullable private final Configuration wearAppConfiguration;
     @Nullable private final Configuration reverseMetadataValuesConfiguration;
-    @Nullable private final TestedVariantData testedVariantData;
+
+    @NonNull private final ImmutableMap<PublishedConfigType, Configuration> elements;
+
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
 
@@ -114,11 +115,12 @@ public class VariantDependencies {
             @NonNull Configuration annotationProcessorConfiguration,
             @Nullable Configuration reverseMetadataValuesConfiguration,
             @Nullable Configuration wearAppConfiguration,
-            @Nullable TestedVariantData testedVariantData,
+            @Nullable VariantPropertiesImpl testedVariant,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions) {
-        Preconditions.checkState(!variantType.isTestComponent() || testedVariantData != null,
-                "testedVariantData null for test component");
+        Preconditions.checkState(
+                !variantType.isTestComponent() || testedVariant != null,
+                "testedVariantDependencies null for test component");
 
         this.variantName = variantName;
         this.variantType = variantType;
@@ -130,7 +132,7 @@ public class VariantDependencies {
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.reverseMetadataValuesConfiguration = reverseMetadataValuesConfiguration;
         this.wearAppConfiguration = wearAppConfiguration;
-        this.testedVariantData = testedVariantData;
+        this.testedVariant = testedVariant;
         this.project = project;
         this.projectOptions = projectOptions;
     }
@@ -277,16 +279,14 @@ public class VariantDependencies {
         }
 
         // get the matching file collection for the tested variant, if any.
-        if (testedVariantData == null) {
+        if (testedVariant == null) {
             return artifacts;
         }
-
-        final VariantScope testedScope = testedVariantData.getScope();
 
         // we only add the tested component to the PROJECT | ALL scopes.
         if (scope == AndroidArtifacts.ArtifactScope.PROJECT || scope == ALL) {
             PublishingSpecs.VariantSpec testedSpec =
-                    testedScope.getPublishingSpec().getTestingSpec(variantType);
+                    testedVariant.getVariantScope().getPublishingSpec().getTestingSpec(variantType);
 
             // get the OutputPublishingSpec from the ArtifactType for this particular variant
             // spec
@@ -303,7 +303,7 @@ public class VariantDependencies {
                     // if it's the case then we add the tested artifact.
                     final SingleArtifactType<? extends FileSystemLocation> taskOutputType =
                             taskOutputSpec.getOutputType();
-                    BuildArtifactsHolder testedArtifacts = testedScope.getArtifacts();
+                    BuildArtifactsHolder testedArtifacts = testedVariant.getArtifacts();
                     artifacts =
                             ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
                                     artifacts,
@@ -311,7 +311,7 @@ public class VariantDependencies {
                                             .getFinalProductAsFileCollection(taskOutputType)
                                             .get(),
                                     project.getPath(),
-                                    testedScope.getName());
+                                    testedVariant.getName());
                 }
             }
         }
@@ -322,7 +322,7 @@ public class VariantDependencies {
         // scope in order to compile.
         // We only do this for the AndroidTest.
         // We do have to however keep the Android resources.
-        if (testedVariantData instanceof ApplicationVariantData
+        if (testedVariant.getVariantType() == VariantTypeImpl.BASE_APK
                 && configType == RUNTIME_CLASSPATH
                 && variantType.isApk()) {
             if (artifactType == AndroidArtifacts.ArtifactType.ANDROID_RES
@@ -335,8 +335,8 @@ public class VariantDependencies {
                                 getRuntimeClasspath().getIncoming());
             } else {
                 ArtifactCollection testedArtifactCollection =
-                        ((ApplicationVariantData) testedVariantData)
-                                .getVariantDependency()
+                        testedVariant
+                                .getVariantDependencies()
                                 .getArtifactCollection(
                                         configType, scope, artifactType, attributeMap);
                 artifacts = new SubtractingArtifactCollection(artifacts, testedArtifactCollection);

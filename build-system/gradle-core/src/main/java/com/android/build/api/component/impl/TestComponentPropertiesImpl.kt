@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.api.variant.impl
+
+package com.android.build.api.component.impl
 
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.api.variant.VariantProperties
+import com.android.build.api.component.TestComponentProperties
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -26,9 +27,9 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.builder.core.VariantType
+import javax.inject.Inject
 
-open class VariantPropertiesImpl(
+open class TestComponentPropertiesImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -37,6 +38,7 @@ open class VariantPropertiesImpl(
     artifacts: BuildArtifactsHolder,
     variantScope: VariantScope,
     variantData: BaseVariantData,
+    override val testedVariant: VariantPropertiesImpl,
     dslScope: DslScope
 ) : ComponentPropertiesImpl(
     componentIdentity,
@@ -48,17 +50,4 @@ open class VariantPropertiesImpl(
     variantScope,
     variantData,
     dslScope
-), VariantProperties {
-
-    // ---------------------------------------------------------------------------------------------
-    // PUBLIC API
-    // ---------------------------------------------------------------------------------------------
-
-
-    // ---------------------------------------------------------------------------------------------
-    // INTERNAL API
-    // ---------------------------------------------------------------------------------------------
-
-    val testComponents = mutableMapOf<VariantType, ComponentPropertiesImpl>()
-
-}
+), TestComponentProperties

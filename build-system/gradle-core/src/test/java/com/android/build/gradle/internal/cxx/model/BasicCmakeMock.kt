@@ -29,10 +29,10 @@ open class BasicCmakeMock : BasicModuleModelMock() {
 
     // Walk all vals in the model and invoke them
     val module by lazy { tryCreateCxxModuleModel(global, cmakeFinder)!! }
-    val variant by lazy { createCxxVariantModel(module, variantScope) }
-    val abi by lazy { createCxxAbiModel(variant, Abi.X86, global, baseVariantData) }
+    val variant by lazy { createCxxVariantModel(module, componentProperties) }
+    val abi by lazy { createCxxAbiModel(variant, Abi.X86, global, componentProperties) }
 
-    val coreExternalNativeCmakeOptions = mock(
+    val coreExternalNativeCmakeOptions: CoreExternalNativeCmakeOptions = mock(
         CoreExternalNativeCmakeOptions::class.java,
         throwUnmocked
     )

@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -65,11 +66,11 @@ public abstract class JacocoTask extends AndroidVariantTask {
 
     /** Returns which Jacoco version to use. */
     @NonNull
-    public static String getJacocoVersion(@NonNull VariantScope scope) {
-        if (scope.getDexer() == DexerTool.DX) {
+    public static String getJacocoVersion(@NonNull ComponentPropertiesImpl componentProperties) {
+        if (componentProperties.getVariantScope().getDexer() == DexerTool.DX) {
             return JacocoConfigurations.VERSION_FOR_DX;
         } else {
-            return scope.getGlobalScope().getExtension().getJacoco().getVersion();
+            return componentProperties.getGlobalScope().getExtension().getJacoco().getVersion();
         }
     }
 
@@ -90,14 +91,14 @@ public abstract class JacocoTask extends AndroidVariantTask {
 
     public static class CreationAction extends VariantTaskCreationAction<JacocoTask> {
 
-        public CreationAction(@NonNull VariantScope scope) {
-            super(scope);
+        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("jacoco");
+            return getComponent().computeTaskName("jacoco");
         }
 
         @NonNull
@@ -134,7 +135,7 @@ public abstract class JacocoTask extends AndroidVariantTask {
             task.inputClasses = scope.getArtifacts().getAllClasses();
             task.jacocoAntTaskConfiguration =
                     JacocoConfigurations.getJacocoAntTaskConfiguration(
-                            scope.getGlobalScope().getProject(), getJacocoVersion(scope));
+                            scope.getGlobalScope().getProject(), getJacocoVersion(getComponent()));
             task.isolationMode =
                     scope.getGlobalScope()
                                     .getProjectOptions()

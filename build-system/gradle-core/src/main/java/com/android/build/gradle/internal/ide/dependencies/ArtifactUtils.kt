@@ -18,6 +18,7 @@
 
 package com.android.build.gradle.internal.ide.dependencies
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.VariantScope
@@ -31,7 +32,7 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult
 
 /** This holder class exists to allow lint to depend on the artifact collections. */
 class ArtifactCollections(
-    variantScope: VariantScope,
+    componentProperties: ComponentPropertiesImpl,
     consumedConfigType: AndroidArtifacts.ConsumedConfigType
 ) {
     /**
@@ -56,20 +57,20 @@ class ArtifactCollections(
      *
      * This captures dependencies without transforming them using `AttributeCompatibilityRule`s.
      **/
-    val all: ArtifactCollection = variantScope.variantDependencies.getArtifactCollectionForToolingModel(
+    val all: ArtifactCollection = componentProperties.variantDependencies.getArtifactCollectionForToolingModel(
         consumedConfigType,
         AndroidArtifacts.ArtifactScope.ALL,
         AndroidArtifacts.ArtifactType.AAR_OR_JAR
     )
 
-    val manifests: ArtifactCollection = variantScope.variantDependencies.getArtifactCollectionForToolingModel(
+    val manifests: ArtifactCollection = componentProperties.variantDependencies.getArtifactCollectionForToolingModel(
         consumedConfigType,
         AndroidArtifacts.ArtifactScope.ALL,
         AndroidArtifacts.ArtifactType.MANIFEST
     )
     val nonNamespacedManifests: ArtifactCollection? =
-        if (variantScope.globalScope.extension.aaptOptions.namespaced) {
-            variantScope.variantDependencies.getArtifactCollectionForToolingModel(
+        if (componentProperties.globalScope.extension.aaptOptions.namespaced) {
+            componentProperties.variantDependencies.getArtifactCollectionForToolingModel(
                 consumedConfigType,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.NON_NAMESPACED_MANIFEST
@@ -84,7 +85,7 @@ class ArtifactCollections(
     // This is why we query for Scope.ALL
     // But we also simply need the exploded AARs for external Android dependencies so that
     // Studio can access the content.
-    val explodedAars: ArtifactCollection = variantScope.variantDependencies.getArtifactCollectionForToolingModel(
+    val explodedAars: ArtifactCollection = componentProperties.variantDependencies.getArtifactCollectionForToolingModel(
         consumedConfigType,
         AndroidArtifacts.ArtifactScope.ALL,
         AndroidArtifacts.ArtifactType.EXPLODED_AAR
@@ -92,7 +93,7 @@ class ArtifactCollections(
 
     // Note: Query for JAR instead of PROCESSED_JAR for project dependencies due to b/110054209
     // With a solution to that projectJars and externalJars could be merged.
-    val projectJars: ArtifactCollection = variantScope.variantDependencies.getArtifactCollectionForToolingModel(
+    val projectJars: ArtifactCollection = componentProperties.variantDependencies.getArtifactCollectionForToolingModel(
         consumedConfigType,
         AndroidArtifacts.ArtifactScope.PROJECT,
         AndroidArtifacts.ArtifactType.JAR
@@ -112,13 +113,13 @@ class ArtifactCollections(
  * Returns a set of ResolvedArtifact where the [ResolvedArtifact.dependencyType] and
  * [ResolvedArtifact.isWrappedModule] fields have been setup properly.
  *
- * @param variantScope the variant to get the artifacts from
+ * @param componentProperties the variant to get the artifacts from
  * @param consumedConfigType the type of the dependency to resolve (compile vs runtime)
  * @param dependencyFailureHandler handler for dependency resolution errors
  * @param buildMapping a build mapping from build name to root dir.
  */
 fun getAllArtifacts(
-    variantScope: VariantScope,
+    componentProperties: ComponentPropertiesImpl,
     consumedConfigType: AndroidArtifacts.ConsumedConfigType,
     dependencyFailureHandler: DependencyFailureHandler?,
     buildMapping: ImmutableMap<String, String>
@@ -129,7 +130,7 @@ fun getAllArtifacts(
     // - Is it an external dependency or a sub-project?
     // - Is it an android or a java dependency
 
-    val collections = ArtifactCollections(variantScope, consumedConfigType)
+    val collections = ArtifactCollections(componentProperties, consumedConfigType)
 
     // All artifacts: see comment on collections.all
     val incomingArtifacts = collections.all
@@ -155,9 +156,9 @@ fun getAllArtifacts(
         val failures = incomingArtifacts.failures
         // compute the name of the configuration
         dependencyFailureHandler.addErrors(
-            variantScope.globalScope.project.path
+            componentProperties.globalScope.project.path
                     + "@"
-                    + variantScope.name
+                    + componentProperties.name
                     + "/"
                     + consumedConfigType.getName(),
             failures
@@ -223,7 +224,7 @@ fun getAllArtifacts(
 
         check(mainArtifacts.isNotEmpty()) {
             """Internal Error: No artifact found for artifactType '$componentIdentifier'
-            | context: ${variantScope.globalScope.project.path} ${variantScope.name}
+            | context: ${componentProperties.globalScope.project.path} ${componentProperties.name}
             | manifests = $manifests
             | explodedAars = $explodedAars
             | projectJars = $projectJars

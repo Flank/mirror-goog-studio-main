@@ -30,13 +30,16 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.LibraryVariantImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.IssueReporter;
@@ -65,36 +68,66 @@ public class LibraryVariantFactory extends BaseVariantFactory {
     @NonNull
     @Override
     public VariantPropertiesImpl createVariantPropertiesObject(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope) {
-        return globalScope
-                .getDslScope()
-                .getObjectFactory()
-                .newInstance(
-                        LibraryVariantPropertiesImpl.class,
-                        globalScope.getDslScope(),
-                        variantScope,
-                        variantScope.getArtifacts().getOperations(),
-                        componentIdentity);
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantScope variantScope,
+            @NonNull BaseVariantData variantData) {
+        LibraryVariantPropertiesImpl variantProperties =
+                globalScope
+                        .getDslScope()
+                        .getObjectFactory()
+                        .newInstance(
+                                LibraryVariantPropertiesImpl.class,
+                                componentIdentity,
+                                variantDslInfo,
+                                variantDependencies,
+                                variantSources,
+                                paths,
+                                artifacts,
+                                variantScope,
+                                variantData,
+                                globalScope.getDslScope());
+
+        // create default output
+        String name =
+                globalScope.getProjectBaseName()
+                        + "-"
+                        + variantDslInfo.getBaseName()
+                        + "."
+                        + BuilderConstants.EXT_LIB_ARCHIVE;
+        variantProperties.addVariantOutput(variantData.getOutputFactory().addMainOutput(name));
+
+        return variantProperties;
     }
 
-    @Override
     @NonNull
+    @Override
     public BaseVariantData createVariantData(
-            @NonNull VariantScope variantScope,
-            @NonNull VariantDslInfoImpl variantDslInfo,
-            @NonNull VariantImpl publicVariantApi,
-            @NonNull VariantPropertiesImpl publicVariantPropertiesApi,
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
-            @NonNull TaskManager taskManager) {
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull GlobalScope globalScope,
+            @NonNull TaskManager taskManager,
+            @NonNull MutableTaskContainer taskContainer) {
         return new LibraryVariantData(
+                componentIdentity,
+                variantDslInfo,
+                variantDependencies,
+                variantSources,
+                paths,
+                artifacts,
                 globalScope,
                 taskManager,
-                variantScope,
-                variantDslInfo,
-                publicVariantApi,
-                publicVariantPropertiesApi,
-                variantSources);
+                taskContainer);
     }
+
 
     @Override
     @NonNull

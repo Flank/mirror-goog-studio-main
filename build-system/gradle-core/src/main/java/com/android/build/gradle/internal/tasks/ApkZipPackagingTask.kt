@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -86,11 +87,13 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<ApkZipPackagingTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<ApkZipPackagingTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("zipApksFor")
+            get() = component.computeTaskName("zipApksFor")
         override val type: Class<ApkZipPackagingTask>
             get() = ApkZipPackagingTask::class.java
 

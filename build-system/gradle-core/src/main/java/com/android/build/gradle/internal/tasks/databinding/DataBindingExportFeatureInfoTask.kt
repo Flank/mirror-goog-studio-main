@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.FeaturePackageInfo
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -79,11 +80,13 @@ abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<DataBindingExportFeatureInfoTask>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<DataBindingExportFeatureInfoTask>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("dataBindingExportFeatureInfo")
+            get() = component.computeTaskName("dataBindingExportFeatureInfo")
         override val type: Class<DataBindingExportFeatureInfoTask>
             get() = DataBindingExportFeatureInfoTask::class.java
 

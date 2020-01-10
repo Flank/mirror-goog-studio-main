@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -289,10 +290,12 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     /**
      * CreateAction for a Task that will pack the bundle artifact.
      */
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<PackageBundleTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<PackageBundleTask>(
+            componentProperties
+        ) {
         override val name: String
-            get() = variantScope.getTaskName("package", "Bundle")
+            get() = component.computeTaskName("package", "Bundle")
 
         override val type: Class<PackageBundleTask>
             get() = PackageBundleTask::class.java

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -230,11 +231,13 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     var minSdkVersion: Int = 1
         private set
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<LinkAndroidResForBundleTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<LinkAndroidResForBundleTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("bundle", "Resources")
+            get() = component.computeTaskName("bundle", "Resources")
         override val type: Class<LinkAndroidResForBundleTask>
             get() = LinkAndroidResForBundleTask::class.java
 
@@ -253,13 +256,13 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             super.configure(task)
 
             val variantScope = variantScope
-            val variantData = variantScope.variantData
+            val variantData = component.variantData
             val projectOptions = variantScope.globalScope.projectOptions
             val variantDslInfo = variantData.variantDslInfo
 
             task.incrementalFolder = variantScope.paths.getIncrementalDir(name)
 
-            val mainSplit = variantData.publicVariantPropertiesApi.outputs.getMainSplit()
+            val mainSplit = component.outputs.getMainSplit()
             task.versionCode.setDisallowChanges(mainSplit.versionCode)
             task.versionName.setDisallowChanges(mainSplit.versionName)
 
@@ -277,12 +280,12 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.featureResourcePackages = variantScope.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG)
 
-            if (variantScope.type.isDynamicFeature) {
+            if (component.variantType.isDynamicFeature) {
                 task.resOffset.set(variantScope.resOffset)
                 task.resOffset.disallowChanges()
             }
 
-            task.debuggable.setDisallowChanges(variantData.variantDslInfo.isDebuggable)
+            task.debuggable.setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions.convert()
 
             task.excludeResSourcesForReleaseBundles

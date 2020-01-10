@@ -21,6 +21,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -135,14 +136,14 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
 
     public static class CreationAction extends VariantTaskCreationAction<JavaPreCompileTask> {
 
-        public CreationAction(VariantScope scope) {
-            super(scope);
+        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("javaPreCompile");
+            return getComponent().computeTaskName("javaPreCompile");
         }
 
         @NonNull

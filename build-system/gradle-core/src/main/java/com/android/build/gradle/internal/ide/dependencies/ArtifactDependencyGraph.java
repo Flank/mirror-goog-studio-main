@@ -20,6 +20,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.ide.DependenciesImpl;
 import com.android.build.gradle.internal.ide.DependencyFailureHandler;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.DependencyType;
@@ -27,7 +28,6 @@ import com.android.build.gradle.internal.ide.level2.FullDependencyGraphsImpl;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
 import com.android.build.gradle.internal.ide.level2.SimpleDependencyGraphsImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
@@ -63,7 +63,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
      */
     @Override
     public DependencyGraphs createLevel4DependencyGraph(
-            @NonNull VariantScope variantScope,
+            @NonNull ComponentPropertiesImpl componentProperties,
             boolean withFullDependency,
             @NonNull ImmutableMap<String, String> buildMapping,
             @NonNull IssueReporter issueReporter) {
@@ -73,7 +73,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             // get the compile artifact first.
             Set<ResolvedArtifact> compileArtifacts =
                     ArtifactUtils.getAllArtifacts(
-                            variantScope,
+                            componentProperties,
                             COMPILE_CLASSPATH,
                             dependencyFailureHandler,
                             buildMapping);
@@ -87,7 +87,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                 // Instead just get all the jars to get all the dependencies.
                 // Note: Query for JAR instead of PROCESSED_JAR due to b/110054209
                 ArtifactCollection runtimeArtifactCollection =
-                        variantScope
+                        componentProperties
                                 .getVariantDependencies()
                                 .getArtifactCollectionForToolingModel(
                                         RUNTIME_CLASSPATH,
@@ -132,7 +132,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             // get the runtime artifacts.
             Set<ResolvedArtifact> runtimeArtifacts =
                     ArtifactUtils.getAllArtifacts(
-                            variantScope,
+                            componentProperties,
                             RUNTIME_CLASSPATH,
                             dependencyFailureHandler,
                             buildMapping);
@@ -170,7 +170,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
     @NonNull
     @Override
     public DependenciesImpl createDependencies(
-            @NonNull VariantScope variantScope,
+            @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull ImmutableMap<String, String> buildMapping,
             @NonNull IssueReporter issueReporter) {
         // FIXME change the way we compare dependencies b/64387392
@@ -182,12 +182,11 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             ImmutableList.Builder<JavaLibrary> javaLibrary = ImmutableList.builder();
 
             ImmutableSet<ComponentIdentifier> runtimeIdentifiers =
-                    getRuntimeComponentIdentifiers(variantScope);
-
+                    getRuntimeComponentIdentifiers(componentProperties);
 
             Set<ResolvedArtifact> artifacts =
                     ArtifactUtils.getAllArtifacts(
-                            variantScope,
+                            componentProperties,
                             COMPILE_CLASSPATH,
                             dependencyFailureHandler,
                             buildMapping);
@@ -244,7 +243,8 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                                     projectPath,
                                     artifact.getArtifactFile(),
                                     extractedFolder,
-                                    LibraryUtils.findResStaticLibrary(variantScope, artifact),
+                                    LibraryUtils.findResStaticLibrary(
+                                            componentProperties, artifact),
                                     artifact.getVariantName(),
                                     isProvided,
                                     false, /* dependencyItem.isSkipped() */
@@ -265,7 +265,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             // might not exist yet.
             ImmutableMultimap<ComponentIdentifier, ResolvedArtifactResult> projectRuntime =
                     ArtifactUtils.asMultiMap(
-                            variantScope
+                            componentProperties
                                     .getVariantDependencies()
                                     .getArtifactCollectionForToolingModel(
                                             RUNTIME_CLASSPATH,
@@ -274,7 +274,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
 
             ImmutableMultimap<ComponentIdentifier, ResolvedArtifactResult> externalRuntime =
                     ArtifactUtils.asMultiMap(
-                            variantScope
+                            componentProperties
                                     .getVariantDependencies()
                                     .getArtifactCollectionForToolingModel(
                                             RUNTIME_CLASSPATH,
@@ -308,12 +308,12 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
     }
 
     private static ImmutableSet<ComponentIdentifier> getRuntimeComponentIdentifiers(
-            VariantScope variantScope) {
+            @NonNull ComponentPropertiesImpl componentProperties) {
         // get the runtime artifact. We only care about the ComponentIdentifier so we don't
         // need to call getAllArtifacts() which computes a lot more many things.
         // Instead just get all the jars to get all the dependencies.
         ArtifactCollection runtimeArtifactCollection =
-                variantScope
+                componentProperties
                         .getVariantDependencies()
                         .getArtifactCollectionForToolingModel(
                                 RUNTIME_CLASSPATH,

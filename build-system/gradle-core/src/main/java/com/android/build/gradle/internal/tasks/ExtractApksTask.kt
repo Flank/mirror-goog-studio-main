@@ -16,13 +16,10 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.VariantOutput
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
-import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildElements
-import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -57,7 +54,7 @@ import javax.inject.Inject
 abstract class ExtractApksTask : NonIncrementalTask() {
 
     companion object {
-        fun getTaskName(scope: VariantScope) = scope.getTaskName("extractApksFor")
+        fun getTaskName(componentProperties: ComponentPropertiesImpl) = componentProperties.computeTaskName("extractApksFor")
     }
 
     @get:InputFile
@@ -145,11 +142,13 @@ abstract class ExtractApksTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<ExtractApksTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<ExtractApksTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = getTaskName(variantScope)
+            get() = getTaskName(component)
         override val type: Class<ExtractApksTask>
             get() = ExtractApksTask::class.java
 
@@ -180,7 +179,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             }
 
             task.extractInstant = variantScope.globalScope.projectOptions.get(BooleanOption.IDE_EXTRACT_INSTANT)
-            task.applicationId.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi.applicationId)
+            task.applicationId.setDisallowChanges(component.applicationId)
         }
     }
 }

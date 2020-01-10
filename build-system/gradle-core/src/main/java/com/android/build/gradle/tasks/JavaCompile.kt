@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
@@ -33,6 +34,7 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.util.PatternSet
 import java.util.concurrent.Callable
 
+
 /**
  * [TaskCreationAction] for the [JavaCompile] task.
  *
@@ -40,18 +42,20 @@ import java.util.concurrent.Callable
  * annotation processing and compilation. When Kapt is used (e.g., in most Kotlin-only or hybrid
  * Kotlin-Java projects), [JavaCompile] performs compilation only, without annotation processing.
  */
-class JavaCompileCreationAction(private val variantScope: VariantScope) :
+class JavaCompileCreationAction(private val componentProperties: ComponentPropertiesImpl) :
     TaskCreationAction<JavaCompile>() {
 
+    private val globalScope = componentProperties.globalScope
+
     private val classesOutputDirectory =
-        variantScope.globalScope.project.objects.directoryProperty()
+        globalScope.project.objects.directoryProperty()
     private val annotationProcessorOutputDirectory =
-        variantScope.globalScope.project.objects.directoryProperty()
+        globalScope.project.objects.directoryProperty()
     private val bundleArtifactFolderForDataBinding =
-        variantScope.globalScope.project.objects.directoryProperty()
+        globalScope.project.objects.directoryProperty()
 
     init {
-        val compileSdkVersion = variantScope.globalScope.extension.compileSdkVersion
+        val compileSdkVersion = globalScope.extension.compileSdkVersion
         if (compileSdkVersion != null && isPostN(compileSdkVersion) && !JavaVersion.current().isJava8Compatible) {
             throw RuntimeException(
                 "compileSdkVersion '$compileSdkVersion' requires JDK 1.8 or later to compile."
@@ -60,7 +64,7 @@ class JavaCompileCreationAction(private val variantScope: VariantScope) :
     }
 
     override val name: String
-        get() = variantScope.getTaskName("compile", "JavaWithJavac")
+        get() = componentProperties.computeTaskName("compile", "JavaWithJavac")
 
     override val type: Class<JavaCompile>
         get() = JavaCompile::class.java
@@ -68,12 +72,14 @@ class JavaCompileCreationAction(private val variantScope: VariantScope) :
     override fun handleProvider(taskProvider: TaskProvider<out JavaCompile>) {
         super.handleProvider(taskProvider)
 
-        variantScope.taskContainer.javacTask = taskProvider
+        componentProperties.taskContainer.javacTask = taskProvider
+
+        val artifacts = componentProperties.artifacts
 
         classesOutputDirectory.set(
-            variantScope.artifacts.getOperations().getOutputDirectory(JAVAC, "classes")
+            artifacts.getOperations().getOutputDirectory(JAVAC, "classes")
         )
-        variantScope.artifacts.producesDir(
+        artifacts.producesDir(
             JAVAC,
             taskProvider,
             { classesOutputDirectory },
@@ -81,9 +87,9 @@ class JavaCompileCreationAction(private val variantScope: VariantScope) :
         )
 
         annotationProcessorOutputDirectory.set(
-            variantScope.artifacts.getOperations().getOutputDirectory(AP_GENERATED_SOURCES)
+            artifacts.getOperations().getOutputDirectory(AP_GENERATED_SOURCES)
         )
-        variantScope.artifacts.producesDir(
+        artifacts.producesDir(
             AP_GENERATED_SOURCES,
             taskProvider,
             { annotationProcessorOutputDirectory }
@@ -91,11 +97,11 @@ class JavaCompileCreationAction(private val variantScope: VariantScope) :
 
         // Data binding artifact is one of the annotation processing outputs, only if kapt is not
         // configured.
-        if (variantScope.globalScope.buildFeatures.dataBinding) {
+        if (globalScope.buildFeatures.dataBinding) {
             bundleArtifactFolderForDataBinding.set(
-                variantScope.artifacts.getOperations().getOutputDirectory(DATA_BINDING_ARTIFACT)
+                artifacts.getOperations().getOutputDirectory(DATA_BINDING_ARTIFACT)
             )
-            variantScope.artifacts.producesDir(
+            artifacts.producesDir(
                 DATA_BINDING_ARTIFACT,
                 taskProvider,
                 { bundleArtifactFolderForDataBinding }
@@ -104,30 +110,30 @@ class JavaCompileCreationAction(private val variantScope: VariantScope) :
     }
 
     override fun configure(task: JavaCompile) {
-        task.dependsOn(variantScope.taskContainer.preBuildTask)
-        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, variantScope.name)
+        task.dependsOn(componentProperties.taskContainer.preBuildTask)
+        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, componentProperties.name)
 
-        task.configureProperties(variantScope)
+        task.configureProperties(componentProperties)
         task.configurePropertiesForAnnotationProcessing(
-            variantScope,
+            componentProperties.variantScope,
             annotationProcessorOutputDirectory
         )
 
         // Wrap sources in Callable to evaluate them just before execution, b/117161463.
-        val sourcesToCompile = Callable { listOf(variantScope.variantData.javaSources) }
+        val sourcesToCompile = Callable { listOf(componentProperties.variantData.javaSources) }
         // Include only java sources, otherwise we hit b/144249620.
         val javaSourcesFilter = PatternSet().include("**/*.java")
         task.source = task.project.files(sourcesToCompile).asFileTree.matching(javaSourcesFilter)
 
-        task.options.isIncremental = variantScope.globalScope.extension.compileOptions.incremental
+        task.options.isIncremental = globalScope.extension.compileOptions.incremental
             ?: DEFAULT_INCREMENTAL_COMPILATION
 
         // Record apList as input. It impacts handleAnnotationProcessors() below.
-        val apList = variantScope.artifacts.getFinalProduct(ANNOTATION_PROCESSOR_LIST)
+        val apList = componentProperties.artifacts.getFinalProduct(ANNOTATION_PROCESSOR_LIST)
         task.inputs.files(apList).withPathSensitivity(PathSensitivity.NONE)
             .withPropertyName("annotationProcessorList")
 
-        task.handleAnnotationProcessors(apList, variantScope.name)
+        task.handleAnnotationProcessors(apList, componentProperties.name)
 
         task.setDestinationDir(classesOutputDirectory.asFile)
 

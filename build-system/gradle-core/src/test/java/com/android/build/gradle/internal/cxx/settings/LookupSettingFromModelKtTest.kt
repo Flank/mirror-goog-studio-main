@@ -41,12 +41,12 @@ class LookupSettingFromModelKtTest {
             val module = tryCreateCxxModuleModel(it.global, it.cmakeFinder)!!
             val variant = createCxxVariantModel(
                 module,
-                it.variantScope)
+                it.componentProperties)
             val abi = createCxxAbiModel(
                 variant,
                 Abi.X86_64,
                 it.global,
-                it.baseVariantData)
+                it.componentProperties)
 
             assertThat(abi.resolveMacroValue(Macro.NDK_SYSTEM_VERSION))
                 .isEqualTo("19")
@@ -70,12 +70,12 @@ class LookupSettingFromModelKtTest {
             }
             val variant = createCxxVariantModel(
                 module,
-                it.variantScope)
+                it.componentProperties)
             val abi = createCxxAbiModel(
                 variant,
                 Abi.X86_64,
                 it.global,
-                it.baseVariantData)
+                it.componentProperties)
 
             assertThat(abi.resolveMacroValue(Macro.NDK_SYSTEM_VERSION))
                 .isEqualTo("19")

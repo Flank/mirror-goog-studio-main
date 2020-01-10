@@ -183,24 +183,24 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
     // ----- Config Action -----
 
-    internal class CreationAction(private val componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<GenerateBuildConfig>(componentProperties.variantScope) {
+    internal class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<GenerateBuildConfig>(
+            componentProperties
+        ) {
 
-        override val name: String = variantScope.getTaskName("generate", "BuildConfig")
+        override val name: String = component.computeTaskName("generate", "BuildConfig")
 
         override val type: Class<GenerateBuildConfig> = GenerateBuildConfig::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out GenerateBuildConfig>) {
             super.handleProvider(taskProvider)
-            variantScope.taskContainer.generateBuildConfigTask = taskProvider
+            component.taskContainer.generateBuildConfigTask = taskProvider
         }
 
         override fun configure(task: GenerateBuildConfig) {
             super.configure(task)
 
-            val variantData = variantScope.variantData
-
-            val variantDslInfo = variantData.variantDslInfo
+            val variantDslInfo = component.variantDslInfo
 
             val project = variantScope.globalScope.project
             task.buildConfigPackageName.set(project.provider {
@@ -209,11 +209,11 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             task.buildConfigPackageName.disallowChanges()
 
             if (!variantDslInfo.variantType.isAar) {
-                task.appPackageName.set(componentProperties.applicationId)
+                task.appPackageName.set(component.applicationId)
             }
             task.appPackageName.disallowChanges()
 
-            val mainSplit = variantData.publicVariantPropertiesApi.outputs.getMainSplit()
+            val mainSplit = component.outputs.getMainSplit()
             // check the variant API property first (if there is one) in case the variant
             // output version has been overridden, otherwise use the variant configuration
             task.versionCode.setDisallowChanges(
@@ -223,7 +223,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 mainSplit?.versionName
                     ?: task.project.provider { variantDslInfo.versionName })
 
-            task.debuggable.setDisallowChanges(variantData.variantDslInfo.isDebuggable)
+            task.debuggable.setDisallowChanges(component.variantDslInfo.isDebuggable)
 
             task.buildTypeName = variantDslInfo.componentIdentity.buildType
 

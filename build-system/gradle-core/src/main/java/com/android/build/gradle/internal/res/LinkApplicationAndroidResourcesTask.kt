@@ -39,8 +39,8 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SplitList
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getAaptDaemon
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -343,26 +343,27 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     }
 
     abstract class BaseCreationAction(
-        private val componentProperties: ComponentProperties,
-        scope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         private val generateLegacyMultidexMainDexProguardRules: Boolean,
         private val baseName: String?,
         private val isLibrary: Boolean
-    ) : VariantTaskCreationAction<LinkApplicationAndroidResourcesTask>(scope) {
+    ) : VariantTaskCreationAction<LinkApplicationAndroidResourcesTask>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("process", "Resources")
+            get() = component.computeTaskName("process", "Resources")
 
         override val type: Class<LinkApplicationAndroidResourcesTask>
             get() = LinkApplicationAndroidResourcesTask::class.java
 
-        protected open fun preconditionsCheck(variantData: BaseVariantData) {}
+        protected open fun preconditionsCheck() {}
 
         override fun handleProvider(
             taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.taskContainer.processAndroidResTask = taskProvider
+            component.taskContainer.processAndroidResTask = taskProvider
             variantScope.artifacts.producesDir(
                 InternalArtifactType.PROCESSED_RES,
                 taskProvider,
@@ -390,22 +391,20 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
         override fun configure(task: LinkApplicationAndroidResourcesTask) {
             super.configure(task)
-            val variantScope = variantScope
-            val variantData = variantScope.variantData
             val projectOptions = variantScope.globalScope.projectOptions
-            val variantDslInfo = variantData.variantDslInfo
+            val variantDslInfo = component.variantDslInfo
 
-            preconditionsCheck(variantData)
+            preconditionsCheck()
 
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
             val project = variantScope.globalScope.project
-            task.applicationId.setDisallowChanges(componentProperties.applicationId)
+            task.applicationId.setDisallowChanges(component.applicationId)
 
             task.incrementalFolder = variantScope.paths.getIncrementalDir(name)
-            if (variantData.type.canHaveSplits) {
+            if (component.variantType.canHaveSplits) {
                 val splits = variantScope.globalScope.extension.splits
 
                 val densitySet = if (splits.density.isEnable)
@@ -432,7 +431,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 )
             }
 
-            task.mainSplit = variantData.publicVariantPropertiesApi.outputs.getMainSplitOrNull()?.apkData
+            task.mainSplit = component.outputs.getMainSplitOrNull()?.apkData
             task.originalApplicationId.set(project.provider { variantDslInfo.originalApplicationId })
             task.originalApplicationId.disallowChanges()
 
@@ -446,18 +445,18 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             variantScope.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
             task.setType(variantDslInfo.variantType)
-            task.debuggable.setDisallowChanges(variantData.variantDslInfo.isDebuggable)
+            task.debuggable.setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
             task.aaptOptions = variantScope.globalScope.extension.aaptOptions.convert()
 
             task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
             task.useConditionalKeepRules = projectOptions.get(BooleanOption.CONDITIONAL_KEEP_RULES)
             task.useMinimalKeepRules = projectOptions.get(BooleanOption.MINIMAL_KEEP_RULES)
-            task.canHaveSplits.set(variantScope.type.canHaveSplits)
+            task.canHaveSplits.set(component.variantType.canHaveSplits)
 
             task.setMergeBlameLogFolder(variantScope.paths.resourceBlameLogDir)
 
-            val variantType = variantScope.type
+            val variantType = component.variantType
 
             // Tests should not have feature dependencies, however because they include the
             // tested production component in their dependency graph, we see the tested feature
@@ -498,10 +497,15 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         private val sourceArtifactType: TaskManager.MergeType,
         baseName: String,
         isLibrary: Boolean
-    ) : BaseCreationAction(componentProperties, componentProperties.variantScope, generateLegacyMultidexMainDexProguardRules, baseName, isLibrary) {
+    ) : BaseCreationAction(
+        componentProperties,
+        generateLegacyMultidexMainDexProguardRules,
+        baseName,
+        isLibrary
+    ) {
 
-        override fun preconditionsCheck(variantData: BaseVariantData) {
-            if (variantData.type.isAar) {
+        override fun preconditionsCheck() {
+            if (component.variantType.isAar) {
                 throw IllegalArgumentException("Use GenerateLibraryRFileTask")
             } else {
                 Preconditions.checkState(
@@ -582,11 +586,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
      * discovery task.
      */
     class NamespacedCreationAction(
-        componentProperties: ComponentProperties,
-        scope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         generateLegacyMultidexMainDexProguardRules: Boolean,
         baseName: String?
-    ) : BaseCreationAction(componentProperties, scope, generateLegacyMultidexMainDexProguardRules, baseName, false) {
+    ) : BaseCreationAction(componentProperties, generateLegacyMultidexMainDexProguardRules, baseName, false) {
 
         override fun handleProvider(taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>) {
             super.handleProvider(taskProvider)

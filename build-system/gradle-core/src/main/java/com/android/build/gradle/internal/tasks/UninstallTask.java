@@ -16,12 +16,12 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
@@ -34,14 +34,14 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 
 public abstract class UninstallTask extends NonIncrementalTask {
 
-    private BaseVariantData variant;
+    // FIXME this should not be in the task
+    private ComponentPropertiesImpl componentProperties;
 
     private int mTimeOutInMs = 0;
 
@@ -57,7 +57,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
     @Override
     protected void doTaskAction() throws DeviceException, ExecutionException {
         final Logger logger = getLogger();
-        final String applicationId = variant.getVariantDslInfo().getApplicationId();
+        final String applicationId = componentProperties.getVariantDslInfo().getApplicationId();
 
         logger.info("Uninstalling app: {}", applicationId);
 
@@ -75,7 +75,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
                                 "Uninstalling {} (from {}:{}) from device '{}' ({}).",
                                 applicationId,
                                 getProject().getName(),
-                                variant.getName(),
+                                componentProperties.getName(),
                                 device.getName(),
                                 device.getSerialNumber());
                     }
@@ -97,15 +97,6 @@ public abstract class UninstallTask extends NonIncrementalTask {
         return adbExecutableProvider.get();
     }
 
-    @Internal("This task is always executed")
-    public BaseVariantData getVariant() {
-        return variant;
-    }
-
-    public void setVariant(BaseVariantData variant) {
-        this.variant = variant;
-    }
-
     @Input
     public int getTimeOutInMs() {
         return mTimeOutInMs;
@@ -117,14 +108,14 @@ public abstract class UninstallTask extends NonIncrementalTask {
 
     public static class CreationAction extends VariantTaskCreationAction<UninstallTask> {
 
-        public CreationAction(VariantScope scope) {
-            super(scope);
+        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return StringHelper.appendCapitalized("uninstall", getVariantScope().getName());
+            return StringHelper.appendCapitalized("uninstall", getComponent().getName());
         }
 
         @NonNull
@@ -138,8 +129,9 @@ public abstract class UninstallTask extends NonIncrementalTask {
             super.configure(task);
             VariantScope scope = getVariantScope();
 
-            task.setVariant(scope.getVariantData());
-            task.setDescription("Uninstalls the " + scope.getVariantData().getDescription() + ".");
+            task.componentProperties = getComponent();
+            task.setDescription(
+                    "Uninstalls the " + getComponent().getVariantData().getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             task.setTimeOutInMs(
                     scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
@@ -152,7 +144,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
         @Override
         public void handleProvider(@NonNull TaskProvider<? extends UninstallTask> taskProvider) {
             super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setUninstallTask(taskProvider);
+            getComponent().getTaskContainer().setUninstallTask(taskProvider);
         }
     }
 }

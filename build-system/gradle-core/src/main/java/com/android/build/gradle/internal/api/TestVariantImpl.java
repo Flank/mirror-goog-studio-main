@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
@@ -49,11 +50,12 @@ public class TestVariantImpl extends ApkVariantImpl implements TestVariant {
     @Inject
     public TestVariantImpl(
             @NonNull TestVariantData variantData,
+            @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull BaseVariant testedVariantData,
             @NonNull ObjectFactory objectFactory,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(objectFactory, readOnlyObjectProvider, outputs);
+        super(componentProperties, objectFactory, readOnlyObjectProvider, outputs);
         this.variantData = variantData;
         this.testedVariantData = testedVariantData;
     }
@@ -74,7 +76,6 @@ public class TestVariantImpl extends ApkVariantImpl implements TestVariant {
     @Nullable
     public DefaultTask getConnectedInstrumentTest() {
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()
@@ -99,7 +100,6 @@ public class TestVariantImpl extends ApkVariantImpl implements TestVariant {
     @Override
     public List<? extends DefaultTask> getProviderInstrumentTests() {
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()

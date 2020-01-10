@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -159,9 +160,11 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
         }
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<DexFileDependenciesTask>(variantScope) {
-        override val name: String = variantScope.getTaskName("desugar", "FileDependencies")
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<DexFileDependenciesTask>(
+            componentProperties
+        ) {
+        override val name: String = component.computeTaskName("desugar", "FileDependencies")
         override val type = DexFileDependenciesTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out DexFileDependenciesTask>) {

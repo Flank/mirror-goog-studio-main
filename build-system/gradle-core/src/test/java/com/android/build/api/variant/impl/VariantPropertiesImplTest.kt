@@ -16,13 +16,20 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.Operations
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.build.gradle.internal.variant2.createFakeDslScope
 import com.android.build.gradle.options.ProjectOptions
 import com.google.common.truth.Truth
 import org.gradle.api.Project
@@ -49,10 +56,12 @@ class VariantPropertiesImplTest {
     @Mock lateinit var globalScope: GlobalScope
     @Mock lateinit var variantDslInfo: VariantDslInfo
     @Mock lateinit var apkData: ApkData
-    @Mock lateinit var operations: Operations
+    @Mock lateinit var variantData: BaseVariantData
     @Mock lateinit var componentIdentity: ComponentIdentity
-    @Mock lateinit var dslScope: DslScope
+    @Mock lateinit var artifacts: BuildArtifactsHolder
+    val dslScope: DslScope = createFakeDslScope()
 
+    lateinit var properties: VariantPropertiesImpl
     lateinit var project: Project
 
     @Before
@@ -62,15 +71,27 @@ class VariantPropertiesImplTest {
         Mockito.`when`(variantScope.globalScope).thenReturn(globalScope)
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(globalScope.projectOptions).thenReturn(Mockito.mock(ProjectOptions::class.java))
-        Mockito.`when`(dslScope.objectFactory).thenReturn(project.objects)
-        Mockito.`when`(dslScope.providerFactory).thenReturn(project.providers)
         Mockito.`when`(variantScope.variantDslInfo).thenReturn(variantDslInfo)
+        Mockito.`when`(variantScope.artifacts).thenReturn(artifacts)
+        Mockito.`when`(variantScope.transformManager).thenReturn(Mockito.mock(TransformManager::class.java))
+
+        Mockito.`when`(variantData.taskContainer).thenReturn(MutableTaskContainer())
+
+        properties = VariantPropertiesImpl(
+            componentIdentity,
+            variantDslInfo,
+            Mockito.mock(VariantDependencies::class.java),
+            Mockito.mock(VariantSources::class.java),
+            VariantPathHelper(project,variantDslInfo, dslScope),
+            artifacts,
+            variantScope,
+            variantData,
+            dslScope)
+
     }
 
     @Test
     fun testManifestProvidedVersion() {
-        val properties = VariantPropertiesImpl(
-            dslScope, variantScope, operations, componentIdentity)
         Mockito.`when`(variantDslInfo.manifestVersionCodeSupplier)
             .thenReturn(IntSupplier { 10 })
         Mockito.`when`(variantDslInfo.manifestVersionNameSupplier)
@@ -86,7 +107,15 @@ class VariantPropertiesImplTest {
     @Test
     fun testDslProvidedVersion() {
         val properties = object: VariantPropertiesImpl(
-            dslScope, variantScope, operations, componentIdentity) {
+            componentIdentity,
+            variantDslInfo,
+            Mockito.mock(VariantDependencies::class.java),
+            Mockito.mock(VariantSources::class.java),
+            VariantPathHelper(project,variantDslInfo, dslScope),
+            artifacts,
+            variantScope,
+            variantData,
+            dslScope) {
             @Suppress("UNCHECKED_CAST")
             override val applicationId: Property<String> = Mockito.mock(Property::class.java) as Property<String>
         }
@@ -102,8 +131,6 @@ class VariantPropertiesImplTest {
 
     @Test
     fun testManifestAndDslProvidedVersions() {
-        val properties = VariantPropertiesImpl(
-            dslScope, variantScope, operations, componentIdentity)
         Mockito.`when`(variantDslInfo.manifestVersionCodeSupplier)
             .thenReturn(IntSupplier { 10 })
         Mockito.`when`(variantDslInfo.manifestVersionNameSupplier)

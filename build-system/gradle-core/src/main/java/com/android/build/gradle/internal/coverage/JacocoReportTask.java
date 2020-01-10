@@ -15,10 +15,11 @@
  */
 package com.android.build.gradle.internal.coverage;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.Version;
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
@@ -172,17 +173,20 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
 
     public static class CreationAction extends VariantTaskCreationAction<JacocoReportTask> {
         @NonNull private final Configuration jacocoAntConfiguration;
+        @NonNull private final TestComponentPropertiesImpl testComponentProperties;
 
         public CreationAction(
-                @NonNull VariantScope scope, @NonNull Configuration jacocoAntConfiguration) {
-            super(scope);
+                @NonNull TestComponentPropertiesImpl testComponentProperties,
+                @NonNull Configuration jacocoAntConfiguration) {
+            super(testComponentProperties);
             this.jacocoAntConfiguration = jacocoAntConfiguration;
+            this.testComponentProperties = testComponentProperties;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("create", "CoverageReport");
+            return getComponent().computeTaskName("create", "CoverageReport");
         }
 
         @NonNull
@@ -194,7 +198,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
         @Override
         public void handleProvider(@NonNull TaskProvider<? extends JacocoReportTask> taskProvider) {
             super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setCoverageReportTask(taskProvider);
+            getComponent().getTaskContainer().setCoverageReportTask(taskProvider);
         }
 
         @Override
@@ -205,10 +209,9 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
             task.setDescription("Creates JaCoCo test coverage report from data gathered on the "
                     + "device.");
 
-            task.setReportName(scope.getName());
+            task.setReportName(testComponentProperties.getName());
 
-            checkNotNull(scope.getTestedVariantData());
-            final VariantScope testedScope = scope.getTestedVariantData().getScope();
+            VariantPropertiesImpl testedVariant = testComponentProperties.getTestedVariant();
 
             task.jacocoClasspath = jacocoAntConfiguration;
 
@@ -217,7 +220,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
                             InternalArtifactType.CODE_COVERAGE.INSTANCE,
                             task.getCoverageDirectories());
 
-            task.classFileCollection = testedScope.getArtifacts().getAllClasses();
+            task.classFileCollection = testedVariant.getArtifacts().getAllClasses();
 
             task.sourceFolders =
                     scope.getGlobalScope()
@@ -225,11 +228,11 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
                             .files(
                                     (Callable)
                                             () ->
-                                                    testedScope
+                                                    testedVariant
                                                             .getVariantData()
                                                             .getJavaSourceFoldersForCoverage());
 
-            task.setReportDir(testedScope.getPaths().getCoverageReportDir());
+            task.setReportDir(testedVariant.getPaths().getCoverageReportDir());
         }
     }
 

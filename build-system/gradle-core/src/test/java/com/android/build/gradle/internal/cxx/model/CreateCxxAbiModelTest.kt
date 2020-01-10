@@ -33,8 +33,8 @@ class CreateCxxAbiModelTest {
             val module = tryCreateCxxModuleModel(it.global)!!
             val variant = createCxxVariantModel(
                 module,
-                it.variant)
-            createCxxAbiModel(variant, Abi.X86, it.global, it.baseVariantData)
+                it.componentProperties)
+            createCxxAbiModel(variant, Abi.X86, it.global, it.componentProperties)
         }
     }
 
@@ -45,12 +45,12 @@ class CreateCxxAbiModelTest {
             val module = tryCreateCxxModuleModel(it.global)!!
             val variant = createCxxVariantModel(
                 module,
-                it.variantScope)
+                it.componentProperties)
             val abi = createCxxAbiModel(
                 variant,
                 Abi.X86,
                 it.global,
-                it.baseVariantData)
+                it.componentProperties)
             CxxAbiModel::class.java.methods.toList().onEach { method ->
                 val result = method.invoke(abi)
                 if (result is File) {
@@ -72,8 +72,8 @@ class CreateCxxAbiModelTest {
             val module = tryCreateCxxModuleModel(it.global)!!
             val variant = createCxxVariantModel(
                 module,
-                it.variantScope)
-            val abi = createCxxAbiModel(variant, Abi.X86, it.global, it.baseVariantData)
+                it.componentProperties)
+            val abi = createCxxAbiModel(variant, Abi.X86, it.global, it.componentProperties)
             assertThat(abi.cxxBuildFolder.path
                     .replace("\\", "/"))
                 .endsWith(".cxx/cmake/debug/x86")

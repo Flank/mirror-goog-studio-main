@@ -17,22 +17,17 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.apksig.ApkSigner
-import com.android.build.VariantOutput
-import com.android.build.api.variant.BuiltArtifacts
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
-import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildElements
-import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.signing.SigningConfigProvider
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.options.StringOption
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.utils.FileUtils
 import org.gradle.api.file.RegularFileProperty
@@ -152,10 +147,12 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
     /**
      * CreateAction for a task that will sign the bundle artifact.
      */
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<FinalizeBundleTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<FinalizeBundleTask>(
+            componentProperties
+        ) {
         override val name: String
-            get() = variantScope.getTaskName("sign", "Bundle")
+            get() = component.computeTaskName("sign", "Bundle")
 
         override val type: Class<FinalizeBundleTask>
             get() = FinalizeBundleTask::class.java
@@ -201,10 +198,10 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
 
             // Don't sign debuggable bundles.
             if (!variantScope.variantDslInfo.isDebuggable) {
-                task.signingConfig = SigningConfigProvider.create(variantScope)
+                task.signingConfig = SigningConfigProvider.create(component)
             }
 
-            task.applicationId.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi.applicationId)
+            task.applicationId.setDisallowChanges(component.applicationId)
         }
 
     }

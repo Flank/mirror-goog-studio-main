@@ -22,12 +22,12 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Info;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactUtils;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.DependencyType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
@@ -60,32 +60,33 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
         super.completeProject(project);
     }
 
-    public void startVariant(VariantScope variantScope) {
+    public void startComponent(@NonNull ComponentPropertiesImpl componentProperties) {
         if (hasConfigs) {
             getTextOutput().println();
         }
         hasConfigs = true;
         renderer = new GraphRenderer(getTextOutput());
         renderer.visit(
-                styledTextOutput -> getTextOutput().withStyle(Header).text(variantScope.getName()),
+                styledTextOutput ->
+                        getTextOutput().withStyle(Header).text(componentProperties.getName()),
                 true);
     }
 
-    public void render(@NonNull VariantScope variant) {
+    public void render(@NonNull ComponentPropertiesImpl componentProperties) {
         ImmutableMap<String, String> buildMapping =
                 BuildMappingUtils.computeBuildMapping(
-                        variant.getGlobalScope().getProject().getGradle());
+                        componentProperties.getGlobalScope().getProject().getGradle());
 
         Set<ResolvedArtifact> compileArtifacts =
                 ArtifactUtils.getAllArtifacts(
-                        variant,
+                        componentProperties,
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         null,
                         buildMapping);
 
         getTextOutput()
                 .withStyle(Identifier)
-                .text(variant.getVariantDependencies().getCompileClasspath().getName());
+                .text(componentProperties.getVariantDependencies().getCompileClasspath().getName());
         getTextOutput().withStyle(Description).text(" - Dependencies for compilation");
         getTextOutput().println();
         renderer.startChildren();
@@ -94,7 +95,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
 
         Set<ResolvedArtifact> runtimeArtifacts =
                 ArtifactUtils.getAllArtifacts(
-                        variant,
+                        componentProperties,
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         null,
                         buildMapping);
@@ -102,7 +103,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
         getTextOutput().println();
         getTextOutput()
                 .withStyle(Identifier)
-                .text(variant.getVariantDependencies().getRuntimeClasspath().getName());
+                .text(componentProperties.getVariantDependencies().getRuntimeClasspath().getName());
         getTextOutput().withStyle(Description).text(" - Dependencies for runtime/packaging");
         getTextOutput().println();
         renderer.startChildren();

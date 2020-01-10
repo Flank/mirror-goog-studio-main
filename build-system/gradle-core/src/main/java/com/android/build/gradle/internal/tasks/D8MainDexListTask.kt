@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
 import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
@@ -145,9 +146,11 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        scope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         private val includeDynamicFeatures: Boolean
-    ) : VariantTaskCreationAction<D8MainDexListTask>(scope) {
+    ) : VariantTaskCreationAction<D8MainDexListTask>(
+        componentProperties
+    ) {
 
         private val inputClasses: FileCollection
         private val libraryClasses: FileCollection
@@ -163,13 +166,13 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
 
             // It is ok to get streams that have more types/scopes than we are asking for, so just
             // check if intersection is not empty. This is what TransformManager does.
-            inputClasses = scope.transformManager
+            inputClasses = variantScope.transformManager
                 .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                     contentTypes.contains(
                         QualifiedContent.DefaultContentType.CLASSES
                     ) && inputScopes.intersect(scopes).isNotEmpty()
                 }
-            libraryClasses = scope.transformManager
+            libraryClasses = variantScope.transformManager
                 .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                     contentTypes.contains(
                         QualifiedContent.DefaultContentType.CLASSES
@@ -178,7 +181,7 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
         }
 
         override val name: String =
-            scope.getTaskName(if (includeDynamicFeatures) "bundleMultiDexList" else "multiDexList")
+            componentProperties.computeTaskName(if (includeDynamicFeatures) "bundleMultiDexList" else "multiDexList")
         override val type: Class<D8MainDexListTask> = D8MainDexListTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out D8MainDexListTask>) {

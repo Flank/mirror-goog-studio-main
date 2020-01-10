@@ -24,7 +24,6 @@ import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
-import java.lang.RuntimeException
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.test.DefaultAsserter.fail
 

@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -27,7 +28,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.test.BuiltArtifactsSplitOutputMatcher;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.internal.InstallUtils;
 import com.android.builder.testing.api.DeviceConfigProviderImpl;
 import com.android.builder.testing.api.DeviceConnector;
@@ -53,7 +53,6 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -72,7 +71,9 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
 
     private Collection<String> installOptions;
 
-    private BaseVariantData variantData;
+    // FIXME this should not be in the task
+    private ComponentPropertiesImpl componentProperties;
+
     @NonNull private final ExecOperations execOperations;
 
     @Inject
@@ -91,15 +92,14 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
                 new ConnectedDeviceProvider(adbExecutableProvider.get(), getTimeOutInMs(), iLogger);
         deviceProvider.use(
                 () -> {
-                    BaseVariantData variantData = getVariantData();
-                    VariantDslInfo variantDslInfo = variantData.getVariantDslInfo();
+                    VariantDslInfo variantDslInfo = componentProperties.getVariantDslInfo();
 
                     BuiltArtifacts builtArtifacts =
                             new BuiltArtifactsLoaderImpl().load(getApkDirectory().get());
 
                     install(
                             getProjectName(),
-                            variantData.getName(),
+                            componentProperties.getName(),
                             deviceProvider,
                             variantDslInfo.getMinSdkVersion(),
                             builtArtifacts,
@@ -206,25 +206,16 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract DirectoryProperty getApkDirectory();
 
-    @Internal("This task is always executed")
-    public BaseVariantData getVariantData() {
-        return variantData;
-    }
-
-    public void setVariantData(BaseVariantData variantData) {
-        this.variantData = variantData;
-    }
-
     public static class CreationAction extends VariantTaskCreationAction<InstallVariantTask> {
 
-        public CreationAction(VariantScope scope) {
-            super(scope);
+        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("install");
+            return getComponent().computeTaskName("install");
         }
 
         @NonNull
@@ -237,9 +228,10 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         public void configure(@NonNull InstallVariantTask task) {
             super.configure(task);
             VariantScope scope = getVariantScope();
-            task.setVariantData(scope.getVariantData());
+            task.componentProperties = getComponent();
 
-            task.setDescription("Installs the " + scope.getVariantData().getDescription() + ".");
+            task.setDescription(
+                    "Installs the " + getComponent().getVariantData().getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             scope.getArtifacts()
                     .setTaskInputToFinalProduct(
@@ -256,7 +248,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends InstallVariantTask> taskProvider) {
             super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setInstallTask(taskProvider);
+            getComponent().getTaskContainer().setInstallTask(taskProvider);
         }
     }
 }

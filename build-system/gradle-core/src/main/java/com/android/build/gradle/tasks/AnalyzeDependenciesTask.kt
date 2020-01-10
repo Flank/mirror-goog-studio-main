@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -157,35 +158,38 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
         fun getPublicClasses() = classesByType[CLASS_TYPE.PUBLIC] ?: emptySet()
     }
 
-    class CreationAction(val scope: VariantScope) :
-        VariantTaskCreationAction<AnalyzeDependenciesTask>(scope) {
+    class CreationAction(
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<AnalyzeDependenciesTask>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = scope.getTaskName("analyze", "Dependencies")
+            get() = component.computeTaskName("analyze", "Dependencies")
         override val type: Class<AnalyzeDependenciesTask>
             get() = AnalyzeDependenciesTask::class.java
 
         override fun configure(task: AnalyzeDependenciesTask) {
             super.configure(task)
 
-            task.variantArtifact = scope.artifacts
+            task.variantArtifact = variantScope.artifacts
                 .getFinalProductAsFileCollection(AnchorOutputType.ALL_CLASSES)
 
-            task.externalArtifactCollection = scope
+            task.externalArtifactCollection = variantScope
                 .variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.CLASSES_JAR)
 
-            task.apiDirectDependenciesConfiguration = scope
+            task.apiDirectDependenciesConfiguration = variantScope
                 .variantDependencies
                 .getElements(AndroidArtifacts.PublishedConfigType.API_ELEMENTS)
 
-            task.allDirectDependencies = scope
+            task.allDirectDependencies = variantScope
                 .variantDependencies
                 .incomingRuntimeDependencies
 
-            task.isVariantLibrary = (scope.type == VariantTypeImpl.LIBRARY)
+            task.isVariantLibrary = (variantScope.type == VariantTypeImpl.LIBRARY)
         }
 
         override fun handleProvider(taskProvider: TaskProvider<out AnalyzeDependenciesTask>) {

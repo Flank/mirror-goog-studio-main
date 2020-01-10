@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
@@ -447,11 +448,13 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
     class CreationAction(
         private val generator: Provider<ExternalNativeJsonGenerator>,
         private val generateTask: TaskProvider<out Task>,
-        scope: VariantScope
-    ) : VariantTaskCreationAction<ExternalNativeBuildTask>(scope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<ExternalNativeBuildTask>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("externalNativeBuild")
+            get() = component.computeTaskName("externalNativeBuild")
 
         override val type: Class<ExternalNativeBuildTask>
             get() = ExternalNativeBuildTask::class.java
@@ -460,8 +463,8 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ExternalNativeBuildTask>
         ) {
             super.handleProvider(taskProvider)
-            assert(variantScope.taskContainer.externalNativeBuildTask == null)
-            variantScope.taskContainer.externalNativeBuildTask = taskProvider
+            assert(component.taskContainer.externalNativeBuildTask == null)
+            component.taskContainer.externalNativeBuildTask = taskProvider
         }
 
         override fun configure(task: ExternalNativeBuildTask) {

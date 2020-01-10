@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.Report
 import com.android.build.gradle.internal.scope.VariantScope
@@ -66,23 +67,24 @@ open class BuildArtifactReportTask : DefaultTask() {
         }
     }
 
-    class BuildArtifactReportCreationAction(val scope: VariantScope) :
+    class BuildArtifactReportCreationAction(val componentProperties: ComponentPropertiesImpl) :
         TaskCreationAction<BuildArtifactReportTask>() {
 
         override val name: String
-            get() = scope.getTaskName("reportBuildArtifacts")
+        get() = componentProperties.computeTaskName("reportBuildArtifacts")
         override val type: Class<BuildArtifactReportTask>
             get() = BuildArtifactReportTask::class.java
 
         override fun configure(task: BuildArtifactReportTask) {
+            var variantScope = componentProperties.variantScope
             val outputFileName =
-                    scope.globalScope.projectOptions.get(StringOption.BUILD_ARTIFACT_REPORT_FILE)
+                    variantScope.globalScope.projectOptions.get(StringOption.BUILD_ARTIFACT_REPORT_FILE)
             val outputFile : File? =
                     if (outputFileName == null) null
-                    else scope.globalScope.project.file(outputFileName)
+                    else variantScope.globalScope.project.file(outputFileName)
 
             task.init(
-                    report = scope.artifacts::createReport,
+                    report = variantScope.artifacts::createReport,
                     outputFile = outputFile)
         }
     }

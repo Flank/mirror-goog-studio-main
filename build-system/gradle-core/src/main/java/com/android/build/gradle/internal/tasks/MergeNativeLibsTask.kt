@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
 import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.api.transform.QualifiedContent.ScopeType
@@ -141,11 +142,13 @@ abstract class MergeNativeLibsTask
 
     class CreationAction(
         private val mergeScopes: Collection<ScopeType>,
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<MergeNativeLibsTask>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<MergeNativeLibsTask>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("merge", "NativeLibs")
+            get() = component.computeTaskName("merge", "NativeLibs")
 
         override val type: Class<MergeNativeLibsTask>
             get() = MergeNativeLibsTask::class.java
@@ -169,7 +172,7 @@ abstract class MergeNativeLibsTask
                         variantScope.globalScope.extension.packagingOptions)
             task.intermediateDir =
                     variantScope.paths.getIncrementalDir(
-                        "${variantScope.name}-mergeNativeLibs")
+                        "${component.name}-mergeNativeLibs")
 
             val project = variantScope.globalScope.project
 
@@ -178,7 +181,7 @@ abstract class MergeNativeLibsTask
                 .disallowChanges()
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
 
-            task.projectNativeLibs.from(getProjectNativeLibs(variantScope).asFileTree.filter(spec))
+            task.projectNativeLibs.from(getProjectNativeLibs(component).asFileTree.filter(spec))
                 .disallowChanges()
 
             if (mergeScopes.contains(SUB_PROJECTS)) {
@@ -192,7 +195,7 @@ abstract class MergeNativeLibsTask
             task.externalLibNativeLibs.disallowChanges()
 
             task.unfilteredProjectNativeLibs
-                .from(getProjectNativeLibs(variantScope)).disallowChanges()
+                .from(getProjectNativeLibs(component)).disallowChanges()
         }
     }
 
@@ -206,15 +209,20 @@ abstract class MergeNativeLibsTask
     }
 }
 
-fun getProjectNativeLibs(scope: VariantScope): FileCollection {
-    val nativeLibs = scope.globalScope.project.files()
+fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
+    val globalScope = componentProperties.globalScope
+    val artifacts = componentProperties.artifacts
+    val taskContainer = componentProperties.taskContainer
+    val project = globalScope.project
+
+    val nativeLibs = globalScope.project.files()
+
+
     // add merged project native libs
     nativeLibs.from(
-        scope.artifacts.getFinalProduct(InternalArtifactType.MERGED_JNI_LIBS)
+        artifacts.getFinalProduct(InternalArtifactType.MERGED_JNI_LIBS)
     )
     // add content of the local external native build
-    val project = scope.globalScope.project
-    val taskContainer = scope.taskContainer
     if (taskContainer.externalNativeJsonGenerator != null) {
         nativeLibs.from(
             project
@@ -223,15 +231,15 @@ fun getProjectNativeLibs(scope: VariantScope): FileCollection {
         )
     }
     // add renderscript compilation output if support mode is enabled.
-    if (scope.variantDslInfo.renderscriptSupportModeEnabled) {
+    if (componentProperties.variantDslInfo.renderscriptSupportModeEnabled) {
         val rsFileCollection: ConfigurableFileCollection =
-                project.files(scope.artifacts.getFinalProduct(RENDERSCRIPT_LIB))
-        val rsLibs = scope.globalScope.sdkComponents.supportNativeLibFolderProvider.orNull
+                project.files(artifacts.getFinalProduct(RENDERSCRIPT_LIB))
+        val rsLibs = globalScope.sdkComponents.supportNativeLibFolderProvider.orNull
         if (rsLibs?.isDirectory != null) {
             rsFileCollection.from(rsLibs)
         }
-        if (scope.variantDslInfo.renderscriptSupportModeBlasEnabled) {
-            val rsBlasLib = scope.globalScope.sdkComponents.supportBlasLibFolderProvider.orNull
+        if (componentProperties.variantDslInfo.renderscriptSupportModeBlasEnabled) {
+            val rsBlasLib = globalScope.sdkComponents.supportBlasLibFolderProvider.orNull
             if (rsBlasLib == null || !rsBlasLib.isDirectory) {
                 throw GradleException(
                     "Renderscript BLAS support mode is not supported in BuildTools $rsBlasLib"

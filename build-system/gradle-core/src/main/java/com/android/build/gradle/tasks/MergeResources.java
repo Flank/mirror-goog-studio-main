@@ -25,6 +25,7 @@ import android.databinding.tool.LayoutXmlProcessor;
 import android.databinding.tool.util.RelativizableFile;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
@@ -658,7 +659,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         private boolean isLibrary;
 
         public CreationAction(
-                @NonNull VariantScope variantScope,
+                @NonNull ComponentPropertiesImpl componentProperties,
                 @NonNull TaskManager.MergeType mergeType,
                 @NonNull String taskNamePrefix,
                 @Nullable File mergedNotCompiledOutputDirectory,
@@ -666,7 +667,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                 boolean processResources,
                 @NonNull ImmutableSet<Flag> flags,
                 boolean isLibrary) {
-            super(variantScope);
+            super(componentProperties);
             this.mergeType = mergeType;
             this.taskNamePrefix = taskNamePrefix;
             this.mergedNotCompiledOutputDirectory = mergedNotCompiledOutputDirectory;
@@ -680,7 +681,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName(taskNamePrefix, "Resources");
+            return getComponent().computeTaskName(taskNamePrefix, "Resources");
         }
 
         @NonNull
@@ -699,7 +700,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             // latter one wins: The mergeResources task with mergeType == MERGE is the one that is
             // finally registered in the current scope.
             // Filed https://issuetracker.google.com//110412851 to clean this up at some point.
-            getVariantScope().getTaskContainer().setMergeResourcesTask(taskProvider);
+            getComponent().getTaskContainer().setMergeResourcesTask(taskProvider);
 
             getVariantScope()
                     .getArtifacts()
@@ -716,10 +717,11 @@ public abstract class MergeResources extends ResourceAwareTask {
         public void configure(@NonNull MergeResources task) {
             super.configure(task);
 
-            VariantScope variantScope = getVariantScope();
-            GlobalScope globalScope = variantScope.getGlobalScope();
-            BaseVariantData variantData = variantScope.getVariantData();
-            VariantPathHelper paths = variantScope.getPaths();
+            ComponentPropertiesImpl component = getComponent();
+            VariantScope variantScope = component.getVariantScope();
+            GlobalScope globalScope = component.getGlobalScope();
+            BaseVariantData variantData = component.getVariantData();
+            VariantPathHelper paths = component.getPaths();
 
             task.getMinSdk()
                     .set(
@@ -762,7 +764,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.vectorSupportLibraryIsUsed =
                     Boolean.TRUE.equals(vectorDrawablesOptions.getUseSupportLibrary());
 
-            task.getResourcesComputer().initFromVariantScope(variantScope, includeDependencies);
+            task.getResourcesComputer().initFromVariantScope(component, includeDependencies);
 
             if (!task.disableVectorDrawables) {
                 task.generatedPngsOutputDir = paths.getGeneratedPngsOutputDir();
@@ -878,11 +880,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             task.mergedNotCompiledResourcesOutputDirectory = mergedNotCompiledOutputDirectory;
 
-            task.pseudoLocalesEnabled =
-                    variantScope
-                            .getVariantData()
-                            .getVariantDslInfo()
-                            .isPseudoLocalesEnabled();
+            task.pseudoLocalesEnabled = component.getVariantDslInfo().isPseudoLocalesEnabled();
             task.flags = flags;
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(globalScope.getProjectOptions());
@@ -918,7 +916,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                 }));
             task.getResourceDirsOutsideRootProjectDir().disallowChanges();
 
-            task.dependsOn(variantScope.getTaskContainer().getResourceGenTask());
+            task.dependsOn(component.getTaskContainer().getResourceGenTask());
 
             // TODO(141301405): when we compile resources AAPT2 stores the absolute path of the raw
             // resource in the proto (.flat) file, so we need to mark those inputs with absolute

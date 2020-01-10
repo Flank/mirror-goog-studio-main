@@ -31,9 +31,12 @@ import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.core.VariantSources;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.BuilderConstants;
@@ -87,29 +90,63 @@ public class TestVariantFactory extends ApplicationVariantFactory {
     @NonNull
     @Override
     public VariantPropertiesImpl createVariantPropertiesObject(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope) {
-        return globalScope
-                .getDslScope()
-                .getObjectFactory()
-                .newInstance(
-                        TestVariantPropertiesImpl.class,
-                        globalScope.getDslScope(),
-                        variantScope,
-                        variantScope.getArtifacts().getOperations(),
-                        componentIdentity);
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantScope variantScope,
+            @NonNull BaseVariantData variantData) {
+        TestVariantPropertiesImpl variantProperties =
+                globalScope
+                        .getDslScope()
+                        .getObjectFactory()
+                        .newInstance(
+                                TestVariantPropertiesImpl.class,
+                                componentIdentity,
+                                variantDslInfo,
+                                variantDependencies,
+                                variantSources,
+                                paths,
+                                artifacts,
+                                variantScope,
+                                variantData,
+                                globalScope.getDslScope());
+
+        // create default output
+        variantProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
+
+        return variantProperties;
     }
 
     @NonNull
     @Override
     public UnitTestPropertiesImpl createUnitTestProperties(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope) {
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantScope variantScope,
+            @NonNull TestVariantData variantData,
+            @NonNull VariantPropertiesImpl testedVariantProperties) {
         throw new RuntimeException("cannot instantiate unit-test properties in test plugin");
     }
 
     @NonNull
     @Override
     public AndroidTestPropertiesImpl createAndroidTestProperties(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantScope variantScope) {
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantScope variantScope,
+            @NonNull TestVariantData variantData,
+            @NonNull VariantPropertiesImpl testedVariantProperties) {
         throw new RuntimeException("cannot instantiate android-test properties in test plugin");
     }
 

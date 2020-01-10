@@ -22,5 +22,5 @@ import org.gradle.api.Incubating
  * Properties for the unit test Variant of a module
  */
 @Incubating
-interface UnitTestProperties : ComponentProperties {
+interface UnitTestProperties : TestComponentProperties {
 }

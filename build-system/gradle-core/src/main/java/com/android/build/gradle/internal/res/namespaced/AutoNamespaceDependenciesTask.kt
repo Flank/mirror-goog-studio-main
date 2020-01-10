@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import android.databinding.tool.util.Preconditions
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
@@ -419,11 +420,13 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
             }
         }.toImmutableMap { it.toImmutableList() }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<AutoNamespaceDependenciesTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<AutoNamespaceDependenciesTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("autoNamespace", "Dependencies")
+            get() = component.computeTaskName("autoNamespace", "Dependencies")
         override val type: Class<AutoNamespaceDependenciesTask>
             get() = AutoNamespaceDependenciesTask::class.java
 
@@ -485,7 +488,7 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
             )
 
             task.dependencies =
-                variantScope.variantData.variantDependency.runtimeClasspath.incoming
+                component.variantDependencies.runtimeClasspath.incoming
 
             task.externalNotNamespacedResources = variantScope.variantDependencies.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,

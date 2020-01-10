@@ -18,14 +18,14 @@ package com.android.build.gradle.internal.test;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.testing.TestData;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.ILogger;
@@ -43,13 +43,12 @@ import org.xml.sax.SAXException;
  */
 public class TestDataImpl extends AbstractTestDataImpl {
 
-    @NonNull
-    private final TestVariantData testVariantData;
+    @NonNull private final AndroidTestPropertiesImpl testVariantData;
 
     @NonNull private final VariantDslInfo testVariantDslInfo;
 
     public TestDataImpl(
-            @NonNull TestVariantData testVariantData,
+            @NonNull AndroidTestPropertiesImpl testVariantData,
             @NonNull Provider<Directory> testApkDir,
             @Nullable FileCollection testedApksDir) {
         super(
@@ -60,7 +59,6 @@ public class TestDataImpl extends AbstractTestDataImpl {
         this.testVariantData = testVariantData;
         this.testVariantDslInfo = testVariantData.getVariantDslInfo();
         if (testVariantData
-                        .getPublicVariantPropertiesApi()
                         .getOutputs()
                         .getSplitsByType(
                                 com.android.build.api.variant.VariantOutput.OutputType.ONE_OF_MANY)
@@ -90,9 +88,8 @@ public class TestDataImpl extends AbstractTestDataImpl {
 
     @Override
     public boolean isLibrary() {
-        TestedVariantData testedVariantData = testVariantData.getTestedVariantData();
-        BaseVariantData testedVariantData2 = (BaseVariantData) testedVariantData;
-        return testedVariantData2.getVariantDslInfo().getVariantType().isAar();
+        VariantPropertiesImpl testedVariant = testVariantData.getTestedVariant();
+        return testedVariant.getVariantType().isAar();
     }
 
     @NonNull
@@ -100,15 +97,13 @@ public class TestDataImpl extends AbstractTestDataImpl {
     public ImmutableList<File> getTestedApks(
             @NonNull DeviceConfigProvider deviceConfigProvider,
             @NonNull ILogger logger) throws ProcessException {
-        BaseVariantData testedVariantData =
-                (BaseVariantData) testVariantData.getTestedVariantData();
+        VariantPropertiesImpl testedVariant = testVariantData.getTestedVariant();
 
         ImmutableList.Builder<File> apks = ImmutableList.builder();
         BuiltArtifacts builtArtifacts =
                 new BuiltArtifactsLoaderImpl()
                         .load(
-                                testedVariantData
-                                        .getScope()
+                                testedVariant
                                         .getArtifacts()
                                         .getFinalProduct(InternalArtifactType.APK.INSTANCE)
                                         .get());
@@ -119,7 +114,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
                 BuiltArtifactsSplitOutputMatcher.INSTANCE.computeBestOutput(
                         deviceConfigProvider,
                         builtArtifacts,
-                        testedVariantData.getVariantDslInfo().getSupportedAbis()));
+                        testedVariant.getVariantDslInfo().getSupportedAbis()));
         return apks.build();
     }
 }

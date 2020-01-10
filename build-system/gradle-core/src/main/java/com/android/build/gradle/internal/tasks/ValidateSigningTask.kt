@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
@@ -127,13 +128,15 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
     fun forceRerun() = signingConfig.storeFile?.isFile != true
 
     class CreationAction(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         private val defaultDebugKeystoreLocation: File
     ) :
-        VariantTaskCreationAction<ValidateSigningTask>(variantScope) {
+        VariantTaskCreationAction<ValidateSigningTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("validateSigning")
+            get() = component.computeTaskName("validateSigning")
         override val type: Class<ValidateSigningTask>
             get() = ValidateSigningTask::class.java
 
@@ -150,7 +153,7 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
             super.configure(task)
 
             task.signingConfig = variantScope.variantDslInfo.signingConfig ?: throw IllegalStateException(
-                "No signing config configured for variant " + variantScope.name
+                "No signing config configured for variant " + component.name
             )
             task.defaultDebugKeystoreLocation = defaultDebugKeystoreLocation
             task.outputs.upToDateWhen { !task.forceRerun() }

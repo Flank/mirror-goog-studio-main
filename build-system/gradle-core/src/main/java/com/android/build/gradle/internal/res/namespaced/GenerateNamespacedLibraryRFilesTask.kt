@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -73,11 +74,13 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
         exportToCompiledJava(ImmutableList.of(resources), rJarFile.get().asFile.toPath())
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<GenerateNamespacedLibraryRFilesTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<GenerateNamespacedLibraryRFilesTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("create", "RFiles")
+            get() = component.computeTaskName("create", "RFiles")
         override val type: Class<GenerateNamespacedLibraryRFilesTask>
             get() = GenerateNamespacedLibraryRFilesTask::class.java
 

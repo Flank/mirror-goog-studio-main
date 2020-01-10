@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -82,11 +83,13 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
         }
     }
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<ExportConsumerProguardFilesTask>(variantScope) {
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<ExportConsumerProguardFilesTask>(
+            componentProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("export", "ConsumerProguardFiles")
+            get() = component.computeTaskName("export", "ConsumerProguardFiles")
 
         override val type: Class<ExportConsumerProguardFilesTask>
             get() = ExportConsumerProguardFilesTask::class.java

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.plugins;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -26,7 +27,6 @@ import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.builder.core.BuilderConstants;
@@ -75,12 +75,12 @@ public class AppPluginInternalTest {
         TestCase.assertNotNull(variantInputModel.getBuildTypes().get(BuilderConstants.RELEASE));
         TestCase.assertEquals(0, variantInputModel.getProductFlavors().size());
 
-        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
-        VariantCheckers.checkDefaultVariants(variants);
+        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getComponents();
+        VariantCheckers.checkDefaultVariants(components);
 
-        VariantCheckers.findVariantData(variants, "debug");
-        VariantCheckers.findVariantData(variants, "release");
-        VariantCheckers.findVariantData(variants, "debugAndroidTest");
+        VariantCheckers.findVariantData(components, "debug");
+        VariantCheckers.findVariantData(components, "release");
+        VariantCheckers.findVariantData(components, "debugAndroidTest");
     }
 
     @Test
@@ -154,21 +154,21 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(3, plugin.getVariantInputModel().getBuildTypes().size());
 
-        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
+        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getComponents();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 3);
         map.put("unitTests", 3);
         map.put("androidTests", 1);
-        TestCase.assertEquals(VariantCheckers.countVariants(map), variants.size());
+        TestCase.assertEquals(VariantCheckers.countVariants(map), components.size());
 
         String[] variantNames = new String[] {"debug", "release", "staging"};
 
         for (String variantName : variantNames) {
-            VariantCheckers.findVariantData(variants, variantName);
+            VariantCheckers.findVariantData(components, variantName);
         }
 
         BaseVariantData testVariant =
-                VariantCheckers.findVariantData(variants, "stagingAndroidTest");
+                VariantCheckers.findVariantData(components, "stagingAndroidTest");
         TestCase.assertEquals(
                 "staging", testVariant.getVariantDslInfo().getComponentIdentity().getBuildType());
     }
@@ -195,12 +195,12 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(2, plugin.getVariantInputModel().getProductFlavors().size());
 
-        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
+        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getComponents();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 4);
         map.put("unitTests", 4);
         map.put("androidTests", 2);
-        TestCase.assertEquals(VariantCheckers.countVariants(map), variants.size());
+        TestCase.assertEquals(VariantCheckers.countVariants(map), components.size());
 
         String[] variantNames =
                 new String[] {
@@ -213,7 +213,7 @@ public class AppPluginInternalTest {
                 };
 
         for (String variantName : variantNames) {
-            VariantCheckers.findVariantData(variants, variantName);
+            VariantCheckers.findVariantData(components, variantName);
         }
     }
     @Test
@@ -251,12 +251,12 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(5, plugin.getVariantInputModel().getProductFlavors().size());
 
-        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
+        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getComponents();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 12);
         map.put("unitTests", 12);
         map.put("androidTests", 6);
-        TestCase.assertEquals(VariantCheckers.countVariants(map), variants.size());
+        TestCase.assertEquals(VariantCheckers.countVariants(map), components.size());
 
         String[] variantNames =
                 new String[] {
@@ -281,7 +281,7 @@ public class AppPluginInternalTest {
                 };
 
         for (String variantName : variantNames) {
-            VariantCheckers.findVariantData(variants, variantName);
+            VariantCheckers.findVariantData(components, variantName);
         }
     }
     @Test
@@ -344,17 +344,17 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks();
 
-        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
+        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getComponents();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 6);
         map.put("unitTests", 6);
         map.put("androidTests", 2);
-        TestCase.assertEquals(VariantCheckers.countVariants(map), variants.size());
+        TestCase.assertEquals(VariantCheckers.countVariants(map), components.size());
 
         BaseVariantData variant;
         SigningConfig signingConfig;
 
-        variant = VariantCheckers.findVariantData(variants, "flavor1Debug");
+        variant = VariantCheckers.findVariantData(components, "flavor1Debug");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         final File file = signingConfig.getStoreFile();
@@ -363,17 +363,17 @@ public class AppPluginInternalTest {
                 .isEqualTo(
                         GradleKeystoreHelper.getDefaultDebugKeystoreLocation().getAbsolutePath());
 
-        variant = VariantCheckers.findVariantData(variants, "flavor1Staging");
+        variant = VariantCheckers.findVariantData(components, "flavor1Staging");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNull(signingConfig);
 
-        variant = VariantCheckers.findVariantData(variants, "flavor1Release");
+        variant = VariantCheckers.findVariantData(components, "flavor1Release");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
                 new File(project.getProjectDir(), "a3"), signingConfig.getStoreFile());
 
-        variant = VariantCheckers.findVariantData(variants, "flavor2Debug");
+        variant = VariantCheckers.findVariantData(components, "flavor2Debug");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         final File file1 = signingConfig.getStoreFile();
@@ -382,13 +382,13 @@ public class AppPluginInternalTest {
                 .isEqualTo(
                         GradleKeystoreHelper.getDefaultDebugKeystoreLocation().getAbsolutePath());
 
-        variant = VariantCheckers.findVariantData(variants, "flavor2Staging");
+        variant = VariantCheckers.findVariantData(components, "flavor2Staging");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
                 new File(project.getProjectDir(), "a1"), signingConfig.getStoreFile());
 
-        variant = VariantCheckers.findVariantData(variants, "flavor2Release");
+        variant = VariantCheckers.findVariantData(components, "flavor2Release");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(

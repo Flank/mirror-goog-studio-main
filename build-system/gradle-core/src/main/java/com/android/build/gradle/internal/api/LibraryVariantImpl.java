@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.api.TestVariant;
@@ -50,10 +51,11 @@ public class LibraryVariantImpl extends BaseVariantImpl implements LibraryVarian
     @Inject
     public LibraryVariantImpl(
             @NonNull LibraryVariantData variantData,
+            @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull ObjectFactory objectFactory,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(objectFactory, readOnlyObjectProvider, outputs);
+        super(componentProperties, objectFactory, readOnlyObjectProvider, outputs);
         this.variantData = variantData;
     }
 
@@ -90,7 +92,6 @@ public class LibraryVariantImpl extends BaseVariantImpl implements LibraryVarian
     @Nullable
     public Zip getPackageLibrary() {
         variantData
-                .getScope()
                 .getGlobalScope()
                 .getDslScope()
                 .getDeprecationReporter()

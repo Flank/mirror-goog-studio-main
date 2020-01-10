@@ -17,12 +17,13 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.testing.api.TestServer;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
@@ -101,9 +102,12 @@ public abstract class TestServerTask extends NonIncrementalTask {
             extends VariantTaskCreationAction<TestServerTask> {
 
         private final TestServer testServer;
+        private final AndroidTestPropertiesImpl androidTestProperties;
 
-        public TestServerTaskCreationAction(VariantScope scope, TestServer testServer) {
-            super(scope);
+        public TestServerTaskCreationAction(
+                @NonNull AndroidTestPropertiesImpl androidTestProperties, TestServer testServer) {
+            super(androidTestProperties);
+            this.androidTestProperties = androidTestProperties;
             this.testServer = testServer;
         }
 
@@ -111,7 +115,7 @@ public abstract class TestServerTask extends NonIncrementalTask {
         @Override
         public String getName() {
             return getVariantScope().getVariantDslInfo().hasFlavors()
-                    ? getVariantScope().getTaskName(testServer.getName() + "Upload")
+                    ? getComponent().computeTaskName(testServer.getName() + "Upload")
                     : testServer.getName() + ("Upload");
         }
 
@@ -126,9 +130,9 @@ public abstract class TestServerTask extends NonIncrementalTask {
             super.configure(task);
             VariantScope scope = getVariantScope();
 
-            final BaseVariantData testedVariantData = scope.getTestedVariantData();
+            VariantPropertiesImpl testedVariant = androidTestProperties.getTestedVariant();
 
-            final String variantName = scope.getName();
+            final String variantName = androidTestProperties.getName();
             task.setDescription(
                     "Uploads APKs for Build \'"
                             + variantName
@@ -139,13 +143,8 @@ public abstract class TestServerTask extends NonIncrementalTask {
 
             task.setTestServer(testServer);
 
-            if (testedVariantData != null
-                    && testedVariantData
-                            .getScope()
-                            .getArtifacts()
-                            .hasFinalProduct(InternalArtifactType.APK.INSTANCE)) {
-                testedVariantData
-                        .getScope()
+            if (testedVariant.getArtifacts().hasFinalProduct(InternalArtifactType.APK.INSTANCE)) {
+                testedVariant
                         .getArtifacts()
                         .setTaskInputToFinalProduct(
                                 InternalArtifactType.APK.INSTANCE, task.getTestedApks());

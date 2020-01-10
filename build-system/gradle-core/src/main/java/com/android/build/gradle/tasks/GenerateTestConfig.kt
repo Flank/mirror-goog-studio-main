@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.UnitTestPropertiesImpl
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -91,11 +93,13 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         val outputDirectory: File
     ) : Serializable
 
-    class CreationAction(scope: VariantScope) :
-        VariantTaskCreationAction<GenerateTestConfig>(scope) {
+    class CreationAction(private val unitTestProperties: UnitTestPropertiesImpl) :
+        VariantTaskCreationAction<GenerateTestConfig>(
+            unitTestProperties
+        ) {
 
         override val name: String
-            get() = variantScope.getTaskName("generate", "Config")
+            get() = component.computeTaskName("generate", "Config")
 
         override val type: Class<GenerateTestConfig>
             get() = GenerateTestConfig::class.java
@@ -114,11 +118,11 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
 
         override fun configure(task: GenerateTestConfig) {
             super.configure(task)
-            task.testConfigInputs = TestConfigInputs(variantScope)
+            task.testConfigInputs = TestConfigInputs(unitTestProperties)
         }
     }
 
-    class TestConfigInputs(scope: VariantScope) {
+    class TestConfigInputs(unitTestProperties: UnitTestPropertiesImpl) {
         @get:Input
         val isUseRelativePathEnabled: Boolean
 
@@ -141,18 +145,17 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         private val packageNameOfFinalRClassProvider: () -> String
 
         init {
-            val testedVariantData = scope.testedVariantData ?: error("Not a unit test variant")
-            val testedScope = testedVariantData.scope
+            val testedVariant = unitTestProperties.testedVariant
 
-            isUseRelativePathEnabled = scope.globalScope.projectOptions.get(
+            isUseRelativePathEnabled = unitTestProperties.globalScope.projectOptions.get(
                 BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
             )
-            resourceApk = scope.artifacts.getFinalProduct(APK_FOR_LOCAL_TEST)
-            mergedAssets = testedScope.artifacts.getFinalProduct(MERGED_ASSETS)
-            mergedManifest = testedScope.artifacts.getFinalProduct(MERGED_MANIFESTS)
-            mainApkInfo = testedScope.variantData.publicVariantPropertiesApi.outputs.getMainSplit().apkData
+            resourceApk = unitTestProperties.artifacts.getFinalProduct(APK_FOR_LOCAL_TEST)
+            mergedAssets = testedVariant.artifacts.getFinalProduct(MERGED_ASSETS)
+            mergedManifest = testedVariant.artifacts.getFinalProduct(MERGED_MANIFESTS)
+            mainApkInfo = testedVariant.outputs.getMainSplit().apkData
             packageNameOfFinalRClassProvider = {
-                testedScope.variantDslInfo.originalApplicationId
+                testedVariant.variantDslInfo.originalApplicationId
             }
         }
 

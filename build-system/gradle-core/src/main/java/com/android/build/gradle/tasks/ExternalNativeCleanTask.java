@@ -24,6 +24,7 @@ import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctio
 import static com.android.build.gradle.internal.cxx.settings.CxxAbiModelCMakeSettingsRewriterKt.rewriteCxxAbiModelWithCMakeSettings;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
@@ -35,7 +36,6 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.errors.DefaultIssueReporter;
@@ -142,9 +142,11 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
         @NonNull private final CxxVariantModel variant;
         @NonNull private final List<CxxAbiModel> abis = Lists.newArrayList();
 
-        public CreationAction(@NonNull CxxModuleModel module, @NonNull VariantScope scope) {
-            super(scope);
-            this.variant = createCxxVariantModel(module, scope);
+        public CreationAction(
+                @NonNull CxxModuleModel module,
+                @NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
+            this.variant = createCxxVariantModel(module, componentProperties);
             // Attempt to clean every possible ABI even those that aren't currently built.
             // This covers cases where user has changed abiFilters or platform. We don't want
             // to leave stale results hanging around.
@@ -154,8 +156,8 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
                                 createCxxAbiModel(
                                         variant,
                                         abi,
-                                        scope.getGlobalScope(),
-                                        scope.getVariantData())));
+                                        componentProperties.getGlobalScope(),
+                                        componentProperties)));
             }
 
         }
@@ -163,7 +165,7 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("externalNativeBuildClean");
+            return getComponent().computeTaskName("externalNativeBuildClean");
         }
 
         @NonNull

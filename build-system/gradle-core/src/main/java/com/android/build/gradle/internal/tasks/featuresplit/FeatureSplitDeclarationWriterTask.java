@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks.featuresplit;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
@@ -58,14 +59,14 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
     public static class CreationAction
             extends VariantTaskCreationAction<FeatureSplitDeclarationWriterTask> {
 
-        public CreationAction(@NonNull VariantScope variantScope) {
-            super(variantScope);
+        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
+            super(componentProperties);
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getTaskName("feature", "Writer");
+            return getComponent().computeTaskName("feature", "Writer");
         }
 
         @NonNull

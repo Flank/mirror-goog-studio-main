@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.test
 
+import com.android.build.api.component.impl.AndroidTestPropertiesImpl
 import com.android.build.gradle.internal.tasks.getApkFiles
 import com.android.build.gradle.internal.testing.TestData
 import com.android.build.gradle.internal.utils.toImmutableList
@@ -34,8 +35,8 @@ import java.io.File
  *
  * For the moment, that is only dynamic feature modules.
  */
-class BundleTestDataImpl(
-    private val testVariantData: TestVariantData,
+internal class BundleTestDataImpl(
+    private val testVariantData: AndroidTestPropertiesImpl,
     testApkDir: Provider<Directory>,
     private val moduleName: String?,
     private val apkBundle: FileCollection
@@ -56,7 +57,7 @@ class BundleTestDataImpl(
         testVariantData.variantDslInfo.testedApplicationId
 
     override fun isLibrary(): Boolean =
-        testVariantData.testedVariantData.variantDslInfo.variantType.isAar
+        testVariantData.testedVariant.variantType.isAar
 
     override fun getTestedApks(
         deviceConfigProvider: DeviceConfigProvider,

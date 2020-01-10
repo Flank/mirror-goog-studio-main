@@ -17,13 +17,14 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.variant.impl.VariantImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.component.ComponentIdentity;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.builder.core.VariantType;
 import com.google.common.collect.Maps;
 import java.util.Map;
@@ -35,21 +36,25 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
     private final Map<VariantType, TestVariantData> testVariants;
 
     public ApplicationVariantData(
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantDependencies variantDependencies,
+            @NonNull VariantSources variantSources,
+            @NonNull VariantPathHelper paths,
+            @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
             @NonNull TaskManager taskManager,
-            @NonNull VariantScope variantScope,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantImpl publicVariantApi,
-            @NonNull VariantPropertiesImpl publicVariantPropertiesApi,
-            @NonNull VariantSources variantSources) {
+            @NonNull MutableTaskContainer taskContainer) {
         super(
+                componentIdentity,
+                variantDslInfo,
+                variantDependencies,
+                variantSources,
+                paths,
+                artifacts,
                 globalScope,
                 taskManager,
-                variantScope,
-                variantDslInfo,
-                publicVariantApi,
-                publicVariantPropertiesApi,
-                variantSources);
+                taskContainer);
         testVariants = Maps.newHashMap();
     }
 

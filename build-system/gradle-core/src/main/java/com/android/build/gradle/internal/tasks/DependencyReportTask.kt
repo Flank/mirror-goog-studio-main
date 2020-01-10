@@ -16,11 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.AndroidDependenciesRenderer
-import com.android.build.gradle.internal.scope.VariantScope
+import com.google.common.collect.ImmutableList
 import java.io.IOException
-import java.util.HashSet
 import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.internal.logging.text.StyledTextOutputFactory
 
@@ -28,22 +29,19 @@ open class DependencyReportTask : DefaultTask() {
 
     private val renderer = AndroidDependenciesRenderer()
 
-    private val variants = HashSet<VariantScope>()
+    @get:Internal
+    lateinit var components: ImmutableList<ComponentPropertiesImpl>
 
     @TaskAction
     @Throws(IOException::class)
     fun generate() {
         renderer.setOutput(services.get(StyledTextOutputFactory::class.java).create(javaClass))
-        val sortedVariants = variants.sortedWith(compareBy { it.name })
+        val sortedComponents = components.sortedWith(compareBy { it.name })
 
-        for (variant in sortedVariants) {
-            renderer.startVariant(variant)
-            renderer.render(variant)
+        for (component in sortedComponents) {
+            renderer.startComponent(component)
+            renderer.render(component)
         }
     }
 
-    /** Sets the variants to generate the report for.  */
-    fun setVariants(variantScopes: Collection<VariantScope>) {
-        this.variants.addAll(variantScopes)
-    }
 }

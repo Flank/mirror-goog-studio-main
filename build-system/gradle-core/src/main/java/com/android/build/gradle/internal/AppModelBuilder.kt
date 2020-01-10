@@ -72,15 +72,15 @@ class AppModelBuilder(
     private fun buildMinimalisticModel(): Any {
         val variantsOutput = ImmutableList.builder<AppBundleVariantBuildOutput>()
 
-        for (variantScope in variantModel.variants) {
-            val artifacts = variantScope.artifacts
+        for (component in variantModel.components) {
+            val artifacts = component.artifacts
 
             if (artifacts.hasFinalProduct(InternalArtifactType.BUNDLE)) {
                 val bundleFile = artifacts.getFinalProduct(InternalArtifactType.BUNDLE)
                 val apkFolder = artifacts.getFinalProduct(InternalArtifactType.EXTRACTED_APKS)
                 variantsOutput.add(
                         DefaultAppBundleVariantBuildOutput(
-                            variantScope.name, bundleFile.get().asFile, apkFolder.get().asFile))
+                            component.name, bundleFile.get().asFile, apkFolder.get().asFile))
             }
         }
 

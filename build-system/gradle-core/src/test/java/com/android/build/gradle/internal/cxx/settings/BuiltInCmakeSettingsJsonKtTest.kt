@@ -33,12 +33,12 @@ class BuiltInCmakeSettingsJsonKtTest {
             val module = tryCreateCxxModuleModel(it.global)!!
             val variant = createCxxVariantModel(
                 module,
-                it.variant)
+                it.componentProperties)
             val abi = createCxxAbiModel(
                 variant,
                 Abi.X86,
                 it.global,
-                it.baseVariantData)
+                it.componentProperties)
             abi.getNdkMetaCmakeSettingsJson()
         }
     }
@@ -49,12 +49,12 @@ class BuiltInCmakeSettingsJsonKtTest {
             val module = tryCreateCxxModuleModel(it.global)!!
             val variant = createCxxVariantModel(
                 module,
-                it.variant)
+                it.componentProperties)
             val abi = createCxxAbiModel(
                 variant,
                 Abi.X86,
                 it.global,
-                it.baseVariantData)
+                it.componentProperties)
             abi.getAndroidGradleCmakeSettings()
         }
     }
@@ -65,12 +65,12 @@ class BuiltInCmakeSettingsJsonKtTest {
             val module = tryCreateCxxModuleModel(it.global)!!
             val variant = createCxxVariantModel(
                 module,
-                it.variantScope)
+                it.componentProperties)
             val abi = createCxxAbiModel(
                 variant,
                 Abi.X86,
                 it.global,
-                it.baseVariantData)
+                it.componentProperties)
             abi.getNdkMetaCmakeSettingsJson().toJsonString()
         }
     }

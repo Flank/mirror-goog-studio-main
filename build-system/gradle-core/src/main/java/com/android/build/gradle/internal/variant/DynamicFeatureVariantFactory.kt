@@ -22,6 +22,9 @@ import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 
@@ -45,17 +48,33 @@ class DynamicFeatureVariantFactory(
 
     override fun createVariantPropertiesObject(
         componentIdentity: ComponentIdentity,
-        variantScope: VariantScope
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: BuildArtifactsHolder,
+        variantScope: VariantScope,
+        variantData: BaseVariantData
     ): VariantPropertiesImpl {
-        return globalScope
+        val variantProperties = globalScope
             .dslScope
             .objectFactory
             .newInstance(
                 DynamicFeatureVariantPropertiesImpl::class.java,
-                globalScope.dslScope,
+                componentIdentity,
+                variantDslInfo,
+                variantDependencies,
+                variantSources,
+                paths,
+                artifacts,
                 variantScope,
-                variantScope.artifacts.getOperations(),
-                componentIdentity
+                variantData,
+                globalScope.dslScope
             )
+
+        // create default output
+        variantProperties.addVariantOutput(variantData.outputFactory.addMainApk())
+
+        return variantProperties
     }
 }

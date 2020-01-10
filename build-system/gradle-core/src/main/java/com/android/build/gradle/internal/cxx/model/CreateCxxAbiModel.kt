@@ -16,14 +16,13 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.services.createDefaultAbiServiceRegistry
 import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.createBuildSettingsFromFile
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.tasks.NativeBuildSystem
-import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils.join
 import java.io.File
 
@@ -34,7 +33,7 @@ fun createCxxAbiModel(
     variant: CxxVariantModel,
     abi: Abi,
     global: GlobalScope,
-    baseVariantData: BaseVariantData) : CxxAbiModel {
+    componentProperties: ComponentPropertiesImpl) : CxxAbiModel {
     return object : CxxAbiModel {
         override val services by lazy { createDefaultAbiServiceRegistry() }
         override val variant = variant
@@ -49,7 +48,7 @@ fun createCxxAbiModel(
             join(variant.jsonFolder, abi.tag)
         }
         override val abiPlatformVersion by lazy {
-            val minSdkVersion = baseVariantData.variantDslInfo.minSdkVersion
+            val minSdkVersion = componentProperties.variantDslInfo.minSdkVersion
             global
                 .sdkComponents
                 .ndkHandlerSupplier.get()

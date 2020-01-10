@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.Format
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
@@ -163,11 +164,11 @@ abstract class R8Task: ProguardConfigurableTask() {
     abstract val mainDexListOutput: RegularFileProperty
 
     class CreationAction(
-        variantScope: VariantScope,
+        componentProperties: ComponentPropertiesImpl,
         isTestApplication: Boolean = false
-    ) : ProguardConfigurableTask.CreationAction<R8Task>(variantScope, isTestApplication) {
+    ) : ProguardConfigurableTask.CreationAction<R8Task>(componentProperties, isTestApplication) {
         override val type = R8Task::class.java
-        override val name =  variantScope.getTaskName("minify", "WithR8")
+        override val name =  component.computeTaskName("minify", "WithR8")
 
         private var disableTreeShaking: Boolean = false
         private var disableMinification: Boolean = false

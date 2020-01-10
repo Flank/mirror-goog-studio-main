@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -55,11 +56,13 @@ abstract class CreateNonNamespacedLibraryManifestTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        variantScope: VariantScope
-    ) : VariantTaskCreationAction<CreateNonNamespacedLibraryManifestTask>(variantScope) {
+        componentProperties: ComponentPropertiesImpl
+    ) : VariantTaskCreationAction<CreateNonNamespacedLibraryManifestTask>(
+        componentProperties
+    ) {
 
         override val name: String
-            get() = variantScope.getTaskName("create", "NonNamespacedLibraryManifest")
+            get() = component.computeTaskName("create", "NonNamespacedLibraryManifest")
         override val type: Class<CreateNonNamespacedLibraryManifestTask>
             get() = CreateNonNamespacedLibraryManifestTask::class.java
 
