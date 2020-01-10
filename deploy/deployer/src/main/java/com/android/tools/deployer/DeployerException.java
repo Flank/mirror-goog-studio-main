@@ -93,6 +93,12 @@ public class DeployerException extends Exception {
                 "Reinstall and restart app",
                 ResolutionAction.RUN_APP),
 
+        PROCESS_TERMINATED(
+                "Apply Changes could not complete because one of the application's processes terminated unexpectedly.",
+                "PID #%s terminated before the operation could complete.",
+                "Reinstall and restart app",
+                ResolutionAction.RUN_APP),
+
         // Errors pertaining to un-swappable changes.
 
         CLASS_NOT_FOUND(
@@ -333,6 +339,11 @@ public class DeployerException extends Exception {
 
     public static DeployerException processNotResponding(String processName) {
         return new DeployerException(Error.PROCESS_NOT_RESPONDING, NO_ARGS, processName);
+    }
+
+    // TODO: We can add tests for this: b/147743908
+    public static DeployerException processTerminated(String pid) {
+        return new DeployerException(Error.PROCESS_TERMINATED, NO_ARGS, pid);
     }
 
     public static DeployerException changedSharedObject(String filePath) {

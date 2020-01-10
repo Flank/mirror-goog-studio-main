@@ -37,6 +37,10 @@ public class InstallerResponseHandler {
             throw DeployerException.processNotResponding(response.getExtra());
         }
 
+        if (response.getStatus() == SwapResponse.Status.PROCESS_TERMINATED) {
+            throw DeployerException.processTerminated(response.getExtra());
+        }
+
         if (response.getStatus() != SwapResponse.Status.AGENT_ERROR) {
             throw DeployerException.swapFailed(response.getStatus());
         }

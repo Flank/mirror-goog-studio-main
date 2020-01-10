@@ -318,6 +318,15 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
       }
     }
   }
+
+  for (int pid : request_.process_ids()) {
+    const std::string pid_string = to_string(pid);
+    if (access(("/proc/" + pid_string).c_str(), F_OK) != 0) {
+      response_->set_extra(pid_string);
+      return proto::SwapResponse::PROCESS_TERMINATED;
+    }
+  }
+
   return proto::SwapResponse::MISSING_AGENT_RESPONSES;
 }
 

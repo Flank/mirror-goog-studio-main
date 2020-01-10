@@ -107,6 +107,7 @@ message SwapResponse {
     NO_DEBUGGER_SESSIONS = 11;        // Could not swap with debugger
     PROCESS_CRASHING = 12;        // One of the processes is crashing
     PROCESS_NOT_RESPONDING = 13;  // One of the processes is not responding
+    PROCESS_TERMINATED = 14;      // One of the processes terminated during swap
   }
 
   Status status = 1;
