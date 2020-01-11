@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.MultipleArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.getDesugarLibDexFromTransform
 import com.android.builder.files.NativeLibraryAbiPredicate
@@ -97,6 +96,11 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     var abiFilters: Set<String>? = null
         private set
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    @get:Optional
+    abstract val appMetadata: ConfigurableFileCollection
+
     @get:Input
     abstract val fileName: Property<String>
 
@@ -114,8 +118,11 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
         // will need to uncompress them anyway.
         jarCreator.setCompressionLevel(Deflater.NO_COMPRESSION)
 
-        val filters = abiFilters
-        val abiFilter: Predicate<String>? = if (filters != null) NativeLibraryAbiPredicate(filters, false) else null
+        val filters = appMetadata.singleOrNull()?.let {
+            ModuleMetadata.load(it).abiFilters?.toSet()
+        } ?: abiFilters
+
+        val abiFilter = filters?.let { NativeLibraryAbiPredicate(it, false) }
 
         jarCreator.use {
             it.addDirectory(
@@ -270,7 +277,19 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             )
             task.nativeLibsFiles.from(getNativeLibsFiles(component, packageCustomClassDependencies))
 
-            task.abiFilters = variantScope.variantDslInfo.supportedAbis
+            if (component.variantType.isDynamicFeature) {
+                // If this is a dynamic feature, we use the abiFilters published by the base module.
+                task.appMetadata.from(
+                    component.variantDependencies.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                        AndroidArtifacts.ArtifactScope.PROJECT,
+                        AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA
+                    )
+                )
+            } else {
+                task.abiFilters = component.variantDslInfo.supportedAbis
+            }
+            task.appMetadata.disallowChanges()
 
             task.jarCreatorType.set(variantScope.jarCreatorType)
             task.jarCreatorType.disallowChanges()

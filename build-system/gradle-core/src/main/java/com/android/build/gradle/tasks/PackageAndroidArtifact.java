@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
@@ -54,6 +57,7 @@ import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.signing.SigningConfigProvider;
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams;
+import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.NewIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -157,6 +161,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     public void setAbiFilters(@Nullable Set<String> abiFilters) {
         this.abiFilters = abiFilters != null ? abiFilters : ImmutableSet.of();
     }
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.NAME_ONLY)
+    @Optional
+    public abstract ConfigurableFileCollection getAppMetadata();
 
     @OutputDirectory
     public abstract DirectoryProperty getIncrementalFolder();
@@ -593,7 +602,26 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             manifestType = task.manifestType;
             apkFormat = task.apkFormat;
             signingConfig = task.signingConfig.convertToParams();
-            abiFilters = task.abiFilters;
+            if (task.getAppMetadata().isEmpty()) {
+                abiFilters = task.abiFilters;
+            } else {
+                List<String> appAbiFilters;
+                try {
+                    appAbiFilters =
+                            ModuleMetadata.load(task.getAppMetadata().getSingleFile())
+                                    .getAbiFilters();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                if (appAbiFilters == null) {
+                    // we assign abiFilters to task.abiFilters (instead of an empty list) because
+                    // we're in a dynamic-feature, so task.abiFilters will be empty unless ABIs have
+                    // been injected from the IDE, and that's what we want.
+                    abiFilters = task.abiFilters;
+                } else {
+                    abiFilters = ImmutableSet.copyOf(appAbiFilters);
+                }
+            }
             jniFolders = task.getJniFolders().getFiles();
             manifestDirectory = task.getManifests().get().getAsFile();
             aaptOptionsNoCompress = task.aaptOptionsNoCompress;
@@ -1049,6 +1077,16 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     globalScope.getExtension().getSplits().getAbi().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
                             : null;
+            if (getComponent().getVariantType().isDynamicFeature()) {
+                packageAndroidArtifact
+                        .getAppMetadata()
+                        .from(
+                                getComponent()
+                                        .getVariantDependencies()
+                                        .getArtifactFileCollection(
+                                                COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA));
+            }
+            packageAndroidArtifact.getAppMetadata().disallowChanges();
             if (variantDslInfo.getSupportedAbis() != null) {
                 packageAndroidArtifact.setAbiFilters(variantDslInfo.getSupportedAbis());
             } else {
@@ -1142,7 +1180,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .getVariantDependencies()
                     .getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.PROJECT,
+                            PROJECT,
                             AndroidArtifacts.ArtifactType.FEATURE_DEX,
                             ImmutableMap.of(MODULE_PATH, project.getPath()));
         }

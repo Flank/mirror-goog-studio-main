@@ -21,6 +21,8 @@ import com.android.SdkConstants
 import com.android.apksig.ApkVerifier
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.truth.ApkSubject
+import com.android.build.gradle.integration.common.truth.ModelContainerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.integration.common.utils.getVariantByName
@@ -29,8 +31,8 @@ import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
+import com.android.builder.model.SyncIssue
 import com.android.ide.common.signing.KeystoreHelper
-import com.android.testutils.TestUtils
 import com.android.testutils.apk.Aab
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
@@ -372,11 +374,49 @@ class DynamicAppTest {
     }
 
     @Test
-    fun `test abiFilter with Bundle task`() {
-        TestUtils.disableIfOnWindowsWithBazel()
+    fun `test abiFilters when building bundle`() {
         val appProject = project.getSubproject(":app")
         createAbiFile(appProject, SdkConstants.ABI_ARMEABI_V7A, "libbase.so")
         createAbiFile(appProject, SdkConstants.ABI_INTEL_ATOM, "libbase.so")
+        createAbiFile(appProject, SdkConstants.ABI_INTEL_ATOM64, "libbase.so")
+
+        TestFileUtils.appendToFile(
+            appProject.buildFile,
+            "\n" +
+                    "android.defaultConfig.ndk {\n" +
+                    "  abiFilters('${SdkConstants.ABI_ARMEABI_V7A}')\n" +
+                    "}"
+        )
+
+        val featureProject = project.getSubproject(":feature1")
+        createAbiFile(featureProject, SdkConstants.ABI_ARMEABI_V7A, "libfeature1.so")
+        createAbiFile(featureProject, SdkConstants.ABI_INTEL_ATOM, "libfeature1.so")
+        createAbiFile(featureProject, SdkConstants.ABI_INTEL_ATOM64, "libfeature1.so")
+
+        val bundleTaskName = getBundleTaskName("debug")
+        project.execute("app:$bundleTaskName")
+
+        val bundleFile = getApkFolderOutput("debug").bundleFile
+        FileSubject.assertThat(bundleFile).exists()
+
+        val bundleContentWithAbis = debugUnsignedContent.plus(
+            listOf(
+                "/base/native.pb",
+                "/base/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so",
+                "/feature1/native.pb",
+                "/feature1/lib/${SdkConstants.ABI_ARMEABI_V7A}/libfeature1.so"
+            )
+        )
+        Zip(bundleFile).use {
+            Truth.assertThat(it.entries.map { it.toString() })
+                .containsExactly(*bundleContentWithAbis)
+        }
+    }
+
+    @Test
+    fun `test abiFilters when building APKs`() {
+        val appProject = project.getSubproject(":app")
+        createAbiFile(appProject, SdkConstants.ABI_ARMEABI_V7A, "libbase.so")
         createAbiFile(appProject, SdkConstants.ABI_INTEL_ATOM64, "libbase.so")
 
         TestFileUtils.appendToFile(appProject.buildFile,
@@ -387,30 +427,83 @@ class DynamicAppTest {
 
         val featureProject = project.getSubproject(":feature1")
         createAbiFile(featureProject, SdkConstants.ABI_ARMEABI_V7A, "libfeature1.so")
-        createAbiFile(featureProject, SdkConstants.ABI_INTEL_ATOM, "libfeature1.so")
         createAbiFile(featureProject, SdkConstants.ABI_INTEL_ATOM64, "libfeature1.so")
 
-        TestFileUtils.appendToFile(featureProject.buildFile,
-            "\n" +
-                    "android.defaultConfig.ndk {\n" +
-                    "  abiFilters('${SdkConstants.ABI_ARMEABI_V7A}')\n" +
-                    "}")
+        project.execute("assembleDebug")
 
-        val bundleTaskName = getBundleTaskName("debug")
-        project.execute("app:$bundleTaskName")
+        val baseApk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
+        assertThat(baseApk.file.toFile()).exists()
+        ApkSubject.assertThat(baseApk).contains(
+            "/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so"
+        )
+        ApkSubject.assertThat(baseApk).doesNotContain(
+            "/lib/${SdkConstants.ABI_INTEL_ATOM64}/libbase.so"
+        )
 
-        val bundleFile = getApkFolderOutput("debug").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        val feature1Apk = project.getSubproject(":feature1").getApk(GradleTestProject.ApkType.DEBUG)
+        assertThat(feature1Apk.file.toFile()).exists()
+        ApkSubject.assertThat(feature1Apk).contains(
+            "/lib/${SdkConstants.ABI_ARMEABI_V7A}/libfeature1.so"
+        )
+        ApkSubject.assertThat(feature1Apk).doesNotContain(
+            "/lib/${SdkConstants.ABI_INTEL_ATOM64}/libfeature1.so"
+        )
+    }
 
-        val bundleContentWithAbis = debugUnsignedContent.plus(listOf(
-                "/base/native.pb",
-                "/base/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so",
-                "/feature1/native.pb",
-                "/feature1/lib/${SdkConstants.ABI_ARMEABI_V7A}/libfeature1.so"))
-        Zip(bundleFile).use {
-            Truth.assertThat(it.entries.map { it.toString() })
-                    .containsExactly(*bundleContentWithAbis)
-        }
+    @Test
+    fun `test injected ABIs when building APKs`() {
+        val appProject = project.getSubproject(":app")
+        createAbiFile(appProject, SdkConstants.ABI_ARMEABI_V7A, "libbase.so")
+        createAbiFile(appProject, SdkConstants.ABI_INTEL_ATOM64, "libbase.so")
+
+        val featureProject = project.getSubproject(":feature1")
+        createAbiFile(featureProject, SdkConstants.ABI_ARMEABI_V7A, "libfeature1.so")
+        createAbiFile(featureProject, SdkConstants.ABI_INTEL_ATOM64, "libfeature1.so")
+
+        project.executor()
+            .with(BooleanOption.BUILD_ONLY_TARGET_ABI, true)
+            .with(StringOption.IDE_BUILD_TARGET_ABI, SdkConstants.ABI_ARMEABI_V7A)
+            .run("assembleDebug")
+
+        val baseApk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
+        assertThat(baseApk.file.toFile()).exists()
+        ApkSubject.assertThat(baseApk).contains(
+            "/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so"
+        )
+        ApkSubject.assertThat(baseApk).doesNotContain(
+            "/lib/${SdkConstants.ABI_INTEL_ATOM64}/libbase.so"
+        )
+
+        val feature1Apk = project.getSubproject(":feature1").getApk(GradleTestProject.ApkType.DEBUG)
+        assertThat(feature1Apk.file.toFile()).exists()
+        ApkSubject.assertThat(feature1Apk).contains(
+            "/lib/${SdkConstants.ABI_ARMEABI_V7A}/libfeature1.so"
+        )
+        ApkSubject.assertThat(feature1Apk).doesNotContain(
+            "/lib/${SdkConstants.ABI_INTEL_ATOM64}/libfeature1.so"
+        )
+    }
+
+    @Test
+    fun `test warning if abiFilters specified in dynamic feature`() {
+        val featureProject = project.getSubproject(":feature1")
+        TestFileUtils.appendToFile(
+            featureProject.buildFile,
+            """
+                android.defaultConfig.ndk.abiFilters '${SdkConstants.ABI_ARMEABI_V7A}'
+                """.trimIndent()
+        )
+        val modelContainer = project.model().ignoreSyncIssues().fetchAndroidProjects()
+        val issue =
+            ModelContainerSubject.assertThat(modelContainer)
+                .rootBuild()
+                .project(":feature1")
+                .hasSingleIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_GENERIC)
+        assertThat(issue.message)
+            .contains(
+                "abiFilters should not be declared in dynamic-features. Dynamic-features use the "
+                        + "abiFilters declared in the application module."
+            )
     }
 
     @Test

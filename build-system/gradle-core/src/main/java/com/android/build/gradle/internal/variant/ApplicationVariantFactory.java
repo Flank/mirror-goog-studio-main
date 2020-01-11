@@ -383,6 +383,27 @@ public class ApplicationVariantFactory extends BaseVariantFactory {
                         Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE, message);
             }
         }
+
+        // check if the default config or any of the build types or flavors try to set abiFilters.
+        message =
+                "abiFilters should not be declared in dynamic-features. Dynamic-features use the "
+                        + "abiFilters declared in the application module.";
+        if (model.getDefaultConfig().getProductFlavor().getNdkConfig() != null
+                && model.getDefaultConfig().getProductFlavor().getNdkConfig().getAbiFilters()
+                        != null) {
+            issueReporter.reportWarning(Type.GENERIC, message);
+        }
+        for (BuildTypeData buildType : model.getBuildTypes().values()) {
+            if (buildType.getBuildType().getNdkConfig().getAbiFilters() != null) {
+                issueReporter.reportWarning(Type.GENERIC, message);
+            }
+        }
+        for (ProductFlavorData<ProductFlavor> productFlavor : model.getProductFlavors().values()) {
+            if (productFlavor.getProductFlavor().getNdkConfig() != null
+                    && productFlavor.getProductFlavor().getNdkConfig().getAbiFilters() != null) {
+                issueReporter.reportWarning(Type.GENERIC, message);
+            }
+        }
     }
 
     @Override

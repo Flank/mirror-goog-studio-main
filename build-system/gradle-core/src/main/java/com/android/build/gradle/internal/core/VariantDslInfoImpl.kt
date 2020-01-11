@@ -875,7 +875,7 @@ open class VariantDslInfoImpl internal constructor(
      * others.
      */
     override val supportedAbis: Set<String>?
-        get() = mergedNdkConfig.abiFilters
+        get() = if (variantType.isDynamicFeature) null else mergedNdkConfig.abiFilters
 
 
     override fun gatherProguardFiles(type: ProguardFileType): List<File> {

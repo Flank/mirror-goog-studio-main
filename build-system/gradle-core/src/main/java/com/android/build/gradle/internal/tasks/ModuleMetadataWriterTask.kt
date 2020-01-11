@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
@@ -56,6 +57,10 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
     @get:Input
     abstract val debuggable: Property<Boolean>
 
+    @get:Input
+    @get:Optional
+    abstract val abiFilters: ListProperty<String>
+
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
@@ -65,7 +70,8 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
                 applicationId = applicationId.get(),
                 versionCode = versionCode.get().toString(),
                 versionName = versionName.orNull,
-                debuggable = debuggable.get()
+                debuggable = debuggable.get(),
+                abiFilters = abiFilters.orNull
             )
 
         declaration.save(outputFile.get().asFile)
@@ -99,6 +105,8 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
                 .setDisallowChanges(component.variantDslInfo.isDebuggable)
             task.versionCode.setDisallowChanges(component.outputs.getMainSplit().versionCode)
             task.versionName.setDisallowChanges(component.outputs.getMainSplit().versionName)
+            task.abiFilters.set(component.variantDslInfo.supportedAbis?.sorted())
+            task.abiFilters.disallowChanges()
         }
     }
 }
