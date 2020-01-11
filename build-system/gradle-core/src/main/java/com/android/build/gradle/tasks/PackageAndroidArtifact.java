@@ -453,7 +453,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                                                     .SINGLE
                                                             : VariantOutputConfiguration.OutputType
                                                                     .ONE_OF_MANY,
-                                            filters);
+                                            filters,
+                                            builtElement.getApkData().getBaseName(),
+                                            builtElement.getApkData().getFullName());
                                 })
                         .collect(Collectors.toList());
 

@@ -209,7 +209,9 @@ public class ModelBuilderTest {
                                         "version_name",
                                         true,
                                         VariantOutputConfiguration.OutputType.SINGLE,
-                                        ImmutableList.of())))
+                                        ImmutableList.of(),
+                                        "baseName",
+                                        "fullName")))
                 .save(new FakeGradleDirectory(variantOutputFolder));
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
@@ -267,7 +269,9 @@ public class ModelBuilderTest {
                             VariantOutputConfiguration.OutputType.ONE_OF_MANY,
                             ImmutableList.of(
                                     new FilterConfiguration(
-                                            FilterConfiguration.FilterType.DENSITY, "hdpi"))));
+                                            FilterConfiguration.FilterType.DENSITY, "hdpi")),
+                            "baseName",
+                            "fullName"));
         }
 
         new BuiltArtifactsImpl(
@@ -335,7 +339,9 @@ public class ModelBuilderTest {
                                             "version_name",
                                             true,
                                             VariantOutputConfiguration.OutputType.SINGLE,
-                                            ImmutableList.of())))
+                                            ImmutableList.of(),
+                                            "baseName",
+                                            "fullName")))
                     .save(new FakeGradleDirectory(variantOutputFolder));
 
             scopes.add(variantScope);

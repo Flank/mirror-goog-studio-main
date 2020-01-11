@@ -84,13 +84,15 @@ class BuiltArtifactsImpl(
                 .asSequence()
                 .map { builtArtifact ->
                     BuiltArtifactImpl(
-                        projectPath.relativize(builtArtifact.outputFile),
-                        builtArtifact.properties,
-                        builtArtifact.versionCode,
-                        builtArtifact.versionName,
-                        builtArtifact.isEnabled,
-                        builtArtifact.outputType,
-                        builtArtifact.filters
+                        outputFile = projectPath.relativize(builtArtifact.outputFile),
+                        properties = builtArtifact.properties,
+                        versionCode = builtArtifact.versionCode,
+                        versionName = builtArtifact.versionName,
+                        isEnabled = builtArtifact.isEnabled,
+                        outputType = builtArtifact.outputType,
+                        filters = builtArtifact.filters,
+                        baseName = builtArtifact.baseName,
+                        fullName = builtArtifact.fullName
                     )
                 }
             .toList()))

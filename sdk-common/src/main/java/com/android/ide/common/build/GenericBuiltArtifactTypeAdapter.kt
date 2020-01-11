@@ -161,6 +161,9 @@ internal class GenericBuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<G
                 when(attributeName) {
                     "type" -> outputType = reader.nextString()
                     "filters" -> readFilters(reader, filters)
+                    // any other attribute we do not know about is AGP implementation details
+                    // we do not care about. it has to be a String though.
+                    else -> reader.nextString()
                 }
             },
             { outputFile: Path,

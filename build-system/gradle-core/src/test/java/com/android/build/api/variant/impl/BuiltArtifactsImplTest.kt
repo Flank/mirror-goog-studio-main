@@ -53,7 +53,9 @@ class BuiltArtifactsImplTest {
                     versionName = "version_name",
                     isEnabled = true,
                     outputType = VariantOutputConfiguration.OutputType.SINGLE,
-                    filters = listOf()
+                    filters = listOf(),
+                    baseName = "someBaseName",
+                    fullName = "someFullName"
                 )
             )
         ).save(FakeGradleDirectory(outputFolder))
@@ -73,6 +75,8 @@ class BuiltArtifactsImplTest {
   "elements": [
     {
       "type": "SINGLE",
+      "baseName": "someBaseName",
+      "fullName": "someFullName",
       "filters": [],
       "properties": [],
       "versionCode": 123,
@@ -258,7 +262,9 @@ class BuiltArtifactsImplTest {
                     outputType = VariantOutputConfiguration.OutputType.ONE_OF_MANY,
                     filters = listOf(
                         FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xhdpi")
-                    )
+                    ),
+                    baseName = "someBaseName1",
+                    fullName = "someFullName1"
                 ),
                 BuiltArtifactImpl(
                     outputFile = File(outputFolder, "file2.apk").toPath(),
@@ -269,7 +275,9 @@ class BuiltArtifactsImplTest {
                     outputType = VariantOutputConfiguration.OutputType.ONE_OF_MANY,
                     filters = listOf(
                         FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xxhdpi")
-                    )
+                    ),
+                    baseName = "someBaseName2",
+                    fullName = "someFullName2"
                 )
             )
         ).save(FakeGradleDirectory(outputFolder))

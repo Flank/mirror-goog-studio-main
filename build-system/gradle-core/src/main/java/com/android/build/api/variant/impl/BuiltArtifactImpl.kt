@@ -37,11 +37,23 @@ data class BuiltArtifactImpl(
     override val versionName: String = "",
     override val isEnabled: Boolean = true,
     override val outputType: VariantOutputConfiguration.OutputType,
-    override val filters: Collection<FilterConfiguration> = listOf()
+    override val filters: Collection<FilterConfiguration> = listOf(),
+    val baseName: String = "",
+    val fullName: String = ""
 ) : BuiltArtifact, CommonBuiltArtifact {
+
     fun newOutput(newOutputFile: Path): BuiltArtifactImpl {
-        return BuiltArtifactImpl(newOutputFile,
-            properties, versionCode, versionName, isEnabled, outputType, filters)
+        return BuiltArtifactImpl(
+            outputFile = newOutputFile,
+            properties = properties,
+            versionCode = versionCode,
+            versionName = versionName,
+            isEnabled = isEnabled,
+            outputType = outputType,
+            filters = filters,
+            baseName = baseName,
+            fullName = fullName
+        )
     }
 }
 
@@ -49,6 +61,8 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
 
     override fun writeSpecificAttributes(out: JsonWriter, value: BuiltArtifactImpl) {
         out.name("type").value(value.outputType.toString())
+        if (value.baseName.isNotEmpty()) out.name("baseName").value(value.baseName)
+        if (value.fullName.isNotEmpty()) out.name("fullName").value(value.fullName)
         out.name("filters").beginArray()
         for (filter in value.filters) {
             out.beginObject()
@@ -63,10 +77,14 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
     override fun read(reader: JsonReader): BuiltArtifactImpl {
         var outputType: String? = null
         val filters = ImmutableList.Builder<FilterConfiguration>()
+        var baseName: String? = null
+        var fullName: String? = null
         return super.read(reader,
             { attributeName: String ->
                 when(attributeName) {
                     "type" -> outputType = reader.nextString()
+                    "baseName" -> baseName = reader.nextString()
+                    "fullName" -> baseName = reader.nextString()
                     "filters" -> readFilters(reader, filters)
                 }
             },
@@ -82,7 +100,9 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
                     properties = properties,
                     versionCode = versionCode,
                     versionName = versionName,
-                    isEnabled = isEnabled)
+                    isEnabled = isEnabled,
+                    baseName = baseName.orEmpty(),
+                    fullName = fullName.orEmpty())
             })
     }
 

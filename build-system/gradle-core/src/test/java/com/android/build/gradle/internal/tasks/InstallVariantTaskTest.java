@@ -89,7 +89,9 @@ public class InstallVariantTaskTest {
                                         "version_name",
                                         true,
                                         VariantOutputConfiguration.OutputType.SINGLE,
-                                        ImmutableList.of())));
+                                        ImmutableList.of(),
+                                        "baseName",
+                                        "fullName")));
         InstallVariantTask.install(
                 "project",
                 "variant",

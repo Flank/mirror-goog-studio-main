@@ -82,7 +82,9 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
                             versionName = builtArtifact.versionName,
                             isEnabled = builtArtifact.isEnabled,
                             outputType = builtArtifact.outputType,
-                            filters = builtArtifact.filters
+                            filters = builtArtifact.filters,
+                            baseName = builtArtifact.baseName,
+                            fullName = builtArtifact.fullName
                         )
                     }
                     .toList())
