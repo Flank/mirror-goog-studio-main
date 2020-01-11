@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import com.android.ddmlib.IDevice;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -57,6 +58,16 @@ public final class InstallOptions {
         // Installs application as non-ephemeral full app.
         public Builder setInstallFullApk() {
             flags.add("--full");
+            return this;
+        }
+
+        // Skips package verification if possible.
+        public Builder setSkipVerification(IDevice device, String packageName) {
+            String skipVerificationString =
+                    ApkVerifierTracker.getSkipVerificationInstallationFlag(device, packageName);
+            if (skipVerificationString != null) {
+                flags.add(skipVerificationString);
+            }
             return this;
         }
 
