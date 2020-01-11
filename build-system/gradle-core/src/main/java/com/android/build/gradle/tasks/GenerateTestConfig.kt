@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIF
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
+import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -143,6 +144,9 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         val mergedManifest: Provider<Directory>
 
         @get:Input
+        val buildDirectoryPath: String
+
+        @get:Input
         val mainApkInfo: ApkData
 
         private val packageNameOfFinalRClassProvider: () -> String
@@ -160,6 +164,11 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             packageNameOfFinalRClassProvider = {
                 testedVariant.variantDslInfo.originalApplicationId
             }
+            buildDirectoryPath = FileUtils.toSystemIndependentPath(
+                FileUtils.relativePossiblyNonExistingPath(
+                    unitTestProperties.globalScope.project.buildDir,
+                    unitTestProperties.globalScope.project.projectDir)
+            )
         }
 
         @get:Input
