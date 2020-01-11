@@ -26,10 +26,10 @@ class StorageDetectorTest : AbstractCheckTest() {
 
     fun testWrong() {
         val expected = """
-            src/test/pkg/StorageTest.java:8: Warning: Consider also using StorageManager#getAllocatableBytes and allocateBytes which will consider clearable cached data. [UsableSpace]
+            src/test/pkg/StorageTest.java:8: Warning: Consider also using StorageManager#getAllocatableBytes and allocateBytes which will consider clearable cached data [UsableSpace]
                     return file.getUsableSpace();
                                 ~~~~~~~~~~~~~~
-            src/test/pkg/test.kt:8: Warning: Consider also using StorageManager#getAllocatableBytes and allocateBytes which will consider clearable cached data. [UsableSpace]
+            src/test/pkg/test.kt:8: Warning: Consider also using StorageManager#getAllocatableBytes and allocateBytes which will consider clearable cached data [UsableSpace]
                 return file.usableSpace
                             ~~~~~~~~~~~
             0 errors, 2 warnings

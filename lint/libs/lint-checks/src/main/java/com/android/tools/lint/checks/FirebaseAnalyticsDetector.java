@@ -68,7 +68,7 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
                             Severity.ERROR,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://firebase.google.com/docs/reference/android/com/google/firebase/analytics/FirebaseAnalytics#logEvent(java.lang.String,%20android.os.Bundle)")
+                            "https://firebase.google.com/docs/reference/android/com/google/firebase/analytics/FirebaseAnalytics#logEvent(java.lang.String,%20android.os.Bundle)")
                     .setAndroidSpecific(true);
 
     /** Constructs a new {@link FirebaseAnalyticsDetector} */
@@ -144,7 +144,7 @@ public class FirebaseAnalyticsDetector extends Detector implements SourceCodeSca
                         INVALID_NAME,
                         call,
                         location,
-                        "Bundle with invalid Analytics event parameters passed to logEvent.");
+                        "Bundle with invalid Analytics event parameters passed to `logEvent`");
             }
         }
     }

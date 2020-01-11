@@ -28,7 +28,7 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
     public void testLintWarningOnSingleGetSignaturesFlag() {
         String expected =
                 ""
-                        + "src/test/pkg/GetSignaturesSingleFlagTest.java:9: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                        + "src/test/pkg/GetSignaturesSingleFlagTest.java:9: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details [PackageManagerGetSignatures]\n"
                         + "            .getPackageInfo(\"some.pkg\", PackageManager.GET_SIGNATURES);\n"
                         + "                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
@@ -55,7 +55,7 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
     public void testLintWarningOnGetSignaturesFlagInBitwiseOrExpression() {
         String expected =
                 ""
-                        + "src/test/pkg/GetSignaturesBitwiseOrTest.java:11: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                        + "src/test/pkg/GetSignaturesBitwiseOrTest.java:11: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details [PackageManagerGetSignatures]\n"
                         + "            .getPackageInfo(\"some.pkg\", GET_GIDS | GET_SIGNATURES | GET_PROVIDERS);\n"
                         + "                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
@@ -84,7 +84,7 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
     public void testLintWarningOnGetSignaturesFlagInBitwiseXorExpression() {
         String expected =
                 ""
-                        + "src/test/pkg/GetSignaturesBitwiseXorTest.java:8: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                        + "src/test/pkg/GetSignaturesBitwiseXorTest.java:8: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details [PackageManagerGetSignatures]\n"
                         + "        getPackageManager().getPackageInfo(\"some.pkg\", PackageManager.GET_SIGNATURES ^ 0x0);\n"
                         + "                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
@@ -110,7 +110,7 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
     public void testLintWarningOnGetSignaturesFlagInBitwiseAndExpression() {
         String expected =
                 ""
-                        + "src/test/pkg/GetSignaturesBitwiseAndTest.java:9: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                        + "src/test/pkg/GetSignaturesBitwiseAndTest.java:9: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details [PackageManagerGetSignatures]\n"
                         + "            Integer.MAX_VALUE & PackageManager.GET_SIGNATURES);\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
@@ -137,7 +137,7 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
     public void testLintWarningOnFlagsInStaticField() {
         String expected =
                 ""
-                        + "src/test/pkg/GetSignaturesStaticFieldTest.java:9: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                        + "src/test/pkg/GetSignaturesStaticFieldTest.java:9: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details [PackageManagerGetSignatures]\n"
                         + "        getPackageManager().getPackageInfo(\"some.pkg\", FLAGS);\n"
                         + "                                                       ~~~~~\n"
                         + "0 errors, 1 warnings\n";
@@ -164,7 +164,7 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
     public void testNoLintWarningOnFlagsInLocalVariable() {
         String expected =
                 ""
-                        + "src/test/pkg/GetSignaturesLocalVariableTest.java:9: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                        + "src/test/pkg/GetSignaturesLocalVariableTest.java:9: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details [PackageManagerGetSignatures]\n"
                         + "        getPackageManager().getPackageInfo(\"some.pkg\", flags);\n"
                         + "                                                       ~~~~~\n"
                         + "0 errors, 1 warnings\n";

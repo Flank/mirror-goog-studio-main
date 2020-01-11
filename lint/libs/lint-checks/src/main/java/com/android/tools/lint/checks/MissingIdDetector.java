@@ -41,8 +41,8 @@ public class MissingIdDetector extends LayoutDetector {
             Issue.create(
                             "MissingId",
                             "Fragments should specify an `id` or `tag`",
-                            "If you do not specify an android:id or an android:tag attribute on a "
-                                    + "<fragment> element, then if the activity is restarted (for example for "
+                            "If you do not specify an `android:id` or an `android:tag` attribute on a "
+                                    + "`<fragment>` element, then if the activity is restarted (for example for "
                                     + "an orientation rotation) you may lose state. From the fragment "
                                     + "documentation:\n"
                                     + "\n"
@@ -50,15 +50,15 @@ public class MissingIdDetector extends LayoutDetector {
                                     + "to restore the fragment if the activity is restarted (and which you can "
                                     + "use to capture the fragment to perform transactions, such as remove it).\n"
                                     + "\n"
-                                    + "* Supply the android:id attribute with a unique ID.\n"
-                                    + "* Supply the android:tag attribute with a unique string.\n"
+                                    + "* Supply the `android:id` attribute with a unique ID.\n"
+                                    + "* Supply the `android:tag` attribute with a unique string.\n"
                                     + "If you provide neither of the previous two, the system uses the ID of the "
                                     + "container view.",
                             Category.CORRECTNESS,
                             5,
                             Severity.WARNING,
                             new Implementation(MissingIdDetector.class, Scope.RESOURCE_FILE_SCOPE))
-                    .addMoreInfo("http://developer.android.com/guide/components/fragments.html");
+                    .addMoreInfo("https://developer.android.com/guide/components/fragments.html");
 
     /** Constructs a new {@link MissingIdDetector} */
     public MissingIdDetector() {}

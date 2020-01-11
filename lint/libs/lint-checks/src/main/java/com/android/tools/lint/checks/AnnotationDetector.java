@@ -70,7 +70,6 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiLiteral;
@@ -545,7 +544,8 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 UMethod method = (UMethod) parent;
                 type =
                         method.isConstructor()
-                                ? mContext.getEvaluator().getClassType(method.getContainingClass())
+                                ? mContext.getEvaluator()
+                                        .getClassType(UastUtils.getContainingUClass(method))
                                 : method.getReturnType();
             } else if (parent instanceof UVariable) {
                 // Field or local variable or parameter
@@ -793,9 +793,10 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                     PsiElement resolved = ((UReferenceExpression) constant).resolve();
                     // Don't try to check complied code.
                     if (!(resolved instanceof PsiCompiledElement) && resolved instanceof PsiField) {
-                        PsiExpression initializer = ((PsiField) resolved).getInitializer();
-                        if (initializer instanceof PsiLiteral) {
-                            PsiLiteral literal = (PsiLiteral) initializer;
+                        UExpression initializer =
+                                UastFacade.INSTANCE.getInitializerBody((PsiField) resolved);
+                        if (initializer instanceof ULiteralExpression) {
+                            ULiteralExpression literal = (ULiteralExpression) initializer;
                             Object o = literal.getValue();
                             if (!(o instanceof Number)) {
                                 continue;
@@ -819,6 +820,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                             }
                             String message =
                                     String.format(
+                                            Locale.US,
                                             "Consider declaring this constant using 1 << %1$d instead",
                                             shift);
                             String replace =
@@ -1122,7 +1124,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 UClass clz = UastUtils.getParentOfType(node, UClass.class, true);
                 if (clz != null) {
                     PsiClass containingClass = field.getContainingClass();
-                    if (containingClass != null && !containingClass.equals(clz.getPsi())) {
+                    if (containingClass != null && !containingClass.isEquivalentTo(clz.getPsi())) {
                         name = containingClass.getQualifiedName() + '.' + field.getName();
                     }
                 }

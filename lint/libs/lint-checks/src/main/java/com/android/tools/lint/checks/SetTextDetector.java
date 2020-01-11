@@ -64,7 +64,7 @@ public class SetTextDetector extends Detector implements SourceCodeScanner {
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/topics/resources/localization.html")
+                            "https://developer.android.com/guide/topics/resources/localization.html")
                     .setAndroidSpecific(true);
 
     private static final String METHOD_NAME = "setText";

@@ -37,7 +37,7 @@ public class SignatureOrSystemDetector extends Detector implements XmlScanner {
     public static final Issue ISSUE =
             Issue.create(
                     "SignatureOrSystemPermissions",
-                    "signatureOrSystem permissions declared",
+                    "Declaring signatureOrSystem permissions",
                     "The `signature` protection level should probably be sufficient for most needs and "
                             + "works regardless of where applications are installed. The "
                             + "`signatureOrSystem` level is used for certain situations where "

@@ -36,7 +36,7 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
     public void testInvalidNoLeanbackActivity() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:2: Error: Expecting an activity to have android.intent.category.LEANBACK_LAUNCHER intent filter. [MissingLeanbackLauncher]\n"
+                        + "AndroidManifest.xml:2: Error: Expecting an activity to have android.intent.category.LEANBACK_LAUNCHER intent filter [MissingLeanbackLauncher]\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + " ~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -116,7 +116,7 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
     public void testInvalidNoUsesFeatureLeanback() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:2: Error: Expecting <uses-feature android:name=\"android.software.leanback\" android:required=\"false\" /> tag. [MissingLeanbackSupport]\n"
+                        + "AndroidManifest.xml:2: Error: Expecting <uses-feature android:name=\"android.software.leanback\" android:required=\"false\" /> tag [MissingLeanbackSupport]\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                         + " ~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -158,7 +158,7 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
 
     public void testInvalidUnsupportedHardware() {
         String expected =
-                "AndroidManifest.xml:6: Error: Expecting android:required=\"false\" for this hardware feature that may not be supported by all Android TVs. [UnsupportedTvHardware]\n"
+                "AndroidManifest.xml:6: Error: Expecting android:required=\"false\" for this hardware feature that may not be supported by all Android TVs [UnsupportedTvHardware]\n"
                         + "        android:name=\"android.hardware.touchscreen\" android:required=\"true\"/>\n"
                         + "                                                    ~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -263,7 +263,7 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
     public void testInvalidPermissionImpliesNotMissingUnsupportedHardware() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Warning: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag. [PermissionImpliesUnsupportedHardware]\n"
+                        + "AndroidManifest.xml:5: Warning: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag [PermissionImpliesUnsupportedHardware]\n"
                         + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
                         + "     ~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings";
@@ -285,7 +285,7 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
     public void testInvalidPermissionImpliesMissingUnsupportedHardware() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Warning: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag. [PermissionImpliesUnsupportedHardware]\n"
+                        + "AndroidManifest.xml:5: Warning: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag [PermissionImpliesUnsupportedHardware]\n"
                         + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
                         + "     ~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings";
@@ -323,7 +323,7 @@ public class AndroidTvDetectorTest extends AbstractCheckTest {
     public void testBannerMissingInApplicationTag() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Error: Expecting android:banner with the <application> tag or each Leanback launcher activity. [MissingTvBanner]\n"
+                        + "AndroidManifest.xml:5: Error: Expecting android:banner with the <application> tag or each Leanback launcher activity [MissingTvBanner]\n"
                         + "    <application>\n"
                         + "     ~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";

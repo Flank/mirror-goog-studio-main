@@ -107,7 +107,7 @@ public class VectorDrawableCompatDetectorTest extends AbstractCheckTest {
     public void testSrc() {
         String expected =
                 ""
-                        + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat. [VectorDrawableCompat]\n"
+                        + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat [VectorDrawableCompat]\n"
                         + "    <ImageView android:src=\"@drawable/foo\" />\n"
                         + "               ~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -129,7 +129,7 @@ public class VectorDrawableCompatDetectorTest extends AbstractCheckTest {
     public void testSrc_incremental() {
         String expected =
                 ""
-                        + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat. [VectorDrawableCompat]\n"
+                        + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat [VectorDrawableCompat]\n"
                         + "    <ImageView android:src=\"@drawable/foo\" />\n"
                         + "               ~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -185,7 +185,7 @@ public class VectorDrawableCompatDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(
                         ""
-                                + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat. [VectorDrawableCompat]\n"
+                                + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat [VectorDrawableCompat]\n"
                                 + "    <ImageView android:src=\"@drawable/foo\" />\n"
                                 + "               ~~~~~~~~~~~\n"
                                 + "1 errors, 0 warnings");

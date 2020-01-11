@@ -204,7 +204,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                             Severity.WARNING,
                             IMPLEMENTATION_XML)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/topics/resources/string-resource.html#Plurals");
+                            "https://developer.android.com/guide/topics/resources/string-resource.html#Plurals");
 
     /**
      * Map from a format string name to a list of declaration file and actual formatting string

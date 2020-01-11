@@ -306,6 +306,11 @@ class LintBaseline(
             "InvalidPackage" -> sameSuffixFrom("not included in", new, old)
             // See https://issuetracker.google.com/68802305
             "IconDensities" -> true
+            "BatteryLife" -> {
+                // Changed URL within error string
+                val s = "Use of REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+                old.startsWith(s) && new.startsWith(s)
+            }
             // Sometimes we just append (or remove trailing period in error messages, now
             // flagged by lint)
             else -> stringsEquivalent(old, new)

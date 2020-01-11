@@ -205,7 +205,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
                 ISSUE, declaration, context.getNameLocation(onMapMethod),
                 "Define intent filters in your manifest on your " +
                         "`<provider android:name=\"$sliceProvider\">`; otherwise " +
-                        "`onMapIntentToUri` will not be called."
+                        "`onMapIntentToUri` will not be called"
             )
         } else if (firstCategory != null && onMapMethod == null) {
             val location = context.getNameLocation(declaration)
@@ -214,7 +214,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
             context.report(
                 ISSUE, declaration, location,
                 "Implement `SliceProvider#onMapIntentToUri` to handle the intents " +
-                        "defined on your slice `<provider>` in your manifest."
+                        "defined on your slice `<provider>` in your manifest"
             )
         }
     }
@@ -321,10 +321,10 @@ class SliceDetector : Detector(), SourceCodeScanner {
                         context.report(
                             ISSUE, listBuilder, context.getLocation(call),
                             "Consider setting a see more action if more than 4 rows " +
-                                    "added to ListBuilder. Depending on where the slice is " +
+                                    "added to `ListBuilder`. Depending on where the slice is " +
                                     "being displayed, all rows of content may not be visible, " +
                                     "consider adding an intent to an activity with the rest " +
-                                    "of the content"
+                                    "of the content."
                         )
                     }
                 }
@@ -334,7 +334,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
         ensureSingleToggleType(
             endActionItems, context,
             "A mixture of slice actions and icons are not supported on a list, " +
-                    "add either actions or icons but not both."
+                    "add either actions or icons but not both"
         )
     }
 
@@ -530,7 +530,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
                             )
                             context.report(
                                 ISSUE, call, location,
-                                "RowBuilder can only have one timestamp added to it, " +
+                                "`RowBuilder` can only have one timestamp added to it, " +
                                         "remove one of your timestamps"
                             )
                         } else {
@@ -544,7 +544,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
                             )
                             context.report(
                                 ISSUE, call, location,
-                                "RowBuilder cannot have a mixture of icons and slice " +
+                                "`RowBuilder` cannot have a mixture of icons and slice " +
                                         "actions added to the end items"
                             )
                         }
@@ -558,7 +558,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
                             )
                             context.report(
                                 ISSUE, call, location,
-                                "RowBuilder cannot have a mixture of icons and slice " +
+                                "`RowBuilder` cannot have a mixture of icons and slice " +
                                         "actions added to the end items"
                             )
                         }
@@ -570,7 +570,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
             }
         })
 
-        val message = "RowBuilder should not have a mixture of default and custom toggles"
+        val message = "`RowBuilder` should not have a mixture of default and custom toggles"
         ensureSingleToggleType(endActionItems, context, message)
 
         if (!hasContent) {
@@ -581,7 +581,7 @@ class SliceDetector : Detector(), SourceCodeScanner {
     private fun warnMissingContent(builder: String, context: JavaContext, node: UCallExpression) {
         context.report(
             ISSUE, node, context.getLocation(node),
-            "$builder should have a piece of content added to it"
+            "`$builder` should have a piece of content added to it"
         )
     }
 

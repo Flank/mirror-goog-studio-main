@@ -134,7 +134,10 @@ public class ToastDetector extends Detector implements SourceCodeScanner {
 
         @Override
         public boolean visitCallExpression(UCallExpression node) {
-            if (node == target || node.getPsi() != null && node.getPsi() == target.getPsi()) {
+            if (node == target
+                    ||
+                    //noinspection LintDetectorImpl
+                    node.getSourcePsi() != null && node.getSourcePsi() == target.getPsi()) {
                 seenTarget = true;
             } else {
                 if ((seenTarget || target.equals(node.getReceiver()))

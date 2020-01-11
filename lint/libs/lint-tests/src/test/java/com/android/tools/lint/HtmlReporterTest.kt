@@ -199,7 +199,7 @@ Dismiss</button>            </div>
 
 </div>
 <div class="metadata"><div class="explanation" id="explanationUsesMinSdkAttributes" style="display: none;">
-The manifest should contain a <code>&lt;uses-sdk></code> element which defines the minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for).<br/><div class="moreinfo">More info: <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html">http://developer.android.com/guide/topics/manifest/uses-sdk-element.html</a>
+The manifest should contain a <code>&lt;uses-sdk></code> element which defines the minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for).<br/><div class="moreinfo">More info: <a href="https://developer.android.com/guide/topics/manifest/uses-sdk-element.html">https://developer.android.com/guide/topics/manifest/uses-sdk-element.html</a>
 </div>To suppress this error, use the issue id "UsesMinSdkAttributes" as explained in the <a href="#SuppressInfo">Suppressing Warnings and Errors</a> section.<br/>
 <br/></div>
 </div>
@@ -418,7 +418,7 @@ The format of the <code>lint.xml</code> file is something like the following:<br
 To suppress lint checks from the command line, pass the --ignore flag with a comma separated list of ids to be suppressed, such as:<br/>
 <code>${'$'} lint --ignore UnusedResources,UselessLeaf /my/project/path</code><br/>
 <br/>
-For more information, see <a href="http://g.co/androidstudio/suppressing-lint-warnings">http://g.co/androidstudio/suppressing-lint-warnings</a><br/>
+For more information, see <a href="https://developer.android.com/studio/write/lint.html#config">https://developer.android.com/studio/write/lint.html#config</a><br/>
 
             </div>
             </div>

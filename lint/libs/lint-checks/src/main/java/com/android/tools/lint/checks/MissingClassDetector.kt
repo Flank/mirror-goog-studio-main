@@ -464,7 +464,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
                 category = Category.CORRECTNESS,
                 priority = 8,
                 severity = Severity.ERROR,
-                moreInfo = "http://developer.android.com/guide/topics/manifest/manifest-intro.html",
+                moreInfo = "https://developer.android.com/guide/topics/manifest/manifest-intro.html",
                 androidSpecific = true,
                 implementation = IMPLEMENTATION
             )

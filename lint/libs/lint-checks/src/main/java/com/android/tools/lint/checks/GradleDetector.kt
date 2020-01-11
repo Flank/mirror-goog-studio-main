@@ -2142,7 +2142,7 @@ open class GradleDetector : Detector(), GradleScanner {
             explanation = """
                 To insert the value of a variable, you can use `${"$"}{variable}` inside a \
                 string literal, but **only** if you are using double quotes!""",
-            moreInfo = "http://www.groovy-lang.org/syntax.html#_string_interpolation",
+            moreInfo = "https://www.groovy-lang.org/syntax.html#_string_interpolation",
             category = Category.CORRECTNESS,
             priority = 8,
             severity = Severity.ERROR,
@@ -2209,10 +2209,10 @@ open class GradleDetector : Detector(), GradleScanner {
                 Google Play services SDK's can be selectively included, which enables a \
                 smaller APK size. Consider declaring dependencies on individual Google \
                 Play services SDK's. If you are using Firebase API's \
-                (http://firebase.google.com/docs/android/setup), Android Studio's \
+                (https://firebase.google.com/docs/android/setup), Android Studio's \
                 Tools → Firebase assistant window can automatically add just the \
                 dependencies needed for each feature.""",
-            moreInfo = "http://developers.google.com/android/guides/setup#split",
+            moreInfo = "https://developers.google.com/android/guides/setup#split",
             category = Category.PERFORMANCE,
             priority = 4,
             severity = Severity.WARNING,

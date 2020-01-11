@@ -100,7 +100,7 @@ class UnusedNavigationDetector : ResourceXmlDetector() {
         context.report(
             ISSUE, document.documentElement, context.getElementLocation(document.documentElement),
             "This navigation graph is not referenced from any layout files (expected to find it in at least one layout " +
-                    "file with a `NavHostFragment` with `app:navGraph=\"$target\"` attribute)."
+                    "file with a `NavHostFragment` with `app:navGraph=\"$target\"` attribute)"
         )
     }
 

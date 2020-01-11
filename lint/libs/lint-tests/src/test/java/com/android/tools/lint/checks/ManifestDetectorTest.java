@@ -100,7 +100,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
         mEnabled = Collections.singleton(ManifestDetector.USES_SDK);
         assertEquals(
                 ""
-                        + "AndroidManifest.xml: Warning: Manifest should specify a minimum API level with <uses-sdk android:minSdkVersion=\"?\" />; if it really supports all versions of Android set it to 1. [UsesMinSdkAttributes]\n"
+                        + "AndroidManifest.xml: Warning: Manifest should specify a minimum API level with <uses-sdk android:minSdkVersion=\"?\" />; if it really supports all versions of Android set it to 1 [UsesMinSdkAttributes]\n"
                         + "0 errors, 1 warnings\n",
                 lintProject(mMissingusessdk, mStrings));
     }
@@ -1744,7 +1744,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     public void testWearableBindListener() {
         String expected =
                 ""
-                        + "src/main/AndroidManifest.xml:11: Error: The com.google.android.gms.wearable.BIND_LISTENER action is deprecated. [WearableBindListener]\n"
+                        + "src/main/AndroidManifest.xml:11: Error: The com.google.android.gms.wearable.BIND_LISTENER action is deprecated [WearableBindListener]\n"
                         + "                  <action android:name=\"com.google.android.gms.wearable.BIND_LISTENER\" />\n"
                         + "                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";

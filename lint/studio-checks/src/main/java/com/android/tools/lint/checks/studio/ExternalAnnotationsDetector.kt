@@ -44,10 +44,10 @@ class ExternalAnnotationsDetector : Detector(), SourceCodeScanner {
             id = "ExternalAnnotations",
             briefDescription = "External annotations not considered",
             explanation = """
-                Lint supports XML files with "external annotations", which means any detectors that
-                recognize certain annotations should get them from `JavaEvaluator.getAllAnnotations`
+                Lint supports XML files with "external annotations", which means any detectors that \
+                recognize certain annotations should get them from `JavaEvaluator.getAllAnnotations` \
                 and not by calling `uAnnotations` directly on UAST or PSI elements.
-            """.trimIndent(),
+            """,
             severity = Severity.ERROR,
             implementation = Implementation(
                 ExternalAnnotationsDetector::class.java,

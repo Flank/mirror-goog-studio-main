@@ -64,14 +64,14 @@ class LogDetector : Detector(), SourceCodeScanner {
             id = "LogConditional",
             briefDescription = "Unconditional Logging Calls",
             explanation = """
-            The BuildConfig class (available in Tools 17) provides a constant, "DEBUG", which indicates \
+            The `BuildConfig` class provides a constant, `DEBUG`, which indicates \
             whether the code is being built in release mode or in debug mode. In release mode, you typically \
             want to strip out all the logging calls. Since the compiler will automatically remove all code \
-            which is inside a "if (false)" check, surrounding your logging calls with a check for \
-            BuildConfig.DEBUG is a good idea.
+            which is inside a `if (false)` check, surrounding your logging calls with a check for \
+            `BuildConfig.DEBUG` is a good idea.
 
             If you **really** intend for the logging to be present in release mode, you can suppress this \
-            warning with a @SuppressLint annotation for the intentional logging calls.""",
+            warning with a `@SuppressLint` annotation for the intentional logging calls.""",
             category = Category.PERFORMANCE,
             priority = 5,
             severity = Severity.WARNING,

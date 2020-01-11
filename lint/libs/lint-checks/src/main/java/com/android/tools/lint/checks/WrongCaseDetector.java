@@ -40,14 +40,14 @@ public class WrongCaseDetector extends LayoutDetector {
             Issue.create(
                             "WrongCase",
                             "Wrong case for view tag",
-                            "Most layout tags, such as <Button>, refer to actual view classes and are therefore "
-                                    + "capitalized. However, there are exceptions such as <fragment> and <include>. This "
+                            "Most layout tags, such as `<Button>`, refer to actual view classes and are therefore "
+                                    + "capitalized. However, there are exceptions such as `<fragment>` and `<include>`. This "
                                     + "lint check looks for incorrect capitalizations.",
                             Category.CORRECTNESS,
                             4,
                             Severity.FATAL,
                             new Implementation(WrongCaseDetector.class, Scope.RESOURCE_FILE_SCOPE))
-                    .addMoreInfo("http://developer.android.com/guide/components/fragments.html");
+                    .addMoreInfo("https://developer.android.com/guide/components/fragments.html");
 
     /** Constructs a new {@link WrongCaseDetector} */
     public WrongCaseDetector() {}

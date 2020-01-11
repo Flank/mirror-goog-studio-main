@@ -142,7 +142,7 @@ class WorkManagerDetector : Detector(), SourceCodeScanner {
             val nameString = if (name != null) "`$name` " else ""
             context.report(
                 ISSUE, node, context.getLocation(node),
-                "WorkContinuation ${nameString}not enqueued: did you forget to call enqueue()?"
+                "WorkContinuation ${nameString}not enqueued: did you forget to call `enqueue()`?"
             )
         }
     }

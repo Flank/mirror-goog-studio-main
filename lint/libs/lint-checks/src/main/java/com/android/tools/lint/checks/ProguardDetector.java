@@ -53,7 +53,8 @@ public class ProguardDetector extends Detector {
                             8,
                             Severity.FATAL,
                             IMPLEMENTATION)
-                    .addMoreInfo("http://http://code.google.com/p/android/issues/detail?id=16384")
+                    //noinspection LintImplBadUrl -- old bug, fewer digits than usual
+                    .addMoreInfo("https://issuetracker.google.com/36928077")
                     .setAndroidSpecific(true);
 
     /**

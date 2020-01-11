@@ -91,7 +91,9 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
                                     Scope.ALL_RESOURCES_SCOPE,
                                     Scope.RESOURCE_FILE_SCOPE))
                     .addMoreInfo(
-                            "http://chris.banes.me/2016/02/25/appcompat-vector/#enabling-the-flag");
+                            "https://developer.android.com/guide/topics/graphics/vector-drawable-resources")
+                    .addMoreInfo(
+                            "https://medium.com/androiddevelopers/using-vector-assets-in-android-apps-4318fd662eb9");
 
     /** Whether to skip the checks altogether. */
     private boolean mSkipChecks;
@@ -216,7 +218,7 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
 
         if (mUseSupportLibrary && ATTR_SRC.equals(name) && isVector.test(resourceUrl.name)) {
             Location location = context.getNameLocation(attribute);
-            String message = "When using VectorDrawableCompat, you need to use `app:srcCompat`.";
+            String message = "When using VectorDrawableCompat, you need to use `app:srcCompat`";
             context.report(ISSUE, attribute, location, message);
         }
 

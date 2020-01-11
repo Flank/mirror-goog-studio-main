@@ -58,7 +58,7 @@ public class FirebaseMessagingDetectorTest {
                 .run()
                 .expect(
                         ""
-                                + "src/com/google/firebase/samples/messaging/advanced/services/MessagingService.java:5: Warning: Apps that use Firebase Cloud Messaging should implement onNewToken() in order to observe token changes. [MissingFirebaseInstanceTokenRefresh]\n"
+                                + "src/com/google/firebase/samples/messaging/advanced/services/MessagingService.java:5: Warning: Apps that use Firebase Cloud Messaging should implement onNewToken() in order to observe token changes [MissingFirebaseInstanceTokenRefresh]\n"
                                 + "public class MessagingService extends FirebaseMessagingService {\n"
                                 + "             ~~~~~~~~~~~~~~~~\n"
                                 + "0 errors, 1 warnings");

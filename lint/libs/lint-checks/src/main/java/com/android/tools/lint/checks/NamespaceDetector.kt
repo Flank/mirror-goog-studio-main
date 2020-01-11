@@ -22,6 +22,7 @@ import com.android.SdkConstants.AUTO_URI
 import com.android.SdkConstants.TOOLS_PREFIX
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.URI_PREFIX
+import com.android.SdkConstants.XMLNS_ANDROID
 import com.android.SdkConstants.XMLNS_PREFIX
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.resources.ResourceFolderType
@@ -90,6 +91,7 @@ class NamespaceDetector : ResourceXmlDetector() {
                                 TYPO,
                                 attribute,
                                 context.getValueLocation(attribute),
+                                //noinspection LintImplUnexpectedDomain
                                 "Suspicious namespace: should start with `http://`",
                                 fix
                             )
@@ -294,7 +296,7 @@ class NamespaceDetector : ResourceXmlDetector() {
                             attribute,
                             context.getValueLocation(attribute),
                             "When using a custom namespace attribute in a library " +
-                                    "project, use the namespace `\"$AUTO_URI\"` instead."
+                                    "project, use the namespace `\"$AUTO_URI\"` instead"
                         )
                     }
                 }
@@ -388,9 +390,6 @@ class NamespaceDetector : ResourceXmlDetector() {
             severity = Severity.FATAL,
             implementation = IMPLEMENTATION
         )
-
-        /** Prefix relevant for custom namespaces  */
-        private const val XMLNS_ANDROID = "xmlns:android"
 
         private const val XMLNS_A = "xmlns:a"
     }

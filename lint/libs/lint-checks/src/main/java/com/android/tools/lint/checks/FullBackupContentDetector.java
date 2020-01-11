@@ -54,7 +54,7 @@ public class FullBackupContentDetector extends ResourceXmlDetector {
                             new Implementation(
                                     FullBackupContentDetector.class, Scope.RESOURCE_FILE_SCOPE))
                     .addMoreInfo(
-                            "http://android-developers.blogspot.com/2015/07/auto-backup-for-apps-made-simple.html");
+                            "https://android-developers.googleblog.com/2015/07/auto-backup-for-apps-made-simple.html");
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String DOMAIN_SHARED_PREF = "sharedpref";

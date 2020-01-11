@@ -18,7 +18,6 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_IME_ACTION_ID;
-import static com.android.SdkConstants.PREFIX_ANDROID;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
@@ -44,11 +43,9 @@ public class InvalidImeActionIdDetector extends LayoutDetector {
             Issue.create(
                             "InvalidImeActionId",
                             "Invalid imeActionId declaration",
-                            PREFIX_ANDROID
-                                    + ATTR_IME_ACTION_ID
-                                    + " should not be a resourceId such as "
-                                    + "@+id/resName. It must be an integer constant, or an integer resource "
-                                    + "reference, as defined in EditorInfo.",
+                            "`android:imeActionId` should not be a resource ID such as "
+                                    + "`@+id/resName`. It must be an integer constant, or an integer resource "
+                                    + "reference, as defined in `EditorInfo`.",
                             Category.CORRECTNESS,
                             6,
                             Severity.ERROR,

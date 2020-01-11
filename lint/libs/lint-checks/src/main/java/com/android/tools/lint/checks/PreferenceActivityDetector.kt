@@ -171,8 +171,9 @@ class PreferenceActivityDetector : Detector(), XmlScanner, SourceCodeScanner {
             id = "ExportedPreferenceActivity",
             briefDescription = "PreferenceActivity should not be exported",
             explanation = """
-                Fragment injection gives anyone who can send your PreferenceActivity an intent \
+                Fragment injection gives anyone who can send your `PreferenceActivity` an intent \
                 the ability to load any fragment, with any arguments, in your process.""",
+            //noinspection LintImplUnexpectedDomain
             moreInfo = "http://securityintelligence.com/new-vulnerability-android-framework-fragment-injection",
             category = Category.SECURITY,
             priority = 8,

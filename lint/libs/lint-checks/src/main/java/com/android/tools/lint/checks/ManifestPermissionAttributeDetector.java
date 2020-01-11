@@ -81,7 +81,7 @@ public class ManifestPermissionAttributeDetector extends Detector implements Xml
         }
         String message =
                 "Protecting an unsupported element with a permission is a no-op and "
-                        + "potentially dangerous.";
+                        + "potentially dangerous";
         context.report(ISSUE, attribute, context.getLocation(attribute), message);
     }
 }

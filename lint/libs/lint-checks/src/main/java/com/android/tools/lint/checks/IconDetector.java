@@ -191,7 +191,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                             IMPLEMENTATION_JAVA)
                     // Still some potential false positives:
                     .setEnabledByDefault(false)
-                    .addMoreInfo("http://developer.android.com/design/style/iconography.html");
+                    .addMoreInfo("https://material.io/design/iconography/");
 
     /** Inconsistent dip size across densities */
     public static final Issue ICON_DIP_SIZE =
@@ -222,7 +222,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                             Severity.WARNING,
                             IMPLEMENTATION_RES_ONLY)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/practices/screens_support.html");
+                            "https://developer.android.com/guide/practices/screens_support.html");
 
     /** Missing density versions of image */
     public static final Issue ICON_DENSITIES =
@@ -238,13 +238,13 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                                     + "the ldpi density. To force lint to include it, set the environment "
                                     + "variable `ANDROID_LINT_INCLUDE_LDPI=true`. For more information on "
                                     + "current density usage, see "
-                                    + "http://developer.android.com/resources/dashboard/screens.html",
+                                    + "https://developer.android.com/about/dashboards",
                             Category.ICONS,
                             4,
                             Severity.WARNING,
                             IMPLEMENTATION_RES_ONLY)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/practices/screens_support.html");
+                            "https://developer.android.com/guide/practices/screens_support.html");
 
     /** Missing density folders */
     public static final Issue ICON_MISSING_FOLDER =
@@ -259,13 +259,13 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                                     + "the ldpi density. To force lint to include it, set the environment "
                                     + "variable `ANDROID_LINT_INCLUDE_LDPI=true`. For more information on "
                                     + "current density usage, see "
-                                    + "http://developer.android.com/resources/dashboard/screens.html",
+                                    + "https://developer.android.com/about/dashboards",
                             Category.ICONS,
                             3,
                             Severity.WARNING,
                             IMPLEMENTATION_RES_ONLY)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/practices/screens_support.html");
+                            "https://developer.android.com/guide/practices/screens_support.html");
 
     /** Using .gif bitmaps */
     public static final Issue GIF_USAGE =
@@ -279,7 +279,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                             Severity.WARNING,
                             IMPLEMENTATION_RES_ONLY)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/topics/resources/drawable-resource.html#Bitmap");
+                            "https://developer.android.com/guide/topics/resources/drawable-resource.html#Bitmap");
 
     /** Duplicated icons across different names */
     public static final Issue DUPLICATES_NAMES =
@@ -366,39 +366,37 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
     /** Wrong color of notification icon. */
     public static final Issue ICON_COLORS =
             Issue.create(
-                            "IconColors",
-                            "Icon colors do not follow the recommended visual style",
-                            "Notification icons and Action Bar icons should only white and shades of gray. "
-                                    + "See the Android Design Guide for more details. "
-                                    + "Note that the way Lint decides whether an icon is an action bar icon or "
-                                    + "a notification icon is based on the filename prefix: `ic_menu_` for "
-                                    + "action bar icons, `ic_stat_` for notification icons etc. These correspond "
-                                    + "to the naming conventions documented in "
-                                    + "http://developer.android.com/guide/practices/ui_guidelines/icon_design.html",
-                            Category.ICONS,
-                            6,
-                            Severity.WARNING,
-                            IMPLEMENTATION_JAVA)
-                    .addMoreInfo("http://developer.android.com/design/style/iconography.html");
+                    "IconColors",
+                    "Icon colors do not follow the recommended visual style",
+                    "Notification icons and Action Bar icons should only white and shades of gray. "
+                            + "See the Android Design Guide for more details. "
+                            + "Note that the way Lint decides whether an icon is an action bar icon or "
+                            + "a notification icon is based on the filename prefix: `ic_menu_` for "
+                            + "action bar icons, `ic_stat_` for notification icons etc. These correspond "
+                            + "to the naming conventions documented in "
+                            + "https://material.io/design/iconography/",
+                    Category.ICONS,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION_JAVA);
 
     /** Wrong launcher icon shape */
     public static final Issue ICON_LAUNCHER_SHAPE =
             Issue.create(
-                            "IconLauncherShape",
-                            "The launcher icon shape should use a distinct silhouette",
-                            "According to the Android Design Guide "
-                                    + "(http://developer.android.com/design/style/iconography.html) "
-                                    + "your launcher icons should \"use a distinct silhouette\", "
-                                    + "a \"three-dimensional, front view, with a slight perspective as if viewed "
-                                    + "from above, so that users perceive some depth.\"\n"
-                                    + "\n"
-                                    + "The unique silhouette implies that your launcher icon should not be a filled "
-                                    + "square.",
-                            Category.ICONS,
-                            6,
-                            Severity.WARNING,
-                            IMPLEMENTATION_JAVA)
-                    .addMoreInfo("http://developer.android.com/design/style/iconography.html");
+                    "IconLauncherShape",
+                    "The launcher icon shape should use a distinct silhouette",
+                    "According to the Android Design Guide "
+                            + "(https://material.io/design/iconography/) "
+                            + "your launcher icons should \"use a distinct silhouette\", "
+                            + "a \"three-dimensional, front view, with a slight perspective as if viewed "
+                            + "from above, so that users perceive some depth.\"\n"
+                            + "\n"
+                            + "The unique silhouette implies that your launcher icon should not be a filled "
+                            + "square.",
+                    Category.ICONS,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION_JAVA);
 
     /** Raster image is required for notification icon at API < 21. */
     public static final Issue NOTIFICATION_ICON_COMPATIBILITY =
@@ -408,7 +406,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                     "Notification icons should define a raster image to support Android versions below 5.0 (API 21). "
                             + "Note that the way Lint decides whether an icon is a notification icon is based on the filename prefix "
                             + "`ic_stat_`. This corresponds to the naming convention documented in "
-                            + "http://developer.android.com/guide/practices/ui_guidelines/icon_design.html",
+                            + "https://material.io/design/iconography/",
                     Category.CORRECTNESS,
                     6,
                     Severity.WARNING,
@@ -588,7 +586,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                         String message =
                                 "One or more images in this project can be converted to "
                                         + "the WebP format which typically results in smaller file sizes, "
-                                        + "even for lossless conversion (but launcher icons should use PNG).";
+                                        + "even for lossless conversion (but launcher icons should use PNG)";
                         context.report(WEBP_ELIGIBLE, location, message);
                     }
                 }

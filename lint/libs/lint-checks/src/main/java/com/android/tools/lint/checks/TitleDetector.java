@@ -62,7 +62,7 @@ public class TitleDetector extends ResourceXmlDetector {
                             5,
                             Severity.ERROR,
                             new Implementation(TitleDetector.class, Scope.RESOURCE_FILE_SCOPE))
-                    .addMoreInfo("http://developer.android.com/guide/topics/ui/actionbar.html");
+                    .addMoreInfo("https://developer.android.com/training/appbar");
 
     /** Constructs a new {@link TitleDetector} */
     public TitleDetector() {}

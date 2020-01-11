@@ -64,7 +64,7 @@ public class TypographyDetector extends ResourceXmlDetector {
                             5,
                             Severity.WARNING,
                             IMPLEMENTATION)
-                    .addMoreInfo("http://en.wikipedia.org/wiki/Dash");
+                    .addMoreInfo("https://en.wikipedia.org/wiki/Dash");
 
     /** Replace dumb quotes with smart quotes? */
     public static final Issue QUOTES =
@@ -83,7 +83,7 @@ public class TypographyDetector extends ResourceXmlDetector {
                             5,
                             Severity.WARNING,
                             IMPLEMENTATION)
-                    .addMoreInfo("http://en.wikipedia.org/wiki/Quotation_mark")
+                    .addMoreInfo("https://en.wikipedia.org/wiki/Quotation_mark")
                     .
                     // This feature is apparently controversial: recent apps have started using
                     // straight quotes to avoid inconsistencies. Disabled by default for now.
@@ -101,7 +101,7 @@ public class TypographyDetector extends ResourceXmlDetector {
                             5,
                             Severity.WARNING,
                             IMPLEMENTATION)
-                    .addMoreInfo("http://en.wikipedia.org/wiki/Number_Forms");
+                    .addMoreInfo("https://en.wikipedia.org/wiki/Number_Forms");
 
     /** Replace ... with the ellipsis character? */
     public static final Issue ELLIPSIS =
@@ -114,7 +114,7 @@ public class TypographyDetector extends ResourceXmlDetector {
                             5,
                             Severity.WARNING,
                             IMPLEMENTATION)
-                    .addMoreInfo("http://en.wikipedia.org/wiki/Ellipsis");
+                    .addMoreInfo("https://en.wikipedia.org/wiki/Ellipsis");
 
     /** The main issue discovered by this detector */
     public static final Issue OTHER =
@@ -336,7 +336,7 @@ public class TypographyDetector extends ResourceXmlDetector {
             // other languages?
             // There are a lot of exceptions and special cases to be considered so
             // this will need careful implementation and testing.
-            // See http://en.wikipedia.org/wiki/Non-English_usage_of_quotation_marks
+            // See https://en.wikipedia.org/wiki/Non-English_usage_of_quotation_marks
         }
 
         // Fraction symbols?

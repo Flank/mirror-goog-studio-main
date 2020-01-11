@@ -83,6 +83,7 @@ public class LayoutInflationDetector extends LayoutDetector implements SourceCod
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .addMoreInfo(
+                            //noinspection LintImplUnexpectedDomain
                             "http://www.doubleencore.com/2013/05/layout-inflation-as-intended");
 
     private static final String ERROR_MESSAGE =

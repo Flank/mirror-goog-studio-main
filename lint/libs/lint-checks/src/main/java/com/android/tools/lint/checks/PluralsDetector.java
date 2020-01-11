@@ -71,7 +71,7 @@ public class PluralsDetector extends ResourceXmlDetector {
                             Severity.ERROR,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/topics/resources/string-resource.html#Plurals");
+                            "https://developer.android.com/guide/topics/resources/string-resource.html#Plurals");
 
     /** This translation is not needed in this locale */
     public static final Issue EXTRA =
@@ -94,7 +94,7 @@ public class PluralsDetector extends ResourceXmlDetector {
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/topics/resources/string-resource.html#Plurals");
+                            "https://developer.android.com/guide/topics/resources/string-resource.html#Plurals");
 
     /** This plural does not use the quantity value */
     public static final Issue IMPLIED_QUANTITY =
@@ -115,7 +115,7 @@ public class PluralsDetector extends ResourceXmlDetector {
                             Severity.ERROR,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/topics/resources/string-resource.html#Plurals");
+                            "https://developer.android.com/guide/topics/resources/string-resource.html#Plurals");
 
     /** Constructs a new {@link PluralsDetector} */
     public PluralsDetector() {}

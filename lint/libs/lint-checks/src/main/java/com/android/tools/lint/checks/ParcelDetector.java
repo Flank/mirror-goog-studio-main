@@ -56,7 +56,7 @@ public class ParcelDetector extends Detector implements SourceCodeScanner {
                             new Implementation(ParcelDetector.class, Scope.JAVA_FILE_SCOPE))
                     .setAndroidSpecific(true)
                     .addMoreInfo(
-                            "http://developer.android.com/reference/android/os/Parcelable.html");
+                            "https://developer.android.com/reference/android/os/Parcelable.html");
 
     /** Constructs a new {@link ParcelDetector} check */
     public ParcelDetector() {}

@@ -1085,7 +1085,7 @@ public class IconDetectorTest extends AbstractCheckTest {
     public void testWebpEligible() {
         String expected =
                 ""
-                        + "res/drawable-mdpi/random.png: Warning: One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion (but launcher icons should use PNG). [ConvertToWebp]\n"
+                        + "res/drawable-mdpi/random.png: Warning: One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion (but launcher icons should use PNG) [ConvertToWebp]\n"
                         + "0 errors, 1 warnings\n";
         lint().files(
                         manifest().minSdk(18),

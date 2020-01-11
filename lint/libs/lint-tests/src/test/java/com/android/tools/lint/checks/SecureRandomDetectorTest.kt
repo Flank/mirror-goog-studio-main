@@ -26,10 +26,10 @@ class SecureRandomDetectorTest : AbstractCheckTest() {
     fun testSeed() {
         val expected =
             """
-            src/test/pkg/SecureRandomTest.java:12: Warning: It is dangerous to seed SecureRandom with the current time because that value is more predictable to an attacker than the default seed. [SecureRandom]
+            src/test/pkg/SecureRandomTest.java:12: Warning: It is dangerous to seed SecureRandom with the current time because that value is more predictable to an attacker than the default seed [SecureRandom]
                     random1.setSeed(System.currentTimeMillis()); // Wrong
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/SecureRandomTest.java:13: Warning: It is dangerous to seed SecureRandom with the current time because that value is more predictable to an attacker than the default seed. [SecureRandom]
+            src/test/pkg/SecureRandomTest.java:13: Warning: It is dangerous to seed SecureRandom with the current time because that value is more predictable to an attacker than the default seed [SecureRandom]
                     random1.setSeed(System.nanoTime()); // Wrong
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/SecureRandomTest.java:15: Warning: Do not call setSeed() on a SecureRandom with a fixed seed: it is not secure. Use getSeed(). [SecureRandom]

@@ -55,7 +55,7 @@ public class IncludeDetector extends LayoutDetector {
                             Severity.ERROR,
                             new Implementation(IncludeDetector.class, Scope.RESOURCE_FILE_SCOPE))
                     .addMoreInfo(
-                            "http://stackoverflow.com/questions/2631614/does-android-xml-layouts-include-tag-really-work");
+                            "https://stackoverflow.com/questions/2631614/does-android-xml-layouts-include-tag-really-work");
 
     @Nullable
     @Override

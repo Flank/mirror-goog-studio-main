@@ -52,6 +52,7 @@ public class GetSignaturesDetector extends Detector implements SourceCodeScanner
                             8,
                             Severity.WARNING,
                             new Implementation(GetSignaturesDetector.class, Scope.JAVA_FILE_SCOPE))
+                    //noinspection LintImplUnexpectedDomain
                     .addMoreInfo("https://bluebox.com/technical/android-fake-id-vulnerability/")
                     .setAndroidSpecific(true);
 
@@ -95,9 +96,9 @@ public class GetSignaturesDetector extends Detector implements SourceCodeScanner
                     ISSUE,
                     node,
                     context.getLocation(last),
-                    "Reading app signatures from getPackageInfo: The app signatures "
+                    "Reading app signatures from `getPackageInfo`: The app signatures "
                             + "could be exploited if not validated properly; "
-                            + "see issue explanation for details.");
+                            + "see issue explanation for details");
         }
     }
 }

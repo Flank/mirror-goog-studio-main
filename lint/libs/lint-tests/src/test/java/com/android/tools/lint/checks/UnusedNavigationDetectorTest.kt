@@ -48,7 +48,7 @@ class UnusedNavigationDetectorTest : AbstractCheckTest() {
             )
         ).incremental("res/navigation/used.xml").run().expect(
             "" +
-                    "res/navigation/used.xml:1: Error: This navigation graph is not referenced from any layout files (expected to find it in at least one layout file with a NavHostFragment with app:navGraph=\"@navigation/used\" attribute). [UnusedNavigation]\n" +
+                    "res/navigation/used.xml:1: Error: This navigation graph is not referenced from any layout files (expected to find it in at least one layout file with a NavHostFragment with app:navGraph=\"@navigation/used\" attribute) [UnusedNavigation]\n" +
                     "<navigation />\n" +
                     "~~~~~~~~~~~~~~\n" +
                     "1 errors, 0 warnings"

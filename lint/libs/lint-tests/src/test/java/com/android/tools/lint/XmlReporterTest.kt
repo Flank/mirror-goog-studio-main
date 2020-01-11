@@ -66,8 +66,8 @@ class XmlReporterTest {
                         priority="9"
                         summary="Minimum SDK and target SDK attributes not defined"
                         explanation="The manifest should contain a `&lt;uses-sdk>` element which defines the minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for)."
-                        url="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
-                        urls="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
+                        url="https://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
+                        urls="https://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
                         errorLine1="    &lt;uses-sdk android:minSdkVersion=&quot;10&quot; />"
                         errorLine2="     ~~~~~~~~">
                         <location
@@ -129,8 +129,8 @@ class XmlReporterTest {
                                 priority="9"
                                 summary="Minimum SDK and target SDK attributes not defined"
                                 explanation="The manifest should contain a `&lt;uses-sdk>` element which defines the minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for)."
-                                url="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
-                                urls="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
+                                url="https://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
+                                urls="https://developer.android.com/guide/topics/manifest/uses-sdk-element.html"
                                 errorLine1="    &lt;uses-sdk android:minSdkVersion=&quot;10&quot; />"
                                 errorLine2="     ~~~~~~~~">
                                 <location
@@ -179,8 +179,8 @@ class XmlReporterTest {
                     priority="5"
                     summary="Fraction string can be replaced with fraction character"
                     explanation="You can replace certain strings, such as 1/2, and 1/4, with dedicated characters for these, such as ½ (&amp;#189;) and ¼ (&amp;#188;). This can help make the text more readable."
-                    url="http://en.wikipedia.org/wiki/Number_Forms"
-                    urls="http://en.wikipedia.org/wiki/Number_Forms"
+                    url="https://en.wikipedia.org/wiki/Number_Forms"
+                    urls="https://en.wikipedia.org/wiki/Number_Forms"
                     errorLine1="    &lt;string name=&quot;user_registration_name1_4&quot;>Register 1/4&lt;/string>"
                     errorLine2="                                             ^">
                     <location

@@ -28,7 +28,7 @@ public class HardwareIdDetectorTest extends AbstractCheckTest {
     public void testBluetoothAdapterGetAddressCall() throws Exception {
         assertEquals(
                 ""
-                        + "src/test/pkg/AppUtils.java:8: Warning: Using getAddress to get device identifiers is not recommended. [HardwareIds]\n"
+                        + "src/test/pkg/AppUtils.java:8: Warning: Using getAddress to get device identifiers is not recommended [HardwareIds]\n"
                         + "        return adapter.getAddress();\n"
                         + "               ~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n",
@@ -97,7 +97,7 @@ public class HardwareIdDetectorTest extends AbstractCheckTest {
     public void testGetAndroidId() throws Exception {
         assertEquals(
                 ""
-                        + "src/test/pkg/AppUtils.java:9: Warning: Using getString to get device identifiers is not recommended. [HardwareIds]\n"
+                        + "src/test/pkg/AppUtils.java:9: Warning: Using getString to get device identifiers is not recommended [HardwareIds]\n"
                         + "        return Settings.Secure.getString(context.getContentResolver(), androidId);\n"
                         + "               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n",
@@ -121,7 +121,7 @@ public class HardwareIdDetectorTest extends AbstractCheckTest {
     public void testWifiInfoGetMacAddress() throws Exception {
         assertEquals(
                 ""
-                        + "src/test/pkg/AppUtils.java:8: Warning: Using getMacAddress to get device identifiers is not recommended. [HardwareIds]\n"
+                        + "src/test/pkg/AppUtils.java:8: Warning: Using getMacAddress to get device identifiers is not recommended [HardwareIds]\n"
                         + "        return info.getMacAddress();\n"
                         + "               ~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n",
@@ -144,16 +144,16 @@ public class HardwareIdDetectorTest extends AbstractCheckTest {
     public void testTelephoneManagerIdentifierCalls() throws Exception {
         assertEquals(
                 ""
-                        + "src/test/pkg/AppUtils.java:8: Warning: Using getDeviceId to get device identifiers is not recommended. [HardwareIds]\n"
+                        + "src/test/pkg/AppUtils.java:8: Warning: Using getDeviceId to get device identifiers is not recommended [HardwareIds]\n"
                         + "        return info.getDeviceId();\n"
                         + "               ~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/AppUtils.java:11: Warning: Using getLine1Number to get device identifiers is not recommended. [HardwareIds]\n"
+                        + "src/test/pkg/AppUtils.java:11: Warning: Using getLine1Number to get device identifiers is not recommended [HardwareIds]\n"
                         + "        return info.getLine1Number();\n"
                         + "               ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/AppUtils.java:14: Warning: Using getSimSerialNumber to get device identifiers is not recommended. [HardwareIds]\n"
+                        + "src/test/pkg/AppUtils.java:14: Warning: Using getSimSerialNumber to get device identifiers is not recommended [HardwareIds]\n"
                         + "        return info.getSimSerialNumber();\n"
                         + "               ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/AppUtils.java:17: Warning: Using getSubscriberId to get device identifiers is not recommended. [HardwareIds]\n"
+                        + "src/test/pkg/AppUtils.java:17: Warning: Using getSubscriberId to get device identifiers is not recommended [HardwareIds]\n"
                         + "        return info.getSubscriberId();\n"
                         + "               ~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 4 warnings\n",
@@ -184,16 +184,16 @@ public class HardwareIdDetectorTest extends AbstractCheckTest {
 
     public void testBuildSerialUsage() throws Exception {
         assertEquals(
-                "src/test/pkg/HardwareIdDetectorTestData.java:16: Warning: Using SERIAL to get device identifiers is not recommended. [HardwareIds]\n"
+                "src/test/pkg/HardwareIdDetectorTestData.java:16: Warning: Using SERIAL to get device identifiers is not recommended [HardwareIds]\n"
                         + "            serial = SERIAL;\n"
                         + "                     ~~~~~~\n"
-                        + "src/test/pkg/HardwareIdDetectorTestData.java:21: Warning: Using ro.serialno to get device identifiers is not recommended. [HardwareIds]\n"
+                        + "src/test/pkg/HardwareIdDetectorTestData.java:21: Warning: Using ro.serialno to get device identifiers is not recommended [HardwareIds]\n"
                         + "                serial = (String) get.invoke(null, \"ro.serialno\");\n"
                         + "                                                   ~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/HardwareIdDetectorTestData.java:29: Warning: Using SERIAL to get device identifiers is not recommended. [HardwareIds]\n"
+                        + "src/test/pkg/HardwareIdDetectorTestData.java:29: Warning: Using SERIAL to get device identifiers is not recommended [HardwareIds]\n"
                         + "        return android.os.Build.SERIAL;\n"
                         + "                                ~~~~~~\n"
-                        + "src/test/pkg/HardwareIdDetectorTestData.java:37: Warning: Using ro.serialno to get device identifiers is not recommended. [HardwareIds]\n"
+                        + "src/test/pkg/HardwareIdDetectorTestData.java:37: Warning: Using ro.serialno to get device identifiers is not recommended [HardwareIds]\n"
                         + "            return (String) get.invoke(null, \"ro.serialno\");\n"
                         + "                                             ~~~~~~~~~~~~~\n"
                         + "0 errors, 4 warnings\n",
@@ -248,7 +248,7 @@ public class HardwareIdDetectorTest extends AbstractCheckTest {
 
     public void testRoSerialUsage() throws Exception {
         assertEquals(
-                "src/test/pkg/AppUtils.java:17: Warning: Using ro.serialno to get device identifiers is not recommended. [HardwareIds]\n"
+                "src/test/pkg/AppUtils.java:17: Warning: Using ro.serialno to get device identifiers is not recommended [HardwareIds]\n"
                         + "        return getSystemProperty(context, \"ro.serialno\");\n"
                         + "                                          ~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n",
@@ -279,13 +279,13 @@ public class HardwareIdDetectorTest extends AbstractCheckTest {
 
     public void testMultipleRoSerialUsages() throws Exception {
         assertEquals(
-                "src/test/pkg/AppUtils.java:19: Warning: Using ro.serialno to get device identifiers is not recommended. [HardwareIds]\n"
+                "src/test/pkg/AppUtils.java:19: Warning: Using ro.serialno to get device identifiers is not recommended [HardwareIds]\n"
                         + "        return getSysProperty(RO_SERIAL, \"default\");\n"
                         + "                              ~~~~~~~~~\n"
-                        + "src/test/pkg/AppUtils.java:34: Warning: Using ro.serialno to get device identifiers is not recommended. [HardwareIds]\n"
+                        + "src/test/pkg/AppUtils.java:34: Warning: Using ro.serialno to get device identifiers is not recommended [HardwareIds]\n"
                         + "        String def = getSystemProperty(context, null, \"ro.serialno\");\n"
                         + "                                                      ~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/AppUtils.java:35: Warning: Using ro.serialno to get device identifiers is not recommended. [HardwareIds]\n"
+                        + "src/test/pkg/AppUtils.java:35: Warning: Using ro.serialno to get device identifiers is not recommended [HardwareIds]\n"
                         + "        return getSystemProperty(context, \"ro.serialno\", null);\n"
                         + "                                          ~~~~~~~~~~~~~\n"
                         + "0 errors, 3 warnings\n",

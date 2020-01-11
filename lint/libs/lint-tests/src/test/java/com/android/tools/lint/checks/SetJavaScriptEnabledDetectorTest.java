@@ -29,7 +29,7 @@ public class SetJavaScriptEnabledDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         assertEquals(
                 ""
-                        + "src/test/pkg/SetJavaScriptEnabled.java:14: Warning: Using setJavaScriptEnabled can introduce XSS vulnerabilities into your application, review carefully. [SetJavaScriptEnabled]\n"
+                        + "src/test/pkg/SetJavaScriptEnabled.java:14: Warning: Using setJavaScriptEnabled can introduce XSS vulnerabilities into your application, review carefully [SetJavaScriptEnabled]\n"
                         + "        webView.getSettings().setJavaScriptEnabled(true); // bad\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n",

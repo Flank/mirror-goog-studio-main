@@ -69,7 +69,7 @@ public class FieldGetterDetector extends Detector implements ClassScanner {
                     // This is a micro-optimization: not enabled by default
                     setEnabledByDefault(false)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/practices/design/performance.html#internal_get_set");
+                            "https://developer.android.com/training/articles/perf-tips#internal_get_set");
 
     private ArrayList<Entry> mPendingCalls;
 

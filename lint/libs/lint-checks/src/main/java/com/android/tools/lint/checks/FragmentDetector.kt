@@ -61,7 +61,7 @@ class FragmentDetector : Detector(), SourceCodeScanner {
             androidSpecific = true,
             priority = 6,
             severity = Severity.ERROR,
-            moreInfo = "http://developer.android.com/reference/android/app/Fragment.html#Fragment()",
+            moreInfo = "https://developer.android.com/reference/android/app/Fragment.html#Fragment()",
             implementation = Implementation(FragmentDetector::class.java, Scope.JAVA_FILE_SCOPE)
         )
     }

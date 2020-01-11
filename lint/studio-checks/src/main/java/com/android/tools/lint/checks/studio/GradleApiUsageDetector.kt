@@ -49,9 +49,9 @@ class GradleApiUsageDetector : Detector(), SourceCodeScanner {
             id = "ProjectExecOperations",
             briefDescription = "Using org.gradle.api.Project.exec",
             explanation = """
-                Using org.gradle.api.Project.exec is not compatible with Gradle instant execution.
+                Using `org.gradle.api.Project.exec` is not compatible with Gradle instant execution.
 
-                Please inject org.gradle.process.ExecOperations into task that needs it. This will
+                Please inject `org.gradle.process.ExecOperations` into task that needs it. This will
                 provide you with ability to start Java and other types of processes.
             """,
             category = CORRECTNESS,
@@ -90,7 +90,7 @@ class GradleApiUsageDetector : Detector(), SourceCodeScanner {
         ) {
             context.report(
                 ISSUE, node, context.getNameLocation(node),
-                "Avoid using org.gradle.api.Project.exec as it is incompatible with Gradle instant execution."
+                "Avoid using `org.gradle.api.Project.exec` as it is incompatible with Gradle instant execution."
             )
         }
     }

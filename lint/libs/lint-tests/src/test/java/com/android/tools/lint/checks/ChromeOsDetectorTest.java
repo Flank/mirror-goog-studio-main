@@ -33,7 +33,7 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
     public void testInvalidUnsupportedHardware() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Error: Expecting android:required=\"false\" for this hardware feature that may not be supported by all Chrome OS devices. [UnsupportedChromeOsHardware]\n"
+                        + "AndroidManifest.xml:5: Error: Expecting android:required=\"false\" for this hardware feature that may not be supported by all Chrome OS devices [UnsupportedChromeOsHardware]\n"
                         + "        android:name=\"android.hardware.touchscreen\" android:required=\"true\"/>\n"
                         + "                                                    ~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -107,7 +107,7 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
     public void testInvalidPermissionImpliesNotMissingUnsupportedHardware() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n"
+                        + "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag [PermissionImpliesUnsupportedChromeOsHardware]\n"
                         + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
                         + "     ~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -127,7 +127,7 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
     public void testInvalidPermissionImpliesMissingUnsupportedHardware() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n"
+                        + "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag [PermissionImpliesUnsupportedChromeOsHardware]\n"
                         + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
                         + "     ~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -147,7 +147,7 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
     public void testCameraPermissionImpliesMissingUnsupportedCamera() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n"
+                        + "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera\" required=\"false\"> tag [PermissionImpliesUnsupportedChromeOsHardware]\n"
                         + "    <uses-permission android:name=\"android.permission.CAMERA\"/>\n"
                         + "     ~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -168,7 +168,7 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
     public void testCameraPermissionImpliesMissingUnsupportedCameraAutofocus() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera.autofocus\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n"
+                        + "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera.autofocus\" required=\"false\"> tag [PermissionImpliesUnsupportedChromeOsHardware]\n"
                         + "    <uses-permission android:name=\"android.permission.CAMERA\"/>\n"
                         + "     ~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
@@ -189,10 +189,10 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
     public void testCameraPermissionImpliesTwoMissingUnsupportedCameraHardware() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n"
+                        + "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera\" required=\"false\"> tag [PermissionImpliesUnsupportedChromeOsHardware]\n"
                         + "    <uses-permission android:name=\"android.permission.CAMERA\"/>\n"
                         + "     ~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera.autofocus\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n"
+                        + "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera.autofocus\" required=\"false\"> tag [PermissionImpliesUnsupportedChromeOsHardware]\n"
                         + "    <uses-permission android:name=\"android.permission.CAMERA\"/>\n"
                         + "     ~~~~~~~~~~~~~~~\n"
                         + "2 errors, 0 warnings";
@@ -259,7 +259,7 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
 
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Error: Expecting android:resizeableActivity=\"true\" for this activity so the user can take advantage of the multi-window environment on Chrome OS devices. [NonResizeableActivity]\n"
+                        + "AndroidManifest.xml:5: Error: Expecting android:resizeableActivity=\"true\" for this activity so the user can take advantage of the multi-window environment on Chrome OS devices [NonResizeableActivity]\n"
                         + "        <activity android:name=\".MainActivity\" android:resizeableActivity=\"false\"/>\n"
                         + "                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -305,7 +305,7 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
 
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Error: Expecting android:screenOrientation=\"unspecified\" or \"fullSensor\" for this activity so the user can use the application in any orientation and provide a great experience on Chrome OS devices. [LockedOrientationActivity]\n"
+                        + "AndroidManifest.xml:5: Error: Expecting android:screenOrientation=\"unspecified\" or \"fullSensor\" for this activity so the user can use the application in any orientation and provide a great experience on Chrome OS devices [LockedOrientationActivity]\n"
                         + "        <activity android:name=\".MainActivity\" android:screenOrientation=\"portrait\"/>\n"
                         + "                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";

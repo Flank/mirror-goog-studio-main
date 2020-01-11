@@ -1214,7 +1214,7 @@ public class Main {
                 + "`$ lint --ignore UnusedResources,UselessLeaf /my/project/path`\n"
                 + "\n"
                 + "For more information, see "
-                + "http://g.co/androidstudio/suppressing-lint-warnings\n";
+                + "https://developer.android.com/studio/write/lint.html#config\n";
     }
 
     private static void printVersion(LintCliClient client) {

@@ -134,7 +134,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/topics/manifest/uses-sdk-element.html");
+                            "https://developer.android.com/guide/topics/manifest/uses-sdk-element.html");
 
     /** Using a targetSdkVersion that isn't recent */
     public static final Issue TARGET_NEWER =
@@ -151,7 +151,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                                     + "test your app to make sure everything works correctly. You may want to consult "
                                     + "the compatibility notes to see what changes apply to each version you are adding "
                                     + "support for: "
-                                    + "http://developer.android.com/reference/android/os/Build.VERSION_CODES.html "
+                                    + "https://developer.android.com/reference/android/os/Build.VERSION_CODES.html "
                                     + "as well as follow this guide:\n"
                                     + "https://developer.android.com/distribute/best-practices/develop/target-sdk.html",
                             Category.CORRECTNESS,
@@ -161,7 +161,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                     .addMoreInfo(
                             "https://developer.android.com/distribute/best-practices/develop/target-sdk.html")
                     .addMoreInfo(
-                            "http://developer.android.com/reference/android/os/Build.VERSION_CODES.html");
+                            "https://developer.android.com/reference/android/os/Build.VERSION_CODES.html");
 
     /** Using multiple {@code <uses-sdk>} elements */
     public static final Issue MULTIPLE_USES_SDK =
@@ -177,7 +177,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                             Severity.FATAL,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/topics/manifest/uses-sdk-element.html");
+                            "https://developer.android.com/guide/topics/manifest/uses-sdk-element.html");
 
     /** Missing a {@code <uses-sdk>} element */
     public static final Issue WRONG_PARENT =
@@ -194,7 +194,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                             Severity.FATAL,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/topics/manifest/manifest-intro.html");
+                            "https://developer.android.com/guide/topics/manifest/manifest-intro.html");
 
     /** Missing a {@code <uses-sdk>} element */
     public static final Issue DUPLICATE_ACTIVITY =
@@ -221,7 +221,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                             "AllowBackup/FullBackupContent Problems",
                             "The `allowBackup` attribute determines if an application's data can be backed up "
                                     + "and restored. It is documented at "
-                                    + "http://developer.android.com/reference/android/R.attr.html#allowBackup\n"
+                                    + "https://developer.android.com/reference/android/R.attr.html#allowBackup\n"
                                     + "\n"
                                     + "By default, this flag is set to `true` which means application data can be "
                                     + "backed up and restored by the OS. Setting `allowBackup=\"false\"` opts the "
@@ -247,7 +247,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                             IMPLEMENTATION)
                     .addMoreInfo(BACKUP_DOCUMENTATION_URL)
                     .addMoreInfo(
-                            "http://developer.android.com/reference/android/R.attr.html#allowBackup");
+                            "https://developer.android.com/reference/android/R.attr.html#allowBackup");
 
     /** Conflicting permission names */
     public static final Issue UNIQUE_PERMISSION =
@@ -283,7 +283,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/tools/publishing/versioning.html#appversioning");
+                            "https://developer.android.com/studio/publish/versioning#appversioning");
 
     /** Using a resource for attributes that do not allow it */
     public static final Issue ILLEGAL_REFERENCE =
@@ -323,7 +323,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/tools/publishing/preparing.html#publishing-configure");
+                            "https://developer.android.com/studio/publish/preparing#publishing-configure");
 
     /** Malformed Device Admin */
     public static final Issue DEVICE_ADMIN =
@@ -417,7 +417,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                             Severity.FATAL,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://android-developers.blogspot.com/2016/04/deprecation-of-bindlistener.html");
+                            "https://android-developers.googleblog.com/2016/04/deprecation-of-bindlistener.html");
 
     public static final Issue APP_INDEXING_SERVICE =
             Issue.create(
@@ -481,7 +481,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                     Location.create(context.file),
                     "Manifest should specify a minimum API level with "
                             + "`<uses-sdk android:minSdkVersion=\"?\" />`; if it really supports "
-                            + "all versions of Android set it to 1.");
+                            + "all versions of Android set it to 1");
         }
     }
 
@@ -823,7 +823,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                                     bindListenerAttr,
                                     context.getLocation(bindListenerAttr),
                                     "The `com.google.android.gms.wearable.BIND_LISTENER`"
-                                            + " action is deprecated.");
+                                            + " action is deprecated");
                             return;
                         }
                     }

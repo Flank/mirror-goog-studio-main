@@ -5,14 +5,6 @@
         id="DefaultLocale"
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
-            file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/AnnotationDetector.java"
-            line="821"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/ArraySizeDetector.java"
             line="162"/>
     </issue>
@@ -38,7 +30,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/FirebaseAnalyticsDetector.java"
-            line="337"/>
+            line="335"/>
     </issue>
 
     <issue
@@ -46,7 +38,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/FirebaseAnalyticsDetector.java"
-            line="377"/>
+            line="375"/>
     </issue>
 
     <issue
@@ -78,7 +70,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/IconDetector.java"
-            line="1011"/>
+            line="1009"/>
     </issue>
 
     <issue
@@ -86,7 +78,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/IconDetector.java"
-            line="1086"/>
+            line="1084"/>
     </issue>
 
     <issue
@@ -94,7 +86,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/IconDetector.java"
-            line="2234"/>
+            line="2232"/>
     </issue>
 
     <issue
@@ -102,7 +94,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/IconDetector.java"
-            line="2244"/>
+            line="2242"/>
     </issue>
 
     <issue
@@ -126,7 +118,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/NetworkSecurityConfigDetector.java"
-            line="466"/>
+            line="464"/>
     </issue>
 
     <issue
@@ -358,7 +350,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/RequiredAttributeDetector.java"
-            line="320"/>
+            line="321"/>
     </issue>
 
 </issues>

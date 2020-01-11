@@ -21,6 +21,8 @@ import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.checks.RangeDetector
 import com.android.tools.lint.checks.infrastructure.TestLintClient
+import com.android.tools.lint.client.api.LintBaseline.Companion.isSamePathSuffix
+import com.android.tools.lint.client.api.LintBaseline.Companion.stringsEquivalent
 import com.android.tools.lint.detector.api.DefaultPosition
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
@@ -195,15 +197,59 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         baseline.close()
     }
 
+    @Test
     fun testSuffix() {
-        assertTrue(LintBaseline.isSamePathSuffix("foo", "foo"))
-        assertTrue(LintBaseline.isSamePathSuffix("", ""))
-        assertTrue(LintBaseline.isSamePathSuffix("abc/def/foo", "def/foo"))
-        assertTrue(LintBaseline.isSamePathSuffix("abc/def/foo", "../../def/foo"))
-        assertTrue(LintBaseline.isSamePathSuffix("abc\\def\\foo", "abc\\def\\foo"))
-        assertTrue(LintBaseline.isSamePathSuffix("abc\\def\\foo", "..\\..\\abc\\def\\foo"))
-        assertTrue(LintBaseline.isSamePathSuffix("abc\\def\\foo", "def\\foo"))
-        assertFalse(LintBaseline.isSamePathSuffix("foo", "bar"))
+        assertTrue(isSamePathSuffix("foo", "foo"))
+        assertTrue(isSamePathSuffix("", ""))
+        assertTrue(isSamePathSuffix("abc/def/foo", "def/foo"))
+        assertTrue(isSamePathSuffix("abc/def/foo", "../../def/foo"))
+        assertTrue(isSamePathSuffix("abc\\def\\foo", "abc\\def\\foo"))
+        assertTrue(isSamePathSuffix("abc\\def\\foo", "..\\..\\abc\\def\\foo"))
+        assertTrue(isSamePathSuffix("abc\\def\\foo", "def\\foo"))
+        assertFalse(isSamePathSuffix("foo", "bar"))
+    }
+
+    @Test
+    fun testStringsEquivalent() {
+        assertTrue(stringsEquivalent("", ""))
+        assertTrue(stringsEquivalent("foo", ""))
+        assertTrue(stringsEquivalent("", "bar"))
+        assertTrue(stringsEquivalent("foo", "foo"))
+        assertTrue(stringsEquivalent("foo", "foo."))
+        assertTrue(stringsEquivalent("foo.", "foo"))
+        assertTrue(stringsEquivalent("foo.", "foo. Bar."))
+        assertTrue(stringsEquivalent("foo. Bar.", "foo"))
+        assertTrue(stringsEquivalent("", ""))
+        assertTrue(stringsEquivalent("abc def", "abc `def`"))
+        assertTrue(stringsEquivalent("abc `def` ghi", "abc def ghi"))
+        assertTrue(stringsEquivalent("`abc` def", "abc def"))
+        assertTrue(
+            stringsEquivalent(
+                "Suspicious equality check: equals() is not implemented in targetType",
+                "Suspicious equality check: `equals()` is not implemented in targetType"
+            )
+        )
+        assertTrue(
+            stringsEquivalent(
+                "This Handler class should be static or leaks might occur name",
+                "This `Handler` class should be static or leaks might occur name"
+            )
+        )
+        assertTrue(
+            stringsEquivalent(
+                "Using the AllowAllHostnameVerifier HostnameVerifier is unsafe ",
+                "Using the `AllowAllHostnameVerifier` HostnameVerifier is unsafe "
+            )
+        )
+        assertTrue(
+            stringsEquivalent(
+                "Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details.",
+                "Reading app signatures from `getPackageInfo`: The app signatures could be exploited if not validated properly; see issue explanation for details"
+            )
+        )
+        assertTrue(stringsEquivalent("````abc", "abc"))
+        assertFalse(stringsEquivalent("abc", "def"))
+        assertFalse(stringsEquivalent("abcd", "abce"))
     }
 
     @Test

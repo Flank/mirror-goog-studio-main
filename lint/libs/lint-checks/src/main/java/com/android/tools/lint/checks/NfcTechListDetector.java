@@ -42,18 +42,19 @@ public class NfcTechListDetector extends ResourceXmlDetector {
             Issue.create(
                             "NfcTechWhitespace",
                             "Whitespace in NFC tech lists",
-                            "In a <tech-list>, there can be whitespace around the <tech> elements,"
+                            "In a `<tech-list>`, there can be whitespace around the `<tech>` elements,"
                                     + "but not inside them. This is because the code which reads in the tech "
                                     + "list is currently very strict and will include the whitespace as part "
                                     + "of the name.\n"
                                     + "\n"
-                                    + "In other words, use <tech>name</tech>, not <tech> name </tech>.",
+                                    + "In other words, use `<tech>name</tech>`, not `<tech> name </tech>`.",
                             Category.CORRECTNESS,
                             5,
                             Severity.FATAL,
                             new Implementation(
                                     NfcTechListDetector.class, Scope.RESOURCE_FILE_SCOPE))
-                    .addMoreInfo("https://code.google.com/p/android/issues/detail?id=65351");
+                    //noinspection LintImplBadUrl -- old bug, fewer digits than usual
+                    .addMoreInfo("https://issuetracker.google.com/36988969");
 
     /** Constructs a new {@link NfcTechListDetector} */
     public NfcTechListDetector() {}

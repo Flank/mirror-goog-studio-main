@@ -31,7 +31,7 @@ public class BatteryDetectorTest extends AbstractCheckTest {
                         + "AndroidManifest.xml:9: Warning: Declaring a broadcastreceiver for android.net.conn.CONNECTIVITY_CHANGE is deprecated for apps targeting N and higher. In general, apps should not rely on this broadcast and instead use WorkManager. [BatteryLife]\n"
                         + "            <action android:name=\"android.net.conn.CONNECTIVITY_CHANGE\" />\n"
                         + "                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:10: Warning: Use of REQUEST_IGNORE_BATTERY_OPTIMIZATIONS violates the Play Store Content Policy regarding acceptable use cases, as described in http://developer.android.com/training/monitoring-device-state/doze-standby.html [BatteryLife]\n"
+                        + "AndroidManifest.xml:10: Warning: Use of REQUEST_IGNORE_BATTERY_OPTIMIZATIONS violates the Play Store Content Policy regarding acceptable use cases, as described in https://developer.android.com/training/monitoring-device-state/doze-standby.html [BatteryLife]\n"
                         + "            <action android:name=\"android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS\" />\n"
                         + "                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "AndroidManifest.xml:11: Warning: Use of com.android.camera.NEW_PICTURE is deprecated for all apps starting with the N release independent of the target SDK. Apps should not rely on these broadcasts and instead use WorkManager [BatteryLife]\n"
@@ -40,7 +40,7 @@ public class BatteryDetectorTest extends AbstractCheckTest {
                         + "AndroidManifest.xml:12: Warning: Use of android.hardware.action.NEW_PICTURE is deprecated for all apps starting with the N release independent of the target SDK. Apps should not rely on these broadcasts and instead use WorkManager [BatteryLife]\n"
                         + "            <action android:name=\"android.hardware.action.NEW_PICTURE\" />\n"
                         + "                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/BatteryTest.java:15: Warning: Use of REQUEST_IGNORE_BATTERY_OPTIMIZATIONS violates the Play Store Content Policy regarding acceptable use cases, as described in http://developer.android.com/training/monitoring-device-state/doze-standby.html [BatteryLife]\n"
+                        + "src/test/pkg/BatteryTest.java:15: Warning: Use of REQUEST_IGNORE_BATTERY_OPTIMIZATIONS violates the Play Store Content Policy regarding acceptable use cases, as described in https://developer.android.com/training/monitoring-device-state/doze-standby.html [BatteryLife]\n"
                         + "        Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);\n"
                         + "                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 5 warnings\n";

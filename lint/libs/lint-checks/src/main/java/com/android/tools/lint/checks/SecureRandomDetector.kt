@@ -74,7 +74,7 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
                             ISSUE, node, context.getLocation(node),
                             "It is dangerous to seed `SecureRandom` with the current " +
                                     "time because that value is more predictable to " +
-                                    "an attacker than the default seed."
+                                    "an attacker than the default seed"
                         )
                     }
                 }
@@ -112,7 +112,7 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
                 sequence of numbers. This may be useful for testing but it is not appropriate \
                 for secure use.
                 """,
-            moreInfo = "http://developer.android.com/reference/java/security/SecureRandom.html",
+            moreInfo = "https://developer.android.com/reference/java/security/SecureRandom.html",
             category = Category.SECURITY,
             priority = 9,
             severity = Severity.WARNING,

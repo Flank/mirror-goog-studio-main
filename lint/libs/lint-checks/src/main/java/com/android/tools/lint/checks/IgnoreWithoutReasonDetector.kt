@@ -96,7 +96,7 @@ class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
                         }
                     context.report(
                         ISSUE, element, context.getLocation(ignoreAnnotation),
-                        "Test is ignored without giving any explanation.", fix
+                        "Test is ignored without giving any explanation", fix
                     )
                 }
             }

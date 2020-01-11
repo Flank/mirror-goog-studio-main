@@ -240,7 +240,7 @@ public class TextReporterTest extends AbstractCheckTest {
                             + "   API Level required for the application to run, as well as the target\n"
                             + "   version (the highest API level you have tested the version for).\n"
                             + "\n"
-                            + "   http://developer.android.com/guide/topics/manifest/uses-sdk-element.html\n"
+                            + "   https://developer.android.com/guide/topics/manifest/uses-sdk-element.html\n"
                             + "\n"
                             + "res/layout/main.xml:12: Warning: Hardcoded string \"Fooo\", should use @string resource [HardcodedText]\n"
                             + "        android:text=\"Fooo\" />\n"

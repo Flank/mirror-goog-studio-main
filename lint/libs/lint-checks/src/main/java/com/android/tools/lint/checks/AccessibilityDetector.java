@@ -66,7 +66,7 @@ public class AccessibilityDetector extends LayoutDetector {
                             + "Note that for text fields, you should not set both the `hint` and the "
                             + "`contentDescription` attributes since the hint will never be shown. Just "
                             + "set the `hint`. See "
-                            + "http://developer.android.com/guide/topics/ui/accessibility/checklist.html#special-cases.",
+                            + "https://developer.android.com/guide/topics/ui/accessibility/apps#special-cases",
                     Category.A11Y,
                     3,
                     Severity.WARNING,

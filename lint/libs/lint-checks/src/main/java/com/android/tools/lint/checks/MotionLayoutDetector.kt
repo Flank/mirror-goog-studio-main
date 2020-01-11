@@ -133,10 +133,10 @@ class MotionLayoutDetector : ResourceXmlDetector() {
             id = "MotionLayoutInvalidSceneFileReference",
             briefDescription = "$ATTR_CONSTRAINT_LAYOUT_DESCRIPTION must specify a scene file",
             explanation = """
-                A motion scene file specifies the animations used in a MotionLayout.
-                The $ATTR_CONSTRAINT_LAYOUT_DESCRIPTION is required to specify a valid motion \
+                A motion scene file specifies the animations used in a `MotionLayout`. \
+                The `$ATTR_CONSTRAINT_LAYOUT_DESCRIPTION` is required to specify a valid motion \
                 scene file.
-                """.trimIndent(),
+                """,
             category = Category.CORRECTNESS,
             priority = 8,
             severity = Severity.ERROR,

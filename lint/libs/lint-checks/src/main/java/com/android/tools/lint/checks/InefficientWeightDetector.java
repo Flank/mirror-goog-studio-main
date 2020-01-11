@@ -70,7 +70,7 @@ public class InefficientWeightDetector extends LayoutDetector {
             Issue.create(
                     "InefficientWeight",
                     "Inefficient layout weight",
-                    "When only a single widget in a LinearLayout defines a weight, it is more "
+                    "When only a single widget in a `LinearLayout` defines a weight, it is more "
                             + "efficient to assign a width/height of `0dp` to it since it will absorb all "
                             + "the remaining space anyway. With a declared width/height of `0dp` it "
                             + "does not have to measure its own size first.",
@@ -84,8 +84,8 @@ public class InefficientWeightDetector extends LayoutDetector {
             Issue.create(
                     "NestedWeights",
                     "Nested layout weights",
-                    "Layout weights require a widget to be measured twice. When a LinearLayout with "
-                            + "non-zero weights is nested inside another LinearLayout with non-zero weights, "
+                    "Layout weights require a widget to be measured twice. When a `LinearLayout` with "
+                            + "non-zero weights is nested inside another `LinearLayout` with non-zero weights, "
                             + "then the number of measurements increase exponentially.",
                     Category.PERFORMANCE,
                     3,
@@ -97,7 +97,7 @@ public class InefficientWeightDetector extends LayoutDetector {
             Issue.create(
                     "DisableBaselineAlignment",
                     "Missing `baselineAligned` attribute",
-                    "When a LinearLayout is used to distribute the space proportionally between "
+                    "When a `LinearLayout` is used to distribute the space proportionally between "
                             + "nested layouts, the baseline alignment property should be turned off to "
                             + "make the layout computation faster.",
                     Category.PERFORMANCE,
@@ -110,13 +110,13 @@ public class InefficientWeightDetector extends LayoutDetector {
             Issue.create(
                     "Suspicious0dp",
                     "Suspicious 0dp dimension",
-                    "Using 0dp as the width in a horizontal LinearLayout with weights is a useful "
+                    "Using 0dp as the width in a horizontal `LinearLayout` with weights is a useful "
                             + "trick to ensure that only the weights (and not the intrinsic sizes) are used "
                             + "when sizing the children.\n"
                             + "\n"
                             + "However, if you use 0dp for the opposite dimension, the view will be invisible. "
                             + "This can happen if you change the orientation of a layout without also flipping "
-                            + "the 0dp dimension in all the children.",
+                            + "the `0dp` dimension in all the children.",
                     Category.CORRECTNESS,
                     6,
                     Severity.ERROR,
@@ -127,11 +127,11 @@ public class InefficientWeightDetector extends LayoutDetector {
             Issue.create(
                     "Orientation",
                     "Missing explicit orientation",
-                    "The default orientation of a LinearLayout is horizontal. It's pretty easy to "
+                    "The default orientation of a `LinearLayout` is horizontal. It's pretty easy to "
                             + "believe that the layout is vertical, add multiple children to it, and wonder "
                             + "why only the first child is visible (when the subsequent children are "
                             + "off screen to the right). This lint rule helps pinpoint this issue by "
-                            + "warning whenever a LinearLayout is used with an implicit orientation "
+                            + "warning whenever a `LinearLayout` is used with an implicit orientation "
                             + "and multiple children.\n"
                             + "\n"
                             + "It also checks for empty LinearLayouts without an `orientation` attribute "

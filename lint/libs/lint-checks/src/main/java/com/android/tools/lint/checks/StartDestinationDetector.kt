@@ -93,7 +93,7 @@ class StartDestinationDetector : ResourceXmlDetector() {
                     ISSUE,
                     element,
                     context.getNameLocation(element),
-                    "startDestination must be an id"
+                    "`startDestination` must be an id"
                 )
                 return
             }

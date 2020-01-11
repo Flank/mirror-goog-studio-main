@@ -82,7 +82,7 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
     private static final String PLAY_SERVICES_NOT_AVAILABLE_EXCEPTION =
             "com.google.android.gms.common.GooglePlayServicesNotAvailableException";
     private static final String MESSAGE_DEVICE_IDENTIFIERS =
-            "Using `%1$s` to get device identifiers is not recommended.";
+            "Using `%1$s` to get device identifiers is not recommended";
     private static final String RO_SERIALNO = "ro.serialno";
     private static final String CLASS_FOR_NAME = "forName";
     private static final String CLASSLOADER_LOAD_CLASS = "loadClass";

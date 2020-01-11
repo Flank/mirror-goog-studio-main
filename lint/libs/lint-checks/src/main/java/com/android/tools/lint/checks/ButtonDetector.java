@@ -122,8 +122,7 @@ public class ButtonDetector extends ResourceXmlDetector {
                             8,
                             Severity.WARNING,
                             IMPLEMENTATION)
-                    .addMoreInfo(
-                            "http://developer.android.com/design/building-blocks/dialogs.html");
+                    .addMoreInfo("https://material.io/components/dialogs/");
 
     /** The main issue discovered by this detector */
     public static final Issue STYLE =
@@ -138,8 +137,7 @@ public class ButtonDetector extends ResourceXmlDetector {
                             5,
                             Severity.WARNING,
                             IMPLEMENTATION)
-                    .addMoreInfo(
-                            "http://developer.android.com/design/building-blocks/buttons.html");
+                    .addMoreInfo("https://material.io/components/dialogs/");
 
     /** The main issue discovered by this detector */
     public static final Issue BACK_BUTTON =
@@ -163,13 +161,14 @@ public class ButtonDetector extends ResourceXmlDetector {
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .setEnabledByDefault(false)
-                    .addMoreInfo("http://developer.android.com/design/patterns/pure-android.html");
+                    .addMoreInfo("https://material.io/design/");
 
     /** The main issue discovered by this detector */
     public static final Issue CASE =
             Issue.create(
                     "ButtonCase",
                     "Cancel/OK dialog button capitalization",
+                    //noinspection LintImplTextFormat
                     "The standard capitalization for OK/Cancel dialogs is \"OK\" and \"Cancel\". "
                             + "To ensure that your dialogs use the standard strings, you can use "
                             + "the resource strings @android:string/ok and @android:string/cancel.",
@@ -287,6 +286,7 @@ public class ButtonDetector extends ResourceXmlDetector {
                                                 CASE,
                                                 child,
                                                 context.getLocation(child),
+                                                //noinspection LintImplTextFormat
                                                 String.format(
                                                         "The standard Android way to capitalize %1$s "
                                                                 + "is \"OK\" (tip: use `@android:string/ok` instead)",

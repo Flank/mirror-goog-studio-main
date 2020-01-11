@@ -50,7 +50,7 @@ class ByteOrderMarkDetector : ResourceXmlDetector(), SourceCodeScanner, GradleSc
             necessary, and they are not handled correctly by all tools. For example, if you have a BOM as \
             part of a resource name in one particular translation, that name will not be considered identical \
             to the base resource's name and the translation will not be used.""",
-            moreInfo = "http://en.wikipedia.org/wiki/Byte_order_mark",
+            moreInfo = "https://en.wikipedia.org/wiki/Byte_order_mark",
             category = Category.I18N,
             priority = 8,
             severity = Severity.ERROR,

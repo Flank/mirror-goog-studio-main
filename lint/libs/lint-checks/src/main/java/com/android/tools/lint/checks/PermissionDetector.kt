@@ -499,7 +499,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 those APIs. If the code using those APIs is called at runtime, then the \
                 program will crash.
 
-                Furthermore, for permissions that are revocable (with targetSdkVersion 23), \
+                Furthermore, for permissions that are revocable (with `targetSdkVersion` 23), \
                 client code must also be prepared to handle the calls throwing an exception \
                 if the user rejects the request for permission at runtime.""",
             category = Category.CORRECTNESS,

@@ -72,7 +72,7 @@ class MotionSceneDetectorTest : AbstractCheckTest() {
                 """
             ).indented()).run()
             .expect("""
-                res/xml/duplicate_custom_attribute_name.xml:10: Error: The custom attribute textSize was specified multiple times. [MotionSceneFileValidationError]
+                res/xml/duplicate_custom_attribute_name.xml:10: Error: The custom attribute textSize was specified multiple times [MotionSceneFileValidationError]
                              <CustomAttribute
                               ~~~~~~~~~~~~~~~
                 1 errors, 0 warnings
@@ -101,7 +101,7 @@ class MotionSceneDetectorTest : AbstractCheckTest() {
                 """
             ).indented()).run()
             .expect("""
-                res/xml/multiple_onclick_in_transition.xml:6: Error: Can only have one OnClick per Transition. [MotionSceneFileValidationError]
+                res/xml/multiple_onclick_in_transition.xml:6: Error: Can only have one OnClick per Transition [MotionSceneFileValidationError]
                         <OnClick motion:clickAction="transitionToEnd"  />
                          ~~~~~~~
                 1 errors, 0 warnings

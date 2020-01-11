@@ -135,7 +135,7 @@ class IgnoreWithoutReasonDetectorTest {
             .run()
             .expect(
                 """
-                src/foo/MyTest.java:7: Warning: Test is ignored without giving any explanation. [IgnoreWithoutReason]
+                src/foo/MyTest.java:7: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
                 @Ignore class MyTest {
                 ~~~~~~~
                 0 errors, 1 warnings
@@ -172,13 +172,13 @@ class IgnoreWithoutReasonDetectorTest {
             .run()
             .expect(
                 """
-                src/foo/MyTest.java:8: Warning: Test is ignored without giving any explanation. [IgnoreWithoutReason]
+                src/foo/MyTest.java:8: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
                   @Test @Ignore fun something() {
                         ~~~~~~~
-                src/foo/MyTest.java:11: Warning: Test is ignored without giving any explanation. [IgnoreWithoutReason]
+                src/foo/MyTest.java:11: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
                   @Test @Ignore("") fun something() {
                         ~~~~~~~~~~~
-                src/foo/MyTest.java:14: Warning: Test is ignored without giving any explanation. [IgnoreWithoutReason]
+                src/foo/MyTest.java:14: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
                   @Test @Ignore("TODO") fun something() {
                         ~~~~~~~~~~~~~~~
                 0 errors, 3 warnings

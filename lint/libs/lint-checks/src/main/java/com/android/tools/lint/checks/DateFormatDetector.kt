@@ -106,7 +106,7 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
 
                 context.report(
                     WEEK_YEAR, argument, location,
-                    "DateFormat character 'Y' in $digits is the week-era-year; did you mean 'y' ?"
+                    "`DateFormat` character 'Y' in $digits is the week-era-year; did you mean 'y' ?"
                 )
                 return
             }
@@ -143,7 +143,7 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
                 category = Category.CORRECTNESS,
                 priority = 6,
                 severity = Severity.WARNING,
-                moreInfo = "http://developer.android.com/reference/java/text/SimpleDateFormat.html",
+                moreInfo = "https://developer.android.com/reference/java/text/SimpleDateFormat.html",
                 implementation = IMPLEMENTATION
             )
 

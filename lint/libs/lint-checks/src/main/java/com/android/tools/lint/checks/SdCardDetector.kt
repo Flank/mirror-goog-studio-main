@@ -46,7 +46,7 @@ class SdCardDetector : Detector(), SourceCodeScanner {
 
             Similarly, do not reference the `/data/data/` path directly; it can vary in multi-user scenarios. \
             Instead, use `Context.getFilesDir().getPath()`.""",
-            moreInfo = "http://developer.android.com/guide/topics/data/data-storage.html#filesExternal",
+            moreInfo = "https://developer.android.com/training/data-storage#filesExternal",
             category = Category.CORRECTNESS,
             priority = 6,
             severity = Severity.WARNING,

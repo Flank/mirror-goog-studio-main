@@ -54,6 +54,7 @@ public class EllipsizeMaxLinesDetector extends LayoutDetector {
                             4,
                             Severity.ERROR,
                             IMPLEMENTATION)
+                    //noinspection LintImplBadUrl -- old bug, fewer digits than usual
                     .addMoreInfo("https://issuetracker.google.com/issues/36950033");
 
     public static final String ATTR_ELLIPSIZE = "ellipsize";

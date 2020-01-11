@@ -373,6 +373,7 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
                 actually called from that thread. For example, calls on methods in widgets \
                 should always be made on the UI thread.
                 """,
+            //noinspection LintImplUnexpectedDomain
             moreInfo = "http://go/do-not-freeze",
             category = UI_RESPONSIVENESS,
             priority = 6,

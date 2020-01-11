@@ -218,7 +218,7 @@ public class MainTest extends AbstractCheckTest {
                         + "multi-user scenarios. Instead, use Context.getFilesDir().getPath().\n"
                         + "\n"
                         + "More information: \n"
-                        + "http://developer.android.com/guide/topics/data/data-storage.html#filesExternal\n"
+                        + "https://developer.android.com/training/data-storage#filesExternal\n"
                         + "\n",
 
                 // Expected error

@@ -146,7 +146,7 @@ class ExternalAnnotationsDetectorTest {
                                                 return method.annotations.any { it.qualifiedName == "com.example.Special" }
                                                               ~~~~~~~~~~~
                 4 errors, 0 warnings
-                """.trimIndent()
+                """
             )
     }
 }

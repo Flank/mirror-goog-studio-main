@@ -200,8 +200,8 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector
                 context.report(
                         ISSUE,
                         mApplicationTagHandle.resolve(),
-                        "Missing attribute android:extractNativeLibs=\"false\""
-                                + " on the `<application>` tag.",
+                        "Missing attribute `android:extractNativeLibs=\"false\"`"
+                                + " on the `<application>` tag",
                         fix);
             }
         }

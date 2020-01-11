@@ -118,7 +118,7 @@ class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
                 `addJavascriptInterface` method with a `@JavascriptInterface` annotation.
                 """,
             category = Category.SECURITY,
-            moreInfo = "http://developer.android.com/reference/android/webkit/WebView.html#addJavascriptInterface(java.lang.Object, java.lang.String)",
+            moreInfo = "https://developer.android.com/reference/android/webkit/WebView.html#addJavascriptInterface(java.lang.Object, java.lang.String)",
             androidSpecific = true,
             priority = 8,
             severity = Severity.ERROR,

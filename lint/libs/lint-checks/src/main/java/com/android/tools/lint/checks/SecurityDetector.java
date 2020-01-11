@@ -171,7 +171,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
     public static final Issue WORLD_WRITEABLE =
             Issue.create(
                             "WorldWriteableFiles",
-                            "`openFileOutput()` or similar call passing `MODE_WORLD_WRITEABLE`",
+                            "`openFileOutput()` with `MODE_WORLD_WRITEABLE`",
                             "There are cases where it is appropriate for an application to write "
                                     + "world writeable files, but these should be reviewed carefully to "
                                     + "ensure that they contain no private data, and that if the file is "
@@ -187,7 +187,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
     public static final Issue WORLD_READABLE =
             Issue.create(
                             "WorldReadableFiles",
-                            "`openFileOutput()` or similar call passing `MODE_WORLD_READABLE`",
+                            "`openFileOutput()` with `MODE_WORLD_READABLE`",
                             "There are cases where it is appropriate for an application to write "
                                     + "world readable files, but these should be reviewed carefully to "
                                     + "ensure that they contain no private data that is leaked to other "
@@ -361,7 +361,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
         Attr prefix = element.getAttributeNodeNS(ANDROID_URI, ATTR_PATH_PREFIX);
         Attr pattern = element.getAttributeNodeNS(ANDROID_URI, ATTR_PATH_PATTERN);
 
-        String msg = "Content provider shares everything; this is potentially dangerous.";
+        String msg = "Content provider shares everything; this is potentially dangerous";
         if (path != null && path.getValue().equals("/")) {
             context.report(OPEN_PROVIDER, path, context.getLocation(path), msg);
         }

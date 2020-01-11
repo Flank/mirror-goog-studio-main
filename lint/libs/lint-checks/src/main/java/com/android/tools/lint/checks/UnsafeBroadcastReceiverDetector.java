@@ -113,8 +113,8 @@ public class UnsafeBroadcastReceiverDetector extends Detector
     public static final Issue ACTION_STRING =
             Issue.create(
                     "UnsafeProtectedBroadcastReceiver",
-                    "Unsafe Protected BroadcastReceiver",
-                    "BroadcastReceivers that declare an intent-filter for a protected-broadcast action "
+                    "Unsafe Protected `BroadcastReceiver`",
+                    "`BroadcastReceiver`s that declare an intent-filter for a protected-broadcast action "
                             + "string must check that the received intent's action string matches the expected "
                             + "value, otherwise it is possible for malicious actors to spoof intents.",
                     Category.SECURITY,
@@ -128,9 +128,9 @@ public class UnsafeBroadcastReceiverDetector extends Detector
     public static final Issue BROADCAST_SMS =
             Issue.create(
                     "UnprotectedSMSBroadcastReceiver",
-                    "Unprotected SMS BroadcastReceiver",
-                    "BroadcastReceivers that declare an intent-filter for SMS_DELIVER or "
-                            + "SMS_RECEIVED must ensure that the caller has the BROADCAST_SMS permission, "
+                    "Unprotected SMS `BroadcastReceiver`",
+                    "BroadcastReceivers that declare an intent-filter for `SMS_DELIVER` or "
+                            + "`SMS_RECEIVED` must ensure that the caller has the `BROADCAST_SMS` permission, "
                             + "otherwise it is possible for malicious actors to spoof intents.",
                     Category.SECURITY,
                     6,
@@ -656,9 +656,9 @@ public class UnsafeBroadcastReceiverDetector extends Detector
                                 element,
                                 context.getNameLocation(element),
                                 "BroadcastReceivers that declare an intent-filter for "
-                                        + "SMS_DELIVER or SMS_RECEIVED must ensure that the "
-                                        + "caller has the BROADCAST_SMS permission, otherwise it "
-                                        + "is possible for malicious actors to spoof intents.",
+                                        + "`SMS_DELIVER` or `SMS_RECEIVED` must ensure that the "
+                                        + "caller has the `BROADCAST_SMS` permission, otherwise it "
+                                        + "is possible for malicious actors to spoof intents",
                                 fix);
                     } else if (isProtectedBroadcast(actionName)) {
                         if (mReceiversWithProtectedBroadcastIntentFilter == null) {
@@ -755,8 +755,8 @@ public class UnsafeBroadcastReceiverDetector extends Detector
                 report =
                         "This broadcast receiver declares an intent-filter for a protected "
                                 + "broadcast action string, which can only be sent by the system, "
-                                + "not third-party applications. However, the receiver's onReceive "
-                                + "method does not appear to call getAction to ensure that the "
+                                + "not third-party applications. However, the receiver's `onReceive` "
+                                + "method does not appear to call `getAction` to ensure that the "
                                 + "received Intent's action string matches the expected value, "
                                 + "potentially making it possible for another actor to send a "
                                 + "spoofed intent with no action string or a different action "
@@ -821,7 +821,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
                 @NonNull USimpleNameReferenceExpression node) {
             if (!mUsesIntent && mParameter != null) {
                 PsiElement resolved = node.resolve();
-                if (mParameter.equals(resolved)) {
+                if (mParameter.isEquivalentTo(resolved)) {
                     mUsesIntent = true;
                 }
             }

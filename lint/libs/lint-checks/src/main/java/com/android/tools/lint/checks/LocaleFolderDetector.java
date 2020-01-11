@@ -91,7 +91,7 @@ public class LocaleFolderDetector extends Detector
                             6,
                             Severity.WARNING,
                             IMPLEMENTATION)
-                    .addMoreInfo("http://developer.android.com/reference/java/util/Locale.html")
+                    .addMoreInfo("https://developer.android.com/reference/java/util/Locale.html")
                     .setAndroidSpecific(true);
 
     /** Using a region that might not be a match for the given language */
@@ -154,7 +154,7 @@ public class LocaleFolderDetector extends Detector
                             Severity.ERROR,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/topics/resources/providing-resources.html")
+                            "https://developer.android.com/guide/topics/resources/providing-resources.html")
                     .addMoreInfo("https://tools.ietf.org/html/bcp47")
                     .setAndroidSpecific(true);
 

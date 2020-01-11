@@ -50,7 +50,6 @@ import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UObjectLiteralExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UResolvable
-import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElement
@@ -225,7 +224,7 @@ class LeakDetector : Detector(), SourceCodeScanner {
          * constructors
          */
         private fun isInitializedToAppContext(field: UField, typeClass: PsiClass): Boolean {
-            val containingClass = field.containingClass ?: return false
+            val containingClass = field.getContainingUClass() ?: return false
 
             // Only check for app context if we're dealing with a Context field -- there's
             // no chance Fragments, Views etc will be the app context.
@@ -233,8 +232,11 @@ class LeakDetector : Detector(), SourceCodeScanner {
                 return false
             }
 
-            for (method in containingClass.constructors) {
-                val methodBody = UastFacade.getMethodBody(method) ?: continue
+            for (method in containingClass.uastDeclarations) {
+                if (method !is UMethod || !method.isConstructor) {
+                    continue
+                }
+                val methodBody = method.uastBody ?: continue
                 val assignedToAppContext = Ref(false)
 
                 methodBody.accept(

@@ -120,7 +120,7 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
                     if (!context.evaluator.isPrivate(target)) {
                         return
                     }
-                    if (target == containingClass.psi) {
+                    if (target.isEquivalentTo(containingClass)) {
                         return
                     }
 

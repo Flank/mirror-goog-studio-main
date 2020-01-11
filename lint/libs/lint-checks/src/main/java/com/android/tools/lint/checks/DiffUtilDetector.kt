@@ -119,7 +119,7 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
     private fun checkCall(context: JavaContext, node: UCallExpression) {
         if (defaultEquals(context, node)) {
             val targetType = node.receiverType?.canonicalText ?: "target"
-            val message = "Suspicious equality check: equals() is not implemented in $targetType"
+            val message = "Suspicious equality check: `equals()` is not implemented in $targetType"
             val location = context.getCallLocation(node, false, true)
             context.report(ISSUE, node, location, message)
         }
@@ -135,7 +135,7 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
                 if (node.operator == UastBinaryOperator.EQUALS) {
                     if (defaultEquals(context, node)) {
                         val message =
-                            "Suspicious equality check: equals() is not implemented in ${left.className}"
+                            "Suspicious equality check: `equals()` is not implemented in ${left.className}"
                         val location = node.operatorIdentifier?.let {
                             context.getLocation(it)
                         } ?: context.getLocation(node)

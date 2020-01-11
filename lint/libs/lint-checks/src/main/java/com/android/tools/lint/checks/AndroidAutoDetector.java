@@ -283,7 +283,7 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
                                     + "` for the name "
                                     + "attribute in "
                                     + TAG_USES
-                                    + " tag.");
+                                    + " tag");
                 }
             }
         }

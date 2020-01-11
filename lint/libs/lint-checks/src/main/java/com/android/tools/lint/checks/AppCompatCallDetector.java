@@ -50,7 +50,7 @@ public class AppCompatCallDetector extends Detector implements SourceCodeScanner
                             6,
                             Severity.WARNING,
                             new Implementation(AppCompatCallDetector.class, Scope.JAVA_FILE_SCOPE))
-                    .addMoreInfo("http://developer.android.com/tools/support-library/index.html")
+                    .addMoreInfo("https://developer.android.com/topic/libraries/support-library/")
                     .setAndroidSpecific(true);
 
     private static final String GET_ACTION_BAR = "getActionBar";

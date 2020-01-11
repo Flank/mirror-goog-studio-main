@@ -47,7 +47,7 @@ public class AllowAllHostnameVerifierDetector extends Detector implements Source
     public static final Issue ISSUE =
             Issue.create(
                             "AllowAllHostnameVerifier",
-                            "Insecure HostnameVerifier",
+                            "Insecure `HostnameVerifier`",
                             "This check looks for use of HostnameVerifier implementations "
                                     + "whose `verify` method always returns true (thus trusting any hostname) "
                                     + "which could result in insecure network traffic caused by trusting arbitrary "
@@ -77,7 +77,7 @@ public class AllowAllHostnameVerifierDetector extends Detector implements Source
                 ISSUE,
                 node,
                 location,
-                "Using the AllowAllHostnameVerifier HostnameVerifier is unsafe "
+                "Using the `AllowAllHostnameVerifier` HostnameVerifier is unsafe "
                         + "because it always returns true, which could cause insecure network "
                         + "traffic due to trusting TLS/SSL server certificates for wrong "
                         + "hostnames");
@@ -102,7 +102,7 @@ public class AllowAllHostnameVerifierDetector extends Detector implements Source
                 if ("ALLOW_ALL_HOSTNAME_VERIFIER".equals(field.getName())) {
                     Location location = context.getLocation(argument);
                     String message =
-                            "Using the ALLOW_ALL_HOSTNAME_VERIFIER HostnameVerifier "
+                            "Using the `ALLOW_ALL_HOSTNAME_VERIFIER` HostnameVerifier "
                                     + "is unsafe because it always returns true, which could cause "
                                     + "insecure network traffic due to trusting TLS/SSL server "
                                     + "certificates for wrong hostnames";

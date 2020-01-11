@@ -48,7 +48,7 @@ class C2dmDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-                AndroidManifest.xml:7: Error: The C2DM library does not work on Android P or newer devices; you should migrate to Firebase Cloud Messaging to ensure reliable message delivery. [UsingC2DM]
+                AndroidManifest.xml:7: Error: The C2DM library does not work on Android P or newer devices; you should migrate to Firebase Cloud Messaging to ensure reliable message delivery [UsingC2DM]
                         <receiver android:name="com.google.android.c2dm.C2DMBroadcastReceiver">
                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 1 errors, 0 warnings
@@ -82,7 +82,7 @@ class C2dmDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-            AndroidManifest.xml:7: Error: The C2DM library does not work on Android P or newer devices; you should migrate to Firebase Cloud Messaging to ensure reliable message delivery. [UsingC2DM]
+            AndroidManifest.xml:7: Error: The C2DM library does not work on Android P or newer devices; you should migrate to Firebase Cloud Messaging to ensure reliable message delivery [UsingC2DM]
                     <receiver android:name="com.google.android.gcm.GCMBroadcastReceiver">
                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings

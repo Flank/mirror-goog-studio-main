@@ -73,7 +73,7 @@ class DeletedProviderDetector : Detector(), SourceCodeScanner {
             context.report(
                 ISSUE, expression, context.getLocation(expression),
                 "The Crypto provider has been deleted " +
-                        "in Android P (and was deprecated in Android N), so the code will crash."
+                        "in Android P (and was deprecated in Android N), so the code will crash"
             )
         }
     }

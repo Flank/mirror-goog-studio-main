@@ -46,7 +46,7 @@ public class SetJavaScriptEnabledDetector extends Detector implements SourceCode
                             Severity.WARNING,
                             new Implementation(
                                     SetJavaScriptEnabledDetector.class, Scope.JAVA_FILE_SCOPE))
-                    .addMoreInfo("http://developer.android.com/guide/practices/security.html")
+                    .addMoreInfo("https://developer.android.com/training/articles/security-tips")
                     .setAndroidSpecific(true);
 
     /** Constructs a new {@link SetJavaScriptEnabledDetector} check */
@@ -68,7 +68,7 @@ public class SetJavaScriptEnabledDetector extends Detector implements SourceCode
                         call,
                         context.getLocation(call),
                         "Using `setJavaScriptEnabled` can introduce XSS vulnerabilities "
-                                + "into your application, review carefully.");
+                                + "into your application, review carefully");
             }
         }
     }

@@ -249,7 +249,7 @@ class LocaleDetector : Detector(), SourceCodeScanner {
                 really want to use the current locale, call \
                 `String#toUpperCase(Locale.getDefault())` instead.
                 """,
-            moreInfo = "http://developer.android.com/reference/java/util/Locale.html#default_locale",
+            moreInfo = "https://developer.android.com/reference/java/util/Locale.html#default_locale",
             category = Category.CORRECTNESS,
             priority = 6,
             severity = Severity.WARNING,

@@ -235,10 +235,10 @@ public class SecurityDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         assertEquals(
                 ""
-                        + "AndroidManifest.xml:25: Warning: Content provider shares everything; this is potentially dangerous. [GrantAllUris]\n"
+                        + "AndroidManifest.xml:25: Warning: Content provider shares everything; this is potentially dangerous [GrantAllUris]\n"
                         + "        <grant-uri-permission android:path=\"/\"/>\n"
                         + "                              ~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:26: Warning: Content provider shares everything; this is potentially dangerous. [GrantAllUris]\n"
+                        + "AndroidManifest.xml:26: Warning: Content provider shares everything; this is potentially dangerous [GrantAllUris]\n"
                         + "        <grant-uri-permission android:pathPrefix=\"/\"/>\n"
                         + "                              ~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 2 warnings\n",

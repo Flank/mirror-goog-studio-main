@@ -321,10 +321,10 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     public void testTrustAnchorsWithMissingCAResource() {
         String expected =
                 ""
-                        + "res/xml/network_config.xml:6: Error: Missing src resource. [NetworkSecurityConfig]\n"
+                        + "res/xml/network_config.xml:6: Error: Missing src resource [NetworkSecurityConfig]\n"
                         + "            <certificates src=\"@raw/my_ca\"/>\n"
                         + "                               ~~~~~~~~~~\n"
-                        + "res/xml/network_config.xml:11: Error: Missing src resource. [NetworkSecurityConfig]\n"
+                        + "res/xml/network_config.xml:11: Error: Missing src resource [NetworkSecurityConfig]\n"
                         + "            <certificates src=\"@raw/debug_cas\"/>\n"
                         + "                               ~~~~~~~~~~~~~~\n"
                         + "2 errors, 0 warnings\n";

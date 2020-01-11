@@ -59,7 +59,7 @@ class StorageDetector : Detector(), SourceCodeScanner {
         if (!found) {
             val location = context.getCallLocation(node, false, false)
             val message = "Consider also using `StorageManager#getAllocatableBytes` and " +
-                    "`allocateBytes` which will consider clearable cached data."
+                    "`allocateBytes` which will consider clearable cached data"
             context.report(ISSUE, node, location, message)
         }
     }

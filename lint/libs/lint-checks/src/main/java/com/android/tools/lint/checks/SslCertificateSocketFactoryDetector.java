@@ -41,6 +41,7 @@ public class SslCertificateSocketFactoryDetector extends Detector implements Sou
     public static final Issue CREATE_SOCKET =
             Issue.create(
                             "SSLCertificateSocketFactoryCreateSocket",
+                            //noinspection LintImplTextFormat
                             "Insecure call to `SSLCertificateSocketFactory.createSocket()`",
                             "When `SSLCertificateSocketFactory.createSocket()` is called with an `InetAddress` "
                                     + "as the first parameter, TLS/SSL hostname verification is not performed, which "

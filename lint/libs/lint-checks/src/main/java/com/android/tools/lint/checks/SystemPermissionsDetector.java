@@ -33,7 +33,6 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
@@ -46,14 +45,13 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
             Issue.create(
                     "ProtectedPermissions",
                     "Using system app permission",
-                    "Permissions with the protection level signature, privileged or signatureOrSystem "
+                    "Permissions with the protection level `signature`, `privileged` or `signatureOrSystem` "
                             + "are only granted to system apps. If an app is a regular non-system app, it will "
                             + "never be able to use these permissions.",
                     Category.CORRECTNESS,
                     5,
                     Severity.ERROR,
-                    new Implementation(
-                            SystemPermissionsDetector.class, EnumSet.of(Scope.MANIFEST)));
+                    new Implementation(SystemPermissionsDetector.class, Scope.MANIFEST_SCOPE));
 
     // List of permissions have the protection levels signature, privileged or systemOrSignature.
     // This list must be sorted alphabetically.

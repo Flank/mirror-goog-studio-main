@@ -175,7 +175,7 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                                 + "}");
         String expected =
                 ""
-                        + "src/test/pkg/MainActivity.java:8: Error: Bundle with invalid Analytics event parameters passed to logEvent. [InvalidAnalyticsName]\n"
+                        + "src/test/pkg/MainActivity.java:8: Error: Bundle with invalid Analytics event parameters passed to logEvent [InvalidAnalyticsName]\n"
                         + "        FirebaseAnalytics.getInstance(this).logEvent(\"bar\", bundle);\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    src/test/pkg/MainActivity.java:7: Analytics event parameter name must be 40 characters or less (found 41)\n"
@@ -204,7 +204,7 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                                 + "}");
         String expected =
                 ""
-                        + "src/test/pkg/MainActivity.java:9: Error: Bundle with invalid Analytics event parameters passed to logEvent. [InvalidAnalyticsName]\n"
+                        + "src/test/pkg/MainActivity.java:9: Error: Bundle with invalid Analytics event parameters passed to logEvent [InvalidAnalyticsName]\n"
                         + "        FirebaseAnalytics.getInstance(this).logEvent(\"bar\", bundle);\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    src/test/pkg/MainActivity.java:8: Analytics event parameter name must be 40 characters or less (found 41)\n"
@@ -245,7 +245,7 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                                 + "}");
         String expected =
                 ""
-                        + "src/test/pkg/MainActivity.java:7: Error: Bundle with invalid Analytics event parameters passed to logEvent. [InvalidAnalyticsName]\n"
+                        + "src/test/pkg/MainActivity.java:7: Error: Bundle with invalid Analytics event parameters passed to logEvent [InvalidAnalyticsName]\n"
                         + "        FirebaseAnalytics.getInstance(this).logEvent(\"bar\", bundle);\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    src/test/pkg/Util.java:6: Analytics event parameter name must be 40 characters or less (found 41)\n"

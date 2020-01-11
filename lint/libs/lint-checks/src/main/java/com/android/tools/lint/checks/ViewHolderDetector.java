@@ -59,14 +59,14 @@ public class ViewHolderDetector extends Detector implements SourceCodeScanner {
                             "View Holder Candidates",
                             "When implementing a view Adapter, you should avoid unconditionally inflating a "
                                     + "new layout; if an available item is passed in for reuse, you should try to "
-                                    + "use that one instead. This helps make for example ListView scrolling much "
+                                    + "use that one instead. This helps make for example `ListView` scrolling much "
                                     + "smoother.",
                             Category.PERFORMANCE,
                             5,
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/training/improving-layouts/smooth-scrolling.html#ViewHolder")
+                            "https://developer.android.com/guide/topics/ui/layout/recyclerview#ViewHolder")
                     .setAndroidSpecific(true);
 
     private static final String GET_VIEW = "getView";

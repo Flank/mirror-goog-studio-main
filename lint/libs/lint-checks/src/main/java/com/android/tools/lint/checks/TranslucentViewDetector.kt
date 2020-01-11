@@ -62,7 +62,7 @@ class TranslucentViewDetector : Detector(), XmlScanner, SourceCodeScanner {
             briefDescription = "Mixing screenOrientation and translucency",
             explanation = """
             Specifying a fixed screen orientation with a translucent theme isn't supported \
-            on apps with targetSdkVersion O or greater since there can be an another activity \
+            on apps with `targetSdkVersion` O or greater since there can be an another activity \
             visible behind your activity with a conflicting request.
 
             For example, your activity requests landscape and the visible activity behind \

@@ -265,7 +265,7 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                             location,
                             "Expecting `android:required=\"false\"` for this hardware "
                                     + "feature that may not be supported by all Chrome OS "
-                                    + "devices.",
+                                    + "devices",
                             fix);
                 }
             }
@@ -320,7 +320,7 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                             String message =
                                     String.format(
                                             "Permission exists without corresponding hardware `<uses-feature "
-                                                    + "android:name=\"%1$s\" required=\"false\">` tag.",
+                                                    + "android:name=\"%1$s\" required=\"false\">` tag",
                                             unsupportedHardwareName);
                             LintFix fix = fix().data(unsupportedHardwareName);
                             xmlContext.report(
@@ -456,7 +456,7 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                     location,
                     "Expecting `android:resizeableActivity=\"true\"` for this activity "
                             + "so the user can take advantage of the multi-window environment on "
-                            + "Chrome OS devices.",
+                            + "Chrome OS devices",
                     fix);
         }
     }
@@ -483,7 +483,7 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                     location,
                     "Expecting `android:screenOrientation=\"unspecified\"` or `\"fullSensor\"` for this activity "
                             + "so the user can use the application in any orientation and provide a great experience on "
-                            + "Chrome OS devices.",
+                            + "Chrome OS devices",
                     fix);
         }
     }

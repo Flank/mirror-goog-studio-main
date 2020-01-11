@@ -108,7 +108,7 @@ class NamespaceDetectorTest : AbstractCheckTest() {
 
     fun testCustom() {
         val expected = """
-            res/layout/customview.xml:5: Error: When using a custom namespace attribute in a library project, use the namespace "http://schemas.android.com/apk/res-auto" instead. [LibraryCustomView]
+            res/layout/customview.xml:5: Error: When using a custom namespace attribute in a library project, use the namespace "http://schemas.android.com/apk/res-auto" instead [LibraryCustomView]
                 xmlns:foo="http://schemas.android.com/apk/res/foo"
                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
@@ -472,7 +472,7 @@ class NamespaceDetectorTest : AbstractCheckTest() {
 
     fun testLayoutAttributes() {
         val expected = """
-            res/layout/namespace3.xml:2: Error: When using a custom namespace attribute in a library project, use the namespace "http://schemas.android.com/apk/res-auto" instead. [LibraryCustomView]
+            res/layout/namespace3.xml:2: Error: When using a custom namespace attribute in a library project, use the namespace "http://schemas.android.com/apk/res-auto" instead [LibraryCustomView]
                 xmlns:app="http://schemas.android.com/apk/res/com.example.apicalltest"
                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
@@ -486,7 +486,7 @@ class NamespaceDetectorTest : AbstractCheckTest() {
 
     fun testLayoutAttributes2() {
         val expected = """
-            res/layout/namespace4.xml:3: Error: When using a custom namespace attribute in a library project, use the namespace "http://schemas.android.com/apk/res-auto" instead. [LibraryCustomView]
+            res/layout/namespace4.xml:3: Error: When using a custom namespace attribute in a library project, use the namespace "http://schemas.android.com/apk/res-auto" instead [LibraryCustomView]
                 xmlns:app="http://schemas.android.com/apk/res/com.example.apicalltest"
                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings

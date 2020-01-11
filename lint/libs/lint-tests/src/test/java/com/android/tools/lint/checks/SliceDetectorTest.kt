@@ -900,7 +900,7 @@ class SliceDetectorTest : AbstractCheckTest() {
             *stubs
         ).run().expect(
             """
-            src/test/pkg/MyProvider.java:4: Warning: Implement SliceProvider#onMapIntentToUri to handle the intents defined on your slice <provider> in your manifest. [Slices]
+            src/test/pkg/MyProvider.java:4: Warning: Implement SliceProvider#onMapIntentToUri to handle the intents defined on your slice <provider> in your manifest [Slices]
             public class MyProvider extends DefaultSliceProvider {
                          ~~~~~~~~~~
                 AndroidManifest.xml:8: <No location-specific message
@@ -942,7 +942,7 @@ class SliceDetectorTest : AbstractCheckTest() {
             *stubs
         ).run().expect(
             """
-            src/test/pkg/MyProvider.java:9: Warning: Define intent filters in your manifest on your <provider android:name="test.pkg.MyProvider">; otherwise onMapIntentToUri will not be called. [Slices]
+            src/test/pkg/MyProvider.java:9: Warning: Define intent filters in your manifest on your <provider android:name="test.pkg.MyProvider">; otherwise onMapIntentToUri will not be called [Slices]
                 public Uri onMapIntentToUri(Intent intent) {
                            ~~~~~~~~~~~~~~~~
             0 errors, 1 warnings

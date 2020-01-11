@@ -70,7 +70,7 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
                                     + "strongly consider using `FLAG_KEEP_SCREEN_ON` instead. This window flag "
                                     + "will be correctly managed by the platform as the user moves between "
                                     + "applications and doesn't require a special permission. See "
-                                    + "http://developer.android.com/reference/android/view/WindowManager.LayoutParams.html#FLAG_KEEP_SCREEN_ON.",
+                                    + "https://developer.android.com/reference/android/view/WindowManager.LayoutParams.html#FLAG_KEEP_SCREEN_ON.",
                             Category.PERFORMANCE,
                             9,
                             Severity.WARNING,

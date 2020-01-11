@@ -29,10 +29,10 @@ public class ManifestPermissionAttributeDetectorTest extends AbstractCheckTest {
     public void testWrongTagPermissions1() throws Exception {
         assertEquals(
                 ""
-                        + "AndroidManifest.xml:19: Error: Protecting an unsupported element with a permission is a no-op and potentially dangerous. [InvalidPermission]\n"
+                        + "AndroidManifest.xml:19: Error: Protecting an unsupported element with a permission is a no-op and potentially dangerous [InvalidPermission]\n"
                         + "                        android:permission=\"android.permission.READ_CONTACTS\"/>\n"
                         + "                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:22: Error: Protecting an unsupported element with a permission is a no-op and potentially dangerous. [InvalidPermission]\n"
+                        + "AndroidManifest.xml:22: Error: Protecting an unsupported element with a permission is a no-op and potentially dangerous [InvalidPermission]\n"
                         + "                          android:permission=\"android.permission.SET_WALLPAPER\"/>\n"
                         + "                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "2 errors, 0 warnings\n",

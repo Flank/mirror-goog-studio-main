@@ -61,9 +61,9 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
             Generally, you should be using `WorkManager` instead.
 
             For more details on how to update your code, please see \
-            http://developer.android.com/preview/features/background-optimization.html
+            https://developer.android.com/topic/performance/background-optimization
             """,
-            moreInfo = "http://developer.android.com/preview/features/background-optimization.html",
+            moreInfo = "https://developer.android.com/topic/performance/background-optimization",
             category = Category.CORRECTNESS,
             priority = 5,
             severity = Severity.WARNING,
@@ -97,7 +97,7 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
                 ISSUE, element, context.getValueLocation(attr),
                 "Use of `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` violates the " +
                         "Play Store Content Policy regarding acceptable use cases, as described in " +
-                        "http://developer.android.com/training/monitoring-device-state/doze-standby.html"
+                        "https://developer.android.com/training/monitoring-device-state/doze-standby.html"
             )
         }
 
@@ -131,7 +131,7 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
                 ISSUE, reference, context.getNameLocation(reference),
                 "Use of `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` violates the " +
                         "Play Store Content Policy regarding acceptable use cases, as described in " +
-                        "http://developer.android.com/training/monitoring-device-state/doze-standby.html"
+                        "https://developer.android.com/training/monitoring-device-state/doze-standby.html"
             )
         }
     }

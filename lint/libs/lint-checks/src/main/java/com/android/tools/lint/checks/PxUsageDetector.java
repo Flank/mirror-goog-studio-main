@@ -86,7 +86,7 @@ public class PxUsageDetector extends LayoutDetector {
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/practices/screens_support.html#screen-independence");
+                            "https://developer.android.com/guide/practices/screens_support.html#screen-independence");
 
     /** Using mm/in instead of dp */
     public static final Issue IN_MM_ISSUE =
@@ -124,7 +124,7 @@ public class PxUsageDetector extends LayoutDetector {
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/training/multiscreen/screendensities.html");
+                            "https://developer.android.com/training/multiscreen/screendensities.html");
 
     /** Using text sizes that are too small */
     public static final Issue SMALL_SP_ISSUE =

@@ -70,8 +70,8 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
             Issue.create(
                             "UnsupportedTvHardware",
                             "Unsupported TV Hardware Feature",
-                            "The <uses-feature> element should not require this unsupported TV hardware feature. "
-                                    + "Any uses-feature not explicitly marked with required=\"false\" is necessary on the "
+                            "The `<uses-feature>` element should not require this unsupported TV hardware feature. "
+                                    + "Any uses-feature not explicitly marked with `required=\"false\"` is necessary on the "
                                     + "device to be installed on. "
                                     + "Ensure that any features that might prevent it from being installed on a TV device "
                                     + "are reviewed and marked as not required in the manifest.",
@@ -85,7 +85,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
     public static final Issue IMPLIED_TOUCHSCREEN_HARDWARE =
             Issue.create(
                             "ImpliedTouchscreenHardware",
-                            "Hardware feature touchscreen not explicitly marked as optional",
+                            "Touchscreen not optional",
                             "Apps require the `android.hardware.touchscreen` feature by default. If you want "
                                     + "your app to be available on TV, you must also explicitly declare that a touchscreen "
                                     + "is not required as follows:\n"
@@ -138,17 +138,17 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
             Issue.create(
                             "PermissionImpliesUnsupportedHardware",
                             "Permission Implies Unsupported Hardware",
-                            "The <uses-permission> element should not require a permission that implies an "
+                            "The `<uses-permission>` element should not require a permission that implies an "
                                     + "unsupported TV hardware feature. Google Play assumes that certain hardware related "
                                     + "permissions indicate that the underlying hardware features are required by default. "
-                                    + "To fix the issue, consider declaring the corresponding uses-feature element with "
-                                    + "required=\"false\" attribute.",
+                                    + "To fix the issue, consider declaring the corresponding `uses-feature` element with "
+                                    + "`required=\"false\"` attribute.",
                             Category.CORRECTNESS,
                             3,
                             Severity.WARNING,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/guide/topics/manifest/uses-feature-element.html#permissions");
+                            "https://developer.android.com/guide/topics/manifest/uses-feature-element.html#permissions");
 
     /** Missing banner attibute */
     public static final Issue MISSING_BANNER =
@@ -163,7 +163,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
                             Severity.ERROR,
                             IMPLEMENTATION)
                     .addMoreInfo(
-                            "http://developer.android.com/training/tv/start/start.html#banner");
+                            "https://developer.android.com/training/tv/start/start.html#banner");
 
     public static final String SOFTWARE_FEATURE_LEANBACK = "android.software.leanback";
 
@@ -270,7 +270,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
                             xmlContext.getNameLocation(manifestNode),
                             "Expecting an activity to have `"
                                     + CATEGORY_LEANBACK_LAUNCHER
-                                    + "` intent filter.");
+                                    + "` intent filter");
                 }
             }
 
@@ -282,8 +282,8 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
                             MISSING_LEANBACK_SUPPORT,
                             manifestNode,
                             xmlContext.getNameLocation(manifestNode),
-                            "Expecting <uses-feature android:name=\"android.software.leanback\" "
-                                    + "android:required=\"false\" /> tag.");
+                            "Expecting `<uses-feature android:name=\"android.software.leanback\" "
+                                    + "android:required=\"false\" />` tag");
                 }
             }
 
@@ -299,7 +299,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
                             applicationElement,
                             xmlContext.getNameLocation(applicationElement),
                             "Expecting `android:banner` with the `<application>` tag or each "
-                                    + "Leanback launcher activity.",
+                                    + "Leanback launcher activity",
                             fix);
                 }
             }
@@ -326,7 +326,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
                             element,
                             location,
                             "Expecting `android:required=\"false\"` for this hardware "
-                                    + "feature that may not be supported by all Android TVs.",
+                                    + "feature that may not be supported by all Android TVs",
                             fix);
                 }
             }
@@ -374,7 +374,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
                         String message =
                                 String.format(
                                         "Permission exists without corresponding hardware `<uses-feature "
-                                                + "android:name=\"%1$s\" required=\"false\">` tag.",
+                                                + "android:name=\"%1$s\" required=\"false\">` tag",
                                         unsupportedHardwareName);
                         LintFix fix = fix().data(unsupportedHardwareName);
                         xmlContext.report(

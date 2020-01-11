@@ -129,7 +129,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
                 MOTION_SCENE_FILE_VALIDATION_ERROR,
                 element,
                 context.getNameLocation(element),
-                "The custom attribute `$name` was specified multiple times.",
+                "The custom attribute `$name` was specified multiple times",
                 LintFix.create()
                     .name("Delete this custom attribute")
                     .replace()
@@ -158,7 +158,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
                     MOTION_SCENE_FILE_VALIDATION_ERROR,
                     onClickElement,
                     context.getNameLocation(onClickElement),
-                    "Can only have one `$ON_CLICK` per `$TRANSITION`.",
+                    "Can only have one `$ON_CLICK` per `$TRANSITION`",
                     LintFix.create()
                         .name("Delete additional $ON_CLICK")
                         .replace()
@@ -250,7 +250,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
                 MOTION_SCENE_FILE_VALIDATION_ERROR,
                 subTag,
                 context.getNameLocation(subTag),
-                "`${element.tagName}` can not have any child tags.",
+                "`${element.tagName}` can not have any child tags",
                 LintFix.create()
                     .name("Delete ${subTag.tagName}")
                     .replace()
@@ -270,11 +270,11 @@ class MotionSceneDetector : ResourceXmlDetector() {
         @JvmField
         val MOTION_SCENE_FILE_VALIDATION_ERROR = Issue.create(
             id = "MotionSceneFileValidationError",
-            briefDescription = "Validation errors in MotionScene files",
+            briefDescription = "Validation errors in `MotionScene` files",
             explanation = """
-                A motion scene file specifies the animations used in a MotionLayout.
+                A motion scene file specifies the animations used in a `MotionLayout`. \
                 This check performs various serious correctness checks in a motion scene file.
-                """.trimIndent(),
+                """,
             category = Category.CORRECTNESS,
             priority = 8,
             severity = Severity.ERROR,

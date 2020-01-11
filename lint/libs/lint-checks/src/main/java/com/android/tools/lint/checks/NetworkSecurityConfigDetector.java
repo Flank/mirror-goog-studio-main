@@ -31,7 +31,6 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableSet;
@@ -121,8 +120,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
     public static final Issue ACCEPTS_USER_CERTIFICATES =
             Issue.create(
                             "AcceptsUserCertificates",
-                            "The Network Security Configuration allows the use of user certificates in the release "
-                                    + "version of your app",
+                            "Allowing User Certificates",
                             "Allowing user certificates could allow eavesdroppers to intercept data sent by your app, '"
                                     + "which could impact the privacy of your users. Consider nesting your app's "
                                     + "`trust-anchors` inside a `<debug-overrides>` element to make sure they are only "
@@ -340,8 +338,8 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
     }
 
     /**
-     * The following checks happen in addition to the {@link handleConfigElement()} checks, but are
-     * specific to the {@code <base-config>} element.
+     * The following checks happen in addition to the {@link #handleConfigElement(XmlContext,
+     * Element, Map)} checks, but are specific to the {@code <base-config>} element.
      */
     private void handleBaseConfigElement(XmlContext context, Element node) {
         if (node.hasAttribute(ATTR_CLEARTEXT_TRAFFIC_PERMITTED)) {
@@ -354,7 +352,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                         INSECURE_CONFIGURATION,
                         node,
                         attributeLocation,
-                        INSECURE_CONFIGURATION.getBriefDescription(TextFormat.RAW),
+                        "Insecure Base Configuration",
                         fix);
             }
         }
@@ -369,7 +367,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                                     ACCEPTS_USER_CERTIFICATES,
                                     grandchild,
                                     context.getLocation(grandchild),
-                                    ACCEPTS_USER_CERTIFICATES.getBriefDescription(TextFormat.RAW));
+                                    "The Network Security Configuration allows the use of user certificates in the release version of your app");
                         }
                     }
                 }
@@ -526,7 +524,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                                     ISSUE,
                                     sourceIdAttr,
                                     context.getValueLocation(sourceIdAttr),
-                                    "Missing `src` resource.");
+                                    "Missing `src` resource");
                         }
                     }
                     // The value should be either "system", "user" or a resource Id

@@ -71,6 +71,7 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
                             Severity.WARNING,
                             IMPL)
                     .addMoreInfo(
+                            //noinspection LintImplUnexpectedDomain
                             "https://cordova.apache.org/announcements/2015/11/20/security.html")
                     .setAndroidSpecific(true);
 

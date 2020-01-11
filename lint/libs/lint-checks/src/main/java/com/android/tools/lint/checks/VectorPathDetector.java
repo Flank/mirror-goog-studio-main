@@ -78,7 +78,8 @@ public class VectorPathDetector extends ResourceXmlDetector {
                             5,
                             Severity.ERROR,
                             new Implementation(VectorPathDetector.class, Scope.RESOURCE_FILE_SCOPE))
-                    .addMoreInfo("https://code.google.com/p/android/issues/detail?id=78162");
+                    //noinspection LintImplBadUrl -- old bug, fewer digits than usual
+                    .addMoreInfo("https://issuetracker.google.com/37008268");
 
     // Arbitrary limit suggested in https://code.google.com/p/android/issues/detail?id=235219
     private static final int MAX_PATH_DATA_LENGTH = 800;

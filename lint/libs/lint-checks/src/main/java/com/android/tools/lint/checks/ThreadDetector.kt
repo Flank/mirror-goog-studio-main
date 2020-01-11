@@ -421,7 +421,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 actually called from that thread. For example, calls on methods in widgets \
                 should always be made on the UI thread.
                 """,
-            moreInfo = "http://developer.android.com/guide/components/processes-and-threads.html#Threads",
+            moreInfo = "https://developer.android.com/guide/components/processes-and-threads.html#Threads",
             category = Category.CORRECTNESS,
             priority = 6,
             severity = Severity.ERROR,

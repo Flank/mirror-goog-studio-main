@@ -99,7 +99,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Sour
                                     MergeRootFrameLayoutDetector.class,
                                     EnumSet.of(Scope.ALL_RESOURCE_FILES, Scope.JAVA_FILE)))
                     .addMoreInfo(
-                            "http://android-developers.blogspot.com/2009/03/android-layout-tricks-3-optimize-by.html");
+                            "https://android-developers.googleblog.com/2009/03/android-layout-tricks-3-optimize-by.html");
 
     /** Constructs a new {@link MergeRootFrameLayoutDetector} */
     public MergeRootFrameLayoutDetector() {}

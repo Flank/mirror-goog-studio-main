@@ -87,7 +87,7 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
     public void testBroken2() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:12: Warning: BroadcastReceivers that declare an intent-filter for SMS_DELIVER or SMS_RECEIVED must ensure that the caller has the BROADCAST_SMS permission, otherwise it is possible for malicious actors to spoof intents. [UnprotectedSMSBroadcastReceiver]\n"
+                        + "AndroidManifest.xml:12: Warning: BroadcastReceivers that declare an intent-filter for SMS_DELIVER or SMS_RECEIVED must ensure that the caller has the BROADCAST_SMS permission, otherwise it is possible for malicious actors to spoof intents [UnprotectedSMSBroadcastReceiver]\n"
                         + "        <receiver\n"
                         + "         ~~~~~~~~\n"
                         + "0 errors, 1 warnings";
