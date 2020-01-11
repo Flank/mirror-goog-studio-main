@@ -185,10 +185,10 @@ src/test/pkg/PxTest.java:22: Error: Should pass resolved pixel dimension instead
 src/test/pkg/PxTest.java:23: Error: Should pass resolved pixel dimension instead of resource id here: getResources().getDimension*(getDimension1()) [ResourceAsColor]
         setDimension2(getDimension1()); // ERROR
                       ~~~~~~~~~~~~~~~
-src/test/pkg/PxTest.java:16: Error: Expected a dimension resource id (R.color.) but received a pixel integer [ResourceType]
+src/test/pkg/PxTest.java:16: Error: Expected a dimension resource id (R.dimen.) but received a pixel integer [ResourceType]
         setDimension1(actualSize); // ERROR
                       ~~~~~~~~~~
-src/test/pkg/PxTest.java:17: Error: Expected a dimension resource id (R.color.) but received a pixel integer [ResourceType]
+src/test/pkg/PxTest.java:17: Error: Expected a dimension resource id (R.dimen.) but received a pixel integer [ResourceType]
         setDimension1(getDimension2()); // ERROR
                       ~~~~~~~~~~~~~~~
 4 errors, 0 warnings

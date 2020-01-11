@@ -437,7 +437,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     "`getResources().getColor(${argument.asSourceString()})`"
             }
             actual != null && actual.size == 1 && actual.contains(DIMENSION_MARKER_TYPE) -> {
-                "Expected a dimension resource id (`R.color.`) but received a pixel integer"
+                "Expected a dimension resource id (`R.dimen.`) but received a pixel integer"
             }
             expectedTypes.contains(DIMENSION_MARKER_TYPE) -> {
                 "Should pass resolved pixel size instead of resource id here: " +
