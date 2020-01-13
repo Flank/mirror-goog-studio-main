@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-5af1da027faceb98393406a7b13e7a19fe918449681caab2a66cf7caac9f82ee
+6b164a50fc9184e57b5c2607a58463d0dc812bbd7b7bc3c6e91f94b141fa25d3
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (com.android.build.gradle.internal.api.dsl.DslScope, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -1241,3 +1241,27 @@ com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (org.gradle.ap
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions extends com.android.builder.core.DefaultVectorDrawablesOptions
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions.<init>: com.android.build.gradle.internal.dsl.VectorDrawablesOptions ()
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions.generatedDensities: void (java.lang.String[])
+com.android.builder.signing.DefaultSigningConfig implements com.android.builder.model.SigningConfig
+com.android.builder.signing.DefaultSigningConfig.<init>: com.android.builder.signing.DefaultSigningConfig (java.lang.String)
+com.android.builder.signing.DefaultSigningConfig.debugSigningConfig: com.android.builder.signing.DefaultSigningConfig (java.io.File)
+com.android.builder.signing.DefaultSigningConfig.equals: boolean (java.lang.Object)
+com.android.builder.signing.DefaultSigningConfig.getKeyAlias: java.lang.String ()
+com.android.builder.signing.DefaultSigningConfig.getKeyPassword: java.lang.String ()
+com.android.builder.signing.DefaultSigningConfig.getName: java.lang.String ()
+com.android.builder.signing.DefaultSigningConfig.getStoreFile: java.io.File ()
+com.android.builder.signing.DefaultSigningConfig.getStorePassword: java.lang.String ()
+com.android.builder.signing.DefaultSigningConfig.getStoreType: java.lang.String ()
+com.android.builder.signing.DefaultSigningConfig.hashCode: int ()
+com.android.builder.signing.DefaultSigningConfig.isSigningReady: boolean ()
+com.android.builder.signing.DefaultSigningConfig.isV1SigningConfigured: boolean ()
+com.android.builder.signing.DefaultSigningConfig.isV1SigningEnabled: boolean ()
+com.android.builder.signing.DefaultSigningConfig.isV2SigningConfigured: boolean ()
+com.android.builder.signing.DefaultSigningConfig.isV2SigningEnabled: boolean ()
+com.android.builder.signing.DefaultSigningConfig.setKeyAlias: com.android.builder.signing.DefaultSigningConfig (java.lang.String)
+com.android.builder.signing.DefaultSigningConfig.setKeyPassword: com.android.builder.signing.DefaultSigningConfig (java.lang.String)
+com.android.builder.signing.DefaultSigningConfig.setStoreFile: com.android.builder.signing.DefaultSigningConfig (java.io.File)
+com.android.builder.signing.DefaultSigningConfig.setStorePassword: com.android.builder.signing.DefaultSigningConfig (java.lang.String)
+com.android.builder.signing.DefaultSigningConfig.setStoreType: com.android.builder.signing.DefaultSigningConfig (java.lang.String)
+com.android.builder.signing.DefaultSigningConfig.setV1SigningEnabled: void (boolean)
+com.android.builder.signing.DefaultSigningConfig.setV2SigningEnabled: void (boolean)
+com.android.builder.signing.DefaultSigningConfig.toString: java.lang.String ()

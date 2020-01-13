@@ -79,6 +79,9 @@ public class PseudoApiChangesTest {
         ImmutableSet.Builder<ClassPath.ClassInfo> builder = ImmutableSet.builder();
         builder.addAll(classPath.getTopLevelClasses("com.android.build.gradle"));
         builder.addAll(classPath.getTopLevelClassesRecursive("com.android.build.gradle.api"));
+        builder.addAll(classPath.getTopLevelClasses("com.android.builder.signing").stream()
+                .filter(classInfo -> classInfo.getSimpleName().equals("DefaultSigningConfig"))
+                .collect(Collectors.toList()));
 
         Set<String> excludedImplClasses = new HashSet<>(EXCLUDED_IMPL_CLASSES);
         for (ClassPath.ClassInfo aClass :
