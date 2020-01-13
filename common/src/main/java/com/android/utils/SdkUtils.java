@@ -327,18 +327,28 @@ public class SdkUtils {
     }
 
     /**
-     * Returns the basename of the given filename, unless it's a dot-file such as ".svn".
+     * Returns the resource name that a file with the given {@code fileName} declares.
      *
-     * @param fileName the file name to extract the basename from
-     * @return the basename (the filename without the file extension)
+     * <p>The returned string is not guaranteed to be a valid resource name, it should be checked by
+     * {@link com.android.ide.common.resources.FileResourceNameValidator} before being used. If the
+     * resource type is known, it's preferable to validate the full filename (including extension)
+     * first.
      */
     public static String fileNameToResourceName(@NonNull String fileName) {
-        int extension = fileName.indexOf('.');
-        if (extension > 0) {
-            return fileName.substring(0, extension);
-        } else {
+        int lastExtension = fileName.lastIndexOf('.');
+        if (lastExtension <= 0) {
             return fileName;
         }
+
+        if (fileName.endsWith(DOT_9PNG)) {
+            if (fileName.length() > DOT_9PNG.length()) {
+                return fileName.substring(0, fileName.length() - DOT_9PNG.length());
+            } else {
+                return fileName;
+            }
+        }
+
+        return fileName.substring(0, lastExtension);
     }
 
     public static final List<String> IMAGE_EXTENSIONS = ImmutableList.of(

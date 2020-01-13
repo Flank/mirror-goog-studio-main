@@ -302,7 +302,11 @@ public class SdkUtilsTest extends TestCase {
     public void testFileNameToResourceName() {
         assertEquals("foo", fileNameToResourceName("foo.png"));
         assertEquals("foo", fileNameToResourceName("foo.9.png"));
+        assertEquals("foo.9", fileNameToResourceName("foo.9.xml"));
         assertEquals(".foo", fileNameToResourceName(".foo"));
+        assertEquals(".foo", fileNameToResourceName(".foo.xml"));
+        assertEquals("foo.bar", fileNameToResourceName("foo.bar.xml"));
+        assertEquals(".9.png", fileNameToResourceName(".9.png"));
     }
 
     public void testIsBitmapFile() {
