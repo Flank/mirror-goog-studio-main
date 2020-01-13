@@ -258,6 +258,28 @@ coverage_report(
     ],
 )
 
+coverage_report(
+    name = "templates",
+    srcpath_include = [
+        "tools/base/wizard/template-impl/src/com/android/tools/idea/wizard/template",
+        "tools/base/wizard/template-plugin/src/com/android/tools/idea/wizard/template",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/recipe/DefaultRecipeExecutor2.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/recipe/FindReferencesExecutor2.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/recipe/RenderingContext2.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/KeystoreUtils.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/ModuleTemplateDataBuilder.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/Parameter.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/RecipeMergeUtils.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/RepositoryUrlManager.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/SourceProviderUtil.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/StringParameterValidator.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/TemplateUtils.kt",
+    ],
+    tests = [
+        "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     reports = [
