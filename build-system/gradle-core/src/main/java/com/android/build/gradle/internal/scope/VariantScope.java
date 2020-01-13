@@ -64,11 +64,6 @@ public interface VariantScope {
     @NonNull
     List<File> getProguardFiles();
 
-    /** @deprecated Use {@link ComponentPropertiesImpl#getGlobalScope()} */
-    @Deprecated
-    @NonNull
-    GlobalScope getGlobalScope();
-
     /**
      * Returns the proguardFiles explicitly specified in the build.gradle. This method differs from
      * getProguardFiles() because getProguardFiles() may include a default proguard file which
@@ -119,9 +114,6 @@ public interface VariantScope {
 
     @NonNull
     AndroidVersion getMinSdkVersion();
-
-    @NonNull
-    TransformManager getTransformManager();
 
     void addNdkDebuggableLibraryFolders(@NonNull Abi abi, @NonNull File searchPath);
 

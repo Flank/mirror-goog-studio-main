@@ -516,8 +516,6 @@ public class ModelBuilderTest {
 
         VariantScope variantScope = Mockito.mock(VariantScope.class);
         when(variantScope.getPublishingSpec()).thenReturn(PublishingSpecs.getVariantSpec(type));
-        when(variantScope.getGlobalScope()).thenReturn(globalScope);
-        when(variantScope.getTransformManager()).thenReturn(Mockito.mock(TransformManager.class));
 
         BaseVariantData variantData = Mockito.mock(BaseVariantData.class);
         when(variantData.getVariantDslInfo()).thenReturn(variantDslInfo);
@@ -539,7 +537,9 @@ public class ModelBuilderTest {
                                     variantScope,
                                     variantData,
                                     testedVariant,
-                                    dslScope);
+                                    Mockito.mock(TransformManager.class),
+                                    dslScope,
+                                    globalScope);
 
             testedVariant
                     .getTestComponents()
@@ -561,7 +561,9 @@ public class ModelBuilderTest {
                         artifacts,
                         variantScope,
                         variantData,
-                        dslScope);
+                        Mockito.mock(TransformManager.class),
+                        dslScope,
+                        globalScope);
     }
 
     private static File createApk(File variantOutputFolder, String fileName) throws IOException {

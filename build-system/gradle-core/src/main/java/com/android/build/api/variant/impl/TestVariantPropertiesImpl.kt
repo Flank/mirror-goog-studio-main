@@ -22,7 +22,9 @@ import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -37,7 +39,9 @@ internal open class TestVariantPropertiesImpl @Inject constructor(
     artifacts: BuildArtifactsHolder,
     variantScope: VariantScope,
     variantData: BaseVariantData,
-    dslScope: DslScope
+    transformManager: TransformManager,
+    dslScope: DslScope,
+    globalScope: GlobalScope
 ) : VariantPropertiesImpl(
     componentIdentity,
     variantDslInfo,
@@ -47,7 +51,9 @@ internal open class TestVariantPropertiesImpl @Inject constructor(
     artifacts,
     variantScope,
     variantData,
-    dslScope
+    transformManager,
+    dslScope,
+    globalScope
 ), TestVariantProperties {
 
     // ---------------------------------------------------------------------------------------------

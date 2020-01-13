@@ -128,7 +128,6 @@ public class VariantScopeImpl implements VariantScope {
 
     // Global Data
     @NonNull private final GlobalScope globalScope;
-    @NonNull private final TransformManager transformManager;
 
     // other
 
@@ -145,7 +144,6 @@ public class VariantScopeImpl implements VariantScope {
             @NonNull VariantPathHelper pathHelper,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
-            @NonNull TransformManager transformManager,
             @Nullable VariantPropertiesImpl testedVariantProperties) {
         this.componentIdentity = componentIdentity;
         this.variantDslInfo = variantDslInfo;
@@ -153,7 +151,6 @@ public class VariantScopeImpl implements VariantScope {
         this.pathHelper = pathHelper;
         this.artifacts = artifacts;
         this.globalScope = globalScope;
-        this.transformManager = transformManager;
         this.variantPublishingSpec =
                 PublishingSpecs.getVariantSpec(variantDslInfo.getVariantType());
         this.testedVariantProperties = testedVariantProperties;
@@ -176,12 +173,6 @@ public class VariantScopeImpl implements VariantScope {
         this.postProcessingOptions = variantDslInfo.createPostProcessingOptions(project);
 
         configureNdk();
-    }
-
-    @Override
-    @NonNull
-    public GlobalScope getGlobalScope() {
-        return globalScope;
     }
 
     private void configureNdk() {
@@ -533,12 +524,6 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public AndroidVersion getMinSdkVersion() {
         return variantDslInfo.getMinSdkVersion();
-    }
-
-    @NonNull
-    @Override
-    public TransformManager getTransformManager() {
-        return transformManager;
     }
 
     @Override

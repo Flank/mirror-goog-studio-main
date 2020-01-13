@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -77,7 +78,8 @@ public abstract class BaseVariantFactory implements VariantFactory {
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantPropertiesImpl testedVariantProperties) {
+            @NonNull VariantPropertiesImpl testedVariantProperties,
+            @NonNull TransformManager transformManager) {
         UnitTestPropertiesImpl unitTestProperties =
                 globalScope
                         .getDslScope()
@@ -93,7 +95,9 @@ public abstract class BaseVariantFactory implements VariantFactory {
                                 variantScope,
                                 variantData,
                                 testedVariantProperties,
-                                globalScope.getDslScope());
+                                transformManager,
+                                globalScope.getDslScope(),
+                                globalScope);
 
         unitTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
 
@@ -111,7 +115,8 @@ public abstract class BaseVariantFactory implements VariantFactory {
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantPropertiesImpl testedVariantProperties) {
+            @NonNull VariantPropertiesImpl testedVariantProperties,
+            @NonNull TransformManager transformManager) {
         AndroidTestPropertiesImpl androidTestProperties =
                 globalScope
                         .getDslScope()
@@ -127,7 +132,9 @@ public abstract class BaseVariantFactory implements VariantFactory {
                                 variantScope,
                                 variantData,
                                 testedVariantProperties,
-                                globalScope.getDslScope());
+                                transformManager,
+                                globalScope.getDslScope(),
+                                globalScope);
 
         androidTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
 

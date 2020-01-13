@@ -24,6 +24,7 @@ import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
@@ -54,7 +55,8 @@ class DynamicFeatureVariantFactory(
         paths: VariantPathHelper,
         artifacts: BuildArtifactsHolder,
         variantScope: VariantScope,
-        variantData: BaseVariantData
+        variantData: BaseVariantData,
+        transformManager: TransformManager
     ): VariantPropertiesImpl {
         val variantProperties = globalScope
             .dslScope
@@ -69,7 +71,9 @@ class DynamicFeatureVariantFactory(
                 artifacts,
                 variantScope,
                 variantData,
-                globalScope.dslScope
+                transformManager,
+                globalScope.dslScope,
+                globalScope
             )
 
         // create default output

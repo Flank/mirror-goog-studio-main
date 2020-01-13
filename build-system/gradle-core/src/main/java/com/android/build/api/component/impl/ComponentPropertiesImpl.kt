@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
 import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
@@ -58,7 +59,9 @@ abstract class ComponentPropertiesImpl(
     val artifacts: BuildArtifactsHolder,
     val variantScope: VariantScope,
     val variantData: BaseVariantData,
-    val dslScope: DslScope
+    val transformManager: TransformManager,
+    val dslScope: DslScope,
+    val globalScope: GlobalScope
 ): ComponentProperties, ComponentIdentity by componentIdentity {
 
     // ---------------------------------------------------------------------------------------------
@@ -79,10 +82,8 @@ abstract class ComponentPropertiesImpl(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    val globalScope: GlobalScope = variantScope.globalScope
-
+    // Move as direct delegates
     val taskContainer = variantData.taskContainer
-    val transformManager = variantScope.transformManager
 
     private val variantOutputs= mutableListOf<VariantOutputImpl>()
 

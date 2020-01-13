@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -97,7 +98,8 @@ public class TestVariantFactory extends ApplicationVariantFactory {
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull VariantScope variantScope,
-            @NonNull BaseVariantData variantData) {
+            @NonNull BaseVariantData variantData,
+            @NonNull TransformManager transformManager) {
         TestVariantPropertiesImpl variantProperties =
                 globalScope
                         .getDslScope()
@@ -112,7 +114,9 @@ public class TestVariantFactory extends ApplicationVariantFactory {
                                 artifacts,
                                 variantScope,
                                 variantData,
-                                globalScope.getDslScope());
+                                transformManager,
+                                globalScope.getDslScope(),
+                                globalScope);
 
         // create default output
         variantProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
@@ -131,7 +135,8 @@ public class TestVariantFactory extends ApplicationVariantFactory {
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantPropertiesImpl testedVariantProperties) {
+            @NonNull VariantPropertiesImpl testedVariantProperties,
+            @NonNull TransformManager transformManager) {
         throw new RuntimeException("cannot instantiate unit-test properties in test plugin");
     }
 
@@ -146,7 +151,8 @@ public class TestVariantFactory extends ApplicationVariantFactory {
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantPropertiesImpl testedVariantProperties) {
+            @NonNull VariantPropertiesImpl testedVariantProperties,
+            @NonNull TransformManager transformManager) {
         throw new RuntimeException("cannot instantiate android-test properties in test plugin");
     }
 

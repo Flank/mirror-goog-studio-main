@@ -577,6 +577,8 @@ public class VariantManager {
                 new VariantBuildArtifactsHolder(
                         project, componentIdentity.getName(), globalScope.getBuildDir());
         MutableTaskContainer taskContainer = new MutableTaskContainer();
+        TransformManager transformManager =
+                new TransformManager(project, dslScope.getIssueReporter(), recorder);
 
         // create the obsolete VariantScope
         VariantScopeImpl variantScope =
@@ -587,7 +589,6 @@ public class VariantManager {
                         pathHelper,
                         artifacts,
                         globalScope,
-                        new TransformManager(project, dslScope.getIssueReporter(), recorder),
                         null /* testedVariantProperties*/);
 
         // and the obsolete variant data
@@ -613,7 +614,8 @@ public class VariantManager {
                         pathHelper,
                         artifacts,
                         variantScope,
-                        variantData);
+                        variantData,
+                        transformManager);
 
         if (variantDslInfo.isLegacyMultiDexMode()) {
             String multiDexDependency =
@@ -828,6 +830,8 @@ public class VariantManager {
                 new VariantBuildArtifactsHolder(
                         project, componentIdentity.getName(), globalScope.getBuildDir());
         MutableTaskContainer taskContainer = new MutableTaskContainer();
+        TransformManager transformManager =
+                new TransformManager(project, dslScope.getIssueReporter(), recorder);
 
         VariantScopeImpl variantScope =
                 new VariantScopeImpl(
@@ -837,7 +841,6 @@ public class VariantManager {
                         pathHelper,
                         artifacts,
                         globalScope,
-                        new TransformManager(project, dslScope.getIssueReporter(), recorder),
                         testedVariantProperties);
 
         // create the internal storage for this variant.
@@ -867,7 +870,8 @@ public class VariantManager {
                             artifacts,
                             variantScope,
                             testVariantData,
-                            testedVariantProperties);
+                            testedVariantProperties,
+                            transformManager);
 
             component.executePropertiesActions(androidTestProperties);
 
@@ -884,7 +888,8 @@ public class VariantManager {
                             artifacts,
                             variantScope,
                             testVariantData,
-                            testedVariantProperties);
+                            testedVariantProperties,
+                            transformManager);
 
             // also execute the delayed actions registered on the Variant object itself
             component.executePropertiesActions(unitTestProperties);

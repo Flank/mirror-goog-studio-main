@@ -68,10 +68,8 @@ class VariantPropertiesImplTest {
     fun setup() {
         MockitoAnnotations.initMocks(this)
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        Mockito.`when`(variantScope.globalScope).thenReturn(globalScope)
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(globalScope.projectOptions).thenReturn(Mockito.mock(ProjectOptions::class.java))
-        Mockito.`when`(variantScope.transformManager).thenReturn(Mockito.mock(TransformManager::class.java))
 
         Mockito.`when`(variantData.taskContainer).thenReturn(MutableTaskContainer())
 
@@ -84,8 +82,9 @@ class VariantPropertiesImplTest {
             artifacts,
             variantScope,
             variantData,
-            dslScope)
-
+            Mockito.mock(TransformManager::class.java),
+            dslScope,
+            globalScope)
     }
 
     @Test
@@ -113,7 +112,9 @@ class VariantPropertiesImplTest {
             artifacts,
             variantScope,
             variantData,
-            dslScope) {
+            Mockito.mock(TransformManager::class.java),
+            dslScope,
+            globalScope) {
             @Suppress("UNCHECKED_CAST")
             override val applicationId: Property<String> = Mockito.mock(Property::class.java) as Property<String>
         }

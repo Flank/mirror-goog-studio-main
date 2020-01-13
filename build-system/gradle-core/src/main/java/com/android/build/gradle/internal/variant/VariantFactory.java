@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
@@ -74,7 +75,8 @@ public interface VariantFactory {
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull VariantScope variantScope,
-            @NonNull BaseVariantData variantData);
+            @NonNull BaseVariantData variantData,
+            @NonNull TransformManager transformManager);
 
     @NonNull
     UnitTestPropertiesImpl createUnitTestProperties(
@@ -86,7 +88,8 @@ public interface VariantFactory {
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantPropertiesImpl testedVariantProperties);
+            @NonNull VariantPropertiesImpl testedVariantProperties,
+            @NonNull TransformManager transformManager);
 
     @NonNull
     AndroidTestPropertiesImpl createAndroidTestProperties(
@@ -98,7 +101,8 @@ public interface VariantFactory {
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantPropertiesImpl testedVariantProperties);
+            @NonNull VariantPropertiesImpl testedVariantProperties,
+            @NonNull TransformManager transformManager);
 
     @NonNull
     BaseVariantData createVariantData(

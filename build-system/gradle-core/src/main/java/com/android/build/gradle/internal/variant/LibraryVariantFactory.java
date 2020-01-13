@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
@@ -75,7 +76,8 @@ public class LibraryVariantFactory extends BaseVariantFactory {
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull VariantScope variantScope,
-            @NonNull BaseVariantData variantData) {
+            @NonNull BaseVariantData variantData,
+            @NonNull TransformManager transformManager) {
         LibraryVariantPropertiesImpl variantProperties =
                 globalScope
                         .getDslScope()
@@ -90,7 +92,9 @@ public class LibraryVariantFactory extends BaseVariantFactory {
                                 artifacts,
                                 variantScope,
                                 variantData,
-                                globalScope.getDslScope());
+                                transformManager,
+                                globalScope.getDslScope(),
+                                globalScope);
 
         // create default output
         String name =

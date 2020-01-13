@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -96,7 +97,8 @@ public class ApplicationVariantFactory extends BaseVariantFactory {
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull VariantScope variantScope,
-            @NonNull BaseVariantData variantData) {
+            @NonNull BaseVariantData variantData,
+            @NonNull TransformManager transformManager) {
         ApplicationVariantPropertiesImpl variantProperties =
                 globalScope
                         .getDslScope()
@@ -111,7 +113,9 @@ public class ApplicationVariantFactory extends BaseVariantFactory {
                                 artifacts,
                                 variantScope,
                                 variantData,
-                                globalScope.getDslScope());
+                                transformManager,
+                                globalScope.getDslScope(),
+                                globalScope);
 
         computeOutputs(variantProperties, (ApplicationVariantData) variantData, true);
 
