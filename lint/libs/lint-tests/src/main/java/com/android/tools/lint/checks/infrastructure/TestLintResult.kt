@@ -92,22 +92,23 @@ class TestLintResult internal constructor(
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
         val actual = transformer.transform(describeOutput(expectedException))
+        val expected = expectedText.replace('$', '＄')
 
-        if (actual.trim() != expectedText.trimIndent().trim()) {
+        if (actual.trim() != expected.trimIndent().trim()) {
             // See if it's a Windows path issue
-            if (actual == expectedText.replace(File.separatorChar, '/')) {
+            if (actual == expected.replace(File.separatorChar, '/')) {
                 assertEquals(
                     "The expected lint output does not match, but it *does* " +
                             "match when Windows file separators (\\) are replaced by Unix ones.\n" +
                             "Make sure your lint detector calls LintClient.getDisplayPath(File) " +
                             "instead of displaying paths directly (in unit tests they will then " +
                             "be converted to forward slashes for test output stability.)\n",
-                    expectedText,
+                    expected,
                     actual
                 )
             }
 
-            assertEquals(expectedText.trimIndent(), actual.trimIndent())
+            assertEquals(expected.trimIndent(), actual.trimIndent())
         }
         cleanup()
         return this
@@ -153,7 +154,7 @@ class TestLintResult internal constructor(
 
             writer.toString()
         } else {
-            output
+            output.replace('$', '＄')
         }
     }
 

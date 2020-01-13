@@ -478,8 +478,8 @@ class MissingClassDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                AndroidManifest.xml:21: Error: This inner class should be static (test.pkg.Foo${"$"}Baz) [Instantiatable]
-                            android:name=".Foo${"$"}Baz"
+                AndroidManifest.xml:21: Error: This inner class should be static (test.pkg.Foo＄Baz) [Instantiatable]
+                            android:name=".Foo＄Baz"
                                           ~~~~~~~~
                 1 errors, 0 warnings
                 """
@@ -529,8 +529,8 @@ class MissingClassDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                AndroidManifest.xml:21: Error: This inner class should be static (test.pkg.Foo${"$"}Baz) [Instantiatable]
-                            android:name=".Foo${"$"}Baz"
+                AndroidManifest.xml:21: Error: This inner class should be static (test.pkg.Foo＄Baz) [Instantiatable]
+                            android:name=".Foo＄Baz"
                                           ~~~~~~~~
                 1 errors, 0 warnings
                 """
@@ -652,7 +652,7 @@ class MissingClassDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                AndroidManifest.xml:5: Warning: Use '${'$'}' instead of '.' for inner classes; replace ".Foo.Bar" with ".Foo${"$"}Bar" [InnerclassSeparator]
+                AndroidManifest.xml:5: Warning: Use '＄' instead of '.' for inner classes; replace ".Foo.Bar" with ".Foo＄Bar" [InnerclassSeparator]
                             android:name=".Foo.Bar"
                                           ~~~~~~~~
                 0 errors, 1 warnings
@@ -660,10 +660,10 @@ class MissingClassDetectorTest : AbstractCheckTest() {
             )
             .expectFixDiffs(
                 """
-                Fix for AndroidManifest.xml line 5: Replace with .Foo${"$"}Bar:
+                Fix for AndroidManifest.xml line 5: Replace with .Foo＄Bar:
                 @@ -5 +5
                 -             android:name=".Foo.Bar"
-                +             android:name=".Foo${"$"}Bar"
+                +             android:name=".Foo＄Bar"
                 """
             )
     }
@@ -717,7 +717,7 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                     "res/layout/user_prefs_fragment.xml",
                     """
                     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-                        class="course.examples.DataManagement.PreferenceActivity.ViewAndUpdatePreferencesActivity${"$"}UserPreferenceFragment"
+                        class="course.examples.DataManagement.PreferenceActivity.ViewAndUpdatePreferencesActivity＄UserPreferenceFragment"
                         android:id="@+id/userPreferenceFragment">
                     </fragment>
                     """
@@ -780,10 +780,10 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                     """
                     <preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
                     <header
-                      android:fragment="foo.bar.MyFragment${"$"}Missing"
+                      android:fragment="foo.bar.MyFragment＄Missing"
                       android:summary="@string/summary"
                       android:title="@string/title" />
-                    <header android:fragment="test.pkg.FragmentTest${"$"}Fragment1" />
+                    <header android:fragment="test.pkg.FragmentTest＄Fragment1" />
                     <header android:fragment="test.pkg.FragmentTest.Fragment1" />
                     </preference-headers>
                     """
@@ -802,10 +802,10 @@ class MissingClassDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                res/xml/prefs_headers.xml:3: Error: Class referenced in the preference header file, foo.bar.MyFragment${"$"}Missing, was not found in the project or the libraries [MissingClass]
-                  android:fragment="foo.bar.MyFragment${"$"}Missing"
+                res/xml/prefs_headers.xml:3: Error: Class referenced in the preference header file, foo.bar.MyFragment＄Missing, was not found in the project or the libraries [MissingClass]
+                  android:fragment="foo.bar.MyFragment＄Missing"
                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~
-                res/xml/prefs_headers.xml:7: Warning: Use '${'$'}' instead of '.' for inner classes; replace "test.pkg.FragmentTest.Fragment1" with "test.pkg.FragmentTest${"$"}Fragment1" [InnerclassSeparator]
+                res/xml/prefs_headers.xml:7: Warning: Use '＄' instead of '.' for inner classes; replace "test.pkg.FragmentTest.Fragment1" with "test.pkg.FragmentTest＄Fragment1" [InnerclassSeparator]
                 <header android:fragment="test.pkg.FragmentTest.Fragment1" />
                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 1 errors, 1 warnings
@@ -813,10 +813,10 @@ class MissingClassDetectorTest : AbstractCheckTest() {
             )
             .expectFixDiffs(
                 """
-                Fix for res/xml/prefs_headers.xml line 7: Replace with test.pkg.FragmentTest${"$"}Fragment1:
+                Fix for res/xml/prefs_headers.xml line 7: Replace with test.pkg.FragmentTest＄Fragment1:
                 @@ -7 +7
                 - <header android:fragment="test.pkg.FragmentTest.Fragment1" />
-                + <header android:fragment="test.pkg.FragmentTest${"$"}Fragment1" />
+                + <header android:fragment="test.pkg.FragmentTest＄Fragment1" />
                 """
             )
     }
@@ -835,7 +835,7 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                 android:label="@string/app_name"
                 android:theme="@style/AppTheme" >
                 <activity
-                    android:name=".Foo${"$"}Bar"
+                    android:name=".Foo＄Bar"
                     android:label="@string/app_name" >
                     <intent-filter>
                         <action android:name="android.intent.action.MAIN" />
@@ -843,7 +843,7 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                     </intent-filter>
                 </activity>
                 <activity
-                    android:name=".Foo${"$"}Baz"
+                    android:name=".Foo＄Baz"
                     android:label="@string/app_name" >
                 </activity>
             </application>

@@ -130,7 +130,7 @@ class AssertDetectorTest : AbstractCheckTest() {
                     assert(!bool1 || bool2 == bool1)
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/AssertTest.kt:14: Warning: Assertions are never enabled in Android. Use BuildConfig.DEBUG conditional checks instead [Assert]
-                    assert(int != bool1) { "This is ${"$"}int and x2=${"$"}bool2" } // ERROR
+                    assert(int != bool1) { "This is ＄int and x2=＄bool2" } // ERROR
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/AssertTest.kt:18: Warning: Assertions are never enabled in Android. Use BuildConfig.DEBUG conditional checks instead [Assert]
                     assert(expensive()) // WARN
@@ -165,8 +165,8 @@ class AssertDetectorTest : AbstractCheckTest() {
             +         if (BuildConfig.DEBUG && !(!bool1 || bool2 == bool1)) { error("Assertion failed") }
             Fix for src/test/pkg/AssertTest.kt line 14: Replace with BuildConfig.DEBUG check:
             @@ -14 +14
-            -         assert(int != bool1) { "This is ${"$"}int and x2=${"$"}bool2" } // ERROR
-            +         if (BuildConfig.DEBUG && int == bool1) { error("This is ${"$"}int and x2=${"$"}bool2") } // ERROR
+            -         assert(int != bool1) { "This is ＄int and x2=＄bool2" } // ERROR
+            +         if (BuildConfig.DEBUG && int == bool1) { error("This is ＄int and x2=＄bool2") } // ERROR
             Fix for src/test/pkg/AssertTest.kt line 18: Replace with BuildConfig.DEBUG check:
             @@ -18 +18
             -         assert(expensive()) // WARN
@@ -263,7 +263,7 @@ class AssertDetectorTest : AbstractCheckTest() {
                     fun testNotExpensive(int: Int, bool1: Boolean, bool2: Boolean) {
                         assert(int < 5)
                         assert(!bool1 || bool2 == bool1)
-                        assert(int != bool1) { "This is ${"$"}int and x2=${"$"}bool2" } // ERROR
+                        assert(int != bool1) { "This is ＄int and x2=＄bool2" } // ERROR
                     }
 
                     fun testExpensive() {

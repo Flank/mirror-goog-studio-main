@@ -76,7 +76,9 @@ public class TestFile {
     public TestFile() {}
 
     public TestFile withSource(@NonNull String source) {
-        contents = source;
+        // Allow ＄ instead of $ in source files to avoid having to escape $'s as ${"$"}
+        // in Kotlin which is a mouthful and makes $-heavy code unreadable.
+        contents = source.replace('＄', '$');
         return this;
     }
 
@@ -736,7 +738,7 @@ public class TestFile {
         @Override
         @NonNull
         public String getContents() {
-            contents = stringBuilder.toString();
+            contents = stringBuilder.toString().replace('＄', '$');
             return contents;
         }
 

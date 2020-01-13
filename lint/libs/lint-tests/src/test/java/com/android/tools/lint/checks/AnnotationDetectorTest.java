@@ -37,7 +37,7 @@ public class AnnotationDetectorTest extends AbstractCheckTest {
         assertEquals(
                 ""
                         + "src/test/pkg/WrongAnnotation.java:9: Error: The @SuppressLint annotation cannot be used on a local variable with the lint check 'NewApi': move out to the surrounding method [LocalSuppress]\n"
-                        + "    public static void foobar(View view, @SuppressLint(\"NewApi\") int foo) { // Invalid: class-file check\n"
+                        + "    public static void foobar(View view, @SuppressLint(\"NewApi\") int foo) { // $ Invalid: class-file check\n"
                         + "                                         ~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "src/test/pkg/WrongAnnotation.java:10: Error: The @SuppressLint annotation cannot be used on a local variable with the lint check 'NewApi': move out to the surrounding method [LocalSuppress]\n"
                         + "        @SuppressLint(\"NewApi\") // Invalid\n"
@@ -66,7 +66,7 @@ public class AnnotationDetectorTest extends AbstractCheckTest {
                                         + "public class WrongAnnotation {\n"
                                         + "\n"
                                         + "    @SuppressLint(\"NewApi\") // Valid: class-file check on method\n"
-                                        + "    public static void foobar(View view, @SuppressLint(\"NewApi\") int foo) { // Invalid: class-file check\n"
+                                        + "    public static void foobar(View view, @SuppressLint(\"NewApi\") int foo) { // $ Invalid: class-file check\n"
                                         + "        @SuppressLint(\"NewApi\") // Invalid\n"
                                         + "        boolean a;\n"
                                         + "        @SuppressLint({\"SdCardPath\", \"NewApi\"}) // Invalid: class-file based check on local variable\n"

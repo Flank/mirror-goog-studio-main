@@ -60,12 +60,12 @@ class DateFormatDetectorTest : AbstractCheckTest() {
                         String.format(Locale.getDefault(), "OK: %f", 1.0f);
                         String.format("OK: %x %A %c %b %B %h %n %%", 1, 2, 'c', true, false, 5);
                         String.format("WRONG: %f", 1.0f); // Implies locale
-                        String.format("WRONG: %1${"$"}f", 1.0f);
+                        String.format("WRONG: %1＄f", 1.0f);
                         String.format("WRONG: %e", 1.0f);
                         String.format("WRONG: %d", 1.0f);
                         String.format("WRONG: %g", 1.0f);
                         String.format("WRONG: %g", 1.0f);
-                        String.format("WRONG: %1${"$"}tm %1${"$"}te,%1${"$"}tY",
+                        String.format("WRONG: %1＄tm %1＄te,%1＄tY",
                                 new GregorianCalendar(2012, GregorianCalendar.AUGUST, 27));
                     }
 
@@ -118,7 +118,7 @@ class DateFormatDetectorTest : AbstractCheckTest() {
                         val s1 =  DateTimeFormatter.ofPattern("MMMM d, YYYY") // ERROR
                         val s2 =  SimpleDateFormat("MMMM d, YYYY") // ERROR
                         val s3 = DateTimeFormatter.ofPattern(""${'"'}dd-MM-YYYY""${'"'}) // ERROR
-                        val s4 = DateTimeFormatter.ofPattern("'${"$"}something'dd-MM-YYYY") // ERROR
+                        val s4 = DateTimeFormatter.ofPattern("'＄something'dd-MM-YYYY") // ERROR
                         val s5 = DateTimeFormatter.ofPattern("'\u1234'dd-MM-YYYY") // ERROR
                         val constant = "dd-MM-YYYY"
                         val s6 = DateTimeFormatter.ofPattern(constant) // ERROR
@@ -142,7 +142,7 @@ class DateFormatDetectorTest : AbstractCheckTest() {
                     val s3 = DateTimeFormatter.ofPattern(""${'"'}dd-MM-YYYY""${'"'}) // ERROR
                                                                   ~~~~
             src/test/pkg/DateFormatTest.kt:32: Warning: DateFormat character 'Y' in YYYY is the week-era-year; did you mean 'y' ? [WeekBasedYear]
-                    val s4 = DateTimeFormatter.ofPattern("'${"$"}something'dd-MM-YYYY") // ERROR
+                    val s4 = DateTimeFormatter.ofPattern("'＄something'dd-MM-YYYY") // ERROR
                                                          ~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/DateFormatTest.kt:33: Warning: DateFormat character 'Y' in YYYY is the week-era-year; did you mean 'y' ? [WeekBasedYear]
                     val s5 = DateTimeFormatter.ofPattern("'\u1234'dd-MM-YYYY") // ERROR

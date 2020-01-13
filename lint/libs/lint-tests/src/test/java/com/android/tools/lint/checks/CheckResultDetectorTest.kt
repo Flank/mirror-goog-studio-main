@@ -258,11 +258,11 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
 
                     class SomeClass {
                         @CheckResult
-                        fun label(a: Any): String = "value: ${"$"}a"
+                        fun label(a: Any): String = "value: ＄a"
 
                         companion object {
                             @CheckResult
-                            fun label(a: Any): String = "value: ${"$"}a"
+                            fun label(a: Any): String = "value: ＄a"
 
                             fun create(): SomeClass {
                                 return SomeClass()

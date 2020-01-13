@@ -26,6 +26,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestFiles.source
 import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.CHECK_URL
+import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.DOLLAR_STRINGS
 import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.EXISTING_LINT_CONSTANTS
 import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.ID
 import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.PSI_COMPARE
@@ -47,7 +48,8 @@ class LintDetectorDetectorTest {
         CHECK_URL,
         TEXT_FORMAT,
         EXISTING_LINT_CONSTANTS,
-        UNEXPECTED_DOMAIN
+        UNEXPECTED_DOMAIN,
+        DOLLAR_STRINGS
     )
 
     @Test
@@ -393,6 +395,9 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyJavaLintDetector.java:34: Warning: Use Scope.JAVA_AND_RESOURCE_FILES instead [LintImplUseExistingConstants]
                                     new Implementation(MyJavaLintDetector.class, EnumSet.of(Scope.RESOURCE_FILE, Scope.JAVA_FILE)))
                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                src/test/pkg/MyKotlinLintDetectorTest.kt:22: Error: In unit tests, use the fullwidth dollar sign, ＄, instead of ＄, to avoid having to use cumbersome escapes. Lint will treat a ＄ as a ＄. [LintImplDollarEscapes]
+                                    println("Value=＄{"＄"}")
+                                                   ~~~~~~
                 src/test/pkg/MyJavaLintDetector.java:53: Error: Don't compare PsiElements with equals, use isEquivalentTo(PsiElement) instead [LintImplPsiEquals]
                         if (element1.equals(element2)) { }
                             ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -447,7 +452,7 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyKotlinLintDetector.kt:37: Error: Don't call PsiField#getInitializer(); you must use UAST instead. If you don't have a UField call UastFacade.getInitializerBody(field) [LintImplUseUast]
                         field.initializer // ERROR - must use UAST
                         ~~~~~~~~~~~~~~~~~
-                25 errors, 9 warnings
+                26 errors, 9 warnings
                 """
             )
             .expectFixDiffs(
@@ -476,6 +481,10 @@ class LintDetectorDetectorTest {
                 @@ -34 +34
                 -                     new Implementation(MyJavaLintDetector.class, EnumSet.of(Scope.RESOURCE_FILE, Scope.JAVA_FILE)))
                 +                     new Implementation(MyJavaLintDetector.class, Scope.JAVA_AND_RESOURCE_FILES))
+                Fix for src/test/pkg/MyKotlinLintDetectorTest.kt line 22: Replace with ＄:
+                @@ -22 +22
+                -                     println("Value=＄{"＄"}")
+                +                     println("Value=＄")
                 Fix for src/test/pkg/MyKotlinLintDetector.kt line 65: Delete:
                 @@ -65 +65
                 -                     ""${'"'}.trimIndent(),

@@ -62,9 +62,10 @@ class StudioIssueRegistry : IssueRegistry() {
         LintDetectorDetector.ID,
         LintDetectorDetector.PSI_COMPARE,
         LintDetectorDetector.CHECK_URL,
-        LintDetectorDetector.UNEXPECTED_DOMAIN,
+        LintDetectorDetector.DOLLAR_STRINGS,
         LintDetectorDetector.TEXT_FORMAT,
         LintDetectorDetector.TRIM_INDENT,
+        LintDetectorDetector.UNEXPECTED_DOMAIN,
         LintDetectorDetector.USE_KOTLIN,
         LintDetectorDetector.USE_UAST
     )

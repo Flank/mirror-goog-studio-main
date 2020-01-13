@@ -316,7 +316,7 @@ class CustomRuleTest {
                 )
                 assertThat(it).contains(
                     "The class loading issue is " +
-                            "com/android/tools/lint/detector/api/Detector\$JavaScanner:"
+                            "com/android/tools/lint/detector/api/Detector＄JavaScanner:"
                 )
                 assertThat(it).contains("ClassLoader.defineClass1(ClassLoader.java:")
                 assertThat(it).contains("0 errors, 1 warnings")
@@ -365,7 +365,7 @@ class CustomRuleTest {
                 )
                 assertThat(it).contains(
                     "The class loading issue is " +
-                            "com/android/tools/lint/detector/api/Detector\$JavaPsiScanner:"
+                            "com/android/tools/lint/detector/api/Detector＄JavaPsiScanner:"
                 )
                 assertThat(it).contains("ClassLoader.defineClass1(ClassLoader.java:")
                 assertThat(it).contains("0 errors, 1 warnings")

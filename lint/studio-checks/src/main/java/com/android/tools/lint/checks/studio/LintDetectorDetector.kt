@@ -35,9 +35,11 @@ import com.android.tools.lint.detector.api.isKotlin
 import com.android.utils.usLocaleCapitalize
 import com.intellij.psi.CommonClassNames.JAVA_LANG_STRING
 import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
+import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.PsiType
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
@@ -248,7 +250,33 @@ class LintDetectorDetector : Detector(), UastScanner {
                     args[0]
                 val string = getString(source)
                 checkTrimIndent(source, isUnitTest = true)
+                if (string.contains("$") && isKotlin(testFile.sourcePsi)) {
+                    checkDollarSubstitutions(source)
+                }
             }
+        }
+
+        private fun checkDollarSubstitutions(source: UExpression) {
+            source.sourcePsi?.accept(object : PsiRecursiveElementVisitor() {
+                override fun visitElement(element: PsiElement) {
+                    val text = element.text
+                    var string = true
+                    var index = text.indexOf(DOLLAR_STRING)
+                    if (index == -1) {
+                        string = false
+                        index = text.indexOf(DOLLAR_CHAR)
+                    }
+                    if (index != -1) {
+                        val fix = LintFix.create().replace().text(if (string) DOLLAR_STRING else DOLLAR_CHAR).with("＄").build()
+                        val location = context.getRangeLocation(element, index, 6)
+                        context.report(DOLLAR_STRINGS, source, location,
+                            "In unit tests, use the fullwidth dollar sign, `＄`, instead of `\$`, to avoid having to use cumbersome escapes. Lint will treat a `＄` as a `\$`.",
+                            fix)
+                        return
+                    }
+                    super.visitElement(element)
+                }
+            })
         }
 
         private fun checkEnumSet(node: UCallExpression) {
@@ -957,6 +985,9 @@ class LintDetectorDetector : Detector(), UastScanner {
         private const val CLASS_PSI_JVM_MEMBER = "com.intellij.psi.PsiJvmMember"
         private const val CLASS_U_ELEMENT = "org.jetbrains.uast.UElement"
 
+        private const val DOLLAR_STRING = "\${\"$\"}"
+        private const val DOLLAR_CHAR = "\${'$'}"
+
         // TODO: use character classes for java identifier part
         private val CAMELCASE_PATTERN = Regex("[a-zA-Z]+[a-z]+[A-Z][a-z]+")
         private val CALL_PATTERN = Regex("[a-zA-Z().=]+\\(.*\\)")
@@ -1165,6 +1196,33 @@ class LintDetectorDetector : Detector(), UastScanner {
                     Kotlin. The second you add in a .trimIndent() on the string, the syntax \
                     highlighting goes away. For test files you can instead call ".indented()" \
                     on the test file builder to get it to indent the string.
+                    """,
+                category = LINT_CATEGORY,
+                priority = 4,
+                severity = Severity.ERROR,
+                implementation = IMPLEMENTATION
+            )
+
+        /** Using ${"$"} or ${'$'} in Kotlin string literals in lint unit tests */
+        val DOLLAR_STRINGS =
+            Issue.create(
+                id = "LintImplDollarEscapes",
+                briefDescription = "Using Dollar Escapes",
+                //noinspection LintImplDollarEscapes
+                explanation = """
+                    Instead of putting ${"$"}{"$"} in your Kotlin raw string literals \
+                    you can simply use ＄. This looks like the dollar sign but is instead \
+                    the full width dollar sign, U+FF04. And this character does not need \
+                    to be escaped in Kotlin raw strings, since it does not start a \
+                    string template.
+
+                    Lint will automatically convert references to ＄ in unit test files into \
+                    a real dollar sign, and when pulling results and error messages out of \
+                    lint, the dollar sign back into the full width dollar sign.
+
+                    That means you can use ＄ everywhere instead of ${"$"}{"$"}, which makes \
+                    the test strings more readable -- especially ${"$"}-heavy code such as \
+                    references to inner classes.
                     """,
                 category = LINT_CATEGORY,
                 priority = 4,

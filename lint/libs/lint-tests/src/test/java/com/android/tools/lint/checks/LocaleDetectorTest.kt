@@ -38,7 +38,7 @@ class LocaleDetectorTest : AbstractCheckTest() {
                     String.format("WRONG: %f", 1.0f); // Implies locale
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/LocaleTest.java:21: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
-                    String.format("WRONG: %1${"$"}f", 1.0f);
+                    String.format("WRONG: %1＄f", 1.0f);
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/LocaleTest.java:22: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
                     String.format("WRONG: %e", 1.0f);
@@ -53,7 +53,7 @@ class LocaleDetectorTest : AbstractCheckTest() {
                     String.format("WRONG: %g", 1.0f);
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/LocaleTest.java:26: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
-                    String.format("WRONG: %1${"$"}tm %1${"$"}te,%1${"$"}tY",
+                    String.format("WRONG: %1＄tm %1＄te,%1＄tY",
                     ^
             0 errors, 9 warnings
             """
@@ -81,12 +81,12 @@ class LocaleDetectorTest : AbstractCheckTest() {
                             String.format(Locale.getDefault(), "OK: %f", 1.0f);
                             String.format("OK: %x %A %c %b %B %h %n %%", 1, 2, 'c', true, false, 5);
                             String.format("WRONG: %f", 1.0f); // Implies locale
-                            String.format("WRONG: %1${"$"}f", 1.0f);
+                            String.format("WRONG: %1＄f", 1.0f);
                             String.format("WRONG: %e", 1.0f);
                             String.format("WRONG: %d", 1.0f);
                             String.format("WRONG: %g", 1.0f);
                             String.format("WRONG: %g", 1.0f);
-                            String.format("WRONG: %1${"$"}tm %1${"$"}te,%1${"$"}tY",
+                            String.format("WRONG: %1＄tm %1＄te,%1＄tY",
                                     new GregorianCalendar(2012, GregorianCalendar.AUGUST, 27));
                         }
 

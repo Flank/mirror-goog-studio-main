@@ -129,8 +129,9 @@ public class LintFixVerifier {
     public LintFixVerifier expectFixDiffs(@NonNull String expected) {
         StringBuilder diff = new StringBuilder(100);
         checkFixes(null, null, diff);
-        String actual = StringsKt.trimIndent(diff.toString().replace("\r\n", "\n"));
-        expected = StringsKt.trimIndent(expected);
+        String actual =
+                StringsKt.trimIndent(diff.toString().replace("\r\n", "\n")).replace('$', '＄');
+        expected = StringsKt.trimIndent(expected).replace('$', '＄');
         if (!expected.equals(actual)) {
             // Until 3.2 canary 10 the line numbers were off by one; try adjusting
             if (!bumpFixLineNumbers(expected).trim().equals(actual.trim())) {
