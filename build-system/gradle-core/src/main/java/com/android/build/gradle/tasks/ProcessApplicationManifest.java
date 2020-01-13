@@ -610,7 +610,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             super.handleProvider(taskProvider);
             component.getTaskContainer().setProcessManifestTask(taskProvider);
 
-            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
+            BuildArtifactsHolder artifacts = component.getArtifacts();
             artifacts.producesDir(
                     InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
                     taskProvider,
@@ -628,7 +628,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     taskProvider,
                     ProcessApplicationManifest::getMergeBlameFile,
                     "manifest-merger-blame-"
-                            + getVariantScope().getVariantDslInfo().getBaseName()
+                            + component.getVariantDslInfo().getBaseName()
                             + "-report.txt");
 
             artifacts.producesDir(
@@ -643,18 +643,16 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     ProcessApplicationManifest::getBundleManifestOutputDirectory,
                     "bundle-manifest");
 
-            getVariantScope()
+            component
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE,
                             taskProvider,
                             ProcessApplicationManifest::getReportFile,
-                            FileUtils.join(
-                                            getVariantScope().getGlobalScope().getOutputsDir(),
-                                            "logs")
+                            FileUtils.join(component.getGlobalScope().getOutputsDir(), "logs")
                                     .getAbsolutePath(),
                             "manifest-merger-"
-                                    + getVariantScope().getVariantDslInfo().getBaseName()
+                                    + component.getVariantDslInfo().getBaseName()
                                     + "-report.txt");
         }
 
@@ -666,7 +664,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             final VariantScope variantScope = component.getVariantScope();
             final VariantDslInfo variantDslInfo = component.getVariantDslInfo();
             final VariantSources variantSources = component.getVariantSources();
-            final GlobalScope globalScope = variantScope.getGlobalScope();
+            final GlobalScope globalScope = component.getGlobalScope();
 
             VariantType variantType = component.getVariantType();
 

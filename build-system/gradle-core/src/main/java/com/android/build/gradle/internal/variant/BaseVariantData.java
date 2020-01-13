@@ -640,11 +640,6 @@ public abstract class BaseVariantData {
     }
 
     @NonNull
-    public VariantPathHelper getPaths() {
-        return paths;
-    }
-
-    @NonNull
     public BuildArtifactsHolder getArtifacts() {
         return artifacts;
     }

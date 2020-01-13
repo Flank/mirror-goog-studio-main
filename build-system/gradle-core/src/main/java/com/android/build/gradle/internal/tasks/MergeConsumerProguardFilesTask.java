@@ -98,7 +98,7 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
                 @NonNull TaskProvider<? extends MergeConsumerProguardFilesTask> taskProvider) {
             super.handleProvider(taskProvider);
 
-            getVariantScope()
+            component
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE.INSTANCE,
@@ -118,7 +118,7 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
             task.isDynamicFeature = component.getVariantType().isDynamicFeature();
 
             task.getConsumerProguardFiles()
-                    .from(getVariantScope().getConsumerProguardFilesForFeatures());
+                    .from(component.getVariantScope().getConsumerProguardFilesForFeatures());
 
             ConfigurableFileCollection inputFiles =
                     project.files(

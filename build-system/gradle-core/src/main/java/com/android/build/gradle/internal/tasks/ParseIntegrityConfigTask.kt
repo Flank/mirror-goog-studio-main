@@ -119,7 +119,7 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ParseIntegrityConfigTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.APP_INTEGRITY_CONFIG,
                 taskProvider,
                 ParseIntegrityConfigTask::appIntegrityConfigProto,

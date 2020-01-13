@@ -111,7 +111,7 @@ class NamespacedResourcesTaskManager(
            )
        )
         if (packageOutputType != null) {
-            componentProperties.variantScope.artifacts.republish(InternalArtifactType.PROCESSED_RES, packageOutputType)
+            componentProperties.artifacts.republish(InternalArtifactType.PROCESSED_RES, packageOutputType)
         }
     }
 
@@ -119,7 +119,7 @@ class NamespacedResourcesTaskManager(
             packageOutputType: SingleArtifactType<Directory>?) {
         taskFactory.register(ProcessAndroidAppResourcesTask.CreationAction(componentProperties))
         if (packageOutputType != null) {
-            componentProperties.variantScope.artifacts.republish(InternalArtifactType.PROCESSED_RES, packageOutputType)
+            componentProperties.artifacts.republish(InternalArtifactType.PROCESSED_RES, packageOutputType)
         }
     }
 

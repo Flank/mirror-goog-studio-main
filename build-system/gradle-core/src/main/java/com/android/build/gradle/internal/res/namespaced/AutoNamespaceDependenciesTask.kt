@@ -433,27 +433,27 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out AutoNamespaceDependenciesTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.NAMESPACED_CLASSES_JAR,
                 taskProvider,
                 AutoNamespaceDependenciesTask::outputClassesJar,
                 "namespaced-classes.jar"
             )
 
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR,
                 taskProvider,
                 AutoNamespaceDependenciesTask::outputRClassesJar,
                 "namespaced-R.jar"
             )
 
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
                 taskProvider,
                 AutoNamespaceDependenciesTask::outputStaticLibraries
             )
 
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.NAMESPACED_MANIFESTS,
                 taskProvider,
                 AutoNamespaceDependenciesTask::outputRewrittenManifests
@@ -466,25 +466,25 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.rFiles = variantScope.variantDependencies.getArtifactCollection(
+            task.rFiles = component.variantDependencies.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,
                 ArtifactScope.EXTERNAL,
                 ArtifactType.DEFINED_ONLY_SYMBOL_LIST
             )
 
-            task.jarFiles = variantScope.variantDependencies.getArtifactCollection(
+            task.jarFiles = component.variantDependencies.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,
                 ArtifactScope.EXTERNAL,
                 ArtifactType.NON_NAMESPACED_CLASSES
             )
 
-            task.nonNamespacedManifests = variantScope.variantDependencies.getArtifactCollection(
+            task.nonNamespacedManifests = component.variantDependencies.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,
                 ArtifactScope.EXTERNAL,
                 ArtifactType.NON_NAMESPACED_MANIFEST
             )
 
-            task.publicFiles = variantScope.variantDependencies.getArtifactCollection(
+            task.publicFiles = component.variantDependencies.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,
                 ArtifactScope.EXTERNAL,
                 ArtifactType.PUBLIC_RES
@@ -493,27 +493,27 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
             task.dependencies =
                 component.variantDependencies.runtimeClasspath.incoming
 
-            task.externalNotNamespacedResources = variantScope.variantDependencies.getArtifactCollection(
+            task.externalNotNamespacedResources = component.variantDependencies.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,
                 ArtifactScope.EXTERNAL,
                 ArtifactType.ANDROID_RES
             )
 
-            task.externalResStaticLibraries = variantScope.variantDependencies.getArtifactCollection(
+            task.externalResStaticLibraries = component.variantDependencies.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,
                 ArtifactScope.EXTERNAL,
                 ArtifactType.RES_STATIC_LIBRARY
             )
 
-            task.intermediateDirectory = variantScope.paths.getIncrementalDir(name)
+            task.intermediateDirectory = component.paths.getIncrementalDir(name)
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
+            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task. aapt2Version = aapt2Version
-            task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
+            task.androidJar = component.globalScope.sdkComponents.androidJarProvider
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                variantScope.globalScope.projectOptions
+                component.globalScope.projectOptions
             )
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }

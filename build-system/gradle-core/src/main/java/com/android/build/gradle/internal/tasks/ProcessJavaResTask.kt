@@ -59,7 +59,7 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
         ) {
             super.handleProvider(taskProvider)
             component.taskContainer.processJavaResourcesTask = taskProvider
-            variantScope
+            component
                 .artifacts
                 .producesDir(
                     InternalArtifactType.JAVA_RES,
@@ -73,7 +73,7 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
         ) {
             super.configure(task)
 
-            for (sourceProvider in variantScope.variantSources.sortedSourceProviders) {
+            for (sourceProvider in component.variantSources.sortedSourceProviders) {
                 task.from((sourceProvider as AndroidSourceSet).resources.sourceFiles)
             }
             task.duplicatesStrategy = DuplicatesStrategy.INCLUDE

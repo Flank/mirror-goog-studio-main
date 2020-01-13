@@ -200,22 +200,22 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
             task.description = "Installs the " + component.variantData.description + ""
             task.group = TaskManager.INSTALL_GROUP
 
-            variantScope.variantDslInfo.minSdkVersion.let {
+            component.variantDslInfo.minSdkVersion.let {
                 task.minSdkVersion = it.apiLevel
                 task.minSdkCodename = it.codename
             }
-            variantScope.globalScope.extension.adbOptions.installOptions?.let {
+            component.globalScope.extension.adbOptions.installOptions?.let {
                 task.installOptions.addAll(it)
             }
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            component.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APKS_FROM_BUNDLE,
                 task.apkBundle
             )
 
-            task.timeOutInMs = variantScope.globalScope.extension.adbOptions.timeOutInMs
+            task.timeOutInMs = component.globalScope.extension.adbOptions.timeOutInMs
 
-            task.adbExecutableProvider = variantScope.globalScope.sdkComponents.adbExecutableProvider
+            task.adbExecutableProvider = component.globalScope.sdkComponents.adbExecutableProvider
         }
 
         override fun handleProvider(

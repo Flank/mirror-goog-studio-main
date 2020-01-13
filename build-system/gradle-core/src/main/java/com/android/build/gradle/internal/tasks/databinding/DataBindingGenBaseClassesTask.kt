@@ -167,12 +167,12 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             taskProvider: TaskProvider<out DataBindingGenBaseClassesTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
                 taskProvider,
                 DataBindingGenBaseClassesTask::classInfoBundleDir
             )
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT,
                 taskProvider,
                 DataBindingGenBaseClassesTask::sourceOutFolder
@@ -184,23 +184,23 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
         ) {
             super.configure(task)
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            component.artifacts.setTaskInputToFinalProduct(
                 DataBindingCompilerArguments.getLayoutInfoArtifactType(component),
                 task.layoutInfoDirectory)
-            val artifacts = variantScope.artifacts
-            task.packageNameSupplier = { variantScope.variantDslInfo.originalApplicationId }
+            val artifacts = component.artifacts
+            task.packageNameSupplier = { component.variantDslInfo.originalApplicationId }
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
                 task.mergedArtifactsFromDependencies
             )
             artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS, task.v1Artifacts)
-            task.logOutFolder = variantScope.paths.getIncrementalDir(task.name)
-            task.useAndroidX = variantScope.globalScope.projectOptions[BooleanOption.USE_ANDROID_X]
+            task.logOutFolder = component.paths.getIncrementalDir(task.name)
+            task.useAndroidX = component.globalScope.projectOptions[BooleanOption.USE_ANDROID_X]
             // needed to decide whether data binding should encode errors or not
-            task.encodeErrors = variantScope.globalScope
+            task.encodeErrors = component.globalScope
                 .projectOptions[BooleanOption.IDE_INVOKED_FROM_IDE]
-            task.enableViewBinding = variantScope.globalScope.buildFeatures.viewBinding
+            task.enableViewBinding = component.globalScope.buildFeatures.viewBinding
         }
     }
 

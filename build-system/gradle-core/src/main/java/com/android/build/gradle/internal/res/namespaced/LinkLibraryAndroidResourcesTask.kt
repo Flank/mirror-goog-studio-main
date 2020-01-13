@@ -142,7 +142,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LinkLibraryAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.RES_STATIC_LIBRARY,
                 taskProvider,
                 LinkLibraryAndroidResourcesTask::staticLibApk,
@@ -155,27 +155,27 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            component.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.STATIC_LIBRARY_MANIFEST,
                 task.manifestFile
             )
 
             task.inputResourcesDirectories.set(
-                variantScope.artifacts.getOperations().getAll(
+                component.artifacts.getOperations().getAll(
                     MultipleArtifactType.RES_COMPILED_FLAT_FILES))
             task.libraryDependencies =
-                    variantScope.variantDependencies.getArtifactFileCollection(
+                    component.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
-            if (variantScope.artifacts.hasFinalProduct(
+            if (component.artifacts.hasFinalProduct(
                     InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES)) {
-                variantScope.artifacts.setTaskInputToFinalProduct(
+                component.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
                     task.convertedLibraryDependencies)
             }
             task.sharedLibraryDependencies =
-                    variantScope.variantDependencies.getArtifactFileCollection(
+                    component.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
@@ -189,21 +189,21 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
             task.aaptIntermediateDir =
                     FileUtils.join(
-                            variantScope.globalScope.intermediatesDir, "res-link-intermediate", variantScope.variantDslInfo.dirName)
+                            component.globalScope.intermediatesDir, "res-link-intermediate", component.variantDslInfo.dirName)
 
-            task.packageForR.set(variantScope.globalScope.project.provider {
-                variantScope.variantDslInfo.originalApplicationId
+            task.packageForR.set(component.globalScope.project.provider {
+                component.variantDslInfo.originalApplicationId
             })
             task.packageForR.disallowChanges()
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
+            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
-            task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
+            task.androidJar = component.globalScope.sdkComponents.androidJarProvider
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                variantScope.globalScope.projectOptions
+                component.globalScope.projectOptions
             )
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }

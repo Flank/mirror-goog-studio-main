@@ -200,7 +200,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             taskProvider: TaskProvider<out PerModuleBundleTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.MODULE_BUNDLE,
                 taskProvider,
                 PerModuleBundleTask::outputDir
@@ -211,12 +211,12 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             task: PerModuleBundleTask
         ) {
             super.configure(task)
-            val artifacts = variantScope.artifacts
+            val artifacts = component.artifacts
 
             if (component.variantType.isBaseModule) {
                 task.fileName.set("base.zip")
             } else {
-                task.fileName.set(variantScope.featureName.map { "$it.zip" })
+                task.fileName.set(component.variantScope.featureName.map { "$it.zip" })
             }
             task.fileName.disallowChanges()
 
@@ -224,7 +224,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                  InternalArtifactType.MERGED_ASSETS, task.assetsFiles)
 
             task.resFiles.set(
-                if (variantScope.useResourceShrinker()) {
+                if (component.variantScope.useResourceShrinker()) {
                     artifacts.getOperations().get(InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE)
                 } else {
                     artifacts.getOperations().get(InternalArtifactType.LINKED_RES_FOR_BUNDLE)
@@ -233,22 +233,20 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             task.resFiles.disallowChanges()
 
             val programDexFiles =
-                if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
-                    variantScope
-                        .artifacts
+                if (artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
+                    artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX).get()
-                } else if (variantScope.artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {
-                    variantScope.globalScope.project.files(variantScope
-                        .artifacts
+                } else if (artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {
+                    component.globalScope.project.files(
+                        artifacts
                         .getOperations()
                         .getAll(MultipleArtifactType.DEX))
                 } else {
-                    variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
+                    component.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
                 }
             val desugarLibDexFile =
-                if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX)) {
-                    variantScope
-                        .artifacts
+                if (artifacts.hasFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX)) {
+                    artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.DESUGAR_LIB_DEX)
                         .get()
                 } else {
@@ -258,23 +256,23 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             task.dexFiles.from(programDexFiles.plus(desugarLibDexFile))
 
             task.featureDexFiles.from(
-                variantScope.variantDependencies.getArtifactFileCollection(
+                component.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,
-                    mapOf(MODULE_PATH to variantScope.globalScope.project.path)
+                    mapOf(MODULE_PATH to component.globalScope.project.path)
                 )
             )
             task.javaResFiles.from(
-                if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)) {
-                    variantScope.globalScope.project.layout.files(
+                if (artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)) {
+                    component.globalScope.project.layout.files(
                         artifacts.getFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)
                     )
-                } else if (variantScope.needsMergedJavaResStream) {
-                    variantScope.transformManager
+                } else if (component.variantScope.needsMergedJavaResStream) {
+                    component.transformManager
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES)
                 } else {
-                    variantScope.globalScope.project.layout.files(
+                    component.globalScope.project.layout.files(
                         artifacts.getFinalProduct(InternalArtifactType.MERGED_JAVA_RES)
                     )
                 }
@@ -295,7 +293,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             }
             task.appMetadata.disallowChanges()
 
-            task.jarCreatorType.set(variantScope.jarCreatorType)
+            task.jarCreatorType.set(component.variantScope.jarCreatorType)
             task.jarCreatorType.disallowChanges()
         }
     }

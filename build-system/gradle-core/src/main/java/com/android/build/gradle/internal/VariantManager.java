@@ -583,7 +583,6 @@ public class VariantManager {
                 new VariantScopeImpl(
                         componentIdentity,
                         variantDslInfo,
-                        variantSources,
                         variantDependencies,
                         pathHelper,
                         artifacts,
@@ -834,7 +833,6 @@ public class VariantManager {
                 new VariantScopeImpl(
                         componentIdentity,
                         variantDslInfo,
-                        variantSources,
                         variantDependencies,
                         pathHelper,
                         artifacts,

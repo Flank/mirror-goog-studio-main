@@ -140,10 +140,10 @@ abstract class ProguardTask : ProguardConfigurableTask() {
 
         init {
             // Publish the Proguarded classes and resources back to a Stream
-            val shrunkClassesAndResourcesProvider = variantScope.artifacts
+            val shrunkClassesAndResourcesProvider = componentProperties.artifacts
                 .getFinalProduct(InternalArtifactType.SHRUNK_JAR)
-            val project = variantScope.globalScope.project
-            variantScope.transformManager.addStream(
+            val project = componentProperties.globalScope.project
+            componentProperties.transformManager.addStream(
                 OriginalStream.builder(project, "shrunk_classes_and_resources")
                     .addContentTypes(TransformManager.CONTENT_JARS)
                     .addScopes(inputScopes)
@@ -175,8 +175,8 @@ abstract class ProguardTask : ProguardConfigurableTask() {
         ) {
             super.configure(task)
 
-            task.bootClasspath.from(variantScope.bootClasspath)
-            task.fullBootClasspath.from(variantScope.globalScope.fullBootClasspath)
+            task.bootClasspath.from(component.variantScope.bootClasspath)
+            task.fullBootClasspath.from(component.globalScope.fullBootClasspath)
 
             task.keepRules.set(this.keepRules)
             task.dontWarnRules.set(this.dontWarnRules)
@@ -190,7 +190,7 @@ abstract class ProguardTask : ProguardConfigurableTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.SHRUNK_JAR,
                 taskProvider,
                 ProguardTask::shrunkJar,

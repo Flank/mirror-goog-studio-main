@@ -318,7 +318,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
             super.handleProvider(taskProvider);
             component.getTaskContainer().setGenerateAnnotationsTask(taskProvider);
 
-            getVariantScope()
+            component
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.ANNOTATIONS_ZIP.INSTANCE,
@@ -326,7 +326,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                             ExtractAnnotations::getOutput,
                             SdkConstants.FN_ANNOTATIONS_ZIP);
 
-            getVariantScope()
+            component
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE.INSTANCE,

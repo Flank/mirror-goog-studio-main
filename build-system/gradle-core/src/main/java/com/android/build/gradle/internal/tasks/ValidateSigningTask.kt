@@ -143,7 +143,7 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ValidateSigningTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.VALIDATE_SIGNING_CONFIG,
                 taskProvider,
                 ValidateSigningTask::dummyOutputDirectory
@@ -155,7 +155,7 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.signingConfig = variantScope.variantDslInfo.signingConfig ?: throw IllegalStateException(
+            task.signingConfig = component.variantDslInfo.signingConfig ?: throw IllegalStateException(
                 "No signing config configured for variant " + component.name
             )
             task.defaultDebugKeystoreLocation = defaultDebugKeystoreLocation

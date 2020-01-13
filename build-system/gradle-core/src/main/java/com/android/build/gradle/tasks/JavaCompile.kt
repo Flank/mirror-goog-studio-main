@@ -115,7 +115,7 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
 
         task.configureProperties(componentProperties)
         task.configurePropertiesForAnnotationProcessing(
-            componentProperties.variantScope,
+            componentProperties,
             annotationProcessorOutputDirectory
         )
 

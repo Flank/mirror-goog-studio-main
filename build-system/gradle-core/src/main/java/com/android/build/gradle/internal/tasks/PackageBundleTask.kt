@@ -304,8 +304,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            val bundleName = "${variantScope.globalScope.projectBaseName}-${variantScope.variantDslInfo.baseName}.aab"
-            variantScope.artifacts.producesFile(
+            val bundleName = "${component.globalScope.projectBaseName}-${component.variantDslInfo.baseName}.aab"
+            component.artifacts.producesFile(
                 InternalArtifactType.INTERMEDIARY_BUNDLE,
                 taskProvider,
                 PackageBundleTask::bundleFile,
@@ -318,47 +318,47 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            component.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MODULE_BUNDLE, task.baseModuleZip)
 
-            task.featureZips = variantScope.variantDependencies.getArtifactFileCollection(
+            task.featureZips = component.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.MODULE_BUNDLE
             )
 
-            if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.ASSET_PACK_BUNDLE)) {
-                variantScope.artifacts.setTaskInputToFinalProduct(
+            if (component.artifacts.hasFinalProduct(InternalArtifactType.ASSET_PACK_BUNDLE)) {
+                component.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.ASSET_PACK_BUNDLE, task.assetPackZips
                 )
             }
 
-            if(variantScope.artifacts.hasFinalProduct(InternalArtifactType.BUNDLE_DEPENDENCY_REPORT)) {
-                variantScope.artifacts.setTaskInputToFinalProduct(
+            if(component.artifacts.hasFinalProduct(InternalArtifactType.BUNDLE_DEPENDENCY_REPORT)) {
+                component.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
                     task.bundleDeps
                 )
             }
 
-            if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.APP_INTEGRITY_CONFIG)) {
-                variantScope.artifacts.setTaskInputToFinalProduct(
+            if (component.artifacts.hasFinalProduct(InternalArtifactType.APP_INTEGRITY_CONFIG)) {
+                component.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.APP_INTEGRITY_CONFIG,
                     task.integrityConfigFile
                 )
             }
 
             task.aaptOptionsNoCompress =
-                    variantScope.globalScope.extension.aaptOptions.noCompress ?: listOf()
+                    component.globalScope.extension.aaptOptions.noCompress ?: listOf()
 
             task.bundleOptions =
-                    ((variantScope.globalScope.extension as BaseAppModuleExtension).bundle).convert()
+                    ((component.globalScope.extension as BaseAppModuleExtension).bundle).convert()
 
             task.bundleFlags = BundleFlags(
-                enableUncompressedNativeLibs = variantScope.globalScope.projectOptions[BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE]
+                enableUncompressedNativeLibs = component.globalScope.projectOptions[BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE]
             )
 
-            if (variantScope.needsMainDexListForBundle) {
-                variantScope.artifacts.setTaskInputToFinalProduct(
+            if (component.variantScope.needsMainDexListForBundle) {
+                component.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
                     task.mainDexList)
                 // The dex files from this application are still processed for legacy multidex
@@ -366,17 +366,17 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 // not reprocess the dex files.
             }
 
-            if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING)) {
-                variantScope.artifacts.setTaskInputToFinalProduct(
+            if (component.artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING)) {
+                component.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.APK_MAPPING,
                     task.obsfuscationMappingFile
                 )
             }
 
             task.debuggable
-                .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
+                .setDisallowChanges(component.variantDslInfo.isDebuggable)
 
-            if (variantScope.minSdkVersion.featureLevel < MIN_SDK_FOR_SPLITS
+            if (component.variantDslInfo.minSdkVersion.featureLevel < MIN_SDK_FOR_SPLITS
                 && task.assetPackZips.isPresent) {
                 task.bundleNeedsFusedStandaloneConfig = true
             }

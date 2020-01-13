@@ -71,8 +71,6 @@ class VariantPropertiesImplTest {
         Mockito.`when`(variantScope.globalScope).thenReturn(globalScope)
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(globalScope.projectOptions).thenReturn(Mockito.mock(ProjectOptions::class.java))
-        Mockito.`when`(variantScope.variantDslInfo).thenReturn(variantDslInfo)
-        Mockito.`when`(variantScope.artifacts).thenReturn(artifacts)
         Mockito.`when`(variantScope.transformManager).thenReturn(Mockito.mock(TransformManager::class.java))
 
         Mockito.`when`(variantData.taskContainer).thenReturn(MutableTaskContainer())

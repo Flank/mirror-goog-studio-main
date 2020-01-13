@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.google.common.annotations.VisibleForTesting;
@@ -202,10 +201,8 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
         }
 
         @Override
-        public void configure(
-                @NonNull JacocoReportTask task) {
+        public void configure(@NonNull JacocoReportTask task) {
             super.configure(task);
-            VariantScope scope = getVariantScope();
 
             task.setDescription("Creates JaCoCo test coverage report from data gathered on the "
                     + "device.");
@@ -216,7 +213,8 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
 
             task.jacocoClasspath = jacocoAntConfiguration;
 
-            scope.getArtifacts()
+            component
+                    .getArtifacts()
                     .setTaskInputToFinalProduct(
                             InternalArtifactType.CODE_COVERAGE.INSTANCE,
                             task.getCoverageDirectories());
@@ -224,7 +222,8 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
             task.classFileCollection = testedVariant.getArtifacts().getAllClasses();
 
             task.sourceFolders =
-                    scope.getGlobalScope()
+                    component
+                            .getGlobalScope()
                             .getProject()
                             .files(
                                     (Callable)

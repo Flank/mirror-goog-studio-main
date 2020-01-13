@@ -104,7 +104,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out L8DexDesugarLibTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.getOperations()
+            component.artifacts.getOperations()
                 .setInitialProvider(taskProvider, L8DexDesugarLibTask::desugarLibDex)
                 .on(InternalArtifactType.DESUGAR_LIB_DEX)
         }
@@ -113,24 +113,24 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             task: L8DexDesugarLibTask
         ) {
             super.configure(task)
-            task.libConfiguration.set(getDesugarLibConfig(variantScope.globalScope.project))
-            task.desugarLibJar.from(getDesugarLibJarFromMaven(variantScope.globalScope.project))
-            task.androidJar.set(variantScope.globalScope.sdkComponents.androidJarProvider)
+            task.libConfiguration.set(getDesugarLibConfig(component.globalScope.project))
+            task.desugarLibJar.from(getDesugarLibJarFromMaven(component.globalScope.project))
+            task.androidJar.set(component.globalScope.sdkComponents.androidJarProvider)
             task.minSdkVersion.set(
-                variantScope.variantDslInfo.minSdkVersionWithTargetDeviceApi.apiLevel)
+                component.variantDslInfo.minSdkVersionWithTargetDeviceApi.apiLevel)
 
             val attributes = getDexingArtifactConfiguration(component).getAttributes()
 
             val subProjectKeepRules =
                 if (enableDexingArtifactTransform) {
-                    variantScope.variantDependencies.getArtifactCollection(
+                    component.variantDependencies.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.KEEP_RULES,
                         attributes
                     ).artifactFiles
                 } else {
-                    variantScope.artifacts.getFinalProductAsFileCollection(
+                    component.artifacts.getFinalProductAsFileCollection(
                         InternalArtifactType.DESUGAR_LIB_SUBPROJECT_KEEP_RULES)
                 }
 
@@ -141,60 +141,60 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                     } else {
                         AndroidArtifacts.ArtifactScope.EXTERNAL
                     }
-                    variantScope.variantDependencies.getArtifactCollection(
+                    component.variantDependencies.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         artifactScope,
                         AndroidArtifacts.ArtifactType.KEEP_RULES,
                         attributes
                     ).artifactFiles
                 } else {
-                    variantScope.artifacts.getFinalProductAsFileCollection(
+                    component.artifacts.getFinalProductAsFileCollection(
                         InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES)
                 }
 
-            task.keepRulesFiles.from(variantScope.globalScope.project.files(
+            task.keepRulesFiles.from(component.globalScope.project.files(
                 subProjectKeepRules,
                 externalLibsKeepRules,
-                variantScope.artifacts.getFinalProductAsFileCollection(
+                component.artifacts.getFinalProductAsFileCollection(
                     InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)),
-                variantScope.artifacts.getFinalProductAsFileCollection(
+                component.artifacts.getFinalProductAsFileCollection(
                     InternalArtifactType.DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES)
             )
 
             if (separateFileDependenciesDexingTask) {
-                task.keepRulesFiles.from(variantScope.artifacts.getFinalProductAsFileCollection(
+                task.keepRulesFiles.from(component.artifacts.getFinalProductAsFileCollection(
                     InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES))
             }
             val hasDynamicFeatures =
-                component.variantType.isBaseModule && variantScope.globalScope.hasDynamicFeatures()
-            val nonMinified = variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
+                component.variantType.isBaseModule && component.globalScope.hasDynamicFeatures()
+            val nonMinified = component.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
             if (hasDynamicFeatures && nonMinified) {
                 task.keepRulesFiles.from(
-                    variantScope.variantDependencies.getArtifactFileCollection(
+                    component.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES)
                 )
                 task.keepRulesFiles.from(
-                    variantScope.variantDependencies.getArtifactFileCollection(
+                    component.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.DESUGAR_LIB_SUBPROJECT_KEEP_RULES)
                 )
                 task.keepRulesFiles.from(
-                    variantScope.variantDependencies.getArtifactFileCollection(
+                    component.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES)
                 )
                 task.keepRulesFiles.from(
-                    variantScope.variantDependencies.getArtifactFileCollection(
+                    component.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.REPOSITORY_MODULE,
                         AndroidArtifacts.ArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES)
                 )
                 task.keepRulesFiles.from(
-                    variantScope.variantDependencies.getArtifactFileCollection(
+                    component.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.FILE,
                         AndroidArtifacts.ArtifactType.DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES)

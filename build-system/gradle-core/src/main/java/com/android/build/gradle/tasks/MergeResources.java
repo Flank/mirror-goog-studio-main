@@ -704,7 +704,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             // Filed https://issuetracker.google.com//110412851 to clean this up at some point.
             component.getTaskContainer().setMergeResourcesTask(taskProvider);
 
-            getVariantScope()
+            component
                     .getArtifacts()
                     .producesDir(
                             mergeType == MERGE
@@ -930,7 +930,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                     .withPropertyName("rawLocalResources");
 
             task.useJvmResourceCompiler =
-                    variantScope
+                    component
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER);

@@ -158,7 +158,7 @@ abstract class MergeNativeLibsTask
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 MERGED_NATIVE_LIBS,
                 taskProvider,
                 MergeNativeLibsTask::outputDir,
@@ -173,12 +173,12 @@ abstract class MergeNativeLibsTask
 
             task.packagingOptions =
                     SerializablePackagingOptions(
-                        variantScope.globalScope.extension.packagingOptions)
+                        component.globalScope.extension.packagingOptions)
             task.intermediateDir =
-                    variantScope.paths.getIncrementalDir(
+                    component.paths.getIncrementalDir(
                         "${component.name}-mergeNativeLibs")
 
-            val project = variantScope.globalScope.project
+            val project = component.globalScope.project
 
             task.cacheDir
                 .fileProvider(project.provider { File(task.intermediateDir, "zip-cache") })
@@ -189,12 +189,12 @@ abstract class MergeNativeLibsTask
                 .disallowChanges()
 
             if (mergeScopes.contains(SUB_PROJECTS)) {
-                task.subProjectNativeLibs.from(getSubProjectNativeLibs(variantScope))
+                task.subProjectNativeLibs.from(getSubProjectNativeLibs(component))
             }
             task.subProjectNativeLibs.disallowChanges()
 
             if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
-                task.externalLibNativeLibs.from(getExternalNativeLibs(variantScope))
+                task.externalLibNativeLibs.from(getExternalNativeLibs(component))
             }
             task.externalLibNativeLibs.disallowChanges()
 
@@ -257,17 +257,17 @@ fun getProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileColl
     return nativeLibs
 }
 
-fun getSubProjectNativeLibs(scope: VariantScope): FileCollection {
-    val nativeLibs = scope.globalScope.project.files()
+fun getSubProjectNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
+    val nativeLibs = componentProperties.globalScope.project.files()
     nativeLibs.from(
-        scope.variantDependencies.getArtifactFileCollection(
+        componentProperties.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.PROJECT,
             AndroidArtifacts.ArtifactType.JAVA_RES
         )
     )
     nativeLibs.from(
-        scope.variantDependencies.getArtifactFileCollection(
+        componentProperties.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.PROJECT,
             AndroidArtifacts.ArtifactType.JNI
@@ -276,17 +276,17 @@ fun getSubProjectNativeLibs(scope: VariantScope): FileCollection {
     return nativeLibs
 }
 
-fun getExternalNativeLibs(scope: VariantScope): FileCollection {
-    val nativeLibs = scope.globalScope.project.files()
+fun getExternalNativeLibs(componentProperties: ComponentPropertiesImpl): FileCollection {
+    val nativeLibs = componentProperties.globalScope.project.files()
     nativeLibs.from(
-        scope.variantDependencies.getArtifactFileCollection(
+        componentProperties.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.EXTERNAL,
             AndroidArtifacts.ArtifactType.JAVA_RES
         )
     )
     nativeLibs.from(
-        scope.variantDependencies.getArtifactFileCollection(
+        componentProperties.variantDependencies.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
             AndroidArtifacts.ArtifactScope.EXTERNAL,
             AndroidArtifacts.ArtifactType.JNI

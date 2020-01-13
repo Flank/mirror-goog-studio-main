@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.test.BuiltArtifactsSplitOutputMatcher;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
@@ -228,21 +227,21 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         @Override
         public void configure(@NonNull InstallVariantTask task) {
             super.configure(task);
-            VariantScope scope = getVariantScope();
             task.componentProperties = component;
 
             task.setDescription(
                     "Installs the " + component.getVariantData().getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
-            scope.getArtifacts()
+            component
+                    .getArtifacts()
                     .setTaskInputToFinalProduct(
                             InternalArtifactType.APK.INSTANCE, task.getApkDirectory());
             task.setTimeOutInMs(
-                    scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
+                    component.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
             task.setInstallOptions(
-                    scope.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
+                    component.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
             task.adbExecutableProvider =
-                    scope.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
+                    component.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
         }
 
         @Override

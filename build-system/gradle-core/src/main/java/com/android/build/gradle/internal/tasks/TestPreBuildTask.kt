@@ -52,12 +52,12 @@ See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details
             task: TestPreBuildTask
         ) {
             super.configure(task)
-            task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
+            task.runtimeClasspath = component.variantDependencies.runtimeClasspath
             task.compileClasspath = testComponentProperties.testedVariant.variantDependencies.runtimeClasspath
 
             task.fakeOutputDirectory = File(
-                variantScope.globalScope.intermediatesDir,
-                "prebuild/${variantScope.variantDslInfo.dirName}"
+                component.globalScope.intermediatesDir,
+                "prebuild/${component.variantDslInfo.dirName}"
             )
         }
     }

@@ -65,7 +65,7 @@ abstract class FeatureNameWriterTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope
+            component
                 .artifacts
                 .producesFile(
                     InternalArtifactType.FEATURE_NAME,
@@ -79,7 +79,7 @@ abstract class FeatureNameWriterTask : NonIncrementalTask() {
             task: FeatureNameWriterTask
         ) {
             super.configure(task)
-            task.featureName.set(variantScope.featureName)
+            task.featureName.set(component.variantScope.featureName)
             task.featureName.disallowChanges()
         }
     }

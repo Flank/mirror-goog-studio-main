@@ -79,7 +79,7 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ApplicationIdWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.METADATA_APPLICATION_ID,
                 taskProvider,
                 ApplicationIdWriterTask::outputFile,
@@ -99,7 +99,7 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
                 // a bit dynamic.
                 // TODO replace this with Property<String> which can be fed from the published artifact directly.
                 // b/141650037
-                task.appMetadata.from(variantScope.variantDependencies.getArtifactFileCollection(
+                task.appMetadata.from(component.variantDependencies.getArtifactFileCollection(
                     COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA
                 ))
             } else {

@@ -834,15 +834,14 @@ public abstract class TaskManager {
     }
 
     public void createRenderscriptTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        VariantScope scope = componentProperties.getVariantScope();
-        if (scope.getGlobalScope().getBuildFeatures().getRenderScript()) {
+        if (componentProperties.getGlobalScope().getBuildFeatures().getRenderScript()) {
             final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
 
             TaskProvider<RenderscriptCompile> rsTask =
                     taskFactory.register(
                             new RenderscriptCompile.CreationAction(componentProperties));
 
-            VariantDslInfo variantDslInfo = scope.getVariantDslInfo();
+            VariantDslInfo variantDslInfo = componentProperties.getVariantDslInfo();
 
             TaskFactoryUtils.dependsOn(taskContainer.getResourceGenTask(), rsTask);
             // only put this dependency if rs will generate Java code

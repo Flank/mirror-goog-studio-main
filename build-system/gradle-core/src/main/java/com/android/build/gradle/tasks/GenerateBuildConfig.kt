@@ -206,7 +206,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             val variantDslInfo = component.variantDslInfo
 
-            val project = variantScope.globalScope.project
+            val project = component.globalScope.project
             task.buildConfigPackageName.set(project.provider {
                 variantDslInfo.originalApplicationId
             })
@@ -243,10 +243,10 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             task.items.set(project.provider { variantDslInfo.buildConfigItems })
             task.items.disallowChanges()
 
-            task.sourceOutputDir = variantScope.paths.buildConfigSourceOutputDir
+            task.sourceOutputDir = component.paths.buildConfigSourceOutputDir
 
-            if (variantScope.variantDslInfo.variantType.isTestComponent) {
-                variantScope.artifacts.setTaskInputToFinalProduct(
+            if (component.variantDslInfo.variantType.isTestComponent) {
+                component.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.MERGED_MANIFESTS, task.mergedManifests
                 )
             }

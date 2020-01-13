@@ -107,7 +107,7 @@ abstract class MergeClassesTask : NonIncrementalTask() {
         // Because ordering matters for the transform pipeline, we need to fetch the classes as soon
         // as this creation action is instantiated.
         private val inputFiles =
-            variantScope
+            componentProperties
                 .transformManager
                 .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                     contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
@@ -118,14 +118,14 @@ abstract class MergeClassesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out MergeClassesTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 artifactType = InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
                 taskProvider = taskProvider,
                 productProvider = MergeClassesTask::outputFile,
                 fileName = if (component.variantType.isBaseModule) {
                     "base.jar"
                 } else {
-                    TaskManager.getFeatureFileName(variantScope.globalScope.project.path, DOT_JAR)
+                    TaskManager.getFeatureFileName(component.globalScope.project.path, DOT_JAR)
                 }
             )
         }
@@ -135,7 +135,7 @@ abstract class MergeClassesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
             task.inputFiles = inputFiles
-            task.jarCreatorType = variantScope.jarCreatorType
+            task.jarCreatorType = component.variantScope.jarCreatorType
         }
     }
 }

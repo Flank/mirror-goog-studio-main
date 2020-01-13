@@ -78,7 +78,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
             taskProvider: TaskProvider<out RecalculateStackFramesTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.FIXED_STACK_FRAMES,
                 taskProvider,
                 RecalculateStackFramesTask::outFolder
@@ -90,12 +90,12 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
         ) {
             super.configure(task)
 
-            task.bootClasspath = variantScope.bootClasspath
+            task.bootClasspath = component.variantScope.bootClasspath
 
-            val globalScope = variantScope.globalScope
+            val globalScope = component.globalScope
 
             val classesToFix = globalScope.project.files(
-                variantScope.variantDependencies.getArtifactFileCollection(
+                component.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.EXTERNAL,
                     AndroidArtifacts.ArtifactType.CLASSES_JAR))
@@ -103,33 +103,33 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
             if (globalScope.extension.aaptOptions.namespaced
                 && globalScope.projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]) {
                 classesToFix.from(
-                    variantScope
+                    component
                         .artifacts
                         .getFinalProduct(InternalArtifactType.NAMESPACED_CLASSES_JAR))
             }
 
+            val referencedClasses =
+                globalScope.project.files(component.variantScope.providedOnlyClasspath)
 
-            val referencedClasses = globalScope.project.files(variantScope.providedOnlyClasspath)
-
-            referencedClasses.from(variantScope.variantDependencies.getArtifactFileCollection(
+            referencedClasses.from(component.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.PROJECT,
                 AndroidArtifacts.ArtifactType.CLASSES_JAR))
 
             if (isTestCoverageEnabled) {
                 referencedClasses.from(
-                    variantScope.artifacts.getFinalProduct(
+                    component.artifacts.getFinalProduct(
                         InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES),
-                    variantScope.globalScope.project.files(
-                        variantScope.artifacts.getFinalProduct(
+                    component.globalScope.project.files(
+                        component.artifacts.getFinalProduct(
                             InternalArtifactType.JACOCO_INSTRUMENTED_JARS)).asFileTree)
             } else {
-                referencedClasses.from(variantScope.artifacts.getAllClasses())
+                referencedClasses.from(component.artifacts.getAllClasses())
             }
 
             component.onTestedVariant {
                 referencedClasses.from(
-                    variantScope.artifacts.getFinalProduct(
+                    component.artifacts.getFinalProduct(
                         InternalArtifactType.TESTED_CODE_CLASSES
                     )
                 )

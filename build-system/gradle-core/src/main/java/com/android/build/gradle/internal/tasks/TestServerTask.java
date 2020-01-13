@@ -22,7 +22,6 @@ import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.testing.api.TestServer;
 import com.android.utils.StringHelper;
@@ -101,17 +100,19 @@ public abstract class TestServerTask extends NonIncrementalTask {
     public static class TestServerTaskCreationAction
             extends VariantTaskCreationAction<TestServerTask, AndroidTestPropertiesImpl> {
         private final TestServer testServer;
+        private final boolean hasFlavors;
 
         public TestServerTaskCreationAction(
                 @NonNull AndroidTestPropertiesImpl androidTestProperties, TestServer testServer) {
             super(androidTestProperties);
             this.testServer = testServer;
+            this.hasFlavors = androidTestProperties.getVariantDslInfo().hasFlavors();
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getVariantScope().getVariantDslInfo().hasFlavors()
+            return hasFlavors
                     ? computeTaskName(testServer.getName() + "Upload")
                     : testServer.getName() + ("Upload");
         }
@@ -126,8 +127,6 @@ public abstract class TestServerTask extends NonIncrementalTask {
         public void configure(
                 @NonNull TestServerTask task) {
             super.configure(task);
-            VariantScope scope = getVariantScope();
-
             VariantPropertiesImpl testedVariant = component.getTestedVariant();
 
             final String variantName = component.getName();
@@ -148,7 +147,8 @@ public abstract class TestServerTask extends NonIncrementalTask {
                                 InternalArtifactType.APK.INSTANCE, task.getTestedApks());
             }
 
-            scope.getArtifacts()
+            component
+                    .getArtifacts()
                     .setTaskInputToFinalProduct(
                             InternalArtifactType.APK.INSTANCE, task.getTestApks());
 

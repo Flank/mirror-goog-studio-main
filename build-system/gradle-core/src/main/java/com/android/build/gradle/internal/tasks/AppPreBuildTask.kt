@@ -93,19 +93,19 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
             super.configure(task)
 
             task.compileManifests =
-                variantScope.variantDependencies.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST)
-            task.compileNonNamespacedManifests = variantScope.variantDependencies.getArtifactCollection(
+                component.variantDependencies.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST)
+            task.compileNonNamespacedManifests = component.variantDependencies.getArtifactCollection(
                 COMPILE_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST
             )
             task.runtimeManifests =
-                variantScope.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST)
-            task.runtimeNonNamespacedManifests = variantScope.variantDependencies.getArtifactCollection(
+                component.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST)
+            task.runtimeNonNamespacedManifests = component.variantDependencies.getArtifactCollection(
                 RUNTIME_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST
             )
 
             task.fakeOutputDirectory = File(
-                variantScope.globalScope.intermediatesDir,
-                "prebuild/${variantScope.variantDslInfo.dirName}"
+                component.globalScope.intermediatesDir,
+                "prebuild/${component.variantDslInfo.dirName}"
             )
         }
     }
@@ -115,8 +115,7 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
         fun getCreationAction(
             componentProperties: ComponentPropertiesImpl
         ): TaskManager.AbstractPreBuildCreationAction<*> {
-            val variantScope = componentProperties.variantScope
-            return if (componentProperties.variantType.isBaseModule && variantScope.globalScope.hasDynamicFeatures()) {
+            return if (componentProperties.variantType.isBaseModule && componentProperties.globalScope.hasDynamicFeatures()) {
                 CheckCreationAction(componentProperties)
             } else EmptyCreationAction(componentProperties)
 

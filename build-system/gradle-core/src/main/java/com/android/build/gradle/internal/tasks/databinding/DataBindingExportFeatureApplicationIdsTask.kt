@@ -80,7 +80,7 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
             taskProvider: TaskProvider<out DataBindingExportFeatureApplicationIdsTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO,
                 taskProvider,
                 DataBindingExportFeatureApplicationIdsTask::packageListOutFolder
@@ -92,7 +92,7 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
         ) {
             super.configure(task)
 
-            task.featureDeclarations = variantScope.variantDependencies.getArtifactFileCollection(
+            task.featureDeclarations = component.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.REVERSE_METADATA_FEATURE_DECLARATION

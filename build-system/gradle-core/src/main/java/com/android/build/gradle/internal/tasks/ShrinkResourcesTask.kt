@@ -154,7 +154,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         override val type = ShrinkResourcesTask::class.java
         override val name = computeTaskName("shrink", "Res")
 
-        private val classes = variantScope.transformManager
+        private val classes = componentProperties.transformManager
             .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                 scopes.intersect(TransformManager.SCOPE_FULL_PROJECT).isNotEmpty()
                         && (contentTypes.contains(DefaultContentType.CLASSES)
@@ -166,7 +166,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 artifactType = InternalArtifactType.SHRUNK_PROCESSED_RES,
                 taskProvider = taskProvider,
                 productProvider = ShrinkResourcesTask::compressedResources,
@@ -179,14 +179,14 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val artifacts = variantScope.artifacts
+            val artifacts = component.artifacts
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PROCESSED_RES,
                 task.uncompressedResources
             )
 
-            if (variantScope
+            if (component
                     .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]) {
                 artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RUNTIME_SYMBOL_LIST,
@@ -214,16 +214,18 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 task.mergedManifests
             )
 
-            task.aaptOptions = variantScope.globalScope.extension.aaptOptions
+            task.aaptOptions = component.globalScope.extension.aaptOptions
 
-            task.buildTypeName = variantScope.variantDslInfo.componentIdentity.buildType
+            task.buildTypeName = component.variantDslInfo.componentIdentity.buildType
 
             task.variantTypeName.setDisallowChanges(component.variantType.name)
 
-            task.debuggableBuildType.setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
+            task.debuggableBuildType.setDisallowChanges(component.variantDslInfo.isDebuggable)
 
-            task.enableRTxtResourceShrinking.set(variantScope
-                .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING])
+            task.enableRTxtResourceShrinking.set(
+                component
+                    .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]
+            )
 
             // When R8 produces dex files, this task analyzes them. If R8 or Proguard produce
             // class files, this task will analyze those. That is why both types are specified.
@@ -231,7 +233,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_CLASSES) -> task.classes.from(
                     artifacts.getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES))
                 artifacts.hasFinalProducts(MultipleArtifactType.DEX) -> task.classes.from(
-                    variantScope.globalScope.project.files(
+                    component.globalScope.project.files(
                         artifacts.getOperations().getAll(MultipleArtifactType.DEX)))
                 else -> task.classes.from(classes)
             }

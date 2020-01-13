@@ -155,12 +155,12 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
             // Because ordering matters for TransformAPI, we need to fetch classes from the
             // transform pipeline as soon as this creation action is instantiated.
             inputs = if (publishedType == PublishedConfigType.RUNTIME_ELEMENTS) {
-                variantScope.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
+                componentProperties.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
                     types.contains(QualifiedContent.DefaultContentType.CLASSES)
                             && scopes.size == 1 && scopes.contains(QualifiedContent.Scope.PROJECT)
                 }
             } else {
-                variantScope.artifacts.getAllClasses()
+                componentProperties.artifacts.getAllClasses()
             }
         }
 
@@ -191,21 +191,21 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
                 check(outputType == CLASSES_JAR) {
                     "Expected CLASSES_JAR output type but found ${outputType.name}"
                 }
-                variantScope.artifacts.getOperations()
+                component.artifacts.getOperations()
                     .setInitialProvider(
                         taskProvider,
                         BundleLibraryClasses::jarOutput
                     ).withName(FN_CLASSES_JAR).on(InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR)
             } else {
                 if (outputType == CLASSES_JAR) {
-                    variantScope.artifacts.getOperations()
+                    component.artifacts.getOperations()
                         .setInitialProvider(
                             taskProvider,
                             BundleLibraryClasses::jarOutput
                         ).withName(FN_CLASSES_JAR)
                         .on(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR)
                 } else {
-                    variantScope.artifacts.getOperations()
+                    component.artifacts.getOperations()
                         .setInitialProvider(
                             taskProvider,
                             BundleLibraryClasses::dirOutput
@@ -220,21 +220,21 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
             super.configure(task)
 
             task.outputType.setDisallowChanges(outputType)
-            task.packageName = lazy { variantScope.variantDslInfo.packageFromManifest }
+            task.packageName = lazy { component.variantDslInfo.packageFromManifest }
             task.classes.from(inputs)
             val packageRClass =
-                variantScope.globalScope.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] &&
+                component.globalScope.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] &&
                         publishedType == PublishedConfigType.API_ELEMENTS &&
-                        !variantScope.globalScope.extension.aaptOptions.namespaced
+                        !component.globalScope.extension.aaptOptions.namespaced
             task.packageRClass.set(packageRClass)
             if (packageRClass) {
-                task.classes.from(variantScope.artifacts.getFinalProduct(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
+                task.classes.from(component.artifacts.getFinalProduct(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
             }
             // FIXME pass this as List<TextResources>
             task.toIgnoreRegExps.set(
-                variantScope.globalScope.project.provider(toIgnoreRegExps::get)
+                component.globalScope.project.provider(toIgnoreRegExps::get)
             )
-            task.jarCreatorType = variantScope.jarCreatorType
+            task.jarCreatorType = component.variantScope.jarCreatorType
         }
     }
 }

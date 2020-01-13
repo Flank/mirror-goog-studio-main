@@ -106,7 +106,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         componentProperties
     ) {
 
-        private val includeFeaturesInScopes: Boolean = variantScope.consumesFeatureJars()
+        private val includeFeaturesInScopes: Boolean = componentProperties.variantScope.consumesFeatureJars()
         protected val variantType: VariantType = componentProperties.variantType
         private val testedVariant = componentProperties.testedVariant
 
@@ -168,31 +168,24 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 """.trimMargin()
             )
 
-            classes = variantScope.transformManager
+            val transformManager = componentProperties.transformManager
+            classes = transformManager
                 .getPipelineOutputAsFileCollection(createStreamFilter(CLASSES, inputScopes))
 
-            resources = variantScope.transformManager
+            resources = transformManager
                 .getPipelineOutputAsFileCollection(createStreamFilter(RESOURCES, inputScopes))
 
             // Consume non referenced inputs
-            variantScope.transformManager.consumeStreams(inputScopes, setOf(CLASSES, RESOURCES))
+            transformManager.consumeStreams(inputScopes, setOf(CLASSES, RESOURCES))
 
-
-            referencedClasses = variantScope.transformManager
+            referencedClasses = transformManager
                 .getPipelineOutputAsFileCollection(
-                    createStreamFilter(
-                        CLASSES,
-                        referencedScopes.toMutableSet()
-                    )
+                    createStreamFilter(CLASSES, referencedScopes.toMutableSet())
                 )
 
-
-            referencedResources = variantScope.transformManager
+            referencedResources = transformManager
                 .getPipelineOutputAsFileCollection(
-                    createStreamFilter(
-                        RESOURCES,
-                        referencedScopes.toMutableSet()
-                    )
+                    createStreamFilter(RESOURCES, referencedScopes.toMutableSet())
                 )
         }
 
@@ -201,7 +194,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope
+            component
                 .artifacts
                 .producesFile(
                     APK_MAPPING,
@@ -224,7 +217,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 )
             } else if (isTestApplication) {
                 task.testedMappingFile.from(
-                    variantScope.variantDependencies.getArtifactFileCollection(
+                    component.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.APK_MAPPING
@@ -261,11 +254,11 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
                         Callable<Collection<File>> { testedVariant.variantScope.testProguardFiles },
-                        variantScope.variantDependencies.getArtifactFileCollection(
+                        component.variantDependencies.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,
                             ALL,
                             FILTERED_PROGUARD_RULES,
-                            maybeGetCodeShrinkerAttrMap(variantScope)
+                            maybeGetCodeShrinkerAttrMap(component)
                         )
                     )
                     task.configurationFiles.from(configurationFiles)
@@ -276,12 +269,12 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
-                        Callable<Collection<File>> { variantScope.testProguardFiles },
-                        variantScope.variantDependencies.getArtifactFileCollection(
+                        Callable<Collection<File>> { component.variantScope.testProguardFiles },
+                        component.variantDependencies.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,
                             ALL,
                             FILTERED_PROGUARD_RULES,
-                            maybeGetCodeShrinkerAttrMap(variantScope)
+                            maybeGetCodeShrinkerAttrMap(component)
                         )
                     )
                     task.configurationFiles.from(configurationFiles)
@@ -313,19 +306,19 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             task: ProguardConfigurableTask,
             component: ComponentPropertiesImpl
         ) {
-            val variantDslInfo = variantScope.variantDslInfo
+            val variantDslInfo = component.variantDslInfo
 
-            val postprocessingFeatures = variantScope.postprocessingFeatures
+            val postprocessingFeatures = component.variantScope.postprocessingFeatures
             postprocessingFeatures?.let { setActions(postprocessingFeatures) }
 
-            val proguardConfigFiles = Callable<Collection<File>> { variantScope.proguardFiles }
+            val proguardConfigFiles = Callable<Collection<File>> { component.variantScope.proguardFiles }
 
             val aaptProguardFile =
                 if (task.includeFeaturesInScopes.get()) {
-                    variantScope.artifacts.getOperations().get(
+                    component.artifacts.getOperations().get(
                         InternalArtifactType.MERGED_AAPT_PROGUARD_FILE)
                 } else {
-                    variantScope.artifacts.getOperations().get(
+                    component.artifacts.getOperations().get(
                         InternalArtifactType.AAPT_PROGUARD_FILE
                     )
                 }
@@ -333,17 +326,17 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             val configurationFiles = task.project.files(
                 proguardConfigFiles,
                 aaptProguardFile,
-                variantScope.artifacts.getFinalProduct(GENERATED_PROGUARD_FILE),
-                variantScope.variantDependencies.getArtifactFileCollection(
+                component.artifacts.getFinalProduct(GENERATED_PROGUARD_FILE),
+                component.variantDependencies.getArtifactFileCollection(
                     RUNTIME_CLASSPATH,
                     ALL,
                     FILTERED_PROGUARD_RULES,
-                    maybeGetCodeShrinkerAttrMap(variantScope)
+                    maybeGetCodeShrinkerAttrMap(component)
                 )
             )
 
             if (task.includeFeaturesInScopes.get()) {
-                addFeatureProguardRules(configurationFiles)
+                addFeatureProguardRules(component, configurationFiles)
             }
             task.configurationFiles.from(configurationFiles)
 
@@ -361,22 +354,25 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             }
         }
 
-        private fun addFeatureProguardRules(configurationFiles: ConfigurableFileCollection) {
+        private fun addFeatureProguardRules(
+            component: ComponentPropertiesImpl,
+            configurationFiles: ConfigurableFileCollection
+        ) {
             configurationFiles.from(
-                variantScope.variantDependencies.getArtifactFileCollection(
+                component.variantDependencies.getArtifactFileCollection(
                     REVERSE_METADATA_VALUES,
                     PROJECT,
                     FILTERED_PROGUARD_RULES,
-                    maybeGetCodeShrinkerAttrMap(variantScope)
+                    maybeGetCodeShrinkerAttrMap(component)
                 )
             )
         }
 
         private fun maybeGetCodeShrinkerAttrMap(
-            variantScope: VariantScope
+            componentProperties: ComponentPropertiesImpl
         ): Map<Attribute<String>, String>? {
-            return if (variantScope.codeShrinker != null) {
-                mapOf(VariantManager.SHRINKER_ATTR to variantScope.codeShrinker.toString())
+            return if (componentProperties.variantScope.codeShrinker != null) {
+                mapOf(VariantManager.SHRINKER_ATTR to componentProperties.variantScope.codeShrinker.toString())
             } else {
                 null
             }

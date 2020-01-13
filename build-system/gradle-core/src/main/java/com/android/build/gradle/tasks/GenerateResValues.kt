@@ -98,11 +98,11 @@ abstract class GenerateResValues : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.items.set(variantScope.globalScope.project.provider {
-                variantScope.variantDslInfo.resValues
+            task.items.set(component.globalScope.project.provider {
+                component.variantDslInfo.resValues
             })
 
-            task.resOutputDir = variantScope.paths.generatedResOutputDir
+            task.resOutputDir = component.paths.generatedResOutputDir
         }
     }
 }

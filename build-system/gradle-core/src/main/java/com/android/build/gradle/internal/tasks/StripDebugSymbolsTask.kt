@@ -150,7 +150,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 STRIPPED_NATIVE_LIBS,
                 taskProvider,
                 StripDebugSymbolsTask::outputDir,
@@ -163,14 +163,14 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
         ) {
             super.configure(task)
 
-            variantScope.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
+            component.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
             task.excludePatterns =
-                variantScope.globalScope.extension.packagingOptions.doNotStrip.sorted()
+                component.globalScope.extension.packagingOptions.doNotStrip.sorted()
             task.stripToolFinderProvider =
-                variantScope.globalScope.sdkComponents.stripExecutableFinderProvider
+                component.globalScope.sdkComponents.stripExecutableFinderProvider
             task.inputFiles.setDisallowChanges(
-                variantScope.globalScope.project.provider {
-                    variantScope.globalScope.project.layout.files(task.inputDir).asFileTree
+                component.globalScope.project.provider {
+                    component.globalScope.project.layout.files(task.inputDir).asFileTree
                 }
             )
         }

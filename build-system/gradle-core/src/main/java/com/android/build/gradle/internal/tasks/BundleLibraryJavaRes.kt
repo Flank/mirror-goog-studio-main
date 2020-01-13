@@ -100,10 +100,10 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
         componentProperties
     ) {
 
-        private val projectJavaResFromStreams = if (this.variantScope.needsJavaResStreams) {
+        private val projectJavaResFromStreams = if (componentProperties.variantScope.needsJavaResStreams) {
             // Because ordering matters for TransformAPI, we need to fetch java res from the
             // transform pipeline as soon as this creation action is instantiated, in needed.
-            this.variantScope.transformManager.getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
+            componentProperties.transformManager.getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
         } else {
             null
         }
@@ -116,7 +116,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
             taskProvider: TaskProvider<out BundleLibraryJavaRes>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.LIBRARY_JAVA_RES,
                 taskProvider,
                 BundleLibraryJavaRes::output,
@@ -139,9 +139,9 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
                 task.resources = projectJavaRes.asFileTree.filter(MergeJavaResourceTask.spec)
             }
 
-            task.jarCreatorType = variantScope.jarCreatorType
+            task.jarCreatorType = component.variantScope.jarCreatorType
             task.debuggable
-                .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
+                .setDisallowChanges(component.variantDslInfo.isDebuggable)
         }
     }
 }

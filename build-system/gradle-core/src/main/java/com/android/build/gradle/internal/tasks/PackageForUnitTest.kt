@@ -136,7 +136,7 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
             taskProvider: TaskProvider<out PackageForUnitTest>
         ) {
             super.handleProvider(taskProvider)
-            variantScope
+            component
                 .artifacts
                 .producesFile(
                     APK_FOR_LOCAL_TEST,
@@ -150,7 +150,7 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
             task: PackageForUnitTest
         ) {
             super.configure(task)
-            val artifacts = variantScope.artifacts
+            val artifacts = component.artifacts
             artifacts.setTaskInputToFinalProduct(PROCESSED_RES, task.resApk)
             artifacts.setTaskInputToFinalProduct(MERGED_ASSETS, task.mergedAssets)
         }

@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks.featuresplit;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.google.common.annotations.VisibleForTesting;
@@ -81,7 +80,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
                 @NonNull TaskProvider<? extends FeatureSplitDeclarationWriterTask> taskProvider) {
             super.handleProvider(taskProvider);
 
-            getVariantScope()
+            component
                     .getArtifacts()
                     .producesDir(
                             InternalArtifactType.METADATA_FEATURE_DECLARATION.INSTANCE,
@@ -95,13 +94,10 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
                 @NonNull FeatureSplitDeclarationWriterTask task) {
             super.configure(task);
 
-            final VariantScope variantScope = getVariantScope();
-            final Project project = variantScope.getGlobalScope().getProject();
+            final Project project = component.getGlobalScope().getProject();
             task.uniqueIdentifier = project.getPath();
             task.getApplicationId()
-                    .set(
-                            project.provider(
-                                    variantScope.getVariantDslInfo()::getOriginalApplicationId));
+                    .set(project.provider(component.getVariantDslInfo()::getOriginalApplicationId));
             task.getApplicationId().disallowChanges();
         }
     }

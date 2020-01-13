@@ -390,7 +390,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             super.handleProvider(taskProvider);
             component.getTaskContainer().setProcessManifestTask(taskProvider);
 
-            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
+            BuildArtifactsHolder artifacts = component.getArtifacts();
             artifacts.producesDir(
                     InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS.INSTANCE,
                     taskProvider,
@@ -414,17 +414,17 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                     taskProvider,
                     ProcessLibraryManifest::getMergeBlameFile,
                     "manifest-merger-blame-"
-                            + getVariantScope().getVariantDslInfo().getBaseName()
+                            + component.getVariantDslInfo().getBaseName()
                             + "-report.txt");
 
             artifacts.producesFile(
                     InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE,
                     taskProvider,
                     ProcessLibraryManifest::getReportFile,
-                    FileUtils.join(getVariantScope().getGlobalScope().getOutputsDir(), "logs")
+                    FileUtils.join(component.getGlobalScope().getOutputsDir(), "logs")
                             .getAbsolutePath(),
                     "manifest-merger-"
-                            + getVariantScope().getVariantDslInfo().getBaseName()
+                            + component.getVariantDslInfo().getBaseName()
                             + "-report.txt");
         }
 
@@ -433,10 +433,10 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                 @NonNull ProcessLibraryManifest task) {
             super.configure(task);
 
-            VariantDslInfo variantDslInfo = getVariantScope().getVariantDslInfo();
-            VariantSources variantSources = getVariantScope().getVariantSources();
+            VariantDslInfo variantDslInfo = component.getVariantDslInfo();
+            VariantSources variantSources = component.getVariantSources();
 
-            Project project = getVariantScope().getGlobalScope().getProject();
+            Project project = component.getGlobalScope().getProject();
             task.getMinSdkVersion()
                     .set(project.provider(() -> variantDslInfo.getMinSdkVersion().getApiString()));
             task.getMinSdkVersion().disallowChanges();
@@ -461,11 +461,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             task.mainSplit.disallowChanges();
 
             task.isNamespaced =
-                    getVariantScope()
-                            .getGlobalScope()
-                            .getExtension()
-                            .getAaptOptions()
-                            .getNamespaced();
+                    component.getGlobalScope().getExtension().getAaptOptions().getNamespaced();
             task.versionName.set(task.getProject().provider(variantDslInfo::getVersionName));
             task.versionName.disallowChanges();
             task.versionCode.set(task.getProject().provider(variantDslInfo::getVersionCode));

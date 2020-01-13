@@ -186,8 +186,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         override fun handleProvider(
             taskProvider: TaskProvider<out ShrinkBundleResourcesTask>
         ) {
-            super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE,
                 taskProvider,
                 ShrinkBundleResourcesTask::compressedResources,
@@ -200,49 +199,50 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            val artifacts = component.artifacts
+
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE,
                 task.uncompressedResources
             )
             task.mainSplit = component.outputs.getMainSplit().apkData
 
-            task.dex = if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
-                variantScope
-                    .artifacts
+            task.dex = if (artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
+                artifacts
                     .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX).get()
-            } else if (variantScope.artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {
-                variantScope.globalScope.project.files(
-                    variantScope.artifacts.getOperations().getAll(MultipleArtifactType.DEX))
+            } else if (artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {
+                component.globalScope.project.files(
+                    artifacts.getOperations().getAll(MultipleArtifactType.DEX))
             } else {
-                variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
+                component.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
             }
 
-            if (variantScope
+            if (component
                     .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]) {
-                variantScope.artifacts.setTaskInputToFinalProduct(
+                artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RUNTIME_SYMBOL_LIST,
                     task.rTxtFile
                 )
             } else {
-                variantScope.artifacts.setTaskInputToFinalProduct(
+                artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                     task.lightRClasses
                 )
             }
 
-            task.enableRTxtResourceShrinking.set(variantScope.globalScope
+            task.enableRTxtResourceShrinking.set(component.globalScope
                 .projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING])
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES,
                 task.resourceDir)
 
-            if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING))
-                variantScope.artifacts.setTaskInputToFinalProduct(
+            if (artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING))
+                artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.APK_MAPPING,
                     task.mappingFileSrc)
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,
                 task.mergedManifests)
         }

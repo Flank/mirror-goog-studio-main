@@ -236,7 +236,9 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             val classesFilter =
                 StreamFilter { types, _ -> DefaultContentType.CLASSES in types }
 
-            projectClasses = variantScope.transformManager.getPipelineOutputAsFileCollection(
+            val transformManager = componentProperties.transformManager
+
+            projectClasses = transformManager.getPipelineOutputAsFileCollection(
                 StreamFilter { _, scopes -> scopes == setOf(Scope.PROJECT) },
                 classesFilter
             )
@@ -244,18 +246,18 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             val desugaringClasspathScopes: MutableSet<ScopeType> =
                 mutableSetOf(Scope.TESTED_CODE, Scope.PROVIDED_ONLY)
             if (enableDexingArtifactTransform) {
-                subProjectsClasses = variantScope.globalScope.project.files()
-                externalLibraryClasses = variantScope.globalScope.project.files()
-                mixedScopeClasses = variantScope.globalScope.project.files()
+                subProjectsClasses = componentProperties.globalScope.project.files()
+                externalLibraryClasses = componentProperties.globalScope.project.files()
+                mixedScopeClasses = componentProperties.globalScope.project.files()
 
                 desugaringClasspathScopes.add(Scope.EXTERNAL_LIBRARIES)
                 desugaringClasspathScopes.add(Scope.SUB_PROJECTS)
-            } else if (variantScope.consumesFeatureJars()) {
-                subProjectsClasses = variantScope.globalScope.project.files()
-                externalLibraryClasses = variantScope.globalScope.project.files()
+            } else if (componentProperties.variantScope.consumesFeatureJars()) {
+                subProjectsClasses = componentProperties.globalScope.project.files()
+                externalLibraryClasses = componentProperties.globalScope.project.files()
 
                 // Get all classes from the scopes we are interested in.
-                mixedScopeClasses = variantScope.transformManager.getPipelineOutputAsFileCollection(
+                mixedScopeClasses = transformManager.getPipelineOutputAsFileCollection(
                     StreamFilter { _, scopes ->
                         scopes.isNotEmpty() && scopes.subtract(
                             TransformManager.SCOPE_FULL_WITH_FEATURES
@@ -268,33 +270,32 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 desugaringClasspathScopes.add(InternalScope.FEATURES)
             } else {
                 subProjectsClasses =
-                    variantScope.transformManager.getPipelineOutputAsFileCollection(
+                    transformManager.getPipelineOutputAsFileCollection(
                         StreamFilter { _, scopes -> scopes == setOf(Scope.SUB_PROJECTS) },
                         classesFilter
                     )
                 externalLibraryClasses =
-                    variantScope.transformManager.getPipelineOutputAsFileCollection(
+                    transformManager.getPipelineOutputAsFileCollection(
                         StreamFilter { _, scopes -> scopes == setOf(Scope.EXTERNAL_LIBRARIES) },
                         classesFilter
                     )
                 // Get all classes that have more than 1 scope. E.g. project & subproject, or
                 // project & subproject & external libs.
-                mixedScopeClasses = variantScope.transformManager.getPipelineOutputAsFileCollection(
+                mixedScopeClasses = transformManager.getPipelineOutputAsFileCollection(
                     StreamFilter { _, scopes -> scopes.size > 1 && scopes.subtract(TransformManager.SCOPE_FULL_PROJECT).isEmpty() },
                     classesFilter
                 )
             }
 
             desugaringClasspathClasses =
-                variantScope.transformManager.getPipelineOutputAsFileCollection(
+                transformManager.getPipelineOutputAsFileCollection(
                     StreamFilter { _, scopes ->
                         scopes.subtract(desugaringClasspathScopes).isEmpty()
                     },
                     classesFilter
                 )
 
-            @Suppress("DEPRECATION") // remove all class files from the transform streams
-            variantScope.transformManager.consumeStreams(
+            transformManager.consumeStreams(
                 TransformManager.SCOPE_FULL_WITH_FEATURES,
                 TransformManager.CONTENT_CLASS
             )
@@ -307,53 +308,53 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.PROJECT_DEX_ARCHIVE,
                 taskProvider,
                 DexArchiveBuilderTask::projectOutputDex
             )
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE,
                 taskProvider,
                 DexArchiveBuilderTask::subProjectOutputDex
             )
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE,
                 taskProvider,
                 DexArchiveBuilderTask::externalLibsOutputDex
             )
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE,
                 taskProvider,
                 DexArchiveBuilderTask::mixedScopeOutputDex
             )
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.DEX_ARCHIVE_INPUT_JAR_HASHES,
                 taskProvider,
                 DexArchiveBuilderTask::inputJarHashesFile
             )
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_GRAPH,
                 taskProvider,
                 DexArchiveBuilderTask::desugarGraphDir
             )
-            if (variantScope.needsShrinkDesugarLibrary) {
-                variantScope.artifacts.producesDir(
+            if (component.variantScope.needsShrinkDesugarLibrary) {
+                component.artifacts.producesDir(
                     InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES,
                     taskProvider,
                     DexArchiveBuilderTask::projectOutputKeepRules
                 )
-                variantScope.artifacts.producesDir(
+                component.artifacts.producesDir(
                     InternalArtifactType.DESUGAR_LIB_SUBPROJECT_KEEP_RULES,
                     taskProvider,
                     DexArchiveBuilderTask::subProjectOutputKeepRules
                 )
-                variantScope.artifacts.producesDir(
+                component.artifacts.producesDir(
                     InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES,
                     taskProvider,
                     DexArchiveBuilderTask::externalLibsOutputKeepRules
                 )
-                variantScope.artifacts.producesDir(
+                component.artifacts.producesDir(
                     InternalArtifactType.DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES,
                     taskProvider,
                     DexArchiveBuilderTask::mixedScopeOutputKeepRules
@@ -366,7 +367,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         ) {
             super.configure(task)
 
-            val projectOptions = variantScope.globalScope.projectOptions
+            val projectOptions = component.globalScope.projectOptions
 
             task.projectClasses.from(projectClasses)
             task.subProjectClasses.from(subProjectsClasses)
@@ -374,28 +375,28 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.mixedScopeClasses.from(mixedScopeClasses)
 
             task.incrementalDexingV2.setDisallowChanges(
-                variantScope.globalScope.project.provider {
+                component.globalScope.project.provider {
                     projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2)
                 })
 
-            val minSdkVersion = variantScope
+            val minSdkVersion = component
                 .variantDslInfo
                 .minSdkVersionWithTargetDeviceApi
                 .featureLevel
             task.dexParams.minSdkVersion.set(minSdkVersion)
             task.dexParams.withDesugaring
-                .set(variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8)
-            if (variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
+                .set(component.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8)
+            if (component.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
                 && minSdkVersion < AndroidVersion.VersionCodes.N
             ) {
                 // Set bootclasspath and classpath only if desugaring with D8 and minSdkVersion < 24
                 task.dexParams.desugarClasspath.from(desugaringClasspathClasses)
                 task.dexParams.desugarBootclasspath
-                    .from(variantScope.globalScope.filteredBootClasspath)
+                    .from(component.globalScope.filteredBootClasspath)
             }
 
             task.dexParams.errorFormatMode.set(SyncOptions.getErrorFormatMode(projectOptions))
-            task.dexer.set(variantScope.dexer)
+            task.dexer.set(component.variantScope.dexer)
             task.useGradleWorkers.set(projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS))
             task.dxDexParams.inBufferSize.set(
                 (projectOptions.get(IntegerOption.DEXING_READ_BUFFER_SIZE)
@@ -406,10 +407,10 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
             )
             task.dexParams.debuggable.setDisallowChanges(
-                variantScope.variantDslInfo.isDebuggable
+                component.variantDslInfo.isDebuggable
             )
             task.projectVariant.set(
-                "${variantScope.globalScope.project.name}:${component.name}"
+                "${component.globalScope.project.name}:${component.name}"
             )
             task.numberOfBuckets.set(
                 projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS) ?: DEFAULT_NUM_BUCKETS
@@ -418,9 +419,9 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 dexOptions.additionalParameters.contains("--no-optimize")
             )
             task.userLevelCache = userLevelCache
-            if (variantScope.isCoreLibraryDesugaringEnabled) {
+            if (component.variantScope.isCoreLibraryDesugaringEnabled) {
                 task.dexParams.coreLibDesugarConfig
-                    .set(getDesugarLibConfig(variantScope.globalScope.project))
+                    .set(getDesugarLibConfig(component.globalScope.project))
             }
         }
     }

@@ -126,7 +126,7 @@ abstract class BundleToApkTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out BundleToApkTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.APKS_FROM_BUNDLE,
                 taskProvider,
                 BundleToApkTask::outputFile,
@@ -139,9 +139,9 @@ abstract class BundleToApkTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            component.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.INTERMEDIARY_BUNDLE, task.bundle)
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
+            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
             task.signingConfig = SigningConfigProvider.create(component)

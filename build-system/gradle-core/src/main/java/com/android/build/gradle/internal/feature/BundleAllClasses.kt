@@ -134,11 +134,9 @@ abstract class BundleAllClasses : NonIncrementalTask() {
         override val type: Class<BundleAllClasses>
             get() = BundleAllClasses::class.java
 
-        override fun handleProvider(
-            taskProvider: TaskProvider<out BundleAllClasses>
-        ) {
+        override fun handleProvider(taskProvider: TaskProvider<out BundleAllClasses>) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.APP_CLASSES,
                 taskProvider,
                 BundleAllClasses::outputJar,
@@ -146,11 +144,9 @@ abstract class BundleAllClasses : NonIncrementalTask() {
             )
         }
 
-        override fun configure(
-            task: BundleAllClasses
-        ) {
+        override fun configure(task: BundleAllClasses) {
             super.configure(task)
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            component.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.JAVAC,
                 task.javacClasses
             )
@@ -158,9 +154,9 @@ abstract class BundleAllClasses : NonIncrementalTask() {
             task.postJavacClasses = component.variantData.allPostJavacGeneratedBytecode
             val globalScope = component.globalScope
             task.modulePath = globalScope.project.path
-            task.jarCreatorType = variantScope.jarCreatorType
+            task.jarCreatorType = component.variantScope.jarCreatorType
             if (globalScope.extension.aaptOptions.namespaced) {
-                variantScope.artifacts.setTaskInputToFinalProduct(
+                component.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                     task.thisRClassClasses
                 )
@@ -174,7 +170,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                 // thisRClassClasses expects *.class files as an input while this is *.jar. Thus,
                 // put it to dependencyRClassClasses and it will be processed properly.
                 task.dependencyRClassClasses =
-                    variantScope
+                    component
                         .artifacts
                         .getFinalProductAsFileCollection(
                             InternalArtifactType

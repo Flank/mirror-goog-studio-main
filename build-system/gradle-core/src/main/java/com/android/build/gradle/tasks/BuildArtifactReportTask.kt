@@ -76,15 +76,14 @@ open class BuildArtifactReportTask : DefaultTask() {
             get() = BuildArtifactReportTask::class.java
 
         override fun configure(task: BuildArtifactReportTask) {
-            var variantScope = componentProperties.variantScope
             val outputFileName =
-                    variantScope.globalScope.projectOptions.get(StringOption.BUILD_ARTIFACT_REPORT_FILE)
+                    componentProperties.globalScope.projectOptions.get(StringOption.BUILD_ARTIFACT_REPORT_FILE)
             val outputFile : File? =
                     if (outputFileName == null) null
-                    else variantScope.globalScope.project.file(outputFileName)
+                    else componentProperties.globalScope.project.file(outputFileName)
 
             task.init(
-                    report = variantScope.artifacts::createReport,
+                    report = componentProperties.artifacts::createReport,
                     outputFile = outputFile)
         }
     }

@@ -19,7 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceConnector;
@@ -127,17 +126,16 @@ public abstract class UninstallTask extends NonIncrementalTask {
         @Override
         public void configure(@NonNull UninstallTask task) {
             super.configure(task);
-            VariantScope scope = getVariantScope();
 
             task.componentProperties = component;
             task.setDescription(
                     "Uninstalls the " + component.getVariantData().getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             task.setTimeOutInMs(
-                    scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
+                    component.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
 
             task.adbExecutableProvider =
-                    scope.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
+                    component.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
 
         }
 

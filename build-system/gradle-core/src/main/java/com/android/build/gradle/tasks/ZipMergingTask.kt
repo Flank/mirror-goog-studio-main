@@ -102,7 +102,7 @@ abstract class ZipMergingTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ZipMergingTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.FULL_JAR,
                 taskProvider,
                 ZipMergingTask::outputFile,
@@ -115,13 +115,13 @@ abstract class ZipMergingTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val buildArtifacts = variantScope.artifacts
+            val buildArtifacts = component.artifacts
             buildArtifacts.setTaskInputToFinalProduct(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR, task.libraryInputFile)
             buildArtifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LIBRARY_JAVA_RES,
                 task.javaResInputFile
             )
-            task.jarCreatorType = variantScope.jarCreatorType
+            task.jarCreatorType = component.variantScope.jarCreatorType
         }
     }
 }

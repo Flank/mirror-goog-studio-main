@@ -86,7 +86,7 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
         taskProvider: TaskProvider<out SdkDependencyDataGeneratorTask>
     ) {
       super.handleProvider(taskProvider)
-      variantScope
+      component
         .artifacts
         .producesFile(
           InternalArtifactType.SDK_DEPENDENCY_DATA,
@@ -100,7 +100,7 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
       task: SdkDependencyDataGeneratorTask
     ) {
       super.configure(task)
-      variantScope.artifacts.setTaskInputToFinalProduct(
+      component.artifacts.setTaskInputToFinalProduct(
         InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.dependencies)
     }
   }

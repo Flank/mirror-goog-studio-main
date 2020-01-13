@@ -52,7 +52,6 @@ import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.PostProcessingOptions;
 import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
@@ -120,7 +119,6 @@ public class VariantScopeImpl implements VariantScope {
     // Variant specific Data
     @NonNull private final ComponentIdentity componentIdentity;
     @NonNull private final VariantDslInfo variantDslInfo;
-    @NonNull private final VariantSources variantSources;
     @NonNull private final VariantPathHelper pathHelper;
     @NonNull private final BuildArtifactsHolder artifacts;
     @NonNull private final VariantDependencies variantDependencies;
@@ -143,7 +141,6 @@ public class VariantScopeImpl implements VariantScope {
     public VariantScopeImpl(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantSources variantSources,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantPathHelper pathHelper,
             @NonNull BuildArtifactsHolder artifacts,
@@ -152,7 +149,6 @@ public class VariantScopeImpl implements VariantScope {
             @Nullable VariantPropertiesImpl testedVariantProperties) {
         this.componentIdentity = componentIdentity;
         this.variantDslInfo = variantDslInfo;
-        this.variantSources = variantSources;
         this.variantDependencies = variantDependencies;
         this.pathHelper = pathHelper;
         this.artifacts = artifacts;
@@ -180,30 +176,6 @@ public class VariantScopeImpl implements VariantScope {
         this.postProcessingOptions = variantDslInfo.createPostProcessingOptions(project);
 
         configureNdk();
-    }
-
-    @Override
-    @NonNull
-    public VariantDslInfo getVariantDslInfo() {
-        return variantDslInfo;
-    }
-
-    @Override
-    @NonNull
-    public VariantSources getVariantSources() {
-        return variantSources;
-    }
-
-    @Override
-    @NonNull
-    public VariantPathHelper getPaths() {
-        return pathHelper;
-    }
-
-    @Override
-    @NonNull
-    public VariantDependencies getVariantDependencies() {
-        return variantDependencies;
     }
 
     @Override
@@ -672,12 +644,6 @@ public class VariantScopeImpl implements VariantScope {
         return mainCollection;
     }
 
-    @NonNull
-    @Override
-    public BuildArtifactsHolder getArtifacts() {
-        return artifacts;
-    }
-
     /**
      * Returns the packaged local Jars
      *
@@ -753,8 +719,8 @@ public class VariantScopeImpl implements VariantScope {
         checkState(variantType == UNIT_TEST, "Expected unit test type but found: " + variantType);
 
         if (testedVariantProperties.getVariantType().isAar()) {
-            return this.getArtifacts()
-                    .getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
+            return artifacts.getFinalProduct(
+                    COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
         } else {
             checkState(
                     testedVariantProperties.getVariantType().isApk(),

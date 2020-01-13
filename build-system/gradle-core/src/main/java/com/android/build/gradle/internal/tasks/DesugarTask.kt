@@ -115,11 +115,11 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
 
         init {
             projectClasses =
-                variantScope.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
+                componentProperties.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
                     QualifiedContent.DefaultContentType.CLASSES in types &&
                             scopes == setOf(QualifiedContent.Scope.PROJECT)
                 }
-            variantScope.transformManager.consumeStreams(
+            componentProperties.transformManager.consumeStreams(
                 mutableSetOf(
                     QualifiedContent.Scope.PROJECT,
                     QualifiedContent.Scope.SUB_PROJECTS,
@@ -134,15 +134,15 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 InternalArtifactType.DESUGAR_SUB_PROJECT_CLASSES to QualifiedContent.Scope.SUB_PROJECTS,
                 InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES to QualifiedContent.Scope.EXTERNAL_LIBRARIES
             ).forEach { (output, scope) ->
-                val processedClasses = variantScope.globalScope.project.files(
-                    variantScope.artifacts.getOperations().get(output)
+                val processedClasses = componentProperties.globalScope.project.files(
+                    componentProperties.artifacts.getOperations().get(output)
                 )
                     .asFileTree
-                variantScope
+                componentProperties
                     .transformManager
                     .addStream(
                         OriginalStream.builder(
-                            variantScope.globalScope.project,
+                            componentProperties.globalScope.project,
                             "desugared-classes-${scope.name}"
                         )
                             .addContentTypes(TransformManager.CONTENT_CLASS)
@@ -158,22 +158,22 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_PROJECT_CLASSES,
                 taskProvider,
                 DesugarTask::projectOutput
             )
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_SUB_PROJECT_CLASSES,
                 taskProvider,
                 DesugarTask::subProjectOutput
             )
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES,
                 taskProvider,
                 DesugarTask::externalLibsOutput
             )
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_LOCAL_STATE_OUTPUT,
                 taskProvider,
                 DesugarTask::tmpDir
@@ -184,6 +184,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
             task: DesugarTask
         ) {
             super.configure(task)
+            val variantScope = component.variantScope
             task.minSdk.set(variantScope.minSdkVersion.featureLevel)
 
             /**
@@ -201,13 +202,13 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
 
             task.projectClasses.from(projectClasses)
             task.subProjectClasses.from(
-                variantScope.variantDependencies.getArtifactFileCollection(
+                component.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.CLASSES_JAR
                 )
             )
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            component.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.FIXED_STACK_FRAMES,
                 task.externaLibsClasses
             )

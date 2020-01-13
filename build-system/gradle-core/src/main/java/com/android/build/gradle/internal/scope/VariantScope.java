@@ -64,21 +64,6 @@ public interface VariantScope {
     @NonNull
     List<File> getProguardFiles();
 
-    @NonNull
-    BuildArtifactsHolder getArtifacts();
-
-    @NonNull
-    VariantDslInfo getVariantDslInfo();
-
-    @NonNull
-    VariantSources getVariantSources();
-
-    @NonNull
-    VariantPathHelper getPaths();
-
-    @NonNull
-    VariantDependencies getVariantDependencies();
-
     /** @deprecated Use {@link ComponentPropertiesImpl#getGlobalScope()} */
     @Deprecated
     @NonNull

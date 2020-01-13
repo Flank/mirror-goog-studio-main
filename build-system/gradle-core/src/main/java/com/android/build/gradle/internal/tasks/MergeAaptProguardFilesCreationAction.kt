@@ -40,7 +40,7 @@ class MergeAaptProguardFilesCreationAction(
     ) {
         super.handleProvider(taskProvider)
 
-        variantScope.artifacts.producesFile(
+        component.artifacts.producesFile(
             InternalArtifactType.MERGED_AAPT_PROGUARD_FILE,
             taskProvider,
             MergeFileTask::outputFile,
@@ -53,12 +53,12 @@ class MergeAaptProguardFilesCreationAction(
     ) {
         super.configure(task)
 
-        val project = variantScope.globalScope.project
+        val project = component.globalScope.project
         val inputFiles =
             project
                 .files(
-                    variantScope.artifacts.getFinalProduct(InternalArtifactType.AAPT_PROGUARD_FILE),
-                    variantScope.variantDependencies.getArtifactFileCollection(
+                    component.artifacts.getFinalProduct(InternalArtifactType.AAPT_PROGUARD_FILE),
+                    component.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.AAPT_PROGUARD_RULES

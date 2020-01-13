@@ -150,7 +150,7 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             taskProvider: TaskProvider<out CompatibleScreensManifest>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 COMPATIBLE_SCREEN_MANIFEST,
                 taskProvider,
                 CompatibleScreensManifest::outputFolder

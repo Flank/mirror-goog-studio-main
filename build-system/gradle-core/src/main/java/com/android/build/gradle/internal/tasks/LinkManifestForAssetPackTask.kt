@@ -123,7 +123,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LinkManifestForAssetPackTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.LINKED_RES_FOR_ASSET_PACK,
                 taskProvider,
                 LinkManifestForAssetPackTask::linkedManifestsDirectory
@@ -135,16 +135,16 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val artifacts = variantScope.artifacts
+            val artifacts = component.artifacts
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.ASSET_PACK_MANIFESTS, task.manifestsDirectory)
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
+            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
-            task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
+            task.androidJar = component.globalScope.sdkComponents.androidJarProvider
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }
     }

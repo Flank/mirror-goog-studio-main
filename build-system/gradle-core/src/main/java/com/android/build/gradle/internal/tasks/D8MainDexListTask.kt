@@ -165,13 +165,13 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
 
             // It is ok to get streams that have more types/scopes than we are asking for, so just
             // check if intersection is not empty. This is what TransformManager does.
-            inputClasses = variantScope.transformManager
+            inputClasses = componentProperties.transformManager
                 .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                     contentTypes.contains(
                         QualifiedContent.DefaultContentType.CLASSES
                     ) && inputScopes.intersect(scopes).isNotEmpty()
                 }
-            libraryClasses = variantScope.transformManager
+            libraryClasses = componentProperties.transformManager
                 .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                     contentTypes.contains(
                         QualifiedContent.DefaultContentType.CLASSES
@@ -187,7 +187,7 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out D8MainDexListTask>
         ) {
             super.handleProvider(taskProvider)
-            val request = variantScope.artifacts.getOperations().setInitialProvider(
+            val request = component.artifacts.getOperations().setInitialProvider(
                 taskProvider, D8MainDexListTask::output
             ).withName("mainDexList.txt")
             if (includeDynamicFeatures) {
@@ -202,13 +202,13 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            component.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
                 task.aaptGeneratedRules
             )
 
-            val variantDslInfo = variantScope.variantDslInfo
-            val project = variantScope.globalScope.project
+            val variantDslInfo = component.variantDslInfo
+            val project = component.globalScope.project
 
             if (variantDslInfo.multiDexKeepProguard != null) {
                 task.userMultidexProguardRules.fileProvider(
@@ -227,10 +227,10 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
             task.inputClasses.from(inputClasses).disallowChanges()
             task.libraryClasses.from(libraryClasses).disallowChanges()
 
-            task.bootClasspath.from(variantScope.bootClasspath).disallowChanges()
+            task.bootClasspath.from(component.variantScope.bootClasspath).disallowChanges()
             task.errorFormat
                 .setDisallowChanges(
-                    SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions))
+                    SyncOptions.getErrorFormatMode(component.globalScope.projectOptions))
         }
     }
 }

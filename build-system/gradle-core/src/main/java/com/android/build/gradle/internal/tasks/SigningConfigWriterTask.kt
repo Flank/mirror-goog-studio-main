@@ -77,7 +77,7 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out SigningConfigWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.SIGNING_CONFIG,
                 taskProvider,
                 SigningConfigWriterTask::outputDirectory
@@ -89,12 +89,12 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            component.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.VALIDATE_SIGNING_CONFIG,
                 task.validatedSigningOutput
             )
 
-            task.signingConfigData = variantScope.variantDslInfo.signingConfig?.let {
+            task.signingConfigData = component.variantDslInfo.signingConfig?.let {
                 task.storeFilePath = it.storeFile?.path
                 SigningConfigData.fromSigningConfig(it)
             }

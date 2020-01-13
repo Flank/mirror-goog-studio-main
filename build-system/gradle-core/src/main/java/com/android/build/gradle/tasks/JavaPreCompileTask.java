@@ -24,7 +24,6 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.ide.common.workers.WorkerExecutorFacade;
@@ -157,7 +156,7 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends JavaPreCompileTask> taskProvider) {
             super.handleProvider(taskProvider);
-            getVariantScope()
+            component
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.ANNOTATION_PROCESSOR_LIST.INSTANCE,
@@ -169,12 +168,13 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
         @Override
         public void configure(@NonNull JavaPreCompileTask task) {
             super.configure(task);
-            VariantScope scope = getVariantScope();
 
             task.init(
-                    scope.getVariantDependencies()
+                    component
+                            .getVariantDependencies()
                             .getArtifactCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR),
-                    scope.getVariantDslInfo()
+                    component
+                            .getVariantDslInfo()
                             .getJavaCompileOptions()
                             .getAnnotationProcessorOptions());
         }

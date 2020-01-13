@@ -182,12 +182,12 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
             // Mirrors logic in OutputFactory.getOutputFileName, but without splits.
-            val suffix = if (variantScope.variantDslInfo.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
-            variantScope.artifacts.producesFile(
+            val suffix = if (component.variantDslInfo.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
+            component.artifacts.producesFile(
                 InternalArtifactType.UNIVERSAL_APK,
                 taskProvider,
                 BundleToStandaloneApkTask::outputFile,
-                "${variantScope.globalScope.projectBaseName}-${variantScope.variantDslInfo.baseName}-universal$suffix"
+                "${component.globalScope.projectBaseName}-${component.variantDslInfo.baseName}-universal$suffix"
             )
         }
 
@@ -196,12 +196,12 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            component.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.INTERMEDIARY_BUNDLE, task.bundle)
-            val (aapt2FromMaven,aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
+            val (aapt2FromMaven,aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
-            task.tempDirectory = variantScope.paths.getIncrementalDir(name)
+            task.tempDirectory = component.paths.getIncrementalDir(name)
             task.signingConfig = SigningConfigProvider.create(component)
         }
     }

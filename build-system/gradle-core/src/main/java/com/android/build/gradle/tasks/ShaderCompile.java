@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.internal.compiler.DirectoryWalker;
@@ -223,7 +222,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ShaderCompile> taskProvider) {
             super.handleProvider(taskProvider);
-            getVariantScope()
+            component
                     .getArtifacts()
                     .producesDir(
                             InternalArtifactType.SHADER_ASSETS.INSTANCE,
@@ -235,18 +234,17 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         @Override
         public void configure(@NonNull ShaderCompile task) {
             super.configure(task);
-            VariantScope scope = getVariantScope();
+            final VariantDslInfo variantDslInfo = component.getVariantDslInfo();
 
-            final VariantDslInfo variantDslInfo = scope.getVariantDslInfo();
-
-            task.ndkLocation = scope.getGlobalScope().getSdkComponents().getNdkFolderProvider();
-            scope.getArtifacts()
+            task.ndkLocation = component.getGlobalScope().getSdkComponents().getNdkFolderProvider();
+            component
+                    .getArtifacts()
                     .setTaskInputToFinalProduct(MERGED_SHADERS.INSTANCE, task.getSourceDir());
             task.setDefaultArgs(variantDslInfo.getDefaultGlslcArgs());
             task.setScopedArgs(variantDslInfo.getScopedGlslcArgs());
 
             task.buildToolInfoRevisionProvider =
-                    scope.getGlobalScope().getSdkComponents().getBuildToolsRevisionProvider();
+                    component.getGlobalScope().getSdkComponents().getBuildToolsRevisionProvider();
         }
     }
 }

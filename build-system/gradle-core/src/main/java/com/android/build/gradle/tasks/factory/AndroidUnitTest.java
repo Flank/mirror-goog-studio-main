@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.scope.BootClasspathBuilder;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.VariantAwareTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
@@ -124,7 +123,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             task.setDescription("Run unit tests for the " + testedVariant.getName() + " build.");
 
             task.setTestClassesDirs(component.getArtifacts().getAllClasses());
-            task.setClasspath(computeClasspath(includeAndroidResources));
+            task.setClasspath(computeClasspath(component, includeAndroidResources));
 
             if (includeAndroidResources) {
                 // When computing the classpath above, we made sure this task depends on the output
@@ -162,12 +161,12 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         }
 
         @NonNull
-        private ConfigurableFileCollection computeClasspath(boolean includeAndroidResources) {
-            VariantScope scope = getVariantScope();
-            GlobalScope globalScope = scope.getGlobalScope();
-            BuildArtifactsHolder artifacts = scope.getArtifacts();
+        private ConfigurableFileCollection computeClasspath(
+                ComponentPropertiesImpl component, boolean includeAndroidResources) {
+            GlobalScope globalScope = component.getGlobalScope();
+            BuildArtifactsHolder artifacts = component.getArtifacts();
 
-            ConfigurableFileCollection collection = scope.getGlobalScope().getProject().files();
+            ConfigurableFileCollection collection = component.getGlobalScope().getProject().files();
 
             // the test classpath is made up of:
             // 1. the config file
@@ -184,25 +183,27 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
 
             // 3. the runtime dependencies for both CLASSES and JAVA_RES type
             collection.from(
-                    scope.getVariantDependencies()
+                    component
+                            .getVariantDependencies()
                             .getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, CLASSES_JAR));
             collection.from(
-                    scope.getVariantDependencies()
+                    component
+                            .getVariantDependencies()
                             .getArtifactFileCollection(
                                     RUNTIME_CLASSPATH, ALL, ArtifactType.JAVA_RES));
 
             // 4. The separately compile R class, if applicable.
             if (!globalScope.getExtension().getAaptOptions().getNamespaced()
                     && !globalScope.getProjectOptions().get(BooleanOption.GENERATE_R_JAVA)) {
-                collection.from(scope.getRJarForUnitTests());
+                collection.from(component.getVariantScope().getRJarForUnitTests());
             }
 
             // 5. Any additional or requested optional libraries
-            collection.from(getAdditionalAndRequestedOptionalLibraries(scope.getGlobalScope()));
+            collection.from(getAdditionalAndRequestedOptionalLibraries(component.getGlobalScope()));
 
             // 6. Mockable JAR is last, to make sure you can shadow the classes with
             // dependencies.
-            collection.from(scope.getGlobalScope().getMockableJarArtifact());
+            collection.from(component.getGlobalScope().getMockableJarArtifact());
 
             return collection;
         }

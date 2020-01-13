@@ -205,12 +205,12 @@ abstract class CompileSourceSetResources : IncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.getOperations().append(
+            component.artifacts.getOperations().append(
                 taskProvider,
                 CompileSourceSetResources::partialRDirectory
             ).on(MultipleArtifactType.PARTIAL_R_FILES)
 
-            variantScope.artifacts.getOperations().append(
+            component.artifacts.getOperations().append(
                 taskProvider,
                 CompileSourceSetResources::outputDirectory
             ).on(MultipleArtifactType.RES_COMPILED_FLAT_FILES)
@@ -222,18 +222,18 @@ abstract class CompileSourceSetResources : IncrementalTask() {
             super.configure(task)
 
             task.inputDirectories = inputDirectories
-            task.isPngCrunching = variantScope.isCrunchPngs
+            task.isPngCrunching = component.variantScope.isCrunchPngs
             task.isPseudoLocalize =
-                    variantScope.variantDslInfo.isPseudoLocalesEnabled
+                    component.variantDslInfo.isPseudoLocalesEnabled
 
-            val (aapt2FromMaven,aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
+            val (aapt2FromMaven,aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
             task.dependsOn(component.taskContainer.resourceGenTask)
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                variantScope.globalScope.projectOptions
+                component.globalScope.projectOptions
             )
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }

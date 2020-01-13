@@ -79,7 +79,7 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ProcessAssetPackManifestTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.ASSET_PACK_MANIFESTS,
                 taskProvider,
                 ProcessAssetPackManifestTask::processedManifests

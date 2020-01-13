@@ -227,7 +227,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 InternalArtifactType.COMPILED_LOCAL_RESOURCES,
                 taskProvider,
                 CompileLibraryResourcesTask::outputDir
@@ -239,26 +239,26 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
         ) {
             super.configure(task)
 
-            variantScope.artifacts.setTaskInputToFinalProduct(
+            component.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_RES,
                 task.mergedLibraryResourcesDir
             )
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
+            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
-            task.pseudoLocalesEnabled = variantScope
+            task.pseudoLocalesEnabled = component
                 .variantDslInfo
                 .isPseudoLocalesEnabled
 
-            task.crunchPng = variantScope.isCrunchPngs
+            task.crunchPng = component.variantScope.isCrunchPngs
 
             task.errorFormatMode =
-                SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
+                SyncOptions.getErrorFormatMode(component.globalScope.projectOptions)
 
             task.useJvmResourceCompiler =
-              variantScope.globalScope.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
+              component.globalScope.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
             task.aapt2WorkersBuildService.set(getAapt2WorkersBuildService(task.project))
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }

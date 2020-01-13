@@ -173,20 +173,20 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.variantArtifact = variantScope.artifacts
+            task.variantArtifact = component.artifacts
                 .getFinalProductAsFileCollection(AnchorOutputType.ALL_CLASSES)
 
-            task.externalArtifactCollection = variantScope
+            task.externalArtifactCollection = component
                 .variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.CLASSES_JAR)
 
-            task.apiDirectDependenciesConfiguration = variantScope
+            task.apiDirectDependenciesConfiguration = component
                 .variantDependencies
                 .getElements(AndroidArtifacts.PublishedConfigType.API_ELEMENTS)
 
-            task.allDirectDependencies = variantScope
+            task.allDirectDependencies = component
                 .variantDependencies
                 .incomingRuntimeDependencies
 
@@ -198,7 +198,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 artifactType = InternalArtifactType.ANALYZE_DEPENDENCIES_REPORT,
                 taskProvider = taskProvider,
                 productProvider = AnalyzeDependenciesTask::outputDirectory,

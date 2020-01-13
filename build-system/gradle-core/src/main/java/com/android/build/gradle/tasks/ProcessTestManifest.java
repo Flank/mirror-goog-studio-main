@@ -501,7 +501,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         @Override
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
-            getVariantScope()
+            component
                     .getArtifacts()
                     .republish(
                             InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
@@ -514,7 +514,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             super.handleProvider(taskProvider);
             component.getTaskContainer().setProcessManifestTask(taskProvider);
 
-            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
+            BuildArtifactsHolder artifacts = component.getArtifacts();
             artifacts.producesDir(
                     InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
                     taskProvider,
@@ -526,7 +526,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                     taskProvider,
                     ProcessTestManifest::getMergeBlameFile,
                     "manifest-merger-blame-"
-                            + getVariantScope().getVariantDslInfo().getBaseName()
+                            + component.getVariantDslInfo().getBaseName()
                             + "-report.txt");
         }
 
@@ -536,8 +536,8 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             super.configure(task);
             Project project = task.getProject();
 
-            final VariantDslInfo variantDslInfo = getVariantScope().getVariantDslInfo();
-            final VariantSources variantSources = getVariantScope().getVariantSources();
+            final VariantDslInfo variantDslInfo = component.getVariantDslInfo();
+            final VariantSources variantSources = component.getVariantSources();
 
             // Use getMainManifestIfExists() instead of getMainManifestFilePath() because this task
             // accepts either a non-null file that exists or a null file, it does not accept a
@@ -553,7 +553,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
 
             task.setTmpDir(
                     FileUtils.join(
-                            getVariantScope().getPaths().getIntermediatesDir(),
+                            component.getPaths().getIntermediatesDir(),
                             "tmp",
                             "manifest",
                             component.getVariantDslInfo().getDirName()));
@@ -591,7 +591,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             task.getTestLabel().disallowChanges();
 
             task.manifests =
-                    getVariantScope()
+                    component
                             .getVariantDependencies()
                             .getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
@@ -599,14 +599,10 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                     .set(project.provider(variantDslInfo::getManifestPlaceholders));
             task.getPlaceholdersValues().disallowChanges();
 
-            if (!getVariantScope()
-                    .getGlobalScope()
-                    .getExtension()
-                    .getAaptOptions()
-                    .getNamespaced()) {
+            if (!component.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
                 task.navigationJsons =
                         project.files(
-                                getVariantScope()
+                                component
                                         .getVariantDependencies()
                                         .getArtifactFileCollection(
                                                 RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));

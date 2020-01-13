@@ -302,11 +302,10 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             task: MergeSourceSetFolders
         ) {
             super.configure(task)
-            val scope = variantScope
 
-            task.incrementalFolder = scope.paths.getIncrementalDir(name)
+            task.incrementalFolder = component.paths.getIncrementalDir(name)
 
-            task.errorFormatMode = SyncOptions.getErrorFormatMode(scope.globalScope.projectOptions)
+            task.errorFormatMode = SyncOptions.getErrorFormatMode(component.globalScope.projectOptions)
         }
     }
 
@@ -324,7 +323,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope
+            component
                 .artifacts
                 .producesDir(
                     outputArtifactType,
@@ -339,32 +338,30 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             task: MergeSourceSetFolders
         ) {
             super.configure(task)
-            val scope = variantScope
-
             val variantSources = component.variantSources
 
             val assetDirFunction =
                 Function<SourceProvider, Collection<File>> { it.assetsDirectories }
 
-            task.assetSets.set(variantScope.globalScope.project.provider {
+            task.assetSets.set(component.globalScope.project.provider {
                 variantSources.getSourceFilesAsAssetSets(assetDirFunction)
             })
             task.assetSets.disallowChanges()
 
             task.sourceFolderInputs.from(Callable { variantSources.getSourceFiles(assetDirFunction) })
 
-            scope.artifacts.setTaskInputToFinalProduct(
+            component.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.SHADER_ASSETS,
                 task.shadersOutputDir
             )
 
-            val options = scope.globalScope.extension.aaptOptions
+            val options = component.globalScope.extension.aaptOptions
             if (options != null) {
                 task.ignoreAssets = options.ignoreAssets
             }
 
             if (includeDependencies) {
-                task.libraryCollection = scope.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ASSETS)
+                task.libraryCollection = component.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ASSETS)
             }
 
             task.dependsOn(component.taskContainer.assetGenTask)
@@ -403,7 +400,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             taskProvider: TaskProvider<out MergeSourceSetFolders>
         ) {
             super.handleProvider(taskProvider)
-            variantScope
+            component
                 .artifacts
                 .producesDir(
                     InternalArtifactType.MERGED_JNI_LIBS,
@@ -421,7 +418,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
             val assetDirFunction =
                 Function<SourceProvider, Collection<File>> { it.jniLibsDirectories }
-            task.assetSets.set(variantScope.globalScope.project.provider {
+            task.assetSets.set(component.globalScope.project.provider {
                 variantSources.getSourceFilesAsAssetSets(assetDirFunction)
             })
             task.assetSets.disallowChanges()
@@ -439,7 +436,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             taskProvider: TaskProvider<out MergeSourceSetFolders>
         ) {
             super.handleProvider(taskProvider)
-            variantScope
+            component
                 .artifacts
                 .producesDir(
                     InternalArtifactType.MERGED_SHADERS,
@@ -456,7 +453,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             val variantSources = component.variantSources
 
             val assetDirFunction = Function<SourceProvider, Collection<File>> { it.shadersDirectories }
-            task.assetSets.set(variantScope.globalScope.project.provider {
+            task.assetSets.set(component.globalScope.project.provider {
                 variantSources.getSourceFilesAsAssetSets(assetDirFunction)
             })
             task.assetSets.disallowChanges()

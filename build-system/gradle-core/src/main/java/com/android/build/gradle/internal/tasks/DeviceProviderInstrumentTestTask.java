@@ -33,8 +33,8 @@ import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.InstrumentationTestAnalytics;
@@ -450,14 +450,14 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             super.handleProvider(taskProvider);
 
             boolean isAdditionalAndroidTestOutputEnabled =
-                    getVariantScope()
+                    component
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT);
 
             if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
                 if (isAdditionalAndroidTestOutputEnabled) {
-                    getVariantScope()
+                    component
                             .getArtifacts()
                             .producesDir(
                                     InternalArtifactType.CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT
@@ -466,7 +466,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir,
                                     deviceProvider.getName());
                 }
-                getVariantScope()
+                component
                         .getArtifacts()
                         .producesDir(
                                 InternalArtifactType.CODE_COVERAGE.INSTANCE,
@@ -477,7 +477,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 // NOTE : This task will be created per device provider, assume several tasks instances
                 // will exist in the variant scope.
                 if (isAdditionalAndroidTestOutputEnabled) {
-                    getVariantScope()
+                    component
                             .getArtifacts()
                             .producesDir(
                                     InternalArtifactType
@@ -487,7 +487,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir,
                                     deviceProvider.getName());
                 }
-                getVariantScope()
+                component
                         .getArtifacts()
                         .producesDir(
                                 InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE.INSTANCE,
@@ -512,9 +512,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 @NonNull DeviceProviderInstrumentTestTask task) {
             super.configure(task);
 
-            VariantScope scope = getVariantScope();
-            Project project = scope.getGlobalScope().getProject();
-            ProjectOptions projectOptions = scope.getGlobalScope().getProjectOptions();
+            GlobalScope globalScope = component.getGlobalScope();
+            Project project = globalScope.getProject();
+            ProjectOptions projectOptions = globalScope.getProjectOptions();
 
             // this can be null for test plugin
             VariantPropertiesImpl testedVariant = component.getTestedVariant();
@@ -541,13 +541,12 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             task.setFlavorName(testData.getFlavorName());
             task.setDeviceProvider(deviceProvider);
             task.testTargetManifests = testTargetManifests;
-            task.setInstallOptions(
-                    scope.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
+            task.setInstallOptions(globalScope.getExtension().getAdbOptions().getInstallOptions());
 
             boolean shardBetweenDevices = projectOptions.get(BooleanOption.ENABLE_TEST_SHARDING);
 
             final TestOptions.Execution executionEnum =
-                    scope.getGlobalScope().getExtension().getTestOptions().getExecutionEnum();
+                    globalScope.getExtension().getTestOptions().getExecutionEnum();
             switch (executionEnum) {
                 case ANDROID_TEST_ORCHESTRATOR:
                 case ANDROIDX_TEST_ORCHESTRATOR:
@@ -585,8 +584,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 default:
                     throw new AssertionError("Unknown value " + executionEnum);
             }
-            task.codeCoverageEnabled = scope.getVariantDslInfo().isTestCoverageEnabled();
-            task.dependencies = scope.getVariantDependencies().getRuntimeClasspath();
+            task.codeCoverageEnabled = component.getVariantDslInfo().isTestCoverageEnabled();
+            task.dependencies = component.getVariantDependencies().getRuntimeClasspath();
             task.testExecution = executionEnum;
 
             String flavorFolder = testData.getFlavorName();
@@ -600,20 +599,19 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             final String subFolder = "/" + providerFolder + "/" + flavorFolder;
 
             task.splitSelectExecProvider =
-                    scope.getGlobalScope().getSdkComponents().getSplitSelectExecutableProvider();
+                    globalScope.getSdkComponents().getSplitSelectExecutableProvider();
 
-            String rootLocation = scope.getGlobalScope().getExtension().getTestOptions()
-                    .getResultsDir();
+            String rootLocation = globalScope.getExtension().getTestOptions().getResultsDir();
             if (rootLocation == null) {
-                rootLocation = scope.getGlobalScope().getBuildDir() + "/" +
-                        FD_OUTPUTS + "/" + FD_ANDROID_RESULTS;
+                rootLocation =
+                        globalScope.getBuildDir() + "/" + FD_OUTPUTS + "/" + FD_ANDROID_RESULTS;
             }
             task.getResultsDir().set(new File(rootLocation + subFolder));
 
-            rootLocation = scope.getGlobalScope().getExtension().getTestOptions().getReportDir();
+            rootLocation = globalScope.getExtension().getTestOptions().getReportDir();
             if (rootLocation == null) {
-                rootLocation = scope.getGlobalScope().getBuildDir() + "/" +
-                        FD_REPORTS + "/" + FD_ANDROID_TESTS;
+                rootLocation =
+                        globalScope.getBuildDir() + "/" + FD_REPORTS + "/" + FD_ANDROID_TESTS;
             }
             task.reportsDir = project.file(rootLocation + subFolder);
 

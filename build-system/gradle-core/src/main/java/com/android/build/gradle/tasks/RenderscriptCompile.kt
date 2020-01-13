@@ -261,7 +261,7 @@ abstract class RenderscriptCompile : NdkTask() {
         ) {
             super.handleProvider(taskProvider)
             component.taskContainer.renderscriptCompileTask = taskProvider
-            variantScope
+            component
                 .artifacts
                 .producesDir(
                     RENDERSCRIPT_SOURCE_OUTPUT_DIR,
@@ -270,7 +270,7 @@ abstract class RenderscriptCompile : NdkTask() {
                     "out"
                 )
 
-            variantScope
+            component
                 .artifacts
                 .producesDir(
                     RENDERSCRIPT_LIB,
@@ -285,11 +285,10 @@ abstract class RenderscriptCompile : NdkTask() {
         ) {
             super.configure(task)
 
-            val scope = variantScope
-            val globalScope = scope.globalScope
+            val globalScope = component.globalScope
 
-            val variantDslInfo = scope.variantDslInfo
-            val variantSources = scope.variantSources
+            val variantDslInfo = component.variantDslInfo
+            val variantSources = component.variantSources
 
             val ndkMode = variantDslInfo.renderscriptNdkModeEnabled
 
@@ -306,12 +305,12 @@ abstract class RenderscriptCompile : NdkTask() {
             task.sourceDirs = globalScope
                 .project
                 .files(Callable { variantSources.renderscriptSourceList })
-            task.importDirs = scope.variantDependencies.getArtifactFileCollection(
+            task.importDirs = component.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH, ALL, RENDERSCRIPT
             )
 
-            task.resOutputDir = scope.paths.renderscriptResOutputDir
-            task.objOutputDir = scope.paths.renderscriptObjOutputDir
+            task.resOutputDir = component.paths.renderscriptResOutputDir
+            task.objOutputDir = component.paths.renderscriptObjOutputDir
 
             task.ndkConfig = variantDslInfo.ndkConfig
 

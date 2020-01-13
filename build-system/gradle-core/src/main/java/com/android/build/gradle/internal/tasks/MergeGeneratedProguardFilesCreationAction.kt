@@ -38,7 +38,7 @@ class MergeGeneratedProguardFilesCreationAction(
         taskProvider: TaskProvider<out MergeFileTask>
     ) {
         super.handleProvider(taskProvider)
-        variantScope.artifacts.producesFile(
+        component.artifacts.producesFile(
             InternalArtifactType.GENERATED_PROGUARD_FILE,
             taskProvider,
             MergeFileTask::outputFile,
@@ -51,7 +51,7 @@ class MergeGeneratedProguardFilesCreationAction(
     ) {
         super.configure(task)
 
-        val allClasses = variantScope.artifacts.getAllClasses()
+        val allClasses = component.artifacts.getAllClasses()
         val proguardFiles = allClasses.asFileTree.filter { f ->
             val baseFolders = allClasses.files
             val baseFolder = baseFolders.first { f.startsWith(it) }

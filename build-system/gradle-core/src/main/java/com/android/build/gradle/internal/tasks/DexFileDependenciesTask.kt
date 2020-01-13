@@ -170,15 +170,15 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
             taskProvider: TaskProvider<out DexFileDependenciesTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 artifactType = InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES,
                 taskProvider = taskProvider,
                 productProvider = DexFileDependenciesTask::outputDirectory,
                 fileName = "out"
             )
 
-            if (variantScope.needsShrinkDesugarLibrary) {
-                variantScope.artifacts.getOperations()
+            if (component.variantScope.needsShrinkDesugarLibrary) {
+                component.artifacts.getOperations()
                     .setInitialProvider(taskProvider, DexFileDependenciesTask::outputKeepRules)
                     .on(InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES)
             }
@@ -189,36 +189,36 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
         ) {
             super.configure(task)
             task.debuggable
-                .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
+                .setDisallowChanges(component.variantDslInfo.isDebuggable)
             task.classes.from(
-                variantScope.variantDependencies.getArtifactFileCollection(
+                component.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.FILE,
                     AndroidArtifacts.ArtifactType.PROCESSED_JAR
                 )
             ).disallowChanges()
             val minSdkVersion =
-                variantScope.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
+                component.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
             task.minSdkVersion.setDisallowChanges(minSdkVersion)
             if (minSdkVersion < AndroidVersion.VersionCodes.N) {
                 task.classpath.from(
-                    variantScope.variantDependencies.getArtifactFileCollection(
+                    component.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.REPOSITORY_MODULE,
                         AndroidArtifacts.ArtifactType.PROCESSED_JAR
                     )
                 )
-                task.bootClasspath.from(variantScope.globalScope.bootClasspath)
+                task.bootClasspath.from(component.globalScope.bootClasspath)
             }
 
             task.classpath.disallowChanges()
             task.bootClasspath.disallowChanges()
 
             task.errorFormatMode =
-                SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
+                SyncOptions.getErrorFormatMode(component.globalScope.projectOptions)
 
-            if (variantScope.isCoreLibraryDesugaringEnabled) {
-                task.libConfiguration.set(getDesugarLibConfig(variantScope.globalScope.project))
+            if (component.variantScope.isCoreLibraryDesugaringEnabled) {
+                task.libConfiguration.set(getDesugarLibConfig(component.globalScope.project))
             }
             task.libConfiguration.disallowChanges()
         }

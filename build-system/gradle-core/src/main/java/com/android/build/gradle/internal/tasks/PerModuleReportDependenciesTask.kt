@@ -218,7 +218,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope
+            component
                 .artifacts
                 .producesFile(
                     InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT,
@@ -232,8 +232,8 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             task: PerModuleReportDependenciesTask
         ) {
             super.configure(task)
-            task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
-            task.runtimeClasspathArtifacts = variantScope.variantDependencies.getArtifactCollection(
+            task.runtimeClasspath = component.variantDependencies.runtimeClasspath
+            task.runtimeClasspathArtifacts = component.variantDependencies.getArtifactCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.EXTERNAL,
                 // Normally we would query for PROCESSED_JAR, but JAR is probably sufficient here
@@ -245,7 +245,7 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             if (component.variantType.isBaseModule) {
                 task.moduleName.set("base")
             } else {
-                task.moduleName.set(variantScope.featureName)
+                task.moduleName.set(component.variantScope.featureName)
             }
             task.moduleName.disallowChanges()
         }

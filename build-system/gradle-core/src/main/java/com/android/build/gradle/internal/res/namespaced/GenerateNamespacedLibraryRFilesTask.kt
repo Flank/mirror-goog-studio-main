@@ -87,7 +87,7 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
             taskProvider: TaskProvider<out GenerateNamespacedLibraryRFilesTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                 taskProvider,
                 GenerateNamespacedLibraryRFilesTask::rJarFile,
@@ -100,11 +100,11 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
         ) {
             super.configure(task)
 
-            task.partialRFiles.set(variantScope.artifacts.getOperations().getAll(
+            task.partialRFiles.set(component.artifacts.getOperations().getAll(
                 MultipleArtifactType.PARTIAL_R_FILES))
             task.packageForR.set(
-                variantScope.globalScope.project.provider {
-                    variantScope.variantDslInfo.originalApplicationId
+                component.globalScope.project.provider {
+                    component.variantDslInfo.originalApplicationId
                 }
             )
             task.packageForR.disallowChanges()

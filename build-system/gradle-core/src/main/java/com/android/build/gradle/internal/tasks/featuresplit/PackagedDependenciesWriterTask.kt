@@ -117,7 +117,7 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out PackagedDependenciesWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 InternalArtifactType.PACKAGED_DEPENDENCIES,
                 taskProvider,
                 PackagedDependenciesWriterTask::outputFile,
@@ -129,10 +129,10 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             task: PackagedDependenciesWriterTask
         ) {
             super.configure(task)
-            task.projectPath = variantScope.globalScope.project.path
+            task.projectPath = component.globalScope.project.path
 
             task.runtimeAarOrJarDeps =
-                variantScope.variantDependencies
+                component.variantDependencies
                     .runtimeClasspath
                     .incoming
                     .artifactView { it.attributes(aarOrJarType) }
@@ -140,7 +140,7 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             task.dependsOn(task.runtimeAarOrJarDeps.artifactFiles)
 
             task.transitivePackagedDeps =
-                variantScope.variantDependencies.getArtifactCollection(
+                component.variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES)

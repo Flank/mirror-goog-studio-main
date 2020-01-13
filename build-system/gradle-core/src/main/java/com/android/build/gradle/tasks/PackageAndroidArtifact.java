@@ -54,7 +54,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MultipleArtifactType;
 import com.android.build.gradle.internal.scope.SingleArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.signing.SigningConfigProvider;
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
@@ -997,7 +996,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 @NonNull ArtifactType<Directory> manifestType,
                 boolean packageCustomClassDependencies) {
             super(componentProperties);
-            this.project = componentProperties.getVariantScope().getGlobalScope().getProject();
+            this.project = componentProperties.getGlobalScope().getProject();
             this.inputResourceFilesType = inputResourceFilesType;
             this.manifests = manifests;
             this.manifestType = manifestType;
@@ -1008,10 +1007,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         public void configure(
                 @NonNull final TaskT packageAndroidArtifact) {
             super.configure(packageAndroidArtifact);
-            VariantScope variantScope = getVariantScope();
 
-            GlobalScope globalScope = variantScope.getGlobalScope();
-            VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
+            GlobalScope globalScope = component.getGlobalScope();
+            VariantDslInfo variantDslInfo = component.getVariantDslInfo();
 
             packageAndroidArtifact.taskInputType = inputResourceFilesType;
             packageAndroidArtifact
@@ -1019,7 +1017,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .set(
                             globalScope
                                     .getProject()
-                                    .provider(() -> variantScope.getMinSdkVersion().getApiLevel()));
+                                    .provider(
+                                            () ->
+                                                    component
+                                                            .getVariantDslInfo()
+                                                            .getMinSdkVersion()
+                                                            .getApiLevel()));
             packageAndroidArtifact.getMinSdkVersion().disallowChanges();
             packageAndroidArtifact.getApplicationId().set(component.getApplicationId());
             packageAndroidArtifact.getApplicationId().disallowChanges();
@@ -1027,14 +1030,14 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact
                     .getResourceFiles()
                     .from(
-                            variantScope
+                            component
                                     .getArtifacts()
                                     .getFinalProductAsFileCollection(inputResourceFilesType));
             packageAndroidArtifact
                     .getIncrementalFolder()
                     .set(
                             new File(
-                                    variantScope
+                                    component
                                             .getPaths()
                                             .getIncrementalDir(packageAndroidArtifact.getName()),
                                     "tmp"));
@@ -1060,18 +1063,18 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             if (featureDexFolder != null) {
                 packageAndroidArtifact.getFeatureDexFolder().from(featureDexFolder);
             }
-            packageAndroidArtifact.getJavaResourceFiles().from(getJavaResources());
+            packageAndroidArtifact.getJavaResourceFiles().from(getJavaResources(component));
 
             packageAndroidArtifact
                     .getAssets()
-                    .set(variantScope.getArtifacts().getFinalProduct(MERGED_ASSETS.INSTANCE));
+                    .set(component.getArtifacts().getFinalProduct(MERGED_ASSETS.INSTANCE));
             packageAndroidArtifact.setJniDebugBuild(variantDslInfo.isJniDebuggable());
             packageAndroidArtifact
                     .getDebugBuild()
-                    .set(variantScope.getVariantDslInfo().isDebuggable());
+                    .set(component.getVariantDslInfo().isDebuggable());
             packageAndroidArtifact.getDebugBuild().disallowChanges();
 
-            ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
+            ProjectOptions projectOptions = component.getGlobalScope().getProjectOptions();
             packageAndroidArtifact.projectBaseName = globalScope.getProjectBaseName();
             packageAndroidArtifact.manifestType = manifestType;
             packageAndroidArtifact.buildTargetAbi =
@@ -1112,7 +1115,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact.targetApi =
                     projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API);
 
-            packageAndroidArtifact.apkCreatorType = variantScope.getApkCreatorType();
+            packageAndroidArtifact.apkCreatorType = component.getVariantScope().getApkCreatorType();
 
             packageAndroidArtifact.getCreatedBy().set(globalScope.getCreatedBy());
 
@@ -1121,11 +1124,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
-                variantScope
-                    .getArtifacts()
-                    .setTaskInputToFinalProduct(
-                        InternalArtifactType.SDK_DEPENDENCY_DATA.INSTANCE,
-                        packageAndroidArtifact.getDependencyDataFile());
+                component
+                        .getArtifacts()
+                        .setTaskInputToFinalProduct(
+                                InternalArtifactType.SDK_DEPENDENCY_DATA.INSTANCE,
+                                packageAndroidArtifact.getDependencyDataFile());
             }
 
             finalConfigure(packageAndroidArtifact, component);
@@ -1156,18 +1159,20 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
 
         @NonNull
-        public FileCollection getJavaResources() {
-            if (getVariantScope().getArtifacts().hasFinalProduct(SHRUNK_JAVA_RES.INSTANCE)) {
+        private FileCollection getJavaResources(@NonNull ComponentPropertiesImpl component) {
+            BuildArtifactsHolder artifacts = component.getArtifacts();
+
+            if (artifacts.hasFinalProduct(SHRUNK_JAVA_RES.INSTANCE)) {
                 Provider<RegularFile> mergedJavaResProvider =
-                        getVariantScope().getArtifacts().getFinalProduct(SHRUNK_JAVA_RES.INSTANCE);
+                        artifacts.getFinalProduct(SHRUNK_JAVA_RES.INSTANCE);
                 return project.getLayout().files(mergedJavaResProvider);
-            } else if (getVariantScope().getNeedsMergedJavaResStream()) {
-                return getVariantScope()
+            } else if (component.getVariantScope().getNeedsMergedJavaResStream()) {
+                return component
                         .getTransformManager()
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES);
             } else {
                 Provider<RegularFile> mergedJavaResProvider =
-                        getVariantScope().getArtifacts().getFinalProduct(MERGED_JAVA_RES.INSTANCE);
+                        artifacts.getFinalProduct(MERGED_JAVA_RES.INSTANCE);
                 return project.getLayout().files(mergedJavaResProvider);
             }
         }

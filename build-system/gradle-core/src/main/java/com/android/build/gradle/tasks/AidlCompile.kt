@@ -182,7 +182,7 @@ abstract class AidlCompile : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
             component.taskContainer.aidlCompileTask = taskProvider
-            variantScope
+            component
                 .artifacts
                 .producesDir(
                     InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR,
@@ -191,8 +191,8 @@ abstract class AidlCompile : NonIncrementalTask() {
                     "out"
                 )
 
-            if (variantScope.variantDslInfo.variantType.isAar) {
-                variantScope
+            if (component.variantDslInfo.variantType.isAar) {
+                component
                     .artifacts
                     .producesDir(
                         InternalArtifactType.AIDL_PARCELABLE,
@@ -207,12 +207,11 @@ abstract class AidlCompile : NonIncrementalTask() {
             task: AidlCompile
         ) {
             super.configure(task)
-            val scope = variantScope
-            val globalScope = scope.globalScope
+            val globalScope = component.globalScope
             val project = globalScope.project
 
-            val variantDslInfo = scope.variantDslInfo
-            val variantSources = scope.variantSources
+            val variantDslInfo = component.variantDslInfo
+            val variantSources = component.variantSources
 
             val sdkComponents = globalScope.sdkComponents
             task.aidlExecutableProvider.set(sdkComponents.aidlExecutableProvider)
@@ -236,7 +235,7 @@ abstract class AidlCompile : NonIncrementalTask() {
                     })
             task.sourceFiles.disallowChanges()
 
-            task.importDirs = scope.variantDependencies.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL)
+            task.importDirs = component.variantDependencies.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL)
 
             if (variantDslInfo.variantType.isAar) {
                 task.packageWhitelist = globalScope.extension.aidlPackageWhiteList

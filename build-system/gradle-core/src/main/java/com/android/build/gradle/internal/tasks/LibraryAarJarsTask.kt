@@ -291,14 +291,14 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.producesFile(
+            component.artifacts.producesFile(
                 artifactType = InternalArtifactType.AAR_MAIN_JAR,
                 taskProvider = taskProvider,
                 productProvider = LibraryAarJarsTask::mainClassLocation,
                 fileName = SdkConstants.FN_CLASSES_JAR
             )
 
-            variantScope.artifacts.producesDir(
+            component.artifacts.producesDir(
                 artifactType = InternalArtifactType.AAR_LIBS_DIRECTORY,
                 taskProvider = taskProvider,
                 productProvider = LibraryAarJarsTask::localJarsLocation,
@@ -312,13 +312,13 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             super.configure(task)
 
             task.excludeList.set(
-                variantScope.globalScope.project.provider {
+                component.globalScope.project.provider {
                     excludeListProvider.get()
                 }
             )
             task.excludeList.disallowChanges()
 
-            val artifacts = variantScope.artifacts
+            val artifacts = component.artifacts
 
             if (artifacts.hasFinalProduct(InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE)) {
                 artifacts.setTaskInputToFinalProduct(
@@ -328,16 +328,16 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             }
 
             task.packageName.set(
-                variantScope.globalScope.project.provider {
-                    variantScope.variantDslInfo.packageFromManifest
+                component.globalScope.project.provider {
+                    component.variantDslInfo.packageFromManifest
                 }
             )
             task.packageName.disallowChanges()
 
-            task.jarCreatorType.setDisallowChanges(variantScope.jarCreatorType)
+            task.jarCreatorType.setDisallowChanges(component.variantScope.jarCreatorType)
 
             task.debugBuild
-                .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
+                .setDisallowChanges(component.variantDslInfo.isDebuggable)
 
             /*
              * Only get files that are CLASS, and exclude files that are both CLASS and RESOURCES
@@ -354,7 +354,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                         .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES)
                         .get()
                 } else {
-                    variantScope.transformManager
+                    component.transformManager
                         .getPipelineOutputAsFileCollection(
                             { contentTypes, scopes ->
                                 contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
@@ -376,7 +376,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                         .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_JAVA_RES)
                         .get()
                 } else {
-                    variantScope.transformManager
+                    component.transformManager
                         .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                             contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES)
                                     && scopes.contains(Scope.PROJECT)
@@ -386,7 +386,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             task.mainScopeResourceFiles.disallowChanges()
 
             task.localScopeInputFiles.from(
-                variantScope.transformManager
+                component.transformManager
                     .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                         (contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
                                 || contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES))

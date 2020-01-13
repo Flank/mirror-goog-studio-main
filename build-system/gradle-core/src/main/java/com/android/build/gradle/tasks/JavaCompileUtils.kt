@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.profile.ProcessProfileWriter
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
@@ -84,12 +83,12 @@ fun JavaCompile.configureProperties(componentProperties: ComponentPropertiesImpl
  * @see [JavaCompile.configureProperties]
  */
 fun JavaCompile.configurePropertiesForAnnotationProcessing(
-    scope: VariantScope, sourcesOutputFolder: DirectoryProperty
+    componentProperties: ComponentPropertiesImpl, sourcesOutputFolder: DirectoryProperty
 ) {
-    val processorOptions = scope.variantDslInfo.javaCompileOptions.annotationProcessorOptions
+    val processorOptions = componentProperties.variantDslInfo.javaCompileOptions.annotationProcessorOptions
     val compileOptions = this.options
 
-    configureAnnotationProcessorPath(scope)
+    configureAnnotationProcessorPath(componentProperties)
 
     if (!processorOptions.classNames.isEmpty()) {
         compileOptions.compilerArgs.add("-processor")
@@ -112,9 +111,12 @@ fun JavaCompile.configurePropertiesForAnnotationProcessing(
  *
  * @see [JavaCompile.configurePropertiesForAnnotationProcessing]
  */
-fun JavaCompile.configureAnnotationProcessorPath(scope: VariantScope) {
-    var processorPath = scope.variantDependencies.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR)
-    this.options.annotationProcessorPath = processorPath
+fun JavaCompile.configureAnnotationProcessorPath(componentProperties: ComponentPropertiesImpl) {
+    options.annotationProcessorPath = componentProperties.variantDependencies.getArtifactFileCollection(
+        ANNOTATION_PROCESSOR,
+        ALL,
+        PROCESSED_JAR
+    )
 }
 
 data class SerializableArtifact(

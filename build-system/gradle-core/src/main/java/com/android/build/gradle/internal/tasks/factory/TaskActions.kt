@@ -65,9 +65,6 @@ abstract class VariantTaskCreationAction<TaskT, ComponentPropertiesT: ComponentP
     private val dependsOnPreBuildTask: Boolean
 ) : TaskCreationAction<TaskT>() where TaskT: Task, TaskT: VariantAwareTask {
 
-    @Deprecated("Use getComponent() instead")
-    protected val variantScope: VariantScope = component.variantScope
-
     constructor(
         component: ComponentPropertiesT
     ): this(component, true)

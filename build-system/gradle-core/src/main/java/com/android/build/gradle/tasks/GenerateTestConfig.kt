@@ -108,7 +108,7 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         ) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts
+            component.artifacts
                 .producesDir(
                     InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY,
                     taskProvider,
