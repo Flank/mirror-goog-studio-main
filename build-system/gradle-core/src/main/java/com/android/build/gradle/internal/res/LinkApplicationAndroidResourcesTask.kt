@@ -370,7 +370,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 LinkApplicationAndroidResourcesTask::resPackageOutputFolder
             )
 
-            if (generatesProguardOutputFile(variantScope)) {
+            if (generatesProguardOutputFile(component)) {
                 variantScope.artifacts.producesFile(
                     InternalArtifactType.AAPT_PROGUARD_FILE,
                     taskProvider,

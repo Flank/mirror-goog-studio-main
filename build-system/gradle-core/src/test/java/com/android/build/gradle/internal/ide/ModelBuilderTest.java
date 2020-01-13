@@ -515,7 +515,6 @@ public class ModelBuilderTest {
         when(paths.getApkLocation()).thenReturn(new File(apkLocation, dirName));
 
         VariantScope variantScope = Mockito.mock(VariantScope.class);
-        when(variantScope.getType()).thenReturn(type);
         when(variantScope.getPublishingSpec()).thenReturn(PublishingSpecs.getVariantSpec(type));
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
         when(variantScope.getTransformManager()).thenReturn(Mockito.mock(TransformManager.class));

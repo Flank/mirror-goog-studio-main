@@ -202,7 +202,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             super.configure(task)
             val artifacts = variantScope.artifacts
 
-            if (variantScope.type.isBaseModule) {
+            if (component.variantType.isBaseModule) {
                 task.fileName.set("base.zip")
             } else {
                 task.fileName.set(variantScope.featureName.map { "$it.zip" })
@@ -241,7 +241,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                         .getFinalProductAsFileCollection(InternalArtifactType.DESUGAR_LIB_DEX)
                         .get()
                 } else {
-                    getDesugarLibDexFromTransform(variantScope)
+                    getDesugarLibDexFromTransform(component)
                 }
 
             task.dexFiles.from(programDexFiles.plus(desugarLibDexFile))
@@ -268,7 +268,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     )
                 }
             )
-            task.nativeLibsFiles.from(getNativeLibsFiles(variantScope, packageCustomClassDependencies))
+            task.nativeLibsFiles.from(getNativeLibsFiles(component, packageCustomClassDependencies))
 
             task.abiFilters = variantScope.variantDslInfo.supportedAbis
 
@@ -325,17 +325,17 @@ private class ResRelocator : JarCreator.Relocator {
  * Returns a file collection containing all of the native libraries to be packaged.
  */
 fun getNativeLibsFiles(
-    scope: VariantScope,
+    componentProperties: ComponentPropertiesImpl,
     packageCustomClassDependencies: Boolean
 ): FileCollection {
-    val nativeLibs = scope.globalScope.project.files()
-    if (scope.type.isForTesting) {
-        return nativeLibs.from(scope.artifacts.getFinalProduct(MERGED_NATIVE_LIBS))
+    val nativeLibs = componentProperties.globalScope.project.files()
+    if (componentProperties.variantType.isForTesting) {
+        return nativeLibs.from(componentProperties.artifacts.getFinalProduct(MERGED_NATIVE_LIBS))
     }
-    nativeLibs.from(scope.artifacts.getFinalProduct(STRIPPED_NATIVE_LIBS))
+    nativeLibs.from(componentProperties.artifacts.getFinalProduct(STRIPPED_NATIVE_LIBS))
     if (packageCustomClassDependencies) {
         nativeLibs.from(
-            scope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS)
+            componentProperties.transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS)
         )
     }
     return nativeLibs

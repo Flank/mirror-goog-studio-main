@@ -58,9 +58,6 @@ public interface VariantScope {
             @NonNull ArtifactType artifactType,
             @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes);
 
-    @NonNull
-    VariantType getType();
-
     @Nullable
     CodeShrinker getCodeShrinker();
 

@@ -88,7 +88,7 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
         override fun configure(task: ApplicationIdWriterTask) {
             super.configure(task)
 
-            if (variantScope.type.isDynamicFeature) {
+            if (component.variantType.isDynamicFeature) {
                 // If this is a dynamic feature, we read the value published by the base
                 // module and write it down.
                 // This is only done so that BaseVariant.getApplicationIdTextResource() can be

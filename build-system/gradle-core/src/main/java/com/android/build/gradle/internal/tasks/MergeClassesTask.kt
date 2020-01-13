@@ -121,7 +121,7 @@ abstract class MergeClassesTask : NonIncrementalTask() {
                 artifactType = InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
                 taskProvider = taskProvider,
                 productProvider = MergeClassesTask::outputFile,
-                fileName = if (variantScope.type.isBaseModule) {
+                fileName = if (component.variantType.isBaseModule) {
                     "base.jar"
                 } else {
                     TaskManager.getFeatureFileName(variantScope.globalScope.project.path, DOT_JAR)

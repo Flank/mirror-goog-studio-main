@@ -1077,9 +1077,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             packageAndroidArtifact.getCreatedBy().set(globalScope.getCreatedBy());
 
-            if (variantScope.getType().isBaseModule() && variantScope.getGlobalScope()
-                .getProjectOptions()
-                .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
+            if (getComponent().getVariantType().isBaseModule()
+                    && getComponent()
+                            .getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
                 variantScope
                     .getArtifacts()
                     .setTaskInputToFinalProduct(
@@ -1091,14 +1093,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
 
         protected void finalConfigure(T task) {
-            VariantScope variantScope = getVariantScope();
-
-            GlobalScope globalScope = variantScope.getGlobalScope();
-
             task.getJniFolders()
                     .from(
                             PerModuleBundleTaskKt.getNativeLibsFiles(
-                                    variantScope, packageCustomClassDependencies));
+                                    getComponent(), packageCustomClassDependencies));
 
             task.setSigningConfig(SigningConfigProvider.create(getComponent()));
         }
@@ -1137,10 +1135,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @Nullable
         public FileCollection getFeatureDexFolder() {
-            if (!getVariantScope().getType().isDynamicFeature()) {
+            if (!getComponent().getVariantType().isDynamicFeature()) {
                 return null;
             }
-            return getVariantScope()
+            return getComponent()
                     .getVariantDependencies()
                     .getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
@@ -1167,15 +1165,15 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @NonNull
         private FileCollection getDesugarLibDexIfExists() {
-            if (getVariantScope().getType().isDynamicFeature()) {
-                return getVariantScope().getGlobalScope().getProject().files();
+            if (getComponent().getVariantType().isDynamicFeature()) {
+                return getComponent().getGlobalScope().getProject().files();
             }
-            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
+            BuildArtifactsHolder artifacts = getComponent().getArtifacts();
             if (artifacts.hasFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE)) {
                 return project.files(
                         artifacts.getFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
             } else {
-                return DesugarLibUtils.getDesugarLibDexFromTransform(getVariantScope());
+                return DesugarLibUtils.getDesugarLibDexFromTransform(getComponent());
             }
         }
     }

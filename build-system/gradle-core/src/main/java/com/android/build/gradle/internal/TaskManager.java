@@ -1120,7 +1120,7 @@ public abstract class TaskManager {
 
             // Only generate the keep rules when we need them. We don't need to generate them here
             // for non-library modules since AAPT2 will generate them from MergeType.MERGE.
-            if (generatesProguardOutputFile(componentProperties.getVariantScope()) && isLibrary()) {
+            if (generatesProguardOutputFile(componentProperties) && isLibrary()) {
                 taskFactory.register(
                         new GenerateLibraryProguardRulesTask.CreationAction(componentProperties));
             }
@@ -1159,8 +1159,10 @@ public abstract class TaskManager {
         }
     }
 
-    private static boolean generatesProguardOutputFile(@NonNull VariantScope variantScope) {
-        return variantScope.getCodeShrinker() != null || variantScope.getType().isDynamicFeature();
+    private static boolean generatesProguardOutputFile(
+            @NonNull ComponentPropertiesImpl componentProperties) {
+        return componentProperties.getVariantScope().getCodeShrinker() != null
+                || componentProperties.getVariantType().isDynamicFeature();
     }
 
     protected VariantTaskCreationAction<LinkApplicationAndroidResourcesTask>

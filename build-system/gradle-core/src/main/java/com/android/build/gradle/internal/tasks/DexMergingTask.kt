@@ -264,7 +264,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
                                 variantScope.artifacts.getFinalProductAsFileCollection(InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE)
                             )
 
-                        val variantType = variantScope.type
+                        val variantType = component.variantType
                         if (variantType.isApk) {
                             component.onTestedVariant {
                                 if (dexingUsingArtifactTransforms && it.variantType.isAar) {

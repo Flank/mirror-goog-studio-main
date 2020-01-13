@@ -115,7 +115,7 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
             componentProperties: ComponentPropertiesImpl
         ): TaskManager.AbstractPreBuildCreationAction<*> {
             val variantScope = componentProperties.variantScope
-            return if (variantScope.type.isBaseModule && variantScope.globalScope.hasDynamicFeatures()) {
+            return if (componentProperties.variantType.isBaseModule && variantScope.globalScope.hasDynamicFeatures()) {
                 CheckCreationAction(componentProperties)
             } else EmptyCreationAction(componentProperties)
 

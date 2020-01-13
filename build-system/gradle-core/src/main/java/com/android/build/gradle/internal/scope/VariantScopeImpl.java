@@ -182,12 +182,6 @@ public class VariantScopeImpl implements VariantScope {
         configureNdk();
     }
 
-    @NonNull
-    @Override
-    public VariantType getType() {
-        return variantDslInfo.getVariantType();
-    }
-
     @Override
     @NonNull
     public VariantDslInfo getVariantDslInfo() {

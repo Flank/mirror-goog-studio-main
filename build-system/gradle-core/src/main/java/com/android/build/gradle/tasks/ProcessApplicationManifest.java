@@ -594,9 +594,11 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
 
-            VariantType variantType = getVariantScope().getType();
+            ComponentPropertiesImpl component = getComponent();
+
+            VariantType variantType = component.getVariantType();
             Preconditions.checkState(!variantType.isTestComponent());
-            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
+            BuildArtifactsHolder artifacts = component.getArtifacts();
 
             artifacts.republish(
                     InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
@@ -729,9 +731,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             task.getOptionalFeatures()
                     .set(
                             project.provider(
-                                    () ->
-                                            getOptionalFeatures(
-                                                    variantScope, isAdvancedProfilingOn)));
+                                    () -> getOptionalFeatures(component, isAdvancedProfilingOn)));
             task.getOptionalFeatures().disallowChanges();
 
             component
@@ -829,9 +829,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     }
 
     private static EnumSet<Feature> getOptionalFeatures(
-            VariantScope variantScope, boolean isAdvancedProfilingOn) {
+            ComponentPropertiesImpl componentProperties, boolean isAdvancedProfilingOn) {
         List<Feature> features = new ArrayList<>();
-        VariantType variantType = variantScope.getType();
+        VariantType variantType = componentProperties.getVariantType();
 
         if (variantType.isDynamicFeature()) {
             features.add(Feature.ADD_FEATURE_SPLIT_ATTRIBUTE);
@@ -855,17 +855,17 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             features.add(Feature.ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST);
         }
 
-        if (variantScope.isTestOnly()) {
+        if (componentProperties.getVariantScope().isTestOnly()) {
             features.add(Feature.TEST_ONLY);
         }
-        if (variantScope.getVariantDslInfo().isDebuggable()) {
+        if (componentProperties.getVariantDslInfo().isDebuggable()) {
             features.add(Feature.DEBUGGABLE);
             if (isAdvancedProfilingOn) {
                 features.add(Feature.ADVANCED_PROFILING);
             }
         }
-        if (variantScope.getVariantDslInfo().getDexingType() == DexingType.LEGACY_MULTIDEX) {
-            if (variantScope
+        if (componentProperties.getVariantDslInfo().getDexingType() == DexingType.LEGACY_MULTIDEX) {
+            if (componentProperties
                     .getGlobalScope()
                     .getProjectOptions()
                     .get(BooleanOption.USE_ANDROID_X)) {
@@ -875,7 +875,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             }
         }
 
-        if (variantScope
+        if (componentProperties
                 .getGlobalScope()
                 .getProjectOptions()
                 .get(BooleanOption.ENFORCE_UNIQUE_PACKAGE_NAMES)) {

@@ -162,7 +162,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                     InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES))
             }
             val hasDynamicFeatures =
-                variantScope.type.isBaseModule && variantScope.globalScope.hasDynamicFeatures()
+                component.variantType.isBaseModule && variantScope.globalScope.hasDynamicFeatures()
             val nonMinified = variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
             if (hasDynamicFeatures && nonMinified) {
                 task.keepRulesFiles.from(

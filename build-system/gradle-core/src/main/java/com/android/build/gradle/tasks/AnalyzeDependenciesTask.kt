@@ -189,7 +189,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
                 .variantDependencies
                 .incomingRuntimeDependencies
 
-            task.isVariantLibrary = (variantScope.type == VariantTypeImpl.LIBRARY)
+            task.isVariantLibrary = (component.variantType == VariantTypeImpl.LIBRARY)
         }
 
         override fun handleProvider(taskProvider: TaskProvider<out AnalyzeDependenciesTask>) {

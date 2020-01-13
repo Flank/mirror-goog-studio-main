@@ -265,7 +265,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                     )
                     task.configurationFiles.from(configurationFiles)
                 }
-                variantScope.type.isForTesting && !variantScope.type.isTestComponent -> {
+                component.variantType.isForTesting && !component.variantType.isTestComponent -> {
                     // This is a test-only module and the app being tested was obfuscated with ProGuard.
                     applyProguardDefaultsForTest(task)
 
