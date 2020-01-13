@@ -168,7 +168,10 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
       ErrEvent("Installer binary does not contain agent.so");
       return false;
     }
-    WriteArrayToDisk(agent->content, agent->content_len, agent_src_path);
+    if (!WriteArrayToDisk(agent->content, agent->content_len, agent_src_path)) {
+      ErrEvent("Failed to write agent.so");
+      return false;
+    }
   }
 
   if (need_agent_alt) {
@@ -177,8 +180,11 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
       ErrEvent("Installer binary does not contain agent-alt.so");
       return false;
     }
-    WriteArrayToDisk(agent_alt->content, agent_alt->content_len,
-                     agent_alt_src_path);
+    if (!WriteArrayToDisk(agent_alt->content, agent_alt->content_len,
+                          agent_alt_src_path)) {
+      ErrEvent("Failed to write agent-alt.so");
+      return false;
+    }
   }
 
   if (need_server) {
@@ -188,9 +194,11 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
       ErrEvent("Installer binary does not contain agent_server");
       return false;
     }
-
-    WriteArrayToDisk(agent_server->content, agent_server->content_len,
-                     server_src_path);
+    if (!WriteArrayToDisk(agent_server->content, agent_server->content_len,
+                          server_src_path)) {
+      ErrEvent("Failed to write agent_server");
+      return false;
+    }
   }
 
   std::string cp_output;
