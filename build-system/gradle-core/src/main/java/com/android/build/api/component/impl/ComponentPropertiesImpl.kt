@@ -43,6 +43,8 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantType
+import com.android.builder.dexing.DexingType
+import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import org.gradle.api.artifacts.ArtifactCollection
@@ -89,6 +91,21 @@ abstract class ComponentPropertiesImpl(
 
     val variantType: VariantType
         get() = variantDslInfo.variantType
+
+    val dexingType: DexingType
+        get() = variantDslInfo.dexingType
+
+    val needsMainDexList: Boolean
+        get() = variantDslInfo.dexingType.needsMainDexList
+
+    val minSdkVersion: AndroidVersion
+        get() = variantDslInfo.minSdkVersion
+
+    val dirName: String
+        get() = variantDslInfo.dirName
+
+    val baseName: String
+        get() = variantDslInfo.baseName
 
     /**
      * Returns the tested variant. This is null for [VariantPropertiesImpl] instances

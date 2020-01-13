@@ -162,7 +162,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            val bundleName = "${component.globalScope.projectBaseName}-${component.variantDslInfo.baseName}.aab"
+            val bundleName = "${component.globalScope.projectBaseName}-${component.baseName}.aab"
             val apkLocationOverride = component.globalScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
             if (apkLocationOverride == null) {
                 component.artifacts.producesFile(
@@ -177,8 +177,8 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                     taskProvider,
                     FinalizeBundleTask::finalBundleFile,
                     FileUtils.join(
-                        component.globalScope.project.file(apkLocationOverride),
-                        component.variantDslInfo.dirName).absolutePath,
+                        component.dslScope.file(apkLocationOverride),
+                        component.dirName).absolutePath,
                     bundleName
                 )
             }

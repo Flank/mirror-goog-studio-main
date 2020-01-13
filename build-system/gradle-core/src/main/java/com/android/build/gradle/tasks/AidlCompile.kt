@@ -191,7 +191,7 @@ abstract class AidlCompile : NonIncrementalTask() {
                     "out"
                 )
 
-            if (component.variantDslInfo.variantType.isAar) {
+            if (component.variantType.isAar) {
                 component
                     .artifacts
                     .producesDir(
@@ -210,7 +210,6 @@ abstract class AidlCompile : NonIncrementalTask() {
             val globalScope = component.globalScope
             val project = globalScope.project
 
-            val variantDslInfo = component.variantDslInfo
             val variantSources = component.variantSources
 
             val sdkComponents = globalScope.sdkComponents
@@ -237,7 +236,7 @@ abstract class AidlCompile : NonIncrementalTask() {
 
             task.importDirs = component.variantDependencies.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL)
 
-            if (variantDslInfo.variantType.isAar) {
+            if (component.variantType.isAar) {
                 task.packageWhitelist = globalScope.extension.aidlPackageWhiteList
             }
         }

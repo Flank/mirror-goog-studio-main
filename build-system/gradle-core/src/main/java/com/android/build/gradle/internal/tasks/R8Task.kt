@@ -257,7 +257,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             task.disableTreeShaking.set(disableTreeShaking)
             task.disableMinification.set(disableMinification)
             task.messageReceiver = component.globalScope.messageReceiver
-            task.dexingType = component.variantScope.dexingType
+            task.dexingType = component.dexingType
             task.useFullR8.set(component.globalScope.projectOptions[BooleanOption.FULL_R8])
 
             task.proguardConfigurations = proguardConfigurations

@@ -301,7 +301,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
-            task.minSdkVersion = component.variantDslInfo.minSdkVersion.apiLevel
+            task.minSdkVersion = component.minSdkVersion.apiLevel
 
             task.resConfig = component.variantDslInfo.resourceConfigurations
 

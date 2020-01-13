@@ -120,7 +120,7 @@ abstract class CheckMultiApkLibrariesTask : NonIncrementalTask() {
                     FileUtils.join(
                         component.globalScope.intermediatesDir,
                         "check-libraries",
-                        component.variantDslInfo.dirName
+                        component.dirName
                     )
         }
     }

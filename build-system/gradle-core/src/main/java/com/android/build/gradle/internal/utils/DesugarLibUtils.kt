@@ -65,7 +65,7 @@ fun getDesugarLibDexFromTransform(componentProperties: ComponentPropertiesImpl):
     }
 
     val configuration = getDesugarLibConfiguration(componentProperties.globalScope.project)
-    return getDesugarLibDexFromTransform(configuration, componentProperties.variantDslInfo.minSdkVersion.featureLevel)
+    return getDesugarLibDexFromTransform(configuration, componentProperties.minSdkVersion.featureLevel)
 }
 
 /**

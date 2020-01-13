@@ -173,11 +173,7 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             }
             task.apkDataList.disallowChanges()
 
-            task.minSdkVersion.set(
-                task.project.provider {
-                    component.variantDslInfo.minSdkVersion.apiString
-                }
-            )
+            task.minSdkVersion.set(task.project.provider { component.minSdkVersion.apiString })
             task.minSdkVersion.disallowChanges()
         }
     }

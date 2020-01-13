@@ -55,7 +55,6 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
-import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType;
@@ -71,7 +70,6 @@ import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
-import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.model.CodeShrinker;
@@ -444,7 +442,7 @@ public class VariantScopeImpl implements VariantScope {
                 || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY))
                 || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
                 || isPreviewTargetPlatform()
-                || getMinSdkVersion().getCodename() != null
+                || variantDslInfo.getMinSdkVersion().getCodename() != null
                 || variantDslInfo.getTargetSdkVersion().getCodename() != null;
     }
 
@@ -507,23 +505,6 @@ public class VariantScopeImpl implements VariantScope {
             return false;
         }
         return true;
-    }
-
-    @NonNull
-    @Override
-    public DexingType getDexingType() {
-        return variantDslInfo.getDexingType();
-    }
-
-    @Override
-    public boolean getNeedsMainDexList() {
-        return getDexingType().getNeedsMainDexList();
-    }
-
-    @NonNull
-    @Override
-    public AndroidVersion getMinSdkVersion() {
-        return variantDslInfo.getMinSdkVersion();
     }
 
     @Override

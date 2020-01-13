@@ -185,7 +185,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
         ) {
             super.configure(task)
             val variantScope = component.variantScope
-            task.minSdk.set(variantScope.minSdkVersion.featureLevel)
+            task.minSdk.set(component.minSdkVersion.featureLevel)
 
             /**
              * If a fix in Desugar should be enabled to handle broken bytecode produced by older

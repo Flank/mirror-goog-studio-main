@@ -712,7 +712,6 @@ public abstract class TaskManager {
                                     .getPublishingSpec()
                                     .getTestingSpec(
                                             componentProperties
-                                                    .getVariantDslInfo()
                                                     .getVariantType());
 
                     // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
@@ -911,7 +910,7 @@ public abstract class TaskManager {
                         ? new File(
                                 globalScope.getIntermediatesDir()
                                         + "/merged-not-compiled-resources/"
-                                        + componentProperties.getVariantDslInfo().getDirName())
+                                        + componentProperties.getDirName())
                         : null;
 
         TaskProvider<MergeResources> mergeResourcesTask =
@@ -1060,7 +1059,8 @@ public abstract class TaskManager {
 
         // The manifest main dex list proguard rules are always needed for the bundle,
         // even if legacy multidex is not explicitly enabled.
-        boolean useAaptToGenerateLegacyMultidexMainDexProguardRules = scope.getNeedsMainDexList();
+        boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
+                componentProperties.getNeedsMainDexList();
 
         if (componentProperties.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             // TODO: make sure we generate the proguard rules in the namespaced case.
@@ -1991,7 +1991,7 @@ public abstract class TaskManager {
 
         maybeCreateDesugarTask(
                 componentProperties,
-                variantDslInfo.getMinSdkVersion(),
+                componentProperties.getMinSdkVersion(),
                 transformManager,
                 isTestCoverageEnabled);
 
@@ -2068,7 +2068,7 @@ public abstract class TaskManager {
         }
 
         // ----- Multi-Dex support
-        DexingType dexingType = variantScope.getDexingType();
+        DexingType dexingType = componentProperties.getDexingType();
 
         // Upgrade from legacy multi-dex to native multi-dex if possible when using with a device
         if (dexingType == DexingType.LEGACY_MULTIDEX) {
@@ -2079,7 +2079,7 @@ public abstract class TaskManager {
             }
         }
 
-        if (variantScope.getNeedsMainDexList()) {
+        if (componentProperties.getNeedsMainDexList()) {
             taskFactory.register(new D8MainDexListTask.CreationAction(componentProperties, false));
         }
 

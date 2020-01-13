@@ -165,7 +165,7 @@ class DataBindingCompilerArguments constructor(
                     .get(BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING),
                 artifactType = getModuleType(componentProperties),
                 modulePackageProvider = { variantDslInfo.originalApplicationId },
-                minApi = variantDslInfo.minSdkVersion.apiLevel,
+                minApi = componentProperties.minSdkVersion.apiLevel,
                 sdkDir = globalScope.sdkComponents.getSdkDirectory(),
                 dependencyArtifactsDir =
                         artifacts.getFinalProduct(DATA_BINDING_DEPENDENCY_ARTIFACTS),

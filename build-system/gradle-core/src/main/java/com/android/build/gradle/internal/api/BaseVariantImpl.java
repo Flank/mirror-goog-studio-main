@@ -113,7 +113,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public String getName() {
-        return getVariantData().getVariantDslInfo().getComponentIdentity().getName();
+        return componentProperties.getName();
     }
 
     @Override
@@ -125,19 +125,19 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public String getDirName() {
-        return getVariantData().getVariantDslInfo().getDirName();
+        return componentProperties.getDirName();
     }
 
     @Override
     @NonNull
     public String getBaseName() {
-        return getVariantData().getVariantDslInfo().getBaseName();
+        return componentProperties.getBaseName();
     }
 
     @NonNull
     @Override
     public String getFlavorName() {
-        return getVariantData().getVariantDslInfo().getComponentIdentity().getFlavorName();
+        return componentProperties.getFlavorName();
     }
 
     @NonNull
@@ -152,7 +152,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         // cast for VariantDslInfoImpl since we need to return this.
         // this is to be removed when we can get rid of the old API.
         final VariantDslInfoImpl variantDslInfo =
-                (VariantDslInfoImpl) getVariantData().getVariantDslInfo();
+                (VariantDslInfoImpl) componentProperties.getVariantDslInfo();
         return readOnlyObjectProvider.getBuildType(variantDslInfo.getBuildTypeObj());
     }
 
@@ -160,7 +160,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public List<ProductFlavor> getProductFlavors() {
         return new ImmutableFlavorList(
-                getVariantData().getVariantDslInfo().getProductFlavorList(),
+                componentProperties.getVariantDslInfo().getProductFlavorList(),
                 readOnlyObjectProvider);
     }
 
@@ -170,20 +170,20 @@ public abstract class BaseVariantImpl implements BaseVariant {
         // cast for VariantDslInfoImpl since we need to return this.
         // this is to be removed when we can get rid of the old API.
         final VariantDslInfoImpl variantDslInfo =
-                (VariantDslInfoImpl) getVariantData().getVariantDslInfo();
+                (VariantDslInfoImpl) componentProperties.getVariantDslInfo();
         return variantDslInfo.getMergedFlavor();
     }
 
     @NonNull
     @Override
     public JavaCompileOptions getJavaCompileOptions() {
-        return getVariantData().getVariantDslInfo().getJavaCompileOptions();
+        return componentProperties.getVariantDslInfo().getJavaCompileOptions();
     }
 
     @NonNull
     @Override
     public List<SourceProvider> getSourceSets() {
-        return getVariantData().getVariantSources().getSortedSourceProviders();
+        return componentProperties.getVariantSources().getSortedSourceProviders();
     }
 
     @NonNull
@@ -250,9 +250,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public Task getPreBuild() {
-        BaseVariantData variantData = getVariantData();
-        variantData
-                .getGlobalScope()
+        componentProperties
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -260,22 +258,20 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getPreBuild()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return variantData.getTaskContainer().getPreBuildTask().get();
+        return componentProperties.getTaskContainer().getPreBuildTask().get();
     }
 
     @NonNull
     @Override
     public TaskProvider<Task> getPreBuildProvider() {
         //noinspection unchecked
-        return (TaskProvider<Task>) getVariantData().getTaskContainer().getPreBuildTask();
+        return (TaskProvider<Task>) componentProperties.getTaskContainer().getPreBuildTask();
     }
 
     @Override
     @NonNull
     public Task getCheckManifest() {
-        BaseVariantData variantData = getVariantData();
-        variantData
-                .getGlobalScope()
+        componentProperties
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -283,7 +279,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getCheckManifest()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return variantData.getTaskContainer().getCheckManifestTask().get();
+        return componentProperties.getTaskContainer().getCheckManifestTask().get();
     }
 
     @NonNull
@@ -292,17 +288,14 @@ public abstract class BaseVariantImpl implements BaseVariant {
         // Double cast needed to satisfy the compiler
         //noinspection unchecked
         return (TaskProvider<Task>)
-                (TaskProvider<?>) getVariantData().getTaskContainer().getCheckManifestTask();
+                (TaskProvider<?>) componentProperties.getTaskContainer().getCheckManifestTask();
     }
 
     @Override
     @Nullable
     public AidlCompile getAidlCompile() {
-        BaseVariantData variantData = getVariantData();
-        GlobalScope globalScope = variantData.getGlobalScope();
-
-        if (!globalScope.getBuildFeatures().getAidl()) {
-            globalScope
+        if (!componentProperties.getGlobalScope().getBuildFeatures().getAidl()) {
+            componentProperties
                     .getDslScope()
                     .getIssueReporter()
                     .reportError(
@@ -311,7 +304,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
             return null;
         }
 
-        globalScope
+        componentProperties
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -319,16 +312,14 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getAidlCompile()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return variantData.getTaskContainer().getAidlCompileTask().get();
+        return componentProperties.getTaskContainer().getAidlCompileTask().get();
     }
 
     @Nullable
     @Override
     public TaskProvider<AidlCompile> getAidlCompileProvider() {
-        final GlobalScope globalScope = getVariantData().getGlobalScope();
-
-        if (!globalScope.getBuildFeatures().getAidl()) {
-            globalScope
+        if (!componentProperties.getGlobalScope().getBuildFeatures().getAidl()) {
+            componentProperties
                     .getDslScope()
                     .getIssueReporter()
                     .reportError(
@@ -338,17 +329,15 @@ public abstract class BaseVariantImpl implements BaseVariant {
         }
 
         //noinspection unchecked
-        return (TaskProvider<AidlCompile>) getVariantData().getTaskContainer().getAidlCompileTask();
+        return (TaskProvider<AidlCompile>)
+                componentProperties.getTaskContainer().getAidlCompileTask();
     }
 
     @Override
     @Nullable
     public RenderscriptCompile getRenderscriptCompile() {
-        BaseVariantData variantData = getVariantData();
-        GlobalScope globalScope = variantData.getGlobalScope();
-
-        if (!globalScope.getBuildFeatures().getRenderScript()) {
-            globalScope
+        if (!componentProperties.getGlobalScope().getBuildFeatures().getRenderScript()) {
+            componentProperties
                     .getDslScope()
                     .getIssueReporter()
                     .reportError(
@@ -357,7 +346,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
             return null;
         }
 
-        globalScope
+        componentProperties
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -365,7 +354,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getRenderscriptCompile()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return variantData.getTaskContainer().getRenderscriptCompileTask().get();
+        return componentProperties.getTaskContainer().getRenderscriptCompileTask().get();
     }
 
     @Nullable
@@ -389,9 +378,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     @Override
     public MergeResources getMergeResources() {
-        BaseVariantData variantData = getVariantData();
-        variantData
-                .getGlobalScope()
+        componentProperties
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -399,7 +386,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getMergeResources()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return variantData.getTaskContainer().getMergeResourcesTask().getOrNull();
+        return componentProperties.getTaskContainer().getMergeResourcesTask().getOrNull();
     }
 
     @Nullable
@@ -407,14 +394,12 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public TaskProvider<MergeResources> getMergeResourcesProvider() {
         //noinspection unchecked
         return (TaskProvider<MergeResources>)
-                getVariantData().getTaskContainer().getMergeResourcesTask();
+                componentProperties.getTaskContainer().getMergeResourcesTask();
     }
 
     @Override
     public MergeSourceSetFolders getMergeAssets() {
-        BaseVariantData variantData = getVariantData();
-        variantData
-                .getGlobalScope()
+        componentProperties
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -422,7 +407,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getMergeAssets()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return variantData.getTaskContainer().getMergeAssetsTask().getOrNull();
+        return componentProperties.getTaskContainer().getMergeAssetsTask().getOrNull();
     }
 
     @Nullable
@@ -435,9 +420,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     @Override
     public GenerateBuildConfig getGenerateBuildConfig() {
-        BaseVariantData variantData = getVariantData();
-        variantData
-                .getGlobalScope()
+        componentProperties
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -445,7 +428,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getGenerateBuildConfig()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return variantData.getTaskContainer().getGenerateBuildConfigTask().get();
+        return componentProperties.getTaskContainer().getGenerateBuildConfigTask().get();
     }
 
     @Nullable
@@ -453,15 +436,13 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public TaskProvider<GenerateBuildConfig> getGenerateBuildConfigProvider() {
         //noinspection unchecked
         return (TaskProvider<GenerateBuildConfig>)
-                getVariantData().getTaskContainer().getGenerateBuildConfigTask();
+                componentProperties.getTaskContainer().getGenerateBuildConfigTask();
     }
 
     @Override
     @NonNull
     public JavaCompile getJavaCompile() {
-        BaseVariantData variantData = getVariantData();
-        variantData
-                .getGlobalScope()
+        componentProperties
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -469,7 +450,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getJavaCompile()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return variantData.getTaskContainer().getJavacTask().get();
+        return componentProperties.getTaskContainer().getJavacTask().get();
     }
 
     @NonNull
@@ -482,9 +463,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     @Override
     public Task getJavaCompiler() {
-        BaseVariantData variantData = getVariantData();
-        variantData
-                .getGlobalScope()
+        componentProperties
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -492,15 +471,13 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getJavaCompiler()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return variantData.getTaskContainer().getJavacTask().get();
+        return componentProperties.getTaskContainer().getJavacTask().get();
     }
 
     @NonNull
     @Override
     public Collection<ExternalNativeBuildTask> getExternalNativeBuildTasks() {
-        BaseVariantData variantData = getVariantData();
-        variantData
-                .getGlobalScope()
+        componentProperties
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -521,7 +498,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         //noinspection unchecked
         TaskProvider<ExternalNativeBuildTask> provider =
                 (TaskProvider<ExternalNativeBuildTask>)
-                        getVariantData().getTaskContainer().getExternalNativeBuildTask();
+                        componentProperties.getTaskContainer().getExternalNativeBuildTask();
         if (provider == null) {
             return ImmutableList.of();
         }
@@ -540,9 +517,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public File getMappingFile() {
-        BaseVariantData variantData = getVariantData();
-        variantData
-                .getGlobalScope()
+        componentProperties
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -550,7 +525,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getMappingFile()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        BuildArtifactsHolder artifacts = getVariantData().getArtifacts();
+        BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
         if (artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE)) {
             //     bypass the configuration time resolution check as some calls this API during
             // configuration.
@@ -565,7 +540,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     @Override
     public Provider<FileCollection> getMappingFileProvider() {
-        return getVariantData()
+        return componentProperties
                 .getArtifacts()
                 .getFinalProductAsFileCollection(InternalArtifactType.APK_MAPPING.INSTANCE);
     }
@@ -573,9 +548,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public Sync getProcessJavaResources() {
-        BaseVariantData variantData = getVariantData();
-        variantData
-                .getGlobalScope()
+        componentProperties
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -583,7 +556,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getProcessJavaResources()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return variantData.getTaskContainer().getProcessJavaResourcesTask().get();
+        return componentProperties.getTaskContainer().getProcessJavaResourcesTask().get();
     }
 
     @NonNull
@@ -598,9 +571,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @Nullable
     public Task getAssemble() {
-        BaseVariantData variantData = getVariantData();
-        variantData
-                .getGlobalScope()
+        componentProperties
                 .getDslScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
@@ -608,14 +579,14 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         "variant.getAssemble()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return variantData.getTaskContainer().getAssembleTask().get();
+        return componentProperties.getTaskContainer().getAssembleTask().get();
     }
 
     @Nullable
     @Override
     public TaskProvider<Task> getAssembleProvider() {
         //noinspection unchecked
-        return (TaskProvider<Task>) getVariantData().getTaskContainer().getAssembleTask();
+        return (TaskProvider<Task>) componentProperties.getTaskContainer().getAssembleTask();
     }
 
     @Override
@@ -697,12 +668,12 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public void buildConfigField(
             @NonNull String type, @NonNull String name, @NonNull String value) {
-        getVariantData().getVariantDslInfo().addBuildConfigField(type, name, value);
+        componentProperties.getVariantDslInfo().addBuildConfigField(type, name, value);
     }
 
     @Override
     public void resValue(@NonNull String type, @NonNull String name, @NonNull String value) {
-        getVariantData().getVariantDslInfo().addResValue(type, name, value);
+        componentProperties.getVariantDslInfo().addResValue(type, name, value);
     }
 
 
@@ -736,7 +707,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         final ProductFlavorAttr attributeValue =
                 objectFactory.named(ProductFlavorAttr.class, requestedValue);
 
-        VariantDependencies dependencies = getVariantData().getVariantDependencies();
+        VariantDependencies dependencies = componentProperties.getVariantDependencies();
         dependencies.getCompileClasspath().getAttributes().attribute(attributeKey, attributeValue);
         dependencies.getRuntimeClasspath().getAttributes().attribute(attributeKey, attributeValue);
         dependencies
@@ -746,7 +717,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
         // then add the fallbacks which contain the actual requested value
         AttributesSchema schema =
-                getVariantData()
+                componentProperties
                         .getGlobalScope()
                         .getProject()
                         .getDependencies()
@@ -774,7 +745,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     @Override
     public void register(Task task) {
-        MutableTaskContainer taskContainer = getVariantData().getTaskContainer();
+        MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
         TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), task);
         TaskProvider<? extends Task> bundleTask = taskContainer.getBundleTask();
         if (bundleTask != null) {

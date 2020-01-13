@@ -85,6 +85,7 @@ class CompatibleScreensManifestTest {
 
         MockitoAnnotations.initMocks(this)
         `when`(variantProperties.name).thenReturn("fullVariantName")
+        `when`(variantProperties.baseName).thenReturn("baseName")
         `when`(variantProperties.variantDslInfo).thenReturn(variantDslInfo)
         `when`(variantProperties.globalScope).thenReturn(globalScope)
         `when`(variantProperties.artifacts).thenReturn(buildArtifactsHolder)
@@ -93,12 +94,11 @@ class CompatibleScreensManifestTest {
         `when`(variantProperties.variantType).thenReturn(VariantTypeImpl.BASE_APK)
         `when`(variantProperties.variantData).thenReturn(variantData)
         `when`(variantProperties.dslScope).thenReturn(dslScope)
+        `when`<AndroidVersion>(variantProperties.minSdkVersion).thenReturn(AndroidVersion(21))
 
 
         `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
         task.outputFolder.set(temporaryFolder.root)
-        `when`<AndroidVersion>(variantDslInfo.minSdkVersion).thenReturn(AndroidVersion(21))
-        `when`(variantDslInfo.baseName).thenReturn("baseName")
         `when`(variantDslInfo.variantType).thenReturn(VariantTypeImpl.BASE_APK)
         `when`(variantDslInfo.componentIdentity).thenReturn(
             ComponentIdentityImpl(

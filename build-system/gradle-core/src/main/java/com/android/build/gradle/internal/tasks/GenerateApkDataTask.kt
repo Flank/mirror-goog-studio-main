@@ -258,7 +258,7 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
 
             task.mainPkgName.setDisallowChanges(component.applicationId)
 
-            task.minSdkVersion.setDisallowChanges(variantDslInfo.minSdkVersion.apiLevel)
+            task.minSdkVersion.setDisallowChanges(component.minSdkVersion.apiLevel)
 
             task.targetSdkVersion.setDisallowChanges(variantDslInfo.targetSdkVersion.apiLevel)
 

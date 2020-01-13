@@ -293,8 +293,8 @@ public class TaskTestUtils {
 
         VariantDslInfo variantDslInfo = mock(VariantDslInfo.class);
         when(componentProperties.getVariantDslInfo()).thenReturn(variantDslInfo);
-        when(variantDslInfo.getDirName()).thenReturn("config dir name");
-        when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
+        when(componentProperties.getDirName()).thenReturn("config dir name");
+        when(componentProperties.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
         when(variantDslInfo.isDebuggable()).thenReturn(true);
         return componentProperties;
     }

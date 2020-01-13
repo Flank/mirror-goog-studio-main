@@ -413,9 +413,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                     InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
                     taskProvider,
                     ProcessLibraryManifest::getMergeBlameFile,
-                    "manifest-merger-blame-"
-                            + component.getVariantDslInfo().getBaseName()
-                            + "-report.txt");
+                    "manifest-merger-blame-" + component.getBaseName() + "-report.txt");
 
             artifacts.producesFile(
                     InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE,
@@ -423,9 +421,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                     ProcessLibraryManifest::getReportFile,
                     FileUtils.join(component.getGlobalScope().getOutputsDir(), "logs")
                             .getAbsolutePath(),
-                    "manifest-merger-"
-                            + component.getVariantDslInfo().getBaseName()
-                            + "-report.txt");
+                    "manifest-merger-" + component.getBaseName() + "-report.txt");
         }
 
         @Override
@@ -438,7 +434,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
 
             Project project = component.getGlobalScope().getProject();
             task.getMinSdkVersion()
-                    .set(project.provider(() -> variantDslInfo.getMinSdkVersion().getApiString()));
+                    .set(project.provider(() -> component.getMinSdkVersion().getApiString()));
             task.getMinSdkVersion().disallowChanges();
 
             task.getTargetSdkVersion()

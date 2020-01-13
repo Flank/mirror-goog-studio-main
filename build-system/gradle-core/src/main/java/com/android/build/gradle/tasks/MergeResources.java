@@ -728,12 +728,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                     .set(
                             globalScope
                                     .getProject()
-                                    .provider(
-                                            () ->
-                                                    variantData
-                                                            .getVariantDslInfo()
-                                                            .getMinSdkVersion()
-                                                            .getApiLevel()));
+                                    .provider(() -> component.getMinSdkVersion().getApiLevel()));
             task.getMinSdk().disallowChanges();
 
             Pair<FileCollection, String> aapt2AndVersion =

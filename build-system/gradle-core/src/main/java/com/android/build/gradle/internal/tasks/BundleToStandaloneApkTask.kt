@@ -187,7 +187,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
                 InternalArtifactType.UNIVERSAL_APK,
                 taskProvider,
                 BundleToStandaloneApkTask::outputFile,
-                "${component.globalScope.projectBaseName}-${component.variantDslInfo.baseName}-universal$suffix"
+                "${component.globalScope.projectBaseName}-${component.baseName}-universal$suffix"
             )
         }
 

@@ -194,7 +194,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
 
             task.aaptIntermediateDir =
                     FileUtils.join(
-                            component.globalScope.intermediatesDir, "res-process-intermediate", component.variantDslInfo.dirName)
+                            component.globalScope.intermediatesDir, "res-process-intermediate", component.dirName)
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version

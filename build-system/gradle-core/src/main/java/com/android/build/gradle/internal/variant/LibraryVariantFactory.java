@@ -100,7 +100,7 @@ public class LibraryVariantFactory extends BaseVariantFactory {
         String name =
                 globalScope.getProjectBaseName()
                         + "-"
-                        + variantDslInfo.getBaseName()
+                        + variantProperties.getBaseName()
                         + "."
                         + BuilderConstants.EXT_LIB_ARCHIVE;
         variantProperties.addVariantOutput(variantData.getOutputFactory().addMainOutput(name));

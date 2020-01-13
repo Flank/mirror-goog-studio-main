@@ -627,9 +627,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
                     taskProvider,
                     ProcessApplicationManifest::getMergeBlameFile,
-                    "manifest-merger-blame-"
-                            + component.getVariantDslInfo().getBaseName()
-                            + "-report.txt");
+                    "manifest-merger-blame-" + component.getBaseName() + "-report.txt");
 
             artifacts.producesDir(
                     InternalArtifactType.METADATA_FEATURE_MANIFEST.INSTANCE,
@@ -651,9 +649,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             ProcessApplicationManifest::getReportFile,
                             FileUtils.join(component.getGlobalScope().getOutputsDir(), "logs")
                                     .getAbsolutePath(),
-                            "manifest-merger-"
-                                    + component.getVariantDslInfo().getBaseName()
-                                    + "-report.txt");
+                            "manifest-merger-" + component.getBaseName() + "-report.txt");
         }
 
         @Override
@@ -708,7 +704,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             task.getVariantType().disallowChanges();
 
             task.getMinSdkVersion()
-                    .set(project.provider(() -> variantDslInfo.getMinSdkVersion().getApiString()));
+                    .set(project.provider(() -> component.getMinSdkVersion().getApiString()));
             task.getMinSdkVersion().disallowChanges();
 
             task.getTargetSdkVersion()
@@ -787,8 +783,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             task.manifestOverlays.set(
                     task.getProject().provider(variantSources::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
-            task.isFeatureSplitVariantType = variantDslInfo.getVariantType().isDynamicFeature();
-            task.buildTypeName = variantDslInfo.getComponentIdentity().getBuildType();
+            task.isFeatureSplitVariantType = component.getVariantType().isDynamicFeature();
+            task.buildTypeName = component.getBuildType();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
 

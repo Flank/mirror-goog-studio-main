@@ -1020,7 +1020,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                     .provider(
                                             () ->
                                                     component
-                                                            .getVariantDslInfo()
                                                             .getMinSdkVersion()
                                                             .getApiLevel()));
             packageAndroidArtifact.getMinSdkVersion().disallowChanges();

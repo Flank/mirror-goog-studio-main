@@ -105,7 +105,7 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
 
             task.fakeOutputDirectory = File(
                 component.globalScope.intermediatesDir,
-                "prebuild/${component.variantDslInfo.dirName}"
+                "prebuild/${component.dirName}"
             )
         }
     }

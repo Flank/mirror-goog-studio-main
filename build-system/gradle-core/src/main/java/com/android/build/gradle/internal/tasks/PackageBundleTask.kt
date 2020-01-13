@@ -304,7 +304,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            val bundleName = "${component.globalScope.projectBaseName}-${component.variantDslInfo.baseName}.aab"
+            val bundleName = "${component.globalScope.projectBaseName}-${component.baseName}.aab"
             component.artifacts.producesFile(
                 InternalArtifactType.INTERMEDIARY_BUNDLE,
                 taskProvider,
@@ -376,7 +376,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             task.debuggable
                 .setDisallowChanges(component.variantDslInfo.isDebuggable)
 
-            if (component.variantDslInfo.minSdkVersion.featureLevel < MIN_SDK_FOR_SPLITS
+            if (component.minSdkVersion.featureLevel < MIN_SDK_FOR_SPLITS
                 && task.assetPackZips.isPresent) {
                 task.bundleNeedsFusedStandaloneConfig = true
             }

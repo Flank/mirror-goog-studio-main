@@ -83,7 +83,7 @@ dependencies {
             task.fakeOutputDirectory = FileUtils.join(
                 componentProperties.globalScope.intermediatesDir,
                 name,
-                componentProperties.variantDslInfo.dirName
+                componentProperties.dirName
             )
         }
     }

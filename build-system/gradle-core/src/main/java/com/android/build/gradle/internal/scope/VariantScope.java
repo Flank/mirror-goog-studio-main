@@ -107,14 +107,6 @@ public interface VariantScope {
     /** Returns if we need to shrink desugar_jdk_libs when desugaring Core Library. */
     boolean getNeedsShrinkDesugarLibrary();
 
-    @NonNull
-    DexingType getDexingType();
-
-    boolean getNeedsMainDexList();
-
-    @NonNull
-    AndroidVersion getMinSdkVersion();
-
     void addNdkDebuggableLibraryFolders(@NonNull Abi abi, @NonNull File searchPath);
 
     /** Returns the path(s) to compiled R classes (R.jar). */

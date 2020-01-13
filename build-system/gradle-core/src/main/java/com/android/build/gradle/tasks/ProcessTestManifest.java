@@ -525,9 +525,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                     InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
                     taskProvider,
                     ProcessTestManifest::getMergeBlameFile,
-                    "manifest-merger-blame-"
-                            + component.getVariantDslInfo().getBaseName()
-                            + "-report.txt");
+                    "manifest-merger-blame-" + component.getBaseName() + "-report.txt");
         }
 
         @Override
@@ -556,10 +554,10 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                             component.getPaths().getIntermediatesDir(),
                             "tmp",
                             "manifest",
-                            component.getVariantDslInfo().getDirName()));
+                            component.getDirName()));
 
             task.getMinSdkVersion()
-                    .set(project.provider(() -> variantDslInfo.getMinSdkVersion().getApiString()));
+                    .set(project.provider(() -> component.getMinSdkVersion().getApiString()));
             task.getMinSdkVersion().disallowChanges();
             task.getTargetSdkVersion()
                     .set(
