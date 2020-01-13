@@ -117,6 +117,12 @@ coverage_report(
     ],
 )
 
+coverage_report(
+    name = "build-attribution",
+    srcpath_include = ["tools/adt/idea/build-attribution/src"],
+    tests = ["//tools/adt/idea/build-attribution:intellij.android.build-attribution.tests_tests"],
+)
+
 # Coverage report for the split editor feature in design tools.
 # The editor covers most CUJs in both layout and navigation editors,
 # so we run both targets and exclude unrelated directories.
