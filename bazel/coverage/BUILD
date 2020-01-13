@@ -102,13 +102,7 @@ coverage_report(
 )
 
 coverage_report(
-    name = "motion-editor",
-    srcpath_exclude = [
-        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion/attributeEditor",
-        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion/MotionLayoutAttributePanel.java",
-        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion/MotionLayoutTimelineHelper.java",
-        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion/MotionLayoutTimelinePanel.java",
-    ],
+    name = "motioneditor",
     srcpath_include = [
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion",
     ],
