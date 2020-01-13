@@ -57,7 +57,8 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<FeatureSplitDeclarationWriterTask> {
+            extends VariantTaskCreationAction<
+                    FeatureSplitDeclarationWriterTask, ComponentPropertiesImpl> {
 
         public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
             super(componentProperties);
@@ -66,7 +67,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("feature", "Writer");
+            return computeTaskName("feature", "Writer");
         }
 
         @NonNull
@@ -90,7 +91,8 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
         }
 
         @Override
-        public void configure(@NonNull FeatureSplitDeclarationWriterTask task) {
+        public void configure(
+                @NonNull FeatureSplitDeclarationWriterTask task) {
             super.configure(task);
 
             final VariantScope variantScope = getVariantScope();

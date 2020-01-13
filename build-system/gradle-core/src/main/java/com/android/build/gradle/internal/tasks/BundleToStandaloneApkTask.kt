@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.signing.SigningConfigProvider
 import com.android.tools.build.bundletool.commands.BuildApksCommand
@@ -169,16 +168,18 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<BundleToStandaloneApkTask>(
+        VariantTaskCreationAction<BundleToStandaloneApkTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("package", "UniversalApk")
+            get() = computeTaskName("package", "UniversalApk")
         override val type: Class<BundleToStandaloneApkTask>
             get() = BundleToStandaloneApkTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out BundleToStandaloneApkTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out BundleToStandaloneApkTask>
+        ) {
             super.handleProvider(taskProvider)
             // Mirrors logic in OutputFactory.getOutputFileName, but without splits.
             val suffix = if (variantScope.variantDslInfo.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
@@ -190,7 +191,9 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: BundleToStandaloneApkTask) {
+        override fun configure(
+            task: BundleToStandaloneApkTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(

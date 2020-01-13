@@ -20,23 +20,24 @@ import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.tasks.TaskProvider
 
 /** Configuration action for a task to merge aapt proguard files  */
 class MergeAaptProguardFilesCreationAction(
     componentProperties: ComponentPropertiesImpl
-) : VariantTaskCreationAction<MergeFileTask>(
+) : VariantTaskCreationAction<MergeFileTask, ComponentPropertiesImpl>(
     componentProperties
 ) {
 
     override val name: String
-            get() = component.computeTaskName("merge", "AaptProguardFiles")
+            get() = computeTaskName("merge", "AaptProguardFiles")
     override val type: Class<MergeFileTask>
         get() = MergeFileTask::class.java
 
-    override fun handleProvider(taskProvider: TaskProvider<out MergeFileTask>) {
+    override fun handleProvider(
+        taskProvider: TaskProvider<out MergeFileTask>
+    ) {
         super.handleProvider(taskProvider)
 
         variantScope.artifacts.producesFile(
@@ -47,7 +48,9 @@ class MergeAaptProguardFilesCreationAction(
         )
     }
 
-    override fun configure(task: MergeFileTask) {
+    override fun configure(
+        task: MergeFileTask
+    ) {
         super.configure(task)
 
         val project = variantScope.globalScope.project

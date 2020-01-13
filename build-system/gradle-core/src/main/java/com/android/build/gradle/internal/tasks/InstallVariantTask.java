@@ -206,7 +206,8 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract DirectoryProperty getApkDirectory();
 
-    public static class CreationAction extends VariantTaskCreationAction<InstallVariantTask> {
+    public static class CreationAction
+            extends VariantTaskCreationAction<InstallVariantTask, ComponentPropertiesImpl> {
 
         public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
             super(componentProperties);
@@ -215,7 +216,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("install");
+            return computeTaskName("install");
         }
 
         @NonNull
@@ -228,10 +229,10 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         public void configure(@NonNull InstallVariantTask task) {
             super.configure(task);
             VariantScope scope = getVariantScope();
-            task.componentProperties = getComponent();
+            task.componentProperties = component;
 
             task.setDescription(
-                    "Installs the " + getComponent().getVariantData().getDescription() + ".");
+                    "Installs the " + component.getVariantData().getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             scope.getArtifacts()
                     .setTaskInputToFinalProduct(
@@ -248,7 +249,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends InstallVariantTask> taskProvider) {
             super.handleProvider(taskProvider);
-            getComponent().getTaskContainer().setInstallTask(taskProvider);
+            component.getTaskContainer().setInstallTask(taskProvider);
         }
     }
 }

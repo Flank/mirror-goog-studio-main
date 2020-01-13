@@ -362,7 +362,8 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         return mainSplit.get().getFullName();
     }
 
-    public static class CreationAction extends VariantTaskCreationAction<ProcessLibraryManifest> {
+    public static class CreationAction
+            extends VariantTaskCreationAction<ProcessLibraryManifest, ComponentPropertiesImpl> {
 
         private final ComponentPropertiesImpl componentProperties;
         /** {@code EagerTaskCreationAction} for the library process manifest task. */
@@ -374,7 +375,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("process", "Manifest");
+            return computeTaskName("process", "Manifest");
         }
 
         @NonNull
@@ -387,7 +388,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessLibraryManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            getComponent().getTaskContainer().setProcessManifestTask(taskProvider);
+            component.getTaskContainer().setProcessManifestTask(taskProvider);
 
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.producesDir(
@@ -428,7 +429,8 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         }
 
         @Override
-        public void configure(@NonNull ProcessLibraryManifest task) {
+        public void configure(
+                @NonNull ProcessLibraryManifest task) {
             super.configure(task);
 
             VariantDslInfo variantDslInfo = getVariantScope().getVariantDslInfo();
@@ -455,8 +457,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             task.getMaxSdkVersion().set(project.provider(variantDslInfo::getMaxSdkVersion));
             task.getMaxSdkVersion().disallowChanges();
 
-            task.mainSplit.set(
-                    project.provider(getComponent().getOutputs().getMainSplit()::getApkData));
+            task.mainSplit.set(project.provider(component.getOutputs().getMainSplit()::getApkData));
             task.mainSplit.disallowChanges();
 
             task.isNamespaced =
@@ -479,7 +480,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             task.manifestOverlays.set(
                     task.getProject().provider(variantSources::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
-            task.getVariantType().set(getComponent().getVariantType().toString());
+            task.getVariantType().set(component.getVariantType().toString());
             task.getVariantType().disallowChanges();
         }
     }

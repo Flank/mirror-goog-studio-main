@@ -21,7 +21,6 @@ import com.android.SdkConstants.FN_RES_BASE
 import com.android.SdkConstants.FN_R_CLASS_JAR
 import com.android.SdkConstants.RES_QUALIFIER_SEP
 import com.android.build.VariantOutput
-import com.android.build.api.component.ComponentProperties
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
@@ -38,7 +37,6 @@ import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SplitList
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
@@ -47,7 +45,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.utils.toImmutableList
-import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
@@ -347,17 +344,17 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         private val generateLegacyMultidexMainDexProguardRules: Boolean,
         private val baseName: String?,
         private val isLibrary: Boolean
-    ) : VariantTaskCreationAction<LinkApplicationAndroidResourcesTask>(
+    ) : VariantTaskCreationAction<LinkApplicationAndroidResourcesTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("process", "Resources")
+            get() = computeTaskName("process", "Resources")
 
         override val type: Class<LinkApplicationAndroidResourcesTask>
             get() = LinkApplicationAndroidResourcesTask::class.java
 
-        protected open fun preconditionsCheck() {}
+        protected open fun preconditionsCheck(component: ComponentPropertiesImpl) {}
 
         override fun handleProvider(
             taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
@@ -389,12 +386,14 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             }
         }
 
-        override fun configure(task: LinkApplicationAndroidResourcesTask) {
+        override fun configure(
+            task: LinkApplicationAndroidResourcesTask
+        ) {
             super.configure(task)
             val projectOptions = variantScope.globalScope.projectOptions
             val variantDslInfo = component.variantDslInfo
 
-            preconditionsCheck()
+            preconditionsCheck(component)
 
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
@@ -504,7 +503,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         isLibrary
     ) {
 
-        override fun preconditionsCheck() {
+        override fun preconditionsCheck(component: ComponentPropertiesImpl) {
             if (component.variantType.isAar) {
                 throw IllegalArgumentException("Use GenerateLibraryRFileTask")
             } else {
@@ -516,7 +515,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             }
         }
 
-        override fun handleProvider(taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
+        ) {
             super.handleProvider(taskProvider)
 
             if (variantScope.globalScope.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
@@ -556,7 +557,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             }
         }
 
-        override fun configure(task: LinkApplicationAndroidResourcesTask) {
+        override fun configure(
+            task: LinkApplicationAndroidResourcesTask
+        ) {
             super.configure(task)
 
             task.dependenciesFileCollection = variantScope
@@ -591,7 +594,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         baseName: String?
     ) : BaseCreationAction(componentProperties, generateLegacyMultidexMainDexProguardRules, baseName, false) {
 
-        override fun handleProvider(taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesDir(
@@ -602,7 +607,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             )
         }
 
-        override fun configure(task: LinkApplicationAndroidResourcesTask) {
+        override fun configure(
+            task: LinkApplicationAndroidResourcesTask
+        ) {
             super.configure(task)
 
             val projectOptions = variantScope.globalScope.projectOptions

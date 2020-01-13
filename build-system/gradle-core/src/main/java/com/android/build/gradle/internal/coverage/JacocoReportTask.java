@@ -171,22 +171,21 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
                         });
     }
 
-    public static class CreationAction extends VariantTaskCreationAction<JacocoReportTask> {
+    public static class CreationAction
+            extends VariantTaskCreationAction<JacocoReportTask, TestComponentPropertiesImpl> {
         @NonNull private final Configuration jacocoAntConfiguration;
-        @NonNull private final TestComponentPropertiesImpl testComponentProperties;
 
         public CreationAction(
                 @NonNull TestComponentPropertiesImpl testComponentProperties,
                 @NonNull Configuration jacocoAntConfiguration) {
             super(testComponentProperties);
             this.jacocoAntConfiguration = jacocoAntConfiguration;
-            this.testComponentProperties = testComponentProperties;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("create", "CoverageReport");
+            return computeTaskName("create", "CoverageReport");
         }
 
         @NonNull
@@ -196,22 +195,24 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
         }
 
         @Override
-        public void handleProvider(@NonNull TaskProvider<? extends JacocoReportTask> taskProvider) {
+        public void handleProvider(
+                @NonNull TaskProvider<? extends JacocoReportTask> taskProvider) {
             super.handleProvider(taskProvider);
-            getComponent().getTaskContainer().setCoverageReportTask(taskProvider);
+            component.getTaskContainer().setCoverageReportTask(taskProvider);
         }
 
         @Override
-        public void configure(@NonNull JacocoReportTask task) {
+        public void configure(
+                @NonNull JacocoReportTask task) {
             super.configure(task);
             VariantScope scope = getVariantScope();
 
             task.setDescription("Creates JaCoCo test coverage report from data gathered on the "
                     + "device.");
 
-            task.setReportName(testComponentProperties.getName());
+            task.setReportName(component.getName());
 
-            VariantPropertiesImpl testedVariant = testComponentProperties.getTestedVariant();
+            VariantPropertiesImpl testedVariant = component.getTestedVariant();
 
             task.jacocoClasspath = jacocoAntConfiguration;
 

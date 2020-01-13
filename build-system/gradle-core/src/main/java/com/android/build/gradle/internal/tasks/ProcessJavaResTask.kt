@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.DuplicatesStrategy
@@ -45,12 +44,12 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
     /** Configuration Action for a process*JavaRes tasks.  */
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<ProcessJavaResTask>(
+    ) : VariantTaskCreationAction<ProcessJavaResTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("process", "JavaRes")
+            get() = computeTaskName("process", "JavaRes")
 
         override val type: Class<ProcessJavaResTask>
             get() = ProcessJavaResTask::class.java
@@ -69,7 +68,9 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
                 )
         }
 
-        override fun configure(task: ProcessJavaResTask) {
+        override fun configure(
+            task: ProcessJavaResTask
+        ) {
             super.configure(task)
 
             for (sourceProvider in variantScope.variantSources.sortedSourceProviders) {

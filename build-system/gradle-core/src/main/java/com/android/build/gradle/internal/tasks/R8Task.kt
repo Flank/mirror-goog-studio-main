@@ -168,7 +168,7 @@ abstract class R8Task: ProguardConfigurableTask() {
         isTestApplication: Boolean = false
     ) : ProguardConfigurableTask.CreationAction<R8Task>(componentProperties, isTestApplication) {
         override val type = R8Task::class.java
-        override val name =  component.computeTaskName("minify", "WithR8")
+        override val name =  computeTaskName("minify", "WithR8")
 
         private var disableTreeShaking: Boolean = false
         private var disableMinification: Boolean = false
@@ -176,7 +176,9 @@ abstract class R8Task: ProguardConfigurableTask() {
         // This is a huge sledgehammer, but it is necessary until http://b/72683872 is fixed.
         private val proguardConfigurations: MutableList<String> = mutableListOf("-ignorewarnings")
 
-        override fun handleProvider(taskProvider: TaskProvider<out R8Task>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out R8Task>
+        ) {
             super.handleProvider(taskProvider)
 
             when {
@@ -236,7 +238,9 @@ abstract class R8Task: ProguardConfigurableTask() {
             }
         }
 
-        override fun configure(task: R8Task) {
+        override fun configure(
+            task: R8Task
+        ) {
             super.configure(task)
 
             val artifacts = variantScope.artifacts

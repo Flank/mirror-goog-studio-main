@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.Internal
@@ -43,16 +42,18 @@ abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
     override lateinit var variantName: String
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<PackageRenderscriptTask>(
+        VariantTaskCreationAction<PackageRenderscriptTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("package", "Renderscript")
+            get() = computeTaskName("package", "Renderscript")
         override val type: Class<PackageRenderscriptTask>
             get() = PackageRenderscriptTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out PackageRenderscriptTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out PackageRenderscriptTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.RENDERSCRIPT_HEADERS,
@@ -62,7 +63,9 @@ abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
             )
         }
 
-        override fun configure(task: PackageRenderscriptTask) {
+        override fun configure(
+            task: PackageRenderscriptTask
+        ) {
             super.configure(task)
 
             // package from 3 sources. the order is important to make sure the override works well.

@@ -48,7 +48,9 @@ See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details
         override val type: Class<TestPreBuildTask>
             get() = TestPreBuildTask::class.java
 
-        override fun configure(task: TestPreBuildTask) {
+        override fun configure(
+            task: TestPreBuildTask
+        ) {
             super.configure(task)
             task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
             task.compileClasspath = testComponentProperties.testedVariant.variantDependencies.runtimeClasspath

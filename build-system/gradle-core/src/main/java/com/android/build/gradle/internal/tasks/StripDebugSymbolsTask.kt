@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFind
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.process.LoggedProcessOutputHandler
@@ -136,17 +135,19 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<StripDebugSymbolsTask>(
+    ) : VariantTaskCreationAction<StripDebugSymbolsTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("strip", "DebugSymbols")
+            get() = computeTaskName("strip", "DebugSymbols")
 
         override val type: Class<StripDebugSymbolsTask>
             get() = StripDebugSymbolsTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out StripDebugSymbolsTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out StripDebugSymbolsTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesDir(
@@ -157,7 +158,9 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
             )
         }
 
-        override fun configure(task: StripDebugSymbolsTask) {
+        override fun configure(
+            task: StripDebugSymbolsTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)

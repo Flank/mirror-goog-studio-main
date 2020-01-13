@@ -405,7 +405,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<DeviceProviderInstrumentTestTask> {
+            extends VariantTaskCreationAction<
+                    DeviceProviderInstrumentTestTask, ComponentPropertiesImpl> {
 
         @NonNull
         private final DeviceProvider deviceProvider;
@@ -434,7 +435,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName(deviceProvider.getName());
+            return computeTaskName(deviceProvider.getName());
         }
 
         @NonNull
@@ -495,19 +496,20 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 deviceProvider.getName());
             }
 
-            if (getComponent() instanceof TestComponentPropertiesImpl) {
+            if (component instanceof TestComponentPropertiesImpl) {
                 if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
-                    getComponent().getTaskContainer().setConnectedTestTask(taskProvider);
+                    component.getTaskContainer().setConnectedTestTask(taskProvider);
                     // possible redundant with setConnectedTestTask?
-                    getComponent().getTaskContainer().setConnectedTask(taskProvider);
+                    component.getTaskContainer().setConnectedTask(taskProvider);
                 } else {
-                    getComponent().getTaskContainer().getProviderTestTaskList().add(taskProvider);
+                    component.getTaskContainer().getProviderTestTaskList().add(taskProvider);
                 }
             }
         }
 
         @Override
-        public void configure(@NonNull DeviceProviderInstrumentTestTask task) {
+        public void configure(
+                @NonNull DeviceProviderInstrumentTestTask task) {
             super.configure(task);
 
             VariantScope scope = getVariantScope();
@@ -515,10 +517,10 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             ProjectOptions projectOptions = scope.getGlobalScope().getProjectOptions();
 
             // this can be null for test plugin
-            VariantPropertiesImpl testedVariant = getComponent().getTestedVariant();
+            VariantPropertiesImpl testedVariant = component.getTestedVariant();
 
             String variantName =
-                    testedVariant != null ? testedVariant.getName() : getComponent().getName();
+                    testedVariant != null ? testedVariant.getName() : component.getName();
             if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
                 task.setDescription("Installs and runs the tests for " + variantName +
                         " on connected devices.");

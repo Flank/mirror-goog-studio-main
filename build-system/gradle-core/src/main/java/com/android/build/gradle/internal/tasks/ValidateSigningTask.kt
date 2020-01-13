@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.BuilderConstants
 import com.android.builder.signing.DefaultSigningConfig
@@ -131,16 +130,18 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
         componentProperties: ComponentPropertiesImpl,
         private val defaultDebugKeystoreLocation: File
     ) :
-        VariantTaskCreationAction<ValidateSigningTask>(
+        VariantTaskCreationAction<ValidateSigningTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("validateSigning")
+            get() = computeTaskName("validateSigning")
         override val type: Class<ValidateSigningTask>
             get() = ValidateSigningTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ValidateSigningTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ValidateSigningTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.VALIDATE_SIGNING_CONFIG,
@@ -149,7 +150,9 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: ValidateSigningTask) {
+        override fun configure(
+            task: ValidateSigningTask
+        ) {
             super.configure(task)
 
             task.signingConfig = variantScope.variantDslInfo.signingConfig ?: throw IllegalStateException(

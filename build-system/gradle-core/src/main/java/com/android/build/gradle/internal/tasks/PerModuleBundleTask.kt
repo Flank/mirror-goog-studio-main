@@ -187,16 +187,18 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     class CreationAction(
         componentProperties: ComponentPropertiesImpl,
         private val packageCustomClassDependencies: Boolean
-    ) : VariantTaskCreationAction<PerModuleBundleTask>(
+    ) : VariantTaskCreationAction<PerModuleBundleTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("build", "PreBundle")
+            get() = computeTaskName("build", "PreBundle")
         override val type: Class<PerModuleBundleTask>
             get() = PerModuleBundleTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out PerModuleBundleTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out PerModuleBundleTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.MODULE_BUNDLE,
@@ -205,7 +207,9 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             )
         }
 
-        override fun configure(task: PerModuleBundleTask) {
+        override fun configure(
+            task: PerModuleBundleTask
+        ) {
             super.configure(task)
             val artifacts = variantScope.artifacts
 

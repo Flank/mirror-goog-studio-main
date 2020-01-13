@@ -172,14 +172,14 @@ abstract class MergeJavaResourceTask
     class CreationAction(
         private val mergeScopes: Collection<ScopeType>,
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<MergeJavaResourceTask>(
+    ) : VariantTaskCreationAction<MergeJavaResourceTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         private val projectJavaResFromStreams: FileCollection?
 
         override val name: String
-            get() = component.computeTaskName("merge", "JavaResource")
+            get() = computeTaskName("merge", "JavaResource")
 
         override val type: Class<MergeJavaResourceTask>
             get() = MergeJavaResourceTask::class.java
@@ -200,7 +200,9 @@ abstract class MergeJavaResourceTask
             }
         }
 
-        override fun handleProvider(taskProvider: TaskProvider<out MergeJavaResourceTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out MergeJavaResourceTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesFile(
@@ -211,7 +213,9 @@ abstract class MergeJavaResourceTask
             )
         }
 
-        override fun configure(task: MergeJavaResourceTask) {
+        override fun configure(
+            task: MergeJavaResourceTask
+        ) {
             super.configure(task)
 
             if (projectJavaResFromStreams != null) {

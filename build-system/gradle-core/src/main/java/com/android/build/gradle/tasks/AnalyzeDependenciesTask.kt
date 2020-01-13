@@ -21,7 +21,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.VariantTypeImpl
@@ -160,16 +159,18 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<AnalyzeDependenciesTask>(
+    ) : VariantTaskCreationAction<AnalyzeDependenciesTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("analyze", "Dependencies")
+            get() = computeTaskName("analyze", "Dependencies")
         override val type: Class<AnalyzeDependenciesTask>
             get() = AnalyzeDependenciesTask::class.java
 
-        override fun configure(task: AnalyzeDependenciesTask) {
+        override fun configure(
+            task: AnalyzeDependenciesTask
+        ) {
             super.configure(task)
 
             task.variantArtifact = variantScope.artifacts
@@ -192,7 +193,9 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
             task.isVariantLibrary = (component.variantType == VariantTypeImpl.LIBRARY)
         }
 
-        override fun handleProvider(taskProvider: TaskProvider<out AnalyzeDependenciesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out AnalyzeDependenciesTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesDir(

@@ -138,7 +138,8 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
         }
     }
 
-    public static class CreationAction extends VariantTaskCreationAction<ExternalNativeCleanTask> {
+    public static class CreationAction
+            extends VariantTaskCreationAction<ExternalNativeCleanTask, ComponentPropertiesImpl> {
         @NonNull private final CxxVariantModel variant;
         @NonNull private final List<CxxAbiModel> abis = Lists.newArrayList();
 
@@ -165,7 +166,7 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("externalNativeBuildClean");
+            return computeTaskName("externalNativeBuildClean");
         }
 
         @NonNull
@@ -175,7 +176,8 @@ public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
         }
 
         @Override
-        public void configure(@NonNull ExternalNativeCleanTask task) {
+        public void configure(
+                @NonNull ExternalNativeCleanTask task) {
             super.configure(task);
             task.variant = variant;
             task.abis = abis;

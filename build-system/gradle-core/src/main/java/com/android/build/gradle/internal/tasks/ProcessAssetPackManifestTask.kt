@@ -69,13 +69,15 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
         componentProperties: ComponentPropertiesImpl,
         private val assetPackManifestFileCollection: FileCollection,
         private val assetPackNames: Set<String>
-    ) : VariantTaskCreationAction<ProcessAssetPackManifestTask>(
+    ) : VariantTaskCreationAction<ProcessAssetPackManifestTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
         override val type = ProcessAssetPackManifestTask::class.java
-        override val name = component.computeTaskName("process", "AssetPackManifests")
+        override val name = computeTaskName("process", "AssetPackManifests")
 
-        override fun handleProvider(taskProvider: TaskProvider<out ProcessAssetPackManifestTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ProcessAssetPackManifestTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.ASSET_PACK_MANIFESTS,
@@ -84,7 +86,9 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: ProcessAssetPackManifestTask) {
+        override fun configure(
+            task: ProcessAssetPackManifestTask
+        ) {
             super.configure(task)
 
             task.applicationId = component.applicationId

@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.utils.FileCache
@@ -68,14 +67,16 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
         componentProperties: ComponentPropertiesImpl,
         private val userCache: FileCache?,
         private val isTestCoverageEnabled: Boolean) :
-        VariantTaskCreationAction<RecalculateStackFramesTask>(
+        VariantTaskCreationAction<RecalculateStackFramesTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
-        override val name = component.computeTaskName("fixStackFrames")
+        override val name = computeTaskName("fixStackFrames")
         override val type = RecalculateStackFramesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out RecalculateStackFramesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out RecalculateStackFramesTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.FIXED_STACK_FRAMES,
@@ -84,7 +85,9 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
             )
         }
 
-        override fun configure(task: RecalculateStackFramesTask) {
+        override fun configure(
+            task: RecalculateStackFramesTask
+        ) {
             super.configure(task)
 
             task.bootClasspath = variantScope.bootClasspath

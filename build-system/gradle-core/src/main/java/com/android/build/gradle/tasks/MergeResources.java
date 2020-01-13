@@ -647,7 +647,8 @@ public abstract class MergeResources extends ResourceAwareTask {
         return useJvmResourceCompiler;
     }
 
-    public static class CreationAction extends VariantTaskCreationAction<MergeResources> {
+    public static class CreationAction
+            extends VariantTaskCreationAction<MergeResources, ComponentPropertiesImpl> {
         @NonNull private final TaskManager.MergeType mergeType;
         @NonNull
         private final String taskNamePrefix;
@@ -681,7 +682,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName(taskNamePrefix, "Resources");
+            return computeTaskName(taskNamePrefix, "Resources");
         }
 
         @NonNull
@@ -691,7 +692,8 @@ public abstract class MergeResources extends ResourceAwareTask {
         }
 
         @Override
-        public void handleProvider(@NonNull TaskProvider<? extends MergeResources> taskProvider) {
+        public void handleProvider(
+                @NonNull TaskProvider<? extends MergeResources> taskProvider) {
             super.handleProvider(taskProvider);
             // In LibraryTaskManager#createMergeResourcesTasks, there are actually two
             // MergeResources tasks sharing the same task type (MergeResources) and CreationAction
@@ -700,7 +702,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             // latter one wins: The mergeResources task with mergeType == MERGE is the one that is
             // finally registered in the current scope.
             // Filed https://issuetracker.google.com//110412851 to clean this up at some point.
-            getComponent().getTaskContainer().setMergeResourcesTask(taskProvider);
+            component.getTaskContainer().setMergeResourcesTask(taskProvider);
 
             getVariantScope()
                     .getArtifacts()
@@ -717,7 +719,6 @@ public abstract class MergeResources extends ResourceAwareTask {
         public void configure(@NonNull MergeResources task) {
             super.configure(task);
 
-            ComponentPropertiesImpl component = getComponent();
             VariantScope variantScope = component.getVariantScope();
             GlobalScope globalScope = component.getGlobalScope();
             BaseVariantData variantData = component.getVariantData();

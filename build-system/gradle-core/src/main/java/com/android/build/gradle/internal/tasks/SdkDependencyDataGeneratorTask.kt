@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.KeymaestroHybridEncrypter
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.tasks.OutputFile
 import com.google.common.io.BaseEncoding
@@ -77,13 +76,15 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
 
   class CreationAction(
     componentProperties: ComponentPropertiesImpl
-  ) : VariantTaskCreationAction<SdkDependencyDataGeneratorTask>(
+  ) : VariantTaskCreationAction<SdkDependencyDataGeneratorTask, ComponentPropertiesImpl>(
       componentProperties
   ) {
-    override val name: String = component.computeTaskName("sdk", "DependencyData")
+    override val name: String = computeTaskName("sdk", "DependencyData")
     override val type: Class<SdkDependencyDataGeneratorTask> = SdkDependencyDataGeneratorTask::class.java
 
-    override fun handleProvider(taskProvider: TaskProvider<out SdkDependencyDataGeneratorTask>) {
+    override fun handleProvider(
+        taskProvider: TaskProvider<out SdkDependencyDataGeneratorTask>
+    ) {
       super.handleProvider(taskProvider)
       variantScope
         .artifacts
@@ -95,7 +96,9 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
         )
     }
 
-    override fun configure(task: SdkDependencyDataGeneratorTask) {
+    override fun configure(
+      task: SdkDependencyDataGeneratorTask
+    ) {
       super.configure(task)
       variantScope.artifacts.setTaskInputToFinalProduct(
         InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.dependencies)

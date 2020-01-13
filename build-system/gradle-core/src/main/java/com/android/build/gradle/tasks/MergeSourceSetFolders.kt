@@ -291,14 +291,16 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
     abstract class CreationAction protected constructor(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<MergeSourceSetFolders>(
+    ) : VariantTaskCreationAction<MergeSourceSetFolders, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val type: Class<MergeSourceSetFolders>
             get() = MergeSourceSetFolders::class.java
 
-        override fun configure(task: MergeSourceSetFolders) {
+        override fun configure(
+            task: MergeSourceSetFolders
+        ) {
             super.configure(task)
             val scope = variantScope
 
@@ -315,9 +317,11 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
     ) : CreationAction(componentProperties) {
 
         override val name: String
-            get() = component.computeTaskName("merge", "Assets")
+            get() = computeTaskName("merge", "Assets")
 
-        override fun handleProvider(taskProvider: TaskProvider<out MergeSourceSetFolders>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out MergeSourceSetFolders>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope
@@ -331,7 +335,9 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             component.taskContainer.mergeAssetsTask = taskProvider
         }
 
-        override fun configure(task: MergeSourceSetFolders) {
+        override fun configure(
+            task: MergeSourceSetFolders
+        ) {
             super.configure(task)
             val scope = variantScope
 
@@ -373,7 +379,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         ) {
 
         override val name: String
-            get() = component.computeTaskName("merge", "Assets")
+            get() = computeTaskName("merge", "Assets")
     }
 
     class LibraryAssetCreationAction(componentProperties: ComponentPropertiesImpl) :
@@ -384,16 +390,18 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         ) {
 
         override val name: String
-            get() = component.computeTaskName("package", "Assets")
+            get() = computeTaskName("package", "Assets")
     }
 
     class MergeJniLibFoldersCreationAction(componentProperties: ComponentPropertiesImpl) :
         CreationAction(componentProperties) {
 
         override val name: String
-            get() = component.computeTaskName("merge", "JniLibFolders")
+            get() = computeTaskName("merge", "JniLibFolders")
 
-        override fun handleProvider(taskProvider: TaskProvider<out MergeSourceSetFolders>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out MergeSourceSetFolders>
+        ) {
             super.handleProvider(taskProvider)
             variantScope
                 .artifacts
@@ -405,7 +413,9 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
                 )
         }
 
-        override fun configure(task: MergeSourceSetFolders) {
+        override fun configure(
+            task: MergeSourceSetFolders
+        ) {
             super.configure(task)
             val variantSources = component.variantSources
 
@@ -423,9 +433,11 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
         CreationAction(componentProperties) {
 
         override val name: String
-            get() = component.computeTaskName("merge", "Shaders")
+            get() = computeTaskName("merge", "Shaders")
 
-        override fun handleProvider(taskProvider: TaskProvider<out MergeSourceSetFolders>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out MergeSourceSetFolders>
+        ) {
             super.handleProvider(taskProvider)
             variantScope
                 .artifacts
@@ -437,7 +449,9 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
                 )
         }
 
-        override fun configure(task: MergeSourceSetFolders) {
+        override fun configure(
+            task: MergeSourceSetFolders
+        ) {
             super.configure(task)
             val variantSources = component.variantSources
 

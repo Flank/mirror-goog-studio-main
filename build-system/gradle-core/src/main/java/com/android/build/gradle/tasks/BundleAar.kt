@@ -21,7 +21,6 @@ import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.BuilderConstants
@@ -75,16 +74,18 @@ abstract class BundleAar : Zip(), VariantAwareTask {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<BundleAar>(
+    ) : VariantTaskCreationAction<BundleAar, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("bundle", "Aar")
+            get() = computeTaskName("bundle", "Aar")
         override val type: Class<BundleAar>
             get() = BundleAar::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out BundleAar>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out BundleAar>
+        ) {
             super.handleProvider(taskProvider)
             component.taskContainer.bundleLibraryTask = taskProvider
             variantScope.artifacts.producesFile(
@@ -94,7 +95,9 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             )
         }
 
-        override fun configure(task: BundleAar) {
+        override fun configure(
+            task: BundleAar
+        ) {
             super.configure(task)
 
             val artifacts = variantScope.artifacts

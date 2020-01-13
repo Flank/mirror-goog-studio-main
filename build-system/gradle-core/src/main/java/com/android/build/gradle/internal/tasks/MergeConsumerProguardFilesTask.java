@@ -74,7 +74,8 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<MergeConsumerProguardFilesTask> {
+            extends VariantTaskCreationAction<
+                    MergeConsumerProguardFilesTask, ComponentPropertiesImpl> {
 
         public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
             super(componentProperties);
@@ -83,7 +84,7 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("merge", "ConsumerProguardFiles");
+            return computeTaskName("merge", "ConsumerProguardFiles");
         }
 
         @NonNull
@@ -107,9 +108,9 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
         }
 
         @Override
-        public void configure(@NonNull MergeConsumerProguardFilesTask task) {
+        public void configure(
+                @NonNull MergeConsumerProguardFilesTask task) {
             super.configure(task);
-            ComponentPropertiesImpl component = getComponent();
             GlobalScope globalScope = component.getGlobalScope();
             Project project = globalScope.getProject();
 

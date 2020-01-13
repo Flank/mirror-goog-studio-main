@@ -99,15 +99,12 @@ public abstract class TestServerTask extends NonIncrementalTask {
 
     /** Configuration Action for a TestServerTask. */
     public static class TestServerTaskCreationAction
-            extends VariantTaskCreationAction<TestServerTask> {
-
+            extends VariantTaskCreationAction<TestServerTask, AndroidTestPropertiesImpl> {
         private final TestServer testServer;
-        private final AndroidTestPropertiesImpl androidTestProperties;
 
         public TestServerTaskCreationAction(
                 @NonNull AndroidTestPropertiesImpl androidTestProperties, TestServer testServer) {
             super(androidTestProperties);
-            this.androidTestProperties = androidTestProperties;
             this.testServer = testServer;
         }
 
@@ -115,7 +112,7 @@ public abstract class TestServerTask extends NonIncrementalTask {
         @Override
         public String getName() {
             return getVariantScope().getVariantDslInfo().hasFlavors()
-                    ? getComponent().computeTaskName(testServer.getName() + "Upload")
+                    ? computeTaskName(testServer.getName() + "Upload")
                     : testServer.getName() + ("Upload");
         }
 
@@ -126,13 +123,14 @@ public abstract class TestServerTask extends NonIncrementalTask {
         }
 
         @Override
-        public void configure(@NonNull TestServerTask task) {
+        public void configure(
+                @NonNull TestServerTask task) {
             super.configure(task);
             VariantScope scope = getVariantScope();
 
-            VariantPropertiesImpl testedVariant = androidTestProperties.getTestedVariant();
+            VariantPropertiesImpl testedVariant = component.getTestedVariant();
 
-            final String variantName = androidTestProperties.getName();
+            final String variantName = component.getName();
             task.setDescription(
                     "Uploads APKs for Build \'"
                             + variantName

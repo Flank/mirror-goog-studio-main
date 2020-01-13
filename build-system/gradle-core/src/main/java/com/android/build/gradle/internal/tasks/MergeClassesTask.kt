@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.dexing.ClassFileInput.CLASS_MATCHER
 import com.android.ide.common.workers.WorkerExecutorFacade
@@ -99,11 +98,11 @@ abstract class MergeClassesTask : NonIncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<MergeClassesTask>(
+    ) : VariantTaskCreationAction<MergeClassesTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
         override val type = MergeClassesTask::class.java
-        override val name: String = component.computeTaskName("merge", "Classes")
+        override val name: String = computeTaskName("merge", "Classes")
 
         // Because ordering matters for the transform pipeline, we need to fetch the classes as soon
         // as this creation action is instantiated.
@@ -115,7 +114,9 @@ abstract class MergeClassesTask : NonIncrementalTask() {
                             && scopes.intersect(TransformManager.SCOPE_FULL_PROJECT).isNotEmpty()
                 }
 
-        override fun handleProvider(taskProvider: TaskProvider<out MergeClassesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out MergeClassesTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 artifactType = InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
@@ -129,7 +130,9 @@ abstract class MergeClassesTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: MergeClassesTask) {
+        override fun configure(
+            task: MergeClassesTask
+        ) {
             super.configure(task)
             task.inputFiles = inputFiles
             task.jarCreatorType = variantScope.jarCreatorType

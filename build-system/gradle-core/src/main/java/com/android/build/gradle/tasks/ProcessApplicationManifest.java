@@ -564,7 +564,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
 
     public static class CreationAction
-            extends VariantTaskCreationAction<ProcessApplicationManifest> {
+            extends VariantTaskCreationAction<ProcessApplicationManifest, ComponentPropertiesImpl> {
 
         protected final ComponentPropertiesImpl componentProperties;
         protected final boolean isAdvancedProfilingOn;
@@ -581,7 +581,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("process", "Manifest");
+            return computeTaskName("process", "Manifest");
         }
 
         @NonNull
@@ -591,10 +591,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
+        public void preConfigure(
+                @NonNull String taskName) {
             super.preConfigure(taskName);
-
-            ComponentPropertiesImpl component = getComponent();
 
             VariantType variantType = component.getVariantType();
             Preconditions.checkState(!variantType.isTestComponent());
@@ -609,7 +608,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessApplicationManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            getComponent().getTaskContainer().setProcessManifestTask(taskProvider);
+            component.getTaskContainer().setProcessManifestTask(taskProvider);
 
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.producesDir(
@@ -660,10 +659,10 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         }
 
         @Override
-        public void configure(@NonNull ProcessApplicationManifest task) {
+        public void configure(
+                @NonNull ProcessApplicationManifest task) {
             super.configure(task);
 
-            ComponentPropertiesImpl component = getComponent();
             final VariantScope variantScope = component.getVariantScope();
             final VariantDslInfo variantDslInfo = component.getVariantDslInfo();
             final VariantSources variantSources = component.getVariantSources();

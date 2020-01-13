@@ -26,7 +26,6 @@ import com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE
 import com.android.build.gradle.internal.InternalScope.FEATURES
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
@@ -148,7 +147,7 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
     class CreationAction(
         componentProperties: ComponentPropertiesImpl,
         private val includeDynamicFeatures: Boolean
-    ) : VariantTaskCreationAction<D8MainDexListTask>(
+    ) : VariantTaskCreationAction<D8MainDexListTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
@@ -184,7 +183,9 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
             componentProperties.computeTaskName(if (includeDynamicFeatures) "bundleMultiDexList" else "multiDexList")
         override val type: Class<D8MainDexListTask> = D8MainDexListTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out D8MainDexListTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out D8MainDexListTask>
+        ) {
             super.handleProvider(taskProvider)
             val request = variantScope.artifacts.getOperations().setInitialProvider(
                 taskProvider, D8MainDexListTask::output
@@ -196,7 +197,9 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
             }
         }
 
-        override fun configure(task: D8MainDexListTask) {
+        override fun configure(
+            task: D8MainDexListTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(

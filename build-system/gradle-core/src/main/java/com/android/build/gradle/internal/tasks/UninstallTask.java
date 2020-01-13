@@ -26,7 +26,6 @@ import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.utils.ILogger;
-import com.android.utils.StringHelper;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -106,7 +105,8 @@ public abstract class UninstallTask extends NonIncrementalTask {
         mTimeOutInMs = timeoutInMs;
     }
 
-    public static class CreationAction extends VariantTaskCreationAction<UninstallTask> {
+    public static class CreationAction
+            extends VariantTaskCreationAction<UninstallTask, ComponentPropertiesImpl> {
 
         public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
             super(componentProperties);
@@ -115,7 +115,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return StringHelper.appendCapitalized("uninstall", getComponent().getName());
+            return computeTaskName("uninstall");
         }
 
         @NonNull
@@ -129,9 +129,9 @@ public abstract class UninstallTask extends NonIncrementalTask {
             super.configure(task);
             VariantScope scope = getVariantScope();
 
-            task.componentProperties = getComponent();
+            task.componentProperties = component;
             task.setDescription(
-                    "Uninstalls the " + getComponent().getVariantData().getDescription() + ".");
+                    "Uninstalls the " + component.getVariantData().getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             task.setTimeOutInMs(
                     scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
@@ -142,9 +142,10 @@ public abstract class UninstallTask extends NonIncrementalTask {
         }
 
         @Override
-        public void handleProvider(@NonNull TaskProvider<? extends UninstallTask> taskProvider) {
+        public void handleProvider(
+                @NonNull TaskProvider<? extends UninstallTask> taskProvider) {
             super.handleProvider(taskProvider);
-            getComponent().getTaskContainer().setUninstallTask(taskProvider);
+            component.getTaskContainer().setUninstallTask(taskProvider);
         }
     }
 }

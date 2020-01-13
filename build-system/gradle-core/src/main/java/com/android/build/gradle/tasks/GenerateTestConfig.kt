@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
@@ -94,17 +93,19 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
     ) : Serializable
 
     class CreationAction(private val unitTestProperties: UnitTestPropertiesImpl) :
-        VariantTaskCreationAction<GenerateTestConfig>(
+        VariantTaskCreationAction<GenerateTestConfig, ComponentPropertiesImpl>(
             unitTestProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("generate", "Config")
+            get() = computeTaskName("generate", "Config")
 
         override val type: Class<GenerateTestConfig>
             get() = GenerateTestConfig::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out GenerateTestConfig>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out GenerateTestConfig>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts
@@ -116,7 +117,9 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
                 )
         }
 
-        override fun configure(task: GenerateTestConfig) {
+        override fun configure(
+            task: GenerateTestConfig
+        ) {
             super.configure(task)
             task.testConfigInputs = TestConfigInputs(unitTestProperties)
         }

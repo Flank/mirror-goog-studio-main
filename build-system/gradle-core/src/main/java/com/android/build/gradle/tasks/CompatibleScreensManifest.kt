@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -138,16 +137,18 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl, private val screenSizes: Set<String>) :
-        VariantTaskCreationAction<CompatibleScreensManifest>(
+        VariantTaskCreationAction<CompatibleScreensManifest, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("create", "CompatibleScreenManifests")
+            get() = computeTaskName("create", "CompatibleScreenManifests")
         override val type: Class<CompatibleScreensManifest>
             get() = CompatibleScreensManifest::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out CompatibleScreensManifest>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out CompatibleScreensManifest>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 COMPATIBLE_SCREEN_MANIFEST,
@@ -156,7 +157,9 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: CompatibleScreensManifest) {
+        override fun configure(
+            task: CompatibleScreensManifest
+        ) {
             super.configure(task)
 
             task.screenSizes = screenSizes

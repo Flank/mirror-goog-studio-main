@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.MultipleArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.tasks.IncrementalTask
@@ -194,14 +193,16 @@ abstract class CompileSourceSetResources : IncrementalTask() {
         override val name: String,
         private val inputDirectories: FileCollection,
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<CompileSourceSetResources>(
+    ) : VariantTaskCreationAction<CompileSourceSetResources, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val type: Class<CompileSourceSetResources>
             get() = CompileSourceSetResources::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out CompileSourceSetResources>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out CompileSourceSetResources>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.getOperations().append(
@@ -215,7 +216,9 @@ abstract class CompileSourceSetResources : IncrementalTask() {
             ).on(MultipleArtifactType.RES_COMPILED_FLAT_FILES)
         }
 
-        override fun configure(task: CompileSourceSetResources) {
+        override fun configure(
+            task: CompileSourceSetResources
+        ) {
             super.configure(task)
 
             task.inputDirectories = inputDirectories

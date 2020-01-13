@@ -104,7 +104,7 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("package");
+            return computeTaskName("package");
         }
 
         @NonNull
@@ -117,7 +117,7 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
         public void handleProvider(
                 @NonNull TaskProvider<? extends PackageApplication> taskProvider) {
             super.handleProvider(taskProvider);
-            getComponent().getTaskContainer().setPackageAndroidTask(taskProvider);
+            component.getTaskContainer().setPackageAndroidTask(taskProvider);
             getVariantScope()
                     .getArtifacts()
                     .producesDir(
@@ -137,8 +137,8 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
         }
 
         @Override
-        protected void finalConfigure(PackageApplication task) {
-            super.finalConfigure(task);
+        protected void finalConfigure(PackageApplication task, ComponentPropertiesImpl component) {
+            super.finalConfigure(task, component);
             task.expectedOutputType = InternalArtifactType.APK.INSTANCE;
         }
     }

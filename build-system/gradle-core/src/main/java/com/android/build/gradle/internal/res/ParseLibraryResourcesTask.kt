@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.res
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -144,16 +143,18 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
 
     class CreateAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<ParseLibraryResourcesTask>(
+    ) : VariantTaskCreationAction<ParseLibraryResourcesTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("parse", "LocalResources")
+            get() = computeTaskName("parse", "LocalResources")
         override val type: Class<ParseLibraryResourcesTask>
             get() = ParseLibraryResourcesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ParseLibraryResourcesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ParseLibraryResourcesTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                     InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
@@ -172,7 +173,9 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
             }
         }
 
-        override fun configure(task: ParseLibraryResourcesTask) {
+        override fun configure(
+            task: ParseLibraryResourcesTask
+        ) {
             super.configure(task)
             task.platformAttrRTxt.set(variantScope.globalScope.platformAttrs)
             task.enablePartialRIncrementalBuilds.setDisallowChanges(variantScope.globalScope

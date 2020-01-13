@@ -292,7 +292,8 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
         return false;
     }
 
-    public static class CreationAction extends VariantTaskCreationAction<ExtractAnnotations> {
+    public static class CreationAction
+            extends VariantTaskCreationAction<ExtractAnnotations, ComponentPropertiesImpl> {
 
 
         public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
@@ -302,7 +303,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("extract", "Annotations");
+            return computeTaskName("extract", "Annotations");
         }
 
         @NonNull
@@ -315,7 +316,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ExtractAnnotations> taskProvider) {
             super.handleProvider(taskProvider);
-            getComponent().getTaskContainer().setGenerateAnnotationsTask(taskProvider);
+            component.getTaskContainer().setGenerateAnnotationsTask(taskProvider);
 
             getVariantScope()
                     .getArtifacts()
@@ -337,7 +338,6 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
         @Override
         public void configure(@NonNull ExtractAnnotations task) {
             super.configure(task);
-            ComponentPropertiesImpl component = getComponent();
             task.setDescription(
                     "Extracts Android annotations for the "
                             + component.getName()

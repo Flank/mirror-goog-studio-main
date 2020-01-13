@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.FileCollection
@@ -97,7 +96,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<BundleLibraryJavaRes>(
+    ) : VariantTaskCreationAction<BundleLibraryJavaRes, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
@@ -109,11 +108,13 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
             null
         }
 
-        override val name: String = component.computeTaskName("bundleLibRes")
+        override val name: String = computeTaskName("bundleLibRes")
 
         override val type: Class<BundleLibraryJavaRes> = BundleLibraryJavaRes::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out BundleLibraryJavaRes>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out BundleLibraryJavaRes>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.LIBRARY_JAVA_RES,
@@ -123,7 +124,9 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: BundleLibraryJavaRes) {
+        override fun configure(
+            task: BundleLibraryJavaRes
+        ) {
             super.configure(task)
 
             // we should have two tasks with each input and ensure that only one runs for any build.

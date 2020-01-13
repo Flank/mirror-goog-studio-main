@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
@@ -421,16 +420,18 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
         }.toImmutableMap { it.toImmutableList() }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<AutoNamespaceDependenciesTask>(
+        VariantTaskCreationAction<AutoNamespaceDependenciesTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("autoNamespace", "Dependencies")
+            get() = computeTaskName("autoNamespace", "Dependencies")
         override val type: Class<AutoNamespaceDependenciesTask>
             get() = AutoNamespaceDependenciesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out AutoNamespaceDependenciesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out AutoNamespaceDependenciesTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.NAMESPACED_CLASSES_JAR,
@@ -460,7 +461,9 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
 
         }
 
-        override fun configure(task: AutoNamespaceDependenciesTask) {
+        override fun configure(
+            task: AutoNamespaceDependenciesTask
+        ) {
             super.configure(task)
 
             task.rFiles = variantScope.variantDependencies.getArtifactCollection(

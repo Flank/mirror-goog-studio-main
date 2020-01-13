@@ -184,20 +184,24 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
     // ----- Config Action -----
 
     internal class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<GenerateBuildConfig>(
+        VariantTaskCreationAction<GenerateBuildConfig, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
-        override val name: String = component.computeTaskName("generate", "BuildConfig")
+        override val name: String = computeTaskName("generate", "BuildConfig")
 
         override val type: Class<GenerateBuildConfig> = GenerateBuildConfig::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out GenerateBuildConfig>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out GenerateBuildConfig>
+        ) {
             super.handleProvider(taskProvider)
             component.taskContainer.generateBuildConfigTask = taskProvider
         }
 
-        override fun configure(task: GenerateBuildConfig) {
+        override fun configure(
+            task: GenerateBuildConfig
+        ) {
             super.configure(task)
 
             val variantDslInfo = component.variantDslInfo

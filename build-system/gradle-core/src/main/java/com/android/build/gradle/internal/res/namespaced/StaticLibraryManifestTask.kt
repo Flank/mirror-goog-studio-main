@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.RegularFileProperty
@@ -51,16 +50,18 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<StaticLibraryManifestTask>(
+    ) : VariantTaskCreationAction<StaticLibraryManifestTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("create", "StaticLibraryManifest")
+            get() = computeTaskName("create", "StaticLibraryManifest")
         override val type: Class<StaticLibraryManifestTask>
             get() = StaticLibraryManifestTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out StaticLibraryManifestTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out StaticLibraryManifestTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.STATIC_LIBRARY_MANIFEST,
@@ -70,7 +71,9 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: StaticLibraryManifestTask) {
+        override fun configure(
+            task: StaticLibraryManifestTask
+        ) {
             super.configure(task)
             task.packageName.set(variantScope.globalScope.project.provider {
                 variantScope.variantDslInfo.originalApplicationId

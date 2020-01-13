@@ -94,20 +94,24 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
         componentProperties: ComponentPropertiesImpl,
         private val enableDexingArtifactTransform: Boolean,
         private val separateFileDependenciesDexingTask: Boolean
-    ) : VariantTaskCreationAction<L8DexDesugarLibTask>(
+    ) : VariantTaskCreationAction<L8DexDesugarLibTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
-        override val name = component.computeTaskName("l8DexDesugarLib")
+        override val name = computeTaskName("l8DexDesugarLib")
         override val type = L8DexDesugarLibTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out L8DexDesugarLibTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out L8DexDesugarLibTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.getOperations()
                 .setInitialProvider(taskProvider, L8DexDesugarLibTask::desugarLibDex)
                 .on(InternalArtifactType.DESUGAR_LIB_DEX)
         }
 
-        override fun configure(task: L8DexDesugarLibTask) {
+        override fun configure(
+            task: L8DexDesugarLibTask
+        ) {
             super.configure(task)
             task.libConfiguration.set(getDesugarLibConfig(variantScope.globalScope.project))
             task.desugarLibJar.from(getDesugarLibJarFromMaven(variantScope.globalScope.project))

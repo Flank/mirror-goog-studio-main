@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.signing.SigningConfigData
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.DirectoryProperty
@@ -64,17 +63,19 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<SigningConfigWriterTask>(
+        VariantTaskCreationAction<SigningConfigWriterTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("signingConfigWriter")
+            get() = computeTaskName("signingConfigWriter")
 
         override val type: Class<SigningConfigWriterTask>
             get() = SigningConfigWriterTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out SigningConfigWriterTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out SigningConfigWriterTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.SIGNING_CONFIG,
@@ -83,7 +84,9 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: SigningConfigWriterTask) {
+        override fun configure(
+            task: SigningConfigWriterTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(

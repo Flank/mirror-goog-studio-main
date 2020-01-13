@@ -24,10 +24,8 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.builder.core.ApkInfoParser
 import com.android.builder.core.BuilderConstants.ANDROID_WEAR
 import com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
@@ -220,21 +218,25 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
     internal class CreationAction(
         private val componentProperties: ComponentPropertiesImpl,
         private val apkFileCollection: FileCollection?
-    ) : VariantTaskCreationAction<GenerateApkDataTask>(
+    ) : VariantTaskCreationAction<GenerateApkDataTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
-        override val name: String = component.computeTaskName("handle", "MicroApk")
+        override val name: String = computeTaskName("handle", "MicroApk")
 
         override val type: Class<GenerateApkDataTask> = GenerateApkDataTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out GenerateApkDataTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out GenerateApkDataTask>
+        ) {
             super.handleProvider(taskProvider)
             component.taskContainer.microApkTask = taskProvider
             component.taskContainer.generateApkDataTask = taskProvider
         }
 
-        override fun configure(task: GenerateApkDataTask) {
+        override fun configure(
+            task: GenerateApkDataTask
+        ) {
             super.configure(task)
 
             val variantDslInfo = component.variantDslInfo

@@ -104,13 +104,15 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<LibraryDexingTask>(
+        VariantTaskCreationAction<LibraryDexingTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
-        override val name = component.computeTaskName("dex")
+        override val name = computeTaskName("dex")
         override val type = LibraryDexingTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out LibraryDexingTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out LibraryDexingTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.getOperations().append(
                 taskProvider,
@@ -118,7 +120,9 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
             ).on(MultipleArtifactType.DEX)
         }
 
-        override fun configure(task: LibraryDexingTask) {
+        override fun configure(
+            task: LibraryDexingTask
+        ) {
             super.configure(task)
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR,

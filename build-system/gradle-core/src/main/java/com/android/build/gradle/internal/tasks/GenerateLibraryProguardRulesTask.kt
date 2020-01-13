@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.tasks.getChangesInSerializableForm
 import com.android.builder.files.SerializableChange
@@ -120,16 +119,18 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ): VariantTaskCreationAction<GenerateLibraryProguardRulesTask>(
+    ): VariantTaskCreationAction<GenerateLibraryProguardRulesTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("generate", "LibraryProguardRules")
+            get() = computeTaskName("generate", "LibraryProguardRules")
         override val type: Class<GenerateLibraryProguardRulesTask>
             get() = GenerateLibraryProguardRulesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out GenerateLibraryProguardRulesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out GenerateLibraryProguardRulesTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesFile(
@@ -140,7 +141,9 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
             )
         }
 
-        override fun configure(task:GenerateLibraryProguardRulesTask) {
+        override fun configure(
+            task: GenerateLibraryProguardRulesTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(

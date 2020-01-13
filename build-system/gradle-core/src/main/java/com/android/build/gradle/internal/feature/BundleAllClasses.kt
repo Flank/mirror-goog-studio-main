@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
@@ -126,16 +125,18 @@ abstract class BundleAllClasses : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<BundleAllClasses>(
+        VariantTaskCreationAction<BundleAllClasses, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("bundle", "Classes")
+            get() = computeTaskName("bundle", "Classes")
         override val type: Class<BundleAllClasses>
             get() = BundleAllClasses::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out BundleAllClasses>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out BundleAllClasses>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.APP_CLASSES,
@@ -145,7 +146,9 @@ abstract class BundleAllClasses : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: BundleAllClasses) {
+        override fun configure(
+            task: BundleAllClasses
+        ) {
             super.configure(task)
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.JAVAC,

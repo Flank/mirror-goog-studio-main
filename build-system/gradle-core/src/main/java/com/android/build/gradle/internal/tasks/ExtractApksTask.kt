@@ -22,7 +22,6 @@ import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -54,7 +53,10 @@ import javax.inject.Inject
 abstract class ExtractApksTask : NonIncrementalTask() {
 
     companion object {
-        fun getTaskName(componentProperties: ComponentPropertiesImpl) = componentProperties.computeTaskName("extractApksFor")
+        const val namePrefix = "extractApksFor"
+        fun getTaskName(componentProperties: ComponentPropertiesImpl): String {
+            return componentProperties.computeTaskName(namePrefix)
+        }
     }
 
     @get:InputFile
@@ -143,16 +145,18 @@ abstract class ExtractApksTask : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ExtractApksTask>(
+        VariantTaskCreationAction<ExtractApksTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = getTaskName(component)
+            get() = computeTaskName(namePrefix)
         override val type: Class<ExtractApksTask>
             get() = ExtractApksTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ExtractApksTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ExtractApksTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.EXTRACTED_APKS,
@@ -167,7 +171,9 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: ExtractApksTask) {
+        override fun configure(
+            task: ExtractApksTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(InternalArtifactType.APKS_FROM_BUNDLE,

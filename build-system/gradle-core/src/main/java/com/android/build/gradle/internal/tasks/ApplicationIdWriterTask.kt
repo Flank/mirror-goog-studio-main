@@ -66,16 +66,18 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
     }
 
     internal class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ApplicationIdWriterTask>(
+        VariantTaskCreationAction<ApplicationIdWriterTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("write", "ApplicationId")
+            get() = computeTaskName("write", "ApplicationId")
         override val type: Class<ApplicationIdWriterTask>
             get() = ApplicationIdWriterTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ApplicationIdWriterTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ApplicationIdWriterTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.METADATA_APPLICATION_ID,
@@ -85,7 +87,9 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: ApplicationIdWriterTask) {
+        override fun configure(
+            task: ApplicationIdWriterTask
+        ) {
             super.configure(task)
 
             if (component.variantType.isDynamicFeature) {

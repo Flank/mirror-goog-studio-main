@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.DesugarProcessArgs
 import com.android.builder.core.DesugarProcessBuilder
@@ -106,10 +105,10 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<DesugarTask>(
+        VariantTaskCreationAction<DesugarTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
-        override val name: String = component.computeTaskName("desugar")
+        override val name: String = computeTaskName("desugar")
         override val type: Class<DesugarTask> = DesugarTask::class.java
 
         private val projectClasses: FileCollection
@@ -154,7 +153,9 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
             }
         }
 
-        override fun handleProvider(taskProvider: TaskProvider<out DesugarTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out DesugarTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesDir(
@@ -179,7 +180,9 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
             )
         }
 
-        override fun configure(task: DesugarTask) {
+        override fun configure(
+            task: DesugarTask
+        ) {
             super.configure(task)
             task.minSdk.set(variantScope.minSdkVersion.featureLevel)
 

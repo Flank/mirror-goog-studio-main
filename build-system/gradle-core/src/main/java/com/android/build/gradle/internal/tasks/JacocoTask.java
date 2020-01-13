@@ -89,7 +89,8 @@ public abstract class JacocoTask extends AndroidVariantTask {
                 });
     }
 
-    public static class CreationAction extends VariantTaskCreationAction<JacocoTask> {
+    public static class CreationAction
+            extends VariantTaskCreationAction<JacocoTask, ComponentPropertiesImpl> {
 
         public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
             super(componentProperties);
@@ -98,7 +99,7 @@ public abstract class JacocoTask extends AndroidVariantTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("jacoco");
+            return computeTaskName("jacoco");
         }
 
         @NonNull
@@ -108,7 +109,8 @@ public abstract class JacocoTask extends AndroidVariantTask {
         }
 
         @Override
-        public void handleProvider(@NonNull TaskProvider<? extends JacocoTask> taskProvider) {
+        public void handleProvider(
+                @NonNull TaskProvider<? extends JacocoTask> taskProvider) {
             super.handleProvider(taskProvider);
             getVariantScope()
                     .getArtifacts()
@@ -135,7 +137,7 @@ public abstract class JacocoTask extends AndroidVariantTask {
             task.inputClasses = scope.getArtifacts().getAllClasses();
             task.jacocoAntTaskConfiguration =
                     JacocoConfigurations.getJacocoAntTaskConfiguration(
-                            scope.getGlobalScope().getProject(), getJacocoVersion(getComponent()));
+                            scope.getGlobalScope().getProject(), getJacocoVersion(component));
             task.isolationMode =
                     scope.getGlobalScope()
                                     .getProjectOptions()

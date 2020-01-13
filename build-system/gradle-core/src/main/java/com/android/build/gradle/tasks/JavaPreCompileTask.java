@@ -134,7 +134,8 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
         }
     }
 
-    public static class CreationAction extends VariantTaskCreationAction<JavaPreCompileTask> {
+    public static class CreationAction
+            extends VariantTaskCreationAction<JavaPreCompileTask, ComponentPropertiesImpl> {
 
         public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
             super(componentProperties);
@@ -143,7 +144,7 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("javaPreCompile");
+            return computeTaskName("javaPreCompile");
         }
 
         @NonNull

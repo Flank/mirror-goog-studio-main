@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -130,16 +129,18 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<LinkLibraryAndroidResourcesTask>(
+    ) : VariantTaskCreationAction<LinkLibraryAndroidResourcesTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("link", "Resources")
+            get() = computeTaskName("link", "Resources")
         override val type: Class<LinkLibraryAndroidResourcesTask>
             get() = LinkLibraryAndroidResourcesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out LinkLibraryAndroidResourcesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out LinkLibraryAndroidResourcesTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.RES_STATIC_LIBRARY,
@@ -149,7 +150,9 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: LinkLibraryAndroidResourcesTask) {
+        override fun configure(
+            task: LinkLibraryAndroidResourcesTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(

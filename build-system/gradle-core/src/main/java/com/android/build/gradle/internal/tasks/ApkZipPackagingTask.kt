@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.packaging.JarMerger
 import com.android.utils.FileUtils
@@ -88,16 +87,18 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ApkZipPackagingTask>(
+        VariantTaskCreationAction<ApkZipPackagingTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("zipApksFor")
+            get() = computeTaskName("zipApksFor")
         override val type: Class<ApkZipPackagingTask>
             get() = ApkZipPackagingTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ApkZipPackagingTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ApkZipPackagingTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesFile(
@@ -108,7 +109,9 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: ApkZipPackagingTask) {
+        override fun configure(
+            task: ApkZipPackagingTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(

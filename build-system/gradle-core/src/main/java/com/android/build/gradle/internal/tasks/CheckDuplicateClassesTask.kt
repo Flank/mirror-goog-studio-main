@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.DirectoryProperty
@@ -56,7 +55,7 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl)
-        : VariantTaskCreationAction<CheckDuplicateClassesTask>(
+        : VariantTaskCreationAction<CheckDuplicateClassesTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
@@ -64,7 +63,9 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
 
         override val name = componentProperties.computeTaskName("check", "DuplicateClasses")
 
-        override fun handleProvider(taskProvider: TaskProvider<out CheckDuplicateClassesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out CheckDuplicateClassesTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesDir(
@@ -74,7 +75,9 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: CheckDuplicateClassesTask) {
+        override fun configure(
+            task: CheckDuplicateClassesTask
+        ) {
             super.configure(task)
 
             task.classesArtifacts =

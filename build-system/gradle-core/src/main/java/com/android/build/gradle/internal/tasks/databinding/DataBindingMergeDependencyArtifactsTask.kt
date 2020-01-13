@@ -20,7 +20,6 @@ import android.databinding.tool.DataBindingBuilder
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
@@ -80,16 +79,18 @@ abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<DataBindingMergeDependencyArtifactsTask>(
+    ) : VariantTaskCreationAction<DataBindingMergeDependencyArtifactsTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("dataBindingMergeDependencyArtifacts")
+            get() = computeTaskName("dataBindingMergeDependencyArtifacts")
         override val type: Class<DataBindingMergeDependencyArtifactsTask>
             get() = DataBindingMergeDependencyArtifactsTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out DataBindingMergeDependencyArtifactsTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out DataBindingMergeDependencyArtifactsTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS,
@@ -98,7 +99,9 @@ abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: DataBindingMergeDependencyArtifactsTask) {
+        override fun configure(
+            task: DataBindingMergeDependencyArtifactsTask
+        ) {
             super.configure(task)
 
             task.runtimeDependencies = variantScope.variantDependencies.getArtifactFileCollection(

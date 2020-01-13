@@ -102,7 +102,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
     internal constructor(
         componentProperties: ComponentPropertiesImpl,
         private val isTestApplication: Boolean = false
-    ) : VariantTaskCreationAction<T>(
+    ) : VariantTaskCreationAction<T, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
@@ -196,7 +196,9 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 )
         }
 
-        override fun handleProvider(taskProvider: TaskProvider<out T>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out T>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope
@@ -209,7 +211,9 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 )
         }
 
-        override fun configure(task: T) {
+        override fun configure(
+            task: T
+        ) {
             super.configure(task)
 
             if (testedVariant?.artifacts?.hasFinalProduct(APK_MAPPING) == true) {
@@ -240,11 +244,12 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
             task.referencedResources.from(referencedResources)
 
-            applyProguardRules(task, task.testedMappingFile, testedVariant)
+            applyProguardRules(task, component, task.testedMappingFile, testedVariant)
         }
 
         private fun applyProguardRules(
             task: ProguardConfigurableTask,
+            component: ComponentPropertiesImpl,
             inputProguardMapping: FileCollection?,
             testedVariant: VariantPropertiesImpl?
         ) {
@@ -282,7 +287,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                     task.configurationFiles.from(configurationFiles)
                 }
                 else -> // This is a "normal" variant in an app/library.
-                    applyProguardConfigForNonTest(task)
+                    applyProguardConfigForNonTest(task, component)
             }
 
 
@@ -304,7 +309,10 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
             keepAttributes()
         }
 
-        private fun applyProguardConfigForNonTest(task: ProguardConfigurableTask) {
+        private fun applyProguardConfigForNonTest(
+            task: ProguardConfigurableTask,
+            component: ComponentPropertiesImpl
+        ) {
             val variantDslInfo = variantScope.variantDslInfo
 
             val postprocessingFeatures = variantScope.postprocessingFeatures

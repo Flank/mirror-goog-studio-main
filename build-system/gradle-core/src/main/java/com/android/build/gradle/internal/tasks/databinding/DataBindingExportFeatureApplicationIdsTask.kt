@@ -21,7 +21,6 @@ import android.databinding.tool.store.FeatureInfoList
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration
@@ -68,16 +67,18 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
     ) :
-        VariantTaskCreationAction<DataBindingExportFeatureApplicationIdsTask>(
+        VariantTaskCreationAction<DataBindingExportFeatureApplicationIdsTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("dataBindingExportFeaturePackageIds")
+            get() = computeTaskName("dataBindingExportFeaturePackageIds")
         override val type: Class<DataBindingExportFeatureApplicationIdsTask>
             get() = DataBindingExportFeatureApplicationIdsTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out DataBindingExportFeatureApplicationIdsTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out DataBindingExportFeatureApplicationIdsTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO,
@@ -86,7 +87,9 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
             )
         }
 
-        override fun configure(task: DataBindingExportFeatureApplicationIdsTask) {
+        override fun configure(
+            task: DataBindingExportFeatureApplicationIdsTask
+        ) {
             super.configure(task)
 
             task.featureDeclarations = variantScope.variantDependencies.getArtifactFileCollection(

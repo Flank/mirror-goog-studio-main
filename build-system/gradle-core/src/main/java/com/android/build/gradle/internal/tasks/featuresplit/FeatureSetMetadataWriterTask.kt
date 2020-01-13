@@ -21,7 +21,6 @@ package com.android.build.gradle.internal.tasks.featuresplit
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.IntegerOption
@@ -108,16 +107,18 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<FeatureSetMetadataWriterTask>(
+        VariantTaskCreationAction<FeatureSetMetadataWriterTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("generate", "FeatureMetadata")
+            get() = computeTaskName("generate", "FeatureMetadata")
         override val type: Class<FeatureSetMetadataWriterTask>
             get() = FeatureSetMetadataWriterTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out FeatureSetMetadataWriterTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out FeatureSetMetadataWriterTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.FEATURE_SET_METADATA,
@@ -127,7 +128,9 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: FeatureSetMetadataWriterTask) {
+        override fun configure(
+            task: FeatureSetMetadataWriterTask
+        ) {
             super.configure(task)
 
             task.minSdkVersion = variantScope.minSdkVersion.apiLevel

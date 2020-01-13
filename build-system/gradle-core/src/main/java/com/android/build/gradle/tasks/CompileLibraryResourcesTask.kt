@@ -214,15 +214,17 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<CompileLibraryResourcesTask>(
+    ) : VariantTaskCreationAction<CompileLibraryResourcesTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
         override val name: String
-            get() = component.computeTaskName("compile", "LibraryResources")
+            get() = computeTaskName("compile", "LibraryResources")
         override val type: Class<CompileLibraryResourcesTask>
             get() = CompileLibraryResourcesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out CompileLibraryResourcesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out CompileLibraryResourcesTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesDir(
@@ -232,7 +234,9 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
             )
         }
 
-        override fun configure(task: CompileLibraryResourcesTask) {
+        override fun configure(
+            task: CompileLibraryResourcesTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(

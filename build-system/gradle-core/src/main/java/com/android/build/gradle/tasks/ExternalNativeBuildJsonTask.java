@@ -76,14 +76,16 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
     }
 
     @NonNull
-    public static VariantTaskCreationAction<ExternalNativeBuildJsonTask> createTaskConfigAction(
-            @NonNull Provider<ExternalNativeJsonGenerator> generator,
-            @NonNull ComponentPropertiesImpl componentProperties) {
+    public static VariantTaskCreationAction<ExternalNativeBuildJsonTask, ComponentPropertiesImpl>
+            createTaskConfigAction(
+                    @NonNull Provider<ExternalNativeJsonGenerator> generator,
+                    @NonNull ComponentPropertiesImpl componentProperties) {
         return new CreationAction(componentProperties, generator);
     }
 
     private static class CreationAction
-            extends VariantTaskCreationAction<ExternalNativeBuildJsonTask> {
+            extends VariantTaskCreationAction<
+                    ExternalNativeBuildJsonTask, ComponentPropertiesImpl> {
 
         private final Provider<ExternalNativeJsonGenerator> generator;
 
@@ -97,7 +99,7 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("generateJsonModel");
+            return computeTaskName("generateJsonModel");
         }
 
         @NonNull
@@ -107,7 +109,8 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
         }
 
         @Override
-        public void configure(@NonNull ExternalNativeBuildJsonTask task) {
+        public void configure(
+                @NonNull ExternalNativeBuildJsonTask task) {
             super.configure(task);
 
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();

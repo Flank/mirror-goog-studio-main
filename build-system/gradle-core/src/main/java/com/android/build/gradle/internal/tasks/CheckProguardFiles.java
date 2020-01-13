@@ -69,7 +69,8 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
         return proguardFiles;
     }
 
-    public static class CreationAction extends VariantTaskCreationAction<CheckProguardFiles> {
+    public static class CreationAction
+            extends VariantTaskCreationAction<CheckProguardFiles, ComponentPropertiesImpl> {
 
         public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
             super(componentProperties);
@@ -78,7 +79,7 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("check", "ProguardFiles");
+            return computeTaskName("check", "ProguardFiles");
         }
 
         @NonNull

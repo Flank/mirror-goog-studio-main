@@ -154,16 +154,18 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<DataBindingGenBaseClassesTask>(
+        VariantTaskCreationAction<DataBindingGenBaseClassesTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("dataBindingGenBaseClasses")
+            get() = computeTaskName("dataBindingGenBaseClasses")
         override val type: Class<DataBindingGenBaseClassesTask>
             get() = DataBindingGenBaseClassesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out DataBindingGenBaseClassesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out DataBindingGenBaseClassesTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
@@ -177,7 +179,9 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             )
         }
 
-        override fun configure(task: DataBindingGenBaseClassesTask) {
+        override fun configure(
+            task: DataBindingGenBaseClassesTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(

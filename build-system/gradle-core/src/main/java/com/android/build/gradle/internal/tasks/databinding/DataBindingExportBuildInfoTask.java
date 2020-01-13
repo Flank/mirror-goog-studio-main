@@ -71,7 +71,8 @@ public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask 
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<DataBindingExportBuildInfoTask> {
+            extends VariantTaskCreationAction<
+                    DataBindingExportBuildInfoTask, ComponentPropertiesImpl> {
 
         public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
             super(componentProperties);
@@ -80,7 +81,7 @@ public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask 
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("dataBindingExportBuildInfo");
+            return computeTaskName("dataBindingExportBuildInfo");
         }
 
         @NonNull
@@ -93,14 +94,13 @@ public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask 
         public void handleProvider(
                 @NonNull TaskProvider<? extends DataBindingExportBuildInfoTask> taskProvider) {
             super.handleProvider(taskProvider);
-            getComponent().getTaskContainer().setDataBindingExportBuildInfoTask(taskProvider);
+            component.getTaskContainer().setDataBindingExportBuildInfoTask(taskProvider);
         }
 
         @Override
-        public void configure(@NonNull DataBindingExportBuildInfoTask task) {
+        public void configure(
+                @NonNull DataBindingExportBuildInfoTask task) {
             super.configure(task);
-
-            ComponentPropertiesImpl component = getComponent();
 
             task.xmlProcessor.set(
                     component

@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.signing.SigningConfigProvider
 import com.android.tools.build.bundletool.commands.BuildApksCommand
@@ -114,16 +113,18 @@ abstract class BundleToApkTask : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<BundleToApkTask>(
+        VariantTaskCreationAction<BundleToApkTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("makeApkFromBundleFor")
+            get() = computeTaskName("makeApkFromBundleFor")
         override val type: Class<BundleToApkTask>
             get() = BundleToApkTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out BundleToApkTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out BundleToApkTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.APKS_FROM_BUNDLE,
@@ -133,7 +134,9 @@ abstract class BundleToApkTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: BundleToApkTask) {
+        override fun configure(
+            task: BundleToApkTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(

@@ -66,7 +66,7 @@ public abstract class CheckTestedAppObfuscation extends NonIncrementalTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<CheckTestedAppObfuscation> {
+            extends VariantTaskCreationAction<CheckTestedAppObfuscation, ComponentPropertiesImpl> {
 
         public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
             super(componentProperties);
@@ -75,7 +75,7 @@ public abstract class CheckTestedAppObfuscation extends NonIncrementalTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("checkTestedAppObfuscation");
+            return computeTaskName("checkTestedAppObfuscation");
         }
 
         @NonNull
@@ -85,7 +85,8 @@ public abstract class CheckTestedAppObfuscation extends NonIncrementalTask {
         }
 
         @Override
-        public void configure(@NonNull CheckTestedAppObfuscation task) {
+        public void configure(
+                @NonNull CheckTestedAppObfuscation task) {
             super.configure(task);
 
             task.mappingFile =

@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
@@ -176,15 +175,17 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ShrinkBundleResourcesTask>(
+        VariantTaskCreationAction<ShrinkBundleResourcesTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
-        override val name: String = component.computeTaskName("shrink", "Resources")
+        override val name: String = computeTaskName("shrink", "Resources")
         override val type: Class<ShrinkBundleResourcesTask>
             get() = ShrinkBundleResourcesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ShrinkBundleResourcesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ShrinkBundleResourcesTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE,
@@ -194,7 +195,9 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: ShrinkBundleResourcesTask) {
+        override fun configure(
+            task: ShrinkBundleResourcesTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(

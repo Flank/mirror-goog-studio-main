@@ -20,7 +20,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -291,16 +290,18 @@ abstract class PackageBundleTask : NonIncrementalTask() {
      * CreateAction for a Task that will pack the bundle artifact.
      */
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<PackageBundleTask>(
+        VariantTaskCreationAction<PackageBundleTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
         override val name: String
-            get() = component.computeTaskName("package", "Bundle")
+            get() = computeTaskName("package", "Bundle")
 
         override val type: Class<PackageBundleTask>
             get() = PackageBundleTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out PackageBundleTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out PackageBundleTask>
+        ) {
             super.handleProvider(taskProvider)
 
             val bundleName = "${variantScope.globalScope.projectBaseName}-${variantScope.variantDslInfo.baseName}.aab"
@@ -312,7 +313,9 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: PackageBundleTask) {
+        override fun configure(
+            task: PackageBundleTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(

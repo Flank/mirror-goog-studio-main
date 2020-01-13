@@ -137,7 +137,7 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
         private val publishedType: PublishedConfigType,
         private val outputType: AndroidArtifacts.ArtifactType,
         private val toIgnoreRegExps: Supplier<List<String>> = Supplier { emptyList<String>() }
-    ) : VariantTaskCreationAction<BundleLibraryClasses>(
+    ) : VariantTaskCreationAction<BundleLibraryClasses, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
@@ -182,7 +182,9 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
 
         override val type: Class<BundleLibraryClasses> = BundleLibraryClasses::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out BundleLibraryClasses>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out BundleLibraryClasses>
+        ) {
             super.handleProvider(taskProvider)
 
             if (publishedType == PublishedConfigType.API_ELEMENTS) {
@@ -212,7 +214,9 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
             }
         }
 
-        override fun configure(task: BundleLibraryClasses) {
+        override fun configure(
+            task: BundleLibraryClasses
+        ) {
             super.configure(task)
 
             task.outputType.setDisallowChanges(outputType)

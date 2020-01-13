@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.compiling.DependencyFileProcessor
@@ -170,15 +169,17 @@ abstract class AidlCompile : NonIncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<AidlCompile>(
+    ) : VariantTaskCreationAction<AidlCompile, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
-        override val name: String = component.computeTaskName("compile", "Aidl")
+        override val name: String = computeTaskName("compile", "Aidl")
 
         override val type: Class<AidlCompile> = AidlCompile::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out AidlCompile>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out AidlCompile>
+        ) {
             super.handleProvider(taskProvider)
             component.taskContainer.aidlCompileTask = taskProvider
             variantScope
@@ -202,7 +203,9 @@ abstract class AidlCompile : NonIncrementalTask() {
             }
         }
 
-        override fun configure(task: AidlCompile) {
+        override fun configure(
+            task: AidlCompile
+        ) {
             super.configure(task)
             val scope = variantScope
             val globalScope = scope.globalScope

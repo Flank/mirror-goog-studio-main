@@ -474,7 +474,8 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         return manifests.getArtifactFiles();
     }
 
-    public static class CreationAction extends VariantTaskCreationAction<ProcessTestManifest> {
+    public static class CreationAction
+            extends VariantTaskCreationAction<ProcessTestManifest, ComponentPropertiesImpl> {
 
         @NonNull private final FileCollection testTargetMetadata;
 
@@ -488,7 +489,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("process", "Manifest");
+            return computeTaskName("process", "Manifest");
         }
 
         @NonNull
@@ -511,7 +512,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessTestManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            getComponent().getTaskContainer().setProcessManifestTask(taskProvider);
+            component.getTaskContainer().setProcessManifestTask(taskProvider);
 
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.producesDir(
@@ -530,7 +531,8 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         }
 
         @Override
-        public void configure(@NonNull final ProcessTestManifest task) {
+        public void configure(
+                @NonNull final ProcessTestManifest task) {
             super.configure(task);
             Project project = task.getProject();
 
@@ -544,9 +546,9 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                     .set(project.provider(variantSources::getMainManifestIfExists));
             task.getTestManifestFile().disallowChanges();
 
-            task.apkData = getComponent().getOutputs().getMainSplit().getApkData();
+            task.apkData = component.getOutputs().getMainSplit().getApkData();
 
-            task.getVariantType().set(getComponent().getVariantType().toString());
+            task.getVariantType().set(component.getVariantType().toString());
             task.getVariantType().disallowChanges();
 
             task.setTmpDir(
@@ -554,7 +556,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                             getVariantScope().getPaths().getIntermediatesDir(),
                             "tmp",
                             "manifest",
-                            getComponent().getVariantDslInfo().getDirName()));
+                            component.getVariantDslInfo().getDirName()));
 
             task.getMinSdkVersion()
                     .set(project.provider(() -> variantDslInfo.getMinSdkVersion().getApiString()));

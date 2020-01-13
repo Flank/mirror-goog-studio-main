@@ -1165,7 +1165,8 @@ public abstract class TaskManager {
                 || componentProperties.getVariantType().isDynamicFeature();
     }
 
-    protected VariantTaskCreationAction<LinkApplicationAndroidResourcesTask>
+    protected VariantTaskCreationAction<
+                    LinkApplicationAndroidResourcesTask, ComponentPropertiesImpl>
             createProcessAndroidResourcesConfigAction(
                     @NonNull ComponentPropertiesImpl componentProperties,
                     boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
@@ -3030,13 +3031,13 @@ public abstract class TaskManager {
         taskFactory.register(new PreBuildCreationAction(componentProperties));
     }
 
-    public abstract static class AbstractPreBuildCreationAction<T extends AndroidVariantTask>
-            extends VariantTaskCreationAction<T> {
+    public abstract static class AbstractPreBuildCreationAction<TaskT extends AndroidVariantTask>
+            extends VariantTaskCreationAction<TaskT, ComponentPropertiesImpl> {
 
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("pre", "Build");
+            return computeTaskName("pre", "Build");
         }
 
         public AbstractPreBuildCreationAction(
@@ -3045,17 +3046,18 @@ public abstract class TaskManager {
         }
 
         @Override
-        public void handleProvider(@NonNull TaskProvider<? extends T> taskProvider) {
+        public void handleProvider(
+                @NonNull TaskProvider<? extends TaskT> taskProvider) {
             super.handleProvider(taskProvider);
-            getComponent().getVariantData().getTaskContainer().setPreBuildTask(taskProvider);
+            component.getVariantData().getTaskContainer().setPreBuildTask(taskProvider);
         }
 
         @Override
-        public void configure(@NonNull T task) {
+        public void configure(@NonNull TaskT task) {
             super.configure(task);
             task.dependsOn(MAIN_PREBUILD);
 
-            if (getComponent().getVariantScope().getCodeShrinker() != null) {
+            if (component.getVariantScope().getCodeShrinker() != null) {
                 task.dependsOn(EXTRACT_PROGUARD_FILES);
             }
         }

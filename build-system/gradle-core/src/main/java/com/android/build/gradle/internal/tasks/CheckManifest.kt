@@ -57,17 +57,19 @@ abstract class CheckManifest : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<CheckManifest>(
+        VariantTaskCreationAction<CheckManifest, ComponentPropertiesImpl>(
             componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("check", "Manifest")
+            get() = computeTaskName("check", "Manifest")
 
         override val type: Class<CheckManifest>
             get() = CheckManifest::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out CheckManifest>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out CheckManifest>
+        ) {
             super.handleProvider(taskProvider)
             component.taskContainer.checkManifestTask = taskProvider
 
@@ -79,7 +81,9 @@ abstract class CheckManifest : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: CheckManifest) {
+        override fun configure(
+            task: CheckManifest
+        ) {
             super.configure(task)
 
             task.manifestRequired = component.variantType.requiresManifest

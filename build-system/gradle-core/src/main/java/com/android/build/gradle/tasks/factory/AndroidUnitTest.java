@@ -77,7 +77,8 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         return testConfigInputs;
     }
 
-    public static class CreationAction extends VariantTaskCreationAction<AndroidUnitTest> {
+    public static class CreationAction
+            extends VariantTaskCreationAction<AndroidUnitTest, ComponentPropertiesImpl> {
 
         @NonNull private final UnitTestPropertiesImpl unitTestProperties;
 
@@ -89,7 +90,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName(VariantType.UNIT_TEST_PREFIX);
+            return computeTaskName(VariantType.UNIT_TEST_PREFIX);
         }
 
         @NonNull
@@ -101,8 +102,6 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         @Override
         public void configure(@NonNull AndroidUnitTest task) {
             super.configure(task);
-
-            ComponentPropertiesImpl component = getComponent();
 
             GlobalScope globalScope = component.getGlobalScope();
             BaseExtension extension = globalScope.getExtension();

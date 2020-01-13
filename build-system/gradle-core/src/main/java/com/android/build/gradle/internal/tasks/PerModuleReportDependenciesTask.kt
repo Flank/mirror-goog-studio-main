@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.tools.build.libraries.metadata.AppDependencies
 import com.android.tools.build.libraries.metadata.Library
@@ -208,13 +207,15 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<PerModuleReportDependenciesTask>(
+    ) : VariantTaskCreationAction<PerModuleReportDependenciesTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
-        override val name: String = component.computeTaskName("collect", "Dependencies")
+        override val name: String = computeTaskName("collect", "Dependencies")
         override val type: Class<PerModuleReportDependenciesTask> = PerModuleReportDependenciesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out PerModuleReportDependenciesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out PerModuleReportDependenciesTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope
@@ -227,7 +228,9 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
                 )
         }
 
-        override fun configure(task: PerModuleReportDependenciesTask) {
+        override fun configure(
+            task: PerModuleReportDependenciesTask
+        ) {
             super.configure(task)
             task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
             task.runtimeClasspathArtifacts = variantScope.variantDependencies.getArtifactCollection(

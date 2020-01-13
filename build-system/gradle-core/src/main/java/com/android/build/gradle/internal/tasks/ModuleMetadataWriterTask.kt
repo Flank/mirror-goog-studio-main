@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
-import com.android.build.gradle.internal.ide.DefaultInstantAppVariantBuildOutput
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -78,16 +76,18 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
     }
 
     internal class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ModuleMetadataWriterTask>(
+        VariantTaskCreationAction<ModuleMetadataWriterTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("write", "ModuleMetadata")
+            get() = computeTaskName("write", "ModuleMetadata")
         override val type: Class<ModuleMetadataWriterTask>
             get() = ModuleMetadataWriterTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ModuleMetadataWriterTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ModuleMetadataWriterTask>
+        ) {
             super.handleProvider(taskProvider)
             // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
             component.artifacts.producesFile(
@@ -98,7 +98,9 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: ModuleMetadataWriterTask) {
+        override fun configure(
+            task: ModuleMetadataWriterTask
+        ) {
             super.configure(task)
             task.applicationId.set(component.applicationId)
             task.debuggable

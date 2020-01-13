@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.packaging.JarCreator
@@ -281,13 +280,15 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     class CreationAction(
         componentProperties: ComponentPropertiesImpl,
         private val excludeListProvider: Supplier<List<String>> =  Supplier { listOf<String>() }
-    ) : VariantTaskCreationAction<LibraryAarJarsTask>(
+    ) : VariantTaskCreationAction<LibraryAarJarsTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
         override val type = LibraryAarJarsTask::class.java
-        override val name =  component.computeTaskName("sync", "LibJars")
+        override val name =  computeTaskName("sync", "LibJars")
 
-        override fun handleProvider(taskProvider: TaskProvider<out LibraryAarJarsTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out LibraryAarJarsTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesFile(
@@ -305,7 +306,9 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: LibraryAarJarsTask) {
+        override fun configure(
+            task: LibraryAarJarsTask
+        ) {
             super.configure(task)
 
             task.excludeList.set(

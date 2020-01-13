@@ -75,16 +75,18 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<ExtractDeepLinksTask>(
+    ) : VariantTaskCreationAction<ExtractDeepLinksTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("extractDeepLinks")
+            get() = computeTaskName("extractDeepLinks")
         override val type: Class<ExtractDeepLinksTask>
             get() = ExtractDeepLinksTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ExtractDeepLinksTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ExtractDeepLinksTask>
+        ) {
             super.handleProvider(taskProvider)
             component.artifacts.producesFile(
                 artifactType = InternalArtifactType.NAVIGATION_JSON,
@@ -94,7 +96,9 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
             )
         }
 
-        override fun configure(task: ExtractDeepLinksTask) {
+        override fun configure(
+            task: ExtractDeepLinksTask
+        ) {
             super.configure(task)
             task.navFilesFolders =
                 component.variantSources

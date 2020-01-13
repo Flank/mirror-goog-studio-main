@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -149,11 +148,11 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<ShrinkResourcesTask>(
+    ) : VariantTaskCreationAction<ShrinkResourcesTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
         override val type = ShrinkResourcesTask::class.java
-        override val name = component.computeTaskName("shrink", "Res")
+        override val name = computeTaskName("shrink", "Res")
 
         private val classes = variantScope.transformManager
             .getPipelineOutputAsFileCollection { contentTypes, scopes ->
@@ -162,7 +161,9 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                         || contentTypes.contains(ExtendedContentType.DEX))
             }
 
-        override fun handleProvider(taskProvider: TaskProvider<out ShrinkResourcesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ShrinkResourcesTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesDir(
@@ -173,7 +174,9 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: ShrinkResourcesTask) {
+        override fun configure(
+            task: ShrinkResourcesTask
+        ) {
             super.configure(task)
 
             val artifacts = variantScope.artifacts

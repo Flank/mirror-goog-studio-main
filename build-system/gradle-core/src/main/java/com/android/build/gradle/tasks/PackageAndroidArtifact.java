@@ -981,8 +981,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     // ----- CreationAction -----
 
-    public abstract static class CreationAction<T extends PackageAndroidArtifact>
-            extends VariantTaskCreationAction<T> {
+    public abstract static class CreationAction<TaskT extends PackageAndroidArtifact>
+            extends VariantTaskCreationAction<TaskT, ComponentPropertiesImpl> {
 
         protected final Project project;
         @NonNull protected final Provider<Directory> manifests;
@@ -1005,7 +1005,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
 
         @Override
-        public void configure(@NonNull final T packageAndroidArtifact) {
+        public void configure(
+                @NonNull final TaskT packageAndroidArtifact) {
             super.configure(packageAndroidArtifact);
             VariantScope variantScope = getVariantScope();
 
@@ -1020,7 +1021,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                     .getProject()
                                     .provider(() -> variantScope.getMinSdkVersion().getApiLevel()));
             packageAndroidArtifact.getMinSdkVersion().disallowChanges();
-            packageAndroidArtifact.getApplicationId().set(getComponent().getApplicationId());
+            packageAndroidArtifact.getApplicationId().set(component.getApplicationId());
             packageAndroidArtifact.getApplicationId().disallowChanges();
 
             packageAndroidArtifact
@@ -1038,7 +1039,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                             .getIncrementalDir(packageAndroidArtifact.getName()),
                                     "tmp"));
 
-            getComponent()
+            component
                     .getOutputs()
                     .forEach(
                             variantOutput -> {
@@ -1054,8 +1055,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             packageAndroidArtifact.getManifests().set(manifests);
 
-            packageAndroidArtifact.getDexFolders().from(getDexFolders());
-            @Nullable FileCollection featureDexFolder = getFeatureDexFolder();
+            packageAndroidArtifact.getDexFolders().from(getDexFolders(component));
+            @Nullable FileCollection featureDexFolder = getFeatureDexFolder(component);
             if (featureDexFolder != null) {
                 packageAndroidArtifact.getFeatureDexFolder().from(featureDexFolder);
             }
@@ -1077,11 +1078,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     globalScope.getExtension().getSplits().getAbi().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
                             : null;
-            if (getComponent().getVariantType().isDynamicFeature()) {
+            if (component.getVariantType().isDynamicFeature()) {
                 packageAndroidArtifact
                         .getAppMetadata()
                         .from(
-                                getComponent()
+                                component
                                         .getVariantDependencies()
                                         .getArtifactFileCollection(
                                                 COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA));
@@ -1115,8 +1116,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             packageAndroidArtifact.getCreatedBy().set(globalScope.getCreatedBy());
 
-            if (getComponent().getVariantType().isBaseModule()
-                    && getComponent()
+            if (component.getVariantType().isBaseModule()
+                    && component
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
@@ -1127,30 +1128,30 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         packageAndroidArtifact.getDependencyDataFile());
             }
 
-            finalConfigure(packageAndroidArtifact);
+            finalConfigure(packageAndroidArtifact, component);
         }
 
-        protected void finalConfigure(T task) {
+        protected void finalConfigure(TaskT task, ComponentPropertiesImpl component) {
             task.getJniFolders()
                     .from(
                             PerModuleBundleTaskKt.getNativeLibsFiles(
-                                    getComponent(), packageCustomClassDependencies));
+                                    component, packageCustomClassDependencies));
 
-            task.setSigningConfig(SigningConfigProvider.create(getComponent()));
+            task.setSigningConfig(SigningConfigProvider.create(component));
         }
 
         @NonNull
-        public FileCollection getDexFolders() {
-            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
+        public FileCollection getDexFolders(@NonNull ComponentPropertiesImpl component) {
+            BuildArtifactsHolder artifacts = component.getArtifacts();
             if (artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX.INSTANCE)) {
                 return artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX.INSTANCE)
                         .get()
-                        .plus(getDesugarLibDexIfExists());
+                        .plus(getDesugarLibDexIfExists(component));
             } else {
                 return project.files(
                                 artifacts.getOperations().getAll(MultipleArtifactType.DEX.INSTANCE))
-                        .plus(getDesugarLibDexIfExists());
+                        .plus(getDesugarLibDexIfExists(component));
             }
         }
 
@@ -1172,11 +1173,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
 
         @Nullable
-        public FileCollection getFeatureDexFolder() {
-            if (!getComponent().getVariantType().isDynamicFeature()) {
+        public FileCollection getFeatureDexFolder(@NonNull ComponentPropertiesImpl component) {
+            if (!component.getVariantType().isDynamicFeature()) {
                 return null;
             }
-            return getComponent()
+            return component
                     .getVariantDependencies()
                     .getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
@@ -1202,16 +1203,16 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
 
         @NonNull
-        private FileCollection getDesugarLibDexIfExists() {
-            if (getComponent().getVariantType().isDynamicFeature()) {
-                return getComponent().getGlobalScope().getProject().files();
+        private FileCollection getDesugarLibDexIfExists(ComponentPropertiesImpl component) {
+            if (component.getVariantType().isDynamicFeature()) {
+                return component.getGlobalScope().getProject().files();
             }
-            BuildArtifactsHolder artifacts = getComponent().getArtifacts();
+            BuildArtifactsHolder artifacts = component.getArtifacts();
             if (artifacts.hasFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE)) {
                 return project.files(
                         artifacts.getFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
             } else {
-                return DesugarLibUtils.getDesugarLibDexFromTransform(getComponent());
+                return DesugarLibUtils.getDesugarLibDexFromTransform(component);
             }
         }
     }

@@ -200,7 +200,8 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         this.scopedArgs = ImmutableMap.copyOf(scopedArgs);
     }
 
-    public static class CreationAction extends VariantTaskCreationAction<ShaderCompile> {
+    public static class CreationAction
+            extends VariantTaskCreationAction<ShaderCompile, ComponentPropertiesImpl> {
 
         public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
             super(componentProperties);
@@ -209,7 +210,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         @Override
         @NonNull
         public String getName() {
-            return getComponent().computeTaskName("compile", "Shaders");
+            return computeTaskName("compile", "Shaders");
         }
 
         @Override
@@ -219,7 +220,8 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         }
 
         @Override
-        public void handleProvider(@NonNull TaskProvider<? extends ShaderCompile> taskProvider) {
+        public void handleProvider(
+                @NonNull TaskProvider<? extends ShaderCompile> taskProvider) {
             super.handleProvider(taskProvider);
             getVariantScope()
                     .getArtifacts()

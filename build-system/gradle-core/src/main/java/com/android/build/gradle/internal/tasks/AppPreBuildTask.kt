@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NON_NAMESPACED_MANIFEST
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
-import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -88,7 +87,9 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
         override val type: Class<AppPreBuildTask>
             get() = AppPreBuildTask::class.java
 
-        override fun configure(task: AppPreBuildTask) {
+        override fun configure(
+            task: AppPreBuildTask
+        ) {
             super.configure(task)
 
             task.compileManifests =

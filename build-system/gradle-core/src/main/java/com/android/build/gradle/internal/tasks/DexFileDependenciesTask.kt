@@ -20,7 +20,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -161,13 +160,15 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<DexFileDependenciesTask>(
+        VariantTaskCreationAction<DexFileDependenciesTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
-        override val name: String = component.computeTaskName("desugar", "FileDependencies")
+        override val name: String = computeTaskName("desugar", "FileDependencies")
         override val type = DexFileDependenciesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out DexFileDependenciesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out DexFileDependenciesTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 artifactType = InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES,
@@ -183,7 +184,9 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
             }
         }
 
-        override fun configure(task: DexFileDependenciesTask) {
+        override fun configure(
+            task: DexFileDependenciesTask
+        ) {
             super.configure(task)
             task.debuggable
                 .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)

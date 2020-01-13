@@ -143,17 +143,19 @@ abstract class MergeNativeLibsTask
     class CreationAction(
         private val mergeScopes: Collection<ScopeType>,
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<MergeNativeLibsTask>(
+    ) : VariantTaskCreationAction<MergeNativeLibsTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("merge", "NativeLibs")
+            get() = computeTaskName("merge", "NativeLibs")
 
         override val type: Class<MergeNativeLibsTask>
             get() = MergeNativeLibsTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out MergeNativeLibsTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out MergeNativeLibsTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesDir(
@@ -164,7 +166,9 @@ abstract class MergeNativeLibsTask
             )
         }
 
-        override fun configure(task: MergeNativeLibsTask) {
+        override fun configure(
+            task: MergeNativeLibsTask
+        ) {
             super.configure(task)
 
             task.packagingOptions =

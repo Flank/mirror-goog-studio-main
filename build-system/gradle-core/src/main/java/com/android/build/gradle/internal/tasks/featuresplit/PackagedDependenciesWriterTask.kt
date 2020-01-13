@@ -21,7 +21,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
@@ -104,17 +103,19 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
      * This cannot depend on preBuild as it would introduce a dependency cycle.
      */
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<PackagedDependenciesWriterTask>(
+        VariantTaskCreationAction<PackagedDependenciesWriterTask, ComponentPropertiesImpl>(
             componentProperties,
             dependsOnPreBuildTask = false
         ) {
 
         override val name: String
-            get() = component.computeTaskName("generate", "FeatureTransitiveDeps")
+            get() = computeTaskName("generate", "FeatureTransitiveDeps")
         override val type: Class<PackagedDependenciesWriterTask>
             get() = PackagedDependenciesWriterTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out PackagedDependenciesWriterTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out PackagedDependenciesWriterTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.PACKAGED_DEPENDENCIES,
@@ -124,7 +125,9 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: PackagedDependenciesWriterTask) {
+        override fun configure(
+            task: PackagedDependenciesWriterTask
+        ) {
             super.configure(task)
             task.projectPath = variantScope.globalScope.project.path
 

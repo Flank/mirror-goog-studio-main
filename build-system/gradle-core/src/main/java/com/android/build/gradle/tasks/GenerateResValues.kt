@@ -16,7 +16,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.compiling.ResValueGenerator
@@ -80,11 +79,11 @@ abstract class GenerateResValues : NonIncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<GenerateResValues>(
+    ) : VariantTaskCreationAction<GenerateResValues, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
-        override val name = component.computeTaskName("generate", "ResValues")
+        override val name = computeTaskName("generate", "ResValues")
         override val type = GenerateResValues::class.java
 
         override fun handleProvider(
@@ -94,7 +93,9 @@ abstract class GenerateResValues : NonIncrementalTask() {
             component.taskContainer.generateResValuesTask = taskProvider
         }
 
-        override fun configure(task: GenerateResValues) {
+        override fun configure(
+            task: GenerateResValues
+        ) {
             super.configure(task)
 
             task.items.set(variantScope.globalScope.project.provider {

@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -132,16 +131,18 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ProcessAndroidAppResourcesTask>(
+        VariantTaskCreationAction<ProcessAndroidAppResourcesTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("process", "NamespacedResources")
+            get() = computeTaskName("process", "NamespacedResources")
         override val type: Class<ProcessAndroidAppResourcesTask>
             get() = ProcessAndroidAppResourcesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ProcessAndroidAppResourcesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ProcessAndroidAppResourcesTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
@@ -156,7 +157,9 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: ProcessAndroidAppResourcesTask) {
+        override fun configure(
+            task: ProcessAndroidAppResourcesTask
+        ) {
             super.configure(task)
 
             val artifacts = variantScope.artifacts

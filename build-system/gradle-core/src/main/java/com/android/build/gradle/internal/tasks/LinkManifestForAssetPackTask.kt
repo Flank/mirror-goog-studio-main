@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -114,13 +113,15 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
 
     internal class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<LinkManifestForAssetPackTask>(
+    ) : VariantTaskCreationAction<LinkManifestForAssetPackTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
         override val type = LinkManifestForAssetPackTask::class.java
-        override val name = component.computeTaskName("link", "ManifestForAssetPacks")
+        override val name = computeTaskName("link", "ManifestForAssetPacks")
 
-        override fun handleProvider(taskProvider: TaskProvider<out LinkManifestForAssetPackTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out LinkManifestForAssetPackTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.LINKED_RES_FOR_ASSET_PACK,
@@ -129,7 +130,9 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: LinkManifestForAssetPackTask) {
+        override fun configure(
+            task: LinkManifestForAssetPackTask
+        ) {
             super.configure(task)
 
             val artifacts = variantScope.artifacts

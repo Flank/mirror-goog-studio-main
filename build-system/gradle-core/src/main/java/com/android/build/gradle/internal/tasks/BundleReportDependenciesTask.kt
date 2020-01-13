@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.tools.build.libraries.metadata.AppDependencies
 import com.android.tools.build.libraries.metadata.Library
@@ -126,13 +125,15 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<BundleReportDependenciesTask>(
+    ) : VariantTaskCreationAction<BundleReportDependenciesTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
-        override val name: String = component.computeTaskName("configure", "Dependencies")
+        override val name: String = computeTaskName("configure", "Dependencies")
         override val type: Class<BundleReportDependenciesTask> = BundleReportDependenciesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out BundleReportDependenciesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out BundleReportDependenciesTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
@@ -142,7 +143,9 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: BundleReportDependenciesTask) {
+        override fun configure(
+            task: BundleReportDependenciesTask
+        ) {
             super.configure(task)
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.baseDeps)

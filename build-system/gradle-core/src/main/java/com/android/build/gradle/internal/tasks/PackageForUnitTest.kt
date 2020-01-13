@@ -22,7 +22,6 @@ import com.android.build.VariantOutput
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
 import com.android.utils.PathUtils
@@ -125,11 +124,11 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<PackageForUnitTest>(
+        VariantTaskCreationAction<PackageForUnitTest, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
-        override val name = component.computeTaskName("package", "ForUnitTest")
+        override val name = computeTaskName("package", "ForUnitTest")
 
         override val type = PackageForUnitTest::class.java
 
@@ -147,7 +146,9 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
                 )
         }
 
-        override fun configure(task: PackageForUnitTest) {
+        override fun configure(
+            task: PackageForUnitTest
+        ) {
             super.configure(task)
             val artifacts = variantScope.artifacts
             artifacts.setTaskInputToFinalProduct(PROCESSED_RES, task.resApk)

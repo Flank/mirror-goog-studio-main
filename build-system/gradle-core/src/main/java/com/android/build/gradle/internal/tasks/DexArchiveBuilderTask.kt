@@ -220,7 +220,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         enableDexingArtifactTransform: Boolean,
         private val userLevelCache: FileCache?,
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<DexArchiveBuilderTask>(
+    ) : VariantTaskCreationAction<DexArchiveBuilderTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
@@ -302,7 +302,9 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
         override val type: Class<DexArchiveBuilderTask> = DexArchiveBuilderTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out DexArchiveBuilderTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out DexArchiveBuilderTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesDir(
@@ -359,7 +361,9 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             }
         }
 
-        override fun configure(task: DexArchiveBuilderTask) {
+        override fun configure(
+            task: DexArchiveBuilderTask
+        ) {
             super.configure(task)
 
             val projectOptions = variantScope.globalScope.projectOptions

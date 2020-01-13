@@ -53,7 +53,8 @@ public abstract class ExtractTryWithResourcesSupportJar extends NonIncrementalTa
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<ExtractTryWithResourcesSupportJar> {
+            extends VariantTaskCreationAction<
+                    ExtractTryWithResourcesSupportJar, ComponentPropertiesImpl> {
 
         public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
             super(componentProperties);
@@ -62,7 +63,7 @@ public abstract class ExtractTryWithResourcesSupportJar extends NonIncrementalTa
         @NonNull
         @Override
         public String getName() {
-            return getComponent().computeTaskName("extractTryWithResourcesSupportJar");
+            return computeTaskName("extractTryWithResourcesSupportJar");
         }
 
         @NonNull
@@ -72,7 +73,8 @@ public abstract class ExtractTryWithResourcesSupportJar extends NonIncrementalTa
         }
 
         @Override
-        public void configure(@NonNull ExtractTryWithResourcesSupportJar task) {
+        public void configure(
+                @NonNull ExtractTryWithResourcesSupportJar task) {
             super.configure(task);
             task.outputLocation = getVariantScope().getTryWithResourceRuntimeSupportJar();
         }

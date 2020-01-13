@@ -16,13 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.ComponentProperties
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.google.common.base.Charsets
 import com.google.common.io.Files
 import org.gradle.api.file.ConfigurableFileCollection
@@ -129,7 +127,7 @@ abstract class ProguardTask : ProguardConfigurableTask() {
     class CreationAction(componentProperties: ComponentPropertiesImpl, isTestApplication: Boolean) :
         ProguardConfigurableTask.CreationAction<ProguardTask>(componentProperties, isTestApplication) {
 
-        override val name = component.computeTaskName("minify", "WithProguard")
+        override val name = computeTaskName("minify", "WithProguard")
         override val type = ProguardTask::class.java
 
         private val keepRules = mutableListOf<String>()
@@ -172,7 +170,9 @@ abstract class ProguardTask : ProguardConfigurableTask() {
             shrinkingEnabled = actions.isRemoveUnusedCode
         }
 
-        override fun configure(task: ProguardTask) {
+        override fun configure(
+            task: ProguardTask
+        ) {
             super.configure(task)
 
             task.bootClasspath.from(variantScope.bootClasspath)
@@ -185,7 +185,9 @@ abstract class ProguardTask : ProguardConfigurableTask() {
             task.shrinkingEnabled.set(this.shrinkingEnabled)
         }
 
-        override fun handleProvider(taskProvider: TaskProvider<out ProguardTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ProguardTask>
+        ) {
             super.handleProvider(taskProvider)
 
             variantScope.artifacts.producesFile(

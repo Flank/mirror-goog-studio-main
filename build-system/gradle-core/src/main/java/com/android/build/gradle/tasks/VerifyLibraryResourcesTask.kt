@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.res.ResourceCompilerRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService
@@ -212,17 +211,19 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<VerifyLibraryResourcesTask>(
+    ) : VariantTaskCreationAction<VerifyLibraryResourcesTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
         override val name: String
-            get() = component.computeTaskName("verify", "Resources")
+            get() = computeTaskName("verify", "Resources")
         override val type: Class<VerifyLibraryResourcesTask>
             get() = VerifyLibraryResourcesTask::class.java
 
         /** Configure the given newly-created task object.  */
-        override fun configure(task: VerifyLibraryResourcesTask) {
+        override fun configure(
+            task: VerifyLibraryResourcesTask
+        ) {
             super.configure(task)
 
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)

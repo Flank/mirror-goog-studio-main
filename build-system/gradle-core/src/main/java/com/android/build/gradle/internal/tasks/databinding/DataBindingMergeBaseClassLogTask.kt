@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.resources.FileStatus
@@ -66,14 +65,16 @@ abstract class DataBindingMergeBaseClassLogTask: IncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<DataBindingMergeBaseClassLogTask>(
+        VariantTaskCreationAction<DataBindingMergeBaseClassLogTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
-        override val name = component.computeTaskName("dataBindingMergeGenClasses")
+        override val name = computeTaskName("dataBindingMergeGenClasses")
         override val type = DataBindingMergeBaseClassLogTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out DataBindingMergeBaseClassLogTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out DataBindingMergeBaseClassLogTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
@@ -82,7 +83,9 @@ abstract class DataBindingMergeBaseClassLogTask: IncrementalTask() {
             )
         }
 
-        override fun configure(task: DataBindingMergeBaseClassLogTask) {
+        override fun configure(
+            task: DataBindingMergeBaseClassLogTask
+        ) {
             super.configure(task)
 
             // data binding related artifacts for external libs

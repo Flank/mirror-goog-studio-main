@@ -203,14 +203,16 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
     internal class CreationAction(
         componentProperties: ComponentPropertiesImpl,
         val isLibrary: Boolean)
-        : VariantTaskCreationAction<GenerateLibraryRFileTask>(componentProperties) {
+        : VariantTaskCreationAction<GenerateLibraryRFileTask, ComponentPropertiesImpl>(componentProperties) {
 
         override val name: String
-            get() = component.computeTaskName("generate", "RFile")
+            get() = computeTaskName("generate", "RFile")
         override val type: Class<GenerateLibraryRFileTask>
             get() = GenerateLibraryRFileTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out GenerateLibraryRFileTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out GenerateLibraryRFileTask>
+        ) {
             super.handleProvider(taskProvider)
             component.taskContainer.processAndroidResTask = taskProvider
 
@@ -239,7 +241,9 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
         }
 
 
-        override fun configure(task: GenerateLibraryRFileTask) {
+        override fun configure(
+            task: GenerateLibraryRFileTask
+        ) {
             super.configure(task)
 
             val projectOptions = variantScope.globalScope.projectOptions
@@ -303,14 +307,16 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
     }
 
     internal class TestRuntimeStubRClassCreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<GenerateLibraryRFileTask>(
+        VariantTaskCreationAction<GenerateLibraryRFileTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
-        override val name: String = component.computeTaskName("generate", "StubRFile")
+        override val name: String = computeTaskName("generate", "StubRFile")
         override val type: Class<GenerateLibraryRFileTask> = GenerateLibraryRFileTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out GenerateLibraryRFileTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out GenerateLibraryRFileTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
@@ -320,7 +326,9 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             )
         }
 
-        override fun configure(task: GenerateLibraryRFileTask) {
+        override fun configure(
+            task: GenerateLibraryRFileTask
+        ) {
             super.configure(task)
             val projectOptions = component.globalScope.projectOptions
 

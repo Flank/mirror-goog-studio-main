@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -167,7 +166,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
         private val dexingUsingArtifactTransforms: Boolean = true,
         private val separateFileDependenciesDexingTask: Boolean = false,
         private val outputType: MultipleArtifactType<Directory> = MultipleArtifactType.DEX
-    ) : VariantTaskCreationAction<DexMergingTask>(
+    ) : VariantTaskCreationAction<DexMergingTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
@@ -181,16 +180,20 @@ abstract class DexMergingTask : NonIncrementalTask() {
         override val name = internalName
         override val type = DexMergingTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out DexMergingTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out DexMergingTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.getOperations().append(
                 taskProvider, DexMergingTask::outputDir).on(outputType)
         }
 
-        override fun configure(task: DexMergingTask) {
+        override fun configure(
+            task: DexMergingTask
+        ) {
             super.configure(task)
 
-            task.dexFiles = getDexFiles(action)
+            task.dexFiles = getDexFiles(component, action)
             task.mergingThreshold = getMergingThreshold(action, task)
 
             task.dexingType = dexingType
@@ -222,7 +225,10 @@ abstract class DexMergingTask : NonIncrementalTask() {
             }
         }
 
-        private fun getDexFiles(action: DexMergingAction): FileCollection {
+        private fun getDexFiles(
+            component: ComponentPropertiesImpl,
+            action: DexMergingAction
+        ): FileCollection {
             val attributes = getDexingArtifactConfiguration(component).getAttributes()
 
             fun forAction(action: DexMergingAction): FileCollection {

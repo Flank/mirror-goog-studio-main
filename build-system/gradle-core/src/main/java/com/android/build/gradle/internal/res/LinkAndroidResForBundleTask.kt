@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -232,16 +231,18 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
         private set
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<LinkAndroidResForBundleTask>(
+        VariantTaskCreationAction<LinkAndroidResForBundleTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("bundle", "Resources")
+            get() = computeTaskName("bundle", "Resources")
         override val type: Class<LinkAndroidResForBundleTask>
             get() = LinkAndroidResForBundleTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out LinkAndroidResForBundleTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out LinkAndroidResForBundleTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE,
@@ -252,7 +253,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
         }
 
-        override fun configure(task: LinkAndroidResForBundleTask) {
+        override fun configure(
+            task: LinkAndroidResForBundleTask
+        ) {
             super.configure(task)
 
             val variantScope = variantScope

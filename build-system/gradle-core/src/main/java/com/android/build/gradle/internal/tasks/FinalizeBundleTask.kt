@@ -148,16 +148,18 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
      * CreateAction for a task that will sign the bundle artifact.
      */
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<FinalizeBundleTask>(
+        VariantTaskCreationAction<FinalizeBundleTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
         override val name: String
-            get() = component.computeTaskName("sign", "Bundle")
+            get() = computeTaskName("sign", "Bundle")
 
         override val type: Class<FinalizeBundleTask>
             get() = FinalizeBundleTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out FinalizeBundleTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out FinalizeBundleTask>
+        ) {
             super.handleProvider(taskProvider)
 
             val bundleName = "${variantScope.globalScope.projectBaseName}-${variantScope.variantDslInfo.baseName}.aab"
@@ -189,7 +191,9 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: FinalizeBundleTask) {
+        override fun configure(
+            task: FinalizeBundleTask
+        ) {
             super.configure(task)
 
             variantScope.artifacts.setTaskInputToFinalProduct(

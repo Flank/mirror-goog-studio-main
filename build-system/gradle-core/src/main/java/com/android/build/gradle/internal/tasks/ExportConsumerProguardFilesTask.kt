@@ -21,7 +21,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.immutableMapBuilder
 import com.android.builder.errors.EvalIssueException
@@ -84,12 +83,12 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ExportConsumerProguardFilesTask>(
+        VariantTaskCreationAction<ExportConsumerProguardFilesTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("export", "ConsumerProguardFiles")
+            get() = computeTaskName("export", "ConsumerProguardFiles")
 
         override val type: Class<ExportConsumerProguardFilesTask>
             get() = ExportConsumerProguardFilesTask::class.java
@@ -107,7 +106,9 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: ExportConsumerProguardFilesTask) {
+        override fun configure(
+            task: ExportConsumerProguardFilesTask
+        ) {
             super.configure(task)
 
             task.consumerProguardFiles.from(variantScope.consumerProguardFilesForFeatures)

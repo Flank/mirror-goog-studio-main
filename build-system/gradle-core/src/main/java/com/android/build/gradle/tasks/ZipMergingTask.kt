@@ -21,7 +21,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
@@ -90,16 +89,18 @@ abstract class ZipMergingTask : NonIncrementalTask() {
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ZipMergingTask>(
+        VariantTaskCreationAction<ZipMergingTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("createFullJar")
+            get() = computeTaskName("createFullJar")
         override val type: Class<ZipMergingTask>
             get() = ZipMergingTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out ZipMergingTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ZipMergingTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.FULL_JAR,
@@ -109,7 +110,9 @@ abstract class ZipMergingTask : NonIncrementalTask() {
             )
         }
 
-        override fun configure(task: ZipMergingTask) {
+        override fun configure(
+            task: ZipMergingTask
+        ) {
             super.configure(task)
 
             val buildArtifacts = variantScope.artifacts

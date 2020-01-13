@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.symbols.exportToCompiledJava
@@ -75,16 +74,18 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<GenerateNamespacedLibraryRFilesTask>(
+        VariantTaskCreationAction<GenerateNamespacedLibraryRFilesTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
         override val name: String
-            get() = component.computeTaskName("create", "RFiles")
+            get() = computeTaskName("create", "RFiles")
         override val type: Class<GenerateNamespacedLibraryRFilesTask>
             get() = GenerateNamespacedLibraryRFilesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out GenerateNamespacedLibraryRFilesTask>) {
+        override fun handleProvider(
+            taskProvider: TaskProvider<out GenerateNamespacedLibraryRFilesTask>
+        ) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
                 InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
@@ -94,7 +95,9 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
             )
         }
 
-        override fun configure(task: GenerateNamespacedLibraryRFilesTask) {
+        override fun configure(
+            task: GenerateNamespacedLibraryRFilesTask
+        ) {
             super.configure(task)
 
             task.partialRFiles.set(variantScope.artifacts.getOperations().getAll(
