@@ -20,11 +20,13 @@ import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
+import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
 /** Internal implementation of the 'new' DSL interface */
@@ -87,4 +89,15 @@ class ApplicationExtensionImpl(
             variantPropertiesOperations,
             ApplicationVariantProperties::class.java
         ) as GenericFilteredComponentActionRegistrar<ApplicationVariantProperties>
+
+    override val dependenciesInfo: DependenciesInfo =
+      dslScope.objectFactory.newInstance(DependenciesInfoImpl::class.java)
+
+    override fun dependenciesInfo(action: DependenciesInfo.() -> Unit) {
+        action.invoke(dependenciesInfo)
+    }
+
+    fun dependenciesInfo(action: Action<DependenciesInfo>) {
+        action.execute(dependenciesInfo)
+    }
 }

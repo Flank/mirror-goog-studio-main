@@ -253,16 +253,16 @@ class ApplicationTaskManager(
             )
         )
 
-        val debuggable = variantProperties.variantDslInfo.isDebuggable
+        val addDependenciesTask = addDependenciesTask(variantProperties)
 
-        if (!debuggable) {
+        if (addDependenciesTask) {
             taskFactory.register(PerModuleReportDependenciesTask.CreationAction(variantProperties))
         }
         if (variantProperties.variantType.isBaseModule) {
             taskFactory.register(ParseIntegrityConfigTask.CreationAction(variantProperties))
             taskFactory.register(PackageBundleTask.CreationAction(variantProperties))
             taskFactory.register(FinalizeBundleTask.CreationAction(variantProperties))
-            if (!debuggable) {
+            if (addDependenciesTask) {
                 taskFactory.register(BundleReportDependenciesTask.CreationAction(variantProperties))
                 if (variantProperties.globalScope
                         .projectOptions[BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS]
@@ -295,5 +295,10 @@ class ApplicationTaskManager(
             // need to install via bundle
             taskFactory.register(InstallVariantViaBundleTask.CreationAction(componentProperties))
         }
+    }
+
+    private fun addDependenciesTask(variantProperties: VariantPropertiesImpl): kotlin.Boolean {
+        return !variantProperties.variantDslInfo.isDebuggable && extension is BaseAppModuleExtension
+          && (extension as BaseAppModuleExtension).dependenciesInfo.include
     }
 }

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-52a51c4789c0fab3322533014df7d3f88aef78176b95423ab75eb3dc7e70f9f0
+dffd805ac7dff762b05474278d33c3acc4ae06ca2697ec90e1490f77d5012e3a
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -119,6 +119,8 @@ com.android.build.api.dsl.AdbOptions.setTimeOutInMs: void (int)
 com.android.build.api.dsl.ApkExtension
 com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.ApplicationExtension.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
+com.android.build.api.dsl.ApplicationExtension.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
 com.android.build.api.dsl.AssetPackExtension
 com.android.build.api.dsl.AssetPackExtension.dynamicDelivery: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DynamicDelivery, kotlin.Unit>)
 com.android.build.api.dsl.AssetPackExtension.getDynamicDelivery: com.android.build.api.dsl.DynamicDelivery ()
@@ -216,6 +218,9 @@ com.android.build.api.dsl.DensitySplit.getCompatibleScreens: java.util.Collectio
 com.android.build.api.dsl.DensitySplit.isStrict: boolean ()
 com.android.build.api.dsl.DensitySplit.setCompatibleScreens: void (java.util.Collection<java.lang.String>)
 com.android.build.api.dsl.DensitySplit.setStrict: void (boolean)
+com.android.build.api.dsl.DependenciesInfo
+com.android.build.api.dsl.DependenciesInfo.getInclude: boolean ()
+com.android.build.api.dsl.DependenciesInfo.setInclude: void (boolean)
 com.android.build.api.dsl.DynamicDelivery
 com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()

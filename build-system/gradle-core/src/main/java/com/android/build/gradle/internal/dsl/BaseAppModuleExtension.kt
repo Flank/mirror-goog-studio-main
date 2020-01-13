@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.AppExtension
@@ -83,6 +84,10 @@ open class BaseAppModuleExtension(
     // ApplicationExtensionImpl, the implementation by delegate does not bring it.
     fun buildFeatures(action: Action<ApplicationBuildFeatures>) {
         publicExtensionImpl.buildFeatures(action)
+    }
+
+    fun dependenciesInfo(action: Action<DependenciesInfo>) {
+        publicExtensionImpl.dependenciesInfo(action)
     }
 
     var dynamicFeatures: MutableSet<String> = mutableSetOf()
