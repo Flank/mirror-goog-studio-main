@@ -26,22 +26,20 @@ public class SecureRandomGeneratorDetectorTest extends AbstractCheckTest {
         return new SecureRandomGeneratorDetector();
     }
 
-    public void testWithoutWorkaround() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testWithoutWorkaround() {
+        String expected =
                 ""
                         + "src/test/pkg/PrngCalls.java:13: Warning: Potentially insecure random numbers on Android 4.3 and older. Read https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html for more info. [TrulyRandom]\n"
                         + "        KeyGenerator generator = KeyGenerator.getInstance(\"AES\", \"BC\");\n"
                         + "                                              ~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(classpath(), manifest().minSdk(10), mPrngCalls, mPrngCalls2));
+                        + "0 errors, 1 warnings\n";
+        lint().files(classpath(), manifest().minSdk(10), mPrngCalls, mPrngCalls2)
+                .run()
+                .expect(expected);
     }
 
-    public void testWithWorkaround() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testWithWorkaround() {
+        lint().files(
                         classpath(),
                         manifest().minSdk(10),
                         mPrngCalls,
@@ -167,18 +165,19 @@ public class SecureRandomGeneratorDetectorTest extends AbstractCheckTest {
                                         + "yrkCxGZidTFUsYU7qsVCcQlKxDacJ7ajVNRTugHVotHdaTl34EGNUITH3XeV"
                                         + "KMQLtFoCv/DyawYrI9ESRSleLEDeS1ioYL+C5jOYxd+AIgqKPULNuFWaKuJM"
                                         + "x9pjk8uwWDRRucUs93e2kDolNF+G50UxCsVcCDGPKXOE7Xx4/wvMVaJiDBUA"
-                                        + "AA==")));
+                                        + "AA=="))
+                .run()
+                .expectClean();
     }
 
-    public void testCipherInit() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testCipherInit() {
+        String expected =
                 ""
                         + "src/test/pkg/CipherTest1.java:11: Warning: Potentially insecure random numbers on Android 4.3 and older. Read https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html for more info. [TrulyRandom]\n"
                         + "        cipher.init(Cipher.WRAP_MODE, key); // FLAG\n"
                         + "               ~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         classpath(),
                         manifest().minSdk(10),
                         java(
@@ -192,15 +191,15 @@ public class SecureRandomGeneratorDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "@SuppressWarnings(\"all\")\n"
                                         + "public class CipherTest1 {\n"
-                                        + "    public void test1(Cipher cipher, Key key) throws Exception {\n"
+                                        + "    public void test1(Cipher cipher, Key key) {\n"
                                         + "        cipher.init(Cipher.WRAP_MODE, key); // FLAG\n"
                                         + "    }\n"
                                         + "\n"
-                                        + "    public void test2(Cipher cipher, Key key, SecureRandom random) throws Exception {\n"
+                                        + "    public void test2(Cipher cipher, Key key, SecureRandom random) {\n"
                                         + "        cipher.init(Cipher.ENCRYPT_MODE, key, random);\n"
                                         + "    }\n"
                                         + "\n"
-                                        + "    public void setup(String transform) throws Exception {\n"
+                                        + "    public void setup(String transform) {\n"
                                         + "        Cipher cipher = Cipher.getInstance(transform);\n"
                                         + "    }\n"
                                         + "}\n"),
@@ -219,7 +218,9 @@ public class SecureRandomGeneratorDetectorTest extends AbstractCheckTest {
                                         + "lpMA0tdIC1xHhaI4uYMc/YBh6q0rLM3SS6RByTolcYmtJCwtwdYKbsRlDayi"
                                         + "StG1tLM1WuvYSAGOyKeRLphaa+cKuUWESlyJEZpJ3BShMEUopAhs3cQt6mQe"
                                         + "6zbupFhvaMdd6uYXaO8WkapEQG1uFn2KpGMTdyk3T4sxf53lXlzn/k9RvT9I"
-                                        + "XQQAAA==")));
+                                        + "XQQAAA=="))
+                .run()
+                .expect(expected);
     }
 
     public void testGetArity() {

@@ -13,90 +13,104 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
+import com.android.tools.lint.detector.api.Detector
 
-import com.android.tools.lint.detector.api.Detector;
-
-@SuppressWarnings({"javadoc", "JavaLangImport", "ClassNameDiffersFromFileName"})
-public class UnsafeNativeCodeDetectorTest extends AbstractCheckTest {
-    @Override
-    protected Detector getDetector() {
-        return new UnsafeNativeCodeDetector();
+class UnsafeNativeCodeDetectorTest : AbstractCheckTest() {
+    override fun getDetector(): Detector {
+        return UnsafeNativeCodeDetector()
     }
 
-    public void testLoad() throws Exception {
-        assertEquals(
-                ""
-                        + "src/test/pkg/Load.java:12: Warning: Dynamically loading code using load is risky, please use loadLibrary instead when possible [UnsafeDynamicallyLoadedCode]\n"
-                        + "            Runtime.getRuntime().load(\"/data/data/test.pkg/files/libhello.so\");\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/Load.java:14: Warning: Dynamically loading code using load is risky, please use loadLibrary instead when possible [UnsafeDynamicallyLoadedCode]\n"
-                        + "            System.load(\"/data/data/test.pkg/files/libhello.so\");\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 2 warnings\n",
-                lintProject(
-                        java(
-                                "src/test/pkg/Load.java",
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "\n"
-                                        + "import java.lang.NullPointerException;\n"
-                                        + "import java.lang.Runtime;\n"
-                                        + "import java.lang.SecurityException;\n"
-                                        + "import java.lang.System;\n"
-                                        + "import java.lang.UnsatisfiedLinkError;\n"
-                                        + "\n"
-                                        + "public class Load {\n"
-                                        + "    public static void foo() {\n"
-                                        + "        try {\n"
-                                        + "            Runtime.getRuntime().load(\"/data/data/test.pkg/files/libhello.so\");\n"
-                                        + "            Runtime.getRuntime().loadLibrary(\"hello\"); // ok\n"
-                                        + "            System.load(\"/data/data/test.pkg/files/libhello.so\");\n"
-                                        + "            System.loadLibrary(\"hello\"); // ok\n"
-                                        + "        } catch (SecurityException ignore) {\n"
-                                        + "        } catch (UnsatisfiedLinkError ignore) {\n"
-                                        + "        } catch (NullPointerException ignore) {\n"
-                                        + "        }\n"
-                                        + "    }\n"
-                                        + "}\n")));
+    fun testLoad() {
+        lint().files(
+            java(
+                "src/test/pkg/Load.java",
+                """
+                package test.pkg;
+
+                import java.lang.NullPointerException;
+                import java.lang.Runtime;
+                import java.lang.SecurityException;
+                import java.lang.System;
+                import java.lang.UnsatisfiedLinkError;
+
+                public class Load {
+                    public static void foo() {
+                        try {
+                            Runtime.getRuntime().load("/data/data/test.pkg/files/libhello.so");
+                            Runtime.getRuntime().loadLibrary("hello"); // ok
+                            System.load("/data/data/test.pkg/files/libhello.so");
+                            System.loadLibrary("hello"); // ok
+                        } catch (SecurityException ignore) {
+                        } catch (UnsatisfiedLinkError ignore) {
+                        } catch (NullPointerException ignore) {
+                        }
+                    }
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/Load.java:12: Warning: Dynamically loading code using load is risky, please use loadLibrary instead when possible [UnsafeDynamicallyLoadedCode]
+                        Runtime.getRuntime().load("/data/data/test.pkg/files/libhello.so");
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/Load.java:14: Warning: Dynamically loading code using load is risky, please use loadLibrary instead when possible [UnsafeDynamicallyLoadedCode]
+                        System.load("/data/data/test.pkg/files/libhello.so");
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
     }
 
-    public void testNativeCode() throws Exception {
-        byte[] dummyBytesWithElfHeader = {(byte) 0x7F, (byte) 0x45, (byte) 0x4C, (byte) 0x46, 0};
-        assertEquals(
-                ""
-                        + "assets/hello: Warning: Embedding non-shared library native executables into applications should be avoided when possible, as there is an increased risk that the executables could be tampered with after installation. Instead, native code should be placed in a shared library, and the features of the development environment should be used to place the shared library in the lib directory of the compiled APK. [UnsafeNativeCodeLocation]\n"
-                        + "res/raw/hello: Warning: Embedding non-shared library native executables into applications should be avoided when possible, as there is an increased risk that the executables could be tampered with after installation. Instead, native code should be placed in a shared library, and the features of the development environment should be used to place the shared library in the lib directory of the compiled APK. [UnsafeNativeCodeLocation]\n"
-                        + "assets/libhello-jni.so: Warning: Shared libraries should not be placed in the res or assets directories. Please use the features of your development environment to place shared libraries in the lib directory of the compiled APK. [UnsafeNativeCodeLocation]\n"
-                        + "res/raw/libhello-jni.so: Warning: Shared libraries should not be placed in the res or assets directories. Please use the features of your development environment to place shared libraries in the lib directory of the compiled APK. [UnsafeNativeCodeLocation]\n"
-                        + "0 errors, 4 warnings\n",
-                lintProject(
-                        bytes("res/raw/hello", dummyBytesWithElfHeader),
-                        bytes("res/raw/libhello-jni.so", dummyBytesWithElfHeader),
-                        bytes("assets/hello", dummyBytesWithElfHeader),
-                        bytes("assets/libhello-jni.so", dummyBytesWithElfHeader),
-                        bytes("lib/armeabi/hello", dummyBytesWithElfHeader),
-                        bytes("lib/armeabi/libhello-jni.so", dummyBytesWithElfHeader)));
+    fun testNativeCode() {
+        val dummyBytesWithElfHeader = byteArrayOf(
+            0x7F.toByte(),
+            0x45.toByte(),
+            0x4C.toByte(),
+            0x46.toByte(),
+            0
+        )
+        lint().files(
+            bytes("res/raw/hello", dummyBytesWithElfHeader),
+            bytes("res/raw/libhello-jni.so", dummyBytesWithElfHeader),
+            bytes("assets/hello", dummyBytesWithElfHeader),
+            bytes("assets/libhello-jni.so", dummyBytesWithElfHeader),
+            bytes("lib/armeabi/hello", dummyBytesWithElfHeader),
+            bytes("lib/armeabi/libhello-jni.so", dummyBytesWithElfHeader)
+        ).run().expect(
+            """
+            assets/hello: Warning: Embedding non-shared library native executables into applications should be avoided when possible, as there is an increased risk that the executables could be tampered with after installation. Instead, native code should be placed in a shared library, and the features of the development environment should be used to place the shared library in the lib directory of the compiled APK. [UnsafeNativeCodeLocation]
+            res/raw/hello: Warning: Embedding non-shared library native executables into applications should be avoided when possible, as there is an increased risk that the executables could be tampered with after installation. Instead, native code should be placed in a shared library, and the features of the development environment should be used to place the shared library in the lib directory of the compiled APK. [UnsafeNativeCodeLocation]
+            assets/libhello-jni.so: Warning: Shared libraries should not be placed in the res or assets directories. Please use the features of your development environment to place shared libraries in the lib directory of the compiled APK. [UnsafeNativeCodeLocation]
+            res/raw/libhello-jni.so: Warning: Shared libraries should not be placed in the res or assets directories. Please use the features of your development environment to place shared libraries in the lib directory of the compiled APK. [UnsafeNativeCodeLocation]
+            0 errors, 4 warnings
+            """
+        )
     }
 
-    public void testNoWorkInInteractiveMode() throws Exception {
-        byte[] dummyBytesWithElfHeader = {(byte) 0x7F, (byte) 0x45, (byte) 0x4C, (byte) 0x46, 0};
+    fun testNoWorkInInteractiveMode() {
+        val dummyBytesWithElfHeader = byteArrayOf(
+            0x7F.toByte(),
+            0x45.toByte(),
+            0x4C.toByte(),
+            0x46.toByte(),
+            0
+        )
 
         // Make sure we don't scan through all resource folders when just incrementally
         // editing a Java file
-        assertEquals(
-                "No warnings.",
-                lintProjectIncrementally(
-                        "src/test/pkg/Load.java",
-                        java(
-                                "src/test/pkg/Load.java",
-                                "package test.pkg;\npublic class Load { }\n"),
-                        bytes("res/raw/hello", dummyBytesWithElfHeader),
-                        bytes("res/raw/libhello-jni.so", dummyBytesWithElfHeader),
-                        bytes("assets/hello", dummyBytesWithElfHeader),
-                        bytes("assets/libhello-jni.so", dummyBytesWithElfHeader),
-                        bytes("lib/armeabi/hello", dummyBytesWithElfHeader),
-                        bytes("lib/armeabi/libhello-jni.so", dummyBytesWithElfHeader)));
+        lint().files(
+            java(
+                "src/test/pkg/Load.java",
+                "package test.pkg;\npublic class Load { }\n"
+            ),
+            bytes("res/raw/hello", dummyBytesWithElfHeader),
+            bytes("res/raw/libhello-jni.so", dummyBytesWithElfHeader),
+            bytes("assets/hello", dummyBytesWithElfHeader),
+            bytes("assets/libhello-jni.so", dummyBytesWithElfHeader),
+            bytes("lib/armeabi/hello", dummyBytesWithElfHeader),
+            bytes("lib/armeabi/libhello-jni.so", dummyBytesWithElfHeader)
+        ).incremental("src/test/pkg/Load.java").run().expectClean()
     }
 }

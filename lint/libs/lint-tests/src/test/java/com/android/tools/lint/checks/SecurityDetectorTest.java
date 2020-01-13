@@ -32,7 +32,7 @@ public class SecurityDetectorTest extends AbstractCheckTest {
         return true;
     }
 
-    public void testBroken() throws Exception {
+    public void testBroken() {
         lint().files(
                         xml(
                                 "AndroidManifest.xml",
@@ -81,15 +81,14 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                 + "+             android:exported=\"false\"");
     }
 
-    public void testBroken2() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testBroken2() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:12: Warning: Exported service does not require permission [ExportedService]\n"
                         + "        <service\n"
                         + "         ~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -116,19 +115,20 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expect(expected);
     }
 
-    public void testBroken3() throws Exception {
+    public void testBroken3() {
         // Not defining exported, but have intent-filters
-        //noinspection all // Sample code
-        assertEquals(
+        String expected =
                 ""
                         + "AndroidManifest.xml:12: Warning: Exported service does not require permission [ExportedService]\n"
                         + "        <service\n"
                         + "         ~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -156,15 +156,14 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "</manifest>\n"
                                         + "\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expect(expected);
     }
 
-    public void testOk1() throws Exception {
+    public void testOk1() {
         // Defines a permission on the <service> element
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -192,15 +191,14 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expectClean();
     }
 
-    public void testOk2() throws Exception {
+    public void testOk2() {
         // Defines a permission on the parent <application> element
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -228,12 +226,13 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expectClean();
     }
 
-    public void testUri() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testUri() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:25: Warning: Content provider shares everything; this is potentially dangerous [GrantAllUris]\n"
                         + "        <grant-uri-permission android:path=\"/\"/>\n"
@@ -241,8 +240,8 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                         + "AndroidManifest.xml:26: Warning: Content provider shares everything; this is potentially dangerous [GrantAllUris]\n"
                         + "        <grant-uri-permission android:pathPrefix=\"/\"/>\n"
                         + "                              ~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 2 warnings\n",
-                lintProject(
+                        + "0 errors, 2 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -276,7 +275,9 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expect(expected);
     }
 
     // exportprovider1.xml has two exported content providers with no permissions
@@ -290,7 +291,6 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                         + "        <provider\n"
                         + "         ~~~~~~~~\n"
                         + "0 errors, 2 warnings";
-        //noinspection all // Sample code
         lint().files(
                         xml(
                                 "AndroidManifest.xml",
@@ -351,11 +351,8 @@ public class SecurityDetectorTest extends AbstractCheckTest {
     }
 
     // exportprovider2.xml has no un-permissioned exported content providers
-    public void testContentProvider2() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testContentProvider2() {
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -398,12 +395,13 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expectClean();
     }
 
-    public void testWorldWriteable() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testWorldWriteable() {
+        String expected =
                 ""
                         + "src/test/pkg/WorldWriteableFile.java:41: Warning: Setting file permissions to world-readable can be risky, review carefully [SetWorldReadable]\n"
                         + "            mFile.setReadable(true, false);\n"
@@ -429,8 +427,8 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                         + "src/test/pkg/WorldWriteableFile.java:35: Warning: Using MODE_WORLD_WRITEABLE when creating files can be risky, review carefully [WorldWriteableFiles]\n"
                         + "            dir = getDir(mFile.getName(), MODE_WORLD_WRITEABLE);\n"
                         + "                                          ~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 8 warnings\n",
-                lintProject(
+                        + "0 errors, 8 warnings\n";
+        lint().files(
                         java(
                                 ""
                                         + "package test.pkg;\n"
@@ -490,15 +488,14 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "        } catch (FileNotFoundException e) {\n"
                                         + "        }\n"
                                         + "    }\n"
-                                        + "}\n")));
+                                        + "}\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testReceiver0() throws Exception {
+    public void testReceiver0() {
         // Activities that do not have intent-filters do not need warnings
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -521,7 +518,9 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "</manifest>\n"
                                         + "\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expectClean();
     }
 
     public void testReceiver1() {
@@ -531,7 +530,6 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                         + "        <receiver\n"
                         + "         ~~~~~~~~\n"
                         + "0 errors, 1 warnings";
-        //noinspection all // Sample code
         lint().files(
                         xml(
                                 "AndroidManifest.xml",
@@ -575,12 +573,9 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                 + "              <intent-filter>");
     }
 
-    public void testReceiver2() throws Exception {
+    public void testReceiver2() {
         // Defines a permission on the <activity> element
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -608,15 +603,14 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expectClean();
     }
 
-    public void testReceiver3() throws Exception {
+    public void testReceiver3() {
         // Defines a permission on the parent <application> element
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -644,7 +638,9 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expectClean();
     }
 
     public void testReceiver4() {
@@ -655,7 +651,6 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                         + "        <receiver\n"
                         + "         ~~~~~~~~\n"
                         + "0 errors, 1 warnings";
-        //noinspection all // Sample code
         lint().files(
                         xml(
                                 "AndroidManifest.xml",
@@ -712,7 +707,6 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                         + "        <receiver\n"
                         + "         ~~~~~~~~\n"
                         + "0 errors, 1 warnings";
-        //noinspection all // Sample code
         lint().files(
                         xml(
                                 "AndroidManifest.xml",
@@ -758,12 +752,9 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                 + "              android:process=\":remote\" >");
     }
 
-    public void testReceiver5() throws Exception {
+    public void testReceiver5() {
         // Intent filter for standard Android action
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -787,15 +778,14 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "</manifest>\n"
                                         + "\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expectClean();
     }
 
-    public void testStandard() throws Exception {
+    public void testStandard() {
         // Various regression tests for http://code.google.com/p/android/issues/detail?id=33976
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -841,15 +831,14 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "        </receiver>\n"
                                         + "    </application>\n"
                                         + "\n"
-                                        + "</manifest>\n")));
+                                        + "</manifest>\n"))
+                .run()
+                .expectClean();
     }
 
-    public void testUsingInstallReferrerReceiver() throws Exception {
+    public void testUsingInstallReferrerReceiver() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=73934
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -883,17 +872,16 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "            </intent-filter>\n"
                                         + "        </receiver>\n"
                                         + "    </application>\n"
-                                        + "</manifest>\n")));
+                                        + "</manifest>\n"))
+                .run()
+                .expectClean();
     }
 
-    public void testGmsWearable() throws Exception {
+    public void testGmsWearable() {
         // As documented in
         //    https://developer.android.com/training/wearables/data-layer/events.html
         // you shouldn't need a permission here.
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -913,12 +901,13 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                                         + "            </intent-filter>\n"
                                         + "        </service>\n"
                                         + "    </application>\n"
-                                        + "</manifest>\n")));
+                                        + "</manifest>\n"))
+                .run()
+                .expectClean();
     }
 
     public void testSlices() {
         // Intent filter for standard Android action
-        //noinspection all // Sample code
         lint().files(
                         manifest(
                                 ""

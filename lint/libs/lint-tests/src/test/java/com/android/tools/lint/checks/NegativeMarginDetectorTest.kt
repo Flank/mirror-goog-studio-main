@@ -13,120 +13,133 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
+import com.android.tools.lint.detector.api.Detector
 
-import com.android.tools.lint.detector.api.Detector;
-
-public class NegativeMarginDetectorTest extends AbstractCheckTest {
-    @Override
-    protected Detector getDetector() {
-        return new NegativeMarginDetector();
+class NegativeMarginDetectorTest : AbstractCheckTest() {
+    override fun getDetector(): Detector {
+        return NegativeMarginDetector()
     }
 
-    public void testLayoutWithoutRepositorySupport() throws Exception {
-        assertEquals(
-                ""
-                        + "res/layout/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]\n"
-                        + "    <TextView android:layout_marginTop=\"-1dp\"/> <!-- WARNING -->\n"
-                        + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintFiles(mNegative_margins));
+    fun testLayoutWithoutRepositorySupport() {
+        lint().files(mNegative_margins).run().expect(
+            """
+            res/layout/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]
+                <TextView android:layout_marginTop="-1dp"/> <!-- WARNING -->
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
     }
 
-    public void testIncrementalInLayout() throws Exception {
-        assertEquals(
-                ""
-                        + "res/layout/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]\n"
-                        + "    <TextView android:layout_marginTop=\"-1dp\"/> <!-- WARNING -->\n"
-                        + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/negative_margins.xml:13: Warning: Margin values should not be negative (@dimen/negative is defined as -16dp in values/negative_margins.xml [NegativeMargin]\n"
-                        + "    <TextView android:layout_marginTop=\"@dimen/negative\"/> <!-- WARNING -->\n"
-                        + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 2 warnings\n",
-                lintProjectIncrementally(
-                        "res/layout/negative_margins.xml", mNegative_margins2, mNegative_margins));
+    fun testIncrementalInLayout() {
+        lint().files(mNegative_margins2, mNegative_margins)
+            .incremental("res/layout/negative_margins.xml").run().expect(
+                """
+                res/layout/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]
+                    <TextView android:layout_marginTop="-1dp"/> <!-- WARNING -->
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                res/layout/negative_margins.xml:13: Warning: Margin values should not be negative (@dimen/negative is defined as -16dp in values/negative_margins.xml [NegativeMargin]
+                    <TextView android:layout_marginTop="@dimen/negative"/> <!-- WARNING -->
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 2 warnings
+                """
+            )
     }
 
-    public void testValuesWithoutRepositorySupport() throws Exception {
-        assertEquals(
-                ""
-                        + "res/values/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]\n"
-                        + "        <item name=\"android:layout_marginBottom\">-5dp</item> <!-- WARNING -->\n"
-                        + "                                                 ^\n"
-                        + "0 errors, 1 warnings\n",
-                lintFiles(mNegative_margins2));
+    fun testValuesWithoutRepositorySupport() {
+        lint()
+            .files(mNegative_margins2)
+            .supportResourceRepository(false)
+            .run()
+            .expect(
+                """
+                res/values/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]
+                        <item name="android:layout_marginBottom">-5dp</item> <!-- WARNING -->
+                                                                 ^
+                0 errors, 1 warnings
+                """
+            )
     }
 
-    public void testIncrementalInValues() throws Exception {
-        assertEquals(
-                ""
-                        + "res/values/negative_margins.xml:10: Warning: Margin values should not be negative (@dimen/negative is defined as -16dp in values/negative_margins.xml [NegativeMargin]\n"
-                        + "        <item name=\"android:layout_marginTop\">@dimen/negative</item> <!-- WARNING -->\n"
-                        + "                                              ^\n"
-                        + "res/values/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]\n"
-                        + "        <item name=\"android:layout_marginBottom\">-5dp</item> <!-- WARNING -->\n"
-                        + "                                                 ^\n"
-                        + "0 errors, 2 warnings\n",
-                lintProjectIncrementally(
-                        "res/values/negative_margins.xml", mNegative_margins2, mNegative_margins));
+    fun testIncrementalInValues() {
+        lint().files(mNegative_margins2, mNegative_margins)
+            .incremental("res/values/negative_margins.xml").run().expect(
+                """
+                res/values/negative_margins.xml:10: Warning: Margin values should not be negative (@dimen/negative is defined as -16dp in values/negative_margins.xml [NegativeMargin]
+                        <item name="android:layout_marginTop">@dimen/negative</item> <!-- WARNING -->
+                                                              ^
+                res/values/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]
+                        <item name="android:layout_marginBottom">-5dp</item> <!-- WARNING -->
+                                                                 ^
+                0 errors, 2 warnings
+                """
+            )
     }
 
-    public void testBatch() throws Exception {
-        assertEquals(
-                ""
-                        + "res/layout/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]\n"
-                        + "    <TextView android:layout_marginTop=\"-1dp\"/> <!-- WARNING -->\n"
-                        + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/values/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]\n"
-                        + "        <item name=\"android:layout_marginBottom\">-5dp</item> <!-- WARNING -->\n"
-                        + "                                                 ^\n"
-                        + "res/layout/negative_margins.xml:13: Warning: Margin values should not be negative [NegativeMargin]\n"
-                        + "    <TextView android:layout_marginTop=\"@dimen/negative\"/> <!-- WARNING -->\n"
-                        + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 3 warnings\n",
-                lintFiles(mNegative_margins2, mNegative_margins));
+    fun testBatch() {
+        lint()
+            .files(mNegative_margins2, mNegative_margins)
+            .supportResourceRepository(false)
+            .run()
+            .expect(
+                """
+                res/layout/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]
+                    <TextView android:layout_marginTop="-1dp"/> <!-- WARNING -->
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                res/values/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]
+                        <item name="android:layout_marginBottom">-5dp</item> <!-- WARNING -->
+                                                                 ^
+                res/layout/negative_margins.xml:13: Warning: Margin values should not be negative [NegativeMargin]
+                    <TextView android:layout_marginTop="@dimen/negative"/> <!-- WARNING -->
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 3 warnings
+                """
+            )
     }
 
-    @SuppressWarnings("all") // Sample code
-    private TestFile mNegative_margins =
-            xml(
-                    "res/layout/negative_margins.xml",
-                    ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<GridLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "            xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                            + "            android:layout_width=\"match_parent\"\n"
-                            + "            android:layout_height=\"match_parent\"\n"
-                            + "            android:orientation=\"vertical\">\n"
-                            + "\n"
-                            + "    <TextView android:layout_margin=\"1dp\"/> <!-- OK -->\n"
-                            + "    <TextView android:layout_marginLeft=\"1dp\"/> <!-- OK -->\n"
-                            + "    <TextView android:layout_marginLeft=\"0dp\"/> <!-- OK -->\n"
-                            + "    <TextView android:layout_marginTop=\"-1dp\"/> <!-- WARNING -->\n"
-                            + "    <TextView android:layout_marginTop=\"@dimen/positive\"/> <!-- OK -->\n"
-                            + "    <TextView android:layout_marginTop=\"@dimen/negative\"/> <!-- WARNING -->\n"
-                            + "    <TextView android:paddingLeft=\"-1dp\"/> <!-- OK -->\n"
-                            + "    <TextView android:layout_marginTop=\"-1dp\" tools:ignore=\"NegativeMargin\"/> <!-- SUPPRESSED -->\n"
-                            + "\n"
-                            + "</GridLayout>\n");
+    // Sample code
+    private val mNegative_margins = xml(
+        "res/layout/negative_margins.xml",
+        """
 
-    @SuppressWarnings("all") // Sample code
-    private TestFile mNegative_margins2 =
-            xml(
-                    "res/values/negative_margins.xml",
-                    ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<resources>\n"
-                            + "    <dimen name=\"activity_horizontal_margin\">16dp</dimen>\n"
-                            + "    <dimen name=\"positive\">16dp</dimen>\n"
-                            + "    <dimen name=\"negative\">-16dp</dimen>\n"
-                            + "\n"
-                            + "    <style name=\"MyStyle\">\n"
-                            + "        <item name=\"android:layout_margin\">5dp</item> <!-- OK -->\n"
-                            + "        <item name=\"android:layout_marginLeft\">@dimen/positive</item> <!-- OK -->\n"
-                            + "        <item name=\"android:layout_marginTop\">@dimen/negative</item> <!-- WARNING -->\n"
-                            + "        <item name=\"android:layout_marginBottom\">-5dp</item> <!-- WARNING -->\n"
-                            + "    </style>\n"
-                            + "</resources>\n");
+        <GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+            <TextView android:layout_margin="1dp"/> <!-- OK -->
+            <TextView android:layout_marginLeft="1dp"/> <!-- OK -->
+            <TextView android:layout_marginLeft="0dp"/> <!-- OK -->
+            <TextView android:layout_marginTop="-1dp"/> <!-- WARNING -->
+            <TextView android:layout_marginTop="@dimen/positive"/> <!-- OK -->
+            <TextView android:layout_marginTop="@dimen/negative"/> <!-- WARNING -->
+            <TextView android:paddingLeft="-1dp"/> <!-- OK -->
+            <TextView android:layout_marginTop="-1dp" tools:ignore="NegativeMargin"/> <!-- SUPPRESSED -->
+
+        </GridLayout>
+        """
+    ).indented()
+
+    // Sample code
+    private val mNegative_margins2 = xml(
+        "res/values/negative_margins.xml",
+        """
+
+        <resources>
+            <dimen name="activity_horizontal_margin">16dp</dimen>
+            <dimen name="positive">16dp</dimen>
+            <dimen name="negative">-16dp</dimen>
+
+            <style name="MyStyle">
+                <item name="android:layout_margin">5dp</item> <!-- OK -->
+                <item name="android:layout_marginLeft">@dimen/positive</item> <!-- OK -->
+                <item name="android:layout_marginTop">@dimen/negative</item> <!-- WARNING -->
+                <item name="android:layout_marginBottom">-5dp</item> <!-- WARNING -->
+            </style>
+        </resources>
+        """
+    ).indented()
 }

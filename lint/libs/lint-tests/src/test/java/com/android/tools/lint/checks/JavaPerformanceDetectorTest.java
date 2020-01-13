@@ -35,7 +35,7 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
     }
 
     @SuppressWarnings("all")
-    public void test() throws Exception {
+    public void test() {
         String expected =
                 ""
                         + "src/test/pkg/JavaPerformanceTest.java:31: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
@@ -345,9 +345,8 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                 + "+         Double d1 = Double.valueOf(1.0);");
     }
 
-    public void testNoLongSparseArray() throws Exception {
-        //noinspection all // Sample code
-        assertEquals("No warnings.", lintProject(manifest().minSdk(1), mLongSparseArray));
+    public void testNoLongSparseArray() {
+        lint().files(manifest().minSdk(1), mLongSparseArray).run().expectClean();
     }
 
     public void testNoSparseArrayOutsideAndroid() {

@@ -13,541 +13,529 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
+import com.android.tools.lint.detector.api.Detector
 
-import com.android.tools.lint.detector.api.Detector;
-
-@SuppressWarnings("javadoc")
-public class TooLintFixGroupViewsDetectorTest extends AbstractCheckTest {
-    @Override
-    protected Detector getDetector() {
-        return new TooManyViewsDetector();
+class TooLintFixGroupViewsDetectorTest : AbstractCheckTest() {
+    override fun getDetector(): Detector {
+        return TooManyViewsDetector()
     }
 
-    public void testTooMany() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout/too_many.xml:399: Warning: too_many.xml has more than 80 views, bad for performance [TooManyViews]\n"
-                        + "                <Button\n"
-                        + "                 ~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintFiles(
-                        xml(
-                                "res/layout/too_many.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "\n"
-                                        + "<FrameLayout\n"
-                                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "\n"
-                                        + "    android:layout_width=\"match_parent\"\n"
-                                        + "    android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "    <LinearLayout\n"
-                                        + "        android:layout_width=\"match_parent\"\n"
-                                        + "        android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "            <LinearLayout\n"
-                                        + "                android:layout_width=\"match_parent\"\n"
-                                        + "                android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "            </LinearLayout>\n"
-                                        + "\n"
-                                        + "    </LinearLayout>\n"
-                                        + "\n"
-                                        + "    <LinearLayout\n"
-                                        + "        android:layout_width=\"match_parent\"\n"
-                                        + "        android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "            <LinearLayout\n"
-                                        + "                android:layout_width=\"match_parent\"\n"
-                                        + "                android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                <Button\n"
-                                        + "                    android:layout_width=\"wrap_content\"\n"
-                                        + "                    android:layout_height=\"wrap_content\"\n"
-                                        + "                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "            </LinearLayout>\n"
-                                        + "\n"
-                                        + "    </LinearLayout>\n"
-                                        + "\n"
-                                        + "</FrameLayout>\n")));
+    fun testTooMany() {
+        lint().files(
+            xml(
+                "res/layout/too_many.xml",
+                """
+                <FrameLayout
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ok" />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ok" />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ok" />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ok" />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ok" />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ok" />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ok" />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ok" />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ok" />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ok" />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ok" />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ok" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                            </LinearLayout>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ok" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                                <Button
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Ok" />
+
+                            </LinearLayout>
+
+                    </LinearLayout>
+
+                </FrameLayout>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/layout/too_many.xml:397: Warning: too_many.xml has more than 80 views, bad for performance [TooManyViews]
+                            <Button
+                             ~~~~~~
+            0 errors, 1 warnings
+            """
+        )
     }
 
-    public void testTooDeep() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout/too_deep.xml:46: Warning: too_deep.xml has more than 10 levels, bad for performance [TooDeepLayout]\n"
-                        + "                                    <LinearLayout\n"
-                        + "                                     ~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintFiles(
-                        xml(
-                                "res/layout/too_deep.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "\n"
-                                        + "<LinearLayout\n"
-                                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "\n"
-                                        + "    android:layout_width=\"match_parent\"\n"
-                                        + "    android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "    <LinearLayout\n"
-                                        + "        android:layout_width=\"match_parent\"\n"
-                                        + "        android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "        <LinearLayout\n"
-                                        + "            android:layout_width=\"match_parent\"\n"
-                                        + "            android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "            <LinearLayout\n"
-                                        + "                android:layout_width=\"match_parent\"\n"
-                                        + "                android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "                <LinearLayout\n"
-                                        + "                    android:layout_width=\"match_parent\"\n"
-                                        + "                    android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "                    <LinearLayout\n"
-                                        + "                        android:layout_width=\"match_parent\"\n"
-                                        + "                        android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "                        <LinearLayout\n"
-                                        + "                            android:layout_width=\"match_parent\"\n"
-                                        + "                            android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "                            <LinearLayout\n"
-                                        + "                                android:layout_width=\"match_parent\"\n"
-                                        + "                                android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "                                <LinearLayout\n"
-                                        + "                                    android:layout_width=\"match_parent\"\n"
-                                        + "                                    android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "                                    <LinearLayout\n"
-                                        + "                                        android:layout_width=\"match_parent\"\n"
-                                        + "                                        android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "                                        <LinearLayout\n"
-                                        + "                                            android:layout_width=\"match_parent\"\n"
-                                        + "                                            android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "                                            <LinearLayout\n"
-                                        + "                                                android:layout_width=\"match_parent\"\n"
-                                        + "                                                android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "                                                <Button\n"
-                                        + "                                                    android:layout_width=\"wrap_content\"\n"
-                                        + "                                                    android:layout_height=\"wrap_content\"\n"
-                                        + "                                                    android:text=\"Ok\" />\n"
-                                        + "\n"
-                                        + "                                            </LinearLayout>\n"
-                                        + "\n"
-                                        + "                                        </LinearLayout>\n"
-                                        + "\n"
-                                        + "                                    </LinearLayout>\n"
-                                        + "\n"
-                                        + "                                </LinearLayout>\n"
-                                        + "\n"
-                                        + "                            </LinearLayout>\n"
-                                        + "\n"
-                                        + "                        </LinearLayout>\n"
-                                        + "\n"
-                                        + "                    </LinearLayout>\n"
-                                        + "\n"
-                                        + "                </LinearLayout>\n"
-                                        + "\n"
-                                        + "            </LinearLayout>\n"
-                                        + "\n"
-                                        + "        </LinearLayout>\n"
-                                        + "\n"
-                                        + "    </LinearLayout>\n"
-                                        + "\n"
-                                        + "</LinearLayout>\n")));
+    fun testTooDeep() {
+        lint().files(
+            xml(
+                "res/layout/too_deep.xml",
+                """
+                <LinearLayout
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ok" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent">
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent">
+
+                                        <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent">
+
+                                            <LinearLayout
+                                                android:layout_width="match_parent"
+                                                android:layout_height="match_parent">
+
+                                                <LinearLayout
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="match_parent">
+
+                                                    <LinearLayout
+                                                        android:layout_width="match_parent"
+                                                        android:layout_height="match_parent">
+
+                                                        <LinearLayout
+                                                            android:layout_width="match_parent"
+                                                            android:layout_height="match_parent">
+
+                                                            <LinearLayout
+                                                                android:layout_width="match_parent"
+                                                                android:layout_height="match_parent">
+
+                                                                <Button
+                                                                    android:layout_width="wrap_content"
+                                                                    android:layout_height="wrap_content"
+                                                                    android:text="Ok" />
+
+                                                            </LinearLayout>
+                                                        </LinearLayout>
+                                                    </LinearLayout>
+                                                </LinearLayout>
+                                            </LinearLayout>
+                                        </LinearLayout>
+                                    </LinearLayout>
+                                </LinearLayout>
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/layout/too_deep.xml:44: Warning: too_deep.xml has more than 10 levels, bad for performance [TooDeepLayout]
+                                                <LinearLayout
+                                                 ~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
     }
 }

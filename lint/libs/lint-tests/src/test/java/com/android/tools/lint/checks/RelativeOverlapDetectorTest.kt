@@ -13,183 +13,185 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
+import com.android.tools.lint.detector.api.Detector
 
-import com.android.tools.lint.detector.api.Detector;
-
-@SuppressWarnings("javadoc")
-public class RelativeOverlapDetectorTest extends AbstractCheckTest {
-    @Override
-    protected Detector getDetector() {
-        return new RelativeOverlapDetector();
+class RelativeOverlapDetectorTest : AbstractCheckTest() {
+    override fun getDetector(): Detector {
+        return RelativeOverlapDetector()
     }
 
-    public void testOneOverlap() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout/relative_overlap.xml:17: Warning: @id/label2 can overlap @id/label1 if @string/label1_text, @string/label2_text grow due to localized text expansion [RelativeOverlap]\n"
-                        + "        <TextView\n"
-                        + "         ~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintFiles(
-                        xml(
-                                "res/layout/relative_overlap.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    android:id=\"@+id/container\"\n"
-                                        + "    android:layout_width=\"match_parent\"\n"
-                                        + "    android:layout_height=\"wrap_content\"\n"
-                                        + "    android:orientation=\"vertical\">\n"
-                                        + "    <RelativeLayout\n"
-                                        + "        android:layout_width=\"match_parent\"\n"
-                                        + "        android:layout_height=\"wrap_content\">\n"
-                                        + "        <TextView\n"
-                                        + "            android:id=\"@+id/label1\"\n"
-                                        + "            android:layout_alignParentLeft=\"true\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"@string/label1_text\"\n"
-                                        + "            android:ellipsize=\"end\" />\n"
-                                        + "        <TextView\n"
-                                        + "            android:id=\"@+id/label2\"\n"
-                                        + "            android:layout_alignParentRight=\"true\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"@string/label2_text\"\n"
-                                        + "            android:ellipsize=\"end\" />\n"
-                                        + "        <TextView\n"
-                                        + "            android:id=\"@+id/circular1\"\n"
-                                        + "            android:layout_alignParentBottom=\"true\"\n"
-                                        + "            android:layout_toRightOf=\"@+id/circular2\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"@string/label1_text\"\n"
-                                        + "            android:ellipsize=\"end\" />\n"
-                                        + "        <TextView\n"
-                                        + "            android:id=\"@id/circular2\"\n"
-                                        + "            android:layout_alignParentBottom=\"true\"\n"
-                                        + "            android:layout_toRightOf=\"@id/circular1\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"@string/label2_text\"\n"
-                                        + "            android:ellipsize=\"end\" />\n"
-                                        + "        <TextView\n"
-                                        + "            android:id=\"@id/circular3\"\n"
-                                        + "            android:layout_alignParentBottom=\"true\"\n"
-                                        + "            android:layout_toRightOf=\"@id/circular1\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"@string/label2_text\"\n"
-                                        + "            android:ellipsize=\"end\" />\n"
-                                        + "    </RelativeLayout>\n"
-                                        + "    <RelativeLayout\n"
-                                        + "        android:layout_width=\"match_parent\"\n"
-                                        + "        android:layout_height=\"wrap_content\">\n"
-                                        + "        <TextView\n"
-                                        + "            android:id=\"@+id/label3\"\n"
-                                        + "            android:layout_alignParentLeft=\"true\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:layout_toStartOf=\"@+id/label4\"\n"
-                                        + "            android:gravity=\"start\"\n"
-                                        + "            android:text=\"@string/label3_text\"\n"
-                                        + "            android:ellipsize=\"end\" />\n"
-                                        + "        <TextView\n"
-                                        + "            android:id=\"@id/label4\"\n"
-                                        + "            android:layout_alignParentRight=\"true\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"@string/label3_text\"\n"
-                                        + "            android:ellipsize=\"end\" />\n"
-                                        + "    </RelativeLayout>\n"
-                                        + "    <RelativeLayout\n"
-                                        + "            android:layout_width=\"match_parent\"\n"
-                                        + "            android:layout_height=\"match_parent\">\n"
-                                        + "        <ImageView android:id=\"@+id/image\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\" />\n"
-                                        + "        <TextView android:id=\"@+id/text\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:layout_toRightOf=\"@id/image\" />\n"
-                                        + "    </RelativeLayout>\n"
-                                        + "    <RelativeLayout\n"
-                                        + "            android:layout_width=\"match_parent\"\n"
-                                        + "            android:layout_height=\"match_parent\">\n"
-                                        + "        <ImageView android:id=\"@+id/image\"\n"
-                                        + "            android:layout_alignParentRight=\"true\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\" />\n"
-                                        + "        <TextView android:id=\"@+id/text\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:layout_toLeftOf=\"@id/image\" />\n"
-                                        + "    </RelativeLayout>\n"
-                                        + "</LinearLayout>\n")));
+    fun testOneOverlap() {
+        lint().files(
+            xml(
+                "res/layout/relative_overlap.xml",
+                """
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:id="@+id/container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:id="@+id/label1"
+                            android:layout_alignParentLeft="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label1_text"
+                            android:ellipsize="end" />
+                        <TextView
+                            android:id="@+id/label2"
+                            android:layout_alignParentRight="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label2_text"
+                            android:ellipsize="end" />
+                        <TextView
+                            android:id="@+id/circular1"
+                            android:layout_alignParentBottom="true"
+                            android:layout_toRightOf="@+id/circular2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label1_text"
+                            android:ellipsize="end" />
+                        <TextView
+                            android:id="@id/circular2"
+                            android:layout_alignParentBottom="true"
+                            android:layout_toRightOf="@id/circular1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label2_text"
+                            android:ellipsize="end" />
+                        <TextView
+                            android:id="@id/circular3"
+                            android:layout_alignParentBottom="true"
+                            android:layout_toRightOf="@id/circular1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label2_text"
+                            android:ellipsize="end" />
+                    </RelativeLayout>
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:id="@+id/label3"
+                            android:layout_alignParentLeft="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toStartOf="@+id/label4"
+                            android:gravity="start"
+                            android:text="@string/label3_text"
+                            android:ellipsize="end" />
+                        <TextView
+                            android:id="@id/label4"
+                            android:layout_alignParentRight="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label3_text"
+                            android:ellipsize="end" />
+                    </RelativeLayout>
+                    <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+                        <ImageView android:id="@+id/image"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                        <TextView android:id="@+id/text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toRightOf="@id/image" />
+                    </RelativeLayout>
+                    <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+                        <ImageView android:id="@+id/image"
+                            android:layout_alignParentRight="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                        <TextView android:id="@+id/text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toLeftOf="@id/image" />
+                    </RelativeLayout>
+                </LinearLayout>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/layout/relative_overlap.xml:16: Warning: @id/label2 can overlap @id/label1 if @string/label1_text, @string/label2_text grow due to localized text expansion [RelativeOverlap]
+                    <TextView
+                     ~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
     }
 
-    public void testOneOverlapPercent() throws Exception {
-        assertEquals(
-                ""
-                        + "res/layout/relative_percent_overlap.xml:17: Warning: @id/label2 can overlap @id/label1 if @string/label1_text, @string/label2_text grow due to localized text expansion [RelativeOverlap]\n"
-                        + "        <TextView\n"
-                        + "         ~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
-                        xml(
-                                "res/layout/relative_percent_overlap.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    android:id=\"@+id/container\"\n"
-                                        + "    android:layout_width=\"match_parent\"\n"
-                                        + "    android:layout_height=\"wrap_content\"\n"
-                                        + "    android:orientation=\"vertical\">\n"
-                                        + "    <android.support.percent.PercentRelativeLayout\n"
-                                        + "        android:layout_width=\"match_parent\"\n"
-                                        + "        android:layout_height=\"wrap_content\">\n"
-                                        + "        <TextView\n"
-                                        + "            android:id=\"@+id/label1\"\n"
-                                        + "            android:layout_alignParentLeft=\"true\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"@string/label1_text\"\n"
-                                        + "            android:ellipsize=\"end\" />\n"
-                                        + "        <TextView\n"
-                                        + "            android:id=\"@+id/label2\"\n"
-                                        + "            android:layout_alignParentRight=\"true\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"@string/label2_text\"\n"
-                                        + "            android:ellipsize=\"end\" />\n"
-                                        + "        <TextView\n"
-                                        + "            android:id=\"@+id/circular1\"\n"
-                                        + "            android:layout_alignParentBottom=\"true\"\n"
-                                        + "            android:layout_toRightOf=\"@+id/circular2\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"@string/label1_text\"\n"
-                                        + "            android:ellipsize=\"end\" />\n"
-                                        + "        <TextView\n"
-                                        + "            android:id=\"@id/circular2\"\n"
-                                        + "            android:layout_alignParentBottom=\"true\"\n"
-                                        + "            android:layout_toRightOf=\"@id/circular1\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"@string/label2_text\"\n"
-                                        + "            android:ellipsize=\"end\" />\n"
-                                        + "        <TextView\n"
-                                        + "            android:id=\"@id/circular3\"\n"
-                                        + "            android:layout_alignParentBottom=\"true\"\n"
-                                        + "            android:layout_toRightOf=\"@id/circular1\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"@string/label2_text\"\n"
-                                        + "            android:ellipsize=\"end\" />\n"
-                                        + "    </android.support.percent.PercentRelativeLayout>\n"
-                                        + "</LinearLayout>\n")));
+    fun testOneOverlapPercent() {
+        lint().files(
+            xml(
+                "res/layout/relative_percent_overlap.xml",
+                """
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:id="@+id/container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <android.support.percent.PercentRelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:id="@+id/label1"
+                            android:layout_alignParentLeft="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label1_text"
+                            android:ellipsize="end" />
+                        <TextView
+                            android:id="@+id/label2"
+                            android:layout_alignParentRight="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label2_text"
+                            android:ellipsize="end" />
+                        <TextView
+                            android:id="@+id/circular1"
+                            android:layout_alignParentBottom="true"
+                            android:layout_toRightOf="@+id/circular2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label1_text"
+                            android:ellipsize="end" />
+                        <TextView
+                            android:id="@id/circular2"
+                            android:layout_alignParentBottom="true"
+                            android:layout_toRightOf="@id/circular1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label2_text"
+                            android:ellipsize="end" />
+                        <TextView
+                            android:id="@id/circular3"
+                            android:layout_alignParentBottom="true"
+                            android:layout_toRightOf="@id/circular1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label2_text"
+                            android:ellipsize="end" />
+                    </android.support.percent.PercentRelativeLayout>
+                </LinearLayout>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/layout/relative_percent_overlap.xml:16: Warning: @id/label2 can overlap @id/label1 if @string/label1_text, @string/label2_text grow due to localized text expansion [RelativeOverlap]
+                    <TextView
+                     ~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
     }
 }

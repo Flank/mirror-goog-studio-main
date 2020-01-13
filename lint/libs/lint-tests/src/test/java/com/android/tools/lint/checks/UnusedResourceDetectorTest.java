@@ -21,15 +21,10 @@ import static com.android.tools.lint.client.api.LintClient.CLIENT_GRADLE;
 
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Issue;
-import java.io.File;
-import java.util.Arrays;
 import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class UnusedResourceDetectorTest extends AbstractCheckTest {
-    private boolean mEnableIds = false;
-
     @Override
     protected Detector getDetector() {
         return new UnusedResourceDetector();
@@ -42,20 +37,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         return true;
     }
 
-    @Override
-    protected boolean isEnabled(Issue issue) {
-        //noinspection SimplifiableIfStatement
-        if (issue == UnusedResourceDetector.ISSUE_IDS) {
-            return mEnableIds;
-        } else {
-            return true;
-        }
-    }
-
-    public void testUnused() throws Exception {
-        mEnableIds = false;
-        //noinspection all // Sample code
-        assertEquals(
+    public void testUnused() {
+        String expected =
                 ""
                         + "res/layout/accessibility.xml:2: Warning: The resource R.layout.accessibility appears to be unused [UnusedResources]\n"
                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:id=\"@+id/newlinear\" android:orientation=\"vertical\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\">\n"
@@ -69,8 +52,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                         + "res/values/strings2.xml:3: Warning: The resource R.string.hello appears to be unused [UnusedResources]\n"
                         + "    <string name=\"hello\">Hello</string>\n"
                         + "            ~~~~~~~~~~~~\n"
-                        + "0 errors, 4 warnings\n",
-                lintProject(
+                        + "0 errors, 4 warnings\n";
+        lint().files(
                         mStrings2,
                         mLayout1,
                         xml(
@@ -107,14 +90,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                         manifest().minSdk(14),
                         mAccessibility,
                         // https://issuetracker.google.com/113686968
-                        source("res/raw/.DS_Store", "")));
+                        source("res/raw/.DS_Store", ""))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expect(expected);
     }
 
-    public void testUnusedIds() throws Exception {
-        mEnableIds = true;
-
-        //noinspection all // Sample code
-        assertEquals(
+    public void testUnusedIds() {
+        String expected =
                 ""
                         + "res/layout/accessibility.xml:2: Warning: The resource R.layout.accessibility appears to be unused [UnusedResources]\n"
                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:id=\"@+id/newlinear\" android:orientation=\"vertical\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\">\n"
@@ -131,17 +114,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                         + "res/layout/accessibility.xml:5: Warning: The resource R.id.android_logo2 appears to be unused [UnusedIds]\n"
                         + "    <ImageButton android:importantForAccessibility=\"yes\" android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
                         + "                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 5 warnings\n",
-                lintProject(mTest, mR, manifest().minSdk(14), mAccessibility));
+                        + "0 errors, 5 warnings\n";
+        lint().files(mTest, mR, manifest().minSdk(14), mAccessibility).run().expect(expected);
     }
 
-    public void testImplicitFragmentUsage() throws Exception {
-        mEnableIds = true;
+    public void testImplicitFragmentUsage() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=209393
         // Ensure fragment id's aren't deleted.
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/layout/has_fragment.xml",
                                 ""
@@ -160,12 +140,13 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    public void test() {"
                                         + "        int used = R.layout.has_fragment;\n"
                                         + "    }"
-                                        + "}")));
+                                        + "}"))
+                .run()
+                .expectClean();
     }
 
-    public void testArrayReference() throws Exception {
-        mEnableIds = false;
-        assertEquals(
+    public void testArrayReference() {
+        String expected =
                 ""
                         + "res/values/arrayusage.xml:2: Warning: The resource R.string.my_item appears to be unused [UnusedResources]\n"
                         + "<string name=\"my_item\">An Item</string>\n"
@@ -173,8 +154,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                         + "res/values/arrayusage.xml:3: Warning: The resource R.array.my_array appears to be unused [UnusedResources]\n"
                         + "<string-array name=\"my_array\">\n"
                         + "              ~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 2 warnings\n",
-                lintProject(
+                        + "0 errors, 2 warnings\n";
+        lint().files(
                         xml(
                                 "res/values/arrayusage.xml",
                                 ""
@@ -183,14 +164,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "<string-array name=\"my_array\">\n"
                                         + "   <item>@string/my_item</item>\n"
                                         + "</string-array>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expect(expected);
     }
 
-    public void testArrayReferenceIncluded() throws Exception {
-        mEnableIds = false;
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testArrayReferenceIncluded() {
+        lint().files(
                         xml(
                                 "res/values/arrayusage.xml",
                                 ""
@@ -200,18 +181,20 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "<string-array name=\"my_array\">\n"
                                         + "   <item>@string/my_item</item>\n"
                                         + "</string-array>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
     }
 
-    public void testAttrs() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testAttrs() {
+        String expected =
                 ""
                         + "res/layout/customattrlayout.xml:2: Warning: The resource R.layout.customattrlayout appears to be unused [UnusedResources]\n"
                         + "<foo.bar.ContentFrame\n"
                         + "^\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "res/values/customattr.xml",
                                 ""
@@ -247,14 +230,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "        public static final int contentId=0x7f020000;\n"
                                         + "    }\n"
                                         + "}\n"),
-                        manifest().minSdk(14)));
+                        manifest().minSdk(14))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expect(expected);
     }
 
-    public void testMultiProjectIgnoreLibraries() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testMultiProjectIgnoreLibraries() {
+        lint().files(
                         // Master project
                         manifest().pkg("foo.master").minSdk(14),
                         projectProperties()
@@ -286,11 +269,12 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    <string name=\"string2\">String 2</string>\n"
                                         + "    <string name=\"string3\">String 3</string>\n"
                                         + "\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .run()
+                .expectClean();
     }
 
     public void testMultiProject() {
-        //noinspection all // Sample code
         ProjectDescription library =
                 project(
                                 // Library project
@@ -298,17 +282,13 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                         .type(LIBRARY)
                         .name("LibraryProject");
 
-        //noinspection all // Sample code
         ProjectDescription main = project(mMainCode).name("App").dependsOn(library);
 
         lint().projects(main, library).run().expectClean();
     }
 
-    public void testFqcnReference() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testFqcnReference() {
+        lint().files(
                         mLayout1,
                         java(
                                 ""
@@ -324,11 +304,13 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "        setContentView(test.pkg.R.layout.main);\n"
                                         + "    }\n"
                                         + "}\n"),
-                        manifest().minSdk(14)));
+                        manifest().minSdk(14))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
     }
 
     public void testKotlin() {
-        //noinspection all // Sample code
         lint().files(
                         mLayout1,
                         kotlin(
@@ -364,7 +346,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         // Regression test for issue 63150366, comment #17 - reference in class declaration
         // Blocked on https://youtrack.jetbrains.com/issue/KT-21409
         //
-        //noinspection all // Sample code
         lint().files(
                         mLayout1,
                         kotlin(
@@ -393,7 +374,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     public void testKotlin3() {
         // Regression test for issue 76213486
         // 76213486: Resource ids passed into Kotlin enum constructors are not considered used
-        //noinspection all // Sample code
         lint().files(
                         kotlin(
                                 ""
@@ -430,7 +410,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
     public void testKotlin4() {
         // Regression test for https://issuetracker.google.com/113198298
-        //noinspection all // Sample code
         lint().files(
                         mLayout1,
                         kotlin(
@@ -462,23 +441,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    /* Not sure about this -- why would we ignore drawable XML?
-    public void testIgnoreXmlDrawable() throws Exception {
-        assertEquals(
-           "No warnings.",
-
-            lintProject(
-                    "res/drawable/ic_menu_help.xml",
-                    "gen/my/pkg/R2.java.txt=>gen/my/pkg/R.java"
-            ));
-    }
-    */
-
-    public void testPlurals() throws Exception {
-        //noinspection ClassNameDiffersFromFileName
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testPlurals() {
+        lint().files(
                         xml(
                                 "res/values/strings4.xml",
                                 ""
@@ -505,42 +469,39 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    public void test() {"
                                         + "        int used = R.plurals.my_plural;\n"
                                         + "    }"
-                                        + "}")));
+                                        + "}"))
+                .run()
+                .expectClean();
     }
 
-    public void testLibraryMerging() throws Exception {
+    public void testLibraryMerging() {
         // http://code.google.com/p/android/issues/detail?id=36952
-        File master =
-                getProjectDir(
-                        "MasterProject",
-                        // Master project
-                        manifest().pkg("foo.master").minSdk(14),
-                        projectProperties()
-                                .property("android.library.reference.1", "../LibraryProject")
-                                .property("manifestmerger.enabled", "true"),
-                        mMainCode);
-
-        File library =
-                getProjectDir(
-                        "LibraryProject",
-                        // Library project
-                        mLibraryManifest,
-                        projectProperties().library(true).compileSdk(14),
-                        mLibraryCode,
-                        mLibraryStrings);
-        assertEquals(
-                // The strings are all referenced in the library project's manifest file
-                // which in this project is merged in
-                "No warnings.", checkLint(Arrays.asList(master, library)));
+        ProjectDescription library =
+                project(
+                                mLibraryManifest,
+                                projectProperties().library(true).compileSdk(14),
+                                mLibraryCode,
+                                mLibraryStrings)
+                        .name("LibraryProject");
+        ProjectDescription master =
+                project(
+                                // Master project
+                                manifest().pkg("foo.master").minSdk(14),
+                                projectProperties()
+                                        .property(
+                                                "android.library.reference.1", "../LibraryProject")
+                                        .property("manifestmerger.enabled", "true"),
+                                mMainCode)
+                        .name("MasterProject")
+                        .dependsOn(library);
+        // The strings are all referenced in the library project's manifest file
+        // which in this project is merged in
+        lint().projects(library, master).run().expectClean();
     }
 
-    public void testCornerCase() throws Exception {
+    public void testCornerCase() {
         // See http://code.google.com/p/projectlombok/issues/detail?id=415
-        mEnableIds = true;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         java(
                                 ""
                                         + "// http://code.google.com/p/projectlombok/issues/detail?id=415\n"
@@ -550,16 +511,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    parent.new Z(parent.getW()).execute();\n"
                                         + "  }\n"
                                         + "}\n"),
-                        manifest().minSdk(14)));
+                        manifest().minSdk(14))
+                .run()
+                .expectClean();
     }
 
-    public void testAnalytics() throws Exception {
+    public void testAnalytics() {
         // See http://code.google.com/p/android/issues/detail?id=42565
-        mEnableIds = false;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/values/analytics.xml",
                                 ""
@@ -578,16 +537,15 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "  <string name=\"com.example.app.BaseActivity\">Home</string>\n"
                                         + "  <string name=\"com.example.app.PrefsActivity\">Preferences</string>\n"
                                         + "  <string name=\"test.pkg.OnClickActivity\">Clicks</string>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
     }
 
-    public void testIntegers() throws Exception {
+    public void testIntegers() {
         // See https://code.google.com/p/android/issues/detail?id=53995
-        mEnableIds = true;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/values/integers.xml",
                                 ""
@@ -605,16 +563,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "      android:duration=\"@integer/bar_slide_out_duration\"\n"
                                         + "      android:startOffset=\"@integer/bar_display_duration\" />\n"
                                         + "</set>\n"
-                                        + "\n")));
+                                        + "\n"))
+                .run()
+                .expectClean();
     }
 
-    public void testIntegerArrays() throws Exception {
+    public void testIntegerArrays() {
         // See http://code.google.com/p/android/issues/detail?id=59761
-        mEnableIds = false;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/values/integer_arrays.xml",
                                 ""
@@ -633,19 +589,17 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    <integer-array name=\"iconset_dryicons_coquette\">\n"
                                         + "        <item>@dimen/used</item>\n"
                                         + "    </integer-array>\n"
-                                        + "</resources>\n")));
+                                        + "</resources>\n"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
     }
 
-    public void testUnitTestReferences() throws Exception {
+    public void testUnitTestReferences() {
         // Make sure that we pick up references in unit tests as well
         // Regression test for
         // https://code.google.com/p/android/issues/detail?id=79066
-        mEnableIds = false;
-
-        //noinspection ClassNameDiffersFromFileName
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         mStrings2,
                         mLayout1,
                         mOther,
@@ -667,17 +621,17 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "        System.out.println(R.layout.other);\n"
                                         + "        System.out.println(R.string.hello);\n"
                                         + "    }\n"
-                                        + "}\n")));
+                                        + "}\n"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
     }
 
-    public void testDataBinding_resourcesUsingAtSyntaxAreConsideredUsed() throws Exception {
+    public void testDataBinding_resourcesUsingAtSyntaxAreConsideredUsed() {
         // Make sure that resources referenced only via a data binding expression
         // are not counted as unused.
         // Regression test for https://code.google.com/p/android/issues/detail?id=183934
-        mEnableIds = false;
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/values/resources.xml",
                                 ""
@@ -705,16 +659,16 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         // Data binding expressions
                                         + "       android:padding=\"@{large? @dimen/largePadding : @dimen/smallPadding}\"\n"
                                         + "       android:text=\"@{@string/nameFormat(firstName, lastName)}\" />\n"
-                                        + "</layout>")));
+                                        + "</layout>"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
     }
 
-    public void testDataBinding_resourcesUsingRNamespacingAreConsideredUsed() throws Exception {
+    public void testDataBinding_resourcesUsingRNamespacingAreConsideredUsed() {
         // Make sure that resources referenced only via a data binding expression in the
         // form of "R.type.name" are not counted as unused.
-        mEnableIds = false;
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/values/resources.xml",
                                 ""
@@ -739,18 +693,18 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         // Data binding expressions
                                         + "       android:padding=\"@{large? R.dimen.largePadding : R.dimen.smallPadding}\"\n"
                                         + "       android:text=\"@{R.string.name}\" />\n"
-                                        + "</layout>")));
+                                        + "</layout>"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
     }
 
-    public void testDataBInding_idsAddedInDataBindingLayoutsAreConsideredUsed() throws Exception {
+    public void testDataBInding_idsAddedInDataBindingLayoutsAreConsideredUsed() {
         // Make sure id's in data binding layouts aren't considered unused
         // (since the compiler will generate accessors for these that
         // may not be visible when running lint on edited sources)
         // Regression test for https://code.google.com/p/android/issues/detail?id=189065
-        mEnableIds = true;
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/layout/db.xml",
                                 ""
@@ -765,19 +719,20 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "       android:id=\"@+id/my_id\"\n"
                                         + "       android:layout_width=\"match_parent\"\n"
                                         + "       android:layout_height=\"match_parent\" />\n"
-                                        + "</layout>")));
+                                        + "</layout>"))
+                .run()
+                .expectClean();
     }
 
-    public void testPublic() throws Exception {
+    public void testPublic() {
         // Resources marked as public should not be listed as potentially unused
-        mEnableIds = false;
-        assertEquals(
+        String expected =
                 ""
                         + "res/values/resources.xml:4: Warning: The resource R.string.nameFormat appears to be unused [UnusedResources]\n"
                         + "    <item type='string' name='nameFormat'>%1$s %2$s</item>\n"
                         + "                        ~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "res/values/resources.xml",
                                 ""
@@ -787,7 +742,10 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    <item type='string' name='nameFormat'>%1$s %2$s</item>\n"
                                         + "    <public type='dimen' name='largePadding' />"
                                         + "    <public type='dimen' name='smallPadding' />"
-                                        + "</resources>")));
+                                        + "</resources>"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expect(expected);
     }
 
     public void testDynamicResources() {
@@ -798,7 +756,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                         + "build.gradle: Warning: The resource R.string.foo appears to be unused [UnusedResources]\n"
                         + "0 errors, 3 warnings\n";
 
-        //noinspection all // Sample code
         lint().files(
                         xml("src/main/" + mLayout1.targetRelativePath, mLayout1.contents),
                         java(
@@ -843,7 +800,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
     public void testManifestPlaceholders() {
         // Regression test for 78678414
-        //noinspection all // Sample code
         lint().files(
                         manifest(
                                 ""
@@ -871,13 +827,10 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testStaticImport() throws Exception {
+    public void testStaticImport() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=40293
         // 40293: Lint reports resource as unused when referenced via "import static"
-        mEnableIds = false;
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/values/resources.xml",
                                 ""
@@ -917,7 +870,10 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    public static class string {\n"
                                         + "        public static final int nameFormat = 3;\n"
                                         + "    }\n"
-                                        + "}")));
+                                        + "}"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
     }
 
     public void testStyles() {
@@ -980,11 +936,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testThemeFromLayout() throws Exception {
-        mEnableIds = false;
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testThemeFromLayout() {
+        lint().files(
                         xml(
                                 "res/values/styles.xml",
                                 ""
@@ -1015,7 +968,10 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    public void test() {\n"
                                         + "        System.out.println(R.layout.main);\n"
                                         + "    }\n"
-                                        + "}\n")));
+                                        + "}\n"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
     }
 
     public void testReferenceFromObjectLiteralArguments() {
@@ -1053,11 +1009,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testKeepAndDiscard() throws Exception {
-        mEnableIds = false;
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testKeepAndDiscard() {
+        lint().files(
                         // By name
                         xml("res/raw/keep.xml", "<foo/>"),
 
@@ -1069,14 +1022,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "        xmlns:tools=\"http://schemas.android.com/tools\"\n"
                                         + "        tools:shrinkMode=\"strict\"\n"
                                         + "        tools:discard=\"@raw/unused\"\n"
-                                        + "        tools:keep=\"@raw/used\" />\n")));
+                                        + "        tools:keep=\"@raw/used\" />\n"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
     }
 
-    public void testKeepAndDiscardWithDifferentPrefix() throws Exception {
-        mEnableIds = false;
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testKeepAndDiscardWithDifferentPrefix() {
+        lint().files(
                         // By name
                         xml("res/raw/keep.xml", "<foo/>"),
 
@@ -1088,16 +1041,15 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "        xmlns:t=\"http://schemas.android.com/tools\"\n"
                                         + "        t:shrinkMode=\"strict\"\n"
                                         + "        t:discard=\"@raw/unused\"\n"
-                                        + "        t:keep=\"@raw/used\" />\n")));
+                                        + "        t:keep=\"@raw/used\" />\n"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
     }
 
-    public void testStringsWithDots() throws Exception {
+    public void testStringsWithDots() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=214189
-
-        mEnableIds = false;
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/values/strings.xml",
                                 ""
@@ -1112,10 +1064,13 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    public void test() {\n"
                                         + "        System.out.println(R.string.foo_bar_your_name);\n"
                                         + "    }\n"
-                                        + "}\n")));
+                                        + "}\n"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
     }
 
-    public void testNavigation() throws Exception {
+    public void testNavigation() {
         // Regression test for https://issuetracker.google.com/145687664
 
         lint().files(
@@ -1177,12 +1132,9 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testToolsNamespaceReferences() throws Exception {
+    public void testToolsNamespaceReferences() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=226204
-        mEnableIds = false;
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/layout/my_layout.xml",
                                 ""
@@ -1221,12 +1173,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "<resources\n"
                                         + "        xmlns:tools=\"http://schemas.android.com/tools\"\n"
                                         + "        tools:shrinkMode=\"strict\"\n"
-                                        + "        tools:keep=\"@raw/used,@layout/my_layout\" />\n")));
+                                        + "        tools:keep=\"@raw/used,@layout/my_layout\" />\n"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
     }
 
     public void testReferenceFromDataBinding() {
         // Regression test for https://issuetracker.google.com/38213600
-        //noinspection all // Sample code
         lint().files(
                         // Data binding layout
                         xml(
@@ -1341,7 +1295,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
     public void testReferenceFromAndroidxDataBinding() {
         // Regression test for https://issuetracker.google.com/116842158
-        //noinspection all // Sample code
         lint().files(
                         // Data binding layout
                         xml(
@@ -1455,7 +1408,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     }
 
     public void testReferenceFromViewBinding_java() {
-        //noinspection all // Sample code
         lint().files(
                         gradle(
                                 ""
@@ -1584,7 +1536,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     }
 
     public void testReferenceFromViewBinding_kotlin() {
-        //noinspection all // Sample code
         lint().files(
                         gradle(
                                 ""
@@ -1681,7 +1632,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     @SuppressWarnings("SpellCheckingInspection")
     public void testButterknife() {
         // Regression test for https://issuetracker.google.com/62640956
-        //noinspection all // Sample code
         lint().files(
                         // Data binding layout
                         xml(
@@ -1734,7 +1684,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
     public void testGeneratedResourcesIncluded() {
         // Regression test for https://issuetracker.google.com/72790641
-        mEnableIds = false;
         lint().files(
                         gradle(
                                 ""
@@ -1748,6 +1697,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "<resources\n"
                                         + "        xmlns:tools=\"http://schemas.android.com/tools\" />\n"))
+                .issues(UnusedResourceDetector.ISSUE)
                 .run()
                 .expect(
                         "generated/res/raw/something.xml:1: Warning: The resource R.raw.something appears to be unused [UnusedResources]\n"
@@ -1758,7 +1708,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
     public void testGeneratedResourcesExcluded() {
         // Regression test for https://issuetracker.google.com/72790641
-        mEnableIds = false;
         lint().files(
                         gradle(
                                 ""
@@ -1772,6 +1721,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "<resources\n"
                                         + "        xmlns:tools=\"http://schemas.android.com/tools\" />\n"))
+                .issues(UnusedResourceDetector.ISSUE)
                 .run()
                 .expectClean();
     }
@@ -1779,7 +1729,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     public void testNoWarningsInGradleLibraries() {
         // Regression test for
         // 78320922: Lint: UnusedResources false positive in library module
-        mEnableIds = false;
         lint().files(
                         gradle("" + "apply plugin: 'com.android.library'\n"),
                         xml(
@@ -1792,6 +1741,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .client(
                         new com.android.tools.lint.checks.infrastructure.TestLintClient(
                                 CLIENT_GRADLE))
+                .issues(UnusedResourceDetector.ISSUE)
                 .run()
                 .expectClean();
     }

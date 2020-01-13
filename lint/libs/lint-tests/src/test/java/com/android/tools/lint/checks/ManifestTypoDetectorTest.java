@@ -25,11 +25,8 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
         return new ManifestTypoDetector();
     }
 
-    public void testOk() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testOk() {
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -61,19 +58,20 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expectClean();
     }
 
-    public void testTypoUsesSdk() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testTypoUsesSdk() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:7: Error: Misspelled tag <use-sdk>: Did you mean <uses-sdk> ? [ManifestTypo]\n"
                         + "    <use-sdk android:minSdkVersion=\"14\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
-                        xml(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
+                        (xml(
                                 "AndroidManifest.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -103,19 +101,20 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
                                         + "        </activity>\n"
                                         + "    </application>\n"
                                         + "\n"
-                                        + "</manifest>\n"),
-                        mStrings));
+                                        + "</manifest>\n")),
+                        mStrings)
+                .run()
+                .expect(expected);
     }
 
-    public void testTypoUsesSdk2() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testTypoUsesSdk2() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:7: Error: Misspelled tag <user-sdk>: Did you mean <uses-sdk> ? [ManifestTypo]\n"
                         + "    <user-sdk android:minSdkVersion=\"14\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -147,18 +146,19 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expect(expected);
     }
 
-    public void testTypoUsesPermission() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testTypoUsesPermission() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:9: Error: Misspelled tag <use-permission>: Did you mean <uses-permission> ? [ManifestTypo]\n"
                         + "    <use-permission android:name=\"com.example.helloworld.permission\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -190,18 +190,19 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expect(expected);
     }
 
-    public void testTypoUsesPermission2() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testTypoUsesPermission2() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:9: Error: Misspelled tag <user-permission>: Did you mean <uses-permission> ? [ManifestTypo]\n"
                         + "    <user-permission android:name=\"com.example.helloworld.permission\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -233,18 +234,19 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expect(expected);
     }
 
-    public void testTypoUsesFeature() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testTypoUsesFeature() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:11: Error: Misspelled tag <use-feature>: Did you mean <uses-feature> ? [ManifestTypo]\n"
                         + "    <use-feature android:name=\"android.hardware.wifi\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -276,18 +278,19 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expect(expected);
     }
 
-    public void testTypoUsesFeature2() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testTypoUsesFeature2() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:11: Error: Misspelled tag <user-feature>: Did you mean <uses-feature> ? [ManifestTypo]\n"
                         + "    <user-feature android:name=\"android.hardware.wifi\" />\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -319,18 +322,19 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expect(expected);
     }
 
-    public void testTypoUsesLibrary() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testTypoUsesLibrary() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:16: Error: Misspelled tag <use-library>: Did you mean <uses-library> ? [ManifestTypo]\n"
                         + "        <use-library android:name=\"com.example.helloworld\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -362,18 +366,19 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expect(expected);
     }
 
-    public void testTypoUsesLibrary2() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testTypoUsesLibrary2() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:16: Error: Misspelled tag <user-library>: Did you mean <uses-library> ? [ManifestTypo]\n"
                         + "        <user-library android:name=\"com.example.helloworld\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintProject(
+                        + "1 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -405,12 +410,13 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expect(expected);
     }
 
-    public void testOtherTypos() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testOtherTypos() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:2: Error: Misspelled tag <mannifest>: Did you mean <manifest> ? [ManifestTypo]\n"
                         + "<mannifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -433,8 +439,8 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
                         + "AndroidManifest.xml:18: Error: Misspelled tag <caaategory>: Did you mean <category> ? [ManifestTypo]\n"
                         + "                <caaategory android:name=\"android.intent.category.LAUNCHER\" />\n"
                         + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "7 errors, 0 warnings\n",
-                lintProject(
+                        + "7 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -461,7 +467,9 @@ public class ManifestTypoDetectorTest extends AbstractCheckTest {
                                         + "    </spplication>\n"
                                         + "\n"
                                         + "</mannifest>\n"),
-                        mStrings));
+                        mStrings)
+                .run()
+                .expect(expected);
     }
 
     @SuppressWarnings("all") // Sample code

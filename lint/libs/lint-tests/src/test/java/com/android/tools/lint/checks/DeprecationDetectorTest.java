@@ -25,9 +25,8 @@ public class DeprecationDetectorTest extends AbstractCheckTest {
         return new DeprecationDetector();
     }
 
-    public void testApi1() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testApi1() {
+        String expected =
                 ""
                         + "res/layout/deprecation.xml:2: Warning: AbsoluteLayout is deprecated [Deprecated]\n"
                         + "<AbsoluteLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -41,13 +40,12 @@ public class DeprecationDetectorTest extends AbstractCheckTest {
                         + "res/layout/deprecation.xml:27: Warning: android:editable is deprecated: Use inputType instead [Deprecated]\n"
                         + "    <EditText android:editable=\"false\" />\n"
                         + "              ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 4 warnings\n",
-                lintProject(manifest().minSdk(1), mDeprecation));
+                        + "0 errors, 4 warnings\n";
+        lint().files(manifest().minSdk(1), mDeprecation).run().expect(expected);
     }
 
-    public void testApi4() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testApi4() {
+        String expected =
                 ""
                         + "res/layout/deprecation.xml:2: Warning: AbsoluteLayout is deprecated [Deprecated]\n"
                         + "<AbsoluteLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -79,18 +77,18 @@ public class DeprecationDetectorTest extends AbstractCheckTest {
                         + "res/layout/deprecation.xml:27: Warning: android:editable is deprecated: Use inputType instead [Deprecated]\n"
                         + "    <EditText android:editable=\"false\" />\n"
                         + "              ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 10 warnings\n",
-                lintProject(manifest().minSdk(4), mDeprecation));
+                        + "0 errors, 10 warnings\n";
+        lint().files(manifest().minSdk(4), mDeprecation).run().expect(expected);
     }
 
-    public void testUsesSdkM() throws Exception {
-        assertEquals(
+    public void testUsesSdkM() {
+        String expected =
                 ""
                         + "AndroidManifest.xml:8: Warning: uses-permission-sdk-m is deprecated: Use `uses-permission-sdk-23 instead [Deprecated]\n"
                         + "    <uses-permission-sdk-m android:name=\"foo.bar.BAZ\" />\n"
                         + "     ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -117,7 +115,9 @@ public class DeprecationDetectorTest extends AbstractCheckTest {
                                         + "        </activity>\n"
                                         + "    </application>\n"
                                         + "\n"
-                                        + "</manifest>\n")));
+                                        + "</manifest>\n"))
+                .run()
+                .expect(expected);
     }
 
     @SuppressWarnings("all") // Sample code

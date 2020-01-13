@@ -13,48 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
+import com.android.tools.lint.detector.api.Detector
 
-import com.android.tools.lint.detector.api.Detector;
-
-@SuppressWarnings("javadoc")
-public class NestedScrollingWidgetDetectorTest extends AbstractCheckTest {
-    @Override
-    protected Detector getDetector() {
-        return new NestedScrollingWidgetDetector();
+class NestedScrollingWidgetDetectorTest : AbstractCheckTest() {
+    override fun getDetector(): Detector {
+        return NestedScrollingWidgetDetector()
     }
 
-    public void testNested() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout/scrolling.xml:13: Warning: The vertically scrolling ScrollView should not contain another vertically scrolling widget (ListView) [NestedScrolling]\n"
-                        + "  <ListView\n"
-                        + "   ~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintFiles(
-                        xml(
-                                "res/layout/scrolling.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "\n"
-                                        + "<ScrollView\n"
-                                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "\n"
-                                        + "    android:layout_width=\"match_parent\"\n"
-                                        + "    android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "\t<LinearLayout\n"
-                                        + "\t    android:layout_width=\"match_parent\"\n"
-                                        + "\t    android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "\t\t<ListView\n"
-                                        + "\t\t    android:layout_width=\"match_parent\"\n"
-                                        + "\t\t    android:layout_height=\"match_parent\" />\n"
-                                        + "\n"
-                                        + "\t</LinearLayout>\n"
-                                        + "\n"
-                                        + "</ScrollView>\n")));
+    fun testNested() {
+        lint().files(
+            xml(
+                "res/layout/scrolling.xml",
+                """
+                <ScrollView
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <ListView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+
+                    </LinearLayout>
+
+                </ScrollView>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/layout/scrolling.xml:11: Warning: The vertically scrolling ScrollView should not contain another vertically scrolling widget (ListView) [NestedScrolling]
+                    <ListView
+                     ~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
     }
 }

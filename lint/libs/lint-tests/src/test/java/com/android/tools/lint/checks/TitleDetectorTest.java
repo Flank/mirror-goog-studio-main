@@ -59,16 +59,14 @@ public class TitleDetectorTest extends AbstractCheckTest {
                                 + "  \n");
     }
 
-    public void testOk() throws Exception {
+    public void testOk() {
         //noinspection all // Sample code
-        assertEquals("No warnings.", lintProject(manifest().minSdk(1), mTitles));
+        lint().files(manifest().minSdk(1), mTitles).run().expectClean();
     }
 
-    public void testOk2() throws Exception {
+    public void testOk2() {
         //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "res/menu-land/actions.xml",
                                 ""
@@ -133,7 +131,9 @@ public class TitleDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "    </group>\n"
                                         + "\n"
-                                        + "</menu>\n")));
+                                        + "</menu>\n"))
+                .run()
+                .expectClean();
     }
 
     @SuppressWarnings("all") // Sample code

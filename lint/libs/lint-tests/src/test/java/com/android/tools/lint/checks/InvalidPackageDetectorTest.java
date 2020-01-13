@@ -17,7 +17,7 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
-import com.android.tools.lint.checks.infrastructure.TestFile;
+import com.android.testutils.TestUtils;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Project;
 import java.io.File;
@@ -31,26 +31,26 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
         return new InvalidPackageDetector();
     }
 
-    public void testUnsupportedJavaLibraryCode() throws Exception {
+    public void testUnsupportedJavaLibraryCode() {
         // See http://code.google.com/p/android/issues/detail?id=39109
-        //noinspection all // Sample code
-        assertEquals(
+        String expected =
                 ""
                         + "libs/unsupported.jar: Error: Invalid package reference in library; not included in Android: java.awt. Referenced from test.pkg.LibraryClass. [InvalidPackage]\n"
                         + "libs/unsupported.jar: Error: Invalid package reference in library; not included in Android: javax.swing. Referenced from test.pkg.LibraryClass. [InvalidPackage]\n"
-                        + "2 errors, 0 warnings\n",
-                lintProject(manifest().minSdk(14), mLayout, mThemes, mThemes2, mUnsupported));
+                        + "2 errors, 0 warnings\n";
+        lint().files(manifest().minSdk(14), mLayout, mThemes, mThemes2, mUnsupported)
+                .run()
+                .expect(expected);
     }
 
-    public void testOrderMatters() throws Exception {
+    public void testOrderMatters() {
         // See http://code.google.com/p/android/issues/detail?id=39109
-        //noinspection all // Sample code
-        assertEquals(
+        String expected =
                 ""
                         + "libs/unsupported.jar: Error: Invalid package reference in library; not included in Android: java.awt. Referenced from test.pkg.LibraryClass. [InvalidPackage]\n"
                         + "libs/unsupported.jar: Error: Invalid package reference in library; not included in Android: javax.swing. Referenced from test.pkg.LibraryClass. [InvalidPackage]\n"
-                        + "2 errors, 0 warnings\n",
-                lintProject(
+                        + "2 errors, 0 warnings\n";
+        lint().files(
                         manifest().minSdk(14),
                         mLayout,
                         mThemes,
@@ -60,14 +60,13 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
                         //// need the actual junit-4.12 code that  is referencing
                         // java.lang.management
                         // base64gzip("libs/junit-4.12.jar", UNSUPPORTED_BYTECODE)
-                        daggerTestFile));
+                        daggerTestFile)
+                .run()
+                .expect(expected);
     }
 
-    public void testOk() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testOk() {
+        lint().files(
                         classpath(),
                         manifest().minSdk(2),
                         base64gzip(
@@ -177,14 +176,13 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
                                         + "5H5rvBUZuHatEYXrXVcLNOgaN90NJOEKAjdgYyH3Z9EB/8q6jV3Aa1yGAGtk"
                                         + "3p9cV9xWX89ia9w42f6X7FuPtXriwtZgYYCbXu/rgVbPK/gaoNecm4/r9Uir"
                                         + "W2dtSlNcm0679UCrqbJ9DRAVtFnfoS04uX6WBAw4xEqC80fF/gu8+KimcgwA"
-                                        + "AA==")));
+                                        + "AA=="))
+                .run()
+                .expectClean();
     }
 
-    public void testLibraryInJavax() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testLibraryInJavax() {
+        lint().files(
                         manifest().minSdk(14),
                         mLayout,
                         mThemes,
@@ -211,15 +209,14 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
                                         + "ErOHsWEBE9jPDypWZqwA+ug8ip+biI8JIxJjQjOk+Co0D+5cuu+DIdBkE7Dd"
                                         + "jEwiDKghDisdQAUIKkApTtC1ImdtERRttjgKE5AJXAy4iwAE2I1UICD0YCsS"
                                         + "EOA+ZuChOxk5P8ihaOZhJFRgIJsFykHIqVgWxSxLJgL5Cd1ZyIkD1VnncRtl"
-                                        + "hOksUHJCjmxUZx1mJpC4ArxZwbEAMkoGaLE9ODkAACKr4XJxBgAA")));
+                                        + "hOksUHJCjmxUZx1mJpC4ArxZwbEAMkoGaLE9ODkAACKr4XJxBgAA"))
+                .run()
+                .expectClean();
     }
 
-    public void testAnnotationProcessors1() throws Exception {
+    public void testAnnotationProcessors1() {
         // See https://code.google.com/p/android/issues/detail?id=64014
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         manifest().minSdk(14),
                         mLayout,
                         mThemes,
@@ -355,21 +352,22 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
                                         + "Ztzg7KveoayztkbLuv2cZMY5TjbG5MxrO+ZNZY6UX/Lx+x/mRYxBXb88Z0kz"
                                         + "S0c+q6UmUiCkS/aGbTUIskHM5FDTAtQ38lecKkaCl/S7aXTX8j23S9G+extP"
                                         + "Tz8+0lYHPMm7DKkposLB0RfGwdFWf4RLifP/HfD/vP3XAf9v/u9GWFsdn+C/"
-                                        + "n4/+M5b/2bjU/23/D9p9Tw94FgAA")));
+                                        + "n4/+M5b/2bjU/23/D9p9Tw94FgAA"))
+                .run()
+                .expectClean();
     }
 
-    public void testAnnotationProcessors2() throws Exception {
+    public void testAnnotationProcessors2() {
         // See https://code.google.com/p/android/issues/detail?id=64014
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         manifest().minSdk(14),
                         mLayout,
                         mThemes,
                         mThemes2,
                         // Just a subset of dagger
-                        daggerTestFile));
+                        daggerTestFile)
+                .run()
+                .expectClean();
     }
 
     private TestFile daggerTestFile =
@@ -460,12 +458,34 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testSkipProvidedLibraries() throws Exception {
+    public void testSkipProvidedLibraries() {
+
+        // Set up a mock project model for the resource configuration test(s)
+        // where we provide a subset of densities to be included
+        com.android.tools.lint.checks.infrastructure.TestLintClient client =
+                new com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                    @NonNull
+                    @Override
+                    protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
+                        return new Project(this, dir, referenceDir) {
+                            @NonNull
+                            @Override
+                            public List<File> getJavaLibraries(boolean includeProvided) {
+                                if (!includeProvided) {
+                                    return Collections.emptyList();
+                                }
+                                return super.getJavaLibraries(true);
+                            }
+                        };
+                    }
+                };
+
         // Regression test for https://code.google.com/p/android/issues/detail?id=187191
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(manifest().minSdk(14), mLayout, mThemes, mThemes2, mUnsupported));
+        lint().files(manifest().minSdk(14), mLayout, mThemes, mThemes2, mUnsupported)
+                .client(client)
+                .sdkHome(TestUtils.getSdk())
+                .run()
+                .expectClean();
     }
 
     public void testNullSuperClass() {
@@ -497,7 +517,7 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testLibraryNameIncluded() throws Exception {
+    public void testLibraryNameIncluded() {
         lint().files(
                         manifest().minSdk(14),
                         classpath("libs/exploded-aar/foo.bar/baz/1.0/unsupported.jar"),
@@ -512,7 +532,7 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
                                 + "2 errors, 0 warnings");
     }
 
-    public void testSuppressByLibrary() throws Exception {
+    public void testSuppressByLibrary() {
         // See https://issuetracker.google.com/139011783
         lint().files(
                         manifest().minSdk(14),
@@ -526,32 +546,6 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
                                 + "libs/exploded-aar/foo.bar/baz/1.0/unsupported.jar: Error: Invalid package reference in foo.bar:baz; not included in Android: java.awt. Referenced from test.pkg.LibraryClass. [InvalidPackage]\n"
                                 + "libs/exploded-aar/foo.bar/baz/1.0/unsupported.jar: Error: Invalid package reference in foo.bar:baz; not included in Android: javax.swing. Referenced from test.pkg.LibraryClass. [InvalidPackage]\n"
                                 + "2 errors, 0 warnings");
-    }
-
-    @Override
-    protected TestLintClient createClient() {
-        if ("testSkipProvidedLibraries".equals(getName())) {
-            // Set up a mock project model for the resource configuration test(s)
-            // where we provide a subset of densities to be included
-            return new ToolsBaseTestLintClient() {
-                @NonNull
-                @Override
-                protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                    return new Project(this, dir, referenceDir) {
-                        @NonNull
-                        @Override
-                        public List<File> getJavaLibraries(boolean includeProvided) {
-                            if (!includeProvided) {
-                                return Collections.emptyList();
-                            }
-                            return super.getJavaLibraries(true);
-                        }
-                    };
-                }
-            };
-        }
-
-        return super.createClient();
     }
 
     @SuppressWarnings("all") // Sample code

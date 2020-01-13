@@ -28,9 +28,9 @@ public class SystemPermissionsDetectorTest extends AbstractCheckTest {
         return new SystemPermissionsDetector();
     }
 
-    public void testBrokenOrder() throws Exception {
+    public void testBrokenOrder() {
         //noinspection all // Sample code
-        assertEquals(
+        String expected =
                 ""
                         + "AndroidManifest.xml:15: Error: Permission is only granted to system apps [ProtectedPermissions]\n"
                         + "    <uses-permission android:name=\"android.intent.category.MASTER_CLEAR.permission.C2D_MESSAGE\" />\n"
@@ -290,8 +290,8 @@ public class SystemPermissionsDetectorTest extends AbstractCheckTest {
                         + "AndroidManifest.xml:100: Error: Permission is only granted to system apps [ProtectedPermissions]\n"
                         + "    <uses-permission android:name=\"android.permission.WRITE_SECURE_SETTINGS\" />\n"
                         + "                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "86 errors, 0 warnings\n",
-                lintProject(
+                        + "86 errors, 0 warnings\n";
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -410,14 +410,14 @@ public class SystemPermissionsDetectorTest extends AbstractCheckTest {
                                         + "        </activity>\n"
                                         + "    </application>\n"
                                         + "\n"
-                                        + "</manifest>\n")));
+                                        + "</manifest>\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testSuppressed() throws Exception {
+    public void testSuppressed() {
         //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -452,7 +452,9 @@ public class SystemPermissionsDetectorTest extends AbstractCheckTest {
                                         + "        </activity>\n"
                                         + "    </application>\n"
                                         + "\n"
-                                        + "</manifest>\n")));
+                                        + "</manifest>\n"))
+                .run()
+                .expectClean();
     }
 
     public void testMaxVersion() {

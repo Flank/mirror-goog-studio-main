@@ -48,15 +48,14 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
         return new UnsafeBroadcastReceiverDetector();
     }
 
-    public void testBroken() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testBroken() {
+        String expected =
                 ""
                         + "src/test/pkg/TestReceiver.java:10: Warning: This broadcast receiver declares an intent-filter for a protected broadcast action string, which can only be sent by the system, not third-party applications. However, the receiver's onReceive method does not appear to call getAction to ensure that the received Intent's action string matches the expected value, potentially making it possible for another actor to send a spoofed intent with no action string or a different action string and cause undesired behavior. [UnsafeProtectedBroadcastReceiver]\n"
                         + "    public void onReceive(Context context, Intent intent) {\n"
                         + "                ~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         manifest,
                         java(
                                 "src/test/pkg/TestReceiver.java",
@@ -81,7 +80,9 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
                                         + "            }\n"
                                         + "        };\n"
                                         + "    }\n"
-                                        + "}\n")));
+                                        + "}\n"))
+                .run()
+                .expect(expected);
     }
 
     public void testBroken2() {
@@ -91,7 +92,6 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
                         + "        <receiver\n"
                         + "         ~~~~~~~~\n"
                         + "0 errors, 1 warnings";
-        //noinspection all // Sample code
         lint().files(
                         xml(
                                 "AndroidManifest.xml",
@@ -133,15 +133,14 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
                                 + "              <intent-filter>\n");
     }
 
-    public void testReferencesIntentVariable() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
+    public void testReferencesIntentVariable() {
+        String expected =
                 ""
                         + "src/test/pkg/TestReceiver.java:10: Warning: This broadcast receiver declares an intent-filter for a protected broadcast action string, which can only be sent by the system, not third-party applications. However, the receiver's onReceive method does not appear to call getAction to ensure that the received Intent's action string matches the expected value, potentially making it possible for another actor to send a spoofed intent with no action string or a different action string and cause undesired behavior. In this case, it is possible that the onReceive method passed the received Intent to another method that checked the action string. If so, this finding can safely be ignored. [UnsafeProtectedBroadcastReceiver]\n"
                         + "    public void onReceive(Context context, Intent intent) {\n"
                         + "                ~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         manifest,
                         java(
                                 "src/test/pkg/TestReceiver.java",
@@ -158,14 +157,13 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
                                         + "    public void onReceive(Context context, Intent intent) {\n"
                                         + "        System.out.println(intent);\n"
                                         + "    }\n"
-                                        + "}\n")));
+                                        + "}\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testCorrect() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testCorrect() {
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -207,14 +205,13 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
                                         + "      if (intent.getAction() == Intent.ACTION_BOOT_COMPLETED) {\n"
                                         + "      }\n"
                                         + "    }\n"
-                                        + "}\n")));
+                                        + "}\n"))
+                .run()
+                .expectClean();
     }
 
-    public void testCorrect2() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testCorrect2() {
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -240,7 +237,9 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
                                         + "    </application>\n"
                                         + "\n"
                                         + "</manifest>\n"
-                                        + "\n")));
+                                        + "\n"))
+                .run()
+                .expectClean();
     }
 
     public void testBrokenIncremental() {
@@ -250,7 +249,6 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
                         + "    public void onReceive(Context context, Intent intent) {\n"
                         + "                ~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
-        //noinspection all // Sample code
         lint().files(
                         manifest,
                         java(

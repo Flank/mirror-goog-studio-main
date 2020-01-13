@@ -17,150 +17,141 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Issue;
 
 @SuppressWarnings("javadoc")
 public class ButtonDetectorTest extends AbstractCheckTest {
-    private static Issue sTestIssue;
-
-    @Override
-    protected boolean isEnabled(Issue issue) {
-        return super.isEnabled(issue) && sTestIssue == null || issue == sTestIssue;
-    }
-
     @Override
     protected Detector getDetector() {
         return new ButtonDetector();
     }
 
-    public void testButtonOrder() throws Exception {
-        sTestIssue = ButtonDetector.ORDER;
+    public void testButtonOrder() {
         //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout/buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:92: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:124: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:140: Warning: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:156: Warning: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:177: Warning: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "0 errors, 7 warnings\n",
-                lintProject(manifest().minSdk(14), mButtonbar, mButtonbar_values));
+        lint().files(manifest().minSdk(14), mButtonbar, mButtonbar_values)
+                .issues(ButtonDetector.ORDER)
+                .run()
+                .expect(
+                        ""
+                                + "res/layout/buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:92: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:124: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:140: Warning: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:156: Warning: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:177: Warning: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "0 errors, 7 warnings\n");
     }
 
-    public void testButtonOrder2() throws Exception {
-        // If the layout is in v14, it had better have the right order
-        sTestIssue = ButtonDetector.ORDER;
-        assertEquals(
-                ""
-                        + "res/layout-v14/buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-v14/buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-v14/buttonbar.xml:92: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-v14/buttonbar.xml:124: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-v14/buttonbar.xml:140: Warning: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-v14/buttonbar.xml:156: Warning: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-v14/buttonbar.xml:177: Warning: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "0 errors, 7 warnings\n",
-                lintProject(mMinsdk5targetsdk14, mButtonbar2, mButtonbar_values));
+    public void testButtonOrder2() {
+        lint().files(mMinsdk5targetsdk14, mButtonbar2, mButtonbar_values)
+                .issues(ButtonDetector.ORDER)
+                .run()
+                .expect(
+                        ""
+                                + "res/layout-v14/buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-v14/buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-v14/buttonbar.xml:92: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-v14/buttonbar.xml:124: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-v14/buttonbar.xml:140: Warning: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-v14/buttonbar.xml:156: Warning: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-v14/buttonbar.xml:177: Warning: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "0 errors, 7 warnings\n");
     }
 
-    public void testButtonOrder3() throws Exception {
+    public void testButtonOrder3() {
         // Similar to test 3, but also complain if the -v version is *higher* than 14
-        sTestIssue = ButtonDetector.ORDER;
-        assertEquals(
-                ""
-                        + "res/layout-v16/buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-v16/buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-v16/buttonbar.xml:92: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-v16/buttonbar.xml:124: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-v16/buttonbar.xml:140: Warning: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-v16/buttonbar.xml:156: Warning: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-v16/buttonbar.xml:177: Warning: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "0 errors, 7 warnings\n",
-                lintProject(mMinsdk5targetsdk14, mButtonbar3, mButtonbar_values));
+        lint().files(mMinsdk5targetsdk14, mButtonbar3, mButtonbar_values)
+                .issues(ButtonDetector.ORDER)
+                .run()
+                .expect(
+                        ""
+                                + "res/layout-v16/buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-v16/buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-v16/buttonbar.xml:92: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-v16/buttonbar.xml:124: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-v16/buttonbar.xml:140: Warning: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-v16/buttonbar.xml:156: Warning: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-v16/buttonbar.xml:177: Warning: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "0 errors, 7 warnings\n");
     }
 
-    public void testButtonOrder4() throws Exception {
+    public void testButtonOrder4() {
         // Targeting 14 but using a layout that also needs to work for older platforms:
-        sTestIssue = ButtonDetector.ORDER;
-        assertEquals(
-                ""
-                        + "res/layout/buttonbar.xml:12: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:44: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:92: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:124: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:140: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:156: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:177: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "0 errors, 7 warnings\n",
-                lintProject(mMinsdk5targetsdk14, mButtonbar, mButtonbar_values));
+        lint().files(mMinsdk5targetsdk14, mButtonbar, mButtonbar_values)
+                .issues(ButtonDetector.ORDER)
+                .run()
+                .expect(
+                        ""
+                                + "res/layout/buttonbar.xml:12: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:44: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:92: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:124: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:140: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:156: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:177: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "0 errors, 7 warnings\n");
     }
 
-    public void testButtonOrder5() throws Exception {
+    public void testButtonOrder5() {
         // If the layout is in a non-ICS folder and has the wrong button order,
         // but there is a v14 version of the layout, don't complain about the non-v14 version
-        sTestIssue = ButtonDetector.ORDER;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         mMinsdk5targetsdk14,
                         mButtonbar,
                         xml(
@@ -190,15 +181,14 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                                         + "        android:text=\"Button\" />\n"
                                         + "\n"
                                         + "</LinearLayout>\n"),
-                        mButtonbar_values));
+                        mButtonbar_values)
+                .issues(ButtonDetector.ORDER)
+                .run()
+                .expectClean();
     }
 
-    public void testSuppressed() throws Exception {
-        sTestIssue = ButtonDetector.ORDER;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testSuppressed() {
+        lint().files(
                         manifest().minSdk(14),
                         xml(
                                 "res/layout/buttonbar_suppressed.xml",
@@ -246,32 +236,33 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                                         + "    </LinearLayout>\n"
                                         + "\n"
                                         + "</LinearLayout>\n"),
-                        mButtonbar_values));
+                        mButtonbar_values)
+                .issues(ButtonDetector.ORDER)
+                .run()
+                .expectClean();
     }
 
-    public void testButtonOrderRelativeLayout() throws Exception {
-        sTestIssue = ButtonDetector.ORDER;
-        assertEquals("No warnings.", lintProject(mButtonbar2_class, mButtonbar_values));
+    public void testButtonOrderRelativeLayout() {
+        lint().files(mButtonbar2_class, mButtonbar_values)
+                .issues(ButtonDetector.ORDER)
+                .run()
+                .expectClean();
     }
 
-    public void testButtonOrderRelativeLayout2() throws Exception {
-        sTestIssue = ButtonDetector.ORDER;
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout/buttonbar3.xml:27: Warning: Cancel button should be on the left [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(manifest().minSdk(14), mButtonbar3_class, mButtonbar_values));
+    public void testButtonOrderRelativeLayout2() {
+        lint().files(manifest().minSdk(14), mButtonbar3_class, mButtonbar_values)
+                .issues(ButtonDetector.ORDER)
+                .run()
+                .expect(
+                        ""
+                                + "res/layout/buttonbar3.xml:27: Warning: Cancel button should be on the left [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "0 errors, 1 warnings\n");
     }
 
-    public void testButtonOrderRelativeLayout3() throws Exception {
-        sTestIssue = ButtonDetector.ORDER;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testButtonOrderRelativeLayout3() {
+        lint().files(
                         xml(
                                 "res/layout/buttonbar4.xml",
                                 ""
@@ -330,41 +321,42 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                                         + "        android:visibility=\"gone\" />\n"
                                         + "\n"
                                         + "</RelativeLayout>\n"),
-                        mButtonbar_values));
+                        mButtonbar_values)
+                .issues(ButtonDetector.ORDER)
+                .run()
+                .expectClean();
     }
 
-    public void testCase() throws Exception {
-        sTestIssue = ButtonDetector.CASE;
-        assertEquals(
-                ""
-                        + "res/values/buttonbar-values.xml:9: Warning: The standard Android way to capitalize Ok is \"OK\" (tip: use @android:string/ok instead) [ButtonCase]\n"
-                        + "    <string name=\"resume2\"> Ok </string>\n"
-                        + "                            ^\n"
-                        + "res/values/buttonbar-values.xml:10: Warning: The standard Android way to capitalize CANCEL is \"Cancel\" (tip: use @android:string/cancel instead) [ButtonCase]\n"
-                        + "    <string name=\"giveup2\">\"CANCEL\"</string>\n"
-                        + "                           ^\n"
-                        + "0 errors, 2 warnings\n",
-                lintProject(mButtonbar, mButtonbar_values));
+    public void testCase() {
+        lint().files(mButtonbar, mButtonbar_values)
+                .issues(ButtonDetector.CASE)
+                .run()
+                .expect(
+                        ""
+                                + "res/values/buttonbar-values.xml:9: Warning: The standard Android way to capitalize Ok is \"OK\" (tip: use @android:string/ok instead) [ButtonCase]\n"
+                                + "    <string name=\"resume2\"> Ok </string>\n"
+                                + "                            ^\n"
+                                + "res/values/buttonbar-values.xml:10: Warning: The standard Android way to capitalize CANCEL is \"Cancel\" (tip: use @android:string/cancel instead) [ButtonCase]\n"
+                                + "    <string name=\"giveup2\">\"CANCEL\"</string>\n"
+                                + "                           ^\n"
+                                + "0 errors, 2 warnings\n");
     }
 
-    public void testBack() throws Exception {
-        sTestIssue = ButtonDetector.BACK_BUTTON;
-        assertEquals(
-                ""
-                        + "res/layout/buttonbar.xml:183: Warning: Back buttons are not standard on Android; see design guide's navigation section [BackButton]\n"
-                        + "    <Button\n"
-                        + "     ~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(mButtonbar, mButtonbar_values));
+    public void testBack() {
+        lint().files(mButtonbar, mButtonbar_values)
+                .issues(ButtonDetector.BACK_BUTTON)
+                .run()
+                .expect(
+                        ""
+                                + "res/layout/buttonbar.xml:183: Warning: Back buttons are not standard on Android; see design guide's navigation section [BackButton]\n"
+                                + "    <Button\n"
+                                + "     ~~~~~~\n"
+                                + "0 errors, 1 warnings\n");
     }
 
-    public void testOldApp() throws Exception {
+    public void testOldApp() {
         // Target SDK < 14 - no warnings on button order
-        sTestIssue = ButtonDetector.ORDER;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         xml(
                                 "AndroidManifest.xml",
                                 ""
@@ -392,135 +384,139 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "</manifest>\n"),
                         mButtonbar,
-                        mButtonbar_values));
+                        mButtonbar_values)
+                .issues(ButtonDetector.ORDER)
+                .run()
+                .expectClean();
     }
 
-    public void testEnglishLocales() throws Exception {
-        sTestIssue = ButtonDetector.ORDER;
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout-en-rGB/buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-en-rGB/buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-en-rGB/buttonbar.xml:92: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-en-rGB/buttonbar.xml:124: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-en-rGB/buttonbar.xml:140: Warning: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-en-rGB/buttonbar.xml:156: Warning: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-en-rGB/buttonbar.xml:177: Warning: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "0 errors, 7 warnings\n",
-                lintProject(manifest().minSdk(14), mButtonbar4, mButtonbar_values2));
+    public void testEnglishLocales() {
+        lint().files(manifest().minSdk(14), mButtonbar4, mButtonbar_values2)
+                .issues(ButtonDetector.ORDER)
+                .run()
+                .expect(
+                        ""
+                                + "res/layout-en-rGB/buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-en-rGB/buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-en-rGB/buttonbar.xml:92: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-en-rGB/buttonbar.xml:124: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-en-rGB/buttonbar.xml:140: Warning: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-en-rGB/buttonbar.xml:156: Warning: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-en-rGB/buttonbar.xml:177: Warning: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "0 errors, 7 warnings\n");
     }
 
-    public void testOtherLocales() throws Exception {
-        sTestIssue = ButtonDetector.ORDER;
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout-de/buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout-de/buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "0 errors, 2 warnings\n",
-                lintProject(manifest().minSdk(14), mButtonbar5, mButtonbar_values3));
+    public void testOtherLocales() {
+        lint().files(manifest().minSdk(14), mButtonbar5, mButtonbar_values3)
+                .issues(ButtonDetector.ORDER)
+                .run()
+                .expect(
+                        ""
+                                + "res/layout-de/buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout-de/buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "0 errors, 2 warnings\n");
     }
 
-    public void testOtherLocales2() throws Exception {
-        sTestIssue = ButtonDetector.CASE;
-        assertEquals("No warnings.", lintProject(mButtonbar5, mButtonbar_values3));
+    public void testOtherLocales2() {
+        lint().files(mButtonbar5, mButtonbar_values3)
+                .issues(ButtonDetector.CASE)
+                .run()
+                .expectClean();
     }
 
-    public void testButtonStyle() throws Exception {
-        sTestIssue = ButtonDetector.STYLE;
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout/buttonbar.xml:12: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:17: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:28: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:33: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:44: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:49: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:60: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:65: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:76: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:81: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:92: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:97: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:108: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:113: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:124: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:129: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:140: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:145: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:156: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "res/layout/buttonbar.xml:161: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
-                        + "        <Button\n"
-                        + "         ~~~~~~\n"
-                        + "0 errors, 20 warnings\n",
-                lintProject(
+    public void testButtonStyle() {
+        lint().files(
                         manifest().minSdk(14),
                         mButtonbar,
                         mButtonbar2_class,
                         mButtonbar3_class,
-                        mButtonbar_values));
+                        mButtonbar_values)
+                .issues(ButtonDetector.STYLE)
+                .run()
+                .expect(
+                        ""
+                                + "res/layout/buttonbar.xml:12: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:17: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:28: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:33: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:44: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:49: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:60: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:65: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:76: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:81: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:92: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:97: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:108: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:113: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:124: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:129: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:140: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:145: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:156: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "res/layout/buttonbar.xml:161: Warning: Buttons in button bars should be borderless; use style=\"?android:attr/buttonBarButtonStyle\" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]\n"
+                                + "        <Button\n"
+                                + "         ~~~~~~\n"
+                                + "0 errors, 20 warnings\n");
     }
 
-    public void testButtonStyleFix() throws Exception {
-        sTestIssue = ButtonDetector.STYLE;
+    public void testButtonStyleFix() {
         lint().files(
                         manifest().minSdk(14),
                         xml(
@@ -570,23 +566,20 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                                 + "+             style=\"?android:attr/buttonBarButtonStyle\"");
     }
 
-    public void testButtonStyleOldMinSdk() throws Exception {
-        sTestIssue = ButtonDetector.STYLE;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+    public void testButtonStyleOldMinSdk() {
+        lint().files(
                         manifest().minSdk(4),
                         mButtonbar,
                         mButtonbar2_class,
                         mButtonbar3_class,
-                        mButtonbar_values));
+                        mButtonbar_values)
+                .issues(ButtonDetector.STYLE)
+                .run()
+                .expectClean();
     }
 
-    public void testYesNo() throws Exception {
-        sTestIssue = ButtonDetector.CASE;
-        //noinspection all // Sample code
-        assertEquals(
+    public void testYesNo() {
+        String expected =
                 ""
                         + "res/layout/yesno.xml:10: Warning: @android:string/yes actually returns \"OK\", not \"Yes\"; use @android:string/ok instead or create a local string resource for Yes [ButtonCase]\n"
                         + "        android:text=\"@android:string/yes\" />\n"
@@ -594,8 +587,8 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                         + "res/layout/yesno.xml:15: Warning: @android:string/no actually returns \"Cancel\", not \"No\"; use @android:string/cancel instead or create a local string resource for No [ButtonCase]\n"
                         + "        android:text=\"@android:string/no\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 2 warnings\n",
-                lintProject(
+                        + "0 errors, 2 warnings\n";
+        lint().files(
                         manifest().minSdk(4),
                         xml(
                                 "res/layout/yesno.xml",
@@ -616,20 +609,22 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                                         + "        android:layout_height=\"wrap_content\"\n"
                                         + "        android:text=\"@android:string/no\" />\n"
                                         + "\n"
-                                        + "</LinearLayout>\n")));
+                                        + "</LinearLayout>\n"))
+                .issues(ButtonDetector.CASE)
+                .run()
+                .expect(expected);
     }
 
-    public void testIssue180417() throws Exception {
+    public void testIssue180417() {
         // Regression test for
         //   https://code.google.com/p/android/issues/detail?id=180417
-        sTestIssue = ButtonDetector.CASE;
-        assertEquals(
+        String expected =
                 ""
                         + "res/values/buttonbar-values.xml:4: Warning: The standard Android way to capitalize Ok is \"OK\" (tip: use @android:string/ok instead) [ButtonCase]\n"
                         + "    <string name=\"ok\">\"Ok\"</string>\n"
                         + "                      ^\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
+                        + "0 errors, 1 warnings\n";
+        lint().files(
                         xml(
                                 "res/values/buttonbar-values.xml",
                                 ""
@@ -661,16 +656,15 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                                         + "            android:layout_height=\"wrap_content\"\n"
                                         + "            android:text=\"@string/ok\" />\n"
                                         + "    </LinearLayout>\n"
-                                        + "</LinearLayout>\n")));
+                                        + "</LinearLayout>\n"))
+                .issues(ButtonDetector.CASE)
+                .run()
+                .expect(expected);
     }
 
-    public void testIssue101279() throws Exception {
+    public void testIssue101279() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=101279
-        sTestIssue = ButtonDetector.STYLE;
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintProject(
+        lint().files(
                         manifest().minSdk(4),
                         xml(
                                 "res/layout/buttonbar5.xml",
@@ -685,7 +679,10 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                                         + "\t\t\tandroid:layout_toRightOf=\"@+id/anyid\"\n"
                                         + "\t\t\tandroid:text=\"Cancel\"/>\n"
                                         + "\n"
-                                        + "</RelativeLayout>\n")));
+                                        + "</RelativeLayout>\n"))
+                .issues(ButtonDetector.STYLE)
+                .run()
+                .expectClean();
     }
 
     @SuppressWarnings("all") // Sample code

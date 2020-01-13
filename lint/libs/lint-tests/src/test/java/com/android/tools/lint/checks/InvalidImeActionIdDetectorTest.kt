@@ -13,68 +13,65 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
+import com.android.tools.lint.detector.api.Detector
 
-import com.android.tools.lint.detector.api.Detector;
-
-@SuppressWarnings("javadoc")
-public class InvalidImeActionIdDetectorTest extends AbstractCheckTest {
-    @Override
-    protected Detector getDetector() {
-        return new InvalidImeActionIdDetector();
+class InvalidImeActionIdDetectorTest : AbstractCheckTest() {
+    override fun getDetector(): Detector {
+        return InvalidImeActionIdDetector()
     }
 
-    public void testNoWarnings() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintFiles(
-                        xml(
-                                "res/layout/namespace.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\" android:orientation=\"vertical\">\n"
-                                        + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"6\"/>\n"
-                                        + "</LinearLayout>\n"
-                                        + "\n")));
+    fun testNoWarnings() {
+        lint().files(
+            xml(
+                "res/layout/namespace.xml",
+                """
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+                    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" android:imeActionId="6"/>
+                </LinearLayout>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void testInvalidResourceType() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout/namespace.xml:3: Error: Invalid resource type, expected integer value [InvalidImeActionId]\n"
-                        + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"@+id/login\"/>\n"
-                        + "                                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintFiles(
-                        xml(
-                                "res/layout/namespace.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\" android:orientation=\"vertical\">\n"
-                                        + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"@+id/login\"/>\n"
-                                        + "</LinearLayout>\n"
-                                        + "\n")));
+    fun testInvalidResourceType() {
+        lint().files(
+            xml(
+                "res/layout/namespace.xml",
+                """
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+                    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" android:imeActionId="@+id/login"/>
+                </LinearLayout>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/layout/namespace.xml:2: Error: Invalid resource type, expected integer value [InvalidImeActionId]
+                <EditText android:layout_width="match_parent" android:layout_height="wrap_content" android:imeActionId="@+id/login"/>
+                                                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
     }
 
-    public void testInvalidResourceValue() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout/namespace.xml:3: Error: \"mmm\" is not an integer [InvalidImeActionId]\n"
-                        + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"mmm\"/>\n"
-                        + "                                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n",
-                lintFiles(
-                        xml(
-                                "res/layout/namespace.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\" android:orientation=\"vertical\">\n"
-                                        + "    <EditText android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:imeActionId=\"mmm\"/>\n"
-                                        + "</LinearLayout>\n"
-                                        + "\n")));
+    fun testInvalidResourceValue() {
+        lint().files(
+            xml(
+                "res/layout/namespace.xml",
+                """
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+                    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" android:imeActionId="mmm"/>
+                </LinearLayout>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/layout/namespace.xml:2: Error: "mmm" is not an integer [InvalidImeActionId]
+                <EditText android:layout_width="match_parent" android:layout_height="wrap_content" android:imeActionId="mmm"/>
+                                                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
     }
 }

@@ -208,7 +208,7 @@ public class ParcelDetectorTest extends AbstractCheckTest {
     }
 
     @SuppressWarnings("all") // sample code
-    public void testTypeParameters() throws Exception {
+    public void testTypeParameters() {
         lint().files(
                         java(
                                 "src/test/pkg/ParcelTest.java",
@@ -229,7 +229,7 @@ public class ParcelDetectorTest extends AbstractCheckTest {
     }
 
     @SuppressWarnings("all") // sample code
-    public void testInheritedCreatorField() throws Exception {
+    public void testInheritedCreatorField() {
         lint().files(
                         java(
                                 "src/test/pkg/ParcelableTest.java",

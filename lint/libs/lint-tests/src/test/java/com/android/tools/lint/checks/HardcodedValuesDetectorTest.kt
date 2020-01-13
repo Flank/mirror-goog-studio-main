@@ -13,374 +13,383 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.lint.checks
 
-package com.android.tools.lint.checks;
+import com.android.tools.lint.detector.api.Detector
 
-import com.android.tools.lint.detector.api.Detector;
-
-@SuppressWarnings("javadoc")
-public class HardcodedValuesDetectorTest extends AbstractCheckTest {
-    @Override
-    protected Detector getDetector() {
-        return new HardcodedValuesDetector();
+class HardcodedValuesDetectorTest : AbstractCheckTest() {
+    override fun getDetector(): Detector {
+        return HardcodedValuesDetector()
     }
 
-    public void testStrings() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout/accessibility.xml:3: Warning: Hardcoded string \"Button\", should use @string resource [HardcodedText]\n"
-                        + "    <Button android:text=\"Button\" android:id=\"@+id/button1\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/accessibility.xml:6: Warning: Hardcoded string \"Button\", should use @string resource [HardcodedText]\n"
-                        + "    <Button android:text=\"Button\" android:id=\"@+id/button2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 2 warnings\n",
-                lintFiles(
-                        xml(
-                                "res/layout/accessibility.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:id=\"@+id/newlinear\" android:orientation=\"vertical\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\">\n"
-                                        + "    <Button android:text=\"Button\" android:id=\"@+id/button1\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
-                                        + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
-                                        + "    <ImageButton android:importantForAccessibility=\"yes\" android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
-                                        + "    <Button android:text=\"Button\" android:id=\"@+id/button2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
-                                        + "    <Button android:id=\"@+android:id/summary\" android:contentDescription=\"@string/label\" />\n"
-                                        + "    <ImageButton android:importantForAccessibility=\"no\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
-                                        + "</LinearLayout>\n")));
+    fun testStrings() {
+        lint().files(
+            xml(
+                "res/layout/accessibility.xml",
+                """
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/newlinear" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
+                    <Button android:text="Button" android:id="@+id/button1" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
+                    <ImageView android:id="@+id/android_logo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
+                    <ImageButton android:importantForAccessibility="yes" android:id="@+id/android_logo2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
+                    <Button android:text="Button" android:id="@+id/button2" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
+                    <Button android:id="@+android:id/summary" android:contentDescription="@string/label" />
+                    <ImageButton android:importantForAccessibility="no" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
+                </LinearLayout>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/layout/accessibility.xml:2: Warning: Hardcoded string "Button", should use @string resource [HardcodedText]
+                <Button android:text="Button" android:id="@+id/button1" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
+                        ~~~~~~~~~~~~~~~~~~~~~
+            res/layout/accessibility.xml:5: Warning: Hardcoded string "Button", should use @string resource [HardcodedText]
+                <Button android:text="Button" android:id="@+id/button2" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
+                        ~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
     }
 
-    public void testMenus() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/menu/menu.xml:7: Warning: Hardcoded string \"My title 1\", should use @string resource [HardcodedText]\n"
-                        + "        android:title=\"My title 1\">\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/menu/menu.xml:13: Warning: Hardcoded string \"My title 2\", should use @string resource [HardcodedText]\n"
-                        + "        android:title=\"My title 2\">\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 2 warnings\n",
-                lintFiles(
-                        xml(
-                                "res/menu/menu.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n"
-                                        + "\n"
-                                        + "    <item\n"
-                                        + "        android:id=\"@+id/item1\"\n"
-                                        + "        android:icon=\"@drawable/icon1\"\n"
-                                        + "        android:title=\"My title 1\">\n"
-                                        + "    </item>\n"
-                                        + "    <item\n"
-                                        + "        android:id=\"@+id/item2\"\n"
-                                        + "        android:icon=\"@drawable/icon2\"\n"
-                                        + "        android:showAsAction=\"ifRoom\"\n"
-                                        + "        android:title=\"My title 2\">\n"
-                                        + "    </item>\n"
-                                        + "\n"
-                                        + "</menu>\n")));
+    fun testMenus() {
+        lint().files(
+            xml(
+                "res/menu/menu.xml",
+                """
+            <menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+                <item
+                    android:id="@+id/item1"
+                    android:icon="@drawable/icon1"
+                    android:title="My title 1">
+                </item>
+                <item
+                    android:id="@+id/item2"
+                    android:icon="@drawable/icon2"
+                    android:showAsAction="ifRoom"
+                    android:title="My title 2">
+                </item>
+
+            </menu>
+            """
+            ).indented()
+        ).run().expect(
+            """
+            res/menu/menu.xml:6: Warning: Hardcoded string "My title 1", should use @string resource [HardcodedText]
+                    android:title="My title 1">
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            res/menu/menu.xml:12: Warning: Hardcoded string "My title 2", should use @string resource [HardcodedText]
+                    android:title="My title 2">
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
     }
 
-    public void testMenusOk() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                "No warnings.",
-                lintFiles(
-                        xml(
-                                "res/menu/titles.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-                                        + "    <item android:id=\"@+id/action_bar_progress_spinner\"\n"
-                                        + "        android:showAsAction=\"always\"\n"
-                                        + "        android:background=\"@null\"\n"
-                                        + "        android:selectableItemBackground=\"@null\"\n"
-                                        + "        android:actionLayout=\"@layout/action_bar_progress_spinner_layout\"/>\n"
-                                        + "    <item android:id=\"@+id/refresh\"\n"
-                                        + "        android:title=\"@string/menu_refresh\"\n"
-                                        + "        android:showAsAction=\"always\"\n"
-                                        + "        android:icon=\"@drawable/ic_menu_refresh\"/>\n"
-                                        + "    <item android:id=\"@+id/menu_plus_one\"\n"
-                                        + "        android:showAsAction=\"always\"\n"
-                                        + "        android:icon=\"@drawable/ic_menu_plus1\"/>\n"
-                                        + "</menu>\n")));
+    fun testMenusOk() {
+        lint().files(
+            xml(
+                "res/menu/titles.xml",
+                """
+                <menu xmlns:android="http://schemas.android.com/apk/res/android">
+                    <item android:id="@+id/action_bar_progress_spinner"
+                        android:showAsAction="always"
+                        android:background="@null"
+                        android:selectableItemBackground="@null"
+                        android:actionLayout="@layout/action_bar_progress_spinner_layout"/>
+                    <item android:id="@+id/refresh"
+                        android:title="@string/menu_refresh"
+                        android:showAsAction="always"
+                        android:icon="@drawable/ic_menu_refresh"/>
+                    <item android:id="@+id/menu_plus_one"
+                        android:showAsAction="always"
+                        android:icon="@drawable/ic_menu_plus1"/>
+                </menu>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void testSuppress() throws Exception {
+    fun testSuppress() {
         // All but one errors in the file contain ignore attributes - direct, inherited
         // and lists
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout/ignores.xml:61: Warning: Hardcoded string \"Hardcoded\", should use @string resource [HardcodedText]\n"
-                        + "        android:text=\"Hardcoded\"\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintFiles(
-                        xml(
-                                "res/layout/ignores.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                                        + "    android:id=\"@+id/newlinear\"\n"
-                                        + "    android:layout_width=\"match_parent\"\n"
-                                        + "    android:layout_height=\"match_parent\"\n"
-                                        + "    android:orientation=\"vertical\" >\n"
-                                        + "\n"
-                                        + "    <!-- Ignored via attribute, should be hidden -->\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:id=\"@+id/button1\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Button1\"\n"
-                                        + "        tools:ignore=\"HardcodedText\" >\n"
-                                        + "    </Button>\n"
-                                        + "\n"
-                                        + "    <!-- Inherited ignore from parent -->\n"
-                                        + "\n"
-                                        + "    <LinearLayout\n"
-                                        + "        android:id=\"@+id/parent\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        tools:ignore=\"HardcodedText\" >\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:id=\"@+id/button2\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Button2\" >\n"
-                                        + "        </Button>\n"
-                                        + "    </LinearLayout>\n"
-                                        + "\n"
-                                        + "    <!-- Hardcoded text warning ignored through \"all\" -->\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:id=\"@+id/button3\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Button3\"\n"
-                                        + "        tools:ignore=\"all\" >\n"
-                                        + "    </Button>\n"
-                                        + "\n"
-                                        + "    <!-- Ignored through item in ignore list -->\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:id=\"@+id/button4\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Hardcoded\"\n"
-                                        + "        tools:ignore=\"NewApi,HardcodedText\" >\n"
-                                        + "    </Button>\n"
-                                        + "\n"
-                                        + "    <!-- Not ignored: should show up as a warning -->\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:id=\"@+id/button5\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Hardcoded\"\n"
-                                        + "        tools:ignore=\"Other\" >\n"
-                                        + "    </Button>\n"
-                                        + "\n"
-                                        + "</LinearLayout>\n")));
+        lint().files(
+            xml(
+                "res/layout/ignores.xml",
+                """
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    android:id="@+id/newlinear"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical" >
+
+                    <!-- Ignored via attribute, should be hidden -->
+
+                    <Button
+                        android:id="@+id/button1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Button1"
+                        tools:ignore="HardcodedText" >
+                    </Button>
+
+                    <!-- Inherited ignore from parent -->
+
+                    <LinearLayout
+                        android:id="@+id/parent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:ignore="HardcodedText" >
+
+                        <Button
+                            android:id="@+id/button2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Button2" >
+                        </Button>
+                    </LinearLayout>
+
+                    <!-- Hardcoded text warning ignored through "all" -->
+
+                    <Button
+                        android:id="@+id/button3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Button3"
+                        tools:ignore="all" >
+                    </Button>
+
+                    <!-- Ignored through item in ignore list -->
+
+                    <Button
+                        android:id="@+id/button4"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hardcoded"
+                        tools:ignore="NewApi,HardcodedText" >
+                    </Button>
+
+                    <!-- Not ignored: should show up as a warning -->
+
+                    <Button
+                        android:id="@+id/button5"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hardcoded"
+                        tools:ignore="Other" >
+                    </Button>
+
+                </LinearLayout>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/layout/ignores.xml:60: Warning: Hardcoded string "Hardcoded", should use @string resource [HardcodedText]
+                    android:text="Hardcoded"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
     }
 
-    public void testSuppressViaComment() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "res/layout/ignores2.xml:51: Warning: Hardcoded string \"Hardcoded\", should use @string resource [HardcodedText]\n"
-                        + "        android:text=\"Hardcoded\"\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintFiles(
-                        xml(
-                                "res/layout/ignores2.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    android:id=\"@+id/newlinear\"\n"
-                                        + "    android:layout_width=\"match_parent\"\n"
-                                        + "    android:layout_height=\"match_parent\"\n"
-                                        + "    android:orientation=\"vertical\" >\n"
-                                        + "\n"
-                                        + "    <!-- Ignored via comment, should be hidden -->\n"
-                                        + "\n"
-                                        + "    <!--suppress AndroidLintHardcodedText -->\n"
-                                        + "    <Button\n"
-                                        + "        android:id=\"@+id/button1\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Button1\" >\n"
-                                        + "    </Button>\n"
-                                        + "\n"
-                                        + "    <!-- Inherited ignore from parent -->\n"
-                                        + "\n"
-                                        + "    <!--suppress AndroidLintHardcodedText-->\n"
-                                        + "    <LinearLayout\n"
-                                        + "        android:id=\"@+id/parent\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\" >\n"
-                                        + "\n"
-                                        + "        <Button\n"
-                                        + "            android:id=\"@+id/button2\"\n"
-                                        + "            android:layout_width=\"wrap_content\"\n"
-                                        + "            android:layout_height=\"wrap_content\"\n"
-                                        + "            android:text=\"Button2\" >\n"
-                                        + "        </Button>\n"
-                                        + "    </LinearLayout>\n"
-                                        + "\n"
-                                        + "    <!-- Ignored through item in ignore list -->\n"
-                                        + "\n"
-                                        + "    <!--suppress AndroidLintNewApi,AndroidLintHardcodedText -->\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:id=\"@+id/button4\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Hardcoded\" >\n"
-                                        + "    </Button>\n"
-                                        + "\n"
-                                        + "    <!-- Not ignored: should show up as a warning -->\n"
-                                        + "    <!--suppress AndroidLintNewApi -->\n"
-                                        + "    <Button\n"
-                                        + "        android:id=\"@+id/button5\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Hardcoded\"\n"
-                                        + "        >\n"
-                                        + "    </Button>\n"
-                                        + "\n"
-                                        + "</LinearLayout>\n")));
+    fun testSuppressViaComment() {
+        lint().files(
+            xml(
+                "res/layout/ignores2.xml",
+                """
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:id="@+id/newlinear"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical" >
+
+                    <!-- Ignored via comment, should be hidden -->
+
+                    <!--suppress AndroidLintHardcodedText -->
+                    <Button
+                        android:id="@+id/button1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Button1" >
+                    </Button>
+
+                    <!-- Inherited ignore from parent -->
+
+                    <!--suppress AndroidLintHardcodedText-->
+                    <LinearLayout
+                        android:id="@+id/parent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" >
+
+                        <Button
+                            android:id="@+id/button2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Button2" >
+                        </Button>
+                    </LinearLayout>
+
+                    <!-- Ignored through item in ignore list -->
+
+                    <!--suppress AndroidLintNewApi,AndroidLintHardcodedText -->
+
+                    <Button
+                        android:id="@+id/button4"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hardcoded" >
+                    </Button>
+
+                    <!-- Not ignored: should show up as a warning -->
+                    <!--suppress AndroidLintNewApi -->
+                    <Button
+                        android:id="@+id/button5"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hardcoded"
+                        >
+                    </Button>
+
+                </LinearLayout>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/layout/ignores2.xml:50: Warning: Hardcoded string "Hardcoded", should use @string resource [HardcodedText]
+                    android:text="Hardcoded"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
     }
 
-    public void testSkippingPlaceHolders() throws Exception {
-        assertEquals(
-                "No warnings.",
-                lintProject(
-                        xml(
-                                "res/layout/test.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
-                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                                        + "    android:layout_width=\"match_parent\"\n"
-                                        + "    android:layout_height=\"match_parent\">\n"
-                                        + "\n"
-                                        + "    <TextView\n"
-                                        + "        android:id=\"@+id/textView\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Hello World!\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:id=\"@+id/button\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"New Button\" />\n"
-                                        + "\n"
-                                        + "    <TextView\n"
-                                        + "        android:id=\"@+id/textView2\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Large Text\"\n"
-                                        + "        android:textAppearance=\"?android:attr/textAppearanceLarge\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:id=\"@+id/button2\"\n"
-                                        + "        style=\"?android:attr/buttonStyleSmall\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"New Button\" />\n"
-                                        + "\n"
-                                        + "    <CheckBox\n"
-                                        + "        android:id=\"@+id/checkBox\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"New CheckBox\" />\n"
-                                        + "\n"
-                                        + "    <TextView\n"
-                                        + "        android:id=\"@+id/textView3\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"New Text\" />\n"
-                                        + "</LinearLayout>\n")));
+    fun testSkippingPlaceHolders() {
+        lint().files(
+            xml(
+                "res/layout/test.xml",
+                """
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:id="@+id/textView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hello World!" />
+
+                    <Button
+                        android:id="@+id/button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="New Button" />
+
+                    <TextView
+                        android:id="@+id/textView2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Large Text"
+                        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+                    <Button
+                        android:id="@+id/button2"
+                        style="?android:attr/buttonStyleSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="New Button" />
+
+                    <CheckBox
+                        android:id="@+id/checkBox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="New CheckBox" />
+
+                    <TextView
+                        android:id="@+id/textView3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="New Text" />
+                </LinearLayout>
+                """
+            ).indented()
+        ).run().expectClean()
     }
 
-    public void testAppRestrictions() throws Exception {
+    fun testAppRestrictions() {
         // Sample from https://developer.android.com/samples/AppRestrictionSchema/index.html
-        assertEquals(
-                ""
-                        + "res/xml/app_restrictions.xml:12: Warning: Hardcoded string \"Hardcoded description\", should use @string resource [HardcodedText]\n"
-                        + "        android:description=\"Hardcoded description\"\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/xml/app_restrictions.xml:15: Warning: Hardcoded string \"Hardcoded title\", should use @string resource [HardcodedText]\n"
-                        + "        android:title=\"Hardcoded title\"/>\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 2 warnings\n",
-                lintProject(
-                        xml(
-                                "res/xml/app_restrictions.xml",
-                                ""
-                                        + "<restrictions xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-                                        + " \n"
-                                        + "    <restriction\n"
-                                        + "        android:defaultValue=\"@bool/default_can_say_hello\"\n"
-                                        + "        android:description=\"@string/description_can_say_hello\"\n"
-                                        + "        android:key=\"can_say_hello\"\n"
-                                        + "        android:restrictionType=\"bool\"\n"
-                                        + "        android:title=\"@string/title_can_say_hello\"/>\n"
-                                        + " \n"
-                                        + "    <restriction\n"
-                                        + "        android:defaultValue=\"Hardcoded default value\"\n"
-                                        + "        android:description=\"Hardcoded description\"\n"
-                                        + "        android:key=\"message\"\n"
-                                        + "        android:restrictionType=\"string\"\n"
-                                        + "        android:title=\"Hardcoded title\"/>\n"
-                                        + " \n"
-                                        + "</restrictions>"),
-                        xml(
-                                "res/xml/random_file.xml",
-                                ""
-                                        + "<myRoot xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-                                        + " \n"
-                                        + "    <myElement\n"
-                                        + "        android:description=\"Hardcoded description\"\n"
-                                        + "        android:title=\"Hardcoded title\"/>\n"
-                                        + " \n"
-                                        + "</myRoot>")));
+        lint().files(
+            xml(
+                "res/xml/app_restrictions.xml",
+                """
+                <restrictions xmlns:android="http://schemas.android.com/apk/res/android">
+
+                    <restriction
+                        android:defaultValue="@bool/default_can_say_hello"
+                        android:description="@string/description_can_say_hello"
+                        android:key="can_say_hello"
+                        android:restrictionType="bool"
+                        android:title="@string/title_can_say_hello"/>
+
+                    <restriction
+                        android:defaultValue="Hardcoded default value"
+                        android:description="Hardcoded description"
+                        android:key="message"
+                        android:restrictionType="string"
+                        android:title="Hardcoded title"/>
+
+                </restrictions>"""
+            ).indented(),
+            xml(
+                "res/xml/random_file.xml",
+                """<myRoot xmlns:android="http://schemas.android.com/apk/res/android">
+
+                    <myElement
+                        android:description="Hardcoded description"
+                        android:title="Hardcoded title"/>
+
+                </myRoot>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            res/xml/app_restrictions.xml:12: Warning: Hardcoded string "Hardcoded description", should use @string resource [HardcodedText]
+                    android:description="Hardcoded description"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            res/xml/app_restrictions.xml:15: Warning: Hardcoded string "Hardcoded title", should use @string resource [HardcodedText]
+                    android:title="Hardcoded title"/>
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
     }
 
-    public void testToggleButtonLabels() {
+    fun testToggleButtonLabels() {
         // Regression test for
         // https://code.google.com/p/android/issues/detail?id=206106
         // Ensure that the toggle button text label attributes are internationalized
-        String expected =
-                ""
-                        + "res/layout/test.xml:5: Warning: Hardcoded string \"Hi tools!\", should use @string resource [HardcodedText]\n"
-                        + "     android:textOn=\"Hi tools!\"\n"
-                        + "     ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/test.xml:6: Warning: Hardcoded string \"Bye tools!\", should use @string resource [HardcodedText]\n"
-                        + "     android:textOff=\"Bye tools!\" />\n"
-                        + "     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 2 warnings\n";
+        val expected =
+            """
+            res/layout/test.xml:4: Warning: Hardcoded string "Hi tools!", should use @string resource [HardcodedText]
+                 android:textOn="Hi tools!"
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            res/layout/test.xml:5: Warning: Hardcoded string "Bye tools!", should use @string resource [HardcodedText]
+                 android:textOff="Bye tools!" />
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
         lint().files(
-                        xml(
-                                "res/layout/test.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<ToggleButton xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "     android:layout_width=\"wrap_content\"\n"
-                                        + "     android:layout_height=\"wrap_content\"\n"
-                                        + "     android:textOn=\"Hi tools!\"\n"
-                                        + "     android:textOff=\"Bye tools!\" />"))
-                .run()
-                .expect(expected);
+            xml(
+                "res/layout/test.xml",
+                """
+                <ToggleButton xmlns:android="http://schemas.android.com/apk/res/android"
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:textOn="Hi tools!"
+                     android:textOff="Bye tools!" />
+                 """
+            ).indented()
+        ).run().expect(expected)
     }
 }
