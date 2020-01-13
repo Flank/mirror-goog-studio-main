@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-acc1e8cbee9497a71649310a5d76f699a084cf64798a199956e8cb6177013455
+fffa7f2111924b29ab757cb1099ab432093214d7e6879576d409288ad208e926
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (com.android.build.gradle.internal.api.dsl.DslScope, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -602,6 +602,8 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.compileOptions: voi
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.compileSdkVersion: void (int)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.compileSdkVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.defaultConfig: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.DefaultConfig>)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.dependenciesInfo: void (org.gradle.api.Action<com.android.build.api.dsl.DependenciesInfo>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.executeVariantOperations: void (com.android.build.api.variant.ApplicationVariant)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.executeVariantOperations: void (com.android.build.api.variant.Variant)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.executeVariantPropertiesOperations: void (com.android.build.api.variant.ApplicationVariantProperties)
@@ -621,6 +623,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getDataBinding: com
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getDefaultConfig: com.android.build.api.dsl.DefaultConfig ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getDefaultConfig: com.android.build.gradle.internal.dsl.CoreProductFlavor ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getDefaultConfig: com.android.build.gradle.internal.dsl.DefaultConfig ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getDynamicFeatures: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getExternalNativeBuild: com.android.build.api.dsl.ExternalNativeBuild ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getExternalNativeBuild: com.android.build.gradle.internal.dsl.ExternalNativeBuild ()

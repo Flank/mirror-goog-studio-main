@@ -476,8 +476,10 @@ public class ApplicationTaskManager extends TaskManager {
         }
     }
 
-    private static boolean addBundleDependenciesTask(@NonNull VariantScope scope) {
-        return !scope.getVariantDslInfo().isDebuggable();
+    private boolean addBundleDependenciesTask(@NonNull VariantScope scope) {
+        return !scope.getVariantDslInfo().isDebuggable()
+                && extension instanceof BaseAppModuleExtension
+                && ((BaseAppModuleExtension) extension).getDependenciesInfo().getInclude();
     }
 
     private void createAssetPackTasks(@NonNull VariantScope variantScope) {
