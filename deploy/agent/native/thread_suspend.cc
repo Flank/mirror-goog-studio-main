@@ -63,13 +63,6 @@ std::string ThreadSuspend::SuspendUserThreads() {
       continue;
     }
 
-    // Work around for b/146178357
-    // The JIT thread ended up in the main ThreadGroup. Suspending
-    // it will cause the call to redefinition to deadlock.
-    if (strstr(threadInfo.name, "Jit")) {
-      continue;
-    }
-
     if (jvmti_->SuspendThread(threads[t]) != JVMTI_ERROR_NONE) {
       return "Cannot SuspendThread";
     }
