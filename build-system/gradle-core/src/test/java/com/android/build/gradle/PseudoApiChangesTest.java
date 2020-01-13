@@ -71,7 +71,8 @@ public class PseudoApiChangesTest {
                         + "the change or re-run DslExtensionClassStableApiUpdater.main[] from the IDE "
                         + "to update the API file.\n"
                         + "DslExtensionClassStableApiUpdater will apply the following changes if run:\n",
-                API_LIST_URL);
+                API_LIST_URL,
+                ApiTester.Flag.OMIT_HASH);
     }
 
     private static ImmutableSet<ClassPath.ClassInfo> getPseudoApiClasses() throws IOException {

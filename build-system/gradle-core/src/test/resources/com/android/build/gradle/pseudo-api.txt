@@ -3,9 +3,6 @@ The Android Gradle Plugin internal implementation classes.
 ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
-Sha256 of below classes:
-1321be08a0ed01bf4a75a9b192f692ecf9402ee2f0f427dc4052991ae303e08f
--------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (com.android.build.gradle.internal.api.dsl.DslScope, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
 com.android.build.gradle.AbstractAppExtension.addVariant: void (com.android.build.gradle.api.BaseVariant)

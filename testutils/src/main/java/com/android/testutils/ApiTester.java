@@ -77,7 +77,8 @@ public final class ApiTester {
     }
 
     public enum Flag {
-        ALLOW_PUBLIC_INSTANCE_FIELD
+        ALLOW_PUBLIC_INSTANCE_FIELD,
+        OMIT_HASH,
     }
 
     private final String titleLine;
@@ -156,12 +157,14 @@ public final class ApiTester {
         lines.add("ATTENTION REVIEWER: If this needs to be changed, please make sure changes");
         lines.add("below are backwards compatible.");
         lines.add("-------------------------------------------------------------------------");
-        lines.add("Sha256 of below classes:");
-        lines.add(
-                Hashing.sha256()
-                        .hashString(Joiner.on("\n").join(stableClasses), Charsets.UTF_8)
-                        .toString());
-        lines.add("-------------------------------------------------------------------------");
+        if (!flags.contains(Flag.OMIT_HASH)) {
+            lines.add("Sha256 of below classes:");
+            lines.add(
+                    Hashing.sha256()
+                            .hashString(Joiner.on("\n").join(stableClasses), Charsets.UTF_8)
+                            .toString());
+            lines.add("-------------------------------------------------------------------------");
+        }
         lines.addAll(stableClasses);
         return lines.build();
     }
