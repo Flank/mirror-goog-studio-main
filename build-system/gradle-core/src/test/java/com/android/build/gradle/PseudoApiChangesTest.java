@@ -40,7 +40,20 @@ public class PseudoApiChangesTest {
                     "DslAdaptersKt",
                     "DslVariableFactory",
                     "NoOpDeprecationReporter",
-                    "VariantOutputFactory");
+                    "VariantOutputFactory",
+                    "ApkInfoParser",
+                    "BuilderConstants",
+                    "DefaultManifestParser",
+                    "DefaultApiVersion",
+                    "DesugarProcessArgs",
+                    "DesugarProcessBuilder",
+                    "LibraryRequest",
+                    "ManifestAttributeSupplier",
+                    "StandardOutErrMessageReceiver",
+                    "ToolsRevisionUtils",
+                    "VariantAttributesProvider",
+                    "VariantType",
+                    "VariantTypeImpl");
 
     @Test
     public void stableImplementationClassesTest() throws IOException {
@@ -85,6 +98,7 @@ public class PseudoApiChangesTest {
                 .collect(Collectors.toList()));
 
         Set<String> excludedImplClasses = new HashSet<>(EXCLUDED_IMPL_CLASSES);
+        // Include the legacy DSL impl classes
         for (ClassPath.ClassInfo aClass :
                 classPath.getTopLevelClasses("com.android.build.gradle.internal.dsl")) {
             if (aClass.getSimpleName().endsWith("Impl")
@@ -93,6 +107,14 @@ public class PseudoApiChangesTest {
             }
             builder.add(aClass);
         }
+        // And the legacy DSL base classes in builder.
+        for (ClassPath.ClassInfo aClass : classPath.getTopLevelClasses("com.android.builder.core")) {
+            if (excludedImplClasses.remove(aClass.getSimpleName())) {
+                continue;
+            }
+            builder.add(aClass);
+        }
+
         if (!excludedImplClasses.isEmpty()) {
             throw new IllegalStateException("Excluded classes not found: " + excludedImplClasses);
         }

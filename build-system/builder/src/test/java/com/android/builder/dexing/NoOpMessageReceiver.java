@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.builder.core;
+package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.blame.Message;

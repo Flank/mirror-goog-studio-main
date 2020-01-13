@@ -16,7 +16,6 @@
 
 package com.android.builder.dexing
 
-import com.android.builder.core.NoOpMessageReceiver
 import com.android.ide.common.blame.MessageReceiver
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
