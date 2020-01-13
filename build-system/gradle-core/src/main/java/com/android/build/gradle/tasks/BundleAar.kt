@@ -131,7 +131,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.from(artifacts.getFinalProduct(
                 InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE))
 
-            if (buildFeatures.dataBinding) {
+            if (buildFeatures.dataBinding && buildFeatures.androidResources) {
                 task.from(
                     component.globalScope.project.provider {
                         component.artifacts.getFinalProduct(
@@ -172,7 +172,9 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 )
             }
 
-            task.from(artifacts.getFinalProduct(InternalArtifactType.PUBLIC_RES))
+            if (buildFeatures.androidResources) {
+                task.from(artifacts.getFinalProduct(InternalArtifactType.PUBLIC_RES))
+            }
             if (artifacts.hasFinalProduct(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
                 task.from(artifacts.getFinalProduct(
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR))

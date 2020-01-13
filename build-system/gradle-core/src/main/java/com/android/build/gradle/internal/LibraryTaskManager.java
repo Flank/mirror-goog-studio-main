@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses;
@@ -127,7 +128,46 @@ public class LibraryTaskManager extends TaskManager {
                 new BuildArtifactReportTask.BuildArtifactReportCreationAction(
                         libVariantProperties));
 
-        createGenerateResValuesTask(libVariantProperties);
+        if (globalScope.getBuildFeatures().getAndroidResources()) {
+            createGenerateResValuesTask(libVariantProperties);
+
+            createMergeResourcesTasks(libVariantProperties);
+
+            createCompileLibraryResourcesTask(libVariantProperties);
+
+            // Add a task to generate resource source files, directing the location
+            // of the r.txt file to be directly in the bundle.
+            createProcessResTask(
+                    libVariantProperties,
+                    null,
+                    // Switch to package where possible so we stop merging resources in
+                    // libraries
+                    MergeType.PACKAGE,
+                    globalScope.getProjectBaseName());
+
+            // Only verify resources if in Release and not namespaced.
+            if (!libVariantProperties.getVariantDslInfo().isDebuggable()
+                    && !globalScope.getExtension().getAaptOptions().getNamespaced()) {
+                createVerifyLibraryResTask(libVariantProperties);
+            }
+
+            registerLibraryRClassTransformStream(libVariantProperties);
+
+            // Maybe minify resources.
+            maybeCreateResourcesShrinkerTasks(libVariantProperties);
+        } else { // Resource processing is disabled.
+            // TODO(b/147579629): add a warning for manifests containing resource references.
+            if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
+                getLogger()
+                        .error(
+                                "Disabling resource processing in resource namespace aware "
+                                        + "modules is not supported currently.");
+            }
+
+            // Create a task to generate empty/mock required resource artifacts.
+            taskFactory.register(
+                    new GenerateEmptyResourceFilesTask.CreateAction(libVariantProperties));
+        }
 
         // Add a task to check the manifest
         taskFactory.register(new CheckManifest.CreationAction(libVariantProperties));
@@ -135,10 +175,6 @@ public class LibraryTaskManager extends TaskManager {
         createMergeLibManifestsTask(libVariantProperties);
 
         createRenderscriptTask(libVariantProperties);
-
-        createMergeResourcesTasks(libVariantProperties);
-
-        createCompileLibraryResourcesTask(libVariantProperties);
 
         createShaderTask(libVariantProperties);
 
@@ -148,27 +184,6 @@ public class LibraryTaskManager extends TaskManager {
 
         // Add a task to create the BuildConfig class
         createBuildConfigTask(libVariantProperties);
-
-        // Add a task to generate resource source files, directing the location
-        // of the r.txt file to be directly in the bundle.
-        createProcessResTask(
-                libVariantProperties,
-                null,
-                // Switch to package where possible so we stop merging resources in
-                // libraries
-                MergeType.PACKAGE,
-                globalScope.getProjectBaseName());
-
-        // Only verify resources if in Release and not namespaced.
-        if (!libVariantProperties.getVariantDslInfo().isDebuggable()
-                && !libVariantProperties
-                        .getGlobalScope()
-                        .getExtension()
-                        .getAaptOptions()
-                        .getNamespaced()) {
-            createVerifyLibraryResTask(libVariantProperties);
-        }
-        registerLibraryRClassTransformStream(libVariantProperties);
 
         // process java resources only, the merge is setup after
         // the task to generate intermediate jars for project to project publishing.
@@ -307,7 +322,6 @@ public class LibraryTaskManager extends TaskManager {
 
         // ----- Minify next -----
         maybeCreateJavaCodeShrinkerTask(libVariantProperties);
-        maybeCreateResourcesShrinkerTasks(libVariantProperties);
 
         // now add a task that will take all the classes and java resources and package them
         // into the main and secondary jar files that goes in the AAR.
