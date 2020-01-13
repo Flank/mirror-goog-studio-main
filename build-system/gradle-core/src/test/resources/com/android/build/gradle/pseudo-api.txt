@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-17d500f35f80cad314ad5d4dc40fb545db0ecec483e3f44fee8952cfa1735214
+5af1da027faceb98393406a7b13e7a19fe918449681caab2a66cf7caac9f82ee
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (com.android.build.gradle.internal.api.dsl.DslScope, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -804,9 +804,11 @@ com.android.build.gradle.internal.dsl.BundleOptionsTexture.getEnableSplit: java.
 com.android.build.gradle.internal.dsl.BundleOptionsTexture.setEnableSplit: void (java.lang.Boolean)
 com.android.build.gradle.internal.dsl.CmakeOptions implements com.android.build.gradle.internal.model.CoreCmakeOptions, com.android.build.api.dsl.Cmake
 com.android.build.gradle.internal.dsl.CmakeOptions.<init>: com.android.build.gradle.internal.dsl.CmakeOptions (com.android.build.gradle.internal.api.dsl.DslScope)
+com.android.build.gradle.internal.dsl.CmakeOptions.buildStagingDirectory: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.CmakeOptions.getBuildStagingDirectory: java.io.File ()
 com.android.build.gradle.internal.dsl.CmakeOptions.getPath: java.io.File ()
 com.android.build.gradle.internal.dsl.CmakeOptions.getVersion: java.lang.String ()
+com.android.build.gradle.internal.dsl.CmakeOptions.path: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.CmakeOptions.setBuildStagingDirectory: void (java.io.File)
 com.android.build.gradle.internal.dsl.CmakeOptions.setBuildStagingDirectory: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.CmakeOptions.setPath: void (java.io.File)

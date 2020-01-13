@@ -27,15 +27,22 @@ import java.io.File;
  */
 @Deprecated
 public interface CoreCmakeOptions extends Cmake {
+    @Override
     @Nullable
     File getPath();
+
+    @Override
     void setPath(@NonNull File path);
 
+    @Override
     @Nullable
     File getBuildStagingDirectory();
+
+    @Override
     void setBuildStagingDirectory(@NonNull File buildStagingDirectory);
 
     /** @return the version of Cmake to use */
+    @Override
     @Nullable
     String getVersion();
 
@@ -44,5 +51,6 @@ public interface CoreCmakeOptions extends Cmake {
      *
      * @param version version string
      */
+    @Override
     void setVersion(@NonNull String version);
 }

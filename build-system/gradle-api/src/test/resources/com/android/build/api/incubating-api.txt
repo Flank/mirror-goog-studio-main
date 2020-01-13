@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-dbf90ff1f6f145009defb05c5c940bf5703cb32cb8d9a0a535defe4d60143629
+aead26404d22bae5124ccc185b27db520a0d519bf583f8e90e2acdbe0310bc03
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -121,6 +121,14 @@ com.android.build.api.dsl.BuildType implements org.gradle.api.Named
 com.android.build.api.dsl.BuildType.isDefault: boolean ()
 com.android.build.api.dsl.BuildType.setDefault: void (boolean)
 com.android.build.api.dsl.Cmake
+com.android.build.api.dsl.Cmake.buildStagingDirectory: void (java.lang.Object)
+com.android.build.api.dsl.Cmake.getBuildStagingDirectory: java.io.File ()
+com.android.build.api.dsl.Cmake.getPath: java.io.File ()
+com.android.build.api.dsl.Cmake.getVersion: java.lang.String ()
+com.android.build.api.dsl.Cmake.path: void (java.lang.Object)
+com.android.build.api.dsl.Cmake.setBuildStagingDirectory: void (java.io.File)
+com.android.build.api.dsl.Cmake.setPath: void (java.io.File)
+com.android.build.api.dsl.Cmake.setVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension.aaptOptions: void (kotlin.jvm.functions.Function1<? super AaptOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.adbOptions: void (kotlin.jvm.functions.Function1<? super AdbOptionsT, kotlin.Unit>)
