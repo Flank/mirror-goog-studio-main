@@ -58,7 +58,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     basicActivityTemplate,
     blankWearActivityTemplate,
     bottomNavigationActivityTemplate,
-    composeActivityTemplate,
+    //composeActivityTemplate, // Disabled for 4.0, see b/147094672.
     emptyActivityTemplate,
     fullscreenActivityTemplate,
     googleAdMobAdsActivityTemplate,
