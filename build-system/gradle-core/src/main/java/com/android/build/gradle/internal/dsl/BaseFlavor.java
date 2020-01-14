@@ -79,12 +79,12 @@ public abstract class BaseFlavor extends AbstractProductFlavor implements CorePr
      * href="http://developer.android.com/studio/projects/add-native-code.html#">Add C and C++ Code
      * to Your Project</a>.
      */
-    @Nullable
+    @NonNull
     public ExternalNativeBuildOptions getExternalNativeBuild() {
         return externalNativeBuildOptions;
     }
 
-    @Nullable
+    @NonNull
     @Override
     public CoreExternalNativeBuildOptions getExternalNativeBuildOptions() {
         return externalNativeBuildOptions;
