@@ -26,7 +26,7 @@ import org.gradle.api.Named;
 
 /** DSL object for configuring signing configs. */
 public class SigningConfig extends DefaultSigningConfig
-        implements Serializable, Named, com.android.build.api.dsl.SigningConfig {
+implements Serializable, Named, com.android.build.api.dsl.SigningConfig {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -130,18 +130,18 @@ public class SigningConfig extends DefaultSigningConfig
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("name", getName())
-                .add(
-                        "storeFile",
-                        getStoreFile() != null ? getStoreFile().getAbsolutePath() : "null")
-                .add("storePassword", getStorePassword())
-                .add("keyAlias", getKeyAlias())
-                .add("keyPassword", getKeyPassword())
-                .add("storeType", getStoreType())
-                .add("v1SigningEnabled", isV1SigningEnabled())
-                .add("v2SigningEnabled", isV2SigningEnabled())
-                .add("v1SigningConfigured", isV1SigningConfigured())
-                .add("v2SigningConfigured", isV2SigningConfigured())
-                .toString();
+            .add("name", getName())
+            .add(
+                "storeFile",
+                getStoreFile() != null ? getStoreFile().getAbsolutePath() : "null")
+        .add("storePassword", getStorePassword())
+        .add("keyAlias", getKeyAlias())
+        .add("keyPassword", getKeyPassword())
+        .add("storeType", getStoreType())
+        .add("v1SigningEnabled", isV1SigningEnabled())
+        .add("v2SigningEnabled", isV2SigningEnabled())
+        .add("v1SigningConfigured", isV1SigningConfigured())
+        .add("v2SigningConfigured", isV2SigningConfigured())
+        .toString();
     }
 }
