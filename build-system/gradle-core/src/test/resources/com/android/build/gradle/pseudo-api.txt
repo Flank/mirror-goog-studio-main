@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-1a1fa9835580de3edcf9c90991d493ebdcbbbaa0f6f04724c0b62e29cbec7359
+1321be08a0ed01bf4a75a9b192f692ecf9402ee2f0f427dc4052991ae303e08f
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (com.android.build.gradle.internal.api.dsl.DslScope, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -1181,6 +1181,11 @@ com.android.build.gradle.internal.dsl.ShaderOptions.glslcScopedArgs: void (java.
 com.android.build.gradle.internal.dsl.SigningConfig extends com.android.builder.signing.DefaultSigningConfig implements java.io.Serializable, org.gradle.api.Named, com.android.build.api.dsl.SigningConfig
 com.android.build.gradle.internal.dsl.SigningConfig.<init>: com.android.build.gradle.internal.dsl.SigningConfig (java.lang.String)
 com.android.build.gradle.internal.dsl.SigningConfig.initWith: com.android.build.gradle.internal.dsl.SigningConfig (com.android.builder.model.SigningConfig)
+com.android.build.gradle.internal.dsl.SigningConfig.keyAlias: void (java.lang.String)
+com.android.build.gradle.internal.dsl.SigningConfig.keyPassword: void (java.lang.String)
+com.android.build.gradle.internal.dsl.SigningConfig.storeFile: void (java.io.File)
+com.android.build.gradle.internal.dsl.SigningConfig.storePassword: void (java.lang.String)
+com.android.build.gradle.internal.dsl.SigningConfig.storeType: void (java.lang.String)
 com.android.build.gradle.internal.dsl.SigningConfig.toString: java.lang.String ()
 com.android.build.gradle.internal.dsl.SigningConfigFactory implements org.gradle.api.NamedDomainObjectFactory
 com.android.build.gradle.internal.dsl.SigningConfigFactory.<init>: com.android.build.gradle.internal.dsl.SigningConfigFactory (org.gradle.api.model.ObjectFactory, java.io.File)

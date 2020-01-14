@@ -18,8 +18,58 @@ package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
 import org.gradle.api.Named
+import java.io.File
 
 /** DSL object to configure signing configs. */
 @Incubating
 interface SigningConfig: Named {
+
+    /**
+     * Store file used when signing.
+     *
+     * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
+     */
+    var storeFile: File?
+
+    /**
+     * Store password used when signing.
+     *
+     * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
+     */
+    var storePassword: String?
+
+    /**
+     * Key alias used when signing.
+     *
+     * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
+     */
+    var keyAlias: String?
+
+    /**
+     * Key password used when signing.
+     *
+     * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
+     */
+    var keyPassword: String?
+
+    /**
+     * Store type used when signing.
+     *
+     * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
+     */
+    var storeType: String?
+
+    /**
+     * Whether signing using JAR Signature Scheme (aka v1 signing) is enabled.
+     *
+     * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
+     */
+    var isV1SigningEnabled: Boolean
+
+    /**
+     * Whether signing using APK Signature Scheme v2 (aka v2 signing) is enabled.
+     *
+     * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
+     */
+    var isV2SigningEnabled: Boolean
 }

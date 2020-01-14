@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a31bd34e1bbcad32ae7eab375c23b9687bfb78201e4cc6873ada4fc17f84e688
+ec01d5c79c465fe8b6594394d74832bec8809642a1825fb2e4fa6e1e035f9cd2
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -203,6 +203,20 @@ com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named
 com.android.build.api.dsl.ProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ProductFlavor.setDefault: void (boolean)
 com.android.build.api.dsl.SigningConfig implements org.gradle.api.Named
+com.android.build.api.dsl.SigningConfig.getKeyAlias: java.lang.String ()
+com.android.build.api.dsl.SigningConfig.getKeyPassword: java.lang.String ()
+com.android.build.api.dsl.SigningConfig.getStoreFile: java.io.File ()
+com.android.build.api.dsl.SigningConfig.getStorePassword: java.lang.String ()
+com.android.build.api.dsl.SigningConfig.getStoreType: java.lang.String ()
+com.android.build.api.dsl.SigningConfig.isV1SigningEnabled: boolean ()
+com.android.build.api.dsl.SigningConfig.isV2SigningEnabled: boolean ()
+com.android.build.api.dsl.SigningConfig.setKeyAlias: void (java.lang.String)
+com.android.build.api.dsl.SigningConfig.setKeyPassword: void (java.lang.String)
+com.android.build.api.dsl.SigningConfig.setStoreFile: void (java.io.File)
+com.android.build.api.dsl.SigningConfig.setStorePassword: void (java.lang.String)
+com.android.build.api.dsl.SigningConfig.setStoreType: void (java.lang.String)
+com.android.build.api.dsl.SigningConfig.setV1SigningEnabled: void (boolean)
+com.android.build.api.dsl.SigningConfig.setV2SigningEnabled: void (boolean)
 com.android.build.api.dsl.TestBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestOptions

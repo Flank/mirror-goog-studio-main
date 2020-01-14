@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dsl
 import com.android.builder.signing.DefaultSigningConfig
 import com.google.common.base.MoreObjects
 import org.gradle.api.Named
+import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
 
@@ -49,5 +50,28 @@ open class SigningConfig @Inject constructor(name: String) : DefaultSigningConfi
             .add("v1SigningConfigured", isV1SigningConfigured)
             .add("v2SigningConfigured", isV2SigningConfigured)
             .toString()
+    }
+
+    // The following setters exist because of a bug where gradle is generating two groovy setters
+    // for each field, since each value exists twice in the implemented interfaces
+
+    open fun storeFile(storeFile: File?) {
+        this.storeFile = storeFile
+    }
+
+    open fun storePassword(storePassword: String?) {
+        this.storePassword = storePassword
+    }
+
+    open fun keyAlias(keyAlias: String?) {
+        this.keyAlias = keyAlias
+    }
+
+    open fun keyPassword(keyPassword: String?) {
+        this.keyPassword = keyPassword
+    }
+
+    open fun storeType(storeType: String?) {
+        this.storeType = storeType
     }
 }
