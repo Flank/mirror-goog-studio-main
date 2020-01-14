@@ -75,7 +75,7 @@ public class AppPluginInternalTest {
         TestCase.assertNotNull(variantInputModel.getBuildTypes().get(BuilderConstants.RELEASE));
         TestCase.assertEquals(0, variantInputModel.getProductFlavors().size());
 
-        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getComponents();
+        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getAllComponents();
         VariantCheckers.checkDefaultVariants(components);
 
         VariantCheckers.findVariantData(components, "debug");
@@ -154,7 +154,7 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(3, plugin.getVariantInputModel().getBuildTypes().size());
 
-        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getComponents();
+        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getAllComponents();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 3);
         map.put("unitTests", 3);
@@ -195,7 +195,7 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(2, plugin.getVariantInputModel().getProductFlavors().size());
 
-        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getComponents();
+        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getAllComponents();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 4);
         map.put("unitTests", 4);
@@ -251,7 +251,7 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(5, plugin.getVariantInputModel().getProductFlavors().size());
 
-        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getComponents();
+        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getAllComponents();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 12);
         map.put("unitTests", 12);
@@ -344,7 +344,7 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks();
 
-        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getComponents();
+        List<ComponentPropertiesImpl> components = plugin.getVariantManager().getAllComponents();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 6);
         map.put("unitTests", 6);

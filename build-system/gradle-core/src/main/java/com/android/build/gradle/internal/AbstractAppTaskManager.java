@@ -70,9 +70,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTas
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.PackagedDependenciesWriterTask;
-import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.VariantType;
@@ -87,7 +85,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
-import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
@@ -101,35 +98,27 @@ import org.gradle.api.resources.TextResourceFactory;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-/**
- * TaskManager for creating tasks in an Android application project.
- */
-public class ApplicationTaskManager extends TaskManager {
+/** TaskManager for creating tasks in an Android application project. */
+public abstract class AbstractAppTaskManager<VariantPropertiesT extends VariantPropertiesImpl>
+        extends TaskManager<VariantPropertiesT> {
 
-    public ApplicationTaskManager(
+    protected AbstractAppTaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull Project project,
-            @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
-            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
                 globalScope,
-                project,
-                projectOptions,
                 dataBindingBuilder,
                 extension,
-                variantFactory,
                 toolingRegistry,
                 recorder);
     }
 
-    @Override
-    public void createTasksForVariantScope(
-            @NonNull VariantPropertiesImpl appVariantProperties,
-            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
+    protected void createCommonTasks(
+            @NonNull VariantPropertiesT appVariantProperties,
+            @NonNull List<VariantPropertiesT> allComponentsWithLint) {
         createAnchorTasks(appVariantProperties);
 
         taskFactory.register(new ExtractDeepLinksTask.CreationAction(appVariantProperties));

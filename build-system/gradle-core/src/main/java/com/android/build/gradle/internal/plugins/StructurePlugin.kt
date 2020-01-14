@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.plugins
 
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.tasks.structureplugin.CombineModuleInfoTask
 import com.android.build.gradle.internal.tasks.structureplugin.GatherModuleInfoTask
 import org.gradle.api.NamedDomainObjectContainer
@@ -69,7 +70,7 @@ class StructurePlugin: Plugin<Project> {
         // to do some conditional work depending on which plugins are applied, or not applied.
         project.afterEvaluate {
             if (it.plugins.count {
-                    it is BasePlugin || it is JavaPlugin || it is JavaLibraryPlugin
+                    it is BasePlugin<*> || it is JavaPlugin || it is JavaLibraryPlugin
                 } > 0) createTask(it)
 
             if (gatherModuleTask == null) {

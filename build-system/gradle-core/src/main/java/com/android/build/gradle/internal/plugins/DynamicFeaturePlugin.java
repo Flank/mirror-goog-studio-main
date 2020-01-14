@@ -16,9 +16,12 @@
 
 package com.android.build.gradle.internal.plugins;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl;
 import com.android.build.gradle.AppExtension;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.api.dsl.DslScope;
@@ -30,9 +33,9 @@ import com.android.build.gradle.internal.dsl.DynamicFeatureExtensionImpl;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.tasks.DynamicFeatureTaskManager;
 import com.android.build.gradle.internal.variant.DynamicFeatureVariantFactory;
-import com.android.build.gradle.internal.variant.VariantFactory;
-import com.android.build.gradle.options.ProjectOptions;
+import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -41,7 +44,7 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on an optional APK module */
-public class DynamicFeaturePlugin extends AbstractAppPlugin {
+public class DynamicFeaturePlugin extends AbstractAppPlugin<DynamicFeatureVariantPropertiesImpl> {
     @Inject
     public DynamicFeaturePlugin(
             ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
@@ -74,7 +77,6 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
     @Override
     protected AppExtension createExtension(
             @NonNull DslScope dslScope,
-            @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull DefaultConfig defaultConfig,
@@ -103,7 +105,19 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin {
 
     @NonNull
     @Override
-    protected VariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
+    protected DynamicFeatureTaskManager createTaskManager(
+            @NonNull GlobalScope globalScope,
+            @NonNull DataBindingBuilder dataBindingBuilder,
+            @NonNull BaseExtension extension,
+            @NonNull ToolingModelBuilderRegistry toolingRegistry,
+            @NonNull Recorder threadRecorder) {
+        return new DynamicFeatureTaskManager(
+                globalScope, dataBindingBuilder, extension, toolingRegistry, threadRecorder);
+    }
+
+    @NonNull
+    @Override
+    protected DynamicFeatureVariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
         return new DynamicFeatureVariantFactory(globalScope);
     }
 }

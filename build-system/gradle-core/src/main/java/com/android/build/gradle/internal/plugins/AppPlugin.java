@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.plugins;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -32,9 +34,10 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.tasks.ApplicationTaskManager;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.VariantModel;
-import com.android.build.gradle.options.ProjectOptions;
+import com.android.builder.profile.Recorder;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -44,7 +47,7 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on the base application module */
-public class AppPlugin extends AbstractAppPlugin {
+public class AppPlugin extends AbstractAppPlugin<ApplicationVariantPropertiesImpl> {
     @Inject
     public AppPlugin(
             ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
@@ -73,6 +76,7 @@ public class AppPlugin extends AbstractAppPlugin {
                         getProjectType()));
     }
 
+
     @Override
     @NonNull
     protected Class<? extends AppExtension> getExtensionClass() {
@@ -83,7 +87,6 @@ public class AppPlugin extends AbstractAppPlugin {
     @Override
     protected AppExtension createExtension(
             @NonNull DslScope dslScope,
-            @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull DefaultConfig defaultConfig,
@@ -108,6 +111,18 @@ public class AppPlugin extends AbstractAppPlugin {
                                 defaultConfig,
                                 productFlavorContainer,
                                 signingConfigContainer));
+    }
+
+    @NonNull
+    @Override
+    protected ApplicationTaskManager createTaskManager(
+            @NonNull GlobalScope globalScope,
+            @NonNull DataBindingBuilder dataBindingBuilder,
+            @NonNull BaseExtension extension,
+            @NonNull ToolingModelBuilderRegistry toolingRegistry,
+            @NonNull Recorder threadRecorder) {
+        return new ApplicationTaskManager(
+                globalScope, dataBindingBuilder, extension, toolingRegistry, threadRecorder);
     }
 
     private static class DeprecatedConfigurationAction implements Action<Dependency> {

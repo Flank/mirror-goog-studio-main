@@ -87,21 +87,21 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
 
     public static class CreationAction extends BaseCreationAction<LintPerVariantTask> {
 
-        private final ComponentPropertiesImpl componentProperties;
-        private final List<VariantPropertiesImpl> allComponentsWithLint;
+        private final VariantPropertiesImpl variantProperties;
+        private final List<? extends VariantPropertiesImpl> allVariants;
 
         public CreationAction(
-                @NonNull ComponentPropertiesImpl componentProperties,
-                @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
-            super(componentProperties.getGlobalScope());
-            this.componentProperties = componentProperties;
-            this.allComponentsWithLint = allComponentsWithLint;
+                @NonNull VariantPropertiesImpl variantProperties,
+                @NonNull List<? extends VariantPropertiesImpl> allVariants) {
+            super(variantProperties.getGlobalScope());
+            this.variantProperties = variantProperties;
+            this.allVariants = allVariants;
         }
 
         @Override
         @NonNull
         public String getName() {
-            return componentProperties.computeTaskName("lint");
+            return variantProperties.computeTaskName("lint");
         }
 
         @Override
@@ -114,14 +114,14 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
         public void configure(@NonNull LintPerVariantTask lint) {
             super.configure(lint);
 
-            lint.setVariantName(componentProperties.getName());
+            lint.setVariantName(variantProperties.getName());
             lint.allInputs = globalScope.getProject().files();
 
-            lint.variantInputs = new VariantInputs(componentProperties);
+            lint.variantInputs = new VariantInputs(variantProperties);
             lint.allInputs.from(lint.variantInputs.getAllInputs());
 
-            for (ComponentPropertiesImpl component : allComponentsWithLint) {
-                addModelArtifactsToInputs(lint.allInputs, componentProperties);
+            for (VariantPropertiesImpl variant : allVariants) {
+                addModelArtifactsToInputs(lint.allInputs, variant);
             }
 
             lint.setDescription(
@@ -138,11 +138,11 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
     public static class VitalCreationAction extends BaseCreationAction<LintPerVariantTask> {
 
         private final ComponentPropertiesImpl componentProperties;
-        private final List<VariantPropertiesImpl> allComponentsWithLint;
+        private final List<? extends VariantPropertiesImpl> allComponentsWithLint;
 
         public VitalCreationAction(
                 @NonNull ComponentPropertiesImpl componentProperties,
-                @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
+                @NonNull List<? extends VariantPropertiesImpl> allComponentsWithLint) {
             super(componentProperties.getGlobalScope());
             this.componentProperties = componentProperties;
             this.allComponentsWithLint = allComponentsWithLint;

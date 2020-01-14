@@ -28,15 +28,17 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 
-class DynamicFeatureVariantFactory(
+internal class DynamicFeatureVariantFactory(
     globalScope: GlobalScope
-): ApplicationVariantFactory(globalScope) {
+    ): AbstractAppVariantFactory<DynamicFeatureVariantPropertiesImpl>(globalScope) {
 
     override fun createVariantObject(
         componentIdentity: ComponentIdentity,
         variantDslInfo: VariantDslInfo
-    ): VariantImpl<*> {
+    ): DynamicFeatureVariantImpl {
         return globalScope
             .dslScope
             .objectFactory
@@ -57,7 +59,7 @@ class DynamicFeatureVariantFactory(
         variantScope: VariantScope,
         variantData: BaseVariantData,
         transformManager: TransformManager
-    ): VariantPropertiesImpl {
+    ): DynamicFeatureVariantPropertiesImpl {
         val variantProperties = globalScope
             .dslScope
             .objectFactory
@@ -80,5 +82,9 @@ class DynamicFeatureVariantFactory(
         variantProperties.addVariantOutput(variantData.outputFactory.addMainApk())
 
         return variantProperties
+    }
+
+    override fun getVariantType(): VariantType {
+        return VariantTypeImpl.OPTIONAL_APK
     }
 }

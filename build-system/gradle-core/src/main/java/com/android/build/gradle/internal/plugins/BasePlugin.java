@@ -26,6 +26,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.variant.impl.GradleProperty;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -127,14 +128,15 @@ import org.gradle.api.tasks.StopExecutionException;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Base class for all Android plugins */
-public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProvider {
+public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImpl>
+        implements Plugin<Project>, ToolingRegistryProvider {
 
     private BaseExtension extension;
 
-    private VariantManager variantManager;
+    private VariantManager<VariantPropertiesT> variantManager;
     private VariantInputModelImpl variantInputModel;
 
-    protected TaskManager taskManager;
+    protected TaskManager<VariantPropertiesT> taskManager;
 
     protected Project project;
 
@@ -145,7 +147,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
     private DataBindingBuilder dataBindingBuilder;
 
-    private VariantFactory variantFactory;
+    private VariantFactory<VariantPropertiesT> variantFactory;
 
     private SourceSetManager sourceSetManager;
 
@@ -175,7 +177,6 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
     @NonNull
     protected abstract BaseExtension createExtension(
             @NonNull DslScope dslScope,
-            @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull DefaultConfig defaultConfig,
@@ -189,23 +190,21 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
     protected abstract GradleBuildProject.PluginType getAnalyticsPluginType();
 
     @NonNull
-    protected abstract VariantFactory createVariantFactory(@NonNull GlobalScope globalScope);
+    protected abstract VariantFactory<VariantPropertiesT> createVariantFactory(
+            @NonNull GlobalScope globalScope);
 
     @NonNull
-    protected abstract TaskManager createTaskManager(
+    protected abstract TaskManager<VariantPropertiesT> createTaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull Project project,
-            @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
-            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder);
 
     protected abstract int getProjectType();
 
     @VisibleForTesting
-    public VariantManager getVariantManager() {
+    public VariantManager<VariantPropertiesT> getVariantManager() {
         return variantManager;
     }
 
@@ -428,7 +427,6 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         extension =
                 createExtension(
                         dslScope,
-                        projectOptions,
                         globalScope,
                         buildTypeContainer,
                         defaultConfig,
@@ -449,11 +447,8 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         taskManager =
                 createTaskManager(
                         globalScope,
-                        project,
-                        projectOptions,
                         dataBindingBuilder,
                         extension,
-                        variantFactory,
                         registry,
                         threadRecorder);
 
@@ -667,7 +662,9 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         }
         AnalyticsUtil.recordFirebasePerformancePluginVersion(project);
 
-        List<ComponentPropertiesImpl> components = variantManager.createVariantsAndTasks();
+        variantManager.createVariantsAndTasks();
+        List<ComponentPropertiesImpl> allComponents = variantManager.getAllComponents();
+        List<VariantPropertiesT> mainComponents = variantManager.getMainComponents();
 
         new DependencyConfigurator(project, project.getName(), globalScope, variantInputModel)
                 .configureDependencies();
@@ -675,7 +672,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         // Run the old Variant API, after the variants and tasks have been created.
         ApiObjectFactory apiObjectFactory =
                 new ApiObjectFactory(extension, variantFactory, globalScope);
-        for (ComponentPropertiesImpl component : components) {
+        for (ComponentPropertiesImpl component : allComponents) {
             apiObjectFactory.create(component);
         }
 
@@ -688,13 +685,13 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                 globalScope.getBuildFeatures().getViewBinding(),
                 globalScope.getBuildFeatures().getDataBinding(),
                 extension.getDataBinding(),
-                components);
+                allComponents);
 
         // configure compose related tasks.
-        taskManager.configureKotlinPluginTasksForComposeIfNecessary(globalScope, components);
+        taskManager.configureKotlinPluginTasksForComposeIfNecessary(globalScope, allComponents);
 
         // create the global lint task that depends on all the variants
-        taskManager.configureGlobalLintTask(components);
+        taskManager.configureGlobalLintTask(mainComponents);
 
         int flavorDimensionCount = 0;
         if (extension.getFlavorDimensionList() != null) {
@@ -702,10 +699,11 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
         }
 
         taskManager.createAnchorAssembleTasks(
-                components, extension.getProductFlavors().size(), flavorDimensionCount);
+                allComponents, extension.getProductFlavors().size(), flavorDimensionCount);
 
-        // now publish all variant artifacts.
-        for (ComponentPropertiesImpl component : components) {
+        // now publish all variant artifacts for non test variants since
+        // tests don't publish anything.
+        for (ComponentPropertiesImpl component : mainComponents) {
             variantManager.publishBuildArtifacts(component);
         }
 

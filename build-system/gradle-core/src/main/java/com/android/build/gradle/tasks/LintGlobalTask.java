@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import java.util.Collection;
@@ -69,11 +69,11 @@ public class LintGlobalTask extends LintBaseTask {
 
     public static class GlobalCreationAction extends BaseCreationAction<LintGlobalTask> {
 
-        private final Collection<ComponentPropertiesImpl> variants;
+        private final Collection<? extends VariantPropertiesImpl> variants;
 
         public GlobalCreationAction(
                 @NonNull GlobalScope globalScope,
-                @NonNull Collection<ComponentPropertiesImpl> variants) {
+                @NonNull Collection<? extends VariantPropertiesImpl> variants) {
             super(globalScope);
             this.variants = variants;
         }

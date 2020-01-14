@@ -154,7 +154,6 @@ import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -250,7 +249,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Manages tasks creation. */
-public abstract class TaskManager {
+public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesImpl> {
 
     public static final String INSTALL_GROUP = "Install";
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP;
@@ -281,7 +280,6 @@ public abstract class TaskManager {
     @NonNull protected final ProjectOptions projectOptions;
     @NonNull protected final DataBindingBuilder dataBindingBuilder;
     @NonNull protected final BaseExtension extension;
-    @NonNull private final VariantFactory variantFactory;
     @NonNull protected final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull protected final GlobalScope globalScope;
     @NonNull protected final Recorder recorder;
@@ -294,19 +292,15 @@ public abstract class TaskManager {
 
     public TaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull Project project,
-            @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
-            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         this.globalScope = globalScope;
-        this.project = project;
-        this.projectOptions = projectOptions;
+        this.project = globalScope.getProject();
+        this.projectOptions = globalScope.getProjectOptions();
         this.dataBindingBuilder = dataBindingBuilder;
         this.extension = extension;
-        this.variantFactory = variantFactory;
         this.toolingRegistry = toolingRegistry;
         this.recorder = recorder;
         this.logger = Logging.getLogger(this.getClass());
@@ -319,19 +313,14 @@ public abstract class TaskManager {
     }
 
     @NonNull
-    public TaskFactory getTaskFactory() {
-        return taskFactory;
-    }
-
-    @NonNull
     public DataBindingBuilder getDataBindingBuilder() {
         return dataBindingBuilder;
     }
 
-    /** Creates the tasks for a given BaseVariantData. */
-    public abstract void createTasksForVariantScope(
-            @NonNull VariantPropertiesImpl variantProperties,
-            @NonNull List<VariantPropertiesImpl> allComponentsWithLint);
+    /** Creates the tasks for a given VariantPropertiesImpl. */
+    public abstract void createTasksForVariant(
+            @NonNull VariantPropertiesT variantProperties,
+            @NonNull List<VariantPropertiesT> allComponentsWithLint);
 
     /**
      * Create tasks before the evaluation (on plugin apply). This is useful for tasks that could be
@@ -449,33 +438,26 @@ public abstract class TaskManager {
 
     // this is run after all the variants are created.
     public void configureGlobalLintTask(
-            @NonNull final Collection<ComponentPropertiesImpl> components) {
-        // we only care about non testing and non feature variants
-        List<ComponentPropertiesImpl> filteredVariants =
-                components.stream().filter(TaskManager::isLintVariant).collect(Collectors.toList());
-
-        if (filteredVariants.isEmpty()) {
-            return;
-        }
+            @NonNull final Collection<? extends VariantPropertiesImpl> variants) {
 
         // configure the global lint tasks.
         taskFactory.configure(
                 LINT,
                 LintGlobalTask.class,
                 task ->
-                        new LintGlobalTask.GlobalCreationAction(globalScope, filteredVariants)
+                        new LintGlobalTask.GlobalCreationAction(globalScope, variants)
                                 .configure(task));
         taskFactory.configure(
                 LINT_FIX,
                 LintFixTask.class,
                 task ->
-                        new LintFixTask.GlobalCreationAction(globalScope, filteredVariants)
+                        new LintFixTask.GlobalCreationAction(globalScope, variants)
                                 .configure(task));
 
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
-        for (ComponentPropertiesImpl component : components) {
-            component.getArtifacts().copy(LINT_PUBLISH_JAR.INSTANCE, globalScope.getArtifacts());
+        for (VariantPropertiesImpl variant : variants) {
+            variant.getArtifacts().copy(LINT_PUBLISH_JAR.INSTANCE, globalScope.getArtifacts());
         }
     }
 
@@ -1618,8 +1600,7 @@ public abstract class TaskManager {
 
     /** Creates the tasks to build android tests. */
     public void createAndroidTestVariantTasks(
-            @NonNull AndroidTestPropertiesImpl androidTestProperties,
-            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
+            @NonNull AndroidTestPropertiesImpl androidTestProperties) {
 
         createAnchorTasks(androidTestProperties);
 
@@ -1688,24 +1669,15 @@ public abstract class TaskManager {
         createConnectedTestForVariant(androidTestProperties);
     }
 
-    /** Is the given variant relevant for lint? */
-    static boolean isLintVariant(@NonNull ComponentPropertiesImpl componentProperties) {
-        // Only create lint targets for variants like debug and release, not debugTest
-        return !componentProperties.getVariantType().isForTesting();
-    }
-
     /**
      * Add tasks for running lint on individual variants. We've already added a lint task earlier
      * which runs on all variants.
      */
     public void createLintTasks(
-            @NonNull ComponentPropertiesImpl componentProperties,
-            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
-        if (!isLintVariant(componentProperties)) {
-            return;
-        }
+            @NonNull VariantPropertiesT variantProperties,
+            @NonNull List<VariantPropertiesT> allComponentsWithLint) {
         taskFactory.register(
-                new LintPerVariantTask.CreationAction(componentProperties, allComponentsWithLint));
+                new LintPerVariantTask.CreationAction(variantProperties, allComponentsWithLint));
     }
 
     /** Returns the full path of a task given its name. */
@@ -1716,24 +1688,21 @@ public abstract class TaskManager {
     }
 
     public void maybeCreateLintVitalTask(
-            @NonNull VariantPropertiesImpl appVariant,
-            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
-        if (!isLintVariant(appVariant)
-                || appVariant.getVariantDslInfo().isDebuggable()
+            @NonNull VariantPropertiesT variant,
+            @NonNull List<VariantPropertiesT> allComponentsWithLint) {
+        if (variant.getVariantDslInfo().isDebuggable()
                 || !extension.getLintOptions().isCheckReleaseBuilds()) {
             return;
         }
 
         TaskProvider<LintPerVariantTask> lintReleaseCheck =
                 taskFactory.register(
-                        new LintPerVariantTask.VitalCreationAction(
-                                appVariant, allComponentsWithLint),
+                        new LintPerVariantTask.VitalCreationAction(variant, allComponentsWithLint),
                         null,
-                        task -> task.dependsOn(appVariant.getTaskContainer().getJavacTask()),
+                        task -> task.dependsOn(variant.getTaskContainer().getJavacTask()),
                         null);
 
-        TaskFactoryUtils.dependsOn(
-                appVariant.getTaskContainer().getAssembleTask(), lintReleaseCheck);
+        TaskFactoryUtils.dependsOn(variant.getTaskContainer().getAssembleTask(), lintReleaseCheck);
 
         // If lint is being run, we do not need to run lint vital.
         project.getGradle()

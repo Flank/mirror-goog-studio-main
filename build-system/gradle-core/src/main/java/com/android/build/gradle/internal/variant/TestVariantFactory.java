@@ -27,7 +27,6 @@ import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
-import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
@@ -52,8 +51,8 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 
-/** Customization of {@link ApplicationVariantFactory} for test-only projects. */
-public class TestVariantFactory extends ApplicationVariantFactory {
+/** Customization of {@link AbstractAppVariantFactory} for test-only projects. */
+public class TestVariantFactory extends AbstractAppVariantFactory<TestVariantPropertiesImpl> {
 
     public TestVariantFactory(@NonNull GlobalScope globalScope) {
         super(globalScope);
@@ -66,7 +65,7 @@ public class TestVariantFactory extends ApplicationVariantFactory {
 
     @NonNull
     @Override
-    public VariantImpl createVariantObject(
+    public TestVariantImpl createVariantObject(
             @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
         return globalScope
                 .getDslScope()
@@ -90,7 +89,7 @@ public class TestVariantFactory extends ApplicationVariantFactory {
 
     @NonNull
     @Override
-    public VariantPropertiesImpl createVariantPropertiesObject(
+    public TestVariantPropertiesImpl createVariantPropertiesObject(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,

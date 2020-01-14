@@ -52,7 +52,7 @@ import org.gradle.api.model.ObjectFactory;
  * <p>While VariantManager is the general variant management, implementation of this interface
  * provides variant type (app, lib) specific implementation.
  */
-public interface VariantFactory {
+public interface VariantFactory<VariantPropertiesT extends VariantPropertiesImpl> {
 
     @NonNull
     VariantImpl createVariantObject(
@@ -67,7 +67,7 @@ public interface VariantFactory {
             @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo);
 
     @NonNull
-    VariantPropertiesImpl createVariantPropertiesObject(
+    VariantPropertiesT createVariantPropertiesObject(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -113,7 +113,7 @@ public interface VariantFactory {
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
-            @NonNull TaskManager taskManager,
+            @NonNull TaskManager<VariantPropertiesT> taskManager,
             @NonNull MutableTaskContainer taskContainer);
 
     @NonNull

@@ -19,11 +19,11 @@ package com.android.build.gradle.internal.plugins;
 import android.databinding.tool.DataBindingBuilder;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.TestApplicationTaskManager;
 import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
@@ -34,8 +34,6 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.TestExtensionImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
-import com.android.build.gradle.internal.variant.VariantFactory;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
@@ -45,7 +43,7 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'test' projects. */
-public class TestPlugin extends BasePlugin {
+public class TestPlugin extends BasePlugin<TestVariantPropertiesImpl> {
     @Inject
     public TestPlugin(
             ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
@@ -61,7 +59,6 @@ public class TestPlugin extends BasePlugin {
     @Override
     protected BaseExtension createExtension(
             @NonNull DslScope dslScope,
-            @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull DefaultConfig defaultConfig,
@@ -96,22 +93,16 @@ public class TestPlugin extends BasePlugin {
 
     @NonNull
     @Override
-    protected TaskManager createTaskManager(
+    protected TestApplicationTaskManager createTaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull Project project,
-            @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
-            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new TestApplicationTaskManager(
                 globalScope,
-                project,
-                projectOptions,
                 dataBindingBuilder,
                 extension,
-                variantFactory,
                 toolingRegistry,
                 recorder);
     }
@@ -123,7 +114,7 @@ public class TestPlugin extends BasePlugin {
 
     @NonNull
     @Override
-    protected VariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
+    protected TestVariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
         return new TestVariantFactory(globalScope);
     }
 }

@@ -106,7 +106,7 @@ public class PluginDslTest {
     @Test
     public void testBasic() {
         plugin.createAndroidTasks();
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getComponents());
+        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getAllComponents());
 
         // we can now call this since the variants/tasks have been created
         Set<BaseTestedVariant> variants = checker.getVariants();
@@ -129,7 +129,7 @@ public class PluginDslTest {
                         + "'\n        }\n");
 
         plugin.createAndroidTasks();
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getComponents());
+        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getAllComponents());
 
         // we can now call this since the variants/tasks have been created
         Set<BaseTestedVariant> variants = checker.getVariants();
@@ -178,7 +178,7 @@ public class PluginDslTest {
         map.put("unitTest", 3);
         map.put("androidTests", 1);
         assertThat(VariantCheckers.countVariants(map))
-                .isEqualTo(plugin.getVariantManager().getComponents().size());
+                .isEqualTo(plugin.getVariantManager().getAllComponents().size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -219,7 +219,7 @@ public class PluginDslTest {
         map.put("unitTest", 4);
         map.put("androidTests", 2);
         assertThat(VariantCheckers.countVariants(map))
-                .isEqualTo(plugin.getVariantManager().getComponents().size());
+                .isEqualTo(plugin.getVariantManager().getAllComponents().size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -277,7 +277,7 @@ public class PluginDslTest {
         ImmutableMap<String, Integer> map =
                 ImmutableMap.of("appVariants", 12, "unitTests", 12, "androidTests", 6);
         assertThat(VariantCheckers.countVariants(map))
-                .isEqualTo(plugin.getVariantManager().getComponents().size());
+                .isEqualTo(plugin.getVariantManager().getAllComponents().size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -348,7 +348,7 @@ public class PluginDslTest {
                         + "}\n");
 
         plugin.createAndroidTasks();
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getComponents());
+        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getAllComponents());
 
         // we can now call this since the variants/tasks have been created
 
@@ -730,8 +730,8 @@ public class PluginDslTest {
 
     public Map<String, ComponentPropertiesImpl> getComponentMap() {
         Map<String, ComponentPropertiesImpl> result = new HashMap<>();
-        for (ComponentPropertiesImpl componentProperties :
-                plugin.getVariantManager().getComponents()) {
+        List<ComponentPropertiesImpl> allComponents = plugin.getVariantManager().getAllComponents();
+        for (ComponentPropertiesImpl componentProperties : allComponents) {
             result.put(componentProperties.getName(), componentProperties);
         }
         return result;
