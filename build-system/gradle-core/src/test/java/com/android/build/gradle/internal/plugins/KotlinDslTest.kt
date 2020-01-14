@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.plugins
 
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.builder.errors.EvalIssueException
@@ -112,6 +113,34 @@ class KotlinDslTest {
             assertThat(version).isNull()
             version = "version1"
             assertThat(version).isEqualTo("version1")
+        }
+    }
+
+    /** Regression test for b/146488072 */
+    @Test
+    fun `compile against variant specific external native build impl class`() {
+        (android as BaseAppModuleExtension).defaultConfig.apply {
+            // Check the getters return the more specific type
+            // (the arguments method is not on the interface)
+            externalNativeBuild.ndkBuild.arguments("a")
+            externalNativeBuild.cmake.arguments("x")
+
+            // Check the action methods use the more specific type
+            externalNativeBuild { externalNativeBuildOptions -> // TODO(b/140406102): Convert to this
+                externalNativeBuildOptions.ndkBuild { externalNativeNdkBuildOptions -> // TODO(b/140406102): Convert to this
+                    externalNativeNdkBuildOptions.arguments("b")
+                }
+            }
+            externalNativeBuild { externalNativeBuildOptions -> // TODO(b/140406102): Convert to this
+                externalNativeBuildOptions.cmake { externalNativeCmakeOptions -> // TODO(b/140406102): Convert to this
+                    externalNativeCmakeOptions.arguments("y")
+                }
+            }
+
+            assertThat(externalNativeBuild.ndkBuild.arguments)
+                .containsExactly("a", "b").inOrder()
+            assertThat(externalNativeBuild.cmake.arguments)
+                .containsExactly("x", "y").inOrder()
         }
     }
 

@@ -19,9 +19,10 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 import com.android.build.gradle.internal.cxx.settings.Macro
-import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions
+import com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions
 import com.android.utils.FileUtils.join
 import org.mockito.Mockito
+import org.mockito.Mockito.doReturn
 
 const val DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION = "different-mock-cmake-settings-configuration"
 const val NO_ABI_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION = "no-abi-in-build-root-mock-cmake-settings-configuration"
@@ -34,18 +35,18 @@ class CmakeSettingsMock : BasicModuleModelMock() {
     val module by lazy { tryCreateCxxModuleModel(global, cmakeFinder)!! }
     val variant by lazy { createCxxVariantModel(module, variantScope) }
     val abi by lazy { createCxxAbiModel(variant, Abi.X86, global, baseVariantData) }
-    val coreExternalNativeCmakeOptions = Mockito.mock(
-        CoreExternalNativeCmakeOptions::class.java,
+    val externalNativeCmakeOptions = Mockito.mock(
+        ExternalNativeCmakeOptions::class.java,
         throwUnmocked
     )!!
 
     init {
-        Mockito.doReturn(coreExternalNativeCmakeOptions).`when`(coreExternalNativeBuildOptions).externalNativeCmakeOptions
-        Mockito.doReturn(setOf<String>()).`when`(coreExternalNativeCmakeOptions).abiFilters
-        Mockito.doReturn(listOf("-DCMAKE_ARG=1")).`when`(coreExternalNativeCmakeOptions).arguments
-        Mockito.doReturn(listOf("-DC_FLAG_DEFINED")).`when`(coreExternalNativeCmakeOptions).getcFlags()
-        Mockito.doReturn(listOf("-DCPP_FLAG_DEFINED")).`when`(coreExternalNativeCmakeOptions).cppFlags
-        Mockito.doReturn(setOf<String>()).`when`(coreExternalNativeCmakeOptions).targets
+        doReturn(externalNativeCmakeOptions).`when`(coreExternalNativeBuildOptions).externalNativeCmakeOptions
+        doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).abiFilters
+        doReturn(listOf("-DCMAKE_ARG=1")).`when`(externalNativeCmakeOptions).arguments
+        doReturn(listOf("-DC_FLAG_DEFINED")).`when`(externalNativeCmakeOptions).getcFlags()
+        doReturn(listOf("-DCPP_FLAG_DEFINED")).`when`(externalNativeCmakeOptions).cppFlags
+        doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).targets
         val makefile = join(allPlatformsProjectRootDir, "CMakeLists.txt")
         val cmakeSettingsJson = join(allPlatformsProjectRootDir, "CMakeSettings.json")
         cmakeSettingsJson.parentFile.mkdirs()
@@ -86,7 +87,7 @@ class CmakeSettingsMock : BasicModuleModelMock() {
                     "buildRoot": "project-build-root/${Macro.NDK_ABI.ref}"
                 } ]
             }""".trimIndent())
-        Mockito.doReturn(makefile).`when`(cmake).path
+        doReturn(makefile).`when`(cmake).path
         projectRootDir.mkdirs()
         makefile.writeText("# written by ${BasicCmakeMock::class}")
     }
