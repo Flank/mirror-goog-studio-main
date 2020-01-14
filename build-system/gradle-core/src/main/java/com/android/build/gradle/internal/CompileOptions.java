@@ -51,68 +51,52 @@ public class CompileOptions implements com.android.build.api.dsl.CompileOptions 
     @Inject
     public CompileOptions() {}
 
-    /** @see #getSourceCompatibility() */
     public void setSourceCompatibility(@NonNull Object sourceCompatibility) {
         this.sourceCompatibility = convert(sourceCompatibility);
     }
 
-    /** @see #getSourceCompatibility() */
+    @Override
+    public void sourceCompatibility(@NonNull Object sourceCompatibility) {
+        this.sourceCompatibility = convert(sourceCompatibility);
+    }
+
+    @Override
     public void setSourceCompatibility(@NonNull JavaVersion sourceCompatibility) {
         this.sourceCompatibility = sourceCompatibility;
     }
 
-    /**
-     * Language level of the java source code.
-     *
-     * <p>Similar to what <a href="http://www.gradle.org/docs/current/userguide/java_plugin.html">
-     * Gradle Java plugin</a> uses. Formats supported are:
-     * <ul>
-     *      <li><code>"1.6"</code></li>
-     *      <li><code>1.6</code></li>
-     *      <li><code>JavaVersion.Version_1_6</code></li>
-     *      <li><code>"Version_1_6"</code></li>
-     * </ul>
-     */
+    @Override
     @NonNull
     public JavaVersion getSourceCompatibility() {
         return sourceCompatibility != null ? sourceCompatibility : defaultJavaVersion;
     }
 
-    /** @see #getTargetCompatibility() */
     public void setTargetCompatibility(@NonNull Object targetCompatibility) {
         this.targetCompatibility = convert(targetCompatibility);
     }
 
-    /** @see #getTargetCompatibility() */
+    @Override
+    public void targetCompatibility(@NonNull Object targetCompatibility) {
+        this.targetCompatibility = convert(targetCompatibility);
+    }
+
+    @Override
     public void setTargetCompatibility(@NonNull JavaVersion targetCompatibility) {
         this.targetCompatibility = targetCompatibility;
     }
 
-    /**
-     * Version of the generated Java bytecode.
-     *
-     * <p>Similar to what <a href="http://www.gradle.org/docs/current/userguide/java_plugin.html">
-     * Gradle Java plugin</a> uses. Formats supported are:
-     * <ul>
-     *      <li><code>"1.6"</code></li>
-     *      <li><code>1.6</code></li>
-     *      <li><code>JavaVersion.Version_1_6</code></li>
-     *      <li><code>"Version_1_6"</code></li>
-     * </ul>
-     */
+    @Override
     @NonNull
     public JavaVersion getTargetCompatibility() {
         return targetCompatibility != null ? targetCompatibility : defaultJavaVersion;
     }
 
-    /** @see #getEncoding() */
+    @Override
     public void setEncoding(@NonNull String encoding) {
         this.encoding = checkNotNull(encoding);
     }
 
-    /**
-     * Java source files encoding.
-     */
+    @Override
     @NonNull
     public String getEncoding() {
         return encoding;
@@ -145,13 +129,17 @@ public class CompileOptions implements com.android.build.api.dsl.CompileOptions 
         this.incremental = incremental;
     }
 
-    /** Whether core library desugaring is enabled */
     @Nullable
     public Boolean getCoreLibraryDesugaringEnabled() {
         return coreLibraryDesugaringEnabled;
     }
 
-    /** @see #getCoreLibraryDesugaringEnabled() */
+    @Override
+    public boolean isCoreLibraryDesugaringEnabled() {
+        return coreLibraryDesugaringEnabled != null ? coreLibraryDesugaringEnabled : false;
+    }
+
+    @Override
     public void setCoreLibraryDesugaringEnabled(boolean coreLibraryDesugaringEnabled) {
         this.coreLibraryDesugaringEnabled = coreLibraryDesugaringEnabled;
     }

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-aead26404d22bae5124ccc185b27db520a0d519bf583f8e90e2acdbe0310bc03
+a31bd34e1bbcad32ae7eab375c23b9687bfb78201e4cc6873ada4fc17f84e688
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -165,6 +165,16 @@ com.android.build.api.dsl.CommonExtension.setCompileSdkVersion: void (java.lang.
 com.android.build.api.dsl.CommonExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<SigningConfigT>>)
 com.android.build.api.dsl.CommonExtension.testOptions: void (kotlin.jvm.functions.Function1<? super TestOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.CompileOptions
+com.android.build.api.dsl.CompileOptions.getEncoding: java.lang.String ()
+com.android.build.api.dsl.CompileOptions.getSourceCompatibility: org.gradle.api.JavaVersion ()
+com.android.build.api.dsl.CompileOptions.getTargetCompatibility: org.gradle.api.JavaVersion ()
+com.android.build.api.dsl.CompileOptions.isCoreLibraryDesugaringEnabled: boolean ()
+com.android.build.api.dsl.CompileOptions.setCoreLibraryDesugaringEnabled: void (boolean)
+com.android.build.api.dsl.CompileOptions.setEncoding: void (java.lang.String)
+com.android.build.api.dsl.CompileOptions.setSourceCompatibility: void (org.gradle.api.JavaVersion)
+com.android.build.api.dsl.CompileOptions.setTargetCompatibility: void (org.gradle.api.JavaVersion)
+com.android.build.api.dsl.CompileOptions.sourceCompatibility: void (java.lang.Object)
+com.android.build.api.dsl.CompileOptions.targetCompatibility: void (java.lang.Object)
 com.android.build.api.dsl.DataBinding
 com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.DynamicDelivery
