@@ -793,6 +793,7 @@ class VdPath extends VdElement {
                 } else if (mTileMode.equals("repeat")) {
                     tile = MultipleGradientPaint.CycleMethod.REPEAT;
                 }
+
                 if (mGradientType.equals("linear")) {
                     LinearGradientPaint gradient =
                             new LinearGradientPaint(
@@ -814,10 +815,17 @@ class VdPath extends VdElement {
                                     mGradientColors,
                                     tile);
                     g.setPaint(paint);
+                } else if (mGradientType.equals("sweep")) {
+                    // AWT doesn't support sweep gradients but Android does.
+                    getLogger().log(Level.WARNING,
+                                    ">>>>>> Unable to render a sweep gradient."
+                                    + " Using a solid color instead. >>>>>>");
+                    g.setPaint(mGradientColors[0]);
                 } else {
                     getLogger().log(Level.WARNING,
                             ">>>>>> Unsupported gradient type: \"" + mGradientType + "\">>>>>>");
                 }
+
                 if (fill) {
                     g.fill(path2d);
                 } else {
