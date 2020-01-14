@@ -13,78 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.builder.model
 
-package com.android.builder.model;
+import java.io.File
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import java.io.File;
+/**
+ * A Signing Configuration.
+ *
+ * This is an interface for the gradle tooling api, and should only be used from Android Studio.
+ * It is not part of the DSL & API interfaces of the Android Gradle Plugin.
+ */
+interface SigningConfig {
+    /** Returns the name of the Signing config */
+    fun getName(): String
 
-/** A Signing Configuration */
-public interface SigningConfig {
+    /** The keystore file. */
+    val storeFile: File?
+
+    /** The keystore password. */
+    val storePassword: String?
+
+    /** The key alias name. */
+    val keyAlias: String?
+
+    /** The key password. */
+    val keyPassword: String?
+
+    /** The store type. */
+    val storeType: String?
+
+    /** Signing using JAR Signature Scheme (aka v1 scheme) is enabled. */
+    val isV1SigningEnabled: Boolean
+
+    /** Signing using APK Signature Scheme v2 (aka v2 scheme) is enabled. */
+    val isV2SigningEnabled: Boolean
 
     /**
-     * Returns the name of the Signing config
+     * Whether the config is fully configured for signing.
      *
-     * @return the name of the config
+     * i.e. all the required information are present.
      */
-    @NonNull
-    String getName();
-
-    /**
-     * Returns the keystore file.
-     *
-     * @return the file.
-     */
-    @Nullable
-    File getStoreFile();
-
-    /**
-     * Returns the keystore password.
-     *
-     * @return the password.
-     */
-    @Nullable
-    String getStorePassword();
-
-    /**
-     * Returns the key alias name.
-     *
-     * @return the key alias name.
-     */
-    @Nullable
-    String getKeyAlias();
-
-    /**
-     * return the key password.
-     *
-     * @return the password.
-     */
-    @Nullable
-    String getKeyPassword();
-
-    /**
-     * Returns the store type.
-     *
-     * @return the store type.
-     */
-    @Nullable
-    String getStoreType();
-
-    /**
-     * Returns {@code true} if signing using JAR Signature Scheme (aka v1 scheme) is enabled.
-     */
-    boolean isV1SigningEnabled();
-
-    /**
-     * Returns {@code true} if signing using APK Signature Scheme v2 (aka v2 scheme) is enabled.
-     */
-    boolean isV2SigningEnabled();
-
-    /**
-     * Returns whether the config is fully configured for signing.
-     *
-     * @return true if all the required information are present.
-     */
-    boolean isSigningReady();
+    val isSigningReady: Boolean
 }
