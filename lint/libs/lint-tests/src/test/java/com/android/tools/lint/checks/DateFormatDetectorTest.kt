@@ -123,6 +123,8 @@ class DateFormatDetectorTest : AbstractCheckTest() {
                         val constant = "dd-MM-YYYY"
                         val s6 = DateTimeFormatter.ofPattern(constant) // ERROR
                         val s7 = DateTimeFormatter.ofPattern(""${'"'}dd-YY-MM""${'"'}) // ERROR
+                        val s7 = DateTimeFormatter.ofPattern("YYYY-dd-MM versus yyyy-dd-MM") // OK -- both, probably okay
+                        val s7 = DateTimeFormatter.ofPattern("YYYY-WW-FF") // OK No days or months
                     }
                 }
                 """

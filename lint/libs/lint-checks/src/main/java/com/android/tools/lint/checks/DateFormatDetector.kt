@@ -90,26 +90,39 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
             return
         }
         var escaped = false
+        var weekYearStart = -1
+        var haveDate = false
+        var haveEraYear = false
         for ((index, c) in format.withIndex()) {
             if (c == '\'') {
                 escaped = !escaped
-            } else if (c == 'Y' && !escaped) {
-                var location = context.getLocation(argument)
-                var end = index + 1
-                while (end < format.length && format[end] == c) {
-                    end++
-                }
-                val digits = format.substring(index, end)
-                if (argument is ULiteralExpression) {
-                    location = context.getRangeLocation(argument, index, end - index)
-                }
-
-                context.report(
-                    WEEK_YEAR, argument, location,
-                    "`DateFormat` character 'Y' in $digits is the week-era-year; did you mean 'y' ?"
-                )
-                return
+            } else if (c == 'M' || c == 'L' || c == 'd') {
+                haveDate = true
+            } else if (c == 'y' || c == 'u') {
+                haveEraYear = true
+            } else if (c == 'Y' && !escaped && weekYearStart == -1) {
+                weekYearStart = index
             }
+        }
+        if (weekYearStart != -1 && haveDate && !haveEraYear) {
+            // The date string is referencing week-based years while also referencing
+            // months and/or days. That's probably a bug -- when you see week-based years
+            // that's typically combined with other week based quantities, like week-of-month.
+            val index = weekYearStart
+            var location = context.getLocation(argument)
+            var end = index + 1
+            while (end < format.length && format[end] == 'Y') {
+                end++
+            }
+            val digits = format.substring(index, end)
+            if (argument is ULiteralExpression) {
+                location = context.getRangeLocation(argument, index, end - index)
+            }
+
+            context.report(
+                WEEK_YEAR, argument, location,
+                "`DateFormat` character 'Y' in $digits is the week-era-year; did you mean 'y' ?"
+            )
         }
     }
 
@@ -164,7 +177,7 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
             category = Category.I18N,
             priority = 6,
             severity = Severity.WARNING,
-            enabledByDefault = false, // get feedback from the field first
+            enabledByDefault = true,
             implementation = IMPLEMENTATION
         )
 
