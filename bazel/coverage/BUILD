@@ -461,3 +461,14 @@ coverage_report(
         "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
     ],
 )
+
+# Coverage report for custom views preview.
+coverage_report(
+    name = "custom-views-preview",
+    srcpath_include = [
+        "tools/adt/idea/designer/customview/src/",
+    ],
+    tests = [
+        "//tools/adt/idea/designer/customview:intellij.android.designer.customview.tests_tests",
+    ],
+)
