@@ -1,10 +1,14 @@
 apply plugin: 'java'
+apply plugin: 'kotlin'
 apply plugin: 'clone-artifacts'
 apply plugin: 'sdk-java-lib'
 
 dependencies {
     compile project(':base:annotations')
+    implementation libs.kotlin_stdlib
     testCompile 'junit:junit:4.12'
+    testImplementation libs.guava
+    testImplementation project(':base:testutils')
 }
 
 group = 'com.android.tools.build'
@@ -20,8 +24,21 @@ project.ext.apiVersion = rootProject.ext.apiVersion ?: 0
 // what version of Gradle Plugin is running, we need to keep this
 // as Java6 bytecode in case Studio 2.2 loads a project running
 // an older plugin in a JDK6 VM.
-sourceCompatibility = JavaVersion.VERSION_1_6
-targetCompatibility = JavaVersion.VERSION_1_6
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_6
+    targetCompatibility = JavaVersion.VERSION_1_6
+}
+
+compileKotlin {
+    sourceCompatibility = JavaVersion.VERSION_1_6
+    targetCompatibility = JavaVersion.VERSION_1_6
+
+    kotlinOptions {
+        jvmTarget = "1.6"
+        apiVersion = "1.3"
+        languageVersion = "1.3"
+    }
+}
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/bintray.gradle"
