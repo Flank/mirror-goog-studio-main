@@ -286,6 +286,23 @@ coverage_report(
     ],
 )
 
+# Coverage report for System Trace V2
+coverage_report(
+    name = "systracev2",
+    srcpath_include = [
+        "tools/adt/idea/adt-ui-model/src/main/java/com/android/tools/adtui/model/trackgroup",
+        "tools/adt/idea/adt-ui/src/main/java/com/android/tools/adtui/trackgroup",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu",
+    ],
+    tests = [
+        "//tools/adt/idea/adt-ui:intellij.android.adt.ui_tests",
+        "//tools/adt/idea/adt-ui-model:intellij.android.adt.ui.model_tests",
+        "//tools/adt/idea/profilers:intellij.android.profilers_tests",
+        "//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     reports = [
