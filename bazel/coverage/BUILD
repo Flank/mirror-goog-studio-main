@@ -288,6 +288,7 @@ coverage_report(
     srcpath_include = [
         "tools/base/wizard/template-impl/src/com/android/tools/idea/wizard/template",
         "tools/base/wizard/template-plugin/src/com/android/tools/idea/wizard/template",
+        "tools/adt/idea/android/src/com/android/tools/idea/npw/module/recipes",
         "tools/adt/idea/android/src/com/android/tools/idea/templates/recipe/DefaultRecipeExecutor2.kt",
         "tools/adt/idea/android/src/com/android/tools/idea/templates/recipe/FindReferencesExecutor2.kt",
         "tools/adt/idea/android/src/com/android/tools/idea/templates/recipe/RenderingContext2.kt",
