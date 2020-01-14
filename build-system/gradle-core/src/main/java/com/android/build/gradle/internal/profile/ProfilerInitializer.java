@@ -51,7 +51,7 @@ public final class ProfilerInitializer {
     public static final String PROFILE_DIRECTORY = "android-profile";
 
     private static final DateTimeFormatter PROFILE_FILE_NAME =
-            DateTimeFormatter.ofPattern("'profile-'YYYY-MM-dd-HH-mm-ss-SSS'.rawproto'", Locale.US);
+            DateTimeFormatter.ofPattern("'profile-'yyyy-MM-dd-HH-mm-ss-SSS'.rawproto'", Locale.US);
 
     private static final Object lock = new Object();
 

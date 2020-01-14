@@ -18,6 +18,7 @@ package com.android.tools.lint.checks.studio
 
 import com.android.tools.lint.checks.AssertDetector
 import com.android.tools.lint.checks.CommentDetector
+import com.android.tools.lint.checks.DateFormatDetector
 import com.android.tools.lint.checks.InteroperabilityDetector
 import com.android.tools.lint.checks.SamDetector
 import com.android.tools.lint.client.api.IssueRegistry
@@ -40,6 +41,7 @@ class StudioIssueRegistry : IssueRegistry() {
         SamDetector.ISSUE.setEnabledByDefault(true)
         CommentDetector.EASTER_EGG.setEnabledByDefault(true)
         CommentDetector.STOP_SHIP.setEnabledByDefault(true)
+        DateFormatDetector.WEEK_YEAR.setEnabledByDefault(true)
         if (isStudio) { // not enforced in PSQ but give guidance in the IDE
             AssertDetector.EXPENSIVE.setEnabledByDefault(true)
             InteroperabilityDetector.NO_HARD_KOTLIN_KEYWORDS.setEnabledByDefault(true)
