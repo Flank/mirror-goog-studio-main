@@ -20,9 +20,10 @@ config_options="--config=remote"
   ${config_options} \
   //tools/adt/idea/android:artifacts
 
+# Use the same compilation mode as the build invocation above, see ag/10086024.
 "${script_dir}/bazel" \
   run \
-  ${config_options} \
+  --compilation_mode opt \
   //tools/base/bazel:iml_to_build -- --dry_run --warnings_as_errors
 
 readonly iml_to_build_status=$?
