@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-63f41f26bb6b1fedd4c71ab984f0ae670b270a29fadba1ce0fdf7e2792e98a41
+c6df944074c7d555d1ec9e22a4be3e7dedada7d120c000fe1c0b83b235bb532b
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -281,13 +281,16 @@ com.android.build.api.variant.BuiltArtifact.isEnabled: boolean ()
 com.android.build.api.variant.BuiltArtifacts
 com.android.build.api.variant.BuiltArtifacts$Companion
 com.android.build.api.variant.BuiltArtifacts$Companion.getLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
+com.android.build.api.variant.BuiltArtifacts$TransformParams implements org.gradle.workers.WorkParameters, java.io.Serializable
+com.android.build.api.variant.BuiltArtifacts$TransformParams.getOutput: java.io.File ()
 com.android.build.api.variant.BuiltArtifacts.getApplicationId: java.lang.String ()
 com.android.build.api.variant.BuiltArtifacts.getArtifactType: com.android.build.api.artifact.ArtifactType<?> ()
 com.android.build.api.variant.BuiltArtifacts.getElements: java.util.Collection<com.android.build.api.variant.BuiltArtifact> ()
 com.android.build.api.variant.BuiltArtifacts.getLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
 com.android.build.api.variant.BuiltArtifacts.getVariantName: java.lang.String ()
 com.android.build.api.variant.BuiltArtifacts.save: void (org.gradle.api.file.Directory)
-com.android.build.api.variant.BuiltArtifacts.transform: com.android.build.api.variant.BuiltArtifacts (com.android.build.api.artifact.ArtifactType<?>, kotlin.jvm.functions.Function1<? super java.io.File, ? extends java.io.File>)
+com.android.build.api.variant.BuiltArtifacts.transform: com.android.build.api.variant.BuiltArtifacts (com.android.build.api.artifact.ArtifactType<org.gradle.api.file.Directory>, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.BuiltArtifact, ? extends java.io.File>)
+com.android.build.api.variant.BuiltArtifacts.transform: java.util.function.Supplier<com.android.build.api.variant.BuiltArtifacts> (com.android.build.api.artifact.ArtifactType<org.gradle.api.file.Directory>, org.gradle.workers.WorkQueue, java.lang.Class<? extends org.gradle.workers.WorkAction<ParamT>>, kotlin.jvm.functions.Function2<? super com.android.build.api.variant.BuiltArtifact, ? super ParamT, kotlin.Unit>)
 com.android.build.api.variant.BuiltArtifactsLoader
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.Directory)
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.FileCollection)

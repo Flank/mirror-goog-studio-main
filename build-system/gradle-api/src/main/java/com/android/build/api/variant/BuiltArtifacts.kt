@@ -20,8 +20,13 @@ import com.android.build.api.artifact.ArtifactType
 import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
+import org.gradle.workers.WorkQueue
 import java.io.File
+import java.io.Serializable
 import java.util.ServiceLoader
+import java.util.function.Supplier
 
 /**
  * Represents a [Collection] of [BuiltArtifact] produced by a [org.gradle.api.Task].
@@ -131,7 +136,45 @@ interface BuiltArtifacts {
      * @return a new instance of [BuiltArtifacts] with updated artifact type and elements as
      * provided by the [transformer] lambda.
      */
-    fun transform(newArtifactType: ArtifactType<*>, transformer: (input: File) -> File): BuiltArtifacts
+    fun transform(newArtifactType: ArtifactType<Directory>,
+        transformer: (input: BuiltArtifact) -> File): BuiltArtifacts
+
+    /**
+     * Transforms this [Collection] of [BuiltArtifact] into a new instance of newly produced
+     * [BuiltArtifact] with a new [ArtifactType].
+     *
+     * This convenience method can be used by [org.gradle.api.Task] implementation to easily
+     * transforms input [BuiltArtifacts] into a new [Collection] of [BuiltArtifact] using a
+     * [WorkQueue]. Each transformation will be [WorkQueue.submit]ed with the instances of
+     * [transformRunnableClass], with parameters of type [ParamT] injected and available through the
+     * [WorkAction.getParameters] method.
+     *
+     * Instances of [ParamT] are created by Gradle and configured by the method
+     * [parameterConfigurator]. This method will be provided with one of the element in [elements]
+     * must configure that passed instance of [ParamT] to contains all the necessary inputs for
+     * the [transformRunnableClass] action.
+     *
+     * Once the work item is completed, the result is expected to be stored into the
+     * [TransformParams.output] field.
+     *
+     * A [Supplier] of [BuiltArtifacts] is returned and callers can block on all work items
+     * completion by doing [Supplier.get] if needed.
+     *
+     * The new [BuiltArtifacts] instance can be used to save the metadata associated with the
+     * new produced files.
+     *
+     * @param newArtifactType the new [ArtifactType] that identifies the new produced files.
+     * @param workers a Gradle [WorkQueue] that can be used to submit work items.
+     * @param transformRunnableClass [WorkAction] subclass that implements the work item.
+     * @param parameterConfigurator a factory lambda to create instances of [ParamT] provided with an
+     * input [BuiltArtifact].
+     */
+    fun <ParamT : TransformParams> transform(
+        newArtifactType: ArtifactType<Directory>,
+        workers: WorkQueue,
+        transformRunnableClass: Class<out WorkAction<ParamT>>,
+        parameterConfigurator: (builtArtifact: BuiltArtifact, parameters: ParamT) -> Unit
+        ) : Supplier<BuiltArtifacts>
 
     /**
      * Saves the metadata associated with this instance into a folder.
@@ -139,4 +182,16 @@ interface BuiltArtifacts {
      * name.
      */
     fun save(out: Directory)
+
+    /**
+     * Specialized version  of Gradle's [WorkParameters] so we can retrieve the output file
+     * generated when transforming an instance of [BuiltArtifacts] into a new one.
+     */
+    @Incubating
+    interface TransformParams: WorkParameters, Serializable {
+        /**
+         * Result of the work item submission must be made available through this field.
+         */
+        val output: File
+    }
 }
