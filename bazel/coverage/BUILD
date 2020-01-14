@@ -112,6 +112,16 @@ coverage_report(
 )
 
 coverage_report(
+    name = "validation",
+    srcpath_include = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual",
+    ],
+    tests = [
+        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+    ],
+)
+
+coverage_report(
     name = "build-attribution",
     srcpath_include = ["tools/adt/idea/build-attribution/src"],
     tests = ["//tools/adt/idea/build-attribution:intellij.android.build-attribution.tests_tests"],
