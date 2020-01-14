@@ -1,0 +1,51 @@
+# This text proto is the output of "am instrument -w -m" command with the following tests.
+#
+# package com.example.myapplication
+#
+# import org.junit.Test
+# import org.junit.runner.RunWith
+# import org.junit.runners.JUnit4
+#
+# @RunWith(JUnit4::class)
+# class CrashTest {
+#   @Test
+#   fun systemServerCrashed() {
+#       Thread.sleep(60000)
+#       /* Kill the system_process process manually by adb shell command manually while the test is running. */
+#   }
+# }
+
+test_status {
+  result_code: 1
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.CrashTest"
+    }
+    entries {
+      key: "current"
+      value_int: 1
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 1
+    }
+    entries {
+      key: "stream"
+      value_string: "\ncom.example.myapplication.CrashTest:"
+    }
+    entries {
+      key: "test"
+      value_string: "systemServerCrashed"
+    }
+  }
+}
+
+session_status {
+  status_code: SESSION_ABORTED
+  error_text: "INSTRUMENTATION_ABORTED: System has crashed."
+}

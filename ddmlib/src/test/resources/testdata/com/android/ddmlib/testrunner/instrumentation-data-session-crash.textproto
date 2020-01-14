@@ -1,0 +1,94 @@
+# This text proto is the output of "am instrument -w -m" command with the following tests.
+#
+# package com.example.myapplication
+#
+# import androidx.test.ext.junit.runners.AndroidJUnit4
+# import androidx.test.platform.app.InstrumentationRegistry
+# import org.junit.Test
+# import org.junit.runner.RunWith
+#
+# @RunWith(AndroidJUnit4::class)
+# class MainActivityTest2 {
+#   @Test
+#   fun crashInUiThread() {
+#     InstrumentationRegistry.getInstrumentation().runOnMainSync {
+#       throw RuntimeException("Crash on UI Thread")
+#     }
+#   }
+#
+#   @Test
+#   fun secondTestWillNotRunBecauseProcessCrashedOnTheFirstTest() {}
+# }
+
+test_status {
+  result_code: 1
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.MainActivityTest2"
+    }
+    entries {
+      key: "current"
+      value_int: 1
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 2
+    }
+    entries {
+      key: "stream"
+      value_string: "\ncom.example.myapplication.MainActivityTest2:"
+    }
+    entries {
+      key: "test"
+      value_string: "crashInUiThread"
+    }
+  }
+}
+test_status {
+  result_code: -2
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.MainActivityTest2"
+    }
+    entries {
+      key: "current"
+      value_int: 1
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 2
+    }
+    entries {
+      key: "stack"
+      value_string: "java.lang.RuntimeException: Crash on UI Thread\n\tat com.example.myapplication.MainActivityTest2$crashInUiThread$1.run(MainActivityTest2.kt:17)\n\tat android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2207)\n\tat android.os.Handler.handleCallback(Handler.java:883)\n\tat android.os.Handler.dispatchMessage(Handler.java:100)\n\tat android.os.Looper.loop(Looper.java:214)\n\tat android.app.ActivityThread.main(ActivityThread.java:7356)\n\tat java.lang.reflect.Method.invoke(Native Method)\n\tat com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:492)\n\tat com.android.internal.os.ZygoteInit.main(ZygoteInit.java:930)\n"
+    }
+    entries {
+      key: "stream"
+      value_string: "\nProcess crashed while executing crashInUiThread(com.example.myapplication.MainActivityTest2):\njava.lang.RuntimeException: Crash on UI Thread\n\tat com.example.myapplication.MainActivityTest2$crashInUiThread$1.run(MainActivityTest2.kt:17)\n\tat android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2207)\n\tat android.os.Handler.handleCallback(Handler.java:883)\n\tat android.os.Handler.dispatchMessage(Handler.java:100)\n\tat android.os.Looper.loop(Looper.java:214)\n\tat android.app.ActivityThread.main(ActivityThread.java:7356)\n\tat java.lang.reflect.Method.invoke(Native Method)\n\tat com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:492)\n\tat com.android.internal.os.ZygoteInit.main(ZygoteInit.java:930)\n"
+    }
+    entries {
+      key: "test"
+      value_string: "crashInUiThread"
+    }
+  }
+  logcat: "--------- beginning of main\n01-07 18:22:01.624 10144  1749  1749 I MonitoringInstr: Activities that are still in CREATED to STOPPED: 0\n01-07 18:22:01.625 10144  1749  1749 D AndroidRuntime: Shutting down VM\n--------- beginning of crash\n01-07 18:22:01.625 10144  1749  1749 E AndroidRuntime: FATAL EXCEPTION: main\n01-07 18:22:01.625 10144  1749  1749 E AndroidRuntime: Process: com.example.myapplication, PID: 1749\n01-07 18:22:01.625 10144  1749  1749 E AndroidRuntime: java.lang.RuntimeException: Crash on UI Thread\n01-07 18:22:01.625 10144  1749  1749 E AndroidRuntime: \tat com.example.myapplication.MainActivityTest2$crashInUiThread$1.run(MainActivityTest2.kt:17)\n01-07 18:22:01.625 10144  1749  1749 E AndroidRuntime: \tat android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2207)\n01-07 18:22:01.625 10144  1749  1749 E AndroidRuntime: \tat android.os.Handler.handleCallback(Handler.java:883)\n01-07 18:22:01.625 10144  1749  1749 E AndroidRuntime: \tat android.os.Handler.dispatchMessage(Handler.java:100)\n01-07 18:22:01.625 10144  1749  1749 E AndroidRuntime: \tat android.os.Looper.loop(Looper.java:214)\n01-07 18:22:01.625 10144  1749  1749 E AndroidRuntime: \tat android.app.ActivityThread.main(ActivityThread.java:7356)\n01-07 18:22:01.625 10144  1749  1749 E AndroidRuntime: \tat java.lang.reflect.Method.invoke(Native Method)\n01-07 18:22:01.625 10144  1749  1749 E AndroidRuntime: \tat com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:492)\n01-07 18:22:01.625 10144  1749  1749 E AndroidRuntime: \tat com.android.internal.os.ZygoteInit.main(ZygoteInit.java:930)\n"
+}
+
+session_status {
+  results {
+    entries {
+      key: "shortMsg"
+      value_string: "Process crashed."
+    }
+  }
+}

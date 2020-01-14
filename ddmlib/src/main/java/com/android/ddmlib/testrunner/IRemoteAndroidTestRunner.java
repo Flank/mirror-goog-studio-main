@@ -190,12 +190,6 @@ public interface IRemoteAndroidTestRunner {
     CoverageOutput getCoverageOutputType();
 
     /**
-     * Sets this test to enforce expecting a final time stamp from the instrumentation otherwise the
-     * run will be considered failed.
-     */
-    void setEnforceTimeStamp(boolean enforceTimestamp);
-
-    /**
      * Sets this test run to test collection mode. If true, will skip test execution and will set
      * all appropriate runner arguments required for a successful test collection.
      */

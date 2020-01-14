@@ -95,15 +95,12 @@ public class InstrumentationResultParserTest extends TestCase {
         mParser =
                 new InstrumentationResultParser(
                         RUN_NAME, Arrays.asList(mMockListener, mMockListener2));
-        mParser.setEnforceTimeStamp(true);
         StringBuilder output = new StringBuilder();
         addLine(output, "INSTRUMENTATION_RESULT: com.android.cts.launcherapps:other=true");
         addLine(output, "INSTRUMENTATION_CODE: -1");
 
         mMockListener.testRunStarted(RUN_NAME, 0);
         mMockListener2.testRunStarted(RUN_NAME, 0);
-        mMockListener.testRunFailed(InstrumentationResultParser.INVALID_OUTPUT_ERR_MSG);
-        mMockListener2.testRunFailed(InstrumentationResultParser.INVALID_OUTPUT_ERR_MSG);
         mMockListener.testRunEnded(EasyMock.anyLong(), EasyMock.anyObject());
         mMockListener2.testRunEnded(EasyMock.anyLong(), EasyMock.anyObject());
 
@@ -136,14 +133,11 @@ public class InstrumentationResultParserTest extends TestCase {
      * Tests parsing output for a missing time stamp, meaning an invalid output from the runner.
      */
     public void testParse_missingTimeStamp() {
-        // we enforce the time stamp
-        mParser.setEnforceTimeStamp(true);
         StringBuilder output = new StringBuilder();
         addLine(output, "INSTRUMENTATION_RESULT: stream=");
         addLine(output, "INSTRUMENTATION_CODE: -1");
 
         mMockListener.testRunStarted(RUN_NAME, 0);
-        mMockListener.testRunFailed(InstrumentationResultParser.INVALID_OUTPUT_ERR_MSG);
         mMockListener.testRunEnded(0, Collections.EMPTY_MAP);
 
         injectAndVerifyTestString(output.toString());
@@ -155,8 +149,6 @@ public class InstrumentationResultParserTest extends TestCase {
      * have a more meaningful message.
      */
     public void testParse_missingTimeStamp_withStack() {
-        // we enforce the time stamp
-        mParser.setEnforceTimeStamp(true);
         StringBuilder output = new StringBuilder();
         addLine(
                 output,
@@ -194,13 +186,11 @@ public class InstrumentationResultParserTest extends TestCase {
 
         injectAndVerifyTestString(output.toString());
         String failure = capture.getValue();
-        assertTrue(failure.startsWith(InstrumentationResultParser.INVALID_OUTPUT_ERR_MSG));
         assertTrue(failure.contains(InstrumentationResultParser.FATAL_EXCEPTION_MSG));
     }
 
     /** Tests parsing output for a missing time stamp but without enforcing the format. */
     public void testParse_missingTimeStamp_notEnforced() {
-        mParser.setEnforceTimeStamp(false);
         StringBuilder output = new StringBuilder();
         addLine(output, "INSTRUMENTATION_RESULT: stream=");
         addLine(output, "INSTRUMENTATION_CODE: -1");
@@ -218,7 +208,6 @@ public class InstrumentationResultParserTest extends TestCase {
      * populated.
      */
     public void testParse_directFailure() {
-        mParser.setEnforceTimeStamp(false);
         StringBuilder output = new StringBuilder();
         addLine(output, "INSTRUMENTATION_RESULT: stream=");
         addLine(output, "Time: 0");

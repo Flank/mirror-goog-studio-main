@@ -1,6 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
+apply plugin: 'com.google.protobuf'
 
 group = 'com.android.tools.ddms'
 archivesBaseName = 'ddmlib'
@@ -9,6 +10,7 @@ version = rootProject.ext.baseVersion
 dependencies {
     compile project(':base:common')
     compile libs.kxml
+    compile libs.protobuf
 
     testCompile project(':base:fakeadbserver')
     testCompile project(':base:testutils')
@@ -17,8 +19,15 @@ dependencies {
 }
 
 sourceSets {
+    main.proto.srcDir 'src/main/proto'
     main.resources.srcDir 'src/main/java'
     test.resources.srcDir 'src/test/java'
+}
+
+protobuf {
+    protoc {
+        artifact = libs.proto_compiler
+    }
 }
 
 project.ext.pomName = 'Android Tools ddmlib'

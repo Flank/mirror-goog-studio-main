@@ -1,0 +1,280 @@
+# This text proto is the output of "am instrument -w -m" command with the following tests.
+#
+# package com.example.myapplication
+#
+# import android.util.Log
+# import androidx.test.ext.junit.runners.AndroidJUnit4
+# import org.junit.Assert.fail
+# import org.junit.Ignore
+# import org.junit.Test
+# import org.junit.runner.RunWith
+#
+# @RunWith(AndroidJUnit4::class)
+# class MainActivityTest {
+#   @Test
+#   fun testCase1() {
+#     Log.w("MainActivityTest", "logcat message from test case 1")
+#   }
+#
+#   @Test
+#   fun testCase2() {
+#     Log.w("MainActivityTest", "logcat message from test case 2")
+#   }
+#
+#   @Test
+#   fun failingTest() {
+#     fail("This is a testing test")
+#   }
+#
+#   @Ignore
+#   @Test
+#   fun testWithIgnoreAnnotation() {}
+# }
+
+test_status {
+  result_code: 1
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.MainActivityTest"
+    }
+    entries {
+      key: "current"
+      value_int: 1
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 4
+    }
+    entries {
+      key: "stream"
+      value_string: "\ncom.example.myapplication.MainActivityTest:"
+    }
+    entries {
+      key: "test"
+      value_string: "testCase1"
+    }
+  }
+}
+test_status {
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.MainActivityTest"
+    }
+    entries {
+      key: "current"
+      value_int: 1
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 4
+    }
+    entries {
+      key: "stream"
+      value_string: "."
+    }
+    entries {
+      key: "test"
+      value_string: "testCase1"
+    }
+  }
+  logcat: "--------- beginning of main\n01-07 17:37:35.131 10144 32744 32744 I MonitoringInstr: Activities that are still in CREATED to STOPPED: 0\n01-07 17:37:35.131 10144 32744   311 W MainActivityTest: logcat message from test case 1\n01-07 17:37:35.131 10144 32744   311 I TestRunner: finished: testCase1(com.example.myapplication.MainActivityTest)\n"
+}
+
+test_status {
+  result_code: 1
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.MainActivityTest"
+    }
+    entries {
+      key: "current"
+      value_int: 2
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 4
+    }
+    entries {
+      key: "stream"
+    }
+    entries {
+      key: "test"
+      value_string: "testCase2"
+    }
+  }
+}
+
+test_status {
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.MainActivityTest"
+    }
+    entries {
+      key: "current"
+      value_int: 2
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 4
+    }
+    entries {
+      key: "stream"
+      value_string: "."
+    }
+    entries {
+      key: "test"
+      value_string: "testCase2"
+    }
+  }
+  logcat: "--------- beginning of main\n01-07 17:37:35.149 10144 32744 32744 I MonitoringInstr: Activities that are still in CREATED to STOPPED: 0\n01-07 17:37:35.149 10144 32744   311 W MainActivityTest: logcat message from test case 2\n01-07 17:37:35.149 10144 32744   311 I TestRunner: finished: testCase2(com.example.myapplication.MainActivityTest)\n"
+}
+test_status {
+  result_code: 1
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.MainActivityTest"
+    }
+    entries {
+      key: "current"
+      value_int: 3
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 4
+    }
+    entries {
+      key: "stream"
+    }
+    entries {
+      key: "test"
+      value_string: "testWithIgnoreAnnotation"
+    }
+  }
+}
+test_status {
+  result_code: -3
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.MainActivityTest"
+    }
+    entries {
+      key: "current"
+      value_int: 3
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 4
+    }
+    entries {
+      key: "stream"
+    }
+    entries {
+      key: "test"
+      value_string: "testWithIgnoreAnnotation"
+    }
+  }
+  logcat: "--------- beginning of main\n01-07 17:37:35.159 10144 32744 32744 I MonitoringInstr: Activities that are still in CREATED to STOPPED: 0\n01-07 17:37:35.160 10144 32744   311 I TestRunner: ignored: testWithIgnoreAnnotation(com.example.myapplication.MainActivityTest)\n"
+}
+test_status {
+  result_code: 1
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.MainActivityTest"
+    }
+    entries {
+      key: "current"
+      value_int: 4
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 4
+    }
+    entries {
+      key: "stream"
+    }
+    entries {
+      key: "test"
+      value_string: "failingTest"
+    }
+  }
+}
+
+test_status {
+  result_code: -2
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.MainActivityTest"
+    }
+    entries {
+      key: "current"
+      value_int: 4
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 4
+    }
+    entries {
+      key: "stack"
+      value_string: "java.lang.AssertionError: This is a testing test\n\tat org.junit.Assert.fail(Assert.java:88)\n\tat com.example.myapplication.MainActivityTest.failingTest(MainActivityTest.kt:27)\n\tat java.lang.reflect.Method.invoke(Native Method)\n\tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)\n\tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\n\tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)\n\tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\n\tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat androidx.test.ext.junit.runners.AndroidJUnit4.run(AndroidJUnit4.java:104)\n\tat org.junit.runners.Suite.runChild(Suite.java:128)\n\tat org.junit.runners.Suite.runChild(Suite.java:27)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:137)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:115)\n\tat androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)\n\tat androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:388)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2189)\n"
+    }
+    entries {
+      key: "stream"
+      value_string: "\nError in failingTest(com.example.myapplication.MainActivityTest):\njava.lang.AssertionError: This is a testing test\n\tat org.junit.Assert.fail(Assert.java:88)\n\tat com.example.myapplication.MainActivityTest.failingTest(MainActivityTest.kt:27)\n\tat java.lang.reflect.Method.invoke(Native Method)\n\tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)\n\tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\n\tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)\n\tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\n\tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat androidx.test.ext.junit.runners.AndroidJUnit4.run(AndroidJUnit4.java:104)\n\tat org.junit.runners.Suite.runChild(Suite.java:128)\n\tat org.junit.runners.Suite.runChild(Suite.java:27)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:137)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:115)\n\tat androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)\n\tat androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:388)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2189)\n"
+    }
+    entries {
+      key: "test"
+      value_string: "failingTest"
+    }
+  }
+  logcat: "--------- beginning of main\n01-07 17:37:35.159 10144 32744 32744 I MonitoringInstr: Activities that are still in CREATED to STOPPED: 0\n01-07 17:37:35.160 10144 32744   311 I TestRunner: ignored: testWithIgnoreAnnotation(com.example.myapplication.MainActivityTest)\n01-07 17:37:35.166 10144 32744   311 I TestRunner: started: failingTest(com.example.myapplication.MainActivityTest)\n01-07 17:37:35.166 10144 32744 32744 I MonitoringInstr: Activities that are still in CREATED to STOPPED: 0\n01-07 17:37:35.167 10144 32744   311 E TestRunner: failed: failingTest(com.example.myapplication.MainActivityTest)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: ----- begin exception -----\n01-07 17:37:35.167 10144 32744   311 E TestRunner: java.lang.AssertionError: This is a testing test\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.Assert.fail(Assert.java:88)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat com.example.myapplication.MainActivityTest.failingTest(MainActivityTest.kt:27)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat java.lang.reflect.Method.invoke(Native Method)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat androidx.test.ext.junit.runners.AndroidJUnit4.run(AndroidJUnit4.java:104)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.Suite.runChild(Suite.java:128)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.Suite.runChild(Suite.java:27)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runner.JUnitCore.run(JUnitCore.java:137)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat org.junit.runner.JUnitCore.run(JUnitCore.java:115)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:388)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: \tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2189)\n01-07 17:37:35.167 10144 32744   311 E TestRunner: ----- end exception -----\n01-07 17:37:35.168 10144 32744   311 I TestRunner: finished: failingTest(com.example.myapplication.MainActivityTest)\n"
+}
+
+session_status {
+  result_code: -1
+  results {
+    entries {
+      key: "stream"
+      value_string: "\n\nTime: 0.057\nThere was 1 failure:\n1) failingTest(com.example.myapplication.MainActivityTest)\njava.lang.AssertionError: This is a testing test\n\tat org.junit.Assert.fail(Assert.java:88)\n\tat com.example.myapplication.MainActivityTest.failingTest(MainActivityTest.kt:27)\n\tat java.lang.reflect.Method.invoke(Native Method)\n\tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)\n\tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\n\tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)\n\tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\n\tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat androidx.test.ext.junit.runners.AndroidJUnit4.run(AndroidJUnit4.java:104)\n\tat org.junit.runners.Suite.runChild(Suite.java:128)\n\tat org.junit.runners.Suite.runChild(Suite.java:27)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:137)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:115)\n\tat androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)\n\tat androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:388)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2189)\n\nFAILURES!!!\nTests run: 3,  Failures: 1\n\n"
+    }
+  }
+}

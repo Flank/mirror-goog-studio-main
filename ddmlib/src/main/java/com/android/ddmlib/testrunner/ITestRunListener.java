@@ -54,17 +54,6 @@ public interface ITestRunListener {
     void testStarted(TestIdentifier test);
 
     /**
-     * Alternative to {@link #testStarted(TestIdentifier)} where we also specify when the test was
-     * started, combined with {@link #testEnded(TestIdentifier, long, Map)} for accurate measure.
-     *
-     * @param test identifies the test
-     * @param startTime the time the test started, measured via {@link System#currentTimeMillis()}
-     */
-    default void testStarted(TestIdentifier test, long startTime) {
-        testStarted(test);
-    }
-
-    /**
      * Reports the failure of a individual test case.
      *
      * <p>Will be called between testStarted and testEnded.
@@ -93,26 +82,18 @@ public interface ITestRunListener {
 
     /**
      * Reports the execution end of an individual test case.
-     * <p>
-     * If {@link #testFailed} was not invoked, this test passed.  Also returns any key/value
+     *
+     * <p>If {@link #testFailed} was not invoked, this test passed. Also returns any key/value
      * metrics which may have been emitted during the test case's execution.
      *
      * @param test identifies the test
-     * @param testMetrics a {@link Map} of the metrics emitted
+     * @param testMetrics a {@link Map} of the metrics emitted during the execution of the test case
+     *     by {@code android.app.Instrumentation#sendStatus}. The insertion order is preserved
+     *     unless you emit a same key multiple times. Note that standard keys defined in {@link
+     *     IInstrumentationResultParser.StatusKeys} are filtered out of this Map. Ddmlib may add
+     *     extra test metrics defined in {@link IInstrumentationResultParser.StatusKeys}.
      */
     void testEnded(TestIdentifier test, Map<String, String> testMetrics);
-
-    /**
-     * Alternative to {@link #testEnded(TestIdentifier, Map)} where we can specify the end time
-     * directly. Combine with {@link #testStarted(TestIdentifier, long)} for accurate measure.
-     *
-     * @param test identifies the test
-     * @param endTime the time the test ended, measured via {@link System#currentTimeMillis()}
-     * @param testMetrics a {@link Map} of the metrics emitted
-     */
-    default void testEnded(TestIdentifier test, long endTime, Map<String, String> testMetrics) {
-        testEnded(test, testMetrics);
-    }
 
     /**
      * Reports test run failed to complete due to a fatal error.
@@ -123,18 +104,22 @@ public interface ITestRunListener {
 
     /**
      * Reports test run stopped before completion due to a user request.
-     * <p>
-     * TODO: currently unused, consider removing
      *
      * @param elapsedTime device reported elapsed time, in milliseconds
+     * @deprecated This callback is never be invoked. To be deleted.
      */
+    @Deprecated
     void testRunStopped(long elapsedTime);
 
     /**
      * Reports end of test run.
      *
      * @param elapsedTime device reported elapsed time, in milliseconds
-     * @param runMetrics key-value pairs reported at the end of a test run
+     * @param runMetrics a {@link Map} of the metrics emitted during the execution of the test case
+     *     by {@code android.app.Instrumentation#addResults}. The insertion order is preserved
+     *     unless you emit a same key multiple times. Note that standard keys defined in {@link
+     *     IInstrumentationResultParser.StatusKeys} are filtered out of this Map. Ddmlib may add
+     *     extra test metrics defined in {@link IInstrumentationResultParser.StatusKeys}.
      */
     void testRunEnded(long elapsedTime, Map<String, String> runMetrics);
 }

@@ -1,6 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "java_proto_library")
 
 # managed by go/iml_to_build
 iml_module(
@@ -29,12 +30,19 @@ iml_module(
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
         "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
+        "//tools/idea/.idea/libraries:protobuf",
+        "//tools/idea/.idea/libraries:libam-instrumentation-data-proto",
     ],
 )
 
-maven_java_library(
+# Kotlin is not enabled in ddmlib module but here we use kotlin_library rule
+# for bundled_deps support.
+kotlin_library(
     name = "tools.ddmlib",
-    srcs = glob(["src/main/java/**"]),
+    srcs = ["src/main/java"],
+    bundled_deps = [
+        ":am-instrumentation-data-proto",
+    ],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     pom = ":pom",
     resource_strip_prefix = "tools/base/ddmlib",
@@ -43,6 +51,7 @@ maven_java_library(
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:com.google.protobuf_protobuf-java",
         "//tools/base/third_party:net.sf.kxml_kxml2",
     ],
 )
@@ -54,9 +63,10 @@ maven_pom(
     source = "//tools/buildSrc/base:base_version",
 )
 
-coverage_java_test(
+kotlin_test(
     name = "tools.tests",
-    srcs = glob(["src/test/java/**/*.java"]),
+    srcs = ["src/test/java"],
+    coverage = True,
     data = ["//prebuilts/studio/sdk:platform-tools"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),
@@ -68,9 +78,16 @@ coverage_java_test(
         "//tools/base/fakeadbserver:tools.fakeadbserver",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:com.google.protobuf_protobuf-java",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.easymock_easymock",
         "//tools/base/third_party:org.mockito_mockito-core",
     ],
+)
+
+java_proto_library(
+    name = "am-instrumentation-data-proto",
+    srcs = glob(["src/main/proto/**/*.proto"]),
+    visibility = ["//visibility:public"],
 )

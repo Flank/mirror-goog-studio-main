@@ -30,11 +30,65 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 
 /**
  * Runs a Android test command remotely and reports results.
  */
 public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
+
+    /** Represents a status reporter mode in am instrument command options. */
+    public enum StatusReporterMode {
+        /**
+         * Use raw text message to receive status from am instrument command.
+         *
+         * @deprecated Use {@link #PROTO_STD}.
+         */
+        // TODO: Delete this mode.
+        @Deprecated
+        RAW_TEXT("-r", InstrumentationResultParser::new),
+
+        /**
+         * Use instrumentationData protobuf status reporter to receive status from am instrument
+         * command.
+         */
+        PROTO_STD("-m", InstrumentationProtoResultParser::new);
+
+        StatusReporterMode(
+                String amInstrumentCommandArg,
+                BiFunction<String, Collection<ITestRunListener>, IInstrumentationResultParser>
+                        parserFactory) {
+            this.amInstrumentCommandArg = amInstrumentCommandArg;
+            this.parserFactory = parserFactory;
+        }
+
+        private final String amInstrumentCommandArg;
+        private final BiFunction<String, Collection<ITestRunListener>, IInstrumentationResultParser>
+                parserFactory;
+
+        /**
+         * Returns a command line arg for am instrument command to specify this status reporter
+         * mode.
+         */
+        public String getAmInstrumentCommandArg() {
+            return amInstrumentCommandArg;
+        }
+
+        /**
+         * Create the {@link InstrumentationResultParser} that can be used to parse the
+         * instrumentation output.
+         *
+         * @param runName The name of the run to use.
+         * @param listeners The listeners where to report the results.
+         * @return An instance of {@link InstrumentationResultParser}.
+         */
+        public IInstrumentationResultParser createInstrumentationResultParser(
+                @NonNull String runName, @NonNull Collection<ITestRunListener> listeners) {
+            return parserFactory.apply(runName, listeners);
+        }
+    }
+
+    private final StatusReporterMode mStatusReporterMode;
 
     private final String mPackageName;
     private final String mRunnerName;
@@ -44,11 +98,10 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     private long mMaxTimeToOutputResponseMs = 0L;
 
     private String mRunName = null;
-    private boolean mEnforceTimeStamp = false;
 
     /** map of name-value instrumentation argument pairs */
     private Map<String, String> mArgMap;
-    private InstrumentationResultParser mParser;
+    private IInstrumentationResultParser mParser;
 
     private static final String LOG_TAG = "RemoteAndroidTest";
     private static final String DEFAULT_RUNNER_NAME = "android.test.InstrumentationTestRunner";
@@ -74,17 +127,35 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
      *
      * @param packageName the Android application package that contains the tests to run
      * @param runnerName the instrumentation test runner to execute. If null, will use default
-     *   runner
+     *     runner
      * @param remoteDevice the Android device to execute tests on
+     * @param statusReporterMode the status reporter mode to be used for am instrument command
      */
-    public RemoteAndroidTestRunner(String packageName,
-                                   String runnerName,
-                                   IShellEnabledDevice remoteDevice) {
+    public RemoteAndroidTestRunner(
+            String packageName,
+            String runnerName,
+            IShellEnabledDevice remoteDevice,
+            StatusReporterMode statusReporterMode) {
 
         mPackageName = packageName;
         mRunnerName = runnerName;
         mRemoteDevice = remoteDevice;
+        mStatusReporterMode = statusReporterMode;
         mArgMap = new Hashtable<String, String>();
+    }
+
+    /**
+     * Alternate constructor. Uses default {@code statusReporterMode}.
+     *
+     * @param packageName the Android application package that contains the tests to run
+     * @param runnerName the instrumentation test runner to execute. If null, will use default
+     *     runner
+     * @param remoteDevice the Android device to execute tests on
+     */
+    public RemoteAndroidTestRunner(
+            String packageName, String runnerName, IShellEnabledDevice remoteDevice) {
+        // TODO(hummer): Change the default reporter mode to PROTO_STD.
+        this(packageName, runnerName, remoteDevice, StatusReporterMode.RAW_TEXT);
     }
 
     /**
@@ -197,11 +268,6 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     }
 
     @Override
-    public void setEnforceTimeStamp(boolean timestamp) {
-        mEnforceTimeStamp = timestamp;
-    }
-
-    @Override
     public void setTestSize(TestSize size) {
         addInstrumentationArg(SIZE_ARG_NAME, size.getRunnerValue());
     }
@@ -279,7 +345,6 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
                 mRemoteDevice.getName()));
         String runName = mRunName == null ? mPackageName : mRunName;
         mParser = createParser(runName, listeners);
-        mParser.setEnforceTimeStamp(mEnforceTimeStamp);
 
         try {
             mRemoteDevice.executeShellCommand(
@@ -328,15 +393,19 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
      * @return An instance of {@link InstrumentationResultParser}.
      */
     @NonNull
-    public InstrumentationResultParser createParser(
+    public IInstrumentationResultParser createParser(
             @NonNull String runName, @NonNull Collection<ITestRunListener> listeners) {
-        return new InstrumentationResultParser(runName, listeners);
+        return mStatusReporterMode.createInstrumentationResultParser(runName, listeners);
     }
 
     @NonNull
     public String getAmInstrumentCommand() {
-        return String.format("am instrument -w -r %1$s %2$s %3$s", getRunOptions(),
-                             getArgsCommand(), getRunnerPath());
+        return String.format(
+                "am instrument -w %1$s %2$s %3$s %4$s",
+                mStatusReporterMode.getAmInstrumentCommandArg(),
+                getRunOptions(),
+                getArgsCommand(),
+                getRunnerPath());
     }
 
     /**

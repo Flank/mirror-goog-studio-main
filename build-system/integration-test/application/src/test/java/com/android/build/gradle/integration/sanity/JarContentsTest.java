@@ -69,6 +69,8 @@ public class JarContentsTest {
                 "com/android/tools/ddms/ddmlib",
                 "com/",
                 "com/android/",
+                "com/android/commands/",
+                "com/android/commands/am/",
                 "com/android/ddmlib/",
                 "com/android/ddmlib/jdwp/",
                 "com/android/ddmlib/jdwp/packets/",

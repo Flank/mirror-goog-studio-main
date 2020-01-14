@@ -1,0 +1,136 @@
+# This text proto is the output of "am instrument -w -m" command with the following tests.
+#
+# package com.example.myapplication
+#
+# import android.os.Bundle
+# import androidx.test.ext.junit.runners.AndroidJUnit4
+# import androidx.test.platform.app.InstrumentationRegistry
+# import org.junit.Test
+# import org.junit.runner.RunWith
+#
+# @RunWith(AndroidJUnit4::class)
+# class MainActivityTest {
+#     @Test
+#     fun testCaseWithCustomStatusAndResultReport() {
+#         InstrumentationRegistry.getInstrumentation().apply {
+#             sendStatus(
+#                 100,
+#                 Bundle().apply {
+#                     putString("myCustomStatusKey1", "myCustomStatusValue1")
+#                 }
+#             )
+#             sendStatus(
+#                 101,
+#                 Bundle().apply {
+#                     putString("myCustomStatusKey2", "myCustomStatusValue2")
+#                 }
+#             )
+#             addResults(
+#                 Bundle().apply {
+#                     putString("myCustomResultKey1", "myCustomResultValue1")
+#                 }
+#             )
+#             addResults(
+#                 Bundle().apply {
+#                     putString("myCustomResultKey2", "myCustomResultValue2")
+#                 }
+#             )
+#         }
+#     }
+# }
+
+test_status {
+  result_code: 1
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.MainActivityTest"
+    }
+    entries {
+      key: "current"
+      value_int: 1
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 1
+    }
+    entries {
+      key: "stream"
+      value_string: "\ncom.example.myapplication.MainActivityTest:"
+    }
+    entries {
+      key: "test"
+      value_string: "testCaseWithCustomStatusAndResultReport"
+    }
+  }
+}
+
+test_status {
+  result_code: 100
+  results {
+    entries {
+      key: "myCustomStatusKey1"
+      value_string: "myCustomStatusValue1"
+    }
+  }
+  logcat: "--------- beginning of main\n01-09 21:08:13.955 10144 13305 13305 I MonitoringInstr: Activities that are still in CREATED to STOPPED: 0\n"
+}
+test_status {
+  result_code: 101
+  results {
+    entries {
+      key: "myCustomStatusKey2"
+      value_string: "myCustomStatusValue2"
+    }
+  }
+}
+test_status {
+  results {
+    entries {
+      key: "class"
+      value_string: "com.example.myapplication.MainActivityTest"
+    }
+    entries {
+      key: "current"
+      value_int: 1
+    }
+    entries {
+      key: "id"
+      value_string: "AndroidJUnitRunner"
+    }
+    entries {
+      key: "numtests"
+      value_int: 1
+    }
+    entries {
+      key: "stream"
+      value_string: "."
+    }
+    entries {
+      key: "test"
+      value_string: "testCaseWithCustomStatusAndResultReport"
+    }
+  }
+}
+
+session_status {
+  result_code: -1
+  results {
+    entries {
+      key: "myCustomResultKey1"
+      value_string: "myCustomResultValue1"
+    }
+    entries {
+      key: "myCustomResultKey2"
+      value_string: "myCustomResultValue2"
+    }
+    entries {
+      key: "stream"
+      value_string: "\n\nTime: 0.021\n\nOK (1 test)\n\n"
+    }
+  }
+}
