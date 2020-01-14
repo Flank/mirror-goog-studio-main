@@ -14,235 +14,167 @@
  * limitations under the License.
  */
 
-package com.android.builder.signing;
+package com.android.builder.signing
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.core.BuilderConstants;
-import com.android.builder.model.SigningConfig;
-import com.google.common.base.MoreObjects;
-import java.io.File;
-import java.security.KeyStore;
+import com.android.builder.core.BuilderConstants
+import com.android.builder.model.SigningConfig
+import com.google.common.base.MoreObjects
+import java.io.File
+import java.security.KeyStore
 
 /**
  * SigningConfig encapsulates the information necessary to access certificates in a keystore file
  * that can be used to sign APKs.
  */
-public class DefaultSigningConfig implements SigningConfig {
+open class DefaultSigningConfig(private val mName: String) : SigningConfig {
+    companion object {
+        const val DEFAULT_PASSWORD = "android"
+        const val DEFAULT_ALIAS = "AndroidDebugKey"
 
-    public static final String DEFAULT_PASSWORD = "android";
-    public static final String DEFAULT_ALIAS = "AndroidDebugKey";
-
-    @NonNull
-    protected final String mName;
-    private File mStoreFile = null;
-    private String mStorePassword = null;
-    private String mKeyAlias = null;
-    private String mKeyPassword = null;
-    private String mStoreType = KeyStore.getDefaultType();
-    private boolean mV1SigningEnabled = true;
-    private boolean mV2SigningEnabled = true;
-    private boolean mV1SigningConfigured = false;
-    private boolean mV2SigningConfigured = false;
-
-    /**
-     * Creates a {@link DefaultSigningConfig} that uses the default debug alias and passwords.
-     */
-    @NonNull
-    public static DefaultSigningConfig debugSigningConfig(File storeFile) {
-        DefaultSigningConfig result = new DefaultSigningConfig(BuilderConstants.DEBUG);
-        result.mStoreFile = storeFile;
-        result.mStorePassword = DEFAULT_PASSWORD;
-        result.mKeyAlias = DEFAULT_ALIAS;
-        result.mKeyPassword = DEFAULT_PASSWORD;
-        return result;
+        /**
+         * Creates a [DefaultSigningConfig] that uses the default debug alias and passwords.
+         */
+        @JvmStatic
+        fun debugSigningConfig(storeFile: File): DefaultSigningConfig {
+            val result = DefaultSigningConfig(BuilderConstants.DEBUG)
+            result.storeFile = storeFile
+            result.storePassword = DEFAULT_PASSWORD
+            result.keyAlias = DEFAULT_ALIAS
+            result.keyPassword = DEFAULT_PASSWORD
+            return result
+        }
     }
 
-    /**
-     * Creates a {@link DefaultSigningConfig}.
-     */
-    public DefaultSigningConfig(@NonNull String name) {
-        mName = name;
-    }
+    override var storeFile: File? = null
+    override var storePassword: String? = null
+    override var keyAlias: String? = null
+    override var keyPassword: String? = null
+    override var storeType: String? = KeyStore.getDefaultType()
 
-    @Override
-    @NonNull
-    public String getName() {
-        return mName;
-    }
-
-    @Override
-    @Nullable
-    public File getStoreFile() {
-        return mStoreFile;
-    }
-
-    @NonNull
-    public DefaultSigningConfig setStoreFile(File storeFile) {
-        mStoreFile = storeFile;
-        return this;
-    }
-
-    @Override
-    @Nullable
-    public String getStorePassword() {
-        return mStorePassword;
-    }
-
-    @NonNull
-    public DefaultSigningConfig setStorePassword(String storePassword) {
-        mStorePassword = storePassword;
-        return this;
-    }
-
-    @Override
-    @Nullable
-    public String getKeyAlias() {
-        return mKeyAlias;
-    }
-
-    @NonNull
-    public DefaultSigningConfig setKeyAlias(String keyAlias) {
-        mKeyAlias = keyAlias;
-        return this;
-    }
-
-    @Override
-    @Nullable
-    public String getKeyPassword() {
-        return mKeyPassword;
-    }
-
-    @NonNull
-    public DefaultSigningConfig setKeyPassword(String keyPassword) {
-        mKeyPassword = keyPassword;
-        return this;
-    }
-
-    @Override
-    @Nullable
-    public String getStoreType() {
-        return mStoreType;
-    }
-
-    @NonNull
-    public DefaultSigningConfig setStoreType(String storeType) {
-        mStoreType = storeType;
-        return this;
-    }
-
-    @Override
-    public boolean isV1SigningEnabled() {
-        return mV1SigningEnabled;
-    }
-
-    public void setV1SigningEnabled(boolean enabled) {
-        mV1SigningEnabled = enabled;
-        mV1SigningConfigured = true;
-    }
-
-    @Override
-    public boolean isV2SigningEnabled() {
-        return mV2SigningEnabled;
-    }
-
-    public void setV2SigningEnabled(boolean enabled) {
-        mV2SigningEnabled = enabled;
-        mV2SigningConfigured = true;
-    }
+    override var isV1SigningEnabled = true
+        set(value) {
+            isV1SigningConfigured = true
+            field = value
+        }
+    override var isV2SigningEnabled = true
+        set(value) {
+            isV2SigningConfigured = true
+            field = value
+        }
 
     /** Returns whether v1SigningEnabled is configured by the user through DSL. */
-    public boolean isV1SigningConfigured() {
-        return mV1SigningConfigured;
-    }
+    var isV1SigningConfigured = false
+        private set
 
     /** Returns whether v2SigningEnabled is configured by the user through DSL. */
-    public boolean isV2SigningConfigured() {
-        return mV2SigningConfigured;
+    var isV2SigningConfigured = false
+        private set
+
+    override val isSigningReady: Boolean
+        get() = storeFile != null &&
+                storePassword != null &&
+                keyAlias != null &&
+                keyPassword != null
+
+    override fun getName() = mName
+
+    fun setStoreFile(storeFile: File?): DefaultSigningConfig {
+        this.storeFile = storeFile
+        return this
+    }
+
+    fun setStorePassword(storePassword: String?): DefaultSigningConfig {
+        this.storePassword = storePassword
+        return this
+    }
+
+    fun setKeyAlias(keyAlias: String?): DefaultSigningConfig {
+        this.keyAlias = keyAlias
+        return this
+    }
+
+    fun setKeyPassword(keyPassword: String?): DefaultSigningConfig {
+        this.keyPassword = keyPassword
+        return this
+    }
+
+    fun setStoreType(storeType: String?): DefaultSigningConfig {
+        this.storeType = storeType
+        return this
     }
 
     /** Note: this function is only used by AGP internally, not by users. */
-    protected void internalSetV1SigningEnabled(boolean enabled) {
-        mV1SigningEnabled = enabled;
+    protected fun internalSetV1SigningEnabled(enabled: Boolean) {
+        val isV1SigningConfigured = this.isV1SigningConfigured
+        isV1SigningEnabled = enabled
+        this.isV1SigningConfigured = isV1SigningConfigured
     }
 
     /** Note: this function is only used by AGP internally, not by users. */
-    protected void internalSetV2SigningEnabled(boolean enabled) {
-        mV2SigningEnabled = enabled;
+    protected fun internalSetV2SigningEnabled(enabled: Boolean) {
+        val isV2SigningConfigured = this.isV2SigningConfigured
+        isV2SigningEnabled = enabled
+        this.isV2SigningConfigured = isV2SigningConfigured
     }
 
-    @Override
-    public boolean isSigningReady() {
-        return mStoreFile != null &&
-                mStorePassword != null &&
-                mKeyAlias != null &&
-                mKeyPassword != null;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class.java != other::class.java) return false
+
+        val that = other as DefaultSigningConfig
+
+        if (keyAlias != that.keyAlias) {
+            return false
+        }
+
+        if (keyPassword != that.keyPassword) {
+            return false
+        }
+
+        if (storeFile != that.storeFile) {
+            return false
+        }
+
+        if (storePassword != that.storePassword) {
+            return false
+        }
+
+        if (storeType != that.storeType) {
+            return false
+        }
+        if (isV1SigningEnabled != that.isV1SigningEnabled) return false
+        if (isV2SigningEnabled != that.isV2SigningEnabled) return false
+        if (isV1SigningConfigured != that.isV1SigningConfigured) return false
+        if (isV2SigningConfigured != that.isV2SigningConfigured) return false
+
+        return true
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        DefaultSigningConfig that = (DefaultSigningConfig) o;
-
-        if (mKeyAlias != null ?
-                !mKeyAlias.equals(that.mKeyAlias) :
-                that.mKeyAlias != null)
-            return false;
-        if (mKeyPassword != null ?
-                !mKeyPassword.equals(that.mKeyPassword) :
-                that.mKeyPassword != null)
-            return false;
-        if (mStoreFile != null ?
-                !mStoreFile.equals(that.mStoreFile) :
-                that.mStoreFile != null)
-            return false;
-        if (mStorePassword != null ?
-                !mStorePassword.equals(that.mStorePassword) :
-                that.mStorePassword != null)
-            return false;
-        if (mStoreType != null ?
-                !mStoreType.equals(that.mStoreType) :
-                that.mStoreType != null)
-            return false;
-        if (mV1SigningEnabled != that.mV1SigningEnabled) return false;
-        if (mV2SigningEnabled != that.mV2SigningEnabled) return false;
-        if (mV1SigningConfigured != that.mV1SigningConfigured) return false;
-        if (mV2SigningConfigured != that.mV2SigningConfigured) return false;
-
-        return true;
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + (storeFile?.hashCode() ?: 0)
+        result = 31 * result + (storePassword?.hashCode() ?: 0)
+        result = 31 * result + (keyAlias?.hashCode() ?: 0)
+        result = 31 * result + (keyPassword?.hashCode() ?: 0)
+        result = 31 * result + (storeType?.hashCode() ?: 0)
+        result = 31 * result + (if (isV1SigningEnabled) 17 else 0)
+        result = 31 * result + (if (isV2SigningEnabled) 17 else 0)
+        result = 31 * result + (if (isV1SigningConfigured) 17 else 0)
+        result = 31 * result + (if (isV2SigningConfigured) 17 else 0)
+        return result
     }
 
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (mStoreFile != null ?
-                mStoreFile.hashCode() : 0);
-        result = 31 * result + (mStorePassword != null ?
-                mStorePassword.hashCode() : 0);
-        result = 31 * result + (mKeyAlias != null ? mKeyAlias.hashCode() : 0);
-        result = 31 * result + (mKeyPassword != null ? mKeyPassword.hashCode() : 0);
-        result = 31 * result + (mStoreType != null ? mStoreType.hashCode() : 0);
-        result = 31 * result + (mV1SigningEnabled ? 17 : 0);
-        result = 31 * result + (mV2SigningEnabled ? 17 : 0);
-        result = 31 * result + (mV1SigningConfigured ? 17 : 0);
-        result = 31 * result + (mV2SigningConfigured ? 17 : 0);
-        return result;
-    }
-
-    @Override
-    public String toString() {
+    override fun toString(): String {
         return MoreObjects.toStringHelper(this)
-                .add("storeFile", mStoreFile.getAbsolutePath())
-                .add("storePassword", mStorePassword)
-                .add("keyAlias", mKeyAlias)
-                .add("keyPassword", mKeyPassword)
-                .add("storeType", mStoreType)
-                .add("v1SigningEnabled", mV1SigningEnabled)
-                .add("v2SigningEnabled", mV2SigningEnabled)
-                .add("v1SigningConfigured", mV1SigningConfigured)
-                .add("v2SigningConfigured", mV2SigningConfigured)
-                .toString();
+            .add("storeFile", storeFile?.absolutePath)
+            .add("storePassword", storePassword)
+            .add("keyAlias", keyAlias)
+            .add("keyPassword", keyPassword)
+            .add("storeType", storeType)
+            .add("v1SigningEnabled", isV1SigningEnabled)
+            .add("v2SigningEnabled", isV2SigningEnabled)
+            .add("v1SigningConfigured", isV1SigningConfigured)
+            .add("v2SigningConfigured", isV2SigningConfigured)
+            .toString()
     }
 }

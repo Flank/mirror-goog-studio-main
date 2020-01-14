@@ -130,7 +130,7 @@ public class SigningConfig extends DefaultSigningConfig
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("name", mName)
+                .add("name", getName())
                 .add(
                         "storeFile",
                         getStoreFile() != null ? getStoreFile().getAbsolutePath() : "null")
