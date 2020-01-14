@@ -152,7 +152,7 @@ import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask;
-import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
+import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
@@ -765,9 +765,8 @@ public abstract class TaskManager {
     }
 
     public void createMergeApkManifestsTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        AndroidArtifactVariantData androidArtifactVariantData =
-                (AndroidArtifactVariantData) componentProperties.getVariantData();
-        Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
+        ApkVariantData apkVariantData = (ApkVariantData) componentProperties.getVariantData();
+        Set<String> screenSizes = apkVariantData.getCompatibleScreens();
 
         taskFactory.register(
                 new CompatibleScreensManifest.CreationAction(componentProperties, screenSizes));

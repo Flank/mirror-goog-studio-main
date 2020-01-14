@@ -85,7 +85,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public static final String USE_PROPERTIES_DEPRECATION_URL =
             "https://d.android.com/r/tools/use-properties";
 
-    @NonNull private final ComponentPropertiesImpl componentProperties;
+    @NonNull protected final ComponentPropertiesImpl componentProperties;
     @NonNull private final ObjectFactory objectFactory;
 
     @NonNull protected final ReadOnlyObjectProvider readOnlyObjectProvider;

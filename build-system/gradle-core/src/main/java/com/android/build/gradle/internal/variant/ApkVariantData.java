@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
@@ -24,10 +25,12 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.utils.StringHelper;
+import java.util.Collections;
+import java.util.Set;
 
-/** Base data about a variant that generates an APK file. */
-public abstract class ApkVariantData extends InstallableVariantData {
+/** Data about a variant that produces a APK. */
+public abstract class ApkVariantData extends BaseVariantData {
+    private Set<String> compatibleScreens = null;
 
     protected ApkVariantData(
             @NonNull ComponentIdentity componentIdentity,
@@ -51,19 +54,16 @@ public abstract class ApkVariantData extends InstallableVariantData {
                 taskContainer);
     }
 
-    @Override
+    public void setCompatibleScreens(Set<String> compatibleScreens) {
+        this.compatibleScreens = compatibleScreens;
+    }
+
     @NonNull
-    public String getDescription() {
-        if (variantDslInfo.hasFlavors()) {
-            StringBuilder sb = new StringBuilder(50);
-            StringHelper.appendCapitalized(
-                    sb, variantDslInfo.getComponentIdentity().getBuildType());
-            StringHelper.appendCapitalized(sb, variantDslInfo.getComponentIdentity().getName());
-            sb.append(" build");
-            return sb.toString();
-        } else {
-            return StringHelper.capitalizeAndAppend(
-                    variantDslInfo.getComponentIdentity().getBuildType(), " build");
+    public Set<String> getCompatibleScreens() {
+        if (compatibleScreens == null) {
+            return Collections.emptySet();
         }
+
+        return compatibleScreens;
     }
 }

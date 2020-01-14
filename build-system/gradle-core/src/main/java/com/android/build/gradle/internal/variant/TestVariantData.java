@@ -28,7 +28,9 @@ import com.android.builder.core.VariantType;
 import com.android.utils.StringHelper;
 
 /**
- * Data about a variant that produce a test APK
+ * Data about a test component in a normal plugin
+ *
+ * <p>For the test plugin, ApplicationVariantData is used.
  */
 public class TestVariantData extends ApkVariantData {
 
