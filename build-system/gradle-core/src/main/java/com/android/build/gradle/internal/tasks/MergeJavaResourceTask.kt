@@ -260,8 +260,7 @@ abstract class MergeJavaResourceTask
             task.cacheDir = File(task.intermediateDir, "zip-cache")
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
             task.noCompress =
-                component.globalScope.extension.aaptOptions.noCompress?.toList()?.sorted() ?:
-                        listOf()
+                component.globalScope.extension.aaptOptions.noCompress.toList().sorted()
         }
     }
 

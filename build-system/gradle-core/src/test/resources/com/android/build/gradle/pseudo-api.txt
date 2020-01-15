@@ -570,6 +570,7 @@ com.android.build.gradle.internal.dsl.AaptOptions.setNamespaced: void (boolean)
 com.android.build.gradle.internal.dsl.AaptOptions.setNoCompress: void (java.lang.Iterable<java.lang.String>)
 com.android.build.gradle.internal.dsl.AaptOptions.setNoCompress: void (java.lang.String)
 com.android.build.gradle.internal.dsl.AaptOptions.setNoCompress: void (java.lang.String[])
+com.android.build.gradle.internal.dsl.AaptOptions.setNoCompress: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.internal.dsl.AaptOptions.setUseNewCruncher: void (boolean)
 com.android.build.gradle.internal.dsl.AaptOptions.useNewCruncher: void (boolean)
 com.android.build.gradle.internal.dsl.AbiSplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions

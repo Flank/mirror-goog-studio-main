@@ -18,7 +18,59 @@ package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
 
+/** DSL object for configuring aapt options. */
 @Incubating
 interface AaptOptions {
-    // TODO: 140406102
+    /**
+     * Pattern describing assets to be ignore.
+     *
+     * See `aapt --help`
+     */
+    var ignoreAssetsPattern: String?
+
+    /**
+     * Extensions of files that will not be stored compressed in the APK. Adding an empty
+     * extension, i.e., setting `noCompress ''` will trivially disable compression
+     * for all files.
+     *
+     * Equivalent of the -0 flag. See `aapt --help`
+     */
+    var noCompress: Collection<String>
+
+    /**
+     * Sets extensions of files that will not be stored compressed in the APK.
+     *
+     * Equivalent of the -0 flag. See `aapt --help`
+     */
+    fun noCompress(noCompress: String)
+
+    /**
+     * Sets extensions of files that will not be stored compressed in the APK.
+     *
+     * Equivalent of the -0 flag. See `aapt --help`
+     */
+    fun noCompress(vararg noCompress: String)
+
+    /**
+     * Forces aapt to return an error if it fails to find an entry for a configuration.
+     *
+     * See `aapt --help`
+     */
+    var failOnMissingConfigEntry: Boolean
+
+    /** List of additional parameters to pass to `aapt`. */
+    var additionalParameters: List<String>
+
+    /** Adds additional parameters to be passed to `aapt`. */
+    fun additionalParameters(params: String)
+
+    /** Adds additional parameters to be passed to `aapt`. */
+    fun additionalParameters(vararg params: String)
+
+    /**
+     * Indicates whether the resources in this sub-project are fully namespaced.
+     *
+     * This property is incubating and may change in a future release.
+     */
+    var namespaced: Boolean
 }

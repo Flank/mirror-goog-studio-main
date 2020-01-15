@@ -109,10 +109,10 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             .join(
                 aaptOptions.ignoreAssetsPattern ?: "",
                 Joiner.on(":")
-                    .join(aaptOptions.noCompress ?: listOf<String>()),
+                    .join(aaptOptions.noCompress),
                 aaptOptions.failOnMissingConfigEntry,
                 Joiner.on(":")
-                    .join(aaptOptions.additionalParameters ?:listOf<String>()),
+                    .join(aaptOptions.additionalParameters),
                 aaptOptions.cruncherProcesses
             )
     }

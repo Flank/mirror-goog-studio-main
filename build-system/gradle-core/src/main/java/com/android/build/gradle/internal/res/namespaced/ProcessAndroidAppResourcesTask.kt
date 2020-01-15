@@ -203,8 +203,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
                 component.globalScope.projectOptions
             )
             task.noCompress =
-                component.globalScope.extension.aaptOptions.noCompress?.toList()?.sorted() ?:
-                        listOf()
+                component.globalScope.extension.aaptOptions.noCompress.toList().sorted()
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }
     }

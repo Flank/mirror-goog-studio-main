@@ -348,7 +348,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             }
 
             task.aaptOptionsNoCompress =
-                    component.globalScope.extension.aaptOptions.noCompress ?: listOf()
+                component.globalScope.extension.aaptOptions.noCompress
 
             task.bundleOptions =
                     ((component.globalScope.extension as BaseAppModuleExtension).bundle).convert()

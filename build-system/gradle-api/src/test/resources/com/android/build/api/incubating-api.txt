@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a894d6401ba52256447acdff73a49b5427bb8497802a5c05ceb227c52602a0fd
+34b954a74d6ac6570748771d1d24801ef0211b14c03e1474df3b822adca44703
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -92,6 +92,20 @@ com.android.build.api.component.TestComponentProperties implements com.android.b
 com.android.build.api.component.TestComponentProperties.getTestedVariant: com.android.build.api.variant.VariantProperties ()
 com.android.build.api.component.UnitTestProperties implements com.android.build.api.component.TestComponentProperties
 com.android.build.api.dsl.AaptOptions
+com.android.build.api.dsl.AaptOptions.additionalParameters: void (java.lang.String)
+com.android.build.api.dsl.AaptOptions.additionalParameters: void (java.lang.String[])
+com.android.build.api.dsl.AaptOptions.getAdditionalParameters: java.util.List<java.lang.String> ()
+com.android.build.api.dsl.AaptOptions.getFailOnMissingConfigEntry: boolean ()
+com.android.build.api.dsl.AaptOptions.getIgnoreAssetsPattern: java.lang.String ()
+com.android.build.api.dsl.AaptOptions.getNamespaced: boolean ()
+com.android.build.api.dsl.AaptOptions.getNoCompress: java.util.Collection<java.lang.String> ()
+com.android.build.api.dsl.AaptOptions.noCompress: void (java.lang.String)
+com.android.build.api.dsl.AaptOptions.noCompress: void (java.lang.String[])
+com.android.build.api.dsl.AaptOptions.setAdditionalParameters: void (java.util.List<java.lang.String>)
+com.android.build.api.dsl.AaptOptions.setFailOnMissingConfigEntry: void (boolean)
+com.android.build.api.dsl.AaptOptions.setIgnoreAssetsPattern: void (java.lang.String)
+com.android.build.api.dsl.AaptOptions.setNamespaced: void (boolean)
+com.android.build.api.dsl.AaptOptions.setNoCompress: void (java.util.Collection<java.lang.String>)
 com.android.build.api.dsl.AdbOptions
 com.android.build.api.dsl.ApkExtension
 com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
