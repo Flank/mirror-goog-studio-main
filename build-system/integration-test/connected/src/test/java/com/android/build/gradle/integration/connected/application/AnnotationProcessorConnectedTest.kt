@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.connected.application
 
 import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -24,23 +24,19 @@ import com.android.build.gradle.integration.common.fixture.app.AnnotationProcess
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.integration.common.utils.getAndroidTestArtifact
-import com.android.build.gradle.integration.common.utils.getDebugVariant
-import com.android.build.gradle.integration.common.utils.getUnitTestArtifact
-import com.android.testutils.truth.PathSubject.assertThat
+import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.google.common.base.Charsets
 import com.google.common.io.Files
 import org.junit.Before
+import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
-import java.io.File
 
 /**
- * Tests for annotation processor.
+ * Connected tests for annotation processor.
  */
-class AnnotationProcessorTest {
+class AnnotationProcessorConnectedTest {
 
     @Rule
     @JvmField
@@ -94,7 +90,7 @@ class AnnotationProcessorTest {
     }
 
     @Test
-    fun normalBuild() {
+    fun connectedCheck() {
         TestFileUtils.appendToFile(
             project.getSubproject(":app").buildFile,
             """
@@ -104,86 +100,15 @@ class AnnotationProcessorTest {
             }
             """.trimIndent()
         )
-
-        project.executor().run("assembleDebug")
-        val aptOutputFolder = project.getSubproject(":app")
-            .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debug/out")
-        assertThat(File(aptOutputFolder, "com/example/helloworld/HelloWorldStringValue.java"))
-            .exists()
-
-        val model = project.model().fetchAndroidProjects().onlyModelMap[":app"]
-        val debugVariant = (model)!!.getDebugVariant()
-
-        assertThat(debugVariant.mainArtifact.generatedSourceFolders)
-            .contains(aptOutputFolder)
-
-        // Ensure that test sources also have their generated sources files sent to the IDE. This
-        // specifically tests for the issue described in
-        // https://issuetracker.google.com/37121918.
-        val testAptOutputFolder = project.getSubproject(":app")
-            .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debugUnitTest/out")
-        val testArtifact = debugVariant.getUnitTestArtifact()
-        assertThat(testArtifact.generatedSourceFolders).contains(testAptOutputFolder)
-
-        // Ensure that test projects also have their generated sources files sent to the IDE. This
-        // specifically tests for the issue described in
-        // https://issuetracker.google.com/37121918.
-        val androidTestAptOutputFolder = project.getSubproject(":app")
-            .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debugAndroidTest/out")
-        val androidTest = debugVariant.getAndroidTestArtifact()
-        assertThat(androidTest.generatedSourceFolders).contains(androidTestAptOutputFolder)
-
-        // check incrementality.
-        val result = project.executor().run("assembleDebug")
-        assertThat(result.upToDateTasks).contains(":app:javaPreCompileDebug")
-    }
-
-    @Test
-    fun testBuild() {
-        TestFileUtils.appendToFile(
-            project.getSubproject(":app").buildFile,
-            """
-            dependencies {
-                annotationProcessor project(':lib-compiler')
-                testAnnotationProcessor project(':lib-compiler')
-                androidTestAnnotationProcessor project(':lib-compiler')
-                api project(':lib')
-            }
-            """.trimIndent()
-        )
-
-        project.executor().run("assembleDebugAndroidTest", "testDebug")
-        val aptOutputFolder =
-            project.getSubproject(":app").file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER)
-        assertThat(
-            File(
-                aptOutputFolder,
-                "debugAndroidTest/out/com/example/helloworld/HelloWorldAndroidTestStringValue.java"
-            )
-        )
-            .exists()
-        assertThat(
-            File(
-                aptOutputFolder,
-                "debugUnitTest/out/com/example/helloworld/HelloWorldTestStringValue.java"
-            )
-        )
-            .exists()
-    }
-
-    @Test
-    fun androidAptPluginFail() {
-        TestFileUtils.appendToFile(
-            project.getSubproject(":app").buildFile,
-            "apply plugin: 'com.neenbedankt.android-apt'\n")
-
-        project.executor().expectFailure().run("assembleDebug")
+        project.executor().run("connectedAndroidTest")
     }
 
     companion object {
 
-        private val ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER =
-            "build/generated/ap_generated_sources/"
+        @ClassRule
+        @JvmField
+        val emulator = getEmulator()
+
         private val app = HelloWorldApp.noBuildFile()
 
         init {

@@ -14,20 +14,28 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.connected.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.connected.utils.getEmulator
+import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 
-class ComposeHelloWorldTest {
+class ComposeHelloWorldConnectedTest {
+
+    companion object {
+        @ClassRule
+        @JvmField
+        val emulator = getEmulator()
+    }
 
     @JvmField
     @Rule
     val project = GradleTestProject.builder().fromTestProject("composeHelloWorld").create()
 
     @Test
-    fun appBuildsSuccessfully() {
-        project.execute("assembleDebug")
+    fun connectedCheck() {
+        project.executor().run("connectedAndroidTest")
     }
 }
