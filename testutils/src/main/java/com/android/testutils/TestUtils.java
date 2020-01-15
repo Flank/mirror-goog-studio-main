@@ -320,6 +320,24 @@ public class TestUtils {
         return new File(getSdk(), SdkConstants.FD_NDK);
     }
 
+    /** Returns the prebuilt offline Maven repository used during IDE tests. */
+    public static File getPrebuiltOfflineMavenRepo() {
+        if (runningFromBazel()) {
+            // If running with Bazel, then Maven artifacts are unzipped into this directory
+            // at runtime using IdeaTestSuiteBase#unzipIntoOfflineMavenRepo. Thus we use
+            // a writeable temp directory instead of //prebuilts/tools/common/m2/repository.
+            // See b/148081564 for how this could be simplified in the future.
+            File dir = new File(System.getProperty("java.io.tmpdir"), "offline-maven-repo");
+            if (!dir.isDirectory() && !dir.mkdirs()) {
+                throw new RuntimeException(
+                        "Failed to create directory for offline maven repository: " + dir);
+            }
+            return dir;
+        } else {
+            return getWorkspaceFile("prebuilts/tools/common/m2/repository");
+        }
+    }
+
     /**
      * Returns the remote SDK directory.
      *
