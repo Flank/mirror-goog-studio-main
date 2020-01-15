@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.scope
 
-import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.ArtifactKind
+import com.android.build.api.artifact.ArtifactType
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
@@ -157,7 +157,11 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // Directory containing config file for unit testing with resources
     object UNIT_TEST_CONFIG_DIRECTORY: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // compiled resources (output of aapt)
+    object PROCESSED_RES_FINAL: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // compiled resources (output of aapt)
     object PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // Processed res after an AAPT2 optimize operation
+    object OPTIMIZED_PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // package resources for aar publishing.
     object PACKAGED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // R.txt output for libraries - contains mock resource IDs used only at compile time.

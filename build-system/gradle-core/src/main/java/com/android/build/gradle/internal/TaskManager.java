@@ -127,6 +127,7 @@ import com.android.build.gradle.internal.tasks.MergeClassesTask;
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.MergeJavaResourceTask;
 import com.android.build.gradle.internal.tasks.MergeNativeLibsTask;
+import com.android.build.gradle.internal.tasks.OptimizeResourcesTask;
 import com.android.build.gradle.internal.tasks.PackageForUnitTest;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish;
@@ -1285,6 +1286,23 @@ public abstract class TaskManager<
             // from dependencies.
             taskFactory.register(
                     new GenerateLibraryRFileTask.CreationAction(componentProperties, isLibrary()));
+
+            if (!componentProperties.getVariantDslInfo().isDebuggable()
+                    && projectOptions.get(BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS)) {
+                if (componentProperties.getVariantScope().useResourceShrinker()) {
+                    taskFactory.register(
+                            new OptimizeResourcesTask.CreateAction(componentProperties));
+                    // Republish the RES_PROCESSED_OPTIMIZED as PROCESSED_RES
+                    componentProperties
+                            .getArtifacts()
+                            .republish(
+                                    InternalArtifactType.OPTIMIZED_PROCESSED_RES.INSTANCE,
+                                    InternalArtifactType.PROCESSED_RES.INSTANCE);
+                } else {
+                    logger.error(
+                            "Cannot apply AAPT2 OPTIMIZE without resource shrinker being enabled.");
+                }
+            }
         } else {
             // MergeType.MERGE means we merged the whole universe.
             taskFactory.register(
