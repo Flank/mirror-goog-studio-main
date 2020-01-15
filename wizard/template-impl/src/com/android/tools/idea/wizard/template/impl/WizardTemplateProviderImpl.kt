@@ -47,6 +47,7 @@ import com.android.tools.idea.wizard.template.impl.fragments.scrollFragment.scro
 import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.settingsFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.viewModelFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.other.broadcastReceiver.broadcastReceiverTemplate
+import com.android.tools.idea.wizard.template.impl.other.contentProvider.contentProviderTemplate
 import com.android.tools.idea.wizard.template.impl.other.folders.folderTemplates
 
 /**
@@ -84,6 +85,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     scrollFragmentTemplate,
     viewModelFragmentTemplate,
 
-    broadcastReceiverTemplate
+    broadcastReceiverTemplate,
+    contentProviderTemplate
   ) + folderTemplates
 }
