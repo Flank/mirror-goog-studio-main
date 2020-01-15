@@ -48,6 +48,7 @@ import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.se
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.viewModelFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.other.broadcastReceiver.broadcastReceiverTemplate
 import com.android.tools.idea.wizard.template.impl.other.contentProvider.contentProviderTemplate
+import com.android.tools.idea.wizard.template.impl.other.customView.customViewTemplate
 import com.android.tools.idea.wizard.template.impl.other.folders.folderTemplates
 import com.android.tools.idea.wizard.template.impl.other.intentService.intentServiceTemplate
 import com.android.tools.idea.wizard.template.impl.other.service.serviceTemplate
@@ -90,6 +91,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
 
     broadcastReceiverTemplate,
     contentProviderTemplate,
+    customViewTemplate,
     intentServiceTemplate,
     serviceTemplate,
     sliceProviderTemplate
