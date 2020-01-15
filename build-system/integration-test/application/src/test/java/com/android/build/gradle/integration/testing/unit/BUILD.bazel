@@ -37,7 +37,12 @@ TEST_DEPS = [
 ]
 
 TEST_DATA = [
-    "//tools/base/build-system/integration-test:test-projects",
+    "//tools/base/build-system/integration-test:test-projects/unitTesting",
+    "//tools/base/build-system/integration-test:test-projects/unitTestingAndroidResources",
+    "//tools/base/build-system/integration-test:test-projects/unitTestingBuildTypes",
+    "//tools/base/build-system/integration-test:test-projects/unitTestingComplexProject",
+    "//tools/base/build-system/integration-test:test-projects/unitTestingDefaultValues",
+    "//tools/base/build-system/integration-test:test-projects/unitTestingFlavors",
     "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
     "//prebuilts/studio/sdk:build-tools/latest",
     "//prebuilts/studio/sdk:cmake",

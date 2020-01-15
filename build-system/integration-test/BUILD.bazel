@@ -8,37 +8,17 @@ filegroup(
 
 [
     filegroup(
-        name = "test-projects/" + project_name,
-        srcs = glob(["test-projects/" + project_name + "/**"]),
+        name = project_name,
+        srcs = glob([project_name + "/**"]),
         visibility = [
             ":__subpackages__",
         ],
     )
-    for project_name in
-    #keep sorted
-    [
-        "apiBinaryCompatibility",
-        "databinding",
-        "databindingAndDagger",
-        "databindingAndJetifier",
-        "databindingAndKotlin",
-        "databindingIncremental",
-        "databindingMultiModule",
-        "databindingWithDynamicFeatures",
-        "dynamicApp",
-        "lintBaseline",
-        "lintCustomLocalAndPublishRules",
-        "lintCustomRules",
-        "lintDeps",
-        "lintKotlin",
-        "lintLibraryModel",
-        "lintLibrarySkipDeps",
-        "lintMultipleLintJars",
-        "lintResourceResolve",
-        "lintStandalone",
-        "lintStandaloneCustomRules",
-        "lintStandaloneVital",
-    ]
+    for project_name in glob(
+        ["test-projects/*"],
+        exclude = ["**/*.*"],  # Ignore files with '.' (e.g. .gitignore, commonBuildScript.gradle)
+        exclude_directories = 0,
+    )
 ]
 
 # Used for bazel packages below this one that use GradleTestProject.
