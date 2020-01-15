@@ -13,7 +13,6 @@ DATA = [
     "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
     "//tools/base/build-system:gradle-distrib",
     "//tools/base/build-system/aapt2:aapt2_for_tests",
-    "//tools/base/build-system/integration-test:test-projects",
 ]
 
 #keep sorted
@@ -122,7 +121,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "CmakeJniLibTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK,
+    data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/ndkJniLib"],
     maven_repos = MAVEN_REPOS,
     deps = DEPS,
 )
@@ -178,7 +177,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "CombinedAbiDensitySplits",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK,
+    data = DATA + NDK + ["//tools/base/build-system/integration-test:test-projects/combinedAbiDensitySplits"],
     maven_repos = MAVEN_REPOS,
     deps = DEPS,
 )
@@ -242,7 +241,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkBuildJniLibTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK,
+    data = DATA + NDK + ["//tools/base/build-system/integration-test:test-projects/ndkJniLib"],
     maven_repos = MAVEN_REPOS,
     deps = DEPS,
 )
@@ -266,7 +265,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "PrefabTest",
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
-    data = DATA + CMAKE + NDK,
+    data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/prefabApp"],
     maven_repos = MAVEN_REPOS,
     deps = DEPS,
 )
@@ -274,7 +273,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "RenderscriptNdkTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK,
+    data = DATA + NDK + ["//tools/base/build-system/integration-test:test-projects/renderscriptNdk"],
     maven_repos = MAVEN_REPOS,
     deps = DEPS,
 )
@@ -282,7 +281,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "RsEnabledAnnotationTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK,
+    data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/extractRsEnabledAnnotations"],
     maven_repos = MAVEN_REPOS,
     deps = DEPS,
 )
@@ -290,7 +289,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "RsSupportModeTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK,
+    data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/rsSupportMode"],
     maven_repos = MAVEN_REPOS,
     deps = DEPS,
 )
@@ -298,7 +297,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "VulkanTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK,
+    data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/vulkan"],
     maven_repos = MAVEN_REPOS,
     tags = [
         "no_test_mac",  # b/110846203
@@ -309,7 +308,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkJniLibTest",
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
-    data = DATA + CMAKE + NDK,
+    data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/ndkJniLib"],
     maven_repos = MAVEN_REPOS,
     deps = DEPS,
 )
@@ -317,7 +316,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkLibPrebuiltsTest",
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
-    data = DATA + CMAKE + NDK,
+    data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/ndkLibPrebuilts"],
     maven_repos = MAVEN_REPOS,
     deps = DEPS,
 )
@@ -325,7 +324,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkPrebuiltsTest",
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
-    data = DATA + CMAKE + NDK,
+    data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/ndkPrebuilts"],
     maven_repos = MAVEN_REPOS,
     deps = DEPS,
 )
@@ -333,7 +332,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "NdkSanAngelesTest",
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
-    data = DATA + CMAKE + NDK,
+    data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/ndkSanAngeles"],
     maven_repos = MAVEN_REPOS,
     deps = DEPS,
 )
