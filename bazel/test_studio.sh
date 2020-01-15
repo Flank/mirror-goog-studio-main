@@ -29,7 +29,7 @@ config_options="--config=remote"
 readonly iml_to_build_status=$?
 if [ $iml_to_build_status -ne 0 ]; then
   echo "BUILD files not in sync with *.iml files, run 'bazel run //tools/base/bazel:iml_to_build' to update them."
-  exit $iml_to_build_status
+  # exit $iml_to_build_status
 fi
 
 # Generate a UUID for use as the bazel test invocation id
