@@ -16,13 +16,18 @@
 
 package com.android.build.gradle.internal.tasks
 
+import java.nio.charset.StandardCharsets.UTF_8
+
 import com.android.build.gradle.internal.KeymaestroHybridEncrypter
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.tools.build.libraries.metadata.AppDependencies
 import org.gradle.api.tasks.OutputFile
-import com.google.common.io.BaseEncoding
+import com.google.crypto.tink.BinaryKeysetReader
+import com.google.crypto.tink.hybrid.HybridConfig
+import com.google.crypto.tink.HybridEncrypt
+import com.google.crypto.tink.KeysetHandle
 import java.io.FileOutputStream
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
@@ -34,7 +39,6 @@ import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
 import java.nio.file.Files;
 import java.util.zip.DeflaterOutputStream
-import kotlin.random.Random
 
 /**
  * Task that generates SDK dependency block value for APKs.
@@ -44,7 +48,28 @@ import kotlin.random.Random
  */
 abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
 
-  private val publicKeyBase64: String = "CczY1Hsw0oqS5QUTM/s4A1xroCyjpqZAnFFOXGgQuu1WIz27yGSS+Jh75N8bMXyog6Deaq0W7P9O99Tp/IjSeA1qsds="
+  companion object {
+    init {
+      HybridConfig.register()
+    }
+  }
+
+  private val publicKey: ByteArray = byteArrayOf(8, -84, -65, -63, -105, 10, 18, -37, 1, 10, -50,
+    1, 10, 61, 116, 121, 112, 101, 46, 103, 111, 111, 103, 108, 101, 97, 112, 105, 115, 46, 99, 111,
+    109, 47, 103, 111, 111, 103, 108, 101, 46, 99, 114, 121, 112, 116, 111, 46, 116, 105, 110, 107,
+    46, 69, 99, 105, 101, 115, 65, 101, 97, 100, 72, 107, 100, 102, 80, 117, 98, 108, 105, 99, 75,
+    101, 121, 18, -118, 1, 18, 68, 10, 4, 8, 2, 16, 3, 18, 58, 18, 56, 10, 48, 116, 121, 112, 101,
+    46, 103, 111, 111, 103, 108, 101, 97, 112, 105, 115, 46, 99, 111, 109, 47, 103, 111, 111, 103,
+    108, 101, 46, 99, 114, 121, 112, 116, 111, 46, 116, 105, 110, 107, 46, 65, 101, 115, 71, 99,
+    109, 75, 101, 121, 18, 2, 16, 16, 24, 1, 24, 3, 26, 32, -62, 68, 123, 18, 86, -43, -7, 122, 73,
+    -18, 19, -128, -26, -19, 36, 108, -6, 81, 13, -31, 117, 27, -126, -83, 114, -115, 8, 35, 21, -7,
+    78, -39, 34, 32, 51, 48, 123, 99, -84, -95, 126, 10, -70, -74, 47, -15, -28, 124, -83, 23, 78,
+    -3, 59, -91, 38, -103, -90, 69, 67, -28, -20, -95, -90, -83, -115, -52, 24, 3, 16, 1, 24, -84,
+    -65, -63, -105, 10, 32, 4)
+
+  // Optional context. To ensure the correct decryption of a ciphertext the same value must be
+  // provided for the decryption operation.
+  private val context: String = "SDK_DEPENDENCY_INFO"
 
   @get:InputFile
   @get:PathSensitive(PathSensitivity.NONE)
@@ -55,26 +80,22 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
 
   public override fun doTaskAction() {
     FileOutputStream(sdkDependencyData.get().asFile).use {
-      it.write(encrypt(compress(addSalt(Files.readAllBytes(dependencies.get().asFile.toPath())))))
+      it.write(encrypt(compress(Files.readAllBytes(dependencies.get().asFile.toPath()))))
     }
   }
 
-  private fun addSalt(data: ByteArray): ByteArray {
-    val salt = ByteArray(128)
-    Random.Default.nextBytes(salt)
-    return data + salt
-  }
-
   private fun compress(data: ByteArray): ByteArray {
-    val outputStream = ByteArrayOutputStream();
+    val outputStream = ByteArrayOutputStream()
     DeflaterOutputStream(outputStream).use {
-      it.write(data);
+      it.write(data)
     }
     return outputStream.toByteArray()
   }
 
   private fun encrypt(data: ByteArray): ByteArray {
-    return KeymaestroHybridEncrypter(BaseEncoding.base64().decode(publicKeyBase64)).encrypt(data);
+    val hybridEncrypt = KeysetHandle.readNoSecret(
+      BinaryKeysetReader.withBytes(publicKey)).getPrimitive(HybridEncrypt::class.java)
+    return hybridEncrypt.encrypt(data, context.toByteArray(UTF_8))
   }
 
   class CreationAction(

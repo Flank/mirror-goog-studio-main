@@ -68,6 +68,7 @@ kotlin_library(
         # can be updated once https://github.com/google/bundletool/pull/76 is released.
         "//tools/base/third_party:com.google.auto.value_auto-value",
         "//tools/base/third_party:com.google.auto.value_auto-value-annotations",
+        "//tools/base/third_party:com.google.crypto.tink_tink",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-core",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-processor",
         "//tools/base/third_party:com.android.tools.build_bundletool",

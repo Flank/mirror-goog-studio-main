@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="tink">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/crypto/tink/tink/1.3.0-rc2/tink-1.3.0-rc2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
