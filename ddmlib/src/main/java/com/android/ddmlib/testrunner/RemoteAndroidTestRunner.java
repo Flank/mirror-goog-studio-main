@@ -42,27 +42,29 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
         /**
          * Use raw text message to receive status from am instrument command.
          *
-         * @deprecated Use {@link #PROTO_STD}.
+         * @deprecated Use {@link #PROTO_STD} for API level 26 and above.
          */
-        // TODO: Delete this mode.
         @Deprecated
-        RAW_TEXT("-r", InstrumentationResultParser::new),
+        RAW_TEXT("-r", 0, InstrumentationResultParser::new),
 
         /**
          * Use instrumentationData protobuf status reporter to receive status from am instrument
          * command.
          */
-        PROTO_STD("-m", InstrumentationProtoResultParser::new);
+        PROTO_STD("-m", 26, InstrumentationProtoResultParser::new);
 
         StatusReporterMode(
                 String amInstrumentCommandArg,
+                int minApiLevel,
                 BiFunction<String, Collection<ITestRunListener>, IInstrumentationResultParser>
                         parserFactory) {
             this.amInstrumentCommandArg = amInstrumentCommandArg;
+            this.minApiLevel = minApiLevel;
             this.parserFactory = parserFactory;
         }
 
         private final String amInstrumentCommandArg;
+        private final int minApiLevel;
         private final BiFunction<String, Collection<ITestRunListener>, IInstrumentationResultParser>
                 parserFactory;
 
@@ -72,6 +74,14 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
          */
         public String getAmInstrumentCommandArg() {
             return amInstrumentCommandArg;
+        }
+
+        /**
+         * Returns the minimum Android API level which supports this instrumentation status report
+         * type.
+         */
+        public int getMinimumApiLevel() {
+            return minApiLevel;
         }
 
         /**
@@ -154,7 +164,6 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
      */
     public RemoteAndroidTestRunner(
             String packageName, String runnerName, IShellEnabledDevice remoteDevice) {
-        // TODO(hummer): Change the default reporter mode to PROTO_STD.
         this(packageName, runnerName, remoteDevice, StatusReporterMode.RAW_TEXT);
     }
 
