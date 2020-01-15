@@ -1,11 +1,3 @@
-filegroup(
-    name = "test-projects",
-    srcs = glob(["test-projects/**"]),
-    visibility = [
-        ":__subpackages__",
-    ],
-)
-
 [
     filegroup(
         name = project_name,
