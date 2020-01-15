@@ -165,6 +165,17 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "com.google.crypto.tink_tink",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/crypto/tink/tink/1.3.0-rc2:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.protobuf_protobuf-java",
+        ":org.json_json",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "com.google.errorprone_error_prone_annotations",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.3.2:jar",
     visibility = ["//visibility:public"],
@@ -1541,6 +1552,14 @@ maven_java_library(
 maven_java_library(
     name = "org.jetbrains_annotations",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/annotations/13.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.json_json",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/json/json/20180813:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )

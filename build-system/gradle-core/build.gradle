@@ -62,6 +62,7 @@ dependencies {
     compile libs.jetifier_processor
     compile libs.protobuf
     compile libs.protobuf_util
+    compile libs.tink
 
     compileOnly libs.kotlin_gradle_plugin
 
