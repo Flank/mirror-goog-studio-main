@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.connected.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.google.common.collect.ImmutableList;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
+import com.android.tools.bazel.avd.Emulator;
 import java.io.IOException;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
-public class ParentLibsConnectedTest {
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("parentLibsTest").create();
+public class ApiConnectedTest {
+
+    @ClassRule public static final Emulator emulator = EmulatorUtils.getEmulator();
+
+    @ClassRule
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("api").create();
 
     @Test
-    @Category(DeviceTests.class)
     public void connectedCheck() throws IOException, InterruptedException {
-        project.executeConnectedCheck(ImmutableList.of("-p", "app"));
+        project.executor().run("connectedAndroidTest");
     }
 }

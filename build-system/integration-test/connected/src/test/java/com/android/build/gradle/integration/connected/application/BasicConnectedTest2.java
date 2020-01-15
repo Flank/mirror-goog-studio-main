@@ -14,30 +14,26 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.connected.application;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
+import com.android.tools.bazel.avd.Emulator;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
-public class BasicConnectedTest {
+public class BasicConnectedTest2 {
+
+    @ClassRule public static final Emulator emulator = EmulatorUtils.getEmulator();
+
     @ClassRule
     public static GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("basic").withoutNdk().create();
-
-    @Rule public Adb adb = new Adb();
+            GradleTestProject.builder().fromTestProject("basic").create();
 
     @Test
-    @Category(DeviceTests.class)
     public void install() throws Exception {
-        adb.exclusiveAccess();
+        project.execute("assembleDebug");
         try {
-            project.execute("installDebug", "uninstallAll");
-            // b/37498215 - Try again.  Behavior may be different when tasks are up-to-date.
             project.execute("installDebug");
         } finally {
             project.execute("uninstallAll");
@@ -45,7 +41,6 @@ public class BasicConnectedTest {
     }
 
     @Test
-    @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
         project.executeConnectedCheck();
     }
