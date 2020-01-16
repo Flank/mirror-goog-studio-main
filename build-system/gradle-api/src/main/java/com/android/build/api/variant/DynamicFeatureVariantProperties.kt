@@ -16,8 +16,16 @@
 package com.android.build.api.variant
 
 import org.gradle.api.Incubating
+import org.gradle.api.provider.Provider
 
 @Incubating
 interface DynamicFeatureVariantProperties : VariantProperties {
+
+    /**
+     * Variant's application ID as present in the final manifest file of the APK.
+     *
+     * This is a read-ony value in this type of project as this is fed by the base module
+     */
+    override val applicationId: Provider<String>
 
 }

@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.VariantOutput
 import com.android.build.api.component.impl.ComponentIdentityImpl
+import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
@@ -69,7 +70,7 @@ class CompatibleScreensManifestTest {
     @Mock private lateinit var buildArtifactsHolder: BuildArtifactsHolder
     @Mock private lateinit var taskContainer: MutableTaskContainer
     @Mock private lateinit var variantData: BaseVariantData
-    @Mock private lateinit var variantProperties: VariantPropertiesImpl
+    @Mock private lateinit var variantProperties: ApplicationVariantPropertiesImpl
 
     private lateinit var task: CompatibleScreensManifest
 
@@ -81,7 +82,7 @@ class CompatibleScreensManifestTest {
 
         task = project.tasks.create("test", CompatibleScreensManifest::class.java)
 
-        var dslScope = createFakeDslScope()
+        val dslScope = createFakeDslScope()
 
         MockitoAnnotations.initMocks(this)
         `when`(variantProperties.name).thenReturn("fullVariantName")

@@ -216,7 +216,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
             task.desugaringClasspath.from(variantScope.providedOnlyClasspath)
             task.bootClasspath.from(variantScope.bootClasspath)
 
-            creationConfig.onTestedVariant {
+            creationConfig.onTestedConfig {
                 task.desugaringClasspath.from(
                     creationConfig.artifacts.getFinalProduct(
                         InternalArtifactType.TESTED_CODE_CLASSES

@@ -19,6 +19,7 @@
 package com.android.build.gradle.internal.utils
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.dependency.ATTR_L8_MIN_SDK
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_CORE_LIBRARY_DESUGARING
 import com.android.build.gradle.internal.scope.VariantScope
@@ -59,13 +60,13 @@ fun getDesugarLibJarFromMaven(project: Project): FileCollection {
  * Returns a file collection which contains desugar_jdk_libs.jar's dex file generated
  * by artifact transform
  */
-fun getDesugarLibDexFromTransform(componentProperties: ComponentPropertiesImpl): FileCollection {
-    if (!componentProperties.variantScope.isCoreLibraryDesugaringEnabled) {
-        return componentProperties.globalScope.project.files()
+fun getDesugarLibDexFromTransform(creationConfig: BaseCreationConfig): FileCollection {
+    if (!creationConfig.variantScope.isCoreLibraryDesugaringEnabled) {
+        return creationConfig.globalScope.project.files()
     }
 
-    val configuration = getDesugarLibConfiguration(componentProperties.globalScope.project)
-    return getDesugarLibDexFromTransform(configuration, componentProperties.minSdkVersion.featureLevel)
+    val configuration = getDesugarLibConfiguration(creationConfig.globalScope.project)
+    return getDesugarLibDexFromTransform(configuration, creationConfig.minSdkVersion.featureLevel)
 }
 
 /**

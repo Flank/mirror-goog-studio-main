@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
@@ -164,7 +164,7 @@ class ApplicationTaskManager(
         )
     }
 
-    private fun createAssetPackTasks(variantProperties: VariantPropertiesImpl) {
+    private fun createAssetPackTasks(variantProperties: ApplicationVariantPropertiesImpl) {
         val depHandler = project.dependencies
         val notFound: MutableList<String> =
             ArrayList()
@@ -234,7 +234,7 @@ class ApplicationTaskManager(
         }
     }
 
-    private fun createDynamicBundleTask(variantProperties: VariantPropertiesImpl) {
+    private fun createDynamicBundleTask(variantProperties: ApplicationVariantPropertiesImpl) {
 
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
         // and the bundle can't be created. For now, just don't add the bundle task.
@@ -274,7 +274,7 @@ class ApplicationTaskManager(
     }
 
     private fun createSoftwareComponent(
-        variantProperties: VariantPropertiesImpl,
+        variantProperties: ApplicationVariantPropertiesImpl,
         suffix: String,
         publication: PublishedConfigType
     ) {
@@ -284,18 +284,18 @@ class ApplicationTaskManager(
         project.components.add(component)
     }
 
-    override fun createInstallTask(componentProperties: ComponentPropertiesImpl) {
+    override fun createInstallTask(creationConfig: ApkCreationConfig) {
         if (extension is BaseAppModuleExtension && extension.dynamicFeatures.isEmpty()) {
             // no dynamic features means we can just use the standard install task
-            super.createInstallTask(componentProperties)
+            super.createInstallTask(creationConfig)
         } else {
             // need to install via bundle
-            taskFactory.register(InstallVariantViaBundleTask.CreationAction(componentProperties))
+            taskFactory.register(InstallVariantViaBundleTask.CreationAction(creationConfig))
         }
     }
 
-    private fun addDependenciesTask(variantProperties: VariantPropertiesImpl): kotlin.Boolean {
-        return !variantProperties.variantDslInfo.isDebuggable && extension is BaseAppModuleExtension
-          && (extension as BaseAppModuleExtension).dependenciesInfo.include
+    private fun addDependenciesTask(variantProperties: ApplicationVariantPropertiesImpl): kotlin.Boolean {
+        return !variantProperties.debuggable
+                && (extension as BaseAppModuleExtension).dependenciesInfo.include
     }
 }

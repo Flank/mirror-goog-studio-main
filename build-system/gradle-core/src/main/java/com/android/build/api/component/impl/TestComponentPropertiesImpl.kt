@@ -20,6 +20,8 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.TestComponentProperties
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -31,7 +33,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import javax.inject.Inject
 
-open class TestComponentPropertiesImpl @Inject constructor(
+abstract class TestComponentPropertiesImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -56,4 +58,11 @@ open class TestComponentPropertiesImpl @Inject constructor(
     transformManager,
     dslScope,
     globalScope
-), TestComponentProperties
+), TestComponentProperties, TestComponentCreationConfig {
+
+    // map the internal getter to the impl of the external variant object
+    override val testedConfig: VariantCreationConfig
+        get() = testedVariant
+}
+
+

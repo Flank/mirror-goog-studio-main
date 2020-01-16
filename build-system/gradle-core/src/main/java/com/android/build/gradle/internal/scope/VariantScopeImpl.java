@@ -812,14 +812,6 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public InternalArtifactType<Directory> getManifestArtifactType() {
-        return globalScope.getProjectOptions().get(BooleanOption.IDE_DEPLOY_AS_INSTANT_APP)
-                ? InternalArtifactType.INSTANT_APP_MANIFEST.INSTANCE
-                : InternalArtifactType.MERGED_MANIFESTS.INSTANCE;
-    }
-
-    @NonNull
-    @Override
     public JarCreatorType getJarCreatorType() {
         if (globalScope.getProjectOptions().get(USE_NEW_JAR_CREATOR)) {
             return JarCreatorType.JAR_FLINGER;
@@ -837,90 +829,4 @@ public class VariantScopeImpl implements VariantScope {
             return ApkCreatorType.APK_Z_FILE_CREATOR;
         }
     }
-
-    private Provider<FeatureSetMetadata> featureSetProvider = null;
-
-    @NonNull
-    private Provider<FeatureSetMetadata> getFeatureSetProvider() {
-        if (featureSetProvider == null) {
-            FileCollection fc =
-                    variantDependencies.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            PROJECT,
-                            FEATURE_SET_METADATA);
-            featureSetProvider =
-                    fc.getElements()
-                            .map(
-                                    entries -> {
-                                        FileSystemLocation file = Iterables.getOnlyElement(entries);
-                                        try {
-                                            return FeatureSetMetadata.load(file.getAsFile());
-                                        } catch (IOException e) {
-                                            throw new RuntimeException(e);
-                                        }
-                                    });
-
-        }
-
-        return featureSetProvider;
-    }
-
-    private Provider<String> featureName = null;
-
-    @NonNull
-    @Override
-    public Provider<String> getFeatureName() {
-        if (featureName == null) {
-            final String gradlePath = globalScope.getProject().getPath();
-
-            featureName =
-                    getFeatureSetProvider()
-                            .map(
-                                    featureSetMetadata -> {
-                                        String featureName =
-                                                featureSetMetadata.getFeatureNameFor(gradlePath);
-
-                                        if (featureName == null) {
-                                            throw new RuntimeException(
-                                                    String.format(
-                                                            "Failed to find feature name for %s in %s",
-                                                            gradlePath,
-                                                            featureSetMetadata.getSourceFile()));
-                                        }
-                                        return featureName;
-                                    });
-        }
-
-        return featureName;
-    }
-
-    private Provider<Integer> resOffset = null;
-
-    @NonNull
-    @Override
-    public Provider<Integer> getResOffset() {
-        if (resOffset == null) {
-            final String gradlePath = globalScope.getProject().getPath();
-
-            resOffset =
-                    getFeatureSetProvider()
-                            .map(
-                                    featureSetMetadata -> {
-                                        Integer resOffset =
-                                                featureSetMetadata.getResOffsetFor(gradlePath);
-
-                                        if (resOffset == null) {
-                                            throw new RuntimeException(
-                                                    String.format(
-                                                            "Failed to find resource offset for %s in %s",
-                                                            gradlePath,
-                                                            featureSetMetadata.getSourceFile()));
-                                        }
-                                        return resOffset;
-                                    });
-        }
-
-        return resOffset;
-    }
-
 }

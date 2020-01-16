@@ -192,7 +192,7 @@ class DataBindingCompilerArguments constructor(
          */
         @JvmStatic
         fun getModuleType(componentProperties: ComponentPropertiesImpl): CompilerArguments.Type {
-            val component = componentProperties.onTestedVariant {
+            val component = componentProperties.onTestedConfig {
                 it
             } ?: componentProperties
 

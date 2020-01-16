@@ -29,8 +29,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -517,10 +517,10 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             ProjectOptions projectOptions = globalScope.getProjectOptions();
 
             // this can be null for test plugin
-            VariantPropertiesImpl testedVariant = creationConfig.getTestedVariant();
+            VariantCreationConfig testedConfig = creationConfig.getTestedConfig();
 
             String variantName =
-                    testedVariant != null ? testedVariant.getName() : creationConfig.getName();
+                    testedConfig != null ? testedConfig.getName() : creationConfig.getName();
             if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
                 task.setDescription("Installs and runs the tests for " + variantName +
                         " on connected devices.");

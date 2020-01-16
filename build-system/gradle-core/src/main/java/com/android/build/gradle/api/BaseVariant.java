@@ -19,6 +19,7 @@ package com.android.build.gradle.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.dsl.BuildFeatures;
+import com.android.build.api.variant.ApplicationVariantProperties;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
@@ -160,8 +161,11 @@ public interface BaseVariant {
      * Returns the true application Id of the variant. For feature variants, this returns the
      * resolved application id from the application. For application variants, this is the same as
      * getApplicationId.
+     *
+     * @deprecated use {@link ApplicationVariantProperties#getApplicationId()}.
      */
     @NonNull
+    @Deprecated
     TextResource getApplicationIdTextResource();
 
     /**

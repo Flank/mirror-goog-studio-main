@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
@@ -163,7 +164,6 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             options = aaptOptions,
             resourceOutputApk = outputFile,
             variantType = VariantTypeImpl.BASE_APK,
-            debuggable = debuggable.get(),
             packageId = resOffset.orNull,
             allowReservedPackageId = minSdkVersion < AndroidVersion.VersionCodes.O,
             dependentFeatures = featurePackagesBuilder.build(),
@@ -280,8 +280,8 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.featureResourcePackages = creationConfig.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG)
 
-            if (creationConfig.variantType.isDynamicFeature) {
-                task.resOffset.set(variantScope.resOffset)
+            if (creationConfig.variantType.isDynamicFeature && creationConfig is DynamicFeatureCreationConfig) {
+                task.resOffset.set(creationConfig.resOffset)
                 task.resOffset.disallowChanges()
             }
 

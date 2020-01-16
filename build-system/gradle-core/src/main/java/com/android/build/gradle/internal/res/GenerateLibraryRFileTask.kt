@@ -354,7 +354,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task.mainSplit = creationConfig.outputs.getMainSplit().apkData
             task.useConstantIds.setDisallowChanges(false)
 
-            creationConfig.onTestedVariant {
+            creationConfig.onTestedConfig {
                 it.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles
                 )

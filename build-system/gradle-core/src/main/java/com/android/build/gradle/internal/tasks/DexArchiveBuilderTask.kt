@@ -337,7 +337,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             }
 
             desugaringClasspathForArtifactTransforms = if (dexExternalLibsInArtifactTransform) {
-                val testedExternalLibs = componentProperties.onTestedVariant {
+                val testedExternalLibs = componentProperties.onTestedConfig {
                     it.variantDependencies.getArtifactCollection(
                         ConsumedConfigType.RUNTIME_CLASSPATH,
                         ArtifactScope.ALL,

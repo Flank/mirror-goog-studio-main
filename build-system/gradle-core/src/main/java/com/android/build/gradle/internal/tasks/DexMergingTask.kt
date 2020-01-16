@@ -275,7 +275,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
 
                         val variantType = component.variantType
                         if (variantType.isApk) {
-                            component.onTestedVariant {
+                            component.onTestedConfig {
                                 if (dexingUsingArtifactTransforms && it.variantType.isAar) {
                                     // If dexing using artifact transforms, library production code will
                                     // be dex'ed in a task, so we need to fetch the output directly.

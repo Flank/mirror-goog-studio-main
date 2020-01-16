@@ -19,8 +19,8 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.component.LibraryCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.scope.ApkData;
@@ -363,13 +363,11 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<ProcessLibraryManifest, ComponentPropertiesImpl> {
+            extends VariantTaskCreationAction<ProcessLibraryManifest, LibraryCreationConfig> {
 
-        private final ComponentPropertiesImpl componentProperties;
         /** {@code EagerTaskCreationAction} for the library process manifest task. */
-        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
-            super(componentProperties);
-            this.componentProperties = componentProperties;
+        public CreationAction(@NonNull LibraryCreationConfig creationConfig) {
+            super(creationConfig);
         }
 
         @NonNull
@@ -442,7 +440,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             project.provider(
                                     () -> {
                                         ApiVersion targetSdkVersion =
-                                                variantDslInfo.getTargetSdkVersion();
+                                                creationConfig.getTargetSdkVersion();
                                         if (targetSdkVersion.getApiLevel() < 0) {
                                             return null;
                                         }
@@ -450,7 +448,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                                     }));
             task.getTargetSdkVersion().disallowChanges();
 
-            task.getMaxSdkVersion().set(project.provider(variantDslInfo::getMaxSdkVersion));
+            task.getMaxSdkVersion().set(project.provider(creationConfig::getMaxSdkVersion));
             task.getMaxSdkVersion().disallowChanges();
 
             task.mainSplit.set(
@@ -463,7 +461,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             task.versionName.disallowChanges();
             task.versionCode.set(task.getProject().provider(variantDslInfo::getVersionCode));
             task.versionCode.disallowChanges();
-            task.packageOverride.set(componentProperties.getApplicationId());
+            task.packageOverride.set(creationConfig.getApplicationId());
             task.packageOverride.disallowChanges();
             task.manifestPlaceholders.set(
                     task.getProject().provider(variantDslInfo::getManifestPlaceholders));

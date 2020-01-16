@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2019 The Android Open Source Project
  *
@@ -19,10 +18,19 @@ package com.android.build.api.variant
 import com.android.build.api.component.ComponentProperties
 import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 
 /**
  * Parent interface for all types of variants.
  */
 @Incubating
 interface VariantProperties: ComponentProperties {
+
+    /**
+     * Variant's application ID as present in the final manifest file of the APK.
+     *
+     * Some type of variants allows this to be writeable but for some it's only read-only.
+     */
+    val applicationId: Provider<String>
+
 }

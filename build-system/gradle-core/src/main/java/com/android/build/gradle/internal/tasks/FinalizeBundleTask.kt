@@ -21,6 +21,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.signing.SigningConfigProvider
@@ -147,9 +148,9 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
     /**
      * CreateAction for a task that will sign the bundle artifact.
      */
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<FinalizeBundleTask, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(creationConfig: ApkCreationConfig) :
+        VariantTaskCreationAction<FinalizeBundleTask, ApkCreationConfig>(
+            creationConfig
         ) {
         override val name: String
             get() = computeTaskName("sign", "Bundle")
@@ -201,8 +202,8 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 task.intermediaryBundleFile)
 
             // Don't sign debuggable bundles.
-            if (!creationConfig.variantDslInfo.isDebuggable) {
-                task.signingConfig = SigningConfigProvider.create(creationConfig)
+            if (!creationConfig.debuggable) {
+                task.signingConfig = SigningConfigProvider.create(creationConfig as ComponentPropertiesImpl)
             }
 
             task.applicationId.setDisallowChanges(creationConfig.applicationId)

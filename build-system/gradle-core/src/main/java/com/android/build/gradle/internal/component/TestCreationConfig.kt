@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.api.variant
 
-import org.gradle.api.Incubating
-import org.gradle.api.provider.Provider
+package com.android.build.gradle.internal.component
 
-/** [VariantProperties] for Library projects */
-@Incubating
-interface LibraryVariantProperties : VariantProperties {
+interface TestCreationConfig: VariantCreationConfig {
 
-    /**
-     * Variant's application ID as present in the final manifest file of the APK.
-     *
-     * This is a read-ony value based on the package entry in the manifest
-     */
-    override val applicationId: Provider<String>
 
 }

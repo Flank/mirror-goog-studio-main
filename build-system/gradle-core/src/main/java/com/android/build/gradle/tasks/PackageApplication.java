@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactType;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.SingleArtifactType;
@@ -86,14 +86,14 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
         private final File outputDirectory;
 
         public CreationAction(
-                @NonNull ComponentPropertiesImpl componentProperties,
+                @NonNull ApkCreationConfig creationConfig,
                 @NonNull File outputDirectory,
                 @NonNull SingleArtifactType<Directory> inputResourceFilesType,
                 @NonNull Provider<Directory> manifests,
                 @NonNull ArtifactType<Directory> manifestType,
                 boolean packageCustomClassDependencies) {
             super(
-                    componentProperties,
+                    creationConfig,
                     inputResourceFilesType,
                     manifests,
                     manifestType,
@@ -137,9 +137,8 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
         }
 
         @Override
-        protected void finalConfigure(
-                @NonNull PackageApplication task, @NonNull ComponentPropertiesImpl component) {
-            super.finalConfigure(task, component);
+        protected void finalConfigure(@NonNull PackageApplication task) {
+            super.finalConfigure(task);
             task.expectedOutputType = InternalArtifactType.APK.INSTANCE;
         }
     }

@@ -34,6 +34,7 @@ import com.android.build.gradle.options.ProjectOptions
 import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
@@ -73,7 +74,7 @@ class VariantPropertiesImplTest {
 
         Mockito.`when`(variantData.taskContainer).thenReturn(MutableTaskContainer())
 
-        properties = VariantPropertiesImpl(
+        properties = FakeVariantProperties(
             componentIdentity,
             variantDslInfo,
             Mockito.mock(VariantDependencies::class.java),
@@ -103,7 +104,7 @@ class VariantPropertiesImplTest {
 
     @Test
     fun testDslProvidedVersion() {
-        val properties = object: VariantPropertiesImpl(
+        val properties = object: FakeVariantProperties(
             componentIdentity,
             variantDslInfo,
             Mockito.mock(VariantDependencies::class.java),
@@ -143,5 +144,34 @@ class VariantPropertiesImplTest {
         // we expect the DSL-provided versions to trump the manifest-provided versions.
         Truth.assertThat(properties.outputs[0].versionCode.get()).isEqualTo(23)
         Truth.assertThat(properties.outputs[0].versionName.get()).isEqualTo("bar")
+    }
+
+    open class FakeVariantProperties(
+        componentIdentity: ComponentIdentity,
+        variantDslInfo: VariantDslInfo,
+        variantDependencies: VariantDependencies,
+        variantSources: VariantSources,
+        paths: VariantPathHelper,
+        artifacts: BuildArtifactsHolder,
+        variantScope: VariantScope,
+        variantData: BaseVariantData,
+        transformManager: TransformManager,
+        dslScope: DslScope,
+        globalScope: GlobalScope
+    ) : VariantPropertiesImpl(
+        componentIdentity,
+        variantDslInfo,
+        variantDependencies,
+        variantSources,
+        paths,
+        artifacts,
+        variantScope,
+        variantData,
+        transformManager,
+        dslScope,
+        globalScope
+    ) {
+        override val applicationId: Provider<String>
+            get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     }
 }

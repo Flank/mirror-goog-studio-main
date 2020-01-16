@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-dffd805ac7dff762b05474278d33c3acc4ae06ca2697ec90e1490f77d5012e3a
+1b819114dba51ae5af655ffed4e5671bd266a0c2e868793208670db7a23cf0fc
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -54,6 +54,7 @@ com.android.build.api.artifact.TransformRequest
 com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.component.ActionableComponentObject
 com.android.build.api.component.AndroidTestProperties implements com.android.build.api.component.TestComponentProperties
+com.android.build.api.component.AndroidTestProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.component.BuildTypedComponentActionRegistrar
 com.android.build.api.component.BuildTypedComponentActionRegistrar.withFlavor: com.android.build.api.component.BuildTypedComponentActionRegistrar<ComponentT> (kotlin.Pair<java.lang.String, java.lang.String>)
 com.android.build.api.component.BuildTypedComponentActionRegistrar.withFlavor: void (kotlin.Pair<java.lang.String, java.lang.String>, kotlin.jvm.functions.Function1<? super ComponentT, kotlin.Unit>)
@@ -67,7 +68,6 @@ com.android.build.api.component.ComponentIdentity.getBuildType: java.lang.String
 com.android.build.api.component.ComponentIdentity.getFlavorName: java.lang.String ()
 com.android.build.api.component.ComponentIdentity.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
 com.android.build.api.component.ComponentProperties implements com.android.build.api.component.ComponentIdentity, com.android.build.api.component.ActionableComponentObject
-com.android.build.api.component.ComponentProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.component.ComponentProperties.getOperations: com.android.build.api.artifact.Operations ()
 com.android.build.api.component.ComponentProperties.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()
 com.android.build.api.component.FilteredComponentActionRegistrar
@@ -299,6 +299,7 @@ com.android.build.api.dsl.UnitTestOptions.setReturnDefaultValues: void (boolean)
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
 com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.ApplicationVariantProperties implements com.android.build.api.variant.VariantProperties
+com.android.build.api.variant.ApplicationVariantProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.BuiltArtifact
 com.android.build.api.variant.BuiltArtifact.getFilters: java.util.Collection<com.android.build.api.variant.FilterConfiguration> ()
 com.android.build.api.variant.BuiltArtifact.getOutputFile: java.nio.file.Path ()
@@ -325,6 +326,7 @@ com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.v
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.FileCollection)
 com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.DynamicFeatureVariantProperties implements com.android.build.api.variant.VariantProperties
+com.android.build.api.variant.DynamicFeatureVariantProperties.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.FilterConfiguration
 com.android.build.api.variant.FilterConfiguration$FilterType extends java.lang.Enum
 com.android.build.api.variant.FilterConfiguration$FilterType.valueOf: com.android.build.api.variant.FilterConfiguration$FilterType (java.lang.String)
@@ -341,8 +343,10 @@ com.android.build.api.variant.FilterConfiguration.hashCode: int ()
 com.android.build.api.variant.FilterConfiguration.toString: java.lang.String ()
 com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.LibraryVariantProperties implements com.android.build.api.variant.VariantProperties
+com.android.build.api.variant.LibraryVariantProperties.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.TestVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.TestVariantProperties implements com.android.build.api.variant.VariantProperties
+com.android.build.api.variant.TestVariantProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.Variant implements com.android.build.api.component.Component, com.android.build.api.component.ActionableComponentObject
 com.android.build.api.variant.Variant.androidTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTest<com.android.build.api.component.AndroidTestProperties>, kotlin.Unit>)
 com.android.build.api.variant.Variant.getMinSdkVersion: int ()
@@ -365,3 +369,4 @@ com.android.build.api.variant.VariantOutputConfiguration$OutputType.values: com.
 com.android.build.api.variant.VariantOutputConfiguration.getFilters: java.util.Collection<com.android.build.api.variant.FilterConfiguration> ()
 com.android.build.api.variant.VariantOutputConfiguration.getOutputType: com.android.build.api.variant.VariantOutputConfiguration$OutputType ()
 com.android.build.api.variant.VariantProperties implements com.android.build.api.component.ComponentProperties
+com.android.build.api.variant.VariantProperties.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()

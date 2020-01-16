@@ -18,6 +18,7 @@ package com.android.build.api.variant.impl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -25,8 +26,11 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.utils.init
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class LibraryVariantPropertiesImpl @Inject constructor(
@@ -53,15 +57,16 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
     transformManager,
     dslScope,
     globalScope
-), LibraryVariantProperties {
+), LibraryVariantProperties, LibraryCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
 
+    override val applicationId: Property<String> = dslScope.objectFactory.property(String::class.java)
+        .init(dslScope.providerFactory.provider { variantDslInfo.packageFromManifest })
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
-
 }

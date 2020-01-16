@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.tools.build.libraries.metadata.AppDependencies
 import com.android.tools.build.libraries.metadata.Library
 import com.android.tools.build.libraries.metadata.LibraryDependencies
@@ -206,9 +208,9 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
 
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<PerModuleReportDependenciesTask, ComponentPropertiesImpl>(
-        componentProperties
+        creationConfig: ApkCreationConfig
+    ) : VariantTaskCreationAction<PerModuleReportDependenciesTask, ApkCreationConfig>(
+        creationConfig
     ) {
         override val name: String = computeTaskName("collect", "Dependencies")
         override val type: Class<PerModuleReportDependenciesTask> = PerModuleReportDependenciesTask::class.java
@@ -242,12 +244,11 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             ).artifactFiles
 
 
-            if (creationConfig.variantType.isBaseModule) {
-                task.moduleName.set("base")
+            if (creationConfig is DynamicFeatureCreationConfig) {
+                task.moduleName.setDisallowChanges(creationConfig.featureName)
             } else {
-                task.moduleName.set(creationConfig.variantScope.featureName)
+                task.moduleName.setDisallowChanges("base")
             }
-            task.moduleName.disallowChanges()
         }
     }
 }

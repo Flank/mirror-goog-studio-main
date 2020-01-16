@@ -19,6 +19,7 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -30,7 +31,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
 
-open class VariantPropertiesImpl(
+abstract class VariantPropertiesImpl(
     componentIdentity: ComponentIdentity,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -54,7 +55,7 @@ open class VariantPropertiesImpl(
     transformManager,
     dslScope,
     globalScope
-), VariantProperties {
+), VariantProperties, VariantCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API

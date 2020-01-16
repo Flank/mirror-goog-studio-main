@@ -16,10 +16,11 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -49,9 +50,9 @@ abstract class FeatureNameWriterTask : NonIncrementalTask() {
         FileUtils.write(outputFile.asFile.get(), featureName.get())
     }
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<FeatureNameWriterTask, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(creationConfig: DynamicFeatureCreationConfig) :
+        VariantTaskCreationAction<FeatureNameWriterTask, DynamicFeatureCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String
@@ -79,8 +80,7 @@ abstract class FeatureNameWriterTask : NonIncrementalTask() {
             task: FeatureNameWriterTask
         ) {
             super.configure(task)
-            task.featureName.set(creationConfig.variantScope.featureName)
-            task.featureName.disallowChanges()
+            task.featureName.setDisallowChanges(creationConfig.featureName)
         }
     }
 }

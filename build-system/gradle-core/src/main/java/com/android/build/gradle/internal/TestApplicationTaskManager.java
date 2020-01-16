@@ -27,6 +27,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
@@ -195,9 +196,8 @@ public class TestApplicationTaskManager extends AbstractAppTaskManager<TestVaria
 
     /** Returns the manifest configuration of the tested application */
     @NonNull
-    private FileCollection getTestedManifestMetadata(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-        return componentProperties
+    private FileCollection getTestedManifestMetadata(@NonNull ApkCreationConfig creationConfig) {
+        return creationConfig
                 .getVariantDependencies()
                 .getCompileClasspath()
                 .getIncoming()
@@ -215,11 +215,11 @@ public class TestApplicationTaskManager extends AbstractAppTaskManager<TestVaria
     @Override
     @NonNull
     protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTask(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull ApkCreationConfig creationConfig) {
 
         return taskFactory.register(
                 new ProcessTestManifest.CreationAction(
-                        componentProperties, getTestedManifestMetadata(componentProperties)));
+                        creationConfig, getTestedManifestMetadata(creationConfig)));
     }
 
     @Override

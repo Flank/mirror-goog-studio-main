@@ -470,7 +470,7 @@ open class VariantDslInfoImpl internal constructor(
 
     /** Reads the package name from the manifest. This is unmodified by the build type.  */
     override val packageFromManifest: String
-        get() = mVariantAttributesProvider.packageName// default to 1 for minSdkVersion.
+        get() = mVariantAttributesProvider.packageName
 
     /**
      * Return the minSdkVersion for this variant.

@@ -18,21 +18,19 @@ package com.android.build.gradle.tasks;
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_NAME;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NAVIGATION_JSON;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.REVERSE_METADATA_FEATURE_MANIFEST;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
 import com.android.build.gradle.internal.scope.ApkData;
@@ -42,10 +40,9 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.manifest.ManifestHelperKt;
+import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingType;
@@ -105,7 +102,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     private ArtifactCollection featureManifests;
     private FileCollection dependencyFeatureNameArtifacts;
     private FileCollection microApkManifest;
-    private FileCollection packageManifest;
+    private Property<Boolean> baseModuleDebuggable;
+    private Property<Integer> baseModuleVersionCode;
+    private Property<String> baseModuleVersionName;
 
     private final Property<String> packageOverride;
     private final ListProperty<File> manifestOverlays;
@@ -121,6 +120,10 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         packageOverride = objectFactory.property(String.class);
         manifestOverlays = objectFactory.listProperty(File.class);
         manifestPlaceholders = objectFactory.mapProperty(String.class, Object.class);
+
+        baseModuleDebuggable = objectFactory.property(Boolean.class);
+        baseModuleVersionCode = objectFactory.property(Integer.class);
+        baseModuleVersionName = objectFactory.property(String.class);
     }
 
     @Override
@@ -131,11 +134,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                         InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
                         getCompatibleScreensManifest().get().getAsFile());
 
-        ModuleMetadata moduleMetadata = null;
-        if (packageManifest != null && !packageManifest.isEmpty()) {
-            moduleMetadata = ModuleMetadata.load(packageManifest.getSingleFile());
+        if (baseModuleDebuggable.isPresent()) {
             boolean isDebuggable = getOptionalFeatures().get().contains(Feature.DEBUGGABLE);
-            if (moduleMetadata.getDebuggable() != isDebuggable) {
+            if (baseModuleDebuggable.get() != isDebuggable) {
                 String errorMessage =
                         String.format(
                                 "Dynamic Feature '%1$s' (build type '%2$s') %3$s debuggable,\n"
@@ -147,9 +148,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                 getProject().getPath(),
                                 buildTypeName,
                                 isDebuggable ? "is" : "is not",
-                                moduleMetadata.getDebuggable() ? "is" : "is not",
+                                baseModuleDebuggable.get() ? "is" : "is not",
                                 getProject().getBuildFile(),
-                                moduleMetadata.getDebuggable() ? "true" : "false");
+                                baseModuleDebuggable.get() ? "true" : "false");
                 throw new InvalidUserDataException(errorMessage);
             }
         }
@@ -202,15 +203,14 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             computeFullProviderList(compatibleScreenManifestForSplit),
                             navJsons,
                             getFeatureName().getOrNull(),
-                            moduleMetadata == null
-                                    ? packageOverride.getOrNull()
-                                    : moduleMetadata.getApplicationId(),
-                            moduleMetadata == null
-                                    ? apkData.getVersionCode()
-                                    : Integer.parseInt(moduleMetadata.getVersionCode()),
-                            moduleMetadata == null
-                                    ? apkData.getVersionName()
-                                    : moduleMetadata.getVersionName(),
+                            packageOverride.get(),
+                            baseModuleVersionCode.isPresent()
+                                    ? baseModuleVersionCode.get()
+                                    : apkData.getVersionCode(),
+                            baseModuleVersionName.isPresent()
+                                            && !baseModuleVersionName.get().isEmpty()
+                                    ? baseModuleVersionName.get()
+                                    : apkData.getVersionName(),
                             getMinSdkVersion().getOrNull(),
                             getTargetSdkVersion().getOrNull(),
                             getMaxSdkVersion().getOrNull(),
@@ -543,11 +543,22 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract DirectoryProperty getCompatibleScreensManifest();
 
-    @InputFiles
+    @Input
     @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getPackageManifest() {
-        return packageManifest;
+    public Property<Boolean> getBaseModuleDebuggable() {
+        return baseModuleDebuggable;
+    }
+
+    @Input
+    @Optional
+    public Property<Integer> getBaseModuleVersionCode() {
+        return baseModuleVersionCode;
+    }
+
+    @Input
+    @Optional
+    public Property<String> getBaseModuleVersionName() {
+        return baseModuleVersionName;
     }
 
     @Input
@@ -562,19 +573,18 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @Nested
     public abstract ListProperty<ApkData> getApkDataList();
 
-
     public static class CreationAction
-            extends VariantTaskCreationAction<ProcessApplicationManifest, ComponentPropertiesImpl> {
+            extends VariantTaskCreationAction<ProcessApplicationManifest, ApkCreationConfig> {
 
-        protected final ComponentPropertiesImpl componentProperties;
+        protected final ApkCreationConfig creationConfig;
         protected final boolean isAdvancedProfilingOn;
 
         public CreationAction(
-                @NonNull ComponentPropertiesImpl componentProperties,
+                @NonNull ApkCreationConfig creationConfig,
                 // TODO : remove this variable and find ways to access it from scope.
                 boolean isAdvancedProfilingOn) {
-            super(componentProperties);
-            this.componentProperties = componentProperties;
+            super(creationConfig);
+            this.creationConfig = creationConfig;
             this.isAdvancedProfilingOn = isAdvancedProfilingOn;
         }
 
@@ -657,8 +667,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                 @NonNull ProcessApplicationManifest task) {
             super.configure(task);
 
-            final VariantScope variantScope = creationConfig.getVariantScope();
-            final VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
             final VariantSources variantSources = creationConfig.getVariantSources();
             final GlobalScope globalScope = creationConfig.getGlobalScope();
 
@@ -688,7 +696,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             // optional manifest files too.
             if (creationConfig.getTaskContainer().getMicroApkTask() != null
-                    && variantDslInfo.isEmbedMicroApp()) {
+                    && creationConfig.getEmbedsMicroApp()) {
                 task.microApkManifest =
                         project.files(creationConfig.getPaths().getMicroApkManifestFile());
             }
@@ -711,14 +719,14 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     .set(
                             project.provider(
                                     () -> {
-                                        ApiVersion targetSdk = variantDslInfo.getTargetSdkVersion();
+                                        ApiVersion targetSdk = creationConfig.getTargetSdkVersion();
                                         return targetSdk.getApiLevel() < 1
                                                 ? null
                                                 : targetSdk.getApiString();
                                     }));
             task.getTargetSdkVersion().disallowChanges();
 
-            task.getMaxSdkVersion().set(project.provider(variantDslInfo::getMaxSdkVersion));
+            task.getMaxSdkVersion().set(project.provider(creationConfig::getMaxSdkVersion));
             task.getMaxSdkVersion().disallowChanges();
 
             task.getOptionalFeatures()
@@ -747,14 +755,18 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                         REVERSE_METADATA_FEATURE_MANIFEST);
 
             } else if (variantType.isDynamicFeature()) {
-                task.getFeatureName().set(variantScope.getFeatureName());
-                task.getFeatureName().disallowChanges();
+                DynamicFeatureCreationConfig dfCreationConfig =
+                        (DynamicFeatureCreationConfig) creationConfig;
 
-                task.packageManifest =
-                        creationConfig
-                                .getVariantDependencies()
-                                .getArtifactFileCollection(
-                                        COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA);
+                HasConfigurableValuesKt.setDisallowChanges(
+                        task.getFeatureName(), dfCreationConfig.getFeatureName());
+
+                HasConfigurableValuesKt.setDisallowChanges(
+                        task.baseModuleDebuggable, dfCreationConfig.getBaseModuleDebuggable());
+                HasConfigurableValuesKt.setDisallowChanges(
+                        task.baseModuleVersionCode, dfCreationConfig.getBaseModuleVersionCode());
+                HasConfigurableValuesKt.setDisallowChanges(
+                        task.baseModuleVersionName, dfCreationConfig.getBaseModuleVersionName());
 
                 task.dependencyFeatureNameArtifacts =
                         creationConfig
@@ -775,10 +787,10 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                         .getArtifactFileCollection(
                                                 RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
             }
-            task.packageOverride.set(componentProperties.getApplicationId());
+            task.packageOverride.set(this.creationConfig.getApplicationId());
             task.packageOverride.disallowChanges();
             task.manifestPlaceholders.set(
-                    task.getProject().provider(variantDslInfo::getManifestPlaceholders));
+                    task.getProject().provider(creationConfig::getManifestPlaceholders));
             task.manifestPlaceholders.disallowChanges();
             task.getMainManifest().set(project.provider(variantSources::getMainManifestFilePath));
             task.getMainManifest().disallowChanges();
@@ -824,9 +836,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     }
 
     private static EnumSet<Feature> getOptionalFeatures(
-            ComponentPropertiesImpl componentProperties, boolean isAdvancedProfilingOn) {
+            ApkCreationConfig creationConfig, boolean isAdvancedProfilingOn) {
         List<Feature> features = new ArrayList<>();
-        VariantType variantType = componentProperties.getVariantType();
+        VariantType variantType = creationConfig.getVariantType();
 
         if (variantType.isDynamicFeature()) {
             features.add(Feature.ADD_FEATURE_SPLIT_ATTRIBUTE);
@@ -850,17 +862,17 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             features.add(Feature.ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST);
         }
 
-        if (componentProperties.getVariantScope().isTestOnly()) {
+        if (creationConfig.getTestOnlyApk()) {
             features.add(Feature.TEST_ONLY);
         }
-        if (componentProperties.getVariantDslInfo().isDebuggable()) {
+        if (creationConfig.getDebuggable()) {
             features.add(Feature.DEBUGGABLE);
             if (isAdvancedProfilingOn) {
                 features.add(Feature.ADVANCED_PROFILING);
             }
         }
-        if (componentProperties.getVariantDslInfo().getDexingType() == DexingType.LEGACY_MULTIDEX) {
-            if (componentProperties
+        if (creationConfig.getDexingType() == DexingType.LEGACY_MULTIDEX) {
+            if (creationConfig
                     .getGlobalScope()
                     .getProjectOptions()
                     .get(BooleanOption.USE_ANDROID_X)) {
@@ -870,7 +882,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             }
         }
 
-        if (componentProperties
+        if (creationConfig
                 .getGlobalScope()
                 .getProjectOptions()
                 .get(BooleanOption.ENFORCE_UNIQUE_PACKAGE_NAMES)) {

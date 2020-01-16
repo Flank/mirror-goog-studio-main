@@ -68,6 +68,10 @@ import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.build.gradle.internal.component.ApplicationCreationConfig;
+import com.android.build.gradle.internal.component.BaseCreationConfig;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
@@ -811,17 +815,16 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                         .setFileCollection(variantScope.getProvidedOnlyClasspath())
                         .build());
 
-        componentProperties.onTestedVariant(
-                testedVariantProperties -> {
+        componentProperties.onTestedConfig(
+                testedConfig -> {
                     PublishingSpecs.VariantSpec testedSpec =
-                            testedVariantProperties
+                            testedConfig
                                     .getVariantScope()
                                     .getPublishingSpec()
-                                    .getTestingSpec(
-                                            componentProperties
-                                                    .getVariantType());
+                                    .getTestingSpec(componentProperties.getVariantType());
 
-                    // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
+                    // get the OutputPublishingSpec from the ArtifactType for this particular
+                    // variant spec
                     PublishingSpecs.OutputSpec taskOutputSpec =
                             testedSpec.getSpec(
                                     AndroidArtifacts.ArtifactType.CLASSES_JAR,
@@ -835,7 +838,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                             .getArtifacts()
                             .copy(
                                     InternalArtifactType.TESTED_CODE_CLASSES.INSTANCE,
-                                    testedVariantProperties.getArtifacts(),
+                                    testedConfig.getArtifacts(),
                                     testedOutputType);
 
                     // create two streams of different types.
@@ -844,7 +847,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                                     .addContentTypes(DefaultContentType.CLASSES)
                                     .addScope(Scope.TESTED_CODE)
                                     .setFileCollection(
-                                            testedVariantProperties
+                                            testedConfig
                                                     .getArtifacts()
                                                     .getFinalProductAsFileCollection(
                                                             testedOutputType)
@@ -856,7 +859,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                                     .addContentTypes(DefaultContentType.CLASSES)
                                     .addScope(Scope.TESTED_CODE)
                                     .setArtifactCollection(
-                                            testedVariantProperties
+                                            testedConfig
                                                     .getVariantDependencies()
                                                     .getArtifactCollection(
                                                             RUNTIME_CLASSPATH, ALL, CLASSES_JAR))
@@ -875,11 +878,14 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         ApkVariantData apkVariantData = (ApkVariantData) componentProperties.getVariantData();
         Set<String> screenSizes = apkVariantData.getCompatibleScreens();
 
+        // FIXME
+        ApkCreationConfig creationConfig = (ApkCreationConfig) componentProperties;
+
         taskFactory.register(
-                new CompatibleScreensManifest.CreationAction(componentProperties, screenSizes));
+                new CompatibleScreensManifest.CreationAction(creationConfig, screenSizes));
 
         TaskProvider<? extends ManifestProcessorTask> processManifestTask =
-                createMergeManifestTask(componentProperties);
+                createMergeManifestTask(creationConfig);
 
         final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
         if (taskContainer.getMicroApkTask() != null) {
@@ -889,19 +895,20 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
 
     /** Returns whether or not dependencies from the {@link CustomClassTransform} are packaged */
     protected static boolean packagesCustomClassDependencies(
-            @NonNull ComponentPropertiesImpl componentProperties, @NonNull ProjectOptions options) {
-        return appliesCustomClassTransforms(componentProperties, options)
-                && !componentProperties.getVariantType().isDynamicFeature();
+            @NonNull BaseCreationConfig creationConfig, @NonNull ProjectOptions options) {
+        return appliesCustomClassTransforms(creationConfig, options)
+                && !creationConfig.getVariantType().isDynamicFeature();
     }
 
     /** Returns whether or not custom class transforms are applied */
     protected static boolean appliesCustomClassTransforms(
-            @NonNull ComponentPropertiesImpl componentProperties, @NonNull ProjectOptions options) {
-        final VariantType type = componentProperties.getVariantType();
-        return componentProperties.getVariantDslInfo().isDebuggable()
-                && type.isApk()
-                && !type.isForTesting()
-                && !getAdvancedProfilingTransforms(options).isEmpty();
+            @NonNull BaseCreationConfig creationConfig, @NonNull ProjectOptions options) {
+        if (creationConfig instanceof ApkCreationConfig) {
+            return ((ApkCreationConfig) creationConfig).getDebuggable()
+                    && !creationConfig.getVariantType().isForTesting()
+                    && !getAdvancedProfilingTransforms(options).isEmpty();
+        }
+        return false;
     }
 
     @NonNull
@@ -916,11 +923,10 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
     /** Creates the merge manifests task. */
     @NonNull
     protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTask(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull ApkCreationConfig creationConfig) {
         return taskFactory.register(
                 new ProcessApplicationManifest.CreationAction(
-                        componentProperties,
-                        !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
+                        creationConfig, !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
     }
 
     protected void createProcessTestManifestTask(
@@ -1149,24 +1155,25 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
     }
 
     public void createProcessResTask(
-            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull BaseCreationConfig creationConfig,
             @Nullable SingleArtifactType<Directory> packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName) {
-        VariantScope scope = componentProperties.getVariantScope();
-        BaseVariantData variantData = componentProperties.getVariantData();
+        VariantScope scope = creationConfig.getVariantScope();
+        // FIXME
+        ComponentPropertiesImpl componentPropertiesImpl = (ComponentPropertiesImpl) creationConfig;
+        BaseVariantData variantData = componentPropertiesImpl.getVariantData();
 
-        variantData.calculateFilters(
-                componentProperties.getGlobalScope().getExtension().getSplits());
+        variantData.calculateFilters(creationConfig.getGlobalScope().getExtension().getSplits());
 
         // The manifest main dex list proguard rules are always needed for the bundle,
         // even if legacy multidex is not explicitly enabled.
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
-                componentProperties.getNeedsMainDexList();
+                creationConfig.getNeedsMainDexList();
 
-        if (componentProperties.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
+        if (creationConfig.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             // TODO: make sure we generate the proguard rules in the namespaced case.
-            new NamespacedResourcesTaskManager(globalScope, taskFactory, componentProperties)
+            new NamespacedResourcesTaskManager(globalScope, taskFactory, componentPropertiesImpl)
                     .createNamespacedResourceTasks(
                             packageOutputType,
                             baseName,
@@ -1174,11 +1181,11 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
 
             FileCollection rFiles =
                     project.files(
-                            componentProperties
+                            creationConfig
                                     .getArtifacts()
                                     .getFinalProduct(RUNTIME_R_CLASS_CLASSES.INSTANCE));
 
-            componentProperties
+            creationConfig
                     .getTransformManager()
                     .addStream(
                             OriginalStream.builder(project, "final-r-classes")
@@ -1190,11 +1197,11 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                                     .setFileCollection(rFiles)
                                     .build());
 
-            componentProperties.getArtifacts().appendToAllClasses(rFiles);
+            creationConfig.getArtifacts().appendToAllClasses(rFiles);
             return;
         }
         createNonNamespacedResourceTasks(
-                componentProperties,
+                componentPropertiesImpl,
                 packageOutputType,
                 mergeType,
                 baseName,
@@ -1233,11 +1240,12 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         } else {
             // MergeType.MERGE means we merged the whole universe.
             taskFactory.register(
-                    createProcessAndroidResourcesConfigAction(
+                    new LinkApplicationAndroidResourcesTask.CreationAction(
                             componentProperties,
                             useAaptToGenerateLegacyMultidexMainDexProguardRules,
                             mergeType,
-                            baseName));
+                            baseName,
+                            isLibrary()));
 
             if (packageOutputType != null) {
                 artifacts.republish(PROCESSED_RES.INSTANCE, packageOutputType);
@@ -1264,22 +1272,6 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
             @NonNull ComponentPropertiesImpl componentProperties) {
         return componentProperties.getVariantScope().getCodeShrinker() != null
                 || componentProperties.getVariantType().isDynamicFeature();
-    }
-
-    protected VariantTaskCreationAction<
-                    LinkApplicationAndroidResourcesTask, ComponentPropertiesImpl>
-            createProcessAndroidResourcesConfigAction(
-                    @NonNull ComponentPropertiesImpl componentProperties,
-                    boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                    @NonNull MergeType sourceArtifactType,
-                    @NonNull String baseName) {
-
-        return new LinkApplicationAndroidResourcesTask.CreationAction(
-                componentProperties,
-                useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                sourceArtifactType,
-                baseName,
-                isLibrary());
     }
 
     /**
@@ -2029,7 +2021,9 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
      * <p>These tasks create the dex file from the .class files, plus optional intermediary steps
      * like proguard and jacoco
      */
-    public void createPostCompilationTasks(@NonNull ComponentPropertiesImpl componentProperties) {
+    public void createPostCompilationTasks(@NonNull ApkCreationConfig creationConfig) {
+        // FIXME we need to remove this but this has large impact in the code
+        ComponentPropertiesImpl componentProperties = (ComponentPropertiesImpl) creationConfig;
 
         checkNotNull(componentProperties.getTaskContainer().getJavacTask());
 
@@ -2127,7 +2121,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         }
 
         // ----- Multi-Dex support
-        DexingType dexingType = componentProperties.getDexingType();
+        DexingType dexingType = creationConfig.getDexingType();
 
         // Upgrade from legacy multi-dex to native multi-dex if possible when using with a device
         if (dexingType == DexingType.LEGACY_MULTIDEX) {
@@ -2150,7 +2144,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
 
         maybeCreateResourcesShrinkerTasks(componentProperties);
 
-        maybeCreateDexSplitterTask(componentProperties);
+        maybeCreateDexSplitterTask(creationConfig);
     }
 
     private void maybeCreateDesugarTask(
@@ -2177,12 +2171,12 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                 return;
             }
 
-
             ScopeType testedType =
-                    componentProperties.onTestedVariant(
-                            variantProperties -> {
-                                if (!variantProperties.getVariantType().isAar()) {
-                                    // test variants, except for library, should not package try-with-resources jar
+                    componentProperties.onTestedConfig(
+                            testedConfig -> {
+                                if (!testedConfig.getVariantType().isAar()) {
+                                    // test variants, except for library, should not package
+                                    // try-with-resources jar
                                     // as the tested variant already contains it.
                                     return Scope.PROVIDED_ONLY;
                                 }
@@ -2476,7 +2470,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                 // else viewBinding must be enabled which is fine.
             } else {
                 VariantType testedVariantType =
-                        componentProperties.onTestedVariant(VariantPropertiesImpl::getVariantType);
+                        componentProperties.onTestedConfig(VariantCreationConfig::getVariantType);
 
                 if (!extension.getDataBinding().isEnabledForTests() && !testedVariantType.isAar()) {
                     return;
@@ -2540,11 +2534,11 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
     /**
      * Creates the final packaging task, and optionally the zipalign task (if the variant is signed)
      */
-    public void createPackagingTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        //ApkVariantData variantData = (ApkVariantData) variantScope.getVariantData();
-        final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
+    public void createPackagingTask(@NonNull ApkCreationConfig creationConfig) {
+        // ApkVariantData variantData = (ApkVariantData) variantScope.getVariantData();
+        final MutableTaskContainer taskContainer = creationConfig.getTaskContainer();
 
-        boolean signedApk = componentProperties.getVariantDslInfo().isSigningReady();
+        boolean signedApk = creationConfig.getVariantDslInfo().isSigningReady();
 
         /*
          * PrePackaging step class that will look if the packaging of the main FULL_APK split is
@@ -2555,11 +2549,10 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
          * forcing a cold swap is triggered, the main FULL_APK must be rebuilt (even if the
          * resources were changed in a previous build).
          */
-        VariantScope variantScope = componentProperties.getVariantScope();
-        InternalArtifactType<Directory> manifestType = variantScope.getManifestArtifactType();
+        VariantScope variantScope = creationConfig.getVariantScope();
+        InternalArtifactType<Directory> manifestType = creationConfig.getManifestArtifactType();
 
-        Provider<Directory> manifests =
-                componentProperties.getArtifacts().getFinalProduct(manifestType);
+        Provider<Directory> manifests = creationConfig.getArtifacts().getFinalProduct(manifestType);
 
         InternalArtifactType resourceFilesInputType =
                 variantScope.useResourceShrinker()
@@ -2578,13 +2571,12 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         TaskProvider<PackageApplication> packageApp =
                 taskFactory.register(
                         new PackageApplication.CreationAction(
-                                componentProperties,
-                                componentProperties.getPaths().getApkLocation(),
+                                creationConfig,
+                                creationConfig.getPaths().getApkLocation(),
                                 resourceFilesInputType,
                                 manifests,
                                 manifestType,
-                                packagesCustomClassDependencies(
-                                        componentProperties, projectOptions)),
+                                packagesCustomClassDependencies(creationConfig, projectOptions)),
                         null,
                         task -> {
                             task.dependsOn(taskContainer.getJavacTask());
@@ -2603,7 +2595,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), packageApp.getName());
 
         // republish APK to the external world.
-        componentProperties
+        creationConfig
                 .getArtifacts()
                 .republish(InternalArtifactType.APK.INSTANCE, PublicArtifactType.APK.INSTANCE);
 
@@ -2611,18 +2603,18 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         // right output if there are more than one.
         // Add a task to install the application package
         if (signedApk) {
-            createInstallTask(componentProperties);
+            createInstallTask(creationConfig);
         }
 
         // add an uninstall task
         final TaskProvider<UninstallTask> uninstallTask =
-                taskFactory.register(new UninstallTask.CreationAction(componentProperties));
+                taskFactory.register(new UninstallTask.CreationAction(creationConfig));
 
         taskFactory.configure(UNINSTALL_ALL, uninstallAll -> uninstallAll.dependsOn(uninstallTask));
     }
 
-    protected void createInstallTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        taskFactory.register(new InstallVariantTask.CreationAction(componentProperties));
+    protected void createInstallTask(@NonNull ApkCreationConfig creationConfig) {
+        taskFactory.register(new InstallVariantTask.CreationAction(creationConfig));
     }
 
     protected void createValidateSigningTask(@NonNull ComponentPropertiesImpl componentProperties) {
@@ -2795,7 +2787,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
 
     public void createAssembleTask(@NonNull ComponentPropertiesImpl componentProperties) {
         taskFactory.register(
-                getAssembleTaskName(componentProperties, "assemble"),
+                componentProperties.computeTaskName("assemble"),
                 null /*preConfigAction*/,
                 task ->
                         task.setDescription(
@@ -2805,15 +2797,9 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                         componentProperties.getTaskContainer().setAssembleTask(taskProvider));
     }
 
-    @NonNull
-    private String getAssembleTaskName(
-            @NonNull ComponentPropertiesImpl componentProperties, @NonNull String prefix) {
-        return componentProperties.computeTaskName(prefix);
-    }
-
     public void createBundleTask(@NonNull ComponentPropertiesImpl componentProperties) {
         taskFactory.register(
-                getAssembleTaskName(componentProperties, "bundle"),
+                componentProperties.computeTaskName("bundle"),
                 null,
                 task -> {
                     task.setDescription(
@@ -2897,22 +2883,23 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
 
     @NonNull
     private TaskProvider<R8Task> createR8Task(
-            @NonNull ComponentPropertiesImpl componentProperties, Boolean isTestApplication) {
-        if (componentProperties.getVariantScope().consumesFeatureJars()) {
-            publishFeatureDex(componentProperties);
+            @NonNull BaseCreationConfig creationConfig, Boolean isTestApplication) {
+        if (creationConfig instanceof ApplicationCreationConfig) {
+            publishFeatureDex((ApplicationCreationConfig) creationConfig);
         }
-        return taskFactory.register(
-                new R8Task.CreationAction(componentProperties, isTestApplication));
+        return taskFactory.register(new R8Task.CreationAction(creationConfig, isTestApplication));
     }
 
-    private void maybeCreateDexSplitterTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (!componentProperties.getVariantScope().consumesFeatureJars()) {
+    private void maybeCreateDexSplitterTask(@NonNull ApkCreationConfig creationConfig) {
+        if (!creationConfig.getVariantScope().consumesFeatureJars()) {
             return;
         }
 
-        taskFactory.register(new DexSplitterTask.CreationAction(componentProperties));
+        taskFactory.register(new DexSplitterTask.CreationAction(creationConfig));
 
-        publishFeatureDex(componentProperties);
+        if (creationConfig instanceof ApplicationCreationConfig) {
+            publishFeatureDex((ApplicationCreationConfig) creationConfig);
+        }
     }
 
     /**
@@ -2924,7 +2911,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
      * code was pulled from there. Once there's support for publishing multiple artifacts per
      * BuildableArtifact in the PublishingSpecs pipeline, we can get rid of this method.
      */
-    private void publishFeatureDex(@NonNull ComponentPropertiesImpl componentProperties) {
+    private void publishFeatureDex(@NonNull ApplicationCreationConfig creationConfig) {
         // first calculate the list of module paths
         final Collection<String> modulePaths;
         final BaseExtension extension = globalScope.getExtension();
@@ -2935,14 +2922,14 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         }
 
         Configuration configuration =
-                componentProperties.getVariantDependencies().getElements(RUNTIME_ELEMENTS);
+                creationConfig.getVariantDependencies().getElements(RUNTIME_ELEMENTS);
         Preconditions.checkNotNull(
                 configuration,
                 "Publishing to Runtime Element with no Runtime Elements configuration object. "
                         + "VariantType: "
-                        + componentProperties.getVariantType());
+                        + creationConfig.getVariantType());
         Provider<Directory> artifact =
-                componentProperties
+                creationConfig
                         .getArtifacts()
                         .getFinalProduct(InternalArtifactType.FEATURE_DEX.INSTANCE);
         for (String modulePath : modulePaths) {

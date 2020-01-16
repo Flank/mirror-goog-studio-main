@@ -20,8 +20,8 @@ import com.android.SdkConstants.DOT_ANDROID_PACKAGE
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FD_RES_RAW
 import com.android.SdkConstants.FD_RES_XML
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -216,10 +216,10 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
     }
 
     internal class CreationAction(
-        private val componentProperties: ComponentPropertiesImpl,
+        creationConfig: ApkCreationConfig,
         private val apkFileCollection: FileCollection?
-    ) : VariantTaskCreationAction<GenerateApkDataTask, ComponentPropertiesImpl>(
-        componentProperties
+    ) : VariantTaskCreationAction<GenerateApkDataTask, ApkCreationConfig>(
+        creationConfig
     ) {
 
         override val name: String = computeTaskName("handle", "MicroApk")
@@ -238,8 +238,6 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
             task: GenerateApkDataTask
         ) {
             super.configure(task)
-
-            val variantDslInfo = creationConfig.variantDslInfo
 
             val paths = creationConfig.paths
 
@@ -260,7 +258,7 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
 
             task.minSdkVersion.setDisallowChanges(creationConfig.minSdkVersion.apiLevel)
 
-            task.targetSdkVersion.setDisallowChanges(variantDslInfo.targetSdkVersion.apiLevel)
+            task.targetSdkVersion.setDisallowChanges(creationConfig.targetSdkVersion.apiLevel)
 
             val aapt2AndVersion = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2Executable.from(aapt2AndVersion.first)

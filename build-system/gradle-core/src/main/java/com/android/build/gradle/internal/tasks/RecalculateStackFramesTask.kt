@@ -124,7 +124,7 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
                 referencedClasses.from(creationConfig.artifacts.getAllClasses())
             }
 
-            creationConfig.onTestedVariant {
+            creationConfig.onTestedConfig {
                 referencedClasses.from(
                     creationConfig.artifacts.getFinalProduct(
                         InternalArtifactType.TESTED_CODE_CLASSES

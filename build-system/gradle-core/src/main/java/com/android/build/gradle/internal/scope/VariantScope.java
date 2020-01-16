@@ -157,22 +157,8 @@ public interface VariantScope {
     FileCollection getBootClasspath();
 
     @NonNull
-    InternalArtifactType<Directory> getManifestArtifactType();
-
-    @NonNull
     JarCreatorType getJarCreatorType();
 
     @NonNull
     ApkCreatorType getApkCreatorType();
-
-    /**
-     * Returns a {@link Provider} for the name of the feature.
-     *
-     * @return the provider
-     */
-    @NonNull
-    Provider<String> getFeatureName();
-
-    @NonNull
-    Provider<Integer> getResOffset();
 }

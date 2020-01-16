@@ -31,12 +31,12 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.ArtifactType;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.VariantOutputConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
@@ -981,7 +981,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     // ----- CreationAction -----
 
     public abstract static class CreationAction<TaskT extends PackageAndroidArtifact>
-            extends VariantTaskCreationAction<TaskT, ComponentPropertiesImpl> {
+            extends VariantTaskCreationAction<TaskT, ApkCreationConfig> {
 
         protected final Project project;
         @NonNull protected final Provider<Directory> manifests;
@@ -990,13 +990,13 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         private final boolean packageCustomClassDependencies;
 
         public CreationAction(
-                @NonNull ComponentPropertiesImpl componentProperties,
+                @NonNull ApkCreationConfig creationConfig,
                 @NonNull SingleArtifactType<Directory> inputResourceFilesType,
                 @NonNull Provider<Directory> manifests,
                 @NonNull ArtifactType<Directory> manifestType,
                 boolean packageCustomClassDependencies) {
-            super(componentProperties);
-            this.project = componentProperties.getGlobalScope().getProject();
+            super(creationConfig);
+            this.project = creationConfig.getGlobalScope().getProject();
             this.inputResourceFilesType = inputResourceFilesType;
             this.manifests = manifests;
             this.manifestType = manifestType;
@@ -1128,43 +1128,43 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                 packageAndroidArtifact.getDependencyDataFile());
             }
 
-            finalConfigure(packageAndroidArtifact, creationConfig);
+            finalConfigure(packageAndroidArtifact);
         }
 
-        protected void finalConfigure(TaskT task, ComponentPropertiesImpl component) {
+        protected void finalConfigure(TaskT task) {
             task.getJniFolders()
                     .from(
                             PerModuleBundleTaskKt.getNativeLibsFiles(
-                                    component, packageCustomClassDependencies));
+                                    creationConfig, packageCustomClassDependencies));
 
-            task.setSigningConfig(SigningConfigProvider.create(component));
+            task.setSigningConfig(SigningConfigProvider.create(creationConfig));
         }
 
         @NonNull
-        public FileCollection getDexFolders(@NonNull ComponentPropertiesImpl component) {
-            BuildArtifactsHolder artifacts = component.getArtifacts();
+        public FileCollection getDexFolders(@NonNull ApkCreationConfig creationConfig) {
+            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
             if (artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX.INSTANCE)) {
                 return artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX.INSTANCE)
                         .get()
-                        .plus(getDesugarLibDexIfExists(component));
+                        .plus(getDesugarLibDexIfExists(creationConfig));
             } else {
                 return project.files(
                                 artifacts.getOperations().getAll(MultipleArtifactType.DEX.INSTANCE))
-                        .plus(getDesugarLibDexIfExists(component));
+                        .plus(getDesugarLibDexIfExists(creationConfig));
             }
         }
 
         @NonNull
-        private FileCollection getJavaResources(@NonNull ComponentPropertiesImpl component) {
-            BuildArtifactsHolder artifacts = component.getArtifacts();
+        private FileCollection getJavaResources(@NonNull ApkCreationConfig creationConfig) {
+            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
 
             if (artifacts.hasFinalProduct(SHRUNK_JAVA_RES.INSTANCE)) {
                 Provider<RegularFile> mergedJavaResProvider =
                         artifacts.getFinalProduct(SHRUNK_JAVA_RES.INSTANCE);
                 return project.getLayout().files(mergedJavaResProvider);
-            } else if (component.getVariantScope().getNeedsMergedJavaResStream()) {
-                return component
+            } else if (creationConfig.getVariantScope().getNeedsMergedJavaResStream()) {
+                return creationConfig
                         .getTransformManager()
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES);
             } else {
@@ -1175,11 +1175,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
 
         @Nullable
-        public FileCollection getFeatureDexFolder(@NonNull ComponentPropertiesImpl component) {
-            if (!component.getVariantType().isDynamicFeature()) {
+        public FileCollection getFeatureDexFolder(@NonNull ApkCreationConfig creationConfig) {
+            if (!creationConfig.getVariantType().isDynamicFeature()) {
                 return null;
             }
-            return component
+            return creationConfig
                     .getVariantDependencies()
                     .getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
@@ -1205,16 +1205,16 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         }
 
         @NonNull
-        private FileCollection getDesugarLibDexIfExists(ComponentPropertiesImpl component) {
-            if (component.getVariantType().isDynamicFeature()) {
-                return component.getGlobalScope().getProject().files();
+        private FileCollection getDesugarLibDexIfExists(@NonNull ApkCreationConfig creationConfig) {
+            if (creationConfig.getVariantType().isDynamicFeature()) {
+                return creationConfig.getGlobalScope().getProject().files();
             }
-            BuildArtifactsHolder artifacts = component.getArtifacts();
+            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
             if (artifacts.hasFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE)) {
                 return project.files(
                         artifacts.getFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
             } else {
-                return DesugarLibUtils.getDesugarLibDexFromTransform(component);
+                return DesugarLibUtils.getDesugarLibDexFromTransform(creationConfig);
             }
         }
     }

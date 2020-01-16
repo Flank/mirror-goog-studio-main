@@ -17,11 +17,17 @@
 package com.android.build.api.variant
 
 import org.gradle.api.Incubating
+import org.gradle.api.provider.Property
 
 /**
  * Properties for a the main Variant of an application.
  */
 @Incubating
 interface ApplicationVariantProperties : VariantProperties {
+
+    /**
+     * Variant's application ID as present in the final manifest file of the APK.
+     */
+    override val applicationId: Property<String>
 
 }

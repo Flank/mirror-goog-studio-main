@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -75,9 +75,9 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
         declaration.save(outputFile.get().asFile)
     }
 
-    internal class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<ModuleMetadataWriterTask, ComponentPropertiesImpl>(
-            componentProperties
+    internal class CreationAction(creationConfig: ApplicationCreationConfig) :
+        VariantTaskCreationAction<ModuleMetadataWriterTask, ApplicationCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String
@@ -103,7 +103,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
         ) {
             super.configure(task)
             task.applicationId.set(creationConfig.applicationId)
-            task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+            task.debuggable.setDisallowChanges(creationConfig.debuggable)
             task.versionCode.setDisallowChanges(creationConfig.outputs.getMainSplit().versionCode)
             task.versionName.setDisallowChanges(creationConfig.outputs.getMainSplit().versionName)
             task.abiFilters.setDisallowChanges(creationConfig.variantDslInfo.supportedAbis?.sorted())

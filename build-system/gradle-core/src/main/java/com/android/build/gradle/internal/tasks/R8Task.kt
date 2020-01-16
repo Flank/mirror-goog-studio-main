@@ -16,10 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.Format
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
+import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
@@ -164,9 +165,9 @@ abstract class R8Task: ProguardConfigurableTask() {
     abstract val mainDexListOutput: RegularFileProperty
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: BaseCreationConfig,
         isTestApplication: Boolean = false
-    ) : ProguardConfigurableTask.CreationAction<R8Task>(componentProperties, isTestApplication) {
+    ) : ProguardConfigurableTask.CreationAction<R8Task, BaseCreationConfig>(creationConfig, isTestApplication) {
         override val type = R8Task::class.java
         override val name =  computeTaskName("minify", "WithR8")
 

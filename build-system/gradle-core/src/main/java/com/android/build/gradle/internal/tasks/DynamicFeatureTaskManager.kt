@@ -16,12 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTask
@@ -62,7 +61,7 @@ internal class DynamicFeatureTaskManager(
 
     }
 
-    private fun createDynamicBundleTask(variantProperties: VariantPropertiesImpl) {
+    private fun createDynamicBundleTask(variantProperties: DynamicFeatureVariantPropertiesImpl) {
 
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
         // and the bundle can't be created. For now, just don't add the bundle task.
@@ -83,7 +82,7 @@ internal class DynamicFeatureTaskManager(
         }
     }
 
-    override fun createInstallTask(componentProperties: ComponentPropertiesImpl) {
+    override fun createInstallTask(creationConfig: ApkCreationConfig) {
         // no install task for Dynamic Features
     }
 }

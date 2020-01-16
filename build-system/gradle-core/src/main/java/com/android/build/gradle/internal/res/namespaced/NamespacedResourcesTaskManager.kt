@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -74,7 +75,7 @@ class NamespacedResourcesTaskManager(
         // TODO: also generate a private R.jar holding private resources.
         taskFactory.register(GenerateNamespacedLibraryRFilesTask.CreationAction(componentProperties))
         if (componentProperties.variantType.isTestComponent) {
-            val testedType = componentProperties.testedVariant?.variantType ?: throw RuntimeException("testedVariant is null")
+            val testedType = componentProperties.testedConfig?.variantType ?: throw RuntimeException("testedVariant is null")
             if (testedType.isAar) {
                 createNamespacedLibraryTestProcessResourcesTask(
                     packageOutputType = packageOutputType
@@ -100,9 +101,10 @@ class NamespacedResourcesTaskManager(
             packageOutputType: SingleArtifactType<Directory>?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
+        // TODO fix by using the right type for field componentProperties
        taskFactory.register(
            LinkApplicationAndroidResourcesTask.NamespacedCreationAction(
-               componentProperties,
+               componentProperties as ApkCreationConfig,
                useAaptToGenerateLegacyMultidexMainDexProguardRules,
                baseName
            )

@@ -29,6 +29,7 @@ import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
@@ -40,8 +41,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
@@ -53,23 +54,25 @@ import com.android.ide.common.blame.SourceFile
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
+import com.google.common.collect.ImmutableSet
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 import java.io.File
 
 abstract class ComponentPropertiesImpl(
     componentIdentity: ComponentIdentity,
-    val variantDslInfo: VariantDslInfo,
-    val variantDependencies: VariantDependencies,
-    val variantSources: VariantSources,
-    val paths: VariantPathHelper,
-    val artifacts: BuildArtifactsHolder,
-    val variantScope: VariantScope,
+    override val variantDslInfo: VariantDslInfo,
+    override val variantDependencies: VariantDependencies,
+    override val variantSources: VariantSources,
+    override val paths: VariantPathHelper,
+    override val artifacts: BuildArtifactsHolder,
+    override val variantScope: VariantScope,
     val variantData: BaseVariantData,
-    val transformManager: TransformManager,
+    override val transformManager: TransformManager,
     override val dslScope: DslScope,
-    val globalScope: GlobalScope
+    override val globalScope: GlobalScope
 ): ComponentProperties, BaseCreationConfig, ComponentIdentity by componentIdentity {
 
     // ---------------------------------------------------------------------------------------------
@@ -79,10 +82,6 @@ abstract class ComponentPropertiesImpl(
     override val outputs: VariantOutputList
         get() = VariantOutputList(variantOutputs.toList())
 
-    override val applicationId: Property<String> = dslScope.objectFactory.property(String::class.java).apply {
-        setDisallowChanges(dslScope.providerFactory.provider { variantDslInfo.applicationId })
-    }
-
     override val operations: Operations
         get() = artifacts.getOperations()
 
@@ -90,28 +89,50 @@ abstract class ComponentPropertiesImpl(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
+
     // Move as direct delegates
     override val taskContainer = variantData.taskContainer
 
     private val variantOutputs= mutableListOf<VariantOutputImpl>()
 
-    val variantType: VariantType
+    override val variantType: VariantType
         get() = variantDslInfo.variantType
 
-    val dexingType: DexingType
-        get() = variantDslInfo.dexingType
-
-    val needsMainDexList: Boolean
-        get() = variantDslInfo.dexingType.needsMainDexList
-
-    val minSdkVersion: AndroidVersion
+    override val minSdkVersion: AndroidVersion
         get() = variantDslInfo.minSdkVersion
 
-    val dirName: String
+    override val maxSdkVersion: Int?
+        get() = variantDslInfo.maxSdkVersion
+
+    override val targetSdkVersion: ApiVersion
+        get() = variantDslInfo.targetSdkVersion
+
+    override val dirName: String
         get() = variantDslInfo.dirName
 
-    val baseName: String
+    override val baseName: String
         get() = variantDslInfo.baseName
+
+    override val originalApplicationId: String
+        get() = variantDslInfo.originalApplicationId
+
+    override val resourceConfigurations: ImmutableSet<String>
+        get() = variantDslInfo.resourceConfigurations
+
+    override val description: String
+        get() = variantData.description
+
+    override val dexingType: DexingType
+        get() = variantDslInfo.dexingType
+
+    override val needsMainDexList: Boolean
+        get() = dexingType.needsMainDexList
+
+    // Resource shrinker expects MergeResources task to have all the resources merged and with
+    // overlay rules applied, so we have to go through the MergeResources pipeline in case it's
+    // enabled, see b/134766811.
+    override val isPrecompileDependenciesResourcesEnabled: Boolean
+        get() = globalScope.projectOptions[BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES] && !variantScope.useResourceShrinker()
 
     /**
      * Returns the tested variant. This is null for [VariantPropertiesImpl] instances
@@ -121,18 +142,18 @@ abstract class ComponentPropertiesImpl(
      * [TestComponentProperties]. This is to facilitate places where one cannot use
      * [TestComponentPropertiesImpl].
      *
-     * see [onTestedVariant] for a utility function helping deal with nullability
+     * see [onTestedConfig] for a utility function helping deal with nullability
      */
-    open val testedVariant: VariantPropertiesImpl? = null
+    override val testedConfig: VariantCreationConfig? = null
 
     /**
      * Runs an action on the tested variant and return the results of the action.
      *
      * if there is no tested variant this does nothing and returns null.
      */
-    fun <T> onTestedVariant(action: (VariantPropertiesImpl) -> T): T? {
+    override fun <T> onTestedConfig(action: (VariantCreationConfig) -> T): T? {
         if (variantType.isTestComponent) {
-            val tested = testedVariant ?: throw RuntimeException("testedVariant null with type $variantType")
+            val tested = testedConfig ?: throw RuntimeException("testedVariant null with type $variantType")
             return action(tested)
         }
 
@@ -263,4 +284,11 @@ abstract class ComponentPropertiesImpl(
         )
     }
 
+    // TODO Move these outside of Variant specific class (maybe GlobalTaskScope?)
+
+    override val manifestArtifactType: InternalArtifactType<Directory>
+        get() = if (globalScope.projectOptions[BooleanOption.IDE_DEPLOY_AS_INSTANT_APP])
+            InternalArtifactType.INSTANT_APP_MANIFEST
+        else
+            InternalArtifactType.MERGED_MANIFESTS
 }

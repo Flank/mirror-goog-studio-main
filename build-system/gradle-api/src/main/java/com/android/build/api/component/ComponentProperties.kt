@@ -37,11 +37,4 @@ interface ComponentProperties: ComponentIdentity,
      * FIXME this does not belong here, but this is needed by AndroidTest. We need an extension that crosses AndroidTest and APK-based Variants
      */
     val outputs: List<VariantOutput>
-
-    /**
-     * Variant's application ID as present in the final manifest file of the APK.
-     *
-     * FIXME that does not belong here but this is needed for androidTest
-     */
-    val applicationId: Property<String>
 }
