@@ -1,0 +1,8 @@
+<root>
+  <item name='com.intellij.psi.PsiManager void dropPsiCaches()'>
+    <annotation name='com.android.annotations.concurrency.UiThread'/>
+  </item>
+  <item name='com.intellij.psi.PsiManager void dropResolveCaches()'>
+    <annotation name='com.android.annotations.concurrency.AnyThread'/>
+  </item>
+</root>
