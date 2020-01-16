@@ -32,21 +32,14 @@ class GradleToolingApiModelTest {
     companion object {
         private val EXCLUDED_CLASSES = ImmutableSet.of<Class<*>>(
             GradleToolingApiModelTest::class.java,
+            GradleToolingApiModelUpdater::class.java,
             TestOptionsTest::class.java
         )
         private val STABLE_API_URL = Resources.getResource(
             GradleToolingApiModelTest::class.java, "tooling-api-model-api.txt"
         )
 
-        @JvmStatic
-        fun main(args: Array<String>) {
-            getApiTester().updateFile(
-                "tools/base/build-system/builder-model/src/test/resources/com/android/builder/model/"
-            )
-        }
-
-        private fun getApiTester(): ApiTester {
-
+        fun getApiTester(): ApiTester {
             val classes =
                 ClassPath
                     .from(GradleToolingApiModelTest::class.java.classLoader)
@@ -58,9 +51,9 @@ class GradleToolingApiModelTest {
                 ApiTester.Filter.ALL,
                 "The Android Gradle Plugin Tooling Model API."
                         + " API has changed, either revert "
-                        + "the api change or re-run GradleToolingApiModelTest.main[] from the IDE "
-                        + "to update the API file.\n"
-                        + "GradleToolingApiModelTest will apply the following changes if run:\n",
+                        + "the api change or re-run GradleToolingApiModelUpdater.main[] from the "
+                        + "IDE to update the API file.\n"
+                        + "GradleToolingApiModelUpdater will apply the following changes if run:\n",
                 STABLE_API_URL
             )
         }
