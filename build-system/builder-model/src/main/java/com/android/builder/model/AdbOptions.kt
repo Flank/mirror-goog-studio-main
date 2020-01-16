@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.builder.model;
-
-import java.util.Collection;
+package com.android.builder.model
 
 /**
  * Options for adb.
  */
-public interface AdbOptions {
+interface AdbOptions {
 
-    /**
-     * Returns the time out used for all adb operations.
-     * @return the time out in milliseconds.
-     */
-    int getTimeOutInMs();
+    /** The time out used for all adb operations. */
+    val timeOutInMs: Int
 
-    /**
-     * Returns the list of APK installation options.
-     */
-    Collection<String> getInstallOptions();
+    /** The list of APK installation options. */
+    val installOptions: Collection<String>?
 }
