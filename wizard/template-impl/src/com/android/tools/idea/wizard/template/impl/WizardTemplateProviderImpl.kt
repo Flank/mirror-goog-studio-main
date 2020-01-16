@@ -50,6 +50,7 @@ import com.android.tools.idea.wizard.template.impl.other.broadcastReceiver.broad
 import com.android.tools.idea.wizard.template.impl.other.contentProvider.contentProviderTemplate
 import com.android.tools.idea.wizard.template.impl.other.folders.folderTemplates
 import com.android.tools.idea.wizard.template.impl.other.intentService.intentServiceTemplate
+import com.android.tools.idea.wizard.template.impl.other.service.serviceTemplate
 import com.android.tools.idea.wizard.template.impl.other.sliceProvider.sliceProviderTemplate
 
 /**
@@ -90,6 +91,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     broadcastReceiverTemplate,
     contentProviderTemplate,
     intentServiceTemplate,
+    serviceTemplate,
     sliceProviderTemplate
   ) + folderTemplates
 }
