@@ -17,10 +17,17 @@
 package com.android.build.gradle.internal.tasks
 
 import android.databinding.tool.DataBindingBuilder
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
+import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTask
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask
 import com.android.builder.profile.Recorder
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
@@ -43,5 +50,44 @@ internal class DynamicFeatureTaskManager(
         allComponentsWithLint: MutableList<DynamicFeatureVariantPropertiesImpl>
     ) {
         createCommonTasks(variantProperties, allComponentsWithLint)
+
+        createDynamicBundleTask(variantProperties)
+
+        // Non-base feature specific task.
+        // Task will produce artifacts consumed by the base feature
+        taskFactory.register(FeatureSplitDeclarationWriterTask.CreationAction(variantProperties))
+        if (globalScope.buildFeatures.dataBinding) {
+            // Create a task that will package necessary information about the feature into a
+            // file which is passed into the Data Binding annotation processor.
+            taskFactory.register(DataBindingExportFeatureInfoTask.CreationAction(variantProperties))
+        }
+        taskFactory.register(ExportConsumerProguardFilesTask.CreationAction(variantProperties))
+        taskFactory.register(FeatureNameWriterTask.CreationAction(variantProperties))
+
+    }
+
+    private fun createDynamicBundleTask(variantProperties: VariantPropertiesImpl) {
+
+        // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
+        // and the bundle can't be created. For now, just don't add the bundle task.
+        // TODO(b/111168382): Remove this
+        if (variantProperties.globalScope.extension.aaptOptions.namespaced) {
+            return
+        }
+
+        taskFactory.register(
+            PerModuleBundleTask.CreationAction(
+                variantProperties,
+                TaskManager.packagesCustomClassDependencies(variantProperties, projectOptions)
+            )
+        )
+
+        if (!variantProperties.variantDslInfo.isDebuggable) {
+            taskFactory.register(PerModuleReportDependenciesTask.CreationAction(variantProperties))
+        }
+    }
+
+    override fun createInstallTask(componentProperties: ComponentPropertiesImpl) {
+        // no install task for Dynamic Features
     }
 }

@@ -65,6 +65,7 @@ import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
+import com.android.build.gradle.tasks.ProcessLibraryManifest;
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.errors.IssueReporter;
@@ -164,7 +165,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
         // Add a task to check the manifest
         taskFactory.register(new CheckManifest.CreationAction(libVariantProperties));
 
-        createMergeLibManifestsTask(libVariantProperties);
+        taskFactory.register(new ProcessLibraryManifest.CreationAction(libVariantProperties));
 
         createRenderscriptTask(libVariantProperties);
 

@@ -798,10 +798,6 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                         !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
     }
 
-    public void createMergeLibManifestsTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        taskFactory.register(new ProcessLibraryManifest.CreationAction(componentProperties));
-    }
-
     protected void createProcessTestManifestTask(
             @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull VariantPropertiesImpl testedVariant) {
@@ -1359,42 +1355,12 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         }
     }
 
-    protected void createCompileTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        TaskProvider<? extends JavaCompile> javacTask = createJavacTask(componentProperties);
-        addJavacClassesStream(componentProperties);
-        setJavaCompilerTask(javacTask, componentProperties);
-        createPostCompilationTasks(componentProperties);
-    }
-
-
     /** Makes the given task the one used by top-level "compile" task. */
     public static void setJavaCompilerTask(
             @NonNull TaskProvider<? extends JavaCompile> javaCompilerTask,
             @NonNull ComponentPropertiesImpl componentProperties) {
         TaskFactoryUtils.dependsOn(
                 componentProperties.getTaskContainer().getCompileTask(), javaCompilerTask);
-    }
-
-    /**
-     * Creates the task that will handle micro apk.
-     *
-     * <p>New in 2.2, it now supports the unbundled mode, in which the apk is not bundled anymore,
-     * but we still have an XML resource packaged, and a custom entry in the manifest. This is
-     * triggered by passing a null {@link Configuration} object.
-     *
-     * @param variantProperties the variant scope
-     * @param config an optional Configuration object. if non null, this will embed the micro apk,
-     *     if null this will trigger the unbundled mode.
-     */
-    public void createGenerateMicroApkDataTask(
-            @NonNull VariantPropertiesImpl variantProperties, @Nullable FileCollection config) {
-        TaskProvider<GenerateApkDataTask> generateMicroApkTask =
-                taskFactory.register(
-                        new GenerateApkDataTask.CreationAction(variantProperties, config));
-
-        // the merge res task will need to run after this one.
-        TaskFactoryUtils.dependsOn(
-                variantProperties.getTaskContainer().getResourceGenTask(), generateMicroApkTask);
     }
 
     public void createExternalNativeBuildJsonGenerators(
