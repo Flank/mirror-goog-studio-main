@@ -23,6 +23,7 @@
 #include "tools/base/deploy/installer/executor/runas_executor.h"
 #include "tools/base/deploy/installer/overlay/overlay.h"
 
+using ServerRequest = proto::InstallServerRequest;
 using ServerResponse = proto::InstallServerResponse;
 
 namespace deploy {
@@ -88,28 +89,10 @@ std::unique_ptr<InstallClient> TryStartServer(const Executor& executor,
 }  // namespace
 
 void InstallServer::Run() {
+  Acknowledge();
+  Pump();
+
   ServerResponse response;
-
-  response.set_status(ServerResponse::SERVER_STARTED);
-  if (!output_.Write(response)) {
-    ErrEvent("Could not write server start message");
-    return;
-  }
-
-  proto::InstallServerRequest request;
-  if (!input_.Read(-1, &request)) {
-    ErrEvent("Could not read server request proto");
-    return;
-  }
-
-  // Handle an overlay request, if we have one.
-  if (request.has_overlay_request()) {
-    HandleOverlayUpdate(request.overlay_request(),
-                        response.mutable_overlay_response());
-    response.set_status(ServerResponse::REQUEST_COMPLETED);
-    output_.Write(response);
-    response.clear_overlay_response();
-  }
 
   // Consume traces and proto events.
   std::unique_ptr<std::vector<Event>> events = ConsumeEvents();
@@ -124,18 +107,59 @@ void InstallServer::Run() {
   }
 }
 
+void InstallServer::Acknowledge() {
+  Phase("InstallServer::Acknowledge");
+  ServerResponse response;
+
+  response.set_status(ServerResponse::SERVER_STARTED);
+  if (!output_.Write(response)) {
+    ErrEvent("Could not write server start message");
+    return;
+  }
+}
+
+void InstallServer::Pump() {
+  Phase("InstallServer::Pump");
+  ServerRequest request;
+  while (input_.Read(-1, &request) &&
+         request.type() == ServerRequest::HANDLE_REQUEST) {
+    HandleRequest(request);
+  }
+}
+
+void InstallServer::HandleRequest(const ServerRequest& request) {
+  ServerResponse response;
+
+  switch (request.message_case()) {
+    case ServerRequest::MessageCase::kCheckRequest:
+      HandleCheckSetup(request.check_request(),
+                       response.mutable_check_response());
+
+      break;
+    case ServerRequest::MessageCase::kOverlayRequest:
+      HandleOverlayUpdate(request.overlay_request(),
+                          response.mutable_overlay_response());
+      break;
+  }
+
+  response.set_status(ServerResponse::REQUEST_COMPLETED);
+  output_.Write(response);
+}
+
+void InstallServer::HandleCheckSetup(
+    const proto::CheckSetupRequest& request,
+    proto::CheckSetupResponse* response) const {
+  for (const std::string& file : request.files()) {
+    if (access(file.c_str(), F_OK) != 0) {
+      response->add_missing_files(file);
+    }
+  }
+}
+
 void InstallServer::HandleOverlayUpdate(
     const proto::OverlayUpdateRequest& request,
     proto::OverlayUpdateResponse* response) const {
-  char current_dir[PATH_MAX];
-  if (getcwd(current_dir, PATH_MAX) == nullptr) {
-    response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
-    response->set_error_message("Could not get current working directory: "_s +
-                                strerror(errno));
-    return;
-  }
-
-  const std::string overlay_folder = current_dir + "/.overlay"_s;
+  const std::string overlay_folder = request.overlay_path() + "/.overlay"_s;
   if (!DoesOverlayIdMatch(overlay_folder, request.expected_overlay_id())) {
     response->set_status(proto::OverlayUpdateResponse::ID_MISMATCH);
     return;
@@ -185,10 +209,10 @@ bool InstallServer::DoesOverlayIdMatch(const std::string& overlay_folder,
   return Overlay::Exists(overlay_folder, expected_id);
 }
 
-std::unique_ptr<InstallClient> StartServer(Executor& executor,
-                                           const std::string& server_path,
-                                           const std::string& package_name,
-                                           const std::string& exec_name) {
+std::unique_ptr<InstallClient> StartInstallServer(
+    Executor& executor, const std::string& server_path,
+    const std::string& package_name, const std::string& exec_name) {
+  Phase p("InstallServer::StartServer");
   const std::string exec_path = "/data/data/" + package_name + "/code_cache/";
   const RunasExecutor run_as(package_name, executor);
 

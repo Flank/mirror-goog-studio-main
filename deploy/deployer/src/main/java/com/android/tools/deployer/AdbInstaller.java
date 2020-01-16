@@ -107,6 +107,16 @@ public class AdbInstaller implements Installer {
     }
 
     @Override
+    public Deploy.SwapResponse overlaySwap(Deploy.OverlaySwapRequest request) throws IOException {
+        String[] cmd = buildCmd(new String[] {"overlayswap"});
+        ByteArrayInputStream inputStream = wrap(request);
+        Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
+        Deploy.SwapResponse response = installerResponse.getSwapResponse();
+        logger.verbose("installer overlayswap: " + response.getStatus().toString());
+        return response;
+    }
+
+    @Override
     public Deploy.DeltaPreinstallResponse deltaPreinstall(Deploy.InstallInfo info)
             throws IOException {
         String[] cmd = buildCmd(new String[] {"deltapreinstall"});

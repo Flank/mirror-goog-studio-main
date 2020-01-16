@@ -41,6 +41,14 @@ class InstallServer {
   ProtoPipe input_;
   ProtoPipe output_;
 
+  void Acknowledge();
+  void Pump();
+
+  void HandleRequest(const proto::InstallServerRequest& request);
+
+  void HandleCheckSetup(const proto::CheckSetupRequest& request,
+                        proto::CheckSetupResponse* response) const;
+
   void HandleOverlayUpdate(const proto::OverlayUpdateRequest& request,
                            proto::OverlayUpdateResponse* response) const;
   bool DoesOverlayIdMatch(const std::string& overlay_folder,
@@ -48,10 +56,9 @@ class InstallServer {
 };
 
 // Starts an install server in a new process.
-std::unique_ptr<InstallClient> StartServer(Executor& executor,
-                                           const std::string& server_path,
-                                           const std::string& package_name,
-                                           const std::string& exec_name);
+std::unique_ptr<InstallClient> StartInstallServer(
+    Executor& executor, const std::string& server_path,
+    const std::string& package_name, const std::string& exec_name);
 
 }  // namespace deploy
 
