@@ -165,7 +165,6 @@ public class Svg2Vector {
             "hkern",
             "vkern",
             // Gradient elements.
-            "radialGradient",
             "stop",
             // Graphics elements.
             "ellipse",
