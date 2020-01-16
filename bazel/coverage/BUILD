@@ -113,6 +113,9 @@ coverage_report(
 
 coverage_report(
     name = "validation",
+    srcpath_exclude = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/analytics",
+    ],
     srcpath_include = [
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual",
     ],
