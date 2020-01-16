@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidThingsActivity
 
-
 import androidThingsActivityRecipe
 import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
