@@ -152,7 +152,8 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                         InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES)
                 }
 
-            task.keepRulesFiles.from(component.globalScope.project.files(
+            task.keepRulesFiles.from(
+                component.globalScope.project.files(
                 subProjectKeepRules,
                 externalLibsKeepRules,
                 component.artifacts.getFinalProductAsFileCollection(
@@ -162,7 +163,8 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             )
 
             if (separateFileDependenciesDexingTask) {
-                task.keepRulesFiles.from(component.artifacts.getFinalProductAsFileCollection(
+                task.keepRulesFiles.from(
+                    component.artifacts.getFinalProductAsFileCollection(
                     InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES))
             }
             val hasDynamicFeatures =

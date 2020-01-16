@@ -100,7 +100,8 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
         ) {
             super.configure(task)
 
-            task.partialRFiles.set(component.artifacts.getOperations().getAll(
+            task.partialRFiles.set(
+                component.artifacts.getOperations().getAll(
                 MultipleArtifactType.PARTIAL_R_FILES))
             task.packageForR.set(
                 component.globalScope.project.provider {

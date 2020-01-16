@@ -40,3 +40,8 @@ fun <T> ListProperty<T>.setDisallowChanges(value: Provider<List<T>>) {
     set(value)
     disallowChanges()
 }
+
+fun <T> ListProperty<T>.setDisallowChanges(value: Iterable<T>?) {
+    set(value)
+    disallowChanges()
+}

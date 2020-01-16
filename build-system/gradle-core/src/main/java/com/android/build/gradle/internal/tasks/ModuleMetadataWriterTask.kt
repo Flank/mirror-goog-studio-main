@@ -103,12 +103,10 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
         ) {
             super.configure(task)
             task.applicationId.set(component.applicationId)
-            task.debuggable
-                .setDisallowChanges(component.variantDslInfo.isDebuggable)
+            task.debuggable.setDisallowChanges(component.variantDslInfo.isDebuggable)
             task.versionCode.setDisallowChanges(component.outputs.getMainSplit().versionCode)
             task.versionName.setDisallowChanges(component.outputs.getMainSplit().versionName)
-            task.abiFilters.set(component.variantDslInfo.supportedAbis?.sorted())
-            task.abiFilters.disallowChanges()
+            task.abiFilters.setDisallowChanges(component.variantDslInfo.supportedAbis?.sorted())
         }
     }
 }

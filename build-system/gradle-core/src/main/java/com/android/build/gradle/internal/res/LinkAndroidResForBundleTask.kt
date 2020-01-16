@@ -250,7 +250,6 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
                 LinkAndroidResForBundleTask::bundledResFile,
                 "bundled-res.ap_"
             )
-
         }
 
         override fun configure(

@@ -26,6 +26,7 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
@@ -62,9 +63,9 @@ abstract class ComponentPropertiesImpl(
     val variantScope: VariantScope,
     val variantData: BaseVariantData,
     val transformManager: TransformManager,
-    val dslScope: DslScope,
+    override val dslScope: DslScope,
     val globalScope: GlobalScope
-): ComponentProperties, ComponentIdentity by componentIdentity {
+): ComponentProperties, BaseCreationConfig, ComponentIdentity by componentIdentity {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -85,7 +86,7 @@ abstract class ComponentPropertiesImpl(
     // ---------------------------------------------------------------------------------------------
 
     // Move as direct delegates
-    val taskContainer = variantData.taskContainer
+    override val taskContainer = variantData.taskContainer
 
     private val variantOutputs= mutableListOf<VariantOutputImpl>()
 
@@ -184,8 +185,10 @@ abstract class ComponentPropertiesImpl(
         }
     }
 
-    @JvmOverloads
-    fun computeTaskName(prefix: String, suffix: String = ""): String =
+    fun computeTaskName(prefix: String): String =
+        prefix.appendCapitalized(name)
+
+    override fun computeTaskName(prefix: String, suffix: String): String =
         prefix.appendCapitalized(name, suffix)
 
     // -------------------------

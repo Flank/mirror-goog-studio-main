@@ -230,7 +230,8 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                 )
             }
 
-            task.enableRTxtResourceShrinking.set(component.globalScope
+            task.enableRTxtResourceShrinking.set(
+                component.globalScope
                 .projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING])
 
             artifacts.setTaskInputToFinalProduct(

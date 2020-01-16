@@ -183,7 +183,8 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
         ) {
             super.configure(task)
             task.platformAttrRTxt.set(component.globalScope.platformAttrs)
-            task.enablePartialRIncrementalBuilds.setDisallowChanges(component.globalScope
+            task.enablePartialRIncrementalBuilds.setDisallowChanges(
+                component.globalScope
                     .projectOptions[BooleanOption.ENABLE_PARTIAL_R_INCREMENTAL_BUILDS])
 
             component.artifacts.setTaskInputToFinalProduct(

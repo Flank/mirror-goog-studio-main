@@ -107,7 +107,8 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
             val referencedClasses =
                 globalScope.project.files(component.variantScope.providedOnlyClasspath)
 
-            referencedClasses.from(component.variantDependencies.getArtifactFileCollection(
+            referencedClasses.from(
+                component.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.PROJECT,
                 AndroidArtifacts.ArtifactType.CLASSES_JAR))
