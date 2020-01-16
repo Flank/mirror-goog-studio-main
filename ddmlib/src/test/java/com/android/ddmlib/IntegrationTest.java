@@ -372,13 +372,15 @@ public class IntegrationTest {
 
             // Start up ADB.
             AndroidDebugBridge.enableFakeAdbServerMode(server.getPort());
+            // A devices are added async. So we add a listener before setting up the bridge to ensure
+            // we don't have timing issues.
+            CustomDeviceListener deviceListener = new CustomDeviceListener();
+            AndroidDebugBridge.addDeviceChangeListener(deviceListener);
             AndroidDebugBridge.initIfNeeded(false);
             AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
             assertNotNull("Debug bridge", bridge);
 
             // Wait for the device to get recognized by ddmlib.
-            CustomDeviceListener deviceListener = new CustomDeviceListener();
-            AndroidDebugBridge.addDeviceChangeListener(deviceListener);
             assertTrue(
                     deviceListener.waitForDeviceConnection(REASONABLE_TIMEOUT_S, TimeUnit.SECONDS));
 

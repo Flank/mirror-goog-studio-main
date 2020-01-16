@@ -16,6 +16,7 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
+import com.android.ddmlib.internal.DeviceListMonitorTask;
 import com.android.ddmlib.internal.DeviceMonitor;
 import java.util.Arrays;
 import java.util.List;
@@ -26,7 +27,7 @@ import org.easymock.EasyMock;
 public class DeviceMonitorTest extends TestCase {
     public void testDeviceListMonitor() {
         Map<String, IDevice.DeviceState> map =
-                DeviceMonitor.DeviceListMonitorTask.parseDeviceListResponse(
+                DeviceListMonitorTask.parseDeviceListResponse(
                         "R32C801BL5K\tdevice\n"
                                 + "0079864fd1d150fd\tunauthorized\n"
                                 + "002ee7a50f6642d3\tsideload\n");
