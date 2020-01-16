@@ -49,6 +49,7 @@ public class DataBindingOptions
         return version;
     }
 
+    @Override
     public void setVersion(String version) {
         this.version = version;
     }
@@ -70,6 +71,7 @@ public class DataBindingOptions
         return dslScope.getProjectOptions().get(BooleanOption.BUILD_FEATURE_DATABINDING);
     }
 
+    @Override
     @Deprecated
     public void setEnabled(boolean enabled) {
         dslScope.getDeprecationReporter()
@@ -87,6 +89,7 @@ public class DataBindingOptions
         return addDefaultAdapters;
     }
 
+    @Override
     public void setAddDefaultAdapters(boolean addDefaultAdapters) {
         this.addDefaultAdapters = addDefaultAdapters;
     }
@@ -99,6 +102,7 @@ public class DataBindingOptions
         return enabledForTests;
     }
 
+    @Override
     public void setEnabledForTests(boolean enabledForTests) {
         this.enabledForTests = enabledForTests;
     }

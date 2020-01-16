@@ -23,5 +23,16 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface DataBinding {
-    // TODO(b/140406102)
+    /** The version of data binding to use. */
+    var version: String?
+
+    /** Whether to add the default data binding adapters. */
+    var addDefaultAdapters: Boolean
+
+    /** Whether to run data binding code generation for test projects. */
+    var isEnabledForTests: Boolean
+
+    /** Whether to enable data binding. */
+    @Deprecated("use android.features.databinding")
+    var isEnabled: Boolean
 }

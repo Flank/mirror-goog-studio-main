@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-ec01d5c79c465fe8b6594394d74832bec8809642a1825fb2e4fa6e1e035f9cd2
+e0f56b269a89c485cf9e4d946f0ac5583fdaeee3486e51cad43d988afb25ad0f
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -176,6 +176,14 @@ com.android.build.api.dsl.CompileOptions.setTargetCompatibility: void (org.gradl
 com.android.build.api.dsl.CompileOptions.sourceCompatibility: void (java.lang.Object)
 com.android.build.api.dsl.CompileOptions.targetCompatibility: void (java.lang.Object)
 com.android.build.api.dsl.DataBinding
+com.android.build.api.dsl.DataBinding.getAddDefaultAdapters: boolean ()
+com.android.build.api.dsl.DataBinding.getVersion: java.lang.String ()
+com.android.build.api.dsl.DataBinding.isEnabled: boolean ()
+com.android.build.api.dsl.DataBinding.isEnabledForTests: boolean ()
+com.android.build.api.dsl.DataBinding.setAddDefaultAdapters: void (boolean)
+com.android.build.api.dsl.DataBinding.setEnabled: void (boolean)
+com.android.build.api.dsl.DataBinding.setEnabledForTests: void (boolean)
+com.android.build.api.dsl.DataBinding.setVersion: void (java.lang.String)
 com.android.build.api.dsl.DefaultConfig
 com.android.build.api.dsl.DynamicDelivery
 com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
