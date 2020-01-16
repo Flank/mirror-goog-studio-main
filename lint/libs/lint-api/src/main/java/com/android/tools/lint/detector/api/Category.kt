@@ -126,6 +126,10 @@ constructor(
         @JvmField
         val LINT = create("Lint", 110)
 
+        /** Issues related to implementing custom lint checks */
+        @JvmField
+        val CUSTOM_LINT_CHECKS = create("Lint Implementation Issues", 38)
+
         /** Issues related to correctness  */
         @JvmField
         val CORRECTNESS = create("Correctness", 100)

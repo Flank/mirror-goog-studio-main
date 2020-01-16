@@ -13,11 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.tools.lint.checks.studio
+package com.android.tools.lint.checks
 
 import com.android.SdkConstants.DOT_JAR
 import com.android.testutils.TestUtils
+import com.android.tools.lint.checks.LintDetectorDetector.Companion.CHECK_URL
+import com.android.tools.lint.checks.LintDetectorDetector.Companion.DOLLAR_STRINGS
+import com.android.tools.lint.checks.LintDetectorDetector.Companion.EXISTING_LINT_CONSTANTS
+import com.android.tools.lint.checks.LintDetectorDetector.Companion.ID
+import com.android.tools.lint.checks.LintDetectorDetector.Companion.PSI_COMPARE
+import com.android.tools.lint.checks.LintDetectorDetector.Companion.TEXT_FORMAT
+import com.android.tools.lint.checks.LintDetectorDetector.Companion.TRIM_INDENT
+import com.android.tools.lint.checks.LintDetectorDetector.Companion.UNEXPECTED_DOMAIN
+import com.android.tools.lint.checks.LintDetectorDetector.Companion.USE_KOTLIN
+import com.android.tools.lint.checks.LintDetectorDetector.Companion.USE_UAST
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles.LibraryReferenceTestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles.getLintClassPath
@@ -25,16 +34,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestFiles.source
-import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.CHECK_URL
-import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.DOLLAR_STRINGS
-import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.EXISTING_LINT_CONSTANTS
-import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.ID
-import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.PSI_COMPARE
-import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.TEXT_FORMAT
-import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.TRIM_INDENT
-import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.UNEXPECTED_DOMAIN
-import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.USE_KOTLIN
-import com.android.tools.lint.checks.studio.LintDetectorDetector.Companion.USE_UAST
+import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import org.junit.Test
 import java.io.File
 
@@ -54,7 +54,7 @@ class LintDetectorDetectorTest {
 
     @Test
     fun testProblems() {
-        studioLint()
+        lint()
             .files(
                 java(
                     """
@@ -344,6 +344,7 @@ class LintDetectorDetectorTest {
             .issues(
                 *issues
             )
+            .allowMissingSdk()
             .run()
             .expect(
                 """
@@ -524,7 +525,7 @@ class LintDetectorDetectorTest {
         }
 
         // Symlink to all the jars on the classpath and insert a src/ link
-        studioLint()
+        lint()
             .issues(*(issues.filter { it != PSI_COMPARE }.toTypedArray()))
             .files(
                 gradle("// dummy"), // such that it's seen as a project by lint
@@ -534,6 +535,7 @@ class LintDetectorDetectorTest {
                     LibraryReferenceTestFile("libs/${file.name}_$index", file)
                 }.toTypedArray()
             )
+            .allowMissingSdk()
             .run()
             .expectClean()
     }

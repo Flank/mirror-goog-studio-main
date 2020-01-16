@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.lint.checks.studio
+package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.TypoLookup
-import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Category.Companion.CUSTOM_LINT_CHECKS
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Detector.UastScanner
@@ -26,8 +25,10 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.LintFix.GroupBuilder
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Platform.Companion.JDK_SET
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.Severity.WARNING
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.TextFormat.Companion.HTTPS_PREFIX
 import com.android.tools.lint.detector.api.TextFormat.Companion.HTTP_PREFIX
@@ -993,8 +994,6 @@ class LintDetectorDetector : Detector(), UastScanner {
         private val CALL_PATTERN = Regex("[a-zA-Z().=]+\\(.*\\)")
         private val XML_PATTERN = Regex("<.+>")
 
-        private val LINT_CATEGORY = Category.create("Lint Implementation Issues", 38)
-
         private val IMPLEMENTATION =
             Implementation(
                 LintDetectorDetector::class.java,
@@ -1002,6 +1001,7 @@ class LintDetectorDetector : Detector(), UastScanner {
             )
 
         /** Expected lint id format */
+        @JvmField
         val ID =
             Issue.create(
                 id = "LintImplIdFormat",
@@ -1027,13 +1027,15 @@ class LintDetectorDetector : Detector(), UastScanner {
                             ...
                     ```
                 """,
-                category = LINT_CATEGORY,
+                category = CUSTOM_LINT_CHECKS,
                 priority = 6,
                 severity = Severity.ERROR,
-                implementation = IMPLEMENTATION
+                implementation = IMPLEMENTATION,
+                platforms = JDK_SET
             )
 
         /** Bad URLs in issue registrations */
+        @JvmField
         val CHECK_URL =
             Issue.create(
                 id = "LintImplBadUrl",
@@ -1046,13 +1048,15 @@ class LintDetectorDetector : Detector(), UastScanner {
                    issue tracker links look correct. It may also at some point touch the network \
                    to make sure that the URLs are actually still reachable.
                 """,
-                category = LINT_CATEGORY,
+                category = CUSTOM_LINT_CHECKS,
                 priority = 6,
                 severity = Severity.ERROR,
-                implementation = IMPLEMENTATION
+                implementation = IMPLEMENTATION,
+                platforms = JDK_SET
             )
 
         /** Unexpected URL domain */
+        @JvmField
         val UNEXPECTED_DOMAIN =
             Issue.create(
                 id = "LintImplUnexpectedDomain",
@@ -1061,16 +1065,18 @@ class LintDetectorDetector : Detector(), UastScanner {
                     This checks flags URLs to domains that have not been explicitly \
                     whitelisted for use as a documentation source.
                 """,
-                category = LINT_CATEGORY,
+                category = CUSTOM_LINT_CHECKS,
                 priority = 6,
                 severity = Severity.ERROR,
                 // This is really specific to our built-in checks; turn it off by default
                 // such that it doesn't by default flag problems in third party lint checks
                 enabledByDefault = false,
-                implementation = IMPLEMENTATION
+                implementation = IMPLEMENTATION,
+                platforms = JDK_SET
             )
 
         /** Suggestions around lint string formats */
+        @JvmField
         val TEXT_FORMAT =
             Issue.create(
                 id = "LintImplTextFormat",
@@ -1090,13 +1096,15 @@ class LintDetectorDetector : Detector(), UastScanner {
                     strings like summaries and explanations there's no risk changing the text \
                     contents.)
                 """,
-                category = LINT_CATEGORY,
+                category = CUSTOM_LINT_CHECKS,
                 priority = 6,
-                severity = Severity.WARNING,
-                implementation = IMPLEMENTATION
+                severity = WARNING,
+                implementation = IMPLEMENTATION,
+                platforms = JDK_SET
             )
 
         /** Should reuse existing constants */
+        @JvmField
         val EXISTING_LINT_CONSTANTS =
             Issue.create(
                 id = "LintImplUseExistingConstants",
@@ -1104,13 +1112,15 @@ class LintDetectorDetector : Detector(), UastScanner {
                 explanation = """
                     This check looks for opportunities to reuse predefined lint constants.
                 """,
-                category = LINT_CATEGORY,
+                category = CUSTOM_LINT_CHECKS,
                 priority = 6,
-                severity = Severity.WARNING,
-                implementation = IMPLEMENTATION
+                severity = WARNING,
+                implementation = IMPLEMENTATION,
+                platforms = JDK_SET
             )
 
         /** Calling PSI methods when you should be calling UAST methods */
+        @JvmField
         val USE_UAST =
             Issue.create(
                 id = "LintImplUseUast",
@@ -1131,13 +1141,15 @@ class LintDetectorDetector : Detector(), UastScanner {
                     There are UAST specific methods you need to call instead and lint will \
                     flag these.
                     """,
-                category = LINT_CATEGORY,
+                category = CUSTOM_LINT_CHECKS,
                 priority = 4,
                 severity = Severity.ERROR,
-                implementation = IMPLEMENTATION
+                implementation = IMPLEMENTATION,
+                platforms = JDK_SET
             )
 
         /** Comparing PSI elements with equals */
+        @JvmField
         val PSI_COMPARE =
             Issue.create(
                 id = "LintImplPsiEquals",
@@ -1146,16 +1158,18 @@ class LintDetectorDetector : Detector(), UastScanner {
                     You should never compare two PSI elements for equality with `equals`;
                     use `isEquivalentTo(PsiElement)` instead.
                     """,
-                category = LINT_CATEGORY,
+                category = CUSTOM_LINT_CHECKS,
                 priority = 4,
                 severity = Severity.ERROR,
                 implementation = IMPLEMENTATION,
+                platforms = JDK_SET,
                 // There are still exceptions to this rule; see for example the tests for
                 // SamDetector if you try to change the example in that detector
                 enabledByDefault = false
             )
 
         /** Still writing lint checks in Java */
+        @JvmField
         val USE_KOTLIN =
             Issue.create(
                 id = "LintImplUseKotlin",
@@ -1168,13 +1182,15 @@ class LintDetectorDetector : Detector(), UastScanner {
                     Issue registration methods for example where there are methods with 12+ \
                     parameters with only a couple of required ones), and so on.
                     """,
-                category = LINT_CATEGORY,
+                category = CUSTOM_LINT_CHECKS,
                 priority = 4,
-                severity = Severity.WARNING,
-                implementation = IMPLEMENTATION
+                severity = WARNING,
+                implementation = IMPLEMENTATION,
+                platforms = JDK_SET
             )
 
         /** Calling .trimIndent() on messages intended for lint */
+        @JvmField
         val TRIM_INDENT =
             Issue.create(
                 id = "LintImplTrimIndent",
@@ -1197,13 +1213,15 @@ class LintDetectorDetector : Detector(), UastScanner {
                     highlighting goes away. For test files you can instead call ".indented()" \
                     on the test file builder to get it to indent the string.
                     """,
-                category = LINT_CATEGORY,
+                category = CUSTOM_LINT_CHECKS,
                 priority = 4,
                 severity = Severity.ERROR,
-                implementation = IMPLEMENTATION
+                implementation = IMPLEMENTATION,
+                platforms = JDK_SET
             )
 
         /** Using ${"$"} or ${'$'} in Kotlin string literals in lint unit tests */
+        @JvmField
         val DOLLAR_STRINGS =
             Issue.create(
                 id = "LintImplDollarEscapes",
@@ -1224,10 +1242,11 @@ class LintDetectorDetector : Detector(), UastScanner {
                     the test strings more readable -- especially ${"$"}-heavy code such as \
                     references to inner classes.
                     """,
-                category = LINT_CATEGORY,
+                category = CUSTOM_LINT_CHECKS,
                 priority = 4,
                 severity = Severity.ERROR,
-                implementation = IMPLEMENTATION
+                implementation = IMPLEMENTATION,
+                platforms = JDK_SET
             )
     }
 }

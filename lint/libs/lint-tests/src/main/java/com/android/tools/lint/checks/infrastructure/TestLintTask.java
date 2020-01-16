@@ -82,6 +82,7 @@ public class TestLintTask {
     // Configuration options
 
     protected ProjectDescription[] projects;
+    private boolean impliedProject;
     boolean allowCompilationErrors;
     boolean allowObsoleteLintChecks = true;
     boolean allowSystemErrors = true;
@@ -150,6 +151,7 @@ public class TestLintTask {
     public TestLintTask files(@NonNull TestFile... files) {
         ensurePreRun();
         this.projects = new ProjectDescription[] {new ProjectDescription(files)};
+        this.impliedProject = true;
         return this;
     }
 
@@ -702,6 +704,17 @@ public class TestLintTask {
         } catch (IOException ignore) {
         }
 
+        if (platforms == null) {
+            platforms = computePlatforms(getCheckedIssues());
+        }
+
+        if (impliedProject &&
+                platforms.contains(Platform.JDK) && !platforms.contains(Platform.ANDROID)) {
+            for (ProjectDescription project : projects) {
+                project.setType(ProjectDescription.Type.JAVA);
+            }
+        }
+
         List<File> projectDirs = createProjects(rootDir);
         try {
             Pair<String, List<Warning>> result = checkLint(rootDir, projectDirs);
@@ -715,6 +728,15 @@ public class TestLintTask {
                 TestUtils.deleteFile(rootDir);
             }
         }
+    }
+
+    /** Returns all the platforms encountered by the given issues */
+    private static EnumSet<Platform> computePlatforms(List<Issue> issues) {
+        EnumSet<Platform> platforms = EnumSet.noneOf(Platform.class);
+        for (Issue issue : issues) {
+            platforms.addAll(issue.getPlatforms());
+        }
+        return platforms;
     }
 
     /**
