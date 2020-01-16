@@ -23,5 +23,15 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface AdbOptions {
-    // TODO(140406102)
+    /** The time out used for all adb operations. */
+    var timeOutInMs: Int
+
+    /** The list of FULL_APK installation options. */
+    var installOptions: Collection<String>?
+
+    /** Sets the list of FULL_APK installation options */
+    fun installOptions(option: String)
+
+    /** Sets the list of FULL_APK installation options */
+    fun installOptions(vararg options: String)
 }

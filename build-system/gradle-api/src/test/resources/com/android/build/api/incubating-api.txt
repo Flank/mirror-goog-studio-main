@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-34b954a74d6ac6570748771d1d24801ef0211b14c03e1474df3b822adca44703
+63f41f26bb6b1fedd4c71ab984f0ae670b270a29fadba1ce0fdf7e2792e98a41
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -107,6 +107,12 @@ com.android.build.api.dsl.AaptOptions.setIgnoreAssetsPattern: void (java.lang.St
 com.android.build.api.dsl.AaptOptions.setNamespaced: void (boolean)
 com.android.build.api.dsl.AaptOptions.setNoCompress: void (java.util.Collection<java.lang.String>)
 com.android.build.api.dsl.AdbOptions
+com.android.build.api.dsl.AdbOptions.getInstallOptions: java.util.Collection<java.lang.String> ()
+com.android.build.api.dsl.AdbOptions.getTimeOutInMs: int ()
+com.android.build.api.dsl.AdbOptions.installOptions: void (java.lang.String)
+com.android.build.api.dsl.AdbOptions.installOptions: void (java.lang.String[])
+com.android.build.api.dsl.AdbOptions.setInstallOptions: void (java.util.Collection<java.lang.String>)
+com.android.build.api.dsl.AdbOptions.setTimeOutInMs: void (int)
 com.android.build.api.dsl.ApkExtension
 com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension

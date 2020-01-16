@@ -20,16 +20,14 @@ import com.google.common.collect.ImmutableList
 import javax.inject.Inject
 
 /** Options for the adb tool. */
-class AdbOptions @Inject constructor() : com.android.builder.model.AdbOptions,
+open class AdbOptions @Inject constructor() : com.android.builder.model.AdbOptions,
     com.android.build.api.dsl.AdbOptions {
 
-    /** The time out used for all adb operations. */
     override var timeOutInMs: Int = 0
 
-    /** The list of FULL_APK installation options. */
     override var installOptions: Collection<String>? = null
 
-    fun timeOutInMs(timeOutInMs: Int) {
+    open fun timeOutInMs(timeOutInMs: Int) {
         this.timeOutInMs = timeOutInMs
     }
 
@@ -41,11 +39,11 @@ class AdbOptions @Inject constructor() : com.android.builder.model.AdbOptions,
         installOptions = ImmutableList.copyOf(options)
     }
 
-    fun installOptions(option: String) {
+    override fun installOptions(option: String) {
         installOptions = ImmutableList.of(option)
     }
 
-    fun installOptions(vararg options: String) {
+    override fun installOptions(vararg options: String) {
         installOptions = ImmutableList.copyOf(options)
     }
 }
