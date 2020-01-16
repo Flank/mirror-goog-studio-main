@@ -2101,8 +2101,6 @@ public abstract class TaskManager {
             boolean isTestCoverageEnabled) {
         VariantScope variantScope = componentProperties.getVariantScope();
         if (variantScope.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
-            FileCache userCache = getUserIntermediatesCache();
-
             componentProperties
                     .getTransformManager()
                     .consumeStreams(
@@ -2111,7 +2109,7 @@ public abstract class TaskManager {
 
             taskFactory.register(
                     new RecalculateStackFramesTask.CreationAction(
-                            componentProperties, userCache, isTestCoverageEnabled));
+                            componentProperties, isTestCoverageEnabled));
 
             taskFactory.register(new DesugarTask.CreationAction(componentProperties));
 

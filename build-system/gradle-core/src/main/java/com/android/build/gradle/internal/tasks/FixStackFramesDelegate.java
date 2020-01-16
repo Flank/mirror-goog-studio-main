@@ -18,11 +18,8 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry;
-import com.android.builder.utils.ExceptionRunnable;
-import com.android.builder.utils.FileCache;
 import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.workers.WorkerExecutorFacade;
@@ -119,12 +116,6 @@ public class FixStackFramesDelegate {
     private static final LoggerWrapper logger =
             LoggerWrapper.getLogger(FixStackFramesDelegate.class);
     private static final FileTime ZERO = FileTime.fromMillis(0);
-    /**
-     * Please update this whenever you wish to invalidate all previous cache entries. E.g. if there
-     * is a bug in processing, increasing the cache version will invalidate all invalid cache
-     * entries, and fresh ones will be generated.
-     */
-    private static final long CACHE_VERSION = 1;
 
     // Shared state used in the worker actions.
     private static final WorkerActionServiceRegistry sharedState =
@@ -134,19 +125,16 @@ public class FixStackFramesDelegate {
     @NonNull private final Set<File> classesToFix;
     @NonNull private final Set<File> referencedClasses;
     @NonNull private final File outFolder;
-    @Nullable private final FileCache userCache;
 
     public FixStackFramesDelegate(
             @NonNull Set<File> bootClasspath,
             @NonNull Set<File> classesToFix,
             @NonNull Set<File> referencedClasses,
-            @NonNull File outFolder,
-            @Nullable FileCache userCache) {
+            @NonNull File outFolder) {
         this.bootClasspath = bootClasspath;
         this.classesToFix = classesToFix;
         this.referencedClasses = referencedClasses;
         this.outFolder = outFolder;
-        this.userCache = userCache;
     }
 
     @NonNull
@@ -186,13 +174,6 @@ public class FixStackFramesDelegate {
             ClassLoaderKey classLoaderKey = new ClassLoaderKey("classLoader" + hashCode());
             closer.register(sharedState.registerServiceAsCloseable(classLoaderKey, classLoader));
 
-            CacheKey cacheKey;
-            if (userCache != null) {
-                cacheKey = new CacheKey("userCache" + hashCode());
-                closer.register(sharedState.registerServiceAsCloseable(cacheKey, userCache));
-            } else {
-                cacheKey = null;
-            }
             for (Map.Entry<File, FileStatus> entry : changedInput.entrySet()) {
                 File out = new File(outFolder, getUniqueName(entry.getKey()));
 
@@ -201,7 +182,7 @@ public class FixStackFramesDelegate {
                 if (entry.getValue() == FileStatus.NEW || entry.getValue() == FileStatus.CHANGED) {
                     workers.submit(
                             FixStackFramesRunnable.class,
-                            new Params(entry.getKey(), out, classLoaderKey, cacheKey));
+                            new Params(entry.getKey(), out, classLoaderKey));
                 }
             }
             // We keep waiting for all the workers to finnish so that all the work is done before
@@ -275,35 +256,17 @@ public class FixStackFramesDelegate {
         }
     }
 
-    static class CacheKey extends BaseKey
-            implements WorkerActionServiceRegistry.ServiceKey<FileCache> {
-        public CacheKey(@NonNull String name) {
-            super(name);
-        }
-
-        @NonNull
-        @Override
-        public Class<FileCache> getType() {
-            return FileCache.class;
-        }
-    }
-
     // TODO: convert to Kotlin data class
     private static class Params implements Serializable {
         @NonNull private final File input;
         @NonNull private final File output;
         @NonNull private final ClassLoaderKey classLoaderKey;
-        @Nullable private final CacheKey cacheKey;
 
         private Params(
-                @NonNull File input,
-                @NonNull File output,
-                @NonNull ClassLoaderKey classLoaderKey,
-                @Nullable CacheKey cacheKey) {
+                @NonNull File input, @NonNull File output, @NonNull ClassLoaderKey classLoaderKey) {
             this.input = input;
             this.output = output;
             this.classLoaderKey = classLoaderKey;
-            this.cacheKey = cacheKey;
         }
     }
 
@@ -322,74 +285,51 @@ public class FixStackFramesDelegate {
                         FixStackFramesDelegate.sharedState
                                 .getService(params.classLoaderKey)
                                 .getService();
-                FileCache userCache =
-                        params.cacheKey != null
-                                ? FixStackFramesDelegate.sharedState
-                                        .getService(params.cacheKey)
-                                        .getService()
-                                : null;
-
-                ExceptionRunnable fileCreator =
-                        createFile(params.input, params.output, classLoader);
-                if (userCache != null) {
-                    FileCache.Inputs key =
-                            new FileCache.Inputs.Builder(FileCache.Command.FIX_STACK_FRAMES)
-                                    .putFile(
-                                            "file",
-                                            params.input,
-                                            FileCache.FileProperties.PATH_SIZE_TIMESTAMP)
-                                    .putLong("version", CACHE_VERSION)
-                                    .build();
-                    userCache.createFile(params.output, key, fileCreator);
-                } else {
-                    fileCreator.run();
-                }
+                createFile(params.input, params.output, classLoader);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
         }
 
-        @NonNull
-        private static ExceptionRunnable createFile(
-                @NonNull File input, @NonNull File output, @NonNull URLClassLoader classLoader) {
-            return () -> {
-                try (ZipFile inputZip = new ZipFile(input);
-                     ZipOutputStream outputZip =
-                             new ZipOutputStream(
-                                     new BufferedOutputStream(
-                                             Files.newOutputStream(output.toPath())))) {
-                    Enumeration<? extends ZipEntry> inEntries = inputZip.entries();
-                    while (inEntries.hasMoreElements()) {
-                        ZipEntry entry = inEntries.nextElement();
-                        if (!ZipEntryUtils.isValidZipEntryName(entry)) {
-                            throw new InvalidPathException(
-                                    entry.getName(), "Entry name contains invalid characters");
-                        }
-                        if (!entry.getName().endsWith(SdkConstants.DOT_CLASS)) {
-                            continue;
-                        }
-                        InputStream originalFile =
-                                new BufferedInputStream(inputZip.getInputStream(entry));
-                        ZipEntry outEntry = new ZipEntry(entry.getName());
-
-                        byte[] newEntryContent = getFixedClass(originalFile, classLoader);
-
-                        CRC32 crc32 = new CRC32();
-                        crc32.update(newEntryContent);
-                        outEntry.setCrc(crc32.getValue());
-                        outEntry.setMethod(ZipEntry.STORED);
-                        outEntry.setSize(newEntryContent.length);
-                        outEntry.setCompressedSize(newEntryContent.length);
-                        outEntry.setLastAccessTime(ZERO);
-                        outEntry.setLastModifiedTime(ZERO);
-                        outEntry.setCreationTime(ZERO);
-
-                        outputZip.putNextEntry(outEntry);
-                        outputZip.write(newEntryContent);
-                        outputZip.closeEntry();
+        private static void createFile(
+                @NonNull File input, @NonNull File output, @NonNull URLClassLoader classLoader)
+                throws IOException {
+            try (ZipFile inputZip = new ZipFile(input);
+                    ZipOutputStream outputZip =
+                            new ZipOutputStream(
+                                    new BufferedOutputStream(
+                                            Files.newOutputStream(output.toPath())))) {
+                Enumeration<? extends ZipEntry> inEntries = inputZip.entries();
+                while (inEntries.hasMoreElements()) {
+                    ZipEntry entry = inEntries.nextElement();
+                    if (!ZipEntryUtils.isValidZipEntryName(entry)) {
+                        throw new InvalidPathException(
+                                entry.getName(), "Entry name contains invalid characters");
                     }
+                    if (!entry.getName().endsWith(SdkConstants.DOT_CLASS)) {
+                        continue;
+                    }
+                    InputStream originalFile =
+                            new BufferedInputStream(inputZip.getInputStream(entry));
+                    ZipEntry outEntry = new ZipEntry(entry.getName());
+
+                    byte[] newEntryContent = getFixedClass(originalFile, classLoader);
+
+                    CRC32 crc32 = new CRC32();
+                    crc32.update(newEntryContent);
+                    outEntry.setCrc(crc32.getValue());
+                    outEntry.setMethod(ZipEntry.STORED);
+                    outEntry.setSize(newEntryContent.length);
+                    outEntry.setCompressedSize(newEntryContent.length);
+                    outEntry.setLastAccessTime(ZERO);
+                    outEntry.setLastModifiedTime(ZERO);
+                    outEntry.setCreationTime(ZERO);
+
+                    outputZip.putNextEntry(outEntry);
+                    outputZip.write(newEntryContent);
+                    outputZip.closeEntry();
                 }
-            };
+            }
         }
 
         @NonNull

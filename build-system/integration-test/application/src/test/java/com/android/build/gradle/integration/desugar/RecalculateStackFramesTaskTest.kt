@@ -22,16 +22,11 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.desugar.resources.TestClass
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
-import com.android.build.gradle.options.StringOption
 import com.android.testutils.TestInputsGenerator
 import com.google.common.collect.Lists
-import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
-import java.io.File
 import java.nio.file.Files
-
-private const val CACHE_DIR = "foo"
 
 class RecalculateStackFramesTaskTest {
 
@@ -42,25 +37,6 @@ class RecalculateStackFramesTaskTest {
             .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
             .create()
 
-    @Test
-    fun testNonEmptyFileCache() {
-        enableJava8()
-        createLibrary()
-        addLibraryAsDependency()
-        project
-            .executor()
-            .with(BooleanOption.ENABLE_BUILD_CACHE, true)
-            .with(BooleanOption.ENABLE_GRADLE_WORKERS, true)
-            .with(BooleanOption.ENABLE_D8_DESUGARING, false)
-            .with(BooleanOption.ENABLE_R8_DESUGARING, false)
-            .with(OptionalBooleanOption.ENABLE_R8, false)
-            .with(BooleanOption.ENABLE_DESUGAR, true)
-            .with(StringOption.BUILD_CACHE_DIR, CACHE_DIR)
-            .run("fixStackFramesDebug")
-
-        assertThat(getCacheDir().listFiles().asList().filter { it.isDirectory }).isNotEmpty()
-    }
-
     /** Regression test for b/133299018. */
     @Test
     fun testAndroidTest() {
@@ -69,13 +45,11 @@ class RecalculateStackFramesTaskTest {
         addLibraryAsDependency()
         project
             .executor()
-            .with(BooleanOption.ENABLE_BUILD_CACHE, true)
             .with(BooleanOption.ENABLE_GRADLE_WORKERS, true)
             .with(BooleanOption.ENABLE_D8_DESUGARING, false)
             .with(BooleanOption.ENABLE_R8_DESUGARING, false)
             .with(OptionalBooleanOption.ENABLE_R8, false)
             .with(BooleanOption.ENABLE_DESUGAR, true)
-            .with(StringOption.BUILD_CACHE_DIR, CACHE_DIR)
             .run("fixStackFramesDebugAndroidTest")
     }
 
@@ -100,11 +74,5 @@ class RecalculateStackFramesTaskTest {
             """dependencies {
                         |compile fileTree(dir: 'libs', include: ['*.jar'])
                     |}""".trimMargin())
-    }
-
-    private fun getCacheDir(): File {
-        val cacheFolder = project.file(CACHE_DIR).listFiles().find { it.isDirectory }
-        assertThat(cacheFolder).isNotNull()
-        return cacheFolder!!
     }
 }

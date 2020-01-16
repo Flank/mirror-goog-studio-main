@@ -35,7 +35,6 @@ import static org.objectweb.asm.Opcodes.V1_8;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.builder.utils.FileCache;
 import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.ide.common.workers.WorkerExecutorFacade;
@@ -100,33 +99,11 @@ public class FixStackFramesDelegateTest {
         Set<File> classesToFix = ImmutableSet.of(jar.toFile());
 
         FixStackFramesDelegate delegate =
-                new FixStackFramesDelegate(
-                        ANDROID_JAR, classesToFix, classesToFix, output, null);
+                new FixStackFramesDelegate(ANDROID_JAR, classesToFix, classesToFix, output);
 
         delegate.doFullRun(executor);
 
         assertAllClassesAreValid(singleOutput().toPath());
-    }
-
-    @Test
-    public void testJarCaching() throws IOException {
-        Path jar = getJarWithBrokenClasses("input.jar", ImmutableList.of("test/A"));
-
-        Set<File> classesToFix = ImmutableSet.of(jar.toFile());
-
-        FileCache cache = FileCache.getInstanceWithSingleProcessLocking(tmp.newFolder());
-
-        FixStackFramesDelegate delegate =
-                new FixStackFramesDelegate(
-                        ANDROID_JAR, classesToFix, classesToFix, output, cache);
-
-        delegate.doFullRun(executor);
-
-        assertThat(cache.getCacheDirectory().list()).hasLength(1);
-
-        delegate.doFullRun(executor);
-
-        assertThat(cache.getCacheDirectory().list()).hasLength(1);
     }
 
     @Test
@@ -136,8 +113,7 @@ public class FixStackFramesDelegateTest {
         Set<File> classesToFix = ImmutableSet.of(jar.toFile());
 
         FixStackFramesDelegate delegate =
-                new FixStackFramesDelegate(
-                        ANDROID_JAR, classesToFix, classesToFix, output, null);
+                new FixStackFramesDelegate(ANDROID_JAR, classesToFix, classesToFix, output);
 
         delegate.doIncrementalRun(executor, ImmutableMap.of());
 
@@ -165,8 +141,7 @@ public class FixStackFramesDelegateTest {
         Set<File> referencedClasses = ImmutableSet.of(referencedJar.toFile());
 
         FixStackFramesDelegate delegate =
-                new FixStackFramesDelegate(
-                        ANDROID_JAR, classesToFix, referencedClasses, output, null);
+                new FixStackFramesDelegate(ANDROID_JAR, classesToFix, referencedClasses, output);
 
         delegate.doFullRun(executor);
 
@@ -181,8 +156,7 @@ public class FixStackFramesDelegateTest {
         Set<File> classesToFix = ImmutableSet.of(jar.toFile());
 
         FixStackFramesDelegate delegate =
-                new FixStackFramesDelegate(
-                        ANDROID_JAR, classesToFix, ImmutableSet.of(), output, null);
+                new FixStackFramesDelegate(ANDROID_JAR, classesToFix, ImmutableSet.of(), output);
 
         delegate.doFullRun(executor);
 
@@ -213,8 +187,7 @@ public class FixStackFramesDelegateTest {
         Set<File> classesToFix = ImmutableSet.of(jar.toFile());
 
         FixStackFramesDelegate delegate =
-                new FixStackFramesDelegate(
-                        ANDROID_JAR, classesToFix, ImmutableSet.of(), output, null);
+                new FixStackFramesDelegate(ANDROID_JAR, classesToFix, ImmutableSet.of(), output);
 
         delegate.doFullRun(executor);
 
@@ -227,7 +200,7 @@ public class FixStackFramesDelegateTest {
 
         FixStackFramesDelegate delegate =
                 new FixStackFramesDelegate(
-                        ANDROID_JAR, ImmutableSet.of(), ImmutableSet.of(), output, null);
+                        ANDROID_JAR, ImmutableSet.of(), ImmutableSet.of(), output);
 
         delegate.doFullRun(executor);
 
@@ -243,18 +216,6 @@ public class FixStackFramesDelegateTest {
 
         FixStackFramesDelegate.ClassLoaderKey deserializedKey =
                 (FixStackFramesDelegate.ClassLoaderKey) Serialization.deserialize(bytes);
-
-        assertThat(deserializedKey).isEqualTo(key);
-    }
-
-    @Test
-    public void testCacheKeySerializable() throws IOException, ClassNotFoundException {
-        FixStackFramesDelegate.CacheKey key = new FixStackFramesDelegate.CacheKey("foo");
-
-        byte[] bytes = Serialization.serialize(key);
-
-        FixStackFramesDelegate.CacheKey deserializedKey =
-                (FixStackFramesDelegate.CacheKey) Serialization.deserialize(bytes);
 
         assertThat(deserializedKey).isEqualTo(key);
     }

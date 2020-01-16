@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.utils.FileCache
 import com.android.ide.common.resources.FileStatus
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -47,10 +46,8 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
     lateinit var referencedClasses: FileCollection
         private set
 
-    private var userCache: FileCache? = null
-
     private fun createDelegate() = FixStackFramesDelegate(
-        bootClasspath.files, classesToFix.files, referencedClasses.files, outFolder!!.get().asFile, userCache
+        bootClasspath.files, classesToFix.files, referencedClasses.files, outFolder!!.get().asFile
     )
 
     override val incremental: Boolean = true
@@ -65,7 +62,6 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl,
-        private val userCache: FileCache?,
         private val isTestCoverageEnabled: Boolean) :
         VariantTaskCreationAction<RecalculateStackFramesTask, ComponentPropertiesImpl>(
             componentProperties
@@ -147,8 +143,6 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
             task.classesToFix = classesToFix
 
             task.referencedClasses = referencedClasses
-
-            task.userCache = userCache
         }
     }
 }
