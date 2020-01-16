@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.root
+package com.android.tools.idea.wizard.template.impl.activities.blankWearActivity
 
 fun androidManifestPermissionsXml() = """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">

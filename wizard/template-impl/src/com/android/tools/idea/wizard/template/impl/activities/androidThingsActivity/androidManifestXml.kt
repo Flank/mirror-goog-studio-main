@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidThingsActivity
 
-import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.impl.activities.common.commonActivityBody
 import com.android.tools.idea.wizard.template.renderIf
 
