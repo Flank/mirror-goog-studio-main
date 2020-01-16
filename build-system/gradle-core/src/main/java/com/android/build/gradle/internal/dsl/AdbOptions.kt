@@ -14,59 +14,38 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.build.gradle.internal.dsl
 
-import com.google.common.collect.ImmutableList;
-import java.util.Collection;
-import java.util.List;
-import javax.inject.Inject;
+import com.google.common.collect.ImmutableList
+import javax.inject.Inject
 
 /** Options for the adb tool. */
-public class AdbOptions
-        implements com.android.builder.model.AdbOptions, com.android.build.api.dsl.AdbOptions {
+class AdbOptions @Inject constructor() : com.android.builder.model.AdbOptions,
+    com.android.build.api.dsl.AdbOptions {
 
-    int timeOutInMs;
+    /** The time out used for all adb operations. */
+    override var timeOutInMs: Int = 0
 
-    List<String> installOptions;
+    /** The list of FULL_APK installation options. */
+    override var installOptions: Collection<String>? = null
 
-    @Inject
-    public AdbOptions() {}
-
-    /**
-     * Returns the time out used for all adb operations.
-     */
-    @Override
-    public int getTimeOutInMs() {
-        return timeOutInMs;
+    fun timeOutInMs(timeOutInMs: Int) {
+        this.timeOutInMs = timeOutInMs
     }
 
-    public void setTimeOutInMs(int timeOutInMs) {
-        this.timeOutInMs = timeOutInMs;
+    fun setInstallOptions(option: String) {
+        installOptions = ImmutableList.of(option)
     }
 
-    public void timeOutInMs(int timeOutInMs) {
-        setTimeOutInMs(timeOutInMs);
+    fun setInstallOptions(vararg options: String) {
+        installOptions = ImmutableList.copyOf(options)
     }
 
-    /** Returns the list of FULL_APK installation options. */
-    @Override
-    public Collection<String> getInstallOptions() {
-        return installOptions;
+    fun installOptions(option: String) {
+        installOptions = ImmutableList.of(option)
     }
 
-    public void setInstallOptions(String option) {
-        installOptions = ImmutableList.of(option);
-    }
-
-    public void setInstallOptions(String... options) {
-        installOptions = ImmutableList.copyOf(options);
-    }
-
-    public void installOptions(String option) {
-        installOptions = ImmutableList.of(option);
-    }
-
-    public void installOptions(String... options) {
-        installOptions = ImmutableList.copyOf(options);
+    fun installOptions(vararg options: String) {
+        installOptions = ImmutableList.copyOf(options)
     }
 }

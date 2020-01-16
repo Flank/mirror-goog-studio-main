@@ -586,6 +586,7 @@ com.android.build.gradle.internal.dsl.AdbOptions.installOptions: void (java.lang
 com.android.build.gradle.internal.dsl.AdbOptions.installOptions: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.AdbOptions.setInstallOptions: void (java.lang.String)
 com.android.build.gradle.internal.dsl.AdbOptions.setInstallOptions: void (java.lang.String[])
+com.android.build.gradle.internal.dsl.AdbOptions.setInstallOptions: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.internal.dsl.AdbOptions.setTimeOutInMs: void (int)
 com.android.build.gradle.internal.dsl.AdbOptions.timeOutInMs: void (int)
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions implements com.android.build.gradle.api.AnnotationProcessorOptions
