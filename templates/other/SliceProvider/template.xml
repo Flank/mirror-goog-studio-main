@@ -34,7 +34,7 @@
 
     <parameter
         id="pathPrefix"
-        name="URI Authorities"
+        name="Path Prefix"
         type="string"
         constraints="nonempty"
         default="/"

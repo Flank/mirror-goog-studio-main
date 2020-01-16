@@ -50,6 +50,7 @@ import com.android.tools.idea.wizard.template.impl.other.broadcastReceiver.broad
 import com.android.tools.idea.wizard.template.impl.other.contentProvider.contentProviderTemplate
 import com.android.tools.idea.wizard.template.impl.other.folders.folderTemplates
 import com.android.tools.idea.wizard.template.impl.other.intentService.intentServiceTemplate
+import com.android.tools.idea.wizard.template.impl.other.sliceProvider.sliceProviderTemplate
 
 /**
  * Implementation of the Android Wizard Template plugin extension point.
@@ -88,6 +89,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
 
     broadcastReceiverTemplate,
     contentProviderTemplate,
-    intentServiceTemplate
+    intentServiceTemplate,
+    sliceProviderTemplate
   ) + folderTemplates
 }
