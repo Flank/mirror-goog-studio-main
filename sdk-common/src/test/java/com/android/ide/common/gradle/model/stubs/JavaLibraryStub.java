@@ -16,7 +16,9 @@
 package com.android.ide.common.gradle.model.stubs;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.JavaLibrary;
+import com.android.builder.model.MavenCoordinates;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.List;
@@ -31,6 +33,20 @@ public class JavaLibraryStub extends LibraryStub implements JavaLibrary {
     }
 
     public JavaLibraryStub(@NonNull File jarFile, @NonNull List<JavaLibrary> dependencies) {
+        myJarFile = jarFile;
+        myDependencies = dependencies;
+    }
+
+    public JavaLibraryStub(
+            @NonNull MavenCoordinates coordinates,
+            @Nullable String buildId,
+            @Nullable String project,
+            @Nullable String name,
+            boolean provided,
+            boolean isSkipped,
+            @NonNull File jarFile,
+            @NonNull List<JavaLibrary> dependencies) {
+        super(coordinates, buildId, project, name, provided, isSkipped);
         myJarFile = jarFile;
         myDependencies = dependencies;
     }
