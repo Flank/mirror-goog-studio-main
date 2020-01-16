@@ -18,11 +18,12 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.resources.ResourceType
+import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.ResourceReference.Companion.get
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
-import com.android.tools.lint.detector.api.Issue.Companion.create
+import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LayoutDetector
 import com.android.tools.lint.detector.api.Location
@@ -33,9 +34,18 @@ import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.getBaseName
 import com.android.utils.Pair
 import com.google.common.annotations.VisibleForTesting
+import com.intellij.openapi.util.Ref
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiPrimitiveType
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.UVariable
+import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isNullLiteral
+import org.jetbrains.uast.visitor.AbstractUastVisitor
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.xmlpull.v1.XmlPullParser
@@ -110,6 +120,9 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
         }
         val first = arguments[0]
         val reference = get(first) ?: return
+        if (isUsedWithAlertDialog(context, node)) {
+            return
+        }
         val layoutName = reference.name
         if (context.scope.contains(Scope.RESOURCE_FILE)) {
             // We're doing a full analysis run: we can gather this information
@@ -170,7 +183,7 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
         /** Passing in a null parent to a layout inflater */
         @JvmField
         val ISSUE =
-            create(
+            Issue.create(
                 id = "InflateParams",
                 briefDescription = "Layout Inflation without a Parent",
                 explanation = """
@@ -187,6 +200,90 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
 
         private const val ERROR_MESSAGE =
             "Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout's root element)"
+
+        /**
+         * Is this call to the layout inflater used for the Alert Dialog? If so, a null root is okay.
+         * See for example "Every Rule Has An Exception" herE:
+         * https://wundermanthompsonmobile.com/2013/05/layout-inflation-as-intended/
+         */
+        private fun isUsedWithAlertDialog(
+            context: JavaContext,
+            call: UCallExpression
+        ): Boolean {
+            val variable = call.getParentOfType<UElement>(UVariable::class.java) ?: return false
+            val method = variable.getParentOfType<UMethod>(UMethod::class.java) ?: return false
+            val sourcePsi = variable.sourcePsi
+            val javaPsi = variable.javaPsi
+            val isAlertBuilderUsage = Ref(false)
+            method.accept(
+                object : AbstractUastVisitor() {
+                    override fun visitSimpleNameReferenceExpression(
+                        node: USimpleNameReferenceExpression
+                    ): Boolean {
+                        checkUsage(node)
+                        return super.visitSimpleNameReferenceExpression(node)
+                    }
+
+                    private fun checkUsage(node: USimpleNameReferenceExpression) {
+                        val resolved = node.resolve() ?: return
+                        if (resolved != sourcePsi && resolved != javaPsi) {
+                            return
+                        }
+                        val setViewCall = node.uastParent as? UCallExpression ?: return
+                        if ("setView" != setViewCall.methodName) {
+                            return
+                        }
+                        val receiver = setViewCall.receiver ?: return
+                        val psiType = receiver.getExpressionType() ?: return
+                        if (isAlertBuilder(psiType.canonicalText)) {
+                            isAlertBuilderUsage.set(true)
+                        } else {
+                            val evaluator = context.evaluator
+                            val typeClass = evaluator.getTypeClass(psiType) ?: return
+                            // Look for create method returning an AlertDialog
+                            for (m in typeClass.methods) {
+                                val returnType = m.returnType ?: continue
+                                if (returnType is PsiPrimitiveType) {
+                                    continue
+                                }
+                                val returnClass = evaluator.getTypeClass(returnType)
+                                    ?: continue
+
+                                // In builders, most methods return self so avoid inheritance check
+                                if (returnClass === typeClass) {
+                                    continue
+                                }
+                                if (isAlertBuilder(evaluator, returnClass)) {
+                                    isAlertBuilderUsage.set(true)
+                                    break
+                                }
+                            }
+                        }
+                    }
+                })
+            return isAlertBuilderUsage.get()
+        }
+
+        private fun isAlertBuilder(s: String): Boolean {
+            return when (s) {
+                "android.app.AlertDialog.Builder",
+                "android.support.v7.app.AlertDialog.Builder",
+                "androidx.appcompat.app.AlertDialog.Builder",
+                "com.google.android.material.dialog.MaterialAlertDialogBuilder" -> true
+                else -> s.contains("AlertDialog")
+            }
+        }
+
+        private fun isAlertBuilder(
+            evaluator: JavaEvaluator,
+            cls: PsiClass
+        ): Boolean {
+            return if (!evaluator.inheritsFrom(cls, "android.app.Dialog", true)) {
+                false
+            } else evaluator.inheritsFrom(cls, "android.app.AlertDialog", false) ||
+                    evaluator.inheritsFrom(cls, "android.support.v7.app.AlertDialog", false) ||
+                    evaluator.inheritsFrom(cls, "androidx.appcompat.app.AlertDialog", false)
+        }
 
         @JvmStatic
         @VisibleForTesting
