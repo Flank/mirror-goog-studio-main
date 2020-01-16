@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.root
+package com.android.tools.idea.wizard.template.impl.activities.blankWearActivity
 
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.renderIf
-
 
 fun androidManifestXml(
   activityClass: String,
@@ -30,7 +29,7 @@ fun androidManifestXml(
   val labelBlock = if (isNew) "android:label=\"@string/app_name\""
   else "android:label=\"@string/title_${activityToLayout(activityClass)}\""
 
-  val intentFilterBlock = renderIf(isLauncher && !isLibrary) {"""
+  val intentFilterBlock = renderIf((isLauncher || isNew) && !isLibrary) {"""
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

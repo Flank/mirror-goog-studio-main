@@ -16,7 +16,7 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow
 
-import com.android.tools.idea.wizard.template.renderIf
+import com.android.tools.idea.wizard.template.impl.activities.common.commonActivityBody
 
 fun androidManifestXml(
   collectionName: String,
@@ -30,12 +30,7 @@ fun androidManifestXml(
   themeNameNoActionBar: String
 ): String {
   val labelBlock = if (isNew) {"android:label=\"@string/app_name\""} else {"android:label=\"@string/title_${collection_name}\""}
-  val activityBody = renderIf(isLauncher && !isLibrary) {"""
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
-  """}
+  val activityBody = commonActivityBody(isLauncher || isNew, isLibrary)
   return """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 

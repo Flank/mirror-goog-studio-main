@@ -23,8 +23,6 @@ import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.
 import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.res.values.dimensXml
 import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.res.values.stringsXml
 import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.res.values_round.stringsXml as stringsXmlRound
-import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.root.androidManifestPermissionsXml
-import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.root.androidManifestXml
 import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.src.app_package.blankActivityJava
 import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.src.app_package.blankActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
