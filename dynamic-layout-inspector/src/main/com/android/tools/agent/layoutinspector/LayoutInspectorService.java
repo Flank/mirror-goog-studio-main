@@ -16,12 +16,18 @@
 
 package com.android.tools.agent.layoutinspector;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Picture;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inspector.WindowInspector;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -31,8 +37,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This (singleton) class can register a callback to, whenever a view is updated, send the current
@@ -40,6 +48,10 @@ import java.util.concurrent.Executors;
  */
 @SuppressWarnings({"unused", "Convert2Lambda"}) // invoked via jni
 public class LayoutInspectorService {
+    private static final int MAX_IMAGE_SIZE = (int) (3.5 * 1024. * 1024.);
+    // Copied from ViewDebug
+    private static final int CAPTURE_TIMEOUT = 6000;
+
     private final Properties properties = new Properties();
     private final Object lock = new Object();
     private DetectRootViewChange detectRootChange = null;
@@ -111,8 +123,8 @@ public class LayoutInspectorService {
                     public void run() {
                         try {
                             synchronized (lock) {
-                                // Sometimes the window has become detached before we get in here, so check one
-                                // more time before trying to start capture.
+                                // Sometimes the window has become detached before we get in here,
+                                // so check one more time before trying to start capture.
                                 if (root.isAttachedToWindow()) {
                                     captureClosables.put(
                                             root,
@@ -198,13 +210,21 @@ public class LayoutInspectorService {
     private native long initComponentTree(long request, @NonNull long[] allIds);
 
     /** Sends a component tree to Android Studio. */
-    private native long sendComponentTree(long request, @NonNull byte[] image, int len, int id);
+    private native long sendComponentTree(
+            long request, @NonNull byte[] image, int len, int id, boolean fallbackToPng);
 
     /** This method is called when a new image has been snapped. */
     private void captureAndSendComponentTree(@NonNull byte[] image, @Nullable View root) {
         long request = 0;
         try {
             request = allocateSendRequest();
+            boolean fallbackToPng = false;
+            if (image.length > MAX_IMAGE_SIZE && root != null) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                capture(baos, root);
+                image = baos.toByteArray();
+                fallbackToPng = true;
+            }
             int index = 0;
             List<View> rootViews = getRootViews();
             long[] rootViewIds = new long[rootViews.size()];
@@ -216,7 +236,7 @@ public class LayoutInspectorService {
                 new ComponentTree().writeTree(event, root);
             }
             int messageId = (int) System.currentTimeMillis();
-            sendComponentTree(request, image, image.length, messageId);
+            sendComponentTree(request, image, image.length, messageId, fallbackToPng);
         } catch (LayoutModifiedException e) {
             // The layout changed while we were traversing, start over.
             captureAndSendComponentTree(image, root);
@@ -225,6 +245,57 @@ public class LayoutInspectorService {
         } finally {
             freeSendRequest(request);
         }
+    }
+
+    // Copied from ViewDebug
+    private static void capture(@NonNull OutputStream clientStream, @NonNull View captureView)
+            throws IOException {
+        Bitmap b = performViewCapture(captureView);
+        if (b == null) {
+            return;
+        }
+        try (BufferedOutputStream out = new BufferedOutputStream(clientStream, 32 * 1024)) {
+            b.compress(Bitmap.CompressFormat.PNG, 100, out);
+            out.flush();
+        } finally {
+            b.recycle();
+        }
+    }
+
+    // Copied from ViewDebug
+    private static Bitmap performViewCapture(final View captureView) {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final Bitmap[] cache = new Bitmap[1];
+
+        captureView.post(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Picture picture = new Picture();
+                            Canvas canvas =
+                                    picture.beginRecording(
+                                            captureView.getWidth(), captureView.getHeight());
+                            captureView.draw(canvas);
+                            picture.endRecording();
+                            cache[0] = Bitmap.createBitmap(picture);
+                        } catch (OutOfMemoryError e) {
+                            Log.w("View", "Out of memory for bitmap");
+                        } finally {
+                            latch.countDown();
+                        }
+                    }
+                });
+
+        try {
+            latch.await(CAPTURE_TIMEOUT, TimeUnit.MILLISECONDS);
+            return cache[0];
+        } catch (InterruptedException e) {
+            Log.w("View", "Could not complete the capture of the view " + captureView);
+            Thread.currentThread().interrupt();
+        }
+
+        return null;
     }
 
     /** Sends the properties via the agent. */
