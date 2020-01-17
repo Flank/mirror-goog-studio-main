@@ -158,12 +158,12 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ExtractApksTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.EXTRACTED_APKS,
                 taskProvider,
                 ExtractApksTask::outputDir
             )
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL,
                 taskProvider,
                 ExtractApksTask::apksFromBundleIdeModel,
@@ -176,16 +176,16 @@ abstract class ExtractApksTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            component.artifacts.setTaskInputToFinalProduct(InternalArtifactType.APKS_FROM_BUNDLE,
+            creationConfig.artifacts.setTaskInputToFinalProduct(InternalArtifactType.APKS_FROM_BUNDLE,
                 task.apkSetArchive)
 
-            val devicePath = component.globalScope.projectOptions.get(StringOption.IDE_APK_SELECT_CONFIG)
+            val devicePath = creationConfig.globalScope.projectOptions.get(StringOption.IDE_APK_SELECT_CONFIG)
             if (devicePath != null) {
                 task.deviceConfig = File(devicePath)
             }
 
-            task.extractInstant = component.globalScope.projectOptions.get(BooleanOption.IDE_EXTRACT_INSTANT)
-            task.applicationId.setDisallowChanges(component.applicationId)
+            task.extractInstant = creationConfig.globalScope.projectOptions.get(BooleanOption.IDE_EXTRACT_INSTANT)
+            task.applicationId.setDisallowChanges(creationConfig.applicationId)
         }
     }
 }

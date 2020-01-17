@@ -79,7 +79,7 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ProcessAssetPackManifestTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.ASSET_PACK_MANIFESTS,
                 taskProvider,
                 ProcessAssetPackManifestTask::processedManifests
@@ -91,7 +91,7 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.applicationId = component.applicationId
+            task.applicationId = creationConfig.applicationId
             task.assetPackManifests.from(assetPackManifestFileCollection)
             task.assetPackNames = assetPackNames
         }

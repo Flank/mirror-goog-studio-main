@@ -92,7 +92,7 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
         public void configure(@NonNull CheckProguardFiles task) {
             super.configure(task);
 
-            task.proguardFiles = component.getVariantScope().getProguardFiles();
+            task.proguardFiles = creationConfig.getVariantScope().getProguardFiles();
         }
     }
 }

@@ -117,8 +117,8 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
         public void handleProvider(
                 @NonNull TaskProvider<? extends PackageApplication> taskProvider) {
             super.handleProvider(taskProvider);
-            component.getTaskContainer().setPackageAndroidTask(taskProvider);
-            component
+            creationConfig.getTaskContainer().setPackageAndroidTask(taskProvider);
+            creationConfig
                     .getArtifacts()
                     .producesDir(
                             InternalArtifactType.APK.INSTANCE,
@@ -127,7 +127,7 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
                             outputDirectory.getAbsolutePath(),
                             "");
 
-            component
+            creationConfig
                     .getArtifacts()
                     .getOperations()
                     .setInitialProvider(taskProvider, PackageApplication::getIdeModelOutputFile)

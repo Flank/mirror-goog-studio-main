@@ -92,7 +92,7 @@ abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out DataBindingMergeDependencyArtifactsTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS,
                 taskProvider,
                 DataBindingMergeDependencyArtifactsTask::outFolder
@@ -104,12 +104,12 @@ abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.runtimeDependencies = component.variantDependencies.getArtifactFileCollection(
+            task.runtimeDependencies = creationConfig.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT
             )
-            task.compileTimeDependencies = component.variantDependencies.getArtifactFileCollection(
+            task.compileTimeDependencies = creationConfig.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT

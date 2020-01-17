@@ -142,7 +142,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LinkLibraryAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.RES_STATIC_LIBRARY,
                 taskProvider,
                 LinkLibraryAndroidResourcesTask::staticLibApk,
@@ -155,32 +155,32 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.STATIC_LIBRARY_MANIFEST,
                 task.manifestFile
             )
 
             task.inputResourcesDirectories.set(
-                component.artifacts.getOperations().getAll(
+                creationConfig.artifacts.getOperations().getAll(
                     MultipleArtifactType.RES_COMPILED_FLAT_FILES))
             task.libraryDependencies =
-                    component.variantDependencies.getArtifactFileCollection(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
-            if (component.artifacts.hasFinalProduct(
+            if (creationConfig.artifacts.hasFinalProduct(
                     InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES)) {
-                component.artifacts.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
                     task.convertedLibraryDependencies)
             }
             task.sharedLibraryDependencies =
-                    component.variantDependencies.getArtifactFileCollection(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
 
-            component.onTestedVariant {
+            creationConfig.onTestedVariant {
                 it.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RES_STATIC_LIBRARY,
                     task.tested
@@ -189,21 +189,21 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
             task.aaptIntermediateDir =
                     FileUtils.join(
-                            component.globalScope.intermediatesDir, "res-link-intermediate", component.variantDslInfo.dirName)
+                            creationConfig.globalScope.intermediatesDir, "res-link-intermediate", creationConfig.variantDslInfo.dirName)
 
-            task.packageForR.set(component.globalScope.project.provider {
-                component.variantDslInfo.originalApplicationId
+            task.packageForR.set(creationConfig.globalScope.project.provider {
+                creationConfig.variantDslInfo.originalApplicationId
             })
             task.packageForR.disallowChanges()
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
+            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
-            task.androidJar = component.globalScope.sdkComponents.androidJarProvider
+            task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                component.globalScope.projectOptions
+                creationConfig.globalScope.projectOptions
             )
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }

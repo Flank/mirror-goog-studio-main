@@ -136,7 +136,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<out BundleAllClasses>) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.APP_CLASSES,
                 taskProvider,
                 BundleAllClasses::outputJar,
@@ -146,21 +146,21 @@ abstract class BundleAllClasses : NonIncrementalTask() {
 
         override fun configure(task: BundleAllClasses) {
             super.configure(task)
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.JAVAC,
                 task.javacClasses
             )
-            task.preJavacClasses = component.variantData.allPreJavacGeneratedBytecode
-            task.postJavacClasses = component.variantData.allPostJavacGeneratedBytecode
-            val globalScope = component.globalScope
+            task.preJavacClasses = creationConfig.variantData.allPreJavacGeneratedBytecode
+            task.postJavacClasses = creationConfig.variantData.allPostJavacGeneratedBytecode
+            val globalScope = creationConfig.globalScope
             task.modulePath = globalScope.project.path
-            task.jarCreatorType = component.variantScope.jarCreatorType
+            task.jarCreatorType = creationConfig.variantScope.jarCreatorType
             if (globalScope.extension.aaptOptions.namespaced) {
-                component.artifacts.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                     task.thisRClassClasses
                 )
-                task.dependencyRClassClasses = component.variantDependencies.getArtifactFileCollection(
+                task.dependencyRClassClasses = creationConfig.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     ALL,
                     COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
@@ -170,7 +170,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                 // thisRClassClasses expects *.class files as an input while this is *.jar. Thus,
                 // put it to dependencyRClassClasses and it will be processed properly.
                 task.dependencyRClassClasses =
-                    component
+                    creationConfig
                         .artifacts
                         .getFinalProductAsFileCollection(
                             InternalArtifactType

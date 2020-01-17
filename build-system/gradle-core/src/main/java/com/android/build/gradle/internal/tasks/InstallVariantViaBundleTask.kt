@@ -197,32 +197,32 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.description = "Installs the " + component.variantData.description + ""
+            task.description = "Installs the " + creationConfig.variantData.description + ""
             task.group = TaskManager.INSTALL_GROUP
 
-            component.minSdkVersion.let {
+            creationConfig.minSdkVersion.let {
                 task.minSdkVersion = it.apiLevel
                 task.minSdkCodename = it.codename
             }
-            component.globalScope.extension.adbOptions.installOptions?.let {
+            creationConfig.globalScope.extension.adbOptions.installOptions?.let {
                 task.installOptions.addAll(it)
             }
 
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APKS_FROM_BUNDLE,
                 task.apkBundle
             )
 
-            task.timeOutInMs = component.globalScope.extension.adbOptions.timeOutInMs
+            task.timeOutInMs = creationConfig.globalScope.extension.adbOptions.timeOutInMs
 
-            task.adbExecutableProvider = component.globalScope.sdkComponents.adbExecutableProvider
+            task.adbExecutableProvider = creationConfig.globalScope.sdkComponents.adbExecutableProvider
         }
 
         override fun handleProvider(
             taskProvider: TaskProvider<out InstallVariantViaBundleTask>
         ) {
             super.handleProvider(taskProvider)
-            component.taskContainer.installTask = taskProvider
+            creationConfig.taskContainer.installTask = taskProvider
         }
     }
 }

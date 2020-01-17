@@ -102,12 +102,12 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         public void configure(@NonNull AndroidUnitTest task) {
             super.configure(task);
 
-            GlobalScope globalScope = component.getGlobalScope();
+            GlobalScope globalScope = creationConfig.getGlobalScope();
             BaseExtension extension = globalScope.getExtension();
 
             VariantPropertiesImpl testedVariant =
                     (VariantPropertiesImpl)
-                            ((TestComponentProperties) component).getTestedVariant();
+                            ((TestComponentProperties) creationConfig).getTestedVariant();
 
             boolean includeAndroidResources =
                     extension.getTestOptions().getUnitTests().isIncludeAndroidResources();
@@ -122,8 +122,8 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
             task.setDescription("Run unit tests for the " + testedVariant.getName() + " build.");
 
-            task.setTestClassesDirs(component.getArtifacts().getAllClasses());
-            task.setClasspath(computeClasspath(component, includeAndroidResources));
+            task.setTestClassesDirs(creationConfig.getArtifacts().getAllClasses());
+            task.setClasspath(computeClasspath(creationConfig, includeAndroidResources));
 
             if (includeAndroidResources) {
                 // When computing the classpath above, we made sure this task depends on the output

@@ -230,8 +230,8 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out GenerateApkDataTask>
         ) {
             super.handleProvider(taskProvider)
-            component.taskContainer.microApkTask = taskProvider
-            component.taskContainer.generateApkDataTask = taskProvider
+            creationConfig.taskContainer.microApkTask = taskProvider
+            creationConfig.taskContainer.generateApkDataTask = taskProvider
         }
 
         override fun configure(
@@ -239,9 +239,9 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val variantDslInfo = component.variantDslInfo
+            val variantDslInfo = creationConfig.variantDslInfo
 
-            val paths = component.paths
+            val paths = creationConfig.paths
 
             task.resOutputDir.set(paths.microApkResDirectory)
             task.resOutputDir.disallowChanges()
@@ -256,13 +256,13 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
             task.manifestFile.set(paths.microApkManifestFile)
             task.manifestFile.disallowChanges()
 
-            task.mainPkgName.setDisallowChanges(component.applicationId)
+            task.mainPkgName.setDisallowChanges(creationConfig.applicationId)
 
-            task.minSdkVersion.setDisallowChanges(component.minSdkVersion.apiLevel)
+            task.minSdkVersion.setDisallowChanges(creationConfig.minSdkVersion.apiLevel)
 
             task.targetSdkVersion.setDisallowChanges(variantDslInfo.targetSdkVersion.apiLevel)
 
-            val aapt2AndVersion = getAapt2FromMavenAndVersion(component.globalScope)
+            val aapt2AndVersion = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2Executable.from(aapt2AndVersion.first)
             task.aapt2Executable.disallowChanges()
 

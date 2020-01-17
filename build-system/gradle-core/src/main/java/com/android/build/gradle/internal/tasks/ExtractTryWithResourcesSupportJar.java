@@ -76,7 +76,8 @@ public abstract class ExtractTryWithResourcesSupportJar extends NonIncrementalTa
         public void configure(
                 @NonNull ExtractTryWithResourcesSupportJar task) {
             super.configure(task);
-            task.outputLocation = component.getVariantScope().getTryWithResourceRuntimeSupportJar();
+            task.outputLocation =
+                    creationConfig.getVariantScope().getTryWithResourceRuntimeSupportJar();
         }
     }
 }

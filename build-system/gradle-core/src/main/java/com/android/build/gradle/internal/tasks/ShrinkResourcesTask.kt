@@ -166,7 +166,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 artifactType = InternalArtifactType.SHRUNK_PROCESSED_RES,
                 taskProvider = taskProvider,
                 productProvider = ShrinkResourcesTask::compressedResources,
@@ -179,14 +179,14 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val artifacts = component.artifacts
+            val artifacts = creationConfig.artifacts
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PROCESSED_RES,
                 task.uncompressedResources
             )
 
-            if (component
+            if (creationConfig
                     .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]) {
                 artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RUNTIME_SYMBOL_LIST,
@@ -214,16 +214,16 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 task.mergedManifests
             )
 
-            task.aaptOptions = component.globalScope.extension.aaptOptions
+            task.aaptOptions = creationConfig.globalScope.extension.aaptOptions
 
-            task.buildTypeName = component.variantDslInfo.componentIdentity.buildType
+            task.buildTypeName = creationConfig.variantDslInfo.componentIdentity.buildType
 
-            task.variantTypeName.setDisallowChanges(component.variantType.name)
+            task.variantTypeName.setDisallowChanges(creationConfig.variantType.name)
 
-            task.debuggableBuildType.setDisallowChanges(component.variantDslInfo.isDebuggable)
+            task.debuggableBuildType.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
 
             task.enableRTxtResourceShrinking.set(
-                component
+                creationConfig
                     .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]
             )
 
@@ -233,7 +233,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_CLASSES) -> task.classes.from(
                     artifacts.getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES))
                 artifacts.hasFinalProducts(MultipleArtifactType.DEX) -> task.classes.from(
-                    component.globalScope.project.files(
+                    creationConfig.globalScope.project.files(
                         artifacts.getOperations().getAll(MultipleArtifactType.DEX)))
                 else -> task.classes.from(classes)
             }

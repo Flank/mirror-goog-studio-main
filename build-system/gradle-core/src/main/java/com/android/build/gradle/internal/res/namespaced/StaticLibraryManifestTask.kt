@@ -63,7 +63,7 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out StaticLibraryManifestTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.STATIC_LIBRARY_MANIFEST,
                 taskProvider,
                 StaticLibraryManifestTask::manifestFile,
@@ -75,8 +75,8 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
             task: StaticLibraryManifestTask
         ) {
             super.configure(task)
-            task.packageName.set(component.globalScope.project.provider {
-                component.variantDslInfo.originalApplicationId
+            task.packageName.set(creationConfig.globalScope.project.provider {
+                creationConfig.variantDslInfo.originalApplicationId
             })
             task.packageName.disallowChanges()
         }

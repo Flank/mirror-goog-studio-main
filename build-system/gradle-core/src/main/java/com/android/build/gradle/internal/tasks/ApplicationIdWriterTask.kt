@@ -79,7 +79,7 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ApplicationIdWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.METADATA_APPLICATION_ID,
                 taskProvider,
                 ApplicationIdWriterTask::outputFile,
@@ -92,7 +92,7 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            if (component.variantType.isDynamicFeature) {
+            if (creationConfig.variantType.isDynamicFeature) {
                 // If this is a dynamic feature, we read the value published by the base
                 // module and write it down.
                 // This is only done so that BaseVariant.getApplicationIdTextResource() can be
@@ -100,11 +100,11 @@ abstract class ApplicationIdWriterTask : NonIncrementalTask() {
                 // TODO replace this with Property<String> which can be fed from the published artifact directly.
                 // b/141650037
                 task.appMetadata.from(
-                    component.variantDependencies.getArtifactFileCollection(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
                     COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA
                 ))
             } else {
-                task.applicationId.setDisallowChanges(component.applicationId)
+                task.applicationId.setDisallowChanges(creationConfig.applicationId)
             }
             task.appMetadata.disallowChanges()
             task.applicationId.disallowChanges()

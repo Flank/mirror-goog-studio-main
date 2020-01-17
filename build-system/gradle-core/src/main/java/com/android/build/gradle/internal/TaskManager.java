@@ -3019,7 +3019,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         public void handleProvider(
                 @NonNull TaskProvider<? extends TaskT> taskProvider) {
             super.handleProvider(taskProvider);
-            component.getVariantData().getTaskContainer().setPreBuildTask(taskProvider);
+            creationConfig.getVariantData().getTaskContainer().setPreBuildTask(taskProvider);
         }
 
         @Override
@@ -3027,7 +3027,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
             super.configure(task);
             task.dependsOn(MAIN_PREBUILD);
 
-            if (component.getVariantScope().getCodeShrinker() != null) {
+            if (creationConfig.getVariantScope().getCodeShrinker() != null) {
                 task.dependsOn(EXTRACT_PROGUARD_FILES);
             }
         }

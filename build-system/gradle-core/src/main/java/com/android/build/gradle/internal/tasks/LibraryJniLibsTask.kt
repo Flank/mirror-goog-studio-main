@@ -128,7 +128,7 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LibraryJniLibsTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 artifactType = artifactType,
                 taskProvider = taskProvider,
                 productProvider = LibraryJniLibsTask::outputDirectory,
@@ -140,7 +140,7 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
             task: LibraryJniLibsTask
         ) {
             super.configure(task)
-            task.projectNativeLibs = component.artifacts.getFinalProduct(STRIPPED_NATIVE_LIBS)
+            task.projectNativeLibs = creationConfig.artifacts.getFinalProduct(STRIPPED_NATIVE_LIBS)
         }
     }
 
@@ -168,7 +168,7 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
             task: LibraryJniLibsTask
         ) {
             super.configure(task)
-            task.localJarsNativeLibs = component.variantScope.localPackagedJars
+            task.localJarsNativeLibs = creationConfig.variantScope.localPackagedJars
         }
     }
 }

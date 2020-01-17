@@ -226,18 +226,18 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         ) {
             super.configure(task)
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
+            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.fromDisallowChanges(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_RES,
                 task.inputDirectory
             )
 
-            task.compiledDirectory = component.paths.compiledResourcesOutputDir
+            task.compiledDirectory = creationConfig.paths.compiledResourcesOutputDir
 
-            val aaptFriendlyManifestsFilePresent = component.artifacts
+            val aaptFriendlyManifestsFilePresent = creationConfig.artifacts
                 .hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
             task.taskInputType = when {
                 aaptFriendlyManifestsFilePresent ->
@@ -245,23 +245,23 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 else ->
                     InternalArtifactType.MERGED_MANIFESTS
             }
-            component.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
+            creationConfig.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
-            task.androidJar = component.globalScope.sdkComponents.androidJarProvider
+            task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
 
-            task.mergeBlameFolder = component.paths.resourceBlameLogDir
+            task.mergeBlameFolder = creationConfig.paths.resourceBlameLogDir
 
-            task.manifestMergeBlameFile = component.artifacts.getFinalProduct(
+            task.manifestMergeBlameFile = creationConfig.artifacts.getFinalProduct(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                component.globalScope.projectOptions
+                creationConfig.globalScope.projectOptions
             )
 
-            if (component.variantScope.isPrecompileDependenciesResourcesEnabled) {
+            if (creationConfig.variantScope.isPrecompileDependenciesResourcesEnabled) {
                 task.compiledDependenciesResources.fromDisallowChanges(
-                    component.variantDependencies.getArtifactFileCollection(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES
@@ -269,7 +269,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             }
 
             task.useJvmResourceCompiler =
-              component.globalScope.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
+              creationConfig.globalScope.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
             task.aapt2WorkersBuildService.set(getAapt2WorkersBuildService(task.project))
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }

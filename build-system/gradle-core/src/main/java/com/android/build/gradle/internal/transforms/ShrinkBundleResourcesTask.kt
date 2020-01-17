@@ -186,7 +186,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         override fun handleProvider(
             taskProvider: TaskProvider<out ShrinkBundleResourcesTask>
         ) {
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE,
                 taskProvider,
                 ShrinkBundleResourcesTask::compressedResources,
@@ -199,25 +199,25 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val artifacts = component.artifacts
+            val artifacts = creationConfig.artifacts
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE,
                 task.uncompressedResources
             )
-            task.mainSplit = component.outputs.getMainSplit().apkData
+            task.mainSplit = creationConfig.outputs.getMainSplit().apkData
 
             task.dex = if (artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
                 artifacts
                     .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX).get()
             } else if (artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {
-                component.globalScope.project.files(
+                creationConfig.globalScope.project.files(
                     artifacts.getOperations().getAll(MultipleArtifactType.DEX))
             } else {
-                component.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
+                creationConfig.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
             }
 
-            if (component
+            if (creationConfig
                     .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]) {
                 artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RUNTIME_SYMBOL_LIST,
@@ -231,7 +231,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             }
 
             task.enableRTxtResourceShrinking.set(
-                component.globalScope
+                creationConfig.globalScope
                 .projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING])
 
             artifacts.setTaskInputToFinalProduct(

@@ -150,7 +150,7 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             taskProvider: TaskProvider<out CompatibleScreensManifest>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 COMPATIBLE_SCREEN_MANIFEST,
                 taskProvider,
                 CompatibleScreensManifest::outputFolder
@@ -163,17 +163,17 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             super.configure(task)
 
             task.screenSizes = screenSizes
-            task.applicationId.setDisallowChanges(component.applicationId)
+            task.applicationId.setDisallowChanges(creationConfig.applicationId)
 
-            task.variantType.set(component.variantType.toString())
+            task.variantType.set(creationConfig.variantType.toString())
             task.variantType.disallowChanges()
 
-            component.outputs.getEnabledVariantOutputs().forEach {
+            creationConfig.outputs.getEnabledVariantOutputs().forEach {
                 task.apkDataList.add(it.apkData)
             }
             task.apkDataList.disallowChanges()
 
-            task.minSdkVersion.set(task.project.provider { component.minSdkVersion.apiString })
+            task.minSdkVersion.set(task.project.provider { creationConfig.minSdkVersion.apiString })
             task.minSdkVersion.disallowChanges()
         }
     }

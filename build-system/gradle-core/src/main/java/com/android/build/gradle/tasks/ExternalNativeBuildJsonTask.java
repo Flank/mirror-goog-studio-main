@@ -113,9 +113,9 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
                 @NonNull ExternalNativeBuildJsonTask task) {
             super.configure(task);
 
-            BuildArtifactsHolder artifacts = component.getArtifacts();
+            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
             task.generator = generator;
-            VariantDslInfo variantDslInfo = component.getVariantDslInfo();
+            VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
 
             if (artifacts.hasFinalProduct(
                             InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)

@@ -388,9 +388,9 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessLibraryManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            component.getTaskContainer().setProcessManifestTask(taskProvider);
+            creationConfig.getTaskContainer().setProcessManifestTask(taskProvider);
 
-            BuildArtifactsHolder artifacts = component.getArtifacts();
+            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
             artifacts.producesDir(
                     InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS.INSTANCE,
                     taskProvider,
@@ -413,15 +413,15 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                     InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
                     taskProvider,
                     ProcessLibraryManifest::getMergeBlameFile,
-                    "manifest-merger-blame-" + component.getBaseName() + "-report.txt");
+                    "manifest-merger-blame-" + creationConfig.getBaseName() + "-report.txt");
 
             artifacts.producesFile(
                     InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE,
                     taskProvider,
                     ProcessLibraryManifest::getReportFile,
-                    FileUtils.join(component.getGlobalScope().getOutputsDir(), "logs")
+                    FileUtils.join(creationConfig.getGlobalScope().getOutputsDir(), "logs")
                             .getAbsolutePath(),
-                    "manifest-merger-" + component.getBaseName() + "-report.txt");
+                    "manifest-merger-" + creationConfig.getBaseName() + "-report.txt");
         }
 
         @Override
@@ -429,12 +429,12 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                 @NonNull ProcessLibraryManifest task) {
             super.configure(task);
 
-            VariantDslInfo variantDslInfo = component.getVariantDslInfo();
-            VariantSources variantSources = component.getVariantSources();
+            VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
+            VariantSources variantSources = creationConfig.getVariantSources();
 
-            Project project = component.getGlobalScope().getProject();
+            Project project = creationConfig.getGlobalScope().getProject();
             task.getMinSdkVersion()
-                    .set(project.provider(() -> component.getMinSdkVersion().getApiString()));
+                    .set(project.provider(() -> creationConfig.getMinSdkVersion().getApiString()));
             task.getMinSdkVersion().disallowChanges();
 
             task.getTargetSdkVersion()
@@ -453,11 +453,12 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             task.getMaxSdkVersion().set(project.provider(variantDslInfo::getMaxSdkVersion));
             task.getMaxSdkVersion().disallowChanges();
 
-            task.mainSplit.set(project.provider(component.getOutputs().getMainSplit()::getApkData));
+            task.mainSplit.set(
+                    project.provider(creationConfig.getOutputs().getMainSplit()::getApkData));
             task.mainSplit.disallowChanges();
 
             task.isNamespaced =
-                    component.getGlobalScope().getExtension().getAaptOptions().getNamespaced();
+                    creationConfig.getGlobalScope().getExtension().getAaptOptions().getNamespaced();
             task.versionName.set(task.getProject().provider(variantDslInfo::getVersionName));
             task.versionName.disallowChanges();
             task.versionCode.set(task.getProject().provider(variantDslInfo::getVersionCode));
@@ -472,7 +473,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             task.manifestOverlays.set(
                     task.getProject().provider(variantSources::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
-            task.getVariantType().set(component.getVariantType().toString());
+            task.getVariantType().set(creationConfig.getVariantType().toString());
             task.getVariantType().disallowChanges();
         }
     }

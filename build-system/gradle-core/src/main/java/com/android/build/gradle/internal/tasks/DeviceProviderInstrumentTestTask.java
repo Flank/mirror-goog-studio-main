@@ -450,14 +450,14 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             super.handleProvider(taskProvider);
 
             boolean isAdditionalAndroidTestOutputEnabled =
-                    component
+                    creationConfig
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT);
 
             if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
                 if (isAdditionalAndroidTestOutputEnabled) {
-                    component
+                    creationConfig
                             .getArtifacts()
                             .producesDir(
                                     InternalArtifactType.CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT
@@ -466,7 +466,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir,
                                     deviceProvider.getName());
                 }
-                component
+                creationConfig
                         .getArtifacts()
                         .producesDir(
                                 InternalArtifactType.CODE_COVERAGE.INSTANCE,
@@ -477,7 +477,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 // NOTE : This task will be created per device provider, assume several tasks instances
                 // will exist in the variant scope.
                 if (isAdditionalAndroidTestOutputEnabled) {
-                    component
+                    creationConfig
                             .getArtifacts()
                             .producesDir(
                                     InternalArtifactType
@@ -487,7 +487,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                     DeviceProviderInstrumentTestTask::getAdditionalTestOutputDir,
                                     deviceProvider.getName());
                 }
-                component
+                creationConfig
                         .getArtifacts()
                         .producesDir(
                                 InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE.INSTANCE,
@@ -496,13 +496,13 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 deviceProvider.getName());
             }
 
-            if (component instanceof TestComponentPropertiesImpl) {
+            if (creationConfig instanceof TestComponentPropertiesImpl) {
                 if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
-                    component.getTaskContainer().setConnectedTestTask(taskProvider);
+                    creationConfig.getTaskContainer().setConnectedTestTask(taskProvider);
                     // possible redundant with setConnectedTestTask?
-                    component.getTaskContainer().setConnectedTask(taskProvider);
+                    creationConfig.getTaskContainer().setConnectedTask(taskProvider);
                 } else {
-                    component.getTaskContainer().getProviderTestTaskList().add(taskProvider);
+                    creationConfig.getTaskContainer().getProviderTestTaskList().add(taskProvider);
                 }
             }
         }
@@ -512,15 +512,15 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 @NonNull DeviceProviderInstrumentTestTask task) {
             super.configure(task);
 
-            GlobalScope globalScope = component.getGlobalScope();
+            GlobalScope globalScope = creationConfig.getGlobalScope();
             Project project = globalScope.getProject();
             ProjectOptions projectOptions = globalScope.getProjectOptions();
 
             // this can be null for test plugin
-            VariantPropertiesImpl testedVariant = component.getTestedVariant();
+            VariantPropertiesImpl testedVariant = creationConfig.getTestedVariant();
 
             String variantName =
-                    testedVariant != null ? testedVariant.getName() : component.getName();
+                    testedVariant != null ? testedVariant.getName() : creationConfig.getName();
             if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
                 task.setDescription("Installs and runs the tests for " + variantName +
                         " on connected devices.");
@@ -584,8 +584,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 default:
                     throw new AssertionError("Unknown value " + executionEnum);
             }
-            task.codeCoverageEnabled = component.getVariantDslInfo().isTestCoverageEnabled();
-            task.dependencies = component.getVariantDependencies().getRuntimeClasspath();
+            task.codeCoverageEnabled = creationConfig.getVariantDslInfo().isTestCoverageEnabled();
+            task.dependencies = creationConfig.getVariantDependencies().getRuntimeClasspath();
             task.testExecution = executionEnum;
 
             String flavorFolder = testData.getFlavorName();

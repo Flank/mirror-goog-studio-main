@@ -260,8 +260,8 @@ abstract class RenderscriptCompile : NdkTask() {
             taskProvider: TaskProvider<out RenderscriptCompile>
         ) {
             super.handleProvider(taskProvider)
-            component.taskContainer.renderscriptCompileTask = taskProvider
-            component
+            creationConfig.taskContainer.renderscriptCompileTask = taskProvider
+            creationConfig
                 .artifacts
                 .producesDir(
                     RENDERSCRIPT_SOURCE_OUTPUT_DIR,
@@ -270,7 +270,7 @@ abstract class RenderscriptCompile : NdkTask() {
                     "out"
                 )
 
-            component
+            creationConfig
                 .artifacts
                 .producesDir(
                     RENDERSCRIPT_LIB,
@@ -285,10 +285,10 @@ abstract class RenderscriptCompile : NdkTask() {
         ) {
             super.configure(task)
 
-            val globalScope = component.globalScope
+            val globalScope = creationConfig.globalScope
 
-            val variantDslInfo = component.variantDslInfo
-            val variantSources = component.variantSources
+            val variantDslInfo = creationConfig.variantDslInfo
+            val variantSources = creationConfig.variantSources
 
             val ndkMode = variantDslInfo.renderscriptNdkModeEnabled
 
@@ -305,20 +305,20 @@ abstract class RenderscriptCompile : NdkTask() {
             task.sourceDirs = globalScope
                 .project
                 .files(Callable { variantSources.renderscriptSourceList })
-            task.importDirs = component.variantDependencies.getArtifactFileCollection(
+            task.importDirs = creationConfig.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH, ALL, RENDERSCRIPT
             )
 
-            task.resOutputDir = component.paths.renderscriptResOutputDir
-            task.objOutputDir = component.paths.renderscriptObjOutputDir
+            task.resOutputDir = creationConfig.paths.renderscriptResOutputDir
+            task.objOutputDir = creationConfig.paths.renderscriptObjOutputDir
 
             task.ndkConfig = variantDslInfo.ndkConfig
 
             task.buildToolInfoProvider =
                 globalScope.sdkComponents.buildToolInfoProvider
 
-            if (component.variantType.isTestComponent) {
-                task.dependsOn(component.taskContainer.processManifestTask!!)
+            if (creationConfig.variantType.isTestComponent) {
+                task.dependsOn(creationConfig.taskContainer.processManifestTask!!)
             }
         }
     }

@@ -127,9 +127,9 @@ public abstract class TestServerTask extends NonIncrementalTask {
         public void configure(
                 @NonNull TestServerTask task) {
             super.configure(task);
-            VariantPropertiesImpl testedVariant = component.getTestedVariant();
+            VariantPropertiesImpl testedVariant = creationConfig.getTestedVariant();
 
-            final String variantName = component.getName();
+            final String variantName = creationConfig.getName();
             task.setDescription(
                     "Uploads APKs for Build \'"
                             + variantName
@@ -147,7 +147,7 @@ public abstract class TestServerTask extends NonIncrementalTask {
                                 InternalArtifactType.APK.INSTANCE, task.getTestedApks());
             }
 
-            component
+            creationConfig
                     .getArtifacts()
                     .setTaskInputToFinalProduct(
                             InternalArtifactType.APK.INSTANCE, task.getTestApks());

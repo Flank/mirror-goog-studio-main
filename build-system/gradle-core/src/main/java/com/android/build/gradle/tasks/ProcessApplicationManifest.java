@@ -595,9 +595,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                 @NonNull String taskName) {
             super.preConfigure(taskName);
 
-            VariantType variantType = component.getVariantType();
+            VariantType variantType = creationConfig.getVariantType();
             Preconditions.checkState(!variantType.isTestComponent());
-            BuildArtifactsHolder artifacts = component.getArtifacts();
+            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
 
             artifacts.republish(
                     InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
@@ -608,9 +608,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessApplicationManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            component.getTaskContainer().setProcessManifestTask(taskProvider);
+            creationConfig.getTaskContainer().setProcessManifestTask(taskProvider);
 
-            BuildArtifactsHolder artifacts = component.getArtifacts();
+            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
             artifacts.producesDir(
                     InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
                     taskProvider,
@@ -627,7 +627,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
                     taskProvider,
                     ProcessApplicationManifest::getMergeBlameFile,
-                    "manifest-merger-blame-" + component.getBaseName() + "-report.txt");
+                    "manifest-merger-blame-" + creationConfig.getBaseName() + "-report.txt");
 
             artifacts.producesDir(
                     InternalArtifactType.METADATA_FEATURE_MANIFEST.INSTANCE,
@@ -641,15 +641,15 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     ProcessApplicationManifest::getBundleManifestOutputDirectory,
                     "bundle-manifest");
 
-            component
+            creationConfig
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE,
                             taskProvider,
                             ProcessApplicationManifest::getReportFile,
-                            FileUtils.join(component.getGlobalScope().getOutputsDir(), "logs")
+                            FileUtils.join(creationConfig.getGlobalScope().getOutputsDir(), "logs")
                                     .getAbsolutePath(),
-                            "manifest-merger-" + component.getBaseName() + "-report.txt");
+                            "manifest-merger-" + creationConfig.getBaseName() + "-report.txt");
         }
 
         @Override
@@ -657,18 +657,18 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                 @NonNull ProcessApplicationManifest task) {
             super.configure(task);
 
-            final VariantScope variantScope = component.getVariantScope();
-            final VariantDslInfo variantDslInfo = component.getVariantDslInfo();
-            final VariantSources variantSources = component.getVariantSources();
-            final GlobalScope globalScope = component.getGlobalScope();
+            final VariantScope variantScope = creationConfig.getVariantScope();
+            final VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
+            final VariantSources variantSources = creationConfig.getVariantSources();
+            final GlobalScope globalScope = creationConfig.getGlobalScope();
 
-            VariantType variantType = component.getVariantType();
+            VariantType variantType = creationConfig.getVariantType();
 
             Project project = globalScope.getProject();
 
             // This includes the dependent libraries.
             task.manifests =
-                    component
+                    creationConfig
                             .getVariantDependencies()
                             .getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
@@ -679,7 +679,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     && globalScope
                             .getProjectOptions()
                             .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-                component
+                creationConfig
                         .getArtifacts()
                         .setTaskInputToFinalProduct(
                                 InternalArtifactType.NAMESPACED_MANIFESTS.INSTANCE,
@@ -687,24 +687,24 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             }
 
             // optional manifest files too.
-            if (component.getTaskContainer().getMicroApkTask() != null
+            if (creationConfig.getTaskContainer().getMicroApkTask() != null
                     && variantDslInfo.isEmbedMicroApp()) {
                 task.microApkManifest =
-                        project.files(component.getPaths().getMicroApkManifestFile());
+                        project.files(creationConfig.getPaths().getMicroApkManifestFile());
             }
-            BuildArtifactsHolder artifacts = component.getArtifacts();
+            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
             artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
                     task.getCompatibleScreensManifest());
 
-            task.getApplicationId().set(component.getApplicationId());
+            task.getApplicationId().set(creationConfig.getApplicationId());
             task.getApplicationId().disallowChanges();
 
-            task.getVariantType().set(component.getVariantType().toString());
+            task.getVariantType().set(creationConfig.getVariantType().toString());
             task.getVariantType().disallowChanges();
 
             task.getMinSdkVersion()
-                    .set(project.provider(() -> component.getMinSdkVersion().getApiString()));
+                    .set(project.provider(() -> creationConfig.getMinSdkVersion().getApiString()));
             task.getMinSdkVersion().disallowChanges();
 
             task.getTargetSdkVersion()
@@ -724,10 +724,12 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             task.getOptionalFeatures()
                     .set(
                             project.provider(
-                                    () -> getOptionalFeatures(component, isAdvancedProfilingOn)));
+                                    () ->
+                                            getOptionalFeatures(
+                                                    creationConfig, isAdvancedProfilingOn)));
             task.getOptionalFeatures().disallowChanges();
 
-            component
+            creationConfig
                     .getOutputs()
                     .getEnabledVariantOutputs()
                     .forEach(
@@ -737,7 +739,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             // set optional inputs per module type
             if (variantType.isBaseModule()) {
                 task.featureManifests =
-                        component
+                        creationConfig
                                 .getVariantDependencies()
                                 .getArtifactCollection(
                                         REVERSE_METADATA_VALUES,
@@ -749,13 +751,13 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                 task.getFeatureName().disallowChanges();
 
                 task.packageManifest =
-                        component
+                        creationConfig
                                 .getVariantDependencies()
                                 .getArtifactFileCollection(
                                         COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA);
 
                 task.dependencyFeatureNameArtifacts =
-                        component
+                        creationConfig
                                 .getVariantDependencies()
                                 .getArtifactFileCollection(
                                         RUNTIME_CLASSPATH, PROJECT, FEATURE_NAME);
@@ -764,11 +766,11 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             if (!globalScope.getExtension().getAaptOptions().getNamespaced()) {
                 task.navigationJsons =
                         project.files(
-                                component
+                                creationConfig
                                         .getArtifacts()
                                         .getFinalProduct(
                                                 InternalArtifactType.NAVIGATION_JSON.INSTANCE),
-                                component
+                                creationConfig
                                         .getVariantDependencies()
                                         .getArtifactFileCollection(
                                                 RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
@@ -783,8 +785,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             task.manifestOverlays.set(
                     task.getProject().provider(variantSources::getManifestOverlays));
             task.manifestOverlays.disallowChanges();
-            task.isFeatureSplitVariantType = component.getVariantType().isDynamicFeature();
-            task.buildTypeName = component.getBuildType();
+            task.isFeatureSplitVariantType = creationConfig.getVariantType().isDynamicFeature();
+            task.buildTypeName = creationConfig.getBuildType();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
 

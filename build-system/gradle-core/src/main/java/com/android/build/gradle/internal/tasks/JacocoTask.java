@@ -111,7 +111,7 @@ public abstract class JacocoTask extends AndroidVariantTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends JacocoTask> taskProvider) {
             super.handleProvider(taskProvider);
-            component
+            creationConfig
                     .getArtifacts()
                     .producesDir(
                             InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES.INSTANCE,
@@ -119,7 +119,7 @@ public abstract class JacocoTask extends AndroidVariantTask {
                             JacocoTask::getOutput,
                             "out");
 
-            component
+            creationConfig
                     .getArtifacts()
                     .producesDir(
                             InternalArtifactType.JACOCO_INSTRUMENTED_JARS.INSTANCE,
@@ -132,12 +132,13 @@ public abstract class JacocoTask extends AndroidVariantTask {
         public void configure(@NonNull JacocoTask task) {
             super.configure(task);
 
-            task.inputClasses = component.getArtifacts().getAllClasses();
+            task.inputClasses = creationConfig.getArtifacts().getAllClasses();
             task.jacocoAntTaskConfiguration =
                     JacocoConfigurations.getJacocoAntTaskConfiguration(
-                            component.getGlobalScope().getProject(), getJacocoVersion(component));
+                            creationConfig.getGlobalScope().getProject(),
+                            getJacocoVersion(creationConfig));
             task.isolationMode =
-                    component
+                    creationConfig
                                     .getGlobalScope()
                                     .getProjectOptions()
                                     .get(BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS)

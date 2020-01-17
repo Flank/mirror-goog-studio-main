@@ -93,19 +93,19 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
             super.configure(task)
 
             task.compileManifests =
-                component.variantDependencies.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST)
-            task.compileNonNamespacedManifests = component.variantDependencies.getArtifactCollection(
+                creationConfig.variantDependencies.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST)
+            task.compileNonNamespacedManifests = creationConfig.variantDependencies.getArtifactCollection(
                 COMPILE_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST
             )
             task.runtimeManifests =
-                component.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST)
-            task.runtimeNonNamespacedManifests = component.variantDependencies.getArtifactCollection(
+                creationConfig.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST)
+            task.runtimeNonNamespacedManifests = creationConfig.variantDependencies.getArtifactCollection(
                 RUNTIME_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST
             )
 
             task.fakeOutputDirectory = File(
-                component.globalScope.intermediatesDir,
-                "prebuild/${component.dirName}"
+                creationConfig.globalScope.intermediatesDir,
+                "prebuild/${creationConfig.dirName}"
             )
         }
     }

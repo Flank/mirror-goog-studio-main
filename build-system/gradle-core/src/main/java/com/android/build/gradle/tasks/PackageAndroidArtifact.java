@@ -1008,8 +1008,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 @NonNull final TaskT packageAndroidArtifact) {
             super.configure(packageAndroidArtifact);
 
-            GlobalScope globalScope = component.getGlobalScope();
-            VariantDslInfo variantDslInfo = component.getVariantDslInfo();
+            GlobalScope globalScope = creationConfig.getGlobalScope();
+            VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
 
             packageAndroidArtifact.taskInputType = inputResourceFilesType;
             packageAndroidArtifact
@@ -1018,30 +1018,27 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             globalScope
                                     .getProject()
                                     .provider(
-                                            () ->
-                                                    component
-                                                            .getMinSdkVersion()
-                                                            .getApiLevel()));
+                                            () -> creationConfig.getMinSdkVersion().getApiLevel()));
             packageAndroidArtifact.getMinSdkVersion().disallowChanges();
-            packageAndroidArtifact.getApplicationId().set(component.getApplicationId());
+            packageAndroidArtifact.getApplicationId().set(creationConfig.getApplicationId());
             packageAndroidArtifact.getApplicationId().disallowChanges();
 
             packageAndroidArtifact
                     .getResourceFiles()
                     .from(
-                            component
+                            creationConfig
                                     .getArtifacts()
                                     .getFinalProductAsFileCollection(inputResourceFilesType));
             packageAndroidArtifact
                     .getIncrementalFolder()
                     .set(
                             new File(
-                                    component
+                                    creationConfig
                                             .getPaths()
                                             .getIncrementalDir(packageAndroidArtifact.getName()),
                                     "tmp"));
 
-            component
+            creationConfig
                     .getOutputs()
                     .forEach(
                             variantOutput -> {
@@ -1057,34 +1054,34 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             packageAndroidArtifact.getManifests().set(manifests);
 
-            packageAndroidArtifact.getDexFolders().from(getDexFolders(component));
-            @Nullable FileCollection featureDexFolder = getFeatureDexFolder(component);
+            packageAndroidArtifact.getDexFolders().from(getDexFolders(creationConfig));
+            @Nullable FileCollection featureDexFolder = getFeatureDexFolder(creationConfig);
             if (featureDexFolder != null) {
                 packageAndroidArtifact.getFeatureDexFolder().from(featureDexFolder);
             }
-            packageAndroidArtifact.getJavaResourceFiles().from(getJavaResources(component));
+            packageAndroidArtifact.getJavaResourceFiles().from(getJavaResources(creationConfig));
 
             packageAndroidArtifact
                     .getAssets()
-                    .set(component.getArtifacts().getFinalProduct(MERGED_ASSETS.INSTANCE));
+                    .set(creationConfig.getArtifacts().getFinalProduct(MERGED_ASSETS.INSTANCE));
             packageAndroidArtifact.setJniDebugBuild(variantDslInfo.isJniDebuggable());
             packageAndroidArtifact
                     .getDebugBuild()
-                    .set(component.getVariantDslInfo().isDebuggable());
+                    .set(creationConfig.getVariantDslInfo().isDebuggable());
             packageAndroidArtifact.getDebugBuild().disallowChanges();
 
-            ProjectOptions projectOptions = component.getGlobalScope().getProjectOptions();
+            ProjectOptions projectOptions = creationConfig.getGlobalScope().getProjectOptions();
             packageAndroidArtifact.projectBaseName = globalScope.getProjectBaseName();
             packageAndroidArtifact.manifestType = manifestType;
             packageAndroidArtifact.buildTargetAbi =
                     globalScope.getExtension().getSplits().getAbi().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
                             : null;
-            if (component.getVariantType().isDynamicFeature()) {
+            if (creationConfig.getVariantType().isDynamicFeature()) {
                 packageAndroidArtifact
                         .getAppMetadata()
                         .from(
-                                component
+                                creationConfig
                                         .getVariantDependencies()
                                         .getArtifactFileCollection(
                                                 COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA));
@@ -1114,23 +1111,24 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact.targetApi =
                     projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API);
 
-            packageAndroidArtifact.apkCreatorType = component.getVariantScope().getApkCreatorType();
+            packageAndroidArtifact.apkCreatorType =
+                    creationConfig.getVariantScope().getApkCreatorType();
 
             packageAndroidArtifact.getCreatedBy().set(globalScope.getCreatedBy());
 
-            if (component.getVariantType().isBaseModule()
-                    && component
+            if (creationConfig.getVariantType().isBaseModule()
+                    && creationConfig
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
-                component
+                creationConfig
                         .getArtifacts()
                         .setTaskInputToFinalProduct(
                                 InternalArtifactType.SDK_DEPENDENCY_DATA.INSTANCE,
                                 packageAndroidArtifact.getDependencyDataFile());
             }
 
-            finalConfigure(packageAndroidArtifact, component);
+            finalConfigure(packageAndroidArtifact, creationConfig);
         }
 
         protected void finalConfigure(TaskT task, ComponentPropertiesImpl component) {

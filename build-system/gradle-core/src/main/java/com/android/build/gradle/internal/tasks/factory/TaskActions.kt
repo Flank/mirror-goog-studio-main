@@ -60,7 +60,7 @@ abstract class TaskCreationAction<TaskT : Task> : TaskInformation<TaskT>, PreCon
  * and actions to configure the task ([preConfigure], [configure], [handleProvider])
  */
 abstract class VariantTaskCreationAction<TaskT, CreationConfigT: BaseCreationConfig>(
-    @JvmField protected val component: CreationConfigT,
+    @JvmField protected val creationConfig: CreationConfigT,
     private val dependsOnPreBuildTask: Boolean
 ) : TaskCreationAction<TaskT>() where TaskT: Task, TaskT: VariantAwareTask {
 
@@ -70,7 +70,7 @@ abstract class VariantTaskCreationAction<TaskT, CreationConfigT: BaseCreationCon
 
     @JvmOverloads
     protected fun computeTaskName(prefix: String, suffix: String = ""): String =
-        component.computeTaskName(prefix, suffix)
+        creationConfig.computeTaskName(prefix, suffix)
 
     override fun preConfigure(taskName: String) {
         // default does nothing
@@ -81,13 +81,13 @@ abstract class VariantTaskCreationAction<TaskT, CreationConfigT: BaseCreationCon
 
     override fun configure(task: TaskT) {
         if (dependsOnPreBuildTask) {
-            val taskContainer: MutableTaskContainer = component.taskContainer
+            val taskContainer: MutableTaskContainer = creationConfig.taskContainer
             task.dependsOn(taskContainer.preBuildTask)
         }
 
-        task.variantName = component.getName()
+        task.variantName = creationConfig.getName()
         task.enableGradleWorkers.set(
-            component.dslScope.projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS)
+            creationConfig.dslScope.projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS)
         )
     }
 }

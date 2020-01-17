@@ -193,7 +193,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            component
+            creationConfig
                 .artifacts
                 .producesFile(
                     APK_MAPPING,
@@ -216,7 +216,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 )
             } else if (isTestApplication) {
                 task.testedMappingFile.from(
-                    component.variantDependencies.getArtifactFileCollection(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.APK_MAPPING
@@ -236,7 +236,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
             task.referencedResources.from(referencedResources)
 
-            applyProguardRules(task, component, task.testedMappingFile, testedVariant)
+            applyProguardRules(task, creationConfig, task.testedMappingFile, testedVariant)
         }
 
         private fun applyProguardRules(

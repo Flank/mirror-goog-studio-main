@@ -133,7 +133,7 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.AAPT_PROGUARD_FILE,
                 taskProvider,
                 GenerateLibraryProguardRulesTask::proguardOutputFile,
@@ -146,12 +146,12 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
         ) {
             super.configure(task)
 
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_RES,
                 task.inputResourcesDir
             )
 
-             component.artifacts.setTaskInputToFinalProduct(
+             creationConfig.artifacts.setTaskInputToFinalProduct(
                  InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
         }
     }

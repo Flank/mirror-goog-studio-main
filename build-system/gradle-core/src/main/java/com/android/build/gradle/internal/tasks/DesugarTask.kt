@@ -158,22 +158,22 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_PROJECT_CLASSES,
                 taskProvider,
                 DesugarTask::projectOutput
             )
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_SUB_PROJECT_CLASSES,
                 taskProvider,
                 DesugarTask::subProjectOutput
             )
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_EXTERNAL_LIBS_CLASSES,
                 taskProvider,
                 DesugarTask::externalLibsOutput
             )
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_LOCAL_STATE_OUTPUT,
                 taskProvider,
                 DesugarTask::tmpDir
@@ -184,15 +184,15 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
             task: DesugarTask
         ) {
             super.configure(task)
-            val variantScope = component.variantScope
-            task.minSdk.set(component.minSdkVersion.featureLevel)
+            val variantScope = creationConfig.variantScope
+            task.minSdk.set(creationConfig.minSdkVersion.featureLevel)
 
             /**
              * If a fix in Desugar should be enabled to handle broken bytecode produced by older
              * Jacoco, see http://b/62623509.
              */
             val enableDesugarBugFixForJacoco = try {
-                val current = GradleVersion.parse(JacocoTask.getJacocoVersion(component))
+                val current = GradleVersion.parse(JacocoTask.getJacocoVersion(creationConfig))
                 JacocoConfigurations.MIN_WITHOUT_BROKEN_BYTECODE > current
             } catch (ignored: Throwable) {
                 // Cannot determine using version comparison, avoid passing the flag.
@@ -202,13 +202,13 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
 
             task.projectClasses.from(projectClasses)
             task.subProjectClasses.from(
-                component.variantDependencies.getArtifactFileCollection(
+                creationConfig.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.CLASSES_JAR
                 )
             )
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.FIXED_STACK_FRAMES,
                 task.externaLibsClasses
             )
@@ -216,9 +216,9 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
             task.desugaringClasspath.from(variantScope.providedOnlyClasspath)
             task.bootClasspath.from(variantScope.bootClasspath)
 
-            component.onTestedVariant {
+            creationConfig.onTestedVariant {
                 task.desugaringClasspath.from(
-                    component.artifacts.getFinalProduct(
+                    creationConfig.artifacts.getFinalProduct(
                         InternalArtifactType.TESTED_CODE_CLASSES
                     )
                 )

@@ -120,7 +120,7 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out FeatureSetMetadataWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.FEATURE_SET_METADATA,
                 taskProvider,
                 FeatureSetMetadataWriterTask::outputFile,
@@ -133,14 +133,14 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.minSdkVersion = component.minSdkVersion.apiLevel
+            task.minSdkVersion = creationConfig.minSdkVersion.apiLevel
 
-            task.inputFiles = component.variantDependencies.getArtifactFileCollection(
+            task.inputFiles = creationConfig.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.PROJECT,
                 AndroidArtifacts.ArtifactType.REVERSE_METADATA_FEATURE_DECLARATION
             )
-            val maxNumberOfFeaturesBeforeOreo = component.globalScope.projectOptions
+            val maxNumberOfFeaturesBeforeOreo = creationConfig.globalScope.projectOptions
                 .get(IntegerOption.PRE_O_MAX_NUMBER_OF_FEATURES)
             if (maxNumberOfFeaturesBeforeOreo != null) {
                 task.maxNumberOfFeaturesBeforeOreo =

@@ -111,16 +111,16 @@ abstract class CheckMultiApkLibrariesTask : NonIncrementalTask() {
             super.configure(task)
 
             task.featureTransitiveDeps =
-                    component.variantDependencies.getArtifactCollection(
+                    creationConfig.variantDependencies.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES
                     )
             task.fakeOutputDir =
                     FileUtils.join(
-                        component.globalScope.intermediatesDir,
+                        creationConfig.globalScope.intermediatesDir,
                         "check-libraries",
-                        component.dirName
+                        creationConfig.dirName
                     )
         }
     }

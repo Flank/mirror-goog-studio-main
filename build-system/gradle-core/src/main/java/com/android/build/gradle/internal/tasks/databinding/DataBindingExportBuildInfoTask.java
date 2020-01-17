@@ -94,7 +94,7 @@ public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask 
         public void handleProvider(
                 @NonNull TaskProvider<? extends DataBindingExportBuildInfoTask> taskProvider) {
             super.handleProvider(taskProvider);
-            component.getTaskContainer().setDataBindingExportBuildInfoTask(taskProvider);
+            creationConfig.getTaskContainer().setDataBindingExportBuildInfoTask(taskProvider);
         }
 
         @Override
@@ -103,16 +103,19 @@ public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask 
             super.configure(task);
 
             task.xmlProcessor.set(
-                    component
+                    creationConfig
                             .getGlobalScope()
                             .getProject()
-                            .provider(component.getVariantData()::getLayoutXmlProcessor));
+                            .provider(creationConfig.getVariantData()::getLayoutXmlProcessor));
             task.xmlProcessor.disallowChanges();
             task.useAndroidX =
-                    component.getGlobalScope().getProjectOptions().get(BooleanOption.USE_ANDROID_X);
-            task.emptyClassOutDir = component.getPaths().getClassOutputForDataBinding();
+                    creationConfig
+                            .getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.USE_ANDROID_X);
+            task.emptyClassOutDir = creationConfig.getPaths().getClassOutputForDataBinding();
 
-            task.dependsOn(component.getTaskContainer().getSourceGenTask());
+            task.dependsOn(creationConfig.getTaskContainer().getSourceGenTask());
         }
     }
 }

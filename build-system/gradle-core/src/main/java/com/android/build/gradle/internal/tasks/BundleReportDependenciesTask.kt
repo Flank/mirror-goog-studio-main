@@ -135,7 +135,7 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out BundleReportDependenciesTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
                 taskProvider,
                 BundleReportDependenciesTask::dependenciesList,
@@ -147,9 +147,9 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             task: BundleReportDependenciesTask
         ) {
             super.configure(task)
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.baseDeps)
-            task.featureDeps = component.variantDependencies.getArtifactFileCollection(
+            task.featureDeps = creationConfig.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.LIB_DEPENDENCIES

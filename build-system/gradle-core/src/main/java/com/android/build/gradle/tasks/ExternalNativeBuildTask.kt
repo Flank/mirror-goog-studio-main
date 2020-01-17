@@ -462,8 +462,8 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ExternalNativeBuildTask>
         ) {
             super.handleProvider(taskProvider)
-            assert(component.taskContainer.externalNativeBuildTask == null)
-            component.taskContainer.externalNativeBuildTask = taskProvider
+            assert(creationConfig.taskContainer.externalNativeBuildTask == null)
+            creationConfig.taskContainer.externalNativeBuildTask = taskProvider
         }
 
         override fun configure(
@@ -473,7 +473,7 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
 
             task.dependsOn(
                 generateTask,
-                component.variantDependencies.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI)
+                creationConfig.variantDependencies.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI)
             )
 
             task.generator = generator

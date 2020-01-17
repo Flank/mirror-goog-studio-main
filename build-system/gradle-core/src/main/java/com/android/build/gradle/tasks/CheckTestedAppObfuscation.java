@@ -90,7 +90,7 @@ public abstract class CheckTestedAppObfuscation extends NonIncrementalTask {
             super.configure(task);
 
             task.mappingFile =
-                    component
+                    creationConfig
                             .getVariantDependencies()
                             .getArtifactFileCollection(
                                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
