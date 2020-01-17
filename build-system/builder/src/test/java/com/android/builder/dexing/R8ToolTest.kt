@@ -20,8 +20,11 @@ import com.android.builder.core.NoOpMessageReceiver
 import com.android.ide.common.blame.MessageReceiver
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
+import com.android.testutils.apk.Dex
+import com.android.testutils.truth.MoreTruth.assertThat
 import com.android.testutils.truth.MoreTruth.assertThatDex
 import com.android.testutils.truth.MoreTruth.assertThatZip
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -553,6 +556,72 @@ class R8ToolTest {
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
         assertThat(getDexFileCount(featureDexDir.resolve("feature"))).isEqualTo(1)
+    }
+
+    @Test
+    fun testAssertionsGeneration() {
+        val testClass = DexArchiveBuilderTest.ClassWithAssertions::class.java
+        val proguardConfig = ProguardConfig(
+            listOf(), null, listOf("-keep class ${testClass.name} { public void foo(); }"), null
+        )
+        val mainDexConfig = MainDexListConfig(listOf(), listOf())
+        val debuggableToolConfig = ToolConfig(
+            minSdkVersion = 21,
+            isDebuggable = true,
+            disableTreeShaking = false,
+            disableDesugaring = true,
+            disableMinification = true,
+            r8OutputType = R8OutputType.DEX
+        )
+
+        val classes = tmp.newFolder().toPath().resolve("classes.jar")
+        TestInputsGenerator.pathWithClasses(classes, listOf(testClass))
+
+        val output = tmp.newFolder().toPath()
+        val javaRes = tmp.root.resolve("res.jar").toPath()
+        runR8(
+            listOf(classes),
+            output,
+            listOf(),
+            javaRes,
+            bootClasspath,
+            emptyList(),
+            debuggableToolConfig,
+            proguardConfig,
+            mainDexConfig,
+            NoOpMessageReceiver(),
+            featureJars = listOf(),
+            featureDexDir = null
+        )
+        val className = testClass.name.replace('.', '/')
+        val dex = Dex(output.toFile().walk().filter { it.extension == "dex" }.single())
+
+        assertThat(dex).containsClass("L$className;")
+            .that()
+            .hasMethodThatInvokes("foo", "Ljava/lang/AssertionError;-><init>()V");
+
+        val releaseToolConfig = debuggableToolConfig.copy(isDebuggable = false)
+        FileUtils.cleanOutputDir(output.toFile())
+        runR8(
+            listOf(classes),
+            output,
+            listOf(),
+            javaRes,
+            bootClasspath,
+            emptyList(),
+            releaseToolConfig,
+            proguardConfig,
+            mainDexConfig,
+            NoOpMessageReceiver(),
+            featureJars = listOf(),
+            featureDexDir = null
+        )
+        assertThat(dex).containsClass("L$className;")
+            .that()
+            .hasMethodThatDoesNotInvoke(
+                "foo",
+                "Ljava/lang/AssertionError;-><init>(Ljava/lang/Object;)V"
+            );
     }
 
     private fun getDexFileCount(dir: Path): Long =

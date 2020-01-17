@@ -112,47 +112,74 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
 
     public void hasMethodThatInvokes(@NonNull String name, String descriptor) {
         assertSubjectIsNonNull();
+        hasMethod(name);
+        DexBackedMethod method = findMethodWithImplementation(name);
+        if (method == null) {
+            fail("contains an implementation for a method named `" + name + "`");
+            return;
+        }
+        if (!checkMethodInvokes(method, descriptor)) {
+            fail("invokes a method with the descriptor `" + descriptor + "` from `" + name + "`");
+        }
+    }
+
+    public void hasMethodThatDoesNotInvoke(@NonNull String name, String descriptor) {
+        assertSubjectIsNonNull();
+        hasMethod(name);
+        DexBackedMethod method = findMethodWithImplementation(name);
+        if (method == null) {
+            fail("contains an implementation for a method named `" + name + "`");
+            return;
+        }
+        if (checkMethodInvokes(method, descriptor)) {
+            fail(
+                    "does not invoke a method with the descriptor `"
+                            + descriptor
+                            + "` from `"
+                            + name
+                            + "`");
+        }
+    }
+
+    @Nullable
+    private DexBackedMethod findMethodWithImplementation(@NonNull String name) {
         for (DexBackedMethod method : actual().getMethods()) {
             if (method.getName().equals(name)) {
-                if (method.getImplementation() == null) {
-                    fail("contains an implementation for a method named `" + name + "`");
-                    return;
+                if (method.getImplementation() != null) {
+                    return method;
                 }
-                for (Instruction instruction : method.getImplementation().getInstructions()) {
-                    Opcode opcode = instruction.getOpcode();
-                    boolean isInvoke =
-                            opcode == INVOKE_VIRTUAL
-                                    || opcode == INVOKE_SUPER
-                                    || opcode == INVOKE_DIRECT
-                                    || opcode == INVOKE_STATIC
-                                    || opcode == INVOKE_INTERFACE;
-                    boolean isInvokeRange =
-                            opcode == INVOKE_VIRTUAL_RANGE
-                                    || opcode == INVOKE_SUPER_RANGE
-                                    || opcode == INVOKE_DIRECT_RANGE
-                                    || opcode == INVOKE_STATIC_RANGE
-                                    || opcode == INVOKE_INTERFACE_RANGE;
-                    if (isInvoke || isInvokeRange) {
-                        MethodReference reference =
-                                isInvoke
-                                        ? ((MethodReference)
-                                                ((Instruction35c) instruction).getReference())
-                                        : ((MethodReference)
-                                                ((Instruction3rc) instruction).getReference());
-                        if (reference.toString().equals(descriptor)) {
-                            return;
-                        }
-                    }
-                }
-                fail(
-                        "invokes a method with the descriptor `"
-                                + descriptor
-                                + "` from `"
-                                + name
-                                + "`");
             }
         }
-        fail("contains a method named `" + name + "`");
+        return null;
+    }
+
+    private static boolean checkMethodInvokes(
+            @NonNull DexBackedMethod method, @NonNull String descriptor) {
+        for (Instruction instruction : method.getImplementation().getInstructions()) {
+            Opcode opcode = instruction.getOpcode();
+            boolean isInvoke =
+                    opcode == INVOKE_VIRTUAL
+                            || opcode == INVOKE_SUPER
+                            || opcode == INVOKE_DIRECT
+                            || opcode == INVOKE_STATIC
+                            || opcode == INVOKE_INTERFACE;
+            boolean isInvokeRange =
+                    opcode == INVOKE_VIRTUAL_RANGE
+                            || opcode == INVOKE_SUPER_RANGE
+                            || opcode == INVOKE_DIRECT_RANGE
+                            || opcode == INVOKE_STATIC_RANGE
+                            || opcode == INVOKE_INTERFACE_RANGE;
+            if (isInvoke || isInvokeRange) {
+                MethodReference reference =
+                        isInvoke
+                                ? ((MethodReference) ((Instruction35c) instruction).getReference())
+                                : ((MethodReference) ((Instruction3rc) instruction).getReference());
+                if (reference.toString().equals(descriptor)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public void hasExactFields(@NonNull Set<String> names) {

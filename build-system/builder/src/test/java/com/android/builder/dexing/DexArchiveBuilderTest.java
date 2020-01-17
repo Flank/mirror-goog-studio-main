@@ -27,6 +27,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.testutils.apk.Dex;
 import com.android.tools.build.apkzlib.zip.ZFile;
+import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -77,6 +78,12 @@ public class DexArchiveBuilderTest {
         static void staticMethodTwo(TestStaticAndDefault t) {
             t.noBody();
             staticMethod();
+        }
+    }
+
+    static class ClassWithAssertions {
+        public static void foo() {
+            assert 1 > System.currentTimeMillis();
         }
     }
 
@@ -324,6 +331,42 @@ public class DexArchiveBuilderTest {
             assertThat(Throwables.getStackTraceAsString(ignored))
                     .contains("strictly requires --min-sdk-version >= 24");
         }
+    }
+
+    @Test
+    public void testAssertionsForDebugBuilds() throws Exception {
+        Assume.assumeTrue(inputFormat == ClassesInputFormat.DIR);
+        Assume.assumeTrue(outputFormat == DexArchiveFormat.DIR);
+        Assume.assumeTrue(dexerTool == DexerTool.D8);
+
+        Path classesDir = temporaryFolder.getRoot().toPath().resolve("classes");
+        String path =
+                ClassWithAssertions.class.getName().replace('.', '/') + SdkConstants.DOT_CLASS;
+        Path outClassFile = classesDir.resolve(path);
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream(path)) {
+            Files.createDirectories(outClassFile.getParent());
+            Files.write(outClassFile, ByteStreams.toByteArray(in));
+        }
+
+        Path output = createOutput();
+        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 24, dexerTool, true);
+
+        Path dexFile =
+                Iterators.getOnlyElement(
+                        Files.walk(output).filter(Files::isRegularFile).iterator());
+        String dexClassName = "L" + path.replaceAll("\\.class$", ";");
+        assertThat(new Dex(dexFile))
+                .containsClass(dexClassName)
+                .that()
+                .hasMethodThatInvokes("foo", "Ljava/lang/AssertionError;-><init>()V");
+
+        // now build for release
+        FileUtils.cleanOutputDir(output.toFile());
+        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 24, dexerTool, false);
+        assertThat(new Dex(dexFile))
+                .containsClass(dexClassName)
+                .that()
+                .hasMethodThatDoesNotInvoke("foo", "Ljava/lang/AssertionError;-><init>()V");
     }
 
     @NonNull

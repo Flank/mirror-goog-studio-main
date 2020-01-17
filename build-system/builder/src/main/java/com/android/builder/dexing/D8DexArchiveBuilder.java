@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.parser.DexParser;
+import com.android.tools.r8.AssertionsConfiguration;
 import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8;
 import com.android.tools.r8.D8Command;
@@ -94,6 +95,11 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                                     ? OutputMode.DexFilePerClassFile
                                     : OutputMode.DexIndexed)
                     .setIncludeClassesChecksum(dexParams.getDebuggable());
+
+            if (dexParams.getDebuggable()) {
+                builder.addAssertionsConfiguration(
+                        AssertionsConfiguration.Builder::enableAllAssertions);
+            }
 
             if (dexParams.getWithDesugaring()) {
                 builder.addLibraryResourceProvider(

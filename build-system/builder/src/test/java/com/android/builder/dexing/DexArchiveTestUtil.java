@@ -66,6 +66,16 @@ public final class DexArchiveTestUtil {
             int minSdkVersion,
             @NonNull DexerTool dexerTool)
             throws IOException {
+        convertClassesToDexArchive(classesInput, dexArchiveOutput, minSdkVersion, dexerTool, true);
+    }
+
+    public static void convertClassesToDexArchive(
+            @NonNull Path classesInput,
+            @NonNull Path dexArchiveOutput,
+            int minSdkVersion,
+            @NonNull DexerTool dexerTool,
+            boolean isDebuggable)
+            throws IOException {
         try (ClassFileInput inputs = ClassFileInputs.fromPath(classesInput)) {
             DexArchiveBuilder dexArchiveBuilder;
             if (!ClassFileInputs.jarMatcher.matches(dexArchiveOutput)) {
@@ -81,7 +91,7 @@ public final class DexArchiveTestUtil {
                         DexArchiveBuilder.createD8DexBuilder(
                                 new DexParameters(
                                         minSdkVersion, // minSdkVersion
-                                        true, // debuggable
+                                        isDebuggable, // debuggable
                                         true, // dexPerClass
                                         true, // withDesugaring
                                         new ClassFileProviderFactory(
