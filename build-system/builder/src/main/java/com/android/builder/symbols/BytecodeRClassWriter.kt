@@ -144,7 +144,7 @@ private fun generateResourceTypeClass(
             val children = s.children
             for ((i, child) in children.withIndex()) {
                 cw.visitField(
-                        ACC_PUBLIC + ACC_STATIC,
+                        ACC_PUBLIC + ACC_STATIC + if (finalIds) ACC_FINAL else 0,
                         "${s.canonicalName}_${canonicalizeValueResourceName(child)}",
                         "I",
                         null,

@@ -70,6 +70,11 @@ class NonNamespacedApplicationLightRClassesTest {
         .withFile(
             "src/main/res/values/strings.xml",
             """<resources>
+                        <attr name="my_attr" format="string"/>
+                        <declare-styleable name="my_styleable">
+                            <attr name="my_attr"/>
+                            <attr name="android:keyHeight"/>
+                        </declare-styleable>
                         <string name="app_string">app string</string>
                     </resources>""")
         .withFile(
@@ -87,6 +92,15 @@ class NonNamespacedApplicationLightRClassesTest {
                         public static int DEP_RES = android.support.v7.appcompat.R.attr.actionBarDivider;
                         public static int DEP_RES_AS_LIB = com.example.lib.R.attr.actionBarDivider;
                         public static int DEP_RES_AS_LOCAL = R.attr.actionBarDivider;
+
+                        public int test(int resId) {
+                            switch(resId) {
+                                case R.styleable.my_styleable_my_attr: return 0;
+                                case R.styleable.my_styleable_android_keyHeight: return 1;
+                                case R.string.app_string: return 2;
+                            }
+                            return -1;
+                        }
                     }
                     """)
         .withFile(
