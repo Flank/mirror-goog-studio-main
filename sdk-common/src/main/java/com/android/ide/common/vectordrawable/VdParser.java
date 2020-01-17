@@ -20,7 +20,6 @@ import com.android.annotations.Nullable;
 import com.android.utils.PositionXmlParser;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -32,10 +31,10 @@ import org.xml.sax.SAXException;
 class VdParser {
     // Note that the incoming file is an VectorDrawable's XML file, not an SVG.
     @NonNull
-    public static VdTree parse(@NonNull InputStream is, @Nullable StringBuilder vdErrorLog) {
+    public static VdTree parse(@NonNull InputStream stream, @Nullable StringBuilder vdErrorLog) {
         final VdTree tree = new VdTree();
         try {
-            Document doc = PositionXmlParser.parse(is, true);
+            Document doc = PositionXmlParser.parse(stream, true);
             tree.parse(doc);
         }
         catch (ParserConfigurationException | SAXException | IOException e) {
@@ -44,10 +43,5 @@ class VdParser {
             }
         }
         return tree;
-    }
-
-    @NonNull
-    public static VdTree parse(URL r, StringBuilder vdErrorLog) throws IOException {
-        return parse(r.openStream(), vdErrorLog);
     }
 }
