@@ -40,6 +40,27 @@ using IterateThroughHeapExt = jvmtiError (*)(jvmtiEnv*, jint, jclass,
                                              const jvmtiHeapCallbacks*,
                                              const void*);
 
+// A data structure to capture the value of a boolean variable when it's
+// instantiated. The boolean is set to true by the constructor and restored
+// to the initial value when the object is out of scope (deconstructed).
+class ScopedBooleanFlag {
+ public:
+  explicit ScopedBooleanFlag(bool* val) : initial_(*val), val_(val) {
+    *val_ = true;
+  }
+  ~ScopedBooleanFlag() { *val_ = initial_; }
+  // Returns the initial value of the boolean variable when the object is
+  // constructed.
+  bool InitialValue() const { return initial_; }
+
+ private:
+  bool initial_;
+  bool* val_;
+};
+
+// Whether the running thread is calling FillAllocEventThreadData().
+static thread_local bool thread_in_FillAllocEventThreadData = false;
+
 static JavaVM* g_vm;
 static profiler::MemoryTrackingEnv* g_env;
 
@@ -1056,10 +1077,22 @@ int32_t MemoryTrackingEnv::FindLineNumber(int64_t location_id, int entry_count,
   return line_number;
 }
 
+// Profiler code MemoryTrackingEnv::FillAllocEventThreadData(..) calls into
+// _jvmtiEnv::GetStackTrace(). Starting from Android R, GetStackTrace() may
+// allocate an object causing ObjectAllocCallback() being invoked again, which
+// calls FillAllocEventThreadData(). This could lead to infinite recursive
+// calls. Therefore, we need a flag to indicate we are already calling
+// FillAllocEventThreadData() so any further invocations of
+// FillAllocEventThreadData() would not cause recursions. We miss stack trace
+// for those allocations but profiler continues running. (See b/147456477 for
+// more context.)
 void MemoryTrackingEnv::FillAllocEventThreadData(
     MemoryTrackingEnv* env, jvmtiEnv* jvmti, JNIEnv* jni, jthread thread,
     AllocationEvent::Allocation* alloc_data) {
   env->FillThreadName(jvmti, jni, thread, alloc_data->mutable_thread_name());
+
+  ScopedBooleanFlag scoped_flag(&thread_in_FillAllocEventThreadData);
+  if (scoped_flag.InitialValue()) return;
 
   // Collect stack frames
   int32_t depth = env->max_stack_depth_;
