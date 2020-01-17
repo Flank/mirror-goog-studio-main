@@ -36,7 +36,6 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
  --test_tag_filters=%TESTTAGFILTERS% ^
  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
- --discard_analysis_cache ^
  -- ^
  //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar ^
  %TARGETS%
