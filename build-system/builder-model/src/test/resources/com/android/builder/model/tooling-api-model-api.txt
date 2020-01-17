@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-bc821b88117080d83df61a658078f61c6572763298eb2d8fb8715e8cc23b2579
+0b58897207b5cd33f819dd44d7b168af45f70976789ded7292c71ab39870c74b
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -102,6 +102,7 @@ com.android.builder.model.AndroidProject.getSyncIssues: java.util.Collection<com
 com.android.builder.model.AndroidProject.getUnresolvedDependencies: java.util.Collection<java.lang.String> ()
 com.android.builder.model.AndroidProject.getVariantNames: java.util.Collection<java.lang.String> ()
 com.android.builder.model.AndroidProject.getVariants: java.util.Collection<com.android.builder.model.Variant> ()
+com.android.builder.model.AndroidProject.getVariantsBuildInformation: java.util.Collection<com.android.builder.model.VariantBuildInformation> ()
 com.android.builder.model.AndroidProject.getViewBindingOptions: com.android.builder.model.ViewBindingOptions ()
 com.android.builder.model.AndroidProject.isBaseSplit: boolean ()
 com.android.builder.model.AndroidProject.isLibrary: boolean ()
@@ -415,6 +416,14 @@ com.android.builder.model.Variant.getName: java.lang.String ()
 com.android.builder.model.Variant.getProductFlavors: java.util.List<java.lang.String> ()
 com.android.builder.model.Variant.getTestedTargetVariants: java.util.Collection<com.android.builder.model.TestedTargetVariant> ()
 com.android.builder.model.Variant.isInstantAppCompatible: boolean ()
+com.android.builder.model.VariantBuildInformation
+com.android.builder.model.VariantBuildInformation.getApkFromBundleTaskName: java.lang.String ()
+com.android.builder.model.VariantBuildInformation.getApkFromBundleTaskOutputListingFile: java.lang.String ()
+com.android.builder.model.VariantBuildInformation.getAssembleTaskName: java.lang.String ()
+com.android.builder.model.VariantBuildInformation.getAssembleTaskOutputListingFile: java.lang.String ()
+com.android.builder.model.VariantBuildInformation.getBundleTaskName: java.lang.String ()
+com.android.builder.model.VariantBuildInformation.getBundleTaskOutputListingFile: java.lang.String ()
+com.android.builder.model.VariantBuildInformation.getVariantName: java.lang.String ()
 com.android.builder.model.VariantBuildOutput implements com.android.builder.model.BaseBuildOutput
 com.android.builder.model.VariantBuildOutput.getTestingVariants: java.util.Collection<com.android.builder.model.TestVariantBuildOutput> ()
 com.android.builder.model.VectorDrawablesOptions

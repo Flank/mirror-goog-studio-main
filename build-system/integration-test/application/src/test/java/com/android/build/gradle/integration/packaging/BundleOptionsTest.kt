@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.packaging
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.utils.getVariantBuildInformationByName
 import com.android.build.gradle.integration.common.utils.getVariantByName
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableSet
@@ -78,17 +79,27 @@ class BundleOptionsTest {
 
     @Test
     fun testBundleModels() {
+
+        fun checkPostBundleModel(postBundleModel: File) {
+            assertThat(postBundleModel.exists()).isTrue()
+            val bundleInfo = BuiltArtifactsLoaderImpl.loadFromFile(postBundleModel)
+            assertThat(bundleInfo!!.elements).hasSize(1)
+            val bundleFile = bundleInfo.elements.first().outputFile
+            assertThat(bundleFile).isNotNull()
+            assertThat(bundleFile.toFile().exists()).isTrue()
+        }
+
         val projectModel = project.executeAndReturnModel(":bundleDebug")
         // check that model files are present.
+        val debugBuildInformation =
+            projectModel.onlyModel.getVariantBuildInformationByName("debug")
+        assertThat(debugBuildInformation.bundleTaskName).isNotNull()
+        checkPostBundleModel(File(debugBuildInformation.bundleTaskOutputListingFile!!))
+
         val mainArtifact = projectModel.onlyModel.getVariantByName("debug").mainArtifact
         assertThat(mainArtifact.bundleTaskOutputListingFile).isNotNull()
         val postBundleModel = File(mainArtifact.bundleTaskOutputListingFile!!)
-        assertThat(postBundleModel.exists()).isTrue()
-        val bundleInfo = BuiltArtifactsLoaderImpl.loadFromFile(postBundleModel)
-        assertThat(bundleInfo!!.elements).hasSize(1)
-        val bundleFile = bundleInfo.elements.first().outputFile
-        assertThat(bundleFile).isNotNull()
-        assertThat(bundleFile.toFile().exists()).isTrue()
+        checkPostBundleModel(postBundleModel)
     }
 
     private fun generateApks(): Set<String> {

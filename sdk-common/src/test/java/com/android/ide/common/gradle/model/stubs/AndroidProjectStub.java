@@ -57,6 +57,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     private final int myProjectType;
     private final boolean myBaseSplit;
     @NonNull private final AndroidGradlePluginProjectFlagsStub myFlags;
+    @NonNull private final Collection<VariantBuildInformation> myVariantsBuildInformation;
 
     public AndroidProjectStub(@NonNull String modelVersion) {
         this(
@@ -88,7 +89,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 true,
                 2,
                 true,
-                new AndroidGradlePluginProjectFlagsStub(Collections.emptyMap()));
+                new AndroidGradlePluginProjectFlagsStub(Collections.emptyMap()),
+                Lists.newArrayList());
     }
 
     public AndroidProjectStub(
@@ -120,7 +122,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             boolean library,
             int projectType,
             boolean baseSplit,
-            AndroidGradlePluginProjectFlagsStub flags) {
+            @NonNull AndroidGradlePluginProjectFlagsStub flags,
+            @NonNull Collection<VariantBuildInformation> variantsBuildInformation) {
         myModelVersion = modelVersion;
         myName = name;
         myGroupId = groupId;
@@ -150,6 +153,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         myProjectType = projectType;
         myBaseSplit = baseSplit;
         myFlags = flags;
+        myVariantsBuildInformation = variantsBuildInformation;
     }
 
     @Override
@@ -340,6 +344,12 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         return myFlags;
     }
 
+    @NonNull
+    @Override
+    public Collection<VariantBuildInformation> getVariantsBuildInformation() {
+        return myVariantsBuildInformation;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -375,7 +385,9 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 && Objects.equals(getResourcePrefix(), stub.getResourcePrefix())
                 && Objects.equals(getDynamicFeatures(), stub.getDynamicFeatures())
                 && Objects.equals(getViewBindingOptions(), stub.getViewBindingOptions())
-                && Objects.equals(getFlags(), stub.getFlags());
+                && Objects.equals(getFlags(), stub.getFlags())
+                && Objects.equals(
+                        getVariantsBuildInformation(), stub.getVariantsBuildInformation());
     }
 
     @Override
@@ -407,7 +419,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 isBaseSplit(),
                 getDynamicFeatures(),
                 getViewBindingOptions(),
-                getFlags());
+                getFlags(),
+                getVariantsBuildInformation());
     }
 
     @Override
@@ -475,6 +488,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 + myViewBindingOptions
                 + ", myFlags="
                 + myFlags
+                + ", myVariantBuildInformnation"
+                + myVariantsBuildInformation
                 + "}";
     }
 }

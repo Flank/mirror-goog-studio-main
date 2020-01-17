@@ -94,6 +94,7 @@ import com.android.builder.model.SourceProvider;
 import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
+import com.android.builder.model.VariantBuildInformation;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.builder.model.ViewBindingOptions;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -134,6 +135,7 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.file.RegularFile;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom Android model. */
@@ -397,6 +399,15 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         AndroidGradlePluginProjectFlagsImpl flags = getFlags();
 
+        // Collect all non test variants minimum information.
+        Collection<VariantBuildInformation> variantBuildOutputs =
+                variantModel.getComponents().stream()
+                        .filter(
+                                componentProperties ->
+                                        !componentProperties.getVariantType().isTestComponent())
+                        .map(this::createBuildInformation)
+                        .collect(Collectors.toList());
+
         return new DefaultAndroidProject(
                 project.getName(),
                 groupId,
@@ -425,7 +436,37 @@ public class ModelBuilder<Extension extends BaseExtension>
                 isBaseSplit(),
                 getDynamicFeatures(),
                 viewBindingOptions,
-                flags);
+                flags,
+                variantBuildOutputs);
+    }
+
+    private VariantBuildInformation createBuildInformation(
+            ComponentPropertiesImpl componentProperties) {
+        return new VariantBuildInformationImp(
+                componentProperties.getName(),
+                componentProperties.getTaskContainer().assembleTask.getName(),
+                toAbsolutePath(
+                        componentProperties
+                                .getArtifacts()
+                                .getOperations()
+                                .get(InternalArtifactType.APK_IDE_MODEL.INSTANCE)
+                                .getOrNull()),
+                componentProperties.getTaskContainer().getBundleTask() == null
+                        ? componentProperties.computeTaskName("bundle")
+                        : componentProperties.getTaskContainer().getBundleTask().getName(),
+                toAbsolutePath(
+                        componentProperties
+                                .getArtifacts()
+                                .getOperations()
+                                .get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE)
+                                .getOrNull()),
+                ExtractApksTask.Companion.getTaskName(componentProperties),
+                toAbsolutePath(
+                        componentProperties
+                                .getArtifacts()
+                                .getOperations()
+                                .get(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL.INSTANCE)
+                                .getOrNull()));
     }
 
     private AndroidGradlePluginProjectFlagsImpl getFlags() {
@@ -452,6 +493,11 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     protected boolean isBaseSplit() {
         return false;
+    }
+
+    @Nullable
+    private static String toAbsolutePath(@Nullable RegularFile regularFile) {
+        return regularFile != null ? regularFile.getAsFile().getAbsolutePath() : null;
     }
 
     protected boolean inspectManifestForInstantTag(
