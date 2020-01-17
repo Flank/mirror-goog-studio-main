@@ -51,7 +51,6 @@ interface BuildFeatureValues {
     // Library flags
 
     val buildType: Boolean
-    val androidResources: Boolean
 
     // ------------------
     // Test flags

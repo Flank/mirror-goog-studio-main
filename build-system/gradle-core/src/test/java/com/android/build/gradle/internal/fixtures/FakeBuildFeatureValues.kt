@@ -27,6 +27,4 @@ class FakeBuildFeatureValues(
     override val renderScript: Boolean = false,
     override val resValues: Boolean = false,
     override val shaders: Boolean = false,
-    override val viewBinding: Boolean = false,
-    override val androidResources: Boolean = true
-) : BuildFeatureValues
+    override val viewBinding: Boolean = false) : BuildFeatureValues

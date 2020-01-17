@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a894d6401ba52256447acdff73a49b5427bb8497802a5c05ceb227c52602a0fd
+e0f56b269a89c485cf9e4d946f0ac5583fdaeee3486e51cad43d988afb25ad0f
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -199,8 +199,6 @@ com.android.build.api.dsl.JacocoOptions
 com.android.build.api.dsl.JacocoOptions.getVersion: java.lang.String ()
 com.android.build.api.dsl.JacocoOptions.setVersion: void (java.lang.String)
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
-com.android.build.api.dsl.LibraryBuildFeatures.getAndroidResources: java.lang.Boolean ()
-com.android.build.api.dsl.LibraryBuildFeatures.setAndroidResources: void (java.lang.Boolean)
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.NdkBuild
 com.android.build.api.dsl.NdkBuild.buildStagingDirectory: void (java.lang.Object)
