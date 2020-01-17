@@ -12,23 +12,40 @@ proto_languages = struct(
 
 PROTOC_VERSION = "3.4.0"
 
+ProtoPackageInfo = provider(fields = ["proto_src", "proto_path"])
+
 def _gen_proto_impl(ctx):
-    gen_dir = label_workspace_path(ctx.label)
     inputs = []
     inputs += ctx.files.srcs + ctx.files.include
-    args = [
-        "--proto_path=" + gen_dir,
+
+    args = []
+    needs_label_path = False
+    for src_target in ctx.attr.srcs:
+        if ProtoPackageInfo in src_target:
+            args += ["--proto_path=" + workspace_path(src_target[ProtoPackageInfo].proto_path)]
+        else:
+            # if src_target doesn't have ProtoPackageInfo provider that should be used to look up proto files
+            # then we're going to path where BUILD is placed.
+            # Example: //rule/proto/BUILD -> --proto_path="rule/proto"
+            needs_label_path = True
+
+    label_dir = label_workspace_path(ctx.label)
+    if needs_label_path:
+        args += ["--proto_path=" + label_dir]
+
+    args += [
         "--proto_path=" + workspace_path("prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/" + ctx.attr.proto_include_version + "/include"),
     ]
+
     for dep in ctx.attr.deps:
-        args += ["--proto_path=" + workspace_path(dep.proto_package)]
-        inputs += dep.proto_src
+        args += ["--proto_path=" + workspace_path(dep[ProtoPackageInfo].proto_path)]
+        inputs += dep[ProtoPackageInfo].proto_src
 
     args += [s.path for s in ctx.files.srcs]
 
     # Try to generate cc protos first.
     if ctx.attr.target_language == proto_languages.CPP:
-        out_path = ctx.var["GENDIR"] + "/" + gen_dir
+        out_path = ctx.var["GENDIR"] + "/" + label_dir
         args += [
             "--cpp_out=" + out_path,
         ]
@@ -77,22 +94,20 @@ def _gen_proto_impl(ctx):
             command = "cp " + srcjar.path + ".jar" + " " + srcjar.path,
         )
 
-    return struct(
+    return ProtoPackageInfo(
         proto_src = ctx.files.srcs,
-        proto_package = ctx.label.package,
+        proto_path = ctx.label.package,
     )
 
 _gen_proto_rule = rule(
     attrs = {
         "srcs": attr.label_list(
             allow_files = [".proto"],
+            providers = [ProtoPackageInfo],
         ),
         "deps": attr.label_list(
             allow_files = False,
-            providers = [
-                "proto_src",
-                "proto_package",
-            ],
+            providers = [ProtoPackageInfo],
         ),
         "include": attr.label(
             allow_files = [".proto"],
