@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
 
 /** The `android` extension for base feature module (application plugin).  */
 open class BaseAppModuleExtension(
@@ -53,17 +52,20 @@ open class BaseAppModuleExtension(
     true
 ), ApplicationExtension<
         AaptOptions,
+        AbiSplitOptions,
         AdbOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,
         DataBindingOptions,
         DefaultConfig,
+        DensitySplitOptions,
         ExternalNativeBuild,
         JacocoOptions,
         NdkBuildOptions,
         ProductFlavor,
         SigningConfig,
+        Splits,
         TestOptions,
         TestOptions.UnitTestOptions> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor<ApplicationVariant, ApplicationVariantProperties> by publicExtensionImpl {

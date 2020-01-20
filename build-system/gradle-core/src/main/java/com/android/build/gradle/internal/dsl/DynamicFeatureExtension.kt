@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
 
 internal open class DynamicFeatureExtension(
     dslScope: DslScope,
@@ -47,17 +46,20 @@ internal open class DynamicFeatureExtension(
     buildOutputs, sourceSetManager, extraModelInfo, false
 ), DynamicFeatureExtension<
         AaptOptions,
+        AbiSplitOptions,
         AdbOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,
         DataBindingOptions,
         DefaultConfig,
+        DensitySplitOptions,
         ExternalNativeBuild,
         JacocoOptions,
         NdkBuildOptions,
         ProductFlavor,
         SigningConfig,
+        Splits,
         TestOptions,
         TestOptions.UnitTestOptions> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor<DynamicFeatureVariant, DynamicFeatureVariantProperties> by publicExtensionImpl {

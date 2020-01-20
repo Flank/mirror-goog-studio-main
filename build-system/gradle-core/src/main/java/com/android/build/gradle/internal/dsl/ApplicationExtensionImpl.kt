@@ -16,9 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.component.FilteredComponentActionRegistrar
 import com.android.build.api.component.GenericFilteredComponentActionRegistrar
-import com.android.build.api.component.impl.FilteredComponentActionRegistrarImpl
 import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
@@ -53,17 +51,20 @@ class ApplicationExtensionImpl(
     ),
     ApplicationExtension<
             AaptOptions,
+            AbiSplitOptions,
             AdbOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,
             DataBindingOptions,
             DefaultConfig,
+            DensitySplitOptions,
             ExternalNativeBuild,
             JacocoOptions,
             NdkBuildOptions,
             ProductFlavor,
             SigningConfig,
+            Splits,
             TestOptions,
             TestOptions.UnitTestOptions> {
 

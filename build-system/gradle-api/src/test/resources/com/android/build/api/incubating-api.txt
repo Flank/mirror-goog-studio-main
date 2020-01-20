@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-5aace1fb6ffde742c12e7806e4b14158ee30b709f2cd28a295628135f0aa3d8c
+52a51c4789c0fab3322533014df7d3f88aef78176b95423ab75eb3dc7e70f9f0
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -177,6 +177,7 @@ com.android.build.api.dsl.CommonExtension.getOnVariantProperties: com.android.bu
 com.android.build.api.dsl.CommonExtension.getOnVariants: com.android.build.api.component.GenericFilteredComponentActionRegistrar<VariantT> ()
 com.android.build.api.dsl.CommonExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<ProductFlavorT> ()
 com.android.build.api.dsl.CommonExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<SigningConfigT> ()
+com.android.build.api.dsl.CommonExtension.getSplits: SplitsT ()
 com.android.build.api.dsl.CommonExtension.getTestOptions: TestOptionsT ()
 com.android.build.api.dsl.CommonExtension.jacoco: void (kotlin.jvm.functions.Function1<? super JacocoOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super VariantPropertiesT, kotlin.Unit>)
@@ -186,6 +187,7 @@ com.android.build.api.dsl.CommonExtension.onVariants: void (org.gradle.api.Actio
 com.android.build.api.dsl.CommonExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<ProductFlavorT>>)
 com.android.build.api.dsl.CommonExtension.setCompileSdkVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<SigningConfigT>>)
+com.android.build.api.dsl.CommonExtension.splits: void (kotlin.jvm.functions.Function1<? super SplitsT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.testOptions: void (kotlin.jvm.functions.Function1<? super TestOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.CompileOptions.getEncoding: java.lang.String ()
@@ -262,6 +264,13 @@ com.android.build.api.dsl.SplitOptions.include: void (java.lang.String[])
 com.android.build.api.dsl.SplitOptions.isEnable: boolean ()
 com.android.build.api.dsl.SplitOptions.reset: void ()
 com.android.build.api.dsl.SplitOptions.setEnable: void (boolean)
+com.android.build.api.dsl.Splits
+com.android.build.api.dsl.Splits.abi: void (kotlin.jvm.functions.Function1<? super AbiSplitT, kotlin.Unit>)
+com.android.build.api.dsl.Splits.density: void (kotlin.jvm.functions.Function1<? super DensitySplitT, kotlin.Unit>)
+com.android.build.api.dsl.Splits.getAbi: AbiSplitT ()
+com.android.build.api.dsl.Splits.getAbiFilters: java.util.Collection<java.lang.String> ()
+com.android.build.api.dsl.Splits.getDensity: DensitySplitT ()
+com.android.build.api.dsl.Splits.getDensityFilters: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.TestBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestOptions

@@ -120,8 +120,6 @@ abstract class BaseExtension protected constructor(
         dslScope.objectFactory.newInstance(DexOptions::class.java, dslScope.deprecationReporter)
     override val packagingOptions: PackagingOptions =
         dslScope.objectFactory.newInstance(PackagingOptions::class.java)
-    override val splits: Splits =
-        dslScope.objectFactory.newInstance(Splits::class.java, dslScope.objectFactory)
 
     private val deviceProviderList: MutableList<DeviceProvider> = Lists.newArrayList()
     private val testServerList: MutableList<TestServer> = Lists.newArrayList()
@@ -422,13 +420,6 @@ abstract class BaseExtension protected constructor(
         action.execute(adbOptions)
     }
 
-    /**
-     * Specifies configurations for
-     * [building multiple APKs](https://developer.android.com/studio/build/configure-apk-splits.html)
-     * or APK splits.
-     *
-     * For more information about the properties you can configure in this block, see [Splits].
-     */
     fun splits(action: Action<Splits>) {
         checkWritability()
         action.execute(splits)
@@ -661,6 +652,8 @@ abstract class BaseExtension protected constructor(
 
     abstract override val signingConfigs: NamedDomainObjectContainer<SigningConfig>
     abstract fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
+
+    abstract override val splits: Splits
 
     abstract override val testOptions: TestOptions
 
