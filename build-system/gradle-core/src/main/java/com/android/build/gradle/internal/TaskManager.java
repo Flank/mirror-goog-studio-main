@@ -2404,6 +2404,11 @@ public abstract class TaskManager {
             return;
         }
 
+        if (!features.getAndroidResources()) {
+            getLogger().info("Data binding is disabled when resource processing is turned off.");
+            return;
+        }
+
         VariantType type = componentProperties.getVariantType();
         if (type.isForTesting()) {
             if (!type.isTestComponent()) {

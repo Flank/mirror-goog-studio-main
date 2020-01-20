@@ -68,6 +68,14 @@ class BuildFeatureValuesImpl(
     override val buildType: Boolean
         get() = true
 
+    override val androidResources: Boolean
+        get() = when (dslBuildFeatures) {
+            is LibraryBuildFeatures ->
+                (dslBuildFeatures as LibraryBuildFeatures).androidResources
+                    ?: projectOptions[BooleanOption.BUILD_FEATURE_ANDROID_RESOURCES]
+            else -> true
+        }
+
     // ------------------
     // Test flags
 }

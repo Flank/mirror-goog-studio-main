@@ -17,17 +17,15 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SingleArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.appendCapitalized
 import org.gradle.api.file.Directory
-import java.lang.RuntimeException
 
 /**
  * Responsible for the creation of tasks to build namespaced resources.
@@ -56,7 +54,6 @@ class NamespacedResourcesTaskManager(
             packageOutputType: SingleArtifactType<Directory>?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
-        val variantScope = componentProperties.variantScope
 
         // Process dependencies making sure everything we consume will be fully namespaced.
         if (globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {

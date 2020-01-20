@@ -23,4 +23,17 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface LibraryBuildFeatures : BuildFeatures {
+    /**
+     * Flag to disable Android resource processing.
+     *
+     * Setting the value to 'null' resets to the default value.
+     * Default value is 'true'.
+     *
+     * You can override the default for this for all projects in your build by adding the line
+     *     `android.defaults.buildfeatures.androidresources=false`
+     * in the gradle.properties file at the root project of your build.
+     *
+     * More information about this feature at: TBD
+     */
+    var androidResources: Boolean?
 }
