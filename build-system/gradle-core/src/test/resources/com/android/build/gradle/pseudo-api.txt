@@ -1190,7 +1190,7 @@ com.android.build.gradle.internal.dsl.SigningConfigFactory implements org.gradle
 com.android.build.gradle.internal.dsl.SigningConfigFactory.<init>: com.android.build.gradle.internal.dsl.SigningConfigFactory (org.gradle.api.model.ObjectFactory, java.io.File)
 com.android.build.gradle.internal.dsl.SigningConfigFactory.create: com.android.build.gradle.internal.dsl.SigningConfig (java.lang.String)
 com.android.build.gradle.internal.dsl.SigningConfigFactory.create: java.lang.Object (java.lang.String)
-com.android.build.gradle.internal.dsl.SplitOptions
+com.android.build.gradle.internal.dsl.SplitOptions implements com.android.build.api.dsl.SplitOptions
 com.android.build.gradle.internal.dsl.SplitOptions.exclude: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.SplitOptions.getApplicableFilters: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.SplitOptions.include: void (java.lang.String[])

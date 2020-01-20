@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-c6df944074c7d555d1ec9e22a4be3e7dedada7d120c000fe1c0b83b235bb532b
+d16251448561b71becb6df236ba9d12a4fd477ee9ef1d97bb12b93f563788269
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -247,6 +247,12 @@ com.android.build.api.dsl.SigningConfig.setStorePassword: void (java.lang.String
 com.android.build.api.dsl.SigningConfig.setStoreType: void (java.lang.String)
 com.android.build.api.dsl.SigningConfig.setV1SigningEnabled: void (boolean)
 com.android.build.api.dsl.SigningConfig.setV2SigningEnabled: void (boolean)
+com.android.build.api.dsl.SplitOptions
+com.android.build.api.dsl.SplitOptions.exclude: void (java.lang.String[])
+com.android.build.api.dsl.SplitOptions.include: void (java.lang.String[])
+com.android.build.api.dsl.SplitOptions.isEnable: boolean ()
+com.android.build.api.dsl.SplitOptions.reset: void ()
+com.android.build.api.dsl.SplitOptions.setEnable: void (boolean)
 com.android.build.api.dsl.TestBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestOptions
