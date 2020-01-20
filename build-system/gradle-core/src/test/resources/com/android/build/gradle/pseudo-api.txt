@@ -573,7 +573,7 @@ com.android.build.gradle.internal.dsl.AaptOptions.setNoCompress: void (java.lang
 com.android.build.gradle.internal.dsl.AaptOptions.setNoCompress: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.internal.dsl.AaptOptions.setUseNewCruncher: void (boolean)
 com.android.build.gradle.internal.dsl.AaptOptions.useNewCruncher: void (boolean)
-com.android.build.gradle.internal.dsl.AbiSplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions
+com.android.build.gradle.internal.dsl.AbiSplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions implements com.android.build.api.dsl.AbiSplit
 com.android.build.gradle.internal.dsl.AbiSplitOptions.<init>: com.android.build.gradle.internal.dsl.AbiSplitOptions ()
 com.android.build.gradle.internal.dsl.AbiSplitOptions.getAbiFilters: com.google.common.collect.ImmutableSet<java.lang.String> (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.AbiSplitOptions.isUniversalApk: boolean ()
