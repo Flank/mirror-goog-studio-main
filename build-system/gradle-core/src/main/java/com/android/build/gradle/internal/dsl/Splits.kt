@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.build.gradle.internal.dsl
 
-import com.android.annotations.NonNull;
-import java.util.Set;
-import javax.inject.Inject;
-import org.gradle.api.Action;
-import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.Action
+import org.gradle.api.model.ObjectFactory
+import javax.inject.Inject
 
 /**
  * DSL object for configuring APK Splits options. Configuring this object allows you to build <a
@@ -59,60 +57,22 @@ import org.gradle.api.model.ObjectFactory;
  *       <code>generatePureSplits</code></a> to <code>true</code>.
  * </ul>
  */
-public class Splits {
-
-    private final DensitySplitOptions density;
-    private final AbiSplitOptions abi;
-    private final LanguageSplitOptions language;
-
-    @Inject
-    public Splits(@NonNull ObjectFactory objectFactory) {
-        density = objectFactory.newInstance(DensitySplitOptions.class);
-        abi = objectFactory.newInstance(AbiSplitOptions.class);
-        language = objectFactory.newInstance(LanguageSplitOptions.class);
-    }
+open class Splits @Inject constructor(objectFactory: ObjectFactory) {
 
     /**
      * Encapsulates settings for <a
      * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-density-split">
      * building per-density APKs</a>.
      */
-    public DensitySplitOptions getDensity() {
-        return density;
-    }
-
-    /**
-     * Encapsulates settings for <a
-     * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-density-split">
-     * building per-density APKs</a>.
-     *
-     * <p>For more information about the properties you can configure in this block, see {@link
-     * DensitySplitOptions}.
-     */
-    public void density(Action<DensitySplitOptions> action) {
-        action.execute(density);
-    }
+    val density: DensitySplitOptions =
+        objectFactory.newInstance(DensitySplitOptions::class.java)
 
     /**
      * Encapsulates settings for <a
      * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split">
      * building per-ABI APKs</a>.
      */
-    public AbiSplitOptions getAbi() {
-        return abi;
-    }
-
-    /**
-     * Encapsulates settings for <a
-     * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split">
-     * building per-ABI APKs</a>.
-     *
-     * <p>For more information about the properties you can configure in this block, see {@link
-     * AbiSplitOptions}.
-     */
-    public void abi(Action<AbiSplitOptions> action) {
-        action.execute(abi);
-    }
+    val abi: AbiSplitOptions = objectFactory.newInstance(AbiSplitOptions::class.java)
 
     /**
      * Encapsulates settings for <a
@@ -124,8 +84,31 @@ public class Splits {
      * configuration APKs</a> for <a
      * href="https://developer.android.com/topic/instant-apps/index.html">Android Instant Apps</a>.
      */
-    public LanguageSplitOptions getLanguage() {
-        return language;
+    val language: LanguageSplitOptions =
+        objectFactory.newInstance(LanguageSplitOptions::class.java)
+
+    /**
+     * Encapsulates settings for <a
+     * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-density-split">
+     * building per-density APKs</a>.
+     *
+     * <p>For more information about the properties you can configure in this block, see {@link
+     * DensitySplitOptions}.
+     */
+    fun density(action: Action<DensitySplitOptions>) {
+        action.execute(density)
+    }
+
+    /**
+     * Encapsulates settings for <a
+     * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split">
+     * building per-ABI APKs</a>.
+     *
+     * <p>For more information about the properties you can configure in this block, see {@link
+     * AbiSplitOptions}.
+     */
+    fun abi(action: Action<AbiSplitOptions>) {
+        action.execute(abi)
     }
 
     /**
@@ -141,8 +124,8 @@ public class Splits {
      * <p>For more information about the properties you can configure in this block, see {@link
      * LanguageSplitOptions}.
      */
-    public void language(Action<LanguageSplitOptions> action) {
-        action.execute(language);
+    fun language(action: Action<LanguageSplitOptions>) {
+        action.execute(language)
     }
 
     /**
@@ -155,10 +138,8 @@ public class Splits {
      *
      * @return a set of screen density configurations.
      */
-    @NonNull
-    public Set<String> getDensityFilters() {
-        return density.getApplicableFilters();
-    }
+    val densityFilters: Set<String>
+        get() = density.applicableFilters
 
     /**
      * Returns the list of ABIs that the plugin will generate separate APKs for.
@@ -168,10 +149,8 @@ public class Splits {
      *
      * @return a set of ABIs.
      */
-    @NonNull
-    public Set<String> getAbiFilters() {
-        return abi.getApplicableFilters();
-    }
+    val abiFilters: Set<String>
+        get() = abi.applicableFilters
 
     /**
      * Returns the list of languages (or locales) that the plugin will generate separate APKs for.
@@ -182,8 +161,6 @@ public class Splits {
      *
      * @return a set of languages (or lacales).
      */
-    @NonNull
-    public Set<String> getLanguageFilters() {
-        return language.getApplicationFilters();
-    }
+    val languageFilters: Set<String>
+        get() = language.applicationFilters
 }
