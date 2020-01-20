@@ -27,31 +27,13 @@ import java.io.Serializable
  */
 abstract class BaseConfigImpl : Serializable,
     BaseConfig {
-    /**
-     * Application id suffix. It is appended to the "base" application id when calculating the final
-     * application id for a variant.
-     *
-     *
-     * In case there are product flavor dimensions specified, the final application id suffix
-     * will contain the suffix from the default product flavor, followed by the suffix from product
-     * flavor of the first dimension, second dimension and so on. All of these will have a dot in
-     * between e.g. &quot;defaultSuffix.dimension1Suffix.dimensions2Suffix&quot;.
-     */
+
     override var applicationIdSuffix: String? = null
 
     open fun applicationIdSuffix(applicationIdSuffix: String?) {
         this.applicationIdSuffix = applicationIdSuffix
     }
 
-    /**
-     * Version name suffix. It is appended to the "base" version name when calculating the final
-     * version name for a variant.
-     *
-     *
-     * In case there are product flavor dimensions specified, the final version name suffix will
-     * contain the suffix from the default product flavor, followed by the suffix from product
-     * flavor of the first dimension, second dimension and so on.
-     */
     override var versionNameSuffix: String? = null
 
     open fun versionNameSuffix(versionNameSuffix: String?) {
@@ -70,27 +52,11 @@ abstract class BaseConfigImpl : Serializable,
         Lists.newArrayList()
     private val mManifestPlaceholders: MutableMap<String, Any> =
         Maps.newHashMap()
-    /**
-     * Whether Multi-Dex is enabled for this variant.
-     */
+
     override var multiDexEnabled: Boolean? = null
-    /**
-     * Text file with additional ProGuard rules to be used to determine which classes are compiled
-     * into the main dex file.
-     *
-     * If set, rules from this file are used in combination with the default rules used by the
-     * build system.
-     */
+
     override var multiDexKeepProguard: File? = null
-    /**
-     * Text file that specifies additional classes that will be compiled into the main dex file.
-     *
-     * Classes specified in the file are appended to the main dex classes computed using
-     * `aapt`.
-     *
-     * If set, the file should contain one class per line, in the following format:
-     * `com/example/MyClass.class`
-     */
+
     override var multiDexKeepFile: File? = null
 
     /**
@@ -130,9 +96,6 @@ abstract class BaseConfigImpl : Serializable,
         mResValues.putAll(values)
     }
 
-    /**
-     * Returns the BuildConfig fields.
-     */
     override var buildConfigFields: Map<String, ClassField>
         get() = mBuildConfigFields
         set(fields) {
@@ -158,35 +121,27 @@ abstract class BaseConfigImpl : Serializable,
         }
 
     /** {@inheritDoc}  */
-    override val proguardFiles: MutableList<File>
+    override var proguardFiles: MutableList<File>
         get() = mProguardFiles
+        set(value) {
+            mProguardFiles.clear()
+            mProguardFiles.addAll(value)
+        }
 
-    /**
-     * ProGuard rule files to be included in the published AAR.
-     *
-     *
-     * These proguard rule files will then be used by any application project that consumes the
-     * AAR (if ProGuard is enabled).
-     *
-     *
-     * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
-     *
-     * This is only valid for Library project. This is ignored in Application project.
-     */
-    override val consumerProguardFiles: MutableList<File>
+    override var consumerProguardFiles: MutableList<File>
         get() = mConsumerProguardFiles
+        set(value) {
+            mConsumerProguardFiles.clear()
+            mConsumerProguardFiles.addAll(value)
+        }
 
-    override val testProguardFiles: MutableList<File>
+    override var testProguardFiles: MutableList<File>
         get() = mTestProguardFiles
+        set(value) {
+            mTestProguardFiles.clear()
+            mTestProguardFiles.addAll(value)
+        }
 
-    /**
-     * Returns the manifest placeholders.
-     *
-     *
-     * See
-     * [Inject Build Variables into the Manifest](https://developer.android.com/studio/build/manifest-build-variables.html).
-     */
     override var manifestPlaceholders: MutableMap<String, Any>
         get() = mManifestPlaceholders
         set(manifestPlaceholders) {
@@ -194,13 +149,6 @@ abstract class BaseConfigImpl : Serializable,
             mManifestPlaceholders.putAll(manifestPlaceholders)
         }
 
-    /**
-     * Adds manifest placeholders.
-     *
-     *
-     * See 
-     * [Inject Build Variables into the Manifest](https://developer.android.com/studio/build/manifest-build-variables.html).
-     */
     fun addManifestPlaceholders(manifestPlaceholders: Map<String, Any>) {
         mManifestPlaceholders.putAll(manifestPlaceholders)
     }

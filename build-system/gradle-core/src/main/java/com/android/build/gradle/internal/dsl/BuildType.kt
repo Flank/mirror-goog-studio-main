@@ -31,6 +31,7 @@ import org.gradle.api.Action
 import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
+import java.io.File
 
 /** DSL object to configure build types.  */
 open class BuildType @Inject constructor(private val name: String, private val dslScope: DslScope) :
@@ -379,42 +380,20 @@ open class BuildType @Inject constructor(private val name: String, private val d
         addResValue(ClassFieldImpl(type, name, value))
     }
 
-    /**
-     * Adds a new ProGuard configuration file.
-     *
-     *
-     * `proguardFile getDefaultProguardFile('proguard-android.txt')`
-     *
-     *
-     * There are 2 default rules files
-     *
-     *  * proguard-android.txt
-     *  * proguard-android-optimize.txt
-     *
-     *
-     * They are located in the SDK. Using `getDefaultProguardFile(String filename)` will return the
-     * full path to the files. They are identical except for enabling optimizations.
-     */
-    fun proguardFile(proguardFile: Any): BuildType {
+    override var proguardFiles: MutableList<File>
+        get() = super.proguardFiles
+        set(value) {
+            // Override to handle the proguardFiles = ['string'] case (see PluginDslTest.testProguardFiles_*)
+            setProguardFiles(value)
+        }
+
+    override fun proguardFile(proguardFile: Any): BuildType {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "proguardFile")
         proguardFiles.add(dslScope.file(proguardFile))
         return this
     }
 
-    /**
-     * Adds new ProGuard configuration files.
-     *
-     *
-     * There are 2 default rules files
-     *
-     *  * proguard-android.txt
-     *  * proguard-android-optimize.txt
-     *
-     *
-     * They are located in the SDK. Using `getDefaultProguardFile(String filename)` will return the
-     * full path to the files. They are identical except for enabling optimizations.
-     */
-    fun proguardFiles(vararg files: Any): BuildType {
+    override fun proguardFiles(vararg files: Any): BuildType {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "proguardFiles")
         for (file in files) {
             proguardFile(file)
@@ -447,25 +426,20 @@ open class BuildType @Inject constructor(private val name: String, private val d
         return this
     }
 
-    /**
-     * Adds a proguard rule file to be used when processing test code.
-     *
-     *
-     * Test code needs to be processed to apply the same obfuscation as was done to main code.
-     */
-    fun testProguardFile(proguardFile: Any): BuildType {
+    override var testProguardFiles: MutableList<File>
+        get() = super.testProguardFiles
+        set(value) {
+            // Override to handle the testProguardFiles = ['string'] case.
+            setTestProguardFiles(value)
+        }
+
+    override fun testProguardFile(proguardFile: Any): BuildType {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "testProguardFile")
         testProguardFiles.add(dslScope.file(proguardFile))
         return this
     }
 
-    /**
-     * Adds proguard rule files to be used when processing test code.
-     *
-     *
-     * Test code needs to be processed to apply the same obfuscation as was done to main code.
-     */
-    fun testProguardFiles(vararg proguardFiles: Any): BuildType {
+    override fun testProguardFiles(vararg proguardFiles: Any): BuildType {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "testProguardFiles")
         for (proguardFile in proguardFiles) {
             testProguardFile(proguardFile)
@@ -493,20 +467,14 @@ open class BuildType @Inject constructor(private val name: String, private val d
         return this
     }
 
-    /**
-     * Adds a proguard rule file to be included in the published AAR.
-     *
-     *
-     * This proguard rule file will then be used by any application project that consume the AAR
-     * (if proguard is enabled).
-     *
-     *
-     * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
-     *
-     * This is only valid for Library project. This is ignored in Application project.
-     */
-    fun consumerProguardFile(proguardFile: Any): BuildType {
+    override var consumerProguardFiles: MutableList<File>
+        get() = super.consumerProguardFiles
+        set(value) {
+            // Override to handle the consumerProguardFiles = ['string'] case.
+            setConsumerProguardFiles(value)
+        }
+
+    override fun consumerProguardFile(proguardFile: Any): BuildType {
         checkPostProcessingConfiguration(
             PostProcessingConfiguration.OLD_DSL, "consumerProguardFile"
         )
@@ -514,20 +482,7 @@ open class BuildType @Inject constructor(private val name: String, private val d
         return this
     }
 
-    /**
-     * Adds proguard rule files to be included in the published AAR.
-     *
-     *
-     * This proguard rule file will then be used by any application project that consume the AAR
-     * (if proguard is enabled).
-     *
-     *
-     * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
-     *
-     * This is only valid for Library project. This is ignored in Application project.
-     */
-    fun consumerProguardFiles(vararg proguardFiles: Any): BuildType {
+    override fun consumerProguardFiles(vararg proguardFiles: Any): BuildType {
         checkPostProcessingConfiguration(
             PostProcessingConfiguration.OLD_DSL, "consumerProguardFiles"
         )

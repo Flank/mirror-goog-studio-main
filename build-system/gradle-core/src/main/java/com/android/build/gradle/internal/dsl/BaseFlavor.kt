@@ -24,6 +24,7 @@ import com.android.builder.model.ApiVersion
 import com.android.builder.model.ProductFlavor
 import com.google.common.base.Strings
 import org.gradle.api.Action
+import java.io.File
 
 /** Base DSL object used to configure product flavors.  */
 abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
@@ -32,7 +33,9 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         dslScope.objectFactory.newInstance(
             VectorDrawablesOptions::class.java
         )
-    ), CoreProductFlavor {
+    ),
+    CoreProductFlavor,
+    com.android.build.api.dsl.BaseFlavor {
 
     /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
     val ndk: NdkOptions = dslScope.objectFactory.newInstance(NdkOptions::class.java)
@@ -244,55 +247,23 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         addResValue(ClassFieldImpl(type, name, value))
     }
 
-    /**
-     * Specifies a ProGuard configuration file that the plugin should use.
-     *
-     * There are two ProGuard rules files that ship with the Android plugin and are used by
-     * default:
-     *
-     *  * proguard-android.txt
-     *  * proguard-android-optimize.txt
-     *
-     * `proguard-android-optimize.txt` is identical to `proguard-android.txt
-    ` * , exccept with optimizations enabled. You can use `
-     * getDefaultProguardFile(String filename)` to return the full path of each file.
-     */
-    fun proguardFile(proguardFile: Any) {
+    override var proguardFiles: MutableList<File>
+        get() = super.proguardFiles
+        set(value) {
+            // Override to handle the proguardFiles = ['string'] case (see PluginDslTest.testProguardFiles_*)
+            setProguardFiles(value)
+        }
+
+    override fun proguardFile(proguardFile: Any) {
         proguardFiles.add(dslScope.file(proguardFile))
     }
 
-    /**
-     * Specifies ProGuard configuration files that the plugin should use.
-     *
-     * There are two ProGuard rules files that ship with the Android plugin and are used by
-     * default:
-     *
-     *  * proguard-android.txt
-     *  * proguard-android-optimize.txt
-     *
-     * `proguard-android-optimize.txt` is identical to `proguard-android.txt
-    ` * , exccept with optimizations enabled. You can use `
-     * getDefaultProguardFile(String filename)` to return the full path of each file.
-     */
-    fun proguardFiles(vararg files: Any) {
+    override fun proguardFiles(vararg files: Any) {
         for (file in files) {
             proguardFile(file)
         }
     }
 
-    /**
-     * Sets the ProGuard configuration files.
-     *
-     * There are two ProGuard rules files that ship with the Android plugin and are used by
-     * default:
-     *
-     *  * proguard-android.txt
-     *  * proguard-android-optimize.txt
-     *
-     * `proguard-android-optimize.txt` is identical to `proguard-android.txt
-    ` * , exccept with optimizations enabled. You can use `
-     * getDefaultProguardFile(String filename)` to return the full path of the files.
-     */
     fun setProguardFiles(proguardFileIterable: Iterable<Any>) {
         proguardFiles.clear()
         for (file in proguardFileIterable) {
@@ -300,21 +271,18 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         }
     }
 
-    /**
-     * Adds a proguard rule file to be used when processing test code.
-     *
-     * Test code needs to be processed to apply the same obfuscation as was done to main code.
-     */
-    fun testProguardFile(proguardFile: Any) {
+    override var testProguardFiles: MutableList<File>
+        get() = super.testProguardFiles
+        set(value) {
+            // Override to handle the testProguardFiles = ['string'] case.
+            setTestProguardFiles(value)
+        }
+
+    override fun testProguardFile(proguardFile: Any) {
         testProguardFiles.add(dslScope.file(proguardFile))
     }
 
-    /**
-     * Adds proguard rule files to be used when processing test code.
-     *
-     * Test code needs to be processed to apply the same obfuscation as was done to main code.
-     */
-    fun testProguardFiles(vararg proguardFiles: Any) {
+    override fun testProguardFiles(vararg proguardFiles: Any) {
         for (proguardFile in proguardFiles) {
             testProguardFile(proguardFile)
         }
@@ -332,31 +300,18 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         }
     }
 
-    /**
-     * Adds a proguard rule file to be included in the published AAR.
-     *
-     * This proguard rule file will then be used by any application project that consume the AAR
-     * (if proguard is enabled).
-     *
-     * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
-     * This is only valid for Library project. This is ignored in Application project.
-     */
-    fun consumerProguardFile(proguardFile: Any) {
+    override var consumerProguardFiles: MutableList<File>
+        get() = super.consumerProguardFiles
+        set(value) {
+            // Override to handle the consumerProguardFiles = ['string'] case.
+            setConsumerProguardFiles(value)
+        }
+
+    override fun consumerProguardFile(proguardFile: Any) {
         consumerProguardFiles.add(dslScope.file(proguardFile))
     }
 
-    /**
-     * Adds proguard rule files to be included in the published AAR.
-     *
-     * This proguard rule file will then be used by any application project that consume the AAR
-     * (if proguard is enabled).
-     *
-     * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
-     * This is only valid for Library project. This is ignored in Application project.
-     */
-    fun consumerProguardFiles(vararg proguardFiles: Any) {
+    override fun consumerProguardFiles(vararg proguardFiles: Any) {
         for (proguardFile in proguardFiles) {
             consumerProguardFile(proguardFile)
         }
