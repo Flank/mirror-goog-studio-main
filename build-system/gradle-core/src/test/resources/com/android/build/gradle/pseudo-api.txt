@@ -870,12 +870,14 @@ com.android.build.gradle.internal.dsl.DataBindingOptions.setEnabledForTests: voi
 com.android.build.gradle.internal.dsl.DataBindingOptions.setVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.DefaultConfig extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.api.dsl.DefaultConfig
 com.android.build.gradle.internal.dsl.DefaultConfig.<init>: com.android.build.gradle.internal.dsl.DefaultConfig (java.lang.String, com.android.build.gradle.internal.api.dsl.DslScope)
-com.android.build.gradle.internal.dsl.DensitySplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions
+com.android.build.gradle.internal.dsl.DensitySplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions implements com.android.build.api.dsl.DensitySplit
 com.android.build.gradle.internal.dsl.DensitySplitOptions.<init>: com.android.build.gradle.internal.dsl.DensitySplitOptions ()
 com.android.build.gradle.internal.dsl.DensitySplitOptions.compatibleScreens: void (java.lang.String[])
+com.android.build.gradle.internal.dsl.DensitySplitOptions.getCompatibleScreens: java.util.Collection ()
 com.android.build.gradle.internal.dsl.DensitySplitOptions.getCompatibleScreens: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.DensitySplitOptions.isStrict: boolean ()
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setAuto: void (boolean)
+com.android.build.gradle.internal.dsl.DensitySplitOptions.setCompatibleScreens: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setCompatibleScreens: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setStrict: void (boolean)
 com.android.build.gradle.internal.dsl.DexOptions extends com.android.builder.core.DefaultDexOptions

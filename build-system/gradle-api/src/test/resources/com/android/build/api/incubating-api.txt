@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-5a39618ab5a1c8cdd4fedfda73d04ec78b32e2404c62bdef21bd3bdf452c90bb
+5aace1fb6ffde742c12e7806e4b14158ee30b709f2cd28a295628135f0aa3d8c
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -208,6 +208,12 @@ com.android.build.api.dsl.DataBinding.setEnabled: void (boolean)
 com.android.build.api.dsl.DataBinding.setEnabledForTests: void (boolean)
 com.android.build.api.dsl.DataBinding.setVersion: void (java.lang.String)
 com.android.build.api.dsl.DefaultConfig
+com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.SplitOptions
+com.android.build.api.dsl.DensitySplit.compatibleScreens: void (java.lang.String[])
+com.android.build.api.dsl.DensitySplit.getCompatibleScreens: java.util.Collection<java.lang.String> ()
+com.android.build.api.dsl.DensitySplit.isStrict: boolean ()
+com.android.build.api.dsl.DensitySplit.setCompatibleScreens: void (java.util.Collection<java.lang.String>)
+com.android.build.api.dsl.DensitySplit.setStrict: void (boolean)
 com.android.build.api.dsl.DynamicDelivery
 com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
