@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,11 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 /**
- * Specifies defaults for variant properties that the Android plugin applies to all build variants.
+ * Shared properties between DSL objects that contribute to a variant.
  *
- * You can override any `defaultConfig` property when [configuring product
- * flavors](https://developer.android.com/studio/build/build-variants.html#product-flavors).
- *
- * @see [ProductFlavor]
+ * That is, [BuildType] and [ProductFlavor] and [DefaultConfig].
  */
 @Incubating
-interface DefaultConfig : BaseFlavor {
+interface BaseConfig {
     // TODO(b/140406102)
 }

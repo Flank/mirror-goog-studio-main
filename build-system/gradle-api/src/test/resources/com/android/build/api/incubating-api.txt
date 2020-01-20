@@ -147,6 +147,8 @@ com.android.build.api.dsl.AssetPackExtension
 com.android.build.api.dsl.AssetPackExtension.dynamicDelivery: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DynamicDelivery, kotlin.Unit>)
 com.android.build.api.dsl.AssetPackExtension.getDynamicDelivery: com.android.build.api.dsl.DynamicDelivery ()
 com.android.build.api.dsl.AssetPackExtension.getPackName: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.dsl.BaseConfig
+com.android.build.api.dsl.BaseFlavor implements com.android.build.api.dsl.BaseConfig
 com.android.build.api.dsl.BuildFeatures implements org.gradle.api.plugins.ExtensionAware
 com.android.build.api.dsl.BuildFeatures.getAidl: java.lang.Boolean ()
 com.android.build.api.dsl.BuildFeatures.getBuildConfig: java.lang.Boolean ()
@@ -164,7 +166,7 @@ com.android.build.api.dsl.BuildFeatures.setRenderScript: void (java.lang.Boolean
 com.android.build.api.dsl.BuildFeatures.setResValues: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setShaders: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
-com.android.build.api.dsl.BuildType implements org.gradle.api.Named
+com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android.build.api.dsl.BaseConfig
 com.android.build.api.dsl.BuildType.isDefault: boolean ()
 com.android.build.api.dsl.BuildType.setDefault: void (boolean)
 com.android.build.api.dsl.Cmake
@@ -233,7 +235,7 @@ com.android.build.api.dsl.DataBinding.setAddDefaultAdapters: void (boolean)
 com.android.build.api.dsl.DataBinding.setEnabled: void (boolean)
 com.android.build.api.dsl.DataBinding.setEnabledForTests: void (boolean)
 com.android.build.api.dsl.DataBinding.setVersion: void (java.lang.String)
-com.android.build.api.dsl.DefaultConfig
+com.android.build.api.dsl.DefaultConfig implements com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.SplitOptions
 com.android.build.api.dsl.DensitySplit.compatibleScreens: void (java.lang.String[])
 com.android.build.api.dsl.DensitySplit.getCompatibleScreens: java.util.Collection<java.lang.String> ()
@@ -270,7 +272,7 @@ com.android.build.api.dsl.NdkBuild.getPath: java.io.File ()
 com.android.build.api.dsl.NdkBuild.path: void (java.lang.Object)
 com.android.build.api.dsl.NdkBuild.setBuildStagingDirectory: void (java.io.File)
 com.android.build.api.dsl.NdkBuild.setPath: void (java.io.File)
-com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named
+com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.ProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ProductFlavor.setDefault: void (boolean)
 com.android.build.api.dsl.SigningConfig implements org.gradle.api.Named
