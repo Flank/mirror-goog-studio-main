@@ -62,7 +62,8 @@ data class ProjectTemplateData(
   val applicationPackage: PackageName?,
   val includedFormFactorNames: FormFactorNames,
   val debugKeystoreSha1: String?,
-  val overridePathCheck: Boolean? = false // To disable android plugin checking for ascii in paths (windows tests)
+  val overridePathCheck: Boolean? = false, // To disable android plugin checking for ascii in paths (windows tests)
+  val isNewProject: Boolean
 ): TemplateData()
 
 fun FormFactorNames.has(ff: FormFactor) = !this[ff].isNullOrEmpty()

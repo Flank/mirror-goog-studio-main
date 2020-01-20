@@ -30,6 +30,7 @@
         name="Use a custom theme for Android Auto colors?"
         type="boolean"
         constraints="package"
+        default="false"
         help="Android Auto apps can define a different set of colors that will be used exclusively when running on Android Auto" />
 
     <parameter
