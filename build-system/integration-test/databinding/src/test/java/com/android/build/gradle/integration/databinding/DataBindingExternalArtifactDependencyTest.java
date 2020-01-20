@@ -32,7 +32,7 @@ import org.junit.runners.Parameterized;
 
 @RunWith(FilterableParameterized.class)
 public class DataBindingExternalArtifactDependencyTest {
-    private static final String MAVEN_REPO_ARG_PREFIX = "-Ptest_maven_repo=";
+    private static final String MAVEN_REPO_ARG_PREFIX = "-Pmaven_repo=";
 
     @Rule public GradleTestProject library;
 
@@ -69,7 +69,7 @@ public class DataBindingExternalArtifactDependencyTest {
 
     @Before
     public void clean() throws IOException, InterruptedException {
-        // just provide test_maven_repo so that build.gradle does not complain
+        // just provide maven_repo so that build.gradle does not complain
         library.executor()
                 .withArguments(ImmutableList.of(MAVEN_REPO_ARG_PREFIX + "."))
                 .withFailOnWarning(false)
