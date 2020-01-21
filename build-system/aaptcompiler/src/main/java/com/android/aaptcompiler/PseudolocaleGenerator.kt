@@ -249,11 +249,13 @@ class PseudolocaleGenerator{
   fun consume (table: ResourceTable) {
     for (resourcePackage in table.packages) {
       for (resourceGroup in resourcePackage.groups) {
-        for (entry in resourceGroup.entries) {
-          val valuesToLocalize = entry.values.filter { isPseudolocalizable(it) }
-          for (value in valuesToLocalize) {
-            pseudolocalizeIfNeeded(Pseudolocalizer.Method.ACCENT, value, table.stringPool, entry)
-            pseudolocalizeIfNeeded(Pseudolocalizer.Method.BIDI, value, table.stringPool, entry)
+        for (idToEntry in resourceGroup.entries.values) {
+          for (entry in idToEntry.values) {
+            val valuesToLocalize = entry.values.filter { isPseudolocalizable(it) }
+            for (value in valuesToLocalize) {
+              pseudolocalizeIfNeeded(Pseudolocalizer.Method.ACCENT, value, table.stringPool, entry)
+              pseudolocalizeIfNeeded(Pseudolocalizer.Method.BIDI, value, table.stringPool, entry)
+            }
           }
         }
       }

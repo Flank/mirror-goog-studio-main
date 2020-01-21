@@ -703,17 +703,19 @@ fun deserializePackageFromPb(
 
   // Assign all references with ids the names of the resource to which they are referencing.
   for (group in resourcePackage.groups) {
-    for (entry in group.entries) {
-      for (configValue in entry.values) {
-        val value = configValue.value
-        if (value is Reference) {
-          val referenceId = value.id
-          if (referenceId == null || !referenceId.isValidId()) {
-            continue
+    for (idToEntries in group.entries.values) {
+      for (entry in idToEntries.values) {
+        for (configValue in entry.values) {
+          val value = configValue.value
+          if (value is Reference) {
+            val referenceId = value.id
+            if (referenceId == null || !referenceId.isValidId()) {
+              continue
+            }
+            val result = idIndex[referenceId]
+            result ?: continue
+            value.name = result
           }
-          val result = idIndex[referenceId]
-          result ?: continue
-          value.name = result
         }
       }
     }

@@ -91,59 +91,62 @@ fun serializeTableToPb(table: ResourceTable, logger: Logger? = null): Resources.
 
       groupBuilder.setName(resourceGroup.type.tagName)
 
-      for (entry in resourceGroup.entries) {
-        val entryBuilder = Resources.Entry.newBuilder()
+      for (idToEntries in resourceGroup.entries.values) {
+        for (entry in idToEntries.values) {
+          val entryBuilder = Resources.Entry.newBuilder()
 
-        val entryId = entry.id
-        if (entryId != null) {
-          entryBuilder.setEntryId(
-            Resources.EntryId.newBuilder()
-              .setId(entryId.toInt())
-              .build())
-        }
-        entryBuilder.setName(entry.name)
-
-        val visibilityBuilder = Resources.Visibility.newBuilder()
-        if (entry.visibility.source.isNotEmpty()) {
-          visibilityBuilder.setSource(serializeSourceToPb(entry.visibility.source, sourcePool))
-        }
-        entryBuilder.setVisibility(
-          visibilityBuilder
-            .setLevel(serializeVisibilityToPb(entry.visibility.level))
-            .setComment(entry.visibility.comment)
-            .build())
-
-        val entryAllowNew = entry.allowNew
-        if (entryAllowNew != null) {
-          val allowNewBuilder = Resources.AllowNew.newBuilder()
-          if (entryAllowNew.source.isNotEmpty()) {
-            allowNewBuilder.setSource(serializeSourceToPb(entryAllowNew.source, sourcePool))
+          val entryId = entry.id
+          if (entryId != null) {
+            entryBuilder.setEntryId(
+              Resources.EntryId.newBuilder()
+                .setId(entryId.toInt())
+                .build())
           }
-          entryBuilder.setAllowNew(
-            allowNewBuilder
-              .setComment(entryAllowNew.comment)
+          entryBuilder.setName(entry.name)
+
+          val visibilityBuilder = Resources.Visibility.newBuilder()
+          if (entry.visibility.source.isNotEmpty()) {
+            visibilityBuilder.setSource(serializeSourceToPb(entry.visibility.source, sourcePool))
+          }
+          entryBuilder.setVisibility(
+            visibilityBuilder
+              .setLevel(serializeVisibilityToPb(entry.visibility.level))
+              .setComment(entry.visibility.comment)
               .build())
-        }
 
-        val entryOverlayableItem = entry.overlayable
-        if (entryOverlayableItem != null) {
+          val entryAllowNew = entry.allowNew
+          if (entryAllowNew != null) {
+            val allowNewBuilder = Resources.AllowNew.newBuilder()
+            if (entryAllowNew.source.isNotEmpty()) {
+              allowNewBuilder.setSource(serializeSourceToPb(entryAllowNew.source, sourcePool))
+            }
+            entryBuilder.setAllowNew(
+              allowNewBuilder
+                .setComment(entryAllowNew.comment)
+                .build())
+          }
 
-          entryBuilder.setOverlayableItem(
-            serializeOverlayableToPb(
-              entryOverlayableItem,
-              overlayables,
-              tableBuilder,
-              sourcePool))
-        }
+          val entryOverlayableItem = entry.overlayable
+          if (entryOverlayableItem != null) {
 
-        for (configValue in entry.values) {
-          entryBuilder.addConfigValue(
-            Resources.ConfigValue.newBuilder()
-              .setConfig(serializeConfigToPb(configValue.config, configValue.product, logger))
-              .setValue(serializeValueToPb(configValue.value!!, sourcePool, logger))
-              .build())
+            entryBuilder.setOverlayableItem(
+              serializeOverlayableToPb(
+                entryOverlayableItem,
+                overlayables,
+                tableBuilder,
+                sourcePool))
+          }
+
+          for (configValue in entry.values) {
+            entryBuilder.addConfigValue(
+              Resources.ConfigValue.newBuilder()
+                .setConfig(serializeConfigToPb(configValue.config, configValue.product, logger))
+                .setValue(serializeValueToPb(configValue.value!!, sourcePool, logger))
+                .build()
+            )
+          }
+          groupBuilder.addEntry(entryBuilder.build())
         }
-        groupBuilder.addEntry(entryBuilder.build())
       }
       packageBuilder.addType(groupBuilder.build())
     }

@@ -4,6 +4,8 @@ import com.android.aapt.Resources
 import com.android.aaptcompiler.android.isTruthy
 import com.android.resources.ResourceVisibility
 import java.io.File
+import java.util.SortedMap
+import java.util.TreeMap
 
 /**
  * The container and index for all resources defined for a given app.
@@ -270,9 +272,10 @@ class ResourceTable(val validateResources: Boolean = false) {
     for (pkg in packages) {
       pkg.groups.sortWith(compareBy({it.type.ordinal}, {it.id}))
       for (group in pkg.groups) {
-        group.entries.sortWith(compareBy({it.name}, {it.id}))
-        for (entry in group.entries) {
-          entry.values.sortWith(compareBy({it.config}, {it.product}))
+        for (entryByName in group.entries.values) {
+          for (entry in entryByName.values) {
+            entry.values.sortWith(compareBy({ it.config }, { it.product }))
+          }
         }
       }
     }
@@ -603,15 +606,16 @@ class ResourceGroup(val type : AaptResourceType) {
   var id: Byte? = null
   var visibility = ResourceVisibility.UNDEFINED
 
-  internal val entries = mutableListOf<ResourceEntry>()
+  internal val entries = sortedMapOf<String, SortedMap<Short?, ResourceEntry>>()
 
-  fun findEntry(name: String, entryId: Short? = null): ResourceEntry? =
-    if (entryId != null) {
-      entries.find {name == it.name && entryId == it.id} ?:
-        entries.find {name == it.name && it.id == null}
+  fun findEntry(name: String, entryId: Short? = null): ResourceEntry? {
+    val nameGroup = entries[name] ?: return null
+    return if (entryId != null) {
+      nameGroup[entryId] ?: nameGroup[null]
     } else {
-      entries.find {name == it.name}
+      nameGroup[nameGroup.firstKey()]
     }
+  }
 
   fun findOrCreateEntry(name: String, entryId: Short? = null): ResourceEntry {
     val entry = findEntry(name, entryId)
@@ -619,7 +623,7 @@ class ResourceGroup(val type : AaptResourceType) {
       null -> {
         val newEntry = ResourceEntry(name)
         newEntry.id = entryId
-        entries.add(newEntry)
+        entries.getOrPut(name) { TreeMap(nullsFirst()) }[entryId] = newEntry
         newEntry
       }
       else -> entry
