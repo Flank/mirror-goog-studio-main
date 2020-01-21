@@ -122,6 +122,11 @@ fun runR8(
                 .addSpecialLibraryConfiguration(libConfiguration)
                 .setDesugaredLibraryKeepRuleConsumer(StringConsumer.FileConsumer(outputKeepRules!!))
         }
+        if (toolConfig.isDebuggable) {
+            r8CommandBuilder.addAssertionsConfiguration(
+                AssertionsConfiguration.Builder::enableAllAssertions
+            )
+        }
     }
 
     r8CommandBuilder
@@ -189,12 +194,6 @@ fun runR8(
         .setDisableDesugaring(toolConfig.disableDesugaring)
         .setMode(compilationMode)
         .setProgramConsumer(programConsumer)
-
-    if (toolConfig.isDebuggable) {
-        r8CommandBuilder.addAssertionsConfiguration(
-            AssertionsConfiguration.Builder::enableAllAssertions
-        )
-    }
 
     // Use this to control all resources provided to R8
     val r8ProgramResourceProvider = R8ProgramResourceProvider()
