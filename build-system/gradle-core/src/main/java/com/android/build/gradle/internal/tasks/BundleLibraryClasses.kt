@@ -24,13 +24,11 @@ import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_DIR
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ClassesDirFormat.CONTAINS_CLASS_FILES_ONLY
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ClassesDirFormat.CONTAINS_SINGLE_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.toSerializable
 import com.android.builder.dexing.isJarFile
@@ -45,8 +43,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
@@ -63,81 +59,136 @@ import javax.inject.Inject
 private val CLASS_PATTERN = Pattern.compile(".*\\.class$")
 private val META_INF_PATTERN = Pattern.compile("^META-INF/.*$")
 
-/**
- * Bundle all library classes in a jar. Additional filters can be specified, in addition to ones
- * defined in [LibraryAarJarsTask.getDefaultExcludes].
- */
-@CacheableTask
-abstract class BundleLibraryClasses : NewIncrementalTask() {
-
-    /** Type of output. Must be either [CLASSES_JAR] or [CLASSES_DIR]. */
+/** Common interface for bundle classes tasks to make configuring them easier. */
+interface BundleLibraryClassesInputs {
     @get:Input
-    abstract val outputType: Property<AndroidArtifacts.ArtifactType>
+    val packageName: Property<String>
 
-    /** Output to a jar if outputType == CLASSES_JAR, null otherwise. */
-    @get:OutputFile
-    @get:Optional
-    abstract val jarOutput: RegularFileProperty
-
-    /** Output to a directory if outputType == CLASSES_DIR, null otherwise. */
-    @get:OutputDirectory
-    @get:Optional
-    abstract val dirOutput: DirectoryProperty
-
-    @get:Internal
-    lateinit var packageName: Lazy<String>
-        private set
-
-    @get:Incremental
     @get:Classpath
-    abstract val classes: ConfigurableFileCollection
+    val classes: ConfigurableFileCollection
 
     @get:Input
-    abstract val packageRClass: Property<Boolean>
+    val packageRClass: Property<Boolean>
 
     @get:Input
-    abstract val toIgnoreRegExps: ListProperty<String>
+    val toIgnoreRegExps: ListProperty<String>
 
     @get:Input
-    lateinit var jarCreatorType: JarCreatorType
-        private set
+    val jarCreatorType: Property<JarCreatorType>
+}
+
+private fun BundleLibraryClassesInputs.configure(
+    component: ComponentPropertiesImpl,
+    inputs: FileCollection,
+    packageRClass: Boolean,
+    toIgnoreRegExps: Supplier<List<String>>
+) {
+    packageName.set(component.globalScope.project.provider { component.variantDslInfo.packageFromManifest })
+    classes.from(inputs)
+    this.packageRClass.set(packageRClass)
+    if (packageRClass) {
+        classes.from(component.artifacts.getFinalProduct(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
+    }
+    // FIXME pass this as List<TextResources>
+    this.toIgnoreRegExps.set(component.globalScope.project.provider(toIgnoreRegExps::get))
+    jarCreatorType.set(component.variantScope.jarCreatorType)
+}
+
+private fun BundleLibraryClassesInputs.getWorkerActionParams(
+    inputChanges: InputChanges?, output: File
+): BundleLibraryClassesRunnable.Params {
+    val incrementalChanges = if (inputChanges?.isIncremental == true) {
+        inputChanges.getFileChanges(classes)
+    } else {
+        emptyList()
+    }
+    return BundleLibraryClassesRunnable.Params(
+        packageName = packageName.get(),
+        toIgnore = toIgnoreRegExps.get(),
+        output = output,
+        // Ignore non-existent files (without this, ResourceNamespaceTest would fail).
+        input = classes.files.filter { file -> file.exists() }.toSet(),
+        incremental = inputChanges?.isIncremental ?: false,
+        inputChanges = incrementalChanges.toSerializable(),
+        packageRClass = packageRClass.get(),
+        jarCreatorType = jarCreatorType.get()
+    )
+}
+
+/** Bundles all library classes to a directory. */
+@CacheableTask
+abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClassesInputs {
+
+    @get:OutputDirectory
+    abstract val output: DirectoryProperty
+
+    @get:Classpath
+    @get:Incremental
+    abstract override val classes: ConfigurableFileCollection
 
     override fun doTaskAction(inputChanges: InputChanges) {
-        val incrementalChanges = if (inputChanges.isIncremental) {
-            inputChanges.getFileChanges(classes)
-        } else {
-            emptyList()
+        getWorkerFacadeWithWorkers().submit(
+            BundleLibraryClassesRunnable::class.java,
+            getWorkerActionParams(inputChanges, output.asFile.get())
+        )
+    }
+
+    class CreationAction(
+        componentProperties: ComponentPropertiesImpl,
+        private val toIgnoreRegExps: Supplier<List<String>> = Supplier { emptyList<String>() }
+    ) : VariantTaskCreationAction<BundleLibraryClassesDir, ComponentPropertiesImpl>(
+        componentProperties
+    ) {
+
+        private val inputs: FileCollection
+
+        init {
+            // Because ordering matters for TransformAPI, we need to fetch classes from the
+            // transform pipeline as soon as this creation action is instantiated.
+            inputs =
+                componentProperties.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
+                    types.contains(QualifiedContent.DefaultContentType.CLASSES)
+                            && scopes.size == 1 && scopes.contains(QualifiedContent.Scope.PROJECT)
+                }
         }
-        getWorkerFacadeWithWorkers().use {
-            it.submit(
-                BundleLibraryClassesRunnable::class.java,
-                BundleLibraryClassesRunnable.Params(
-                    packageName = packageName.value,
-                    toIgnore = toIgnoreRegExps.get(),
-                    outputType = outputType.get(),
-                    output = if (outputType.get() == CLASSES_JAR) {
-                        jarOutput.get().asFile
-                    } else {
-                        check(outputType.get() == CLASSES_DIR)
-                        dirOutput.get().asFile
-                    },
-                    // Ignore non-existent files (without this, ResourceNamespaceTest would fail).
-                    input = classes.files.filter { file -> file.exists() }.toSet(),
-                    incremental = inputChanges.isIncremental,
-                    inputChanges = incrementalChanges.toSerializable(),
-                    packageRClass = packageRClass.get(),
-                    jarCreatorType = jarCreatorType
-                )
-            )
+
+        override val name: String = componentProperties.computeTaskName("bundleLibRuntimeToDir")
+
+        override val type: Class<BundleLibraryClassesDir> = BundleLibraryClassesDir::class.java
+
+        override fun handleProvider(taskProvider: TaskProvider<out BundleLibraryClassesDir>) {
+            super.handleProvider(taskProvider)
+            creationConfig.artifacts.getOperations()
+                .setInitialProvider(taskProvider, BundleLibraryClassesDir::output)
+                .on(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_DIR)
         }
+
+        override fun configure(task: BundleLibraryClassesDir) {
+            super.configure(task)
+            task.configure(creationConfig, inputs, false, toIgnoreRegExps)
+        }
+    }
+}
+
+/** Bundles all library classes to a jar. */
+@CacheableTask
+abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClassesInputs {
+
+    @get:OutputFile
+    abstract val output: RegularFileProperty
+
+    override fun doTaskAction() {
+        getWorkerFacadeWithWorkers().submit(
+            BundleLibraryClassesRunnable::class.java,
+            getWorkerActionParams(null, output.asFile.get())
+        )
     }
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl,
         private val publishedType: PublishedConfigType,
-        private val outputType: AndroidArtifacts.ArtifactType,
         private val toIgnoreRegExps: Supplier<List<String>> = Supplier { emptyList<String>() }
-    ) : VariantTaskCreationAction<BundleLibraryClasses, ComponentPropertiesImpl>(
+    ) : VariantTaskCreationAction<BundleLibraryClassesJar, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
@@ -148,10 +199,6 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
                 publishedType == PublishedConfigType.API_ELEMENTS
                         || publishedType == PublishedConfigType.RUNTIME_ELEMENTS
             ) { "Library classes bundling is supported only for api and runtime." }
-            check(outputType == CLASSES_JAR || outputType == CLASSES_DIR) {
-                "Unexpected output type: ${outputType.name}."
-            }
-
             // Because ordering matters for TransformAPI, we need to fetch classes from the
             // transform pipeline as soon as this creation action is instantiated.
             inputs = if (publishedType == PublishedConfigType.RUNTIME_ELEMENTS) {
@@ -164,77 +211,41 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
             }
         }
 
-        override val name: String =
-            componentProperties.computeTaskName(
-                if (publishedType == PublishedConfigType.API_ELEMENTS) {
-                    check(outputType == CLASSES_JAR) {
-                        "Expected CLASSES_JAR output type but found ${outputType.name}"
-                    }
-                    "bundleLibCompileToJar"
-                } else {
-                    if (outputType == CLASSES_JAR) {
-                        "bundleLibRuntimeToJar"
-                    } else {
-                        "copyLibRuntimeToDir"
-                    }
-                }
-            )
+        override val name: String = componentProperties.computeTaskName(
+            if (publishedType == PublishedConfigType.API_ELEMENTS) {
+                "bundleLibCompileToJar"
+            } else {
+                "bundleLibRuntimeToJar"
+            }
+        )
 
-        override val type: Class<BundleLibraryClasses> = BundleLibraryClasses::class.java
+        override val type: Class<BundleLibraryClassesJar> = BundleLibraryClassesJar::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out BundleLibraryClasses>
+            taskProvider: TaskProvider<out BundleLibraryClassesJar>
         ) {
             super.handleProvider(taskProvider)
 
-            if (publishedType == PublishedConfigType.API_ELEMENTS) {
-                check(outputType == CLASSES_JAR) {
-                    "Expected CLASSES_JAR output type but found ${outputType.name}"
+            creationConfig.artifacts.getOperations()
+                .setInitialProvider(
+                    taskProvider,
+                    BundleLibraryClassesJar::output
+                ).withName(FN_CLASSES_JAR).let {
+                    if (publishedType == PublishedConfigType.API_ELEMENTS) {
+                        it.on(InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR)
+                    } else {
+                        it.on(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR)
+                    }
                 }
-                creationConfig.artifacts.getOperations()
-                    .setInitialProvider(
-                        taskProvider,
-                        BundleLibraryClasses::jarOutput
-                    ).withName(FN_CLASSES_JAR).on(InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR)
-            } else {
-                if (outputType == CLASSES_JAR) {
-                    creationConfig.artifacts.getOperations()
-                        .setInitialProvider(
-                            taskProvider,
-                            BundleLibraryClasses::jarOutput
-                        ).withName(FN_CLASSES_JAR)
-                        .on(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR)
-                } else {
-                    creationConfig.artifacts.getOperations()
-                        .setInitialProvider(
-                            taskProvider,
-                            BundleLibraryClasses::dirOutput
-                        ).on(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_DIR)
-                }
-            }
         }
 
-        override fun configure(
-            task: BundleLibraryClasses
-        ) {
+        override fun configure(task: BundleLibraryClassesJar) {
             super.configure(task)
-
-            task.outputType.setDisallowChanges(outputType)
-            task.packageName = lazy { creationConfig.variantDslInfo.packageFromManifest }
-            task.classes.from(inputs)
             val packageRClass =
                 creationConfig.globalScope.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] &&
                         publishedType == PublishedConfigType.API_ELEMENTS &&
                         !creationConfig.globalScope.extension.aaptOptions.namespaced
-            task.packageRClass.set(packageRClass)
-            if (packageRClass) {
-                task.classes.from(creationConfig.artifacts.getFinalProduct(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
-            }
-            // FIXME pass this as List<TextResources>
-            task.toIgnoreRegExps.set(
-                creationConfig.globalScope.project.provider(toIgnoreRegExps::get)
-            )
-            task.jarCreatorType = creationConfig.variantScope.jarCreatorType
+            task.configure(creationConfig, inputs, packageRClass, toIgnoreRegExps)
         }
     }
 }
@@ -244,24 +255,13 @@ class BundleLibraryClassesRunnable @Inject constructor(private val params: Param
     data class Params(
         val packageName: String,
         val toIgnore: List<String>,
-        val outputType: AndroidArtifacts.ArtifactType,
         val output: File,
         val input: Set<File>,
         val incremental: Boolean,
         val inputChanges: SerializableFileChanges,
         val packageRClass: Boolean,
         val jarCreatorType: JarCreatorType
-    ) :
-        Serializable {
-
-        init {
-            if (outputType == CLASSES_JAR) {
-                check(isJarFile(output)) { "Expected jar file but found ${output.path}" }
-            } else {
-                check(outputType == CLASSES_DIR)
-                check(!isJarFile(output)) { "Expected directory but found ${output.path}" }
-            }
-        }
+    ) : Serializable {
 
         companion object {
 
@@ -284,7 +284,8 @@ class BundleLibraryClassesRunnable @Inject constructor(private val params: Param
                     && !ignorePatterns.any { it.matcher(normalizedPath).matches() }
         }
 
-        if (params.outputType == CLASSES_JAR) {
+
+        if (isJarFile(params.output)) {
             zipFilesNonIncrementally(params.input, params.output, predicate, params.jarCreatorType)
         } else {
             when (getClassesDirFormat(params.input)) {

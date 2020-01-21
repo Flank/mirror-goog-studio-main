@@ -43,7 +43,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.tasks.BundleLibraryClasses;
+import com.android.build.gradle.internal.tasks.BundleLibraryClassesDir;
+import com.android.build.gradle.internal.tasks.BundleLibraryClassesJar;
 import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
@@ -276,18 +277,15 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
 
         // Create jar with library classes used for publishing to runtime elements.
         taskFactory.register(
-                new BundleLibraryClasses.CreationAction(
+                new BundleLibraryClassesJar.CreationAction(
                         libVariantProperties,
                         AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS,
-                        AndroidArtifacts.ArtifactType.CLASSES_JAR,
                         excludeDataBindingClassesIfNecessary(libVariantProperties)));
 
         // Also create a directory containing the same classes for incremental dexing
         taskFactory.register(
-                new BundleLibraryClasses.CreationAction(
+                new BundleLibraryClassesDir.CreationAction(
                         libVariantProperties,
-                        AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS,
-                        AndroidArtifacts.ArtifactType.CLASSES_DIR,
                         excludeDataBindingClassesIfNecessary(libVariantProperties)));
 
         taskFactory.register(new BundleLibraryJavaRes.CreationAction(libVariantProperties));
@@ -513,10 +511,9 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
 
         // Create jar used for publishing to API elements (for other projects to compile against).
         taskFactory.register(
-                new BundleLibraryClasses.CreationAction(
+                new BundleLibraryClassesJar.CreationAction(
                         componentProperties,
                         AndroidArtifacts.PublishedConfigType.API_ELEMENTS,
-                        AndroidArtifacts.ArtifactType.CLASSES_JAR,
                         excludeDataBindingClassesIfNecessary(componentProperties)));
     }
 
