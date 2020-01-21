@@ -286,7 +286,7 @@ cc_test(
     tags = ["no_windows"],
     deps = [
         ":installer_lib",
-        "//external:gmock_main",
+        "@googletest//:gtest_main",
     ],
 )
 

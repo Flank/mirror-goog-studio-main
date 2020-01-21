@@ -116,8 +116,8 @@ cc_test(
         "no_windows",
     ],
     deps = [
-        "//external:gmock_main",
         "//tools/base/deploy/test/fakes:fakes_lib",
+        "@googletest//:gtest_main",
     ],
 )
 

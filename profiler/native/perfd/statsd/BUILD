@@ -38,6 +38,6 @@ cc_test(
     tags = ["no_windows"],
     deps = [
         ":statsd",
-        "//external:gmock_main",
+        "@googletest//:gtest_main",
     ],
 )

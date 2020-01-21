@@ -28,14 +28,8 @@ _git = [
         "path": "external/libpng",
     },
     {
-        "name": "gmock_repo",
-        "build_file": "tools/base/profiler/native/external/gmock.BUILD",
-        "path": "external/googletest/googlemock",
-    },
-    {
-        "name": "gtest_repo",
-        "build_file": "tools/base/profiler/native/external/gtest.BUILD",
-        "path": "external/googletest/googletest",
+        "name": "googletest",
+        "path": "external/googletest",
     },
     {
         "name": "slicer_repo",
@@ -132,9 +126,6 @@ _archives = [
 ]
 
 _binds = {
-    "gtest_main": "@gtest_repo//:gtest_main",
-    "gtest": "@gtest_repo//:gtest",
-    "gmock_main": "@gmock_repo//:gmock_main",
     "slicer": "@slicer_repo//:slicer",
     "protobuf_clib": "@protobuf_repo//:protoc_lib",
     "nanopb": "@nanopb_repo//:nanopb",

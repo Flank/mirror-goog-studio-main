@@ -96,12 +96,12 @@ cc_test(
     tags = ["no_windows"],
     deps = [
         ":profiler_cpu",
-        "//external:gmock_main",
         "//tools/base/profiler/native/perfd",
         "//tools/base/profiler/native/test:testutils",
         "//tools/base/transport/native/daemon",
         "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
+        "@googletest//:gtest_main",
         "@perfetto_repo//:cc_proto",
     ],
 )

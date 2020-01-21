@@ -41,8 +41,8 @@ cc_test(
     tags = ["no_windows"],
     deps = [
         ":profiler_energy",
-        "//external:gmock_main",
         "//tools/base/profiler/native/test:testutils",
         "//tools/base/transport/native/tests/test:testutils",
+        "@googletest//:gtest_main",
     ],
 )
