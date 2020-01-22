@@ -17,14 +17,14 @@
 package com.android.build.gradle
 
 import com.android.build.api.variant.VariantFilter
-import com.android.build.api.variant.impl.VariantConfigurationImpl
+import com.android.build.api.component.impl.ComponentIdentityImpl
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.core.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.AbstractVariantInputModelTest
 import com.android.build.gradle.internal.variant.TestVariantInputModel
-import com.android.build.gradle.internal.variant.VariantCombinator
+import com.android.build.gradle.internal.variant.DimensionCombinator
 import com.android.build.gradle.internal.variant.VariantModelImpl
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.model.BuildType
@@ -480,7 +480,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         val variantType = VariantTypeImpl.BASE_APK
 
         // gather the variant lists from the input model.
-        val variantComputer = VariantCombinator(
+        val variantComputer = DimensionCombinator(
             given, dslScope.issueReporter, variantType, given.implicitFlavorDimensions
         )
 
@@ -515,19 +515,20 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
                 val variantScope = Mockito.mock(VariantScope::class.java)
                 variantScopes.add(variantScope)
 
-                val varConfig = VariantConfigurationImpl(
-                    name,
-                    "",
-                    variant.buildType,
-                    variant.productFlavors
-                )
+                val varConfig =
+                    ComponentIdentityImpl(
+                        name,
+                        "",
+                        variant.buildType,
+                        variant.productFlavors
+                    )
 
                 Mockito.`when`(variantScope.name).thenReturn(name)
                 Mockito.`when`(variantScope.type).thenReturn(variantType)
 
                 val variantDslInfo = Mockito.mock(VariantDslInfo::class.java)
                 Mockito.`when`(variantScope.variantDslInfo).thenReturn(variantDslInfo)
-                Mockito.`when`(variantDslInfo.variantConfiguration).thenReturn(varConfig)
+                Mockito.`when`(variantDslInfo.componentIdentity).thenReturn(varConfig)
                 Mockito.`when`(variantDslInfo.productFlavorList).thenReturn(flavors)
             }
         }

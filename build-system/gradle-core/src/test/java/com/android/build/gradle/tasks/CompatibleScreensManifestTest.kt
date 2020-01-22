@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
-import com.android.build.api.variant.impl.VariantConfigurationImpl
+import com.android.build.api.component.impl.ComponentIdentityImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
@@ -91,8 +91,8 @@ class CompatibleScreensManifestTest {
         `when`<AndroidVersion>(variantDslInfo.minSdkVersion).thenReturn(AndroidVersion(21))
         `when`(variantDslInfo.baseName).thenReturn("baseName")
         `when`(variantDslInfo.variantType).thenReturn(VariantTypeImpl.BASE_APK)
-        `when`(variantDslInfo.variantConfiguration).thenReturn(
-            VariantConfigurationImpl(
+        `when`(variantDslInfo.componentIdentity).thenReturn(
+            ComponentIdentityImpl(
                 "fullVariantName",
                 "flavorName",
                 "debug"

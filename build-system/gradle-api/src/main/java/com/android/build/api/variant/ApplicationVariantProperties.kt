@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.AppVariant
-import com.android.build.api.variant.AppVariantProperties
-import com.android.build.api.variant.VariantConfiguration
-import com.android.build.gradle.internal.core.VariantDslInfo
-import javax.inject.Inject
+package com.android.build.api.variant
 
-open class AppVariantImpl @Inject constructor(
-    variantConfiguration: VariantConfiguration,
-    variantDslInfo: VariantDslInfo
-) : VariantImpl<AppVariantProperties>(variantConfiguration), AppVariant {
-    override var minSdkVersion = variantDslInfo.minSdkVersion.apiLevel
+import org.gradle.api.Incubating
+
+/**
+ * Properties for a the main Variant of an application.
+ */
+@Incubating
+interface ApplicationVariantProperties : VariantProperties {
+
 }

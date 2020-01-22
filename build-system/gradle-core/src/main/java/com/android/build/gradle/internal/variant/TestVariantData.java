@@ -16,8 +16,8 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.variant.impl.VariantImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
@@ -39,8 +39,8 @@ public class TestVariantData extends ApkVariantData {
             @NonNull TaskManager taskManager,
             @NonNull VariantScope variantScope,
             @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantImpl publicVariantApi,
-            @NonNull VariantPropertiesImpl publicVariantPropertiesApi,
+            @NonNull ComponentImpl publicVariantApi,
+            @NonNull ComponentPropertiesImpl publicVariantPropertiesApi,
             @NonNull VariantSources variantSources,
             @NonNull TestedVariantData testedVariantData) {
         super(
@@ -54,6 +54,7 @@ public class TestVariantData extends ApkVariantData {
         this.testedVariantData = testedVariantData;
 
         // create default output
+
         getPublicVariantPropertiesApi().addVariantOutput(getOutputFactory().addMainApk());
     }
 
@@ -80,9 +81,9 @@ public class TestVariantData extends ApkVariantData {
             sb.append(prefix);
             sb.append(" for the ");
             StringHelper.appendCapitalized(
-                    sb, variantDslInfo.getVariantConfiguration().getFlavorName());
+                    sb, variantDslInfo.getComponentIdentity().getFlavorName());
             StringHelper.appendCapitalized(
-                    sb, variantDslInfo.getVariantConfiguration().getBuildType());
+                    sb, variantDslInfo.getComponentIdentity().getBuildType());
             sb.append(" build");
             return sb.toString();
         } else {
@@ -90,7 +91,7 @@ public class TestVariantData extends ApkVariantData {
             sb.append(prefix);
             sb.append(" for the ");
             StringHelper.appendCapitalized(
-                    sb, variantDslInfo.getVariantConfiguration().getBuildType());
+                    sb, variantDslInfo.getComponentIdentity().getBuildType());
             sb.append(" build");
             return sb.toString();
         }

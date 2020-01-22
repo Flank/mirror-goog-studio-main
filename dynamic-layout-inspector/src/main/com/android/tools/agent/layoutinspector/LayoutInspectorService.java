@@ -94,7 +94,9 @@ public class LayoutInspectorService {
                                         command.run();
                                         byte[] arr = os.toByteArray();
                                         os.reset();
-                                        captureAndSendComponentTree(arr, root);
+                                        if (captureClosables.get(root) != null) {
+                                            captureAndSendComponentTree(arr, root);
+                                        }
                                     }
                                 });
                     }

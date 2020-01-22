@@ -17,9 +17,9 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
-import com.android.build.api.variant.BuiltArtifact
 import com.android.build.gradle.internal.api.artifact.toArtifactType
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap

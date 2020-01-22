@@ -29,7 +29,13 @@ import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORM
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.attributes.ProductFlavorAttr;
-import com.android.build.api.variant.VariantConfiguration;
+import com.android.build.api.component.ComponentIdentity;
+import com.android.build.api.component.impl.AndroidTestImpl;
+import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
+import com.android.build.api.component.impl.ComponentImpl;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.UnitTestImpl;
+import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -66,10 +72,10 @@ import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.DimensionCombination;
+import com.android.build.gradle.internal.variant.DimensionCombinator;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
-import com.android.build.gradle.internal.variant.VariantCombination;
-import com.android.build.gradle.internal.variant.VariantCombinator;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.build.gradle.options.BooleanOption;
@@ -174,7 +180,7 @@ public class VariantManager {
      * the same, but we'll try to gradually shift all the immutable state to VariantScope and
      * pretend that there's only an edge from scope to data.
      */
-    private void addVariant(BaseVariantData variantData) {
+    private void addVariant(@NonNull BaseVariantData variantData) {
         variantScopes.add(variantData.getScope());
     }
 
@@ -244,7 +250,7 @@ public class VariantManager {
             final BuildTypeData buildTypeData =
                     variantInputModel
                             .getBuildTypes()
-                            .get(variantDslInfo.getVariantConfiguration().getBuildType());
+                            .get(variantDslInfo.getComponentIdentity().getBuildType());
             DefaultAndroidSourceSet buildTypeConfigurationProvider =
                     buildTypeData.getTestSourceSet(variantType);
             if (buildTypeConfigurationProvider != null) {
@@ -467,20 +473,20 @@ public class VariantManager {
     public void computeVariants() {
         List<String> flavorDimensionList = extension.getFlavorDimensionList();
 
-        VariantCombinator computer =
-                new VariantCombinator(
+        DimensionCombinator computer =
+                new DimensionCombinator(
                         variantInputModel,
                         globalScope.getDslScope().getIssueReporter(),
                         variantFactory.getVariantType(),
                         flavorDimensionList);
 
-        List<VariantCombination> variants = computer.computeVariants();
+        List<DimensionCombination> variants = computer.computeVariants();
 
         // get some info related to testing
         BuildTypeData testBuildTypeData = getTestBuildTypeData();
 
         // loop on all the new variant objects to create the legacy ones.
-        for (VariantCombination variant : variants) {
+        for (DimensionCombination variant : variants) {
             createVariantsFromConfiguration(variant, testBuildTypeData);
         }
 
@@ -506,8 +512,8 @@ public class VariantManager {
     }
 
     @Nullable
-    private BaseVariantData createProdVariantData(
-            @NonNull VariantCombination variantCombination,
+    private BaseVariantData createVariant(
+            @NonNull DimensionCombination dimensionCombination,
             @NonNull BuildTypeData buildTypeData,
             @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
             @NonNull VariantType variantType) {
@@ -520,7 +526,7 @@ public class VariantManager {
 
         VariantBuilder variantBuilder =
                 VariantBuilder.getBuilder(
-                        variantCombination,
+                        dimensionCombination,
                         variantType,
                         defaultConfig.getProductFlavor(),
                         defaultConfigSourceProvider,
@@ -547,7 +553,7 @@ public class VariantManager {
         // (in case of enabled = false)
         VariantImpl variant =
                 variantFactory.createVariantObject(
-                        variantDslInfo.getVariantConfiguration(), variantDslInfo);
+                        variantDslInfo.getComponentIdentity(), variantDslInfo);
 
         // HACK, we need access to the new type rather than the old. This will go away in the
         // future
@@ -619,7 +625,7 @@ public class VariantManager {
 
         VariantPropertiesImpl variantProperties =
                 variantFactory.createVariantPropertiesObject(
-                        variantDslInfo.getVariantConfiguration(), variantScope);
+                        variantDslInfo.getComponentIdentity(), variantScope);
 
         BaseVariantData variantData =
                 variantFactory.createVariantData(
@@ -674,6 +680,10 @@ public class VariantManager {
         //noinspection unchecked
         commonExtension.executeVariantPropertiesOperations(variantProperties);
 
+        // also execute the delayed actions registered on the Variant object itself
+        //noinspection unchecked
+        variant.executePropertiesActions(variantProperties);
+
         return variantData;
     }
 
@@ -705,8 +715,9 @@ public class VariantManager {
     }
 
     /** Create a TestVariantData for the specified testedVariantData. */
-    public TestVariantData createTestVariantData(
-            @NonNull VariantCombination variantCombination,
+    @Nullable
+    public TestVariantData createTestComponents(
+            @NonNull DimensionCombination dimensionCombination,
             @NonNull BuildTypeData buildTypeData,
             @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
             @NonNull BaseVariantData testedVariantData,
@@ -722,7 +733,7 @@ public class VariantManager {
         @SuppressWarnings("ConstantConditions")
         VariantBuilder variantBuilder =
                 VariantBuilder.getBuilder(
-                        variantCombination,
+                        dimensionCombination,
                         type,
                         variantInputModel.getDefaultConfig().getProductFlavor(),
                         testSourceSet,
@@ -759,18 +770,30 @@ public class VariantManager {
 
         // create the Variant object so that we can run the action which may interrupt the creation
         // (in case of enabled = false)
-        VariantImpl variant =
-                variantFactory.createVariantObject(
-                        variantDslInfo.getVariantConfiguration(), variantDslInfo);
+        VariantImpl testedVariant = (VariantImpl) testedVariantData.getPublicVariantApi();
 
-        // HACK, we need access to the new type rather than the old. This will go away in the
-        // future
-        ActionableVariantObjectOperationsExecutor commonExtension =
-                (ActionableVariantObjectOperationsExecutor) extension;
-        //noinspection unchecked
-        commonExtension.executeVariantOperations(variant);
+        // this is ANDROID_TEST
+        ComponentImpl component;
+        if (type.isApk()) {
+            AndroidTestImpl androidTestVariant =
+                    variantFactory.createAndroidTestObject(
+                            variantDslInfo.getComponentIdentity(), variantDslInfo);
 
-        if (!variant.getEnabled()) {
+            testedVariant.executeAndroidTestActions(androidTestVariant);
+
+            component = androidTestVariant;
+        } else {
+            // this is UNIT_TEST
+            UnitTestImpl unitTestVariant =
+                    variantFactory.createUnitTestObject(
+                            variantDslInfo.getComponentIdentity(), variantDslInfo);
+
+            testedVariant.executeUnitTestActions(unitTestVariant);
+
+            component = unitTestVariant;
+        }
+
+        if (!component.getEnabled()) {
             return null;
         }
 
@@ -787,9 +810,28 @@ public class VariantManager {
                         variantDslInfo,
                         type);
 
-        VariantPropertiesImpl variantProperties =
-                variantFactory.createVariantPropertiesObject(
-                        variantDslInfo.getVariantConfiguration(), variantScope);
+
+        // this is ANDROID_TEST
+        ComponentPropertiesImpl componentProperties;
+        if (type.isApk()) {
+            AndroidTestPropertiesImpl androidTestProperties =
+                    variantFactory.createAndroidTestProperties(
+                            variantDslInfo.getComponentIdentity(), variantScope);
+
+            component.executePropertiesActions(androidTestProperties);
+
+            componentProperties = androidTestProperties;
+        } else {
+            // this is UNIT_TEST
+            UnitTestPropertiesImpl unitTestProperties =
+                    variantFactory.createUnitTestProperties(
+                            variantDslInfo.getComponentIdentity(), variantScope);
+
+            // also execute the delayed actions registered on the Variant object itself
+            component.executePropertiesActions(unitTestProperties);
+
+            componentProperties = unitTestProperties;
+        }
 
         // create the internal storage for this variant.
         TestVariantData testVariantData =
@@ -798,8 +840,8 @@ public class VariantManager {
                         taskManager,
                         variantScope,
                         variantDslInfo,
-                        variant,
-                        variantProperties,
+                        component,
+                        componentProperties,
                         variantBuilder.createVariantSources(),
                         (TestedVariantData) testedVariantData);
         variantScope.setVariantData(testVariantData);
@@ -807,20 +849,17 @@ public class VariantManager {
         // link the testVariant to the tested variant in the other direction
         ((TestedVariantData) testedVariantData).setTestVariantData(testVariantData, type);
 
-        // Run the VariantProperties actions
-        //noinspection unchecked
-        commonExtension.executeVariantPropertiesOperations(variantProperties);
 
         return testVariantData;
     }
 
     /**
-     * Creates Variant objects for a specific {@link VariantConfiguration}
+     * Creates Variant objects for a specific {@link ComponentIdentity}
      *
      * <p>This will create both the prod and the androidTest/unitTest variants.
      */
     private void createVariantsFromConfiguration(
-            @NonNull VariantCombination variantCombination,
+            @NonNull DimensionCombination dimensionCombination,
             @Nullable BuildTypeData testBuildTypeData) {
         VariantType variantType = variantFactory.getVariantType();
 
@@ -832,12 +871,12 @@ public class VariantManager {
         DefaultConfig defaultConfig = variantInputModel.getDefaultConfig().getProductFlavor();
 
         BuildTypeData buildTypeData =
-                variantInputModel.getBuildTypes().get(variantCombination.getBuildType());
+                variantInputModel.getBuildTypes().get(dimensionCombination.getBuildType());
         BuildType buildType = buildTypeData.getBuildType();
 
         // get the list of ProductFlavorData from the list of flavor name
         List<ProductFlavorData<ProductFlavor>> productFlavorDataList =
-                variantCombination
+                dimensionCombination
                         .getProductFlavors()
                         .stream()
                         .map(it -> variantInputModel.getProductFlavors().get(it.getSecond()))
@@ -853,7 +892,7 @@ public class VariantManager {
 
         if (variantFilterAction != null) {
             variantFilter.reset(
-                    variantCombination, defaultConfig, buildType, variantType, productFlavorList);
+                    dimensionCombination, defaultConfig, buildType, variantType, productFlavorList);
 
             try {
                 // variantFilterAction != null always true here.
@@ -867,8 +906,11 @@ public class VariantManager {
         if (!ignore) {
             // create the prod variant
             BaseVariantData variantData =
-                    createProdVariantData(
-                            variantCombination, buildTypeData, productFlavorDataList, variantType);
+                    createVariant(
+                            dimensionCombination,
+                            buildTypeData,
+                            productFlavorDataList,
+                            variantType);
             if (variantData != null) {
                 addVariant(variantData);
 
@@ -939,23 +981,27 @@ public class VariantManager {
                 if (variantFactory.hasTestScope()) {
                     if (buildTypeData == testBuildTypeData) {
                         TestVariantData androidTestVariantData =
-                                createTestVariantData(
-                                        variantCombination,
+                                createTestComponents(
+                                        dimensionCombination,
                                         buildTypeData,
                                         productFlavorDataList,
                                         variantData,
                                         ANDROID_TEST);
-                        addVariant(androidTestVariantData);
+                        if (androidTestVariantData != null) {
+                            addVariant(androidTestVariantData);
+                        }
                     }
 
                     TestVariantData unitTestVariantData =
-                            createTestVariantData(
-                                    variantCombination,
+                            createTestComponents(
+                                    dimensionCombination,
                                     buildTypeData,
                                     productFlavorDataList,
                                     variantData,
                                     UNIT_TEST);
-                    addVariant(unitTestVariantData);
+                    if (unitTestVariantData != null) {
+                        addVariant(unitTestVariantData);
+                    }
                 }
             }
         }

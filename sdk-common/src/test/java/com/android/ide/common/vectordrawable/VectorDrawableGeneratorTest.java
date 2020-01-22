@@ -924,6 +924,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_gradient_radial_transform_rotate_translate");
     }
 
+    public void testSvgGradientRadialTransformRotateTranslate2() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_rotate_translate2");
+    }
+
     public void testSvgGradientRadialTransformRotateTranslateScale() throws Exception {
         checkSvgConversion("test_gradient_radial_transform_rotate_translate_scale");
     }

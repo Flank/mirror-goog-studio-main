@@ -16,15 +16,15 @@
 
 package com.android.build.gradle.internal.core
 
-import com.android.build.api.variant.impl.VariantConfigurationImpl
-import com.android.build.gradle.internal.variant.VariantCombinationImpl
+import com.android.build.api.component.impl.ComponentIdentityImpl
+import com.android.build.gradle.internal.variant.DimensionCombinationImpl
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
-import com.android.testutils.AbstractGivenExpectBuilderTest
+import com.android.testutils.AbstractBuildGivenBuildExpectTest
 import org.junit.Test
 
 class VariantBuilderComputeNameTest :
-    AbstractGivenExpectBuilderTest<VariantBuilderComputeNameTest.GivenBuilder, VariantBuilderComputeNameTest.ResultBuilder>() {
+    AbstractBuildGivenBuildExpectTest<VariantBuilderComputeNameTest.GivenBuilder, VariantBuilderComputeNameTest.ResultBuilder>() {
 
     @Test
     fun `app with build-type but not flavors`() {
@@ -204,7 +204,7 @@ class VariantBuilderComputeNameTest :
     override fun instantiateResult() = ResultBuilder()
 
     override fun defaultWhen(given: GivenBuilder): ResultBuilder {
-        val varCombo = VariantCombinationImpl(given.buildType, given.flavors)
+        val varCombo = DimensionCombinationImpl(given.buildType, given.flavors)
         var flavorName: String = ""
 
         return ResultBuilder().also {
@@ -213,7 +213,12 @@ class VariantBuilderComputeNameTest :
             }
             it.baseName = VariantBuilder.computeBaseName(varCombo, given.variantType)
             it.fullNameWithSplit = VariantBuilder.computeFullNameWithSplits(
-                VariantConfigurationImpl(it.name, flavorName, given.buildType, given.flavors),
+                ComponentIdentityImpl(
+                    it.name,
+                    flavorName,
+                    given.buildType,
+                    given.flavors
+                ),
                 given.variantType,"split"
             )
         }
@@ -228,32 +233,9 @@ class VariantBuilderComputeNameTest :
         var flavors: List<Pair<String, String>> = listOf()
     }
 
-    class ResultBuilder {
-        lateinit var name: String
-        lateinit var baseName: String
-        lateinit var fullNameWithSplit: String
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as ResultBuilder
-
-            if (name != other.name) return false
-            if (baseName != other.baseName) return false
-            if (fullNameWithSplit != other.fullNameWithSplit) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = name.hashCode()
-            result = 31 * result + baseName.hashCode()
-            result = 31 * result + fullNameWithSplit.hashCode()
-            return result
-        }
-
-        override fun toString(): String {
-            return "ResultBuilder(name='$name', baseName='$baseName', fullNameWithSplit='$fullNameWithSplit')"
-        }
-    }
+    data class ResultBuilder(
+        var name: String = "",
+        var baseName: String = "",
+        var fullNameWithSplit: String = ""
+    )
 }

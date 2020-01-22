@@ -24,6 +24,7 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.vectordrawable.PathParser.ParseMode;
 import com.google.common.collect.ImmutableMap;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -166,17 +167,6 @@ class SvgGradientNode extends SvgNode {
             return;
         }
 
-        writer.write(indent);
-        if (mGradientUsage == GradientUsage.FILL) {
-            writer.write("<aapt:attr name=\"android:fillColor\">");
-        } else {
-            writer.write("<aapt:attr name=\"android:strokeColor\">");
-        }
-        writer.write(System.lineSeparator());
-        writer.write(indent);
-        writer.write(INDENT_UNIT);
-        writer.write("<gradient ");
-
         // By default, the dimensions of the gradient is the bounding box of the path.
         setBoundingBox();
         double height = boundingBox.getHeight();
@@ -194,19 +184,36 @@ class SvgGradientNode extends SvgNode {
             width = getTree().getWidth();
         }
 
+        if (width == 0 || height == 0) {
+            return; // The gradient is not visible because it doesn't occupy any area.
+        }
+
+        writer.write(indent);
+        if (mGradientUsage == GradientUsage.FILL) {
+            writer.write("<aapt:attr name=\"android:fillColor\">");
+        } else {
+            writer.write("<aapt:attr name=\"android:strokeColor\">");
+        }
+        writer.write(System.lineSeparator());
+        writer.write(indent);
+        writer.write(INDENT_UNIT);
+        writer.write("<gradient ");
+
         // TODO: Fix matrix transformations that include skew element and SVGs that define scale before rotate.
         // Additionally skew transformations have not been tested.
-        // If there is a gradientTransform parse and store in mLocalTransform.
-        AffineTransform identity = new AffineTransform();
+        // If there is a gradientTransform, parse and store in mLocalTransform.
         if (mVdAttributesMap.containsKey("gradientTransform")) {
             String transformValue = mVdAttributesMap.get("gradientTransform");
             parseLocalTransform(transformValue);
             if (!isUserSpaceOnUse) {
-                identity.scale(1.0 / width, 1.0 / height);
-                mLocalTransform.concatenate(identity);
-                identity.setToIdentity();
-                identity.scale(width, height);
-                mLocalTransform.preConcatenate(identity);
+                AffineTransform tr = new AffineTransform(width, 0, 0, height, 0, 0);
+                mLocalTransform.preConcatenate(tr);
+                try {
+                    tr.invert();
+                } catch (NoninvertibleTransformException e) {
+                    throw new Error(e); // Not going to happen because width * height != 0;
+                }
+                mLocalTransform.concatenate(tr);
             }
         }
 

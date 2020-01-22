@@ -16,7 +16,7 @@
 
 package com.android.build.api.dsl
 
-import com.android.build.api.variant.GenericVariantFilterBuilder
+import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
 import org.gradle.api.Action
@@ -311,42 +311,46 @@ interface CommonExtension<
     fun testOptions(action: TestOptionsT.() -> Unit)
 
     /**
-     * Adds a [Action] to be performed on all [Variant] objects associated with this module.
+     * Adds an [Action] to be performed on all [VariantT] objects associated with this module
      */
     fun onVariants(action: Action<VariantT>)
 
     /**
-     * Adds a lambda function to be performed on all [Variant] objects associated with his module
+     * Adds a lambda function to be performed on all [VariantT] objects associated with this module
      */
     fun onVariants(action: VariantT.() -> Unit)
 
     /**
-     * Creates a filter on [Variant] objects for this module. The filter will reduce the set of
-     * applicable variants to run an action on.
+     * A registrar to apply actions on subsets of [VariantT] via filters.
      *
-     * @return a [GenericVariantFilterBuilder] of [VariantT]
+     * @return a [GenericFilteredComponentActionRegistrar] of [VariantT]
      */
-    val onVariants: GenericVariantFilterBuilder<VariantT>
+    val onVariants: GenericFilteredComponentActionRegistrar<VariantT>
 
     /**
-     * Registers an [Action] to be executed on each [VariantProperties] of the project.
+     * Adds an [Action] to be performed on all [VariantPropertiesT] objects associated with this
+     * module
+     *
      * This method is a shortcut for calling [onVariants] followed by [Variant.onProperties].
      *
-     * @param action an [Action] taking a [VariantProperties] as a parameter.
+     * @param action a lambda taking a [VariantProperties] as a parameter.
      */
     fun onVariantProperties(action: Action<VariantPropertiesT>)
 
     /**
-     * Adds a lambda function to be performed on all [VariantProperties] objects associated
-     * with his module
+     * Adds a lambda function to be performed on all [VariantPropertiesT] objects associated with
+     * this module.
+     *
+     * This method is a shortcut for calling [onVariants] followed by [Variant.onProperties].
+     *
+     * @param action a lambda taking a [VariantProperties] as a parameter.
      */
     fun onVariantProperties(action: VariantPropertiesT.() -> Unit)
 
     /**
-     * Creates a filter on [VariantProperties] objects for this module. The filter will reduce the
-     * set of application variants to run an action on.
+     * A registrar to apply actions on subsets of [VariantPropertiesT] via filters.
      *
-     * @areturn a [GenericVariantFilterBuilder] of [VariantPropertiesT]
+     * @areturn a [GenericFilteredComponentActionRegistrar] of [VariantPropertiesT]
      */
-    val onVariantProperties: GenericVariantFilterBuilder<VariantPropertiesT>
+    val onVariantProperties: GenericFilteredComponentActionRegistrar<VariantPropertiesT>
 }

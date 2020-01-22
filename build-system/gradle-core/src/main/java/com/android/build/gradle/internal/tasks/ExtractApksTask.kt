@@ -180,8 +180,8 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             }
 
             task.extractInstant = variantScope.globalScope.projectOptions.get(BooleanOption.IDE_EXTRACT_INSTANT)
-            task.applicationId.setDisallowChanges(
-                variantScope.variantData.publicVariantPropertiesApi.applicationId)
+
+            task.applicationId.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi.applicationId)
             task.variantType.setDisallowChanges(variantScope.variantData.type.toString())
         }
     }

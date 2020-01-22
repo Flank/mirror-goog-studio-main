@@ -16,23 +16,18 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity
 
-import com.android.tools.idea.wizard.template.renderIf
-
+import com.android.tools.idea.wizard.template.impl.activities.common.commonActivityBody
 
 fun androidManifestXml(
   activityClass: String,
   isLauncher: Boolean,
   isLibrary: Boolean,
   packageName: String,
-  simpleName: String
+  simpleName: String,
+  isNewModule: Boolean
 ): String {
-  val activityBody = renderIf(isLauncher && !isLibrary) {"""
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
-  """
-  }
+  // TODO(qumeric): add activityLabel like in other activity templates
+  val activityBody = commonActivityBody(isLauncher || isNewModule, isLibrary)
 
   return """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">

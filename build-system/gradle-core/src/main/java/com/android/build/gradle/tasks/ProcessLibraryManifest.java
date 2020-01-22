@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.variant.VariantProperties;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
@@ -365,16 +365,16 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
 
     public static class CreationAction extends VariantTaskCreationAction<ProcessLibraryManifest> {
 
-        private final VariantProperties variantProperties;
+        private final ComponentPropertiesImpl componentProperties;
         /**
          * {@code EagerTaskCreationAction} for the library process manifest task.
          *
          * @param scope The library variant scope.
          */
         public CreationAction(
-                @NonNull VariantProperties variantProperties, @NonNull VariantScope scope) {
+                @NonNull ComponentPropertiesImpl componentProperties, @NonNull VariantScope scope) {
             super(scope);
-            this.variantProperties = variantProperties;
+            this.componentProperties = componentProperties;
         }
 
         @NonNull
@@ -481,7 +481,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             task.versionName.disallowChanges();
             task.versionCode.set(task.getProject().provider(variantDslInfo::getVersionCode));
             task.versionCode.disallowChanges();
-            task.packageOverride.set(variantProperties.getApplicationId());
+            task.packageOverride.set(componentProperties.getApplicationId());
             task.packageOverride.disallowChanges();
             task.manifestPlaceholders.set(
                     task.getProject().provider(variantDslInfo::getManifestPlaceholders));

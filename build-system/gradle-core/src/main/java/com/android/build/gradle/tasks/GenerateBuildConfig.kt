@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -183,8 +183,8 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
     // ----- Config Action -----
 
-    internal class CreationAction(private val variantProperties: VariantPropertiesImpl) :
-        VariantTaskCreationAction<GenerateBuildConfig>(variantProperties.variantScope) {
+    internal class CreationAction(private val componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<GenerateBuildConfig>(componentProperties.variantScope) {
 
         override val name: String = variantScope.getTaskName("generate", "BuildConfig")
 
@@ -209,7 +209,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             task.buildConfigPackageName.disallowChanges()
 
             if (!variantDslInfo.variantType.isAar) {
-                task.appPackageName.set(variantProperties.applicationId)
+                task.appPackageName.set(componentProperties.applicationId)
             }
             task.appPackageName.disallowChanges()
 
@@ -225,10 +225,10 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             task.debuggable.setDisallowChanges(variantData.variantDslInfo.isDebuggable)
 
-            task.buildTypeName = variantDslInfo.variantConfiguration.buildType
+            task.buildTypeName = variantDslInfo.componentIdentity.buildType
 
             // no need to memoize, variant configuration does that already.
-            task.flavorName.set(project.provider { variantDslInfo.variantConfiguration.flavorName })
+            task.flavorName.set(project.provider { variantDslInfo.componentIdentity.flavorName })
             task.flavorName.disallowChanges()
 
             task.flavorNamesWithDimensionNames.set(project.provider {

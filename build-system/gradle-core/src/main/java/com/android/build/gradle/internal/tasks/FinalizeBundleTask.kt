@@ -203,8 +203,8 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             if (!variantScope.variantDslInfo.isDebuggable) {
                 task.signingConfig = SigningConfigProvider.create(variantScope)
             }
-            task.applicationId.setDisallowChanges(
-                variantScope.variantData.publicVariantPropertiesApi.applicationId)
+
+            task.applicationId.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi.applicationId)
             task.variantType.setDisallowChanges(variantScope.variantData.type.toString())
         }
 

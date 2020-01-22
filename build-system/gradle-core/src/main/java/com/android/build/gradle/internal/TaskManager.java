@@ -55,12 +55,12 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.PublicArtifactType;
+import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
-import com.android.build.api.variant.VariantConfiguration;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
@@ -2553,8 +2553,8 @@ public abstract class TaskManager {
                 if (!variantType.isTestComponent()) {
                     final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
                     final VariantDslInfo variantDslInfo = variantScope.getVariantDslInfo();
-                    final VariantConfiguration variantConfiguration =
-                            variantDslInfo.getVariantConfiguration();
+                    final ComponentIdentity variantConfiguration =
+                            variantDslInfo.getComponentIdentity();
                     final String buildType = variantConfiguration.getBuildType();
 
                     final TaskProvider<? extends Task> assembleTask =
@@ -2682,7 +2682,7 @@ public abstract class TaskManager {
                         task.setDescription(
                                 "Assembles main output for variant "
                                         + scope.getVariantDslInfo()
-                                                .getVariantConfiguration()
+                                                .getComponentIdentity()
                                                 .getName()),
                 taskProvider -> scope.getTaskContainer().setAssembleTask(taskProvider));
     }
@@ -2700,9 +2700,7 @@ public abstract class TaskManager {
                 task -> {
                     task.setDescription(
                             "Assembles bundle for variant "
-                                    + scope.getVariantDslInfo()
-                                            .getVariantConfiguration()
-                                            .getName());
+                                    + scope.getVariantDslInfo().getComponentIdentity().getName());
                     task.dependsOn(
                             scope.getArtifacts()
                                     .getFinalProduct(InternalArtifactType.BUNDLE.INSTANCE));

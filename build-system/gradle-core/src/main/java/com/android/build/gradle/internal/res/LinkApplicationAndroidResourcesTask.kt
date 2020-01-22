@@ -21,8 +21,8 @@ import com.android.SdkConstants.FN_RES_BASE
 import com.android.SdkConstants.FN_R_CLASS_JAR
 import com.android.SdkConstants.RES_QUALIFIER_SEP
 import com.android.build.VariantOutput
-import com.android.build.api.variant.VariantProperties
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.component.ComponentProperties
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.dsl.convert
@@ -48,7 +48,6 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
@@ -72,7 +71,6 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -345,7 +343,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     }
 
     abstract class BaseCreationAction(
-        private val variantProperties: VariantProperties,
+        private val componentProperties: ComponentProperties,
         scope: VariantScope,
         private val generateLegacyMultidexMainDexProguardRules: Boolean,
         private val baseName: String?,
@@ -404,7 +402,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.aapt2Version = aapt2Version
 
             val project = variantScope.globalScope.project
-            task.applicationId.setDisallowChanges(variantProperties.applicationId)
+            task.applicationId.setDisallowChanges(componentProperties.applicationId)
 
             task.incrementalFolder = variantScope.getIncrementalDir(name)
             if (variantData.type.canHaveSplits) {
@@ -495,12 +493,12 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     }
 
     internal class CreationAction(
-        variantProperties: VariantPropertiesImpl,
+        componentProperties: ComponentPropertiesImpl,
         generateLegacyMultidexMainDexProguardRules: Boolean,
         private val sourceArtifactType: TaskManager.MergeType,
         baseName: String,
         isLibrary: Boolean
-    ) : BaseCreationAction(variantProperties, variantProperties.variantScope, generateLegacyMultidexMainDexProguardRules, baseName, isLibrary) {
+    ) : BaseCreationAction(componentProperties, componentProperties.variantScope, generateLegacyMultidexMainDexProguardRules, baseName, isLibrary) {
 
         override fun preconditionsCheck(variantData: BaseVariantData) {
             if (variantData.type.isAar) {
@@ -584,11 +582,11 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
      * discovery task.
      */
     class NamespacedCreationAction(
-        variantProperties: VariantProperties,
+        componentProperties: ComponentProperties,
         scope: VariantScope,
         generateLegacyMultidexMainDexProguardRules: Boolean,
         baseName: String?
-    ) : BaseCreationAction(variantProperties, scope, generateLegacyMultidexMainDexProguardRules, baseName, false) {
+    ) : BaseCreationAction(componentProperties, scope, generateLegacyMultidexMainDexProguardRules, baseName, false) {
 
         override fun handleProvider(taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>) {
             super.handleProvider(taskProvider)

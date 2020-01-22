@@ -55,4 +55,5 @@ interface TestExtension<
             TestVariant,
             TestVariantProperties> {
     // TODO(b/140406102)
+
 }

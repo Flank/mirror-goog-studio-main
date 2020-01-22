@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.ConfigurableFileCollection
@@ -66,10 +66,10 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
     }
 
     internal class CreationAction(
-        private val variantProperties: VariantPropertiesImpl,
+        private val componentProperties: ComponentPropertiesImpl,
         private val assetPackManifestFileCollection: FileCollection,
         private val assetPackNames: Set<String>
-    ) : VariantTaskCreationAction<ProcessAssetPackManifestTask>(variantProperties.variantScope) {
+    ) : VariantTaskCreationAction<ProcessAssetPackManifestTask>(componentProperties.variantScope) {
         override val type = ProcessAssetPackManifestTask::class.java
         override val name = variantScope.getTaskName("process", "AssetPackManifests")
 
@@ -85,7 +85,7 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
         override fun configure(task: ProcessAssetPackManifestTask) {
             super.configure(task)
 
-            task.applicationId = variantProperties.applicationId
+            task.applicationId = componentProperties.applicationId
             task.assetPackManifests.from(assetPackManifestFileCollection)
             task.assetPackNames = assetPackNames
         }

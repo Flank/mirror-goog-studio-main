@@ -16,16 +16,12 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.VariantOutput
 import com.android.build.api.variant.BuiltArtifacts
-import com.android.build.api.variant.BuiltArtifactsLoader
-import com.android.build.api.variant.VariantConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.Directory
 import org.junit.Assert.fail
@@ -33,7 +29,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito
 import java.io.File
-import java.io.FileReader
 import java.io.IOException
 import kotlin.test.assertNotNull
 

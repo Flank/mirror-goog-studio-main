@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -69,8 +69,8 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
         declaration.save(outputFile.get().asFile)
     }
 
-    internal class CreationAction(private val variantProperties: VariantPropertiesImpl) :
-        VariantTaskCreationAction<ModuleMetadataWriterTask>(variantProperties.variantScope) {
+    internal class CreationAction(private val componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<ModuleMetadataWriterTask>(componentProperties.variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("write", "ModuleMetadata")
@@ -90,7 +90,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
 
         override fun configure(task: ModuleMetadataWriterTask) {
             super.configure(task)
-            task.applicationId.set(variantProperties.applicationId)
+            task.applicationId.set(componentProperties.applicationId)
             task.debuggable
                 .setDisallowChanges(variantScope.variantDslInfo.isDebuggable)
             task.versionCode.setDisallowChanges(variantScope.variantData.publicVariantPropertiesApi

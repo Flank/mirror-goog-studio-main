@@ -38,7 +38,7 @@ fun RecipeExecutor.androidThingsActivityRecipe(
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
-  mergeXml(androidManifestXml(activityClass, moduleData.isLibrary, moduleData.isNew, isThingsLauncher, packageName),
+  mergeXml(androidManifestXml(activityClass, moduleData.isLibrary, moduleData.isNew, isThingsLauncher || moduleData.isNew, packageName),
            manifestOut.resolve("AndroidManifest.xml"))
 
   if (generateLayout) {

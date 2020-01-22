@@ -48,7 +48,7 @@ fun RecipeExecutor.googleMapsActivityRecipe(
   addDependency("com.android.support:appcompat-v7:${buildApi}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 
-  mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, packageName, simpleName),
+  mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, packageName, simpleName, moduleData.isNew),
            manifestOut.resolve("AndroidManifest.xml"))
 
   save(activityMapXml(activityClass, packageName), resOut.resolve("layout/${layoutName}.xml"))
