@@ -25,7 +25,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
@@ -94,13 +93,11 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
 
     public LibraryTaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
                 globalScope,
-                dataBindingBuilder,
                 extension,
                 toolingRegistry,
                 recorder);
@@ -538,10 +535,12 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
                                     InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS.INSTANCE)
                             .get()
                             .getAsFile();
-            return dataBindingBuilder.getJarExcludeList(
-                    componentProperties.getVariantData().getLayoutXmlProcessor(),
-                    excludeFile,
-                    dependencyArtifactsDir);
+            return globalScope
+                    .getDataBindingBuilder()
+                    .getJarExcludeList(
+                            componentProperties.getLayoutXmlProcessor(),
+                            excludeFile,
+                            dependencyArtifactsDir);
         };
     }
 

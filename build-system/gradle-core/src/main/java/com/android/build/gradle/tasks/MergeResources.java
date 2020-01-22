@@ -780,7 +780,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
                             private LayoutXmlProcessor getProcessor() {
                                 if (processor == null) {
-                                    processor = variantData.getLayoutXmlProcessor();
+                                    processor = creationConfig.getLayoutXmlProcessor();
                                 }
                                 return processor;
                             }

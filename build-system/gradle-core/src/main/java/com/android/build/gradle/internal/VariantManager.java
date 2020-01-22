@@ -596,7 +596,6 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
                         pathHelper,
                         artifacts,
                         globalScope,
-                        taskManager,
                         taskContainer);
 
         // then the new VariantProperties which will contain the 2 old objects.
@@ -848,7 +847,6 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
                         artifacts,
                         (TestedVariantData) testedVariantProperties.getVariantData(),
                         globalScope,
-                        taskManager,
                         taskContainer);
 
         // this is ANDROID_TEST

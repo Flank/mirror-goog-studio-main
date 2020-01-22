@@ -67,13 +67,11 @@ public abstract class AbstractAppTaskManager<VariantPropertiesT extends VariantP
 
     protected AbstractAppTaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
                 globalScope,
-                dataBindingBuilder,
                 extension,
                 toolingRegistry,
                 recorder);

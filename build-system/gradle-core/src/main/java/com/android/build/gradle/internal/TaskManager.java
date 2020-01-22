@@ -110,7 +110,6 @@ import com.android.build.gradle.internal.tasks.DexMergingTask;
 import com.android.build.gradle.internal.tasks.DexSplitterTask;
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles;
 import com.android.build.gradle.internal.tasks.ExtractTryWithResourcesSupportJar;
-import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.JacocoTask;
@@ -180,7 +179,6 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PrepareKotlinCompileTask;
 import com.android.build.gradle.tasks.ProcessApplicationManifest;
-import com.android.build.gradle.tasks.ProcessLibraryManifest;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
@@ -278,7 +276,6 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
 
     @NonNull protected final Project project;
     @NonNull protected final ProjectOptions projectOptions;
-    @NonNull protected final DataBindingBuilder dataBindingBuilder;
     @NonNull protected final BaseExtension extension;
     @NonNull protected final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull protected final GlobalScope globalScope;
@@ -292,14 +289,12 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
 
     public TaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         this.globalScope = globalScope;
         this.project = globalScope.getProject();
         this.projectOptions = globalScope.getProjectOptions();
-        this.dataBindingBuilder = dataBindingBuilder;
         this.extension = extension;
         this.toolingRegistry = toolingRegistry;
         this.recorder = recorder;
@@ -310,11 +305,6 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         this.buildCache = globalScope.getBuildCache();
 
         taskFactory = new TaskFactoryImpl(project.getTasks());
-    }
-
-    @NonNull
-    public DataBindingBuilder getDataBindingBuilder() {
-        return dataBindingBuilder;
     }
 
     /** Creates the tasks for a given VariantPropertiesImpl. */
@@ -2365,7 +2355,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         taskFactory.register(
                 new DataBindingMergeDependencyArtifactsTask.CreationAction(componentProperties));
 
-        dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
+        globalScope.getDataBindingBuilder().setDebugLogEnabled(getLogger().isDebugEnabled());
 
         taskFactory.register(new DataBindingGenBaseClassesTask.CreationAction(componentProperties));
 
@@ -2401,7 +2391,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                     DataBindingCompilerArguments.createArguments(
                             componentProperties,
                             getLogger().isDebugEnabled(),
-                            dataBindingBuilder.getPrintMachineReadableOutput());
+                            globalScope.getDataBindingBuilder().getPrintMachineReadableOutput());
             options.compilerArgumentProvider(dataBindingArgs);
         } else {
             getLogger()
@@ -3033,6 +3023,8 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
             @NonNull List<ComponentPropertiesImpl> components) {
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         boolean useAndroidX = projectOptions.get(BooleanOption.USE_ANDROID_X);
+
+        DataBindingBuilder dataBindingBuilder = globalScope.getDataBindingBuilder();
 
         if (viewBindingEnabled) {
             String version =

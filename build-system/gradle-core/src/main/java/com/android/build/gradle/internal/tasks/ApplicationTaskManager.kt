@@ -46,13 +46,11 @@ import java.util.stream.Collectors
 
 class ApplicationTaskManager(
     globalScope: GlobalScope,
-    databindingBuilder: DataBindingBuilder,
     extension: BaseExtension,
     toolingRegistry: ToolingModelBuilderRegistry,
     recorder: Recorder
 ) : AbstractAppTaskManager<ApplicationVariantPropertiesImpl>(
     globalScope,
-    databindingBuilder,
     extension,
     toolingRegistry,
     recorder

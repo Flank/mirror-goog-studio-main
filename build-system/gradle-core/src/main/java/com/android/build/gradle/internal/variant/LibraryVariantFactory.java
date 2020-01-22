@@ -25,7 +25,6 @@ import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
-import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.LibraryVariantImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
@@ -117,7 +116,6 @@ public class LibraryVariantFactory extends BaseVariantFactory<LibraryVariantProp
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
-            @NonNull TaskManager<LibraryVariantPropertiesImpl> taskManager,
             @NonNull MutableTaskContainer taskContainer) {
         return new LibraryVariantData(
                 componentIdentity,
@@ -127,7 +125,6 @@ public class LibraryVariantFactory extends BaseVariantFactory<LibraryVariantProp
                 paths,
                 artifacts,
                 globalScope,
-                taskManager,
                 taskContainer);
     }
 

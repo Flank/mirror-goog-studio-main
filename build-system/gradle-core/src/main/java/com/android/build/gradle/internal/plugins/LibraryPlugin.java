@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.plugins;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
@@ -106,13 +105,11 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantPropertiesImpl> {
     @Override
     protected LibraryTaskManager createTaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new LibraryTaskManager(
                 globalScope,
-                dataBindingBuilder,
                 extension,
                 toolingRegistry,
                 recorder);

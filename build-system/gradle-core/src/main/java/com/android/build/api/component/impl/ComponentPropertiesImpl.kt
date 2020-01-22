@@ -16,6 +16,8 @@
 
 package com.android.build.api.component.impl
 
+import android.databinding.tool.LayoutXmlProcessor
+import android.databinding.tool.LayoutXmlProcessor.OriginalFileLookup
 import com.android.build.api.artifact.Operations
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.ComponentProperties
@@ -45,6 +47,9 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
+import com.android.builder.model.ApiVersion
+import com.android.ide.common.blame.MergingLog
+import com.android.ide.common.blame.SourceFile
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
@@ -132,6 +137,24 @@ abstract class ComponentPropertiesImpl(
         }
 
         return null
+    }
+
+    override val layoutXmlProcessor: LayoutXmlProcessor by lazy {
+        val resourceBlameLogDir = paths.resourceBlameLogDir
+        val mergingLog = MergingLog(resourceBlameLogDir)
+        LayoutXmlProcessor(
+            variantDslInfo.originalApplicationId,
+            globalScope
+                .dataBindingBuilder
+                .createJavaFileWriter(paths.classOutputForDataBinding),
+            OriginalFileLookup { file: File? ->
+                val input =
+                    SourceFile(file!!)
+                val original = mergingLog.find(input)
+                if (original === input) null else original.sourceFile
+            },
+            globalScope.projectOptions[BooleanOption.USE_ANDROID_X]
+        )
     }
 
     fun addVariantOutput(apkData: ApkData): VariantOutputImpl {

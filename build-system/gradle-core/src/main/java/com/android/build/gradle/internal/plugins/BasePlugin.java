@@ -145,8 +145,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
     GlobalScope globalScope;
     protected SyncIssueReporterImpl syncIssueHandler;
 
-    private DataBindingBuilder dataBindingBuilder;
-
     private VariantFactory<VariantPropertiesT> variantFactory;
 
     private SourceSetManager sourceSetManager;
@@ -196,7 +194,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
     @NonNull
     protected abstract TaskManager<VariantPropertiesT> createTaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder);
@@ -308,9 +305,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                         getLogger(),
                         syncIssueHandler);
 
-        dataBindingBuilder = new DataBindingBuilder();
-        dataBindingBuilder.setPrintMachineReadableOutput(
-                SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
 
         projectOptions.getAllOptions().forEach(deprecationReporter::reportOptionIssuesIfAny);
 
@@ -447,7 +441,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
         taskManager =
                 createTaskManager(
                         globalScope,
-                        dataBindingBuilder,
                         extension,
                         registry,
                         threadRecorder);

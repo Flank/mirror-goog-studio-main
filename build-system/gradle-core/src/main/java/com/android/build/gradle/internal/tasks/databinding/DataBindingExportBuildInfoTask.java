@@ -106,7 +106,7 @@ public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask 
                     creationConfig
                             .getGlobalScope()
                             .getProject()
-                            .provider(creationConfig.getVariantData()::getLayoutXmlProcessor));
+                            .provider(creationConfig::getLayoutXmlProcessor));
             task.xmlProcessor.disallowChanges();
             task.useAndroidX =
                     creationConfig

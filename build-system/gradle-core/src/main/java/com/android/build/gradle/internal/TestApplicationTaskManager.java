@@ -61,13 +61,11 @@ public class TestApplicationTaskManager extends AbstractAppTaskManager<TestVaria
 
     public TestApplicationTaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
                 globalScope,
-                dataBindingBuilder,
                 extension,
                 toolingRegistry,
                 recorder);

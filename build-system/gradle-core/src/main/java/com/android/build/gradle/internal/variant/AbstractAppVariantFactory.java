@@ -24,7 +24,6 @@ import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
-import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
@@ -61,7 +60,6 @@ public abstract class AbstractAppVariantFactory<VariantPropertiesT extends Varia
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
-            @NonNull TaskManager<VariantPropertiesT> taskManager,
             @NonNull MutableTaskContainer taskContainer) {
         return new ApplicationVariantData(
                 componentIdentity,
@@ -71,7 +69,6 @@ public abstract class AbstractAppVariantFactory<VariantPropertiesT extends Varia
                 paths,
                 artifacts,
                 globalScope,
-                taskManager,
                 taskContainer);
     }
 

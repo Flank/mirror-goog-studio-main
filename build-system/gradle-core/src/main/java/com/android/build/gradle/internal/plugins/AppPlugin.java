@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.plugins;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.gradle.AppExtension;
@@ -117,12 +116,10 @@ public class AppPlugin extends AbstractAppPlugin<ApplicationVariantPropertiesImp
     @Override
     protected ApplicationTaskManager createTaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder) {
-        return new ApplicationTaskManager(
-                globalScope, dataBindingBuilder, extension, toolingRegistry, threadRecorder);
+        return new ApplicationTaskManager(globalScope, extension, toolingRegistry, threadRecorder);
     }
 
     private static class DeprecatedConfigurationAction implements Action<Dependency> {

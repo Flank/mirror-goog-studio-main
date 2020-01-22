@@ -16,14 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
-import android.databinding.tool.DataBindingBuilder
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.TaskManager
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTask
@@ -33,13 +31,11 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 internal class DynamicFeatureTaskManager(
     globalScope: GlobalScope,
-    databindingBuilder: DataBindingBuilder,
     extension: BaseExtension,
     toolingRegistry: ToolingModelBuilderRegistry,
     recorder: Recorder
 ) : AbstractAppTaskManager<DynamicFeatureVariantPropertiesImpl>(
     globalScope,
-    databindingBuilder,
     extension,
     toolingRegistry,
     recorder

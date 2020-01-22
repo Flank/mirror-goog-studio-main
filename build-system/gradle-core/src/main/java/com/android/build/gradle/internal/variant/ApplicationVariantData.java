@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.variant;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.ComponentIdentity;
-import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -46,7 +45,6 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
-            @NonNull TaskManager taskManager,
             @NonNull MutableTaskContainer taskContainer) {
         super(
                 componentIdentity,
@@ -56,7 +54,6 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
                 paths,
                 artifacts,
                 globalScope,
-                taskManager,
                 taskContainer);
         testVariants = Maps.newHashMap();
     }

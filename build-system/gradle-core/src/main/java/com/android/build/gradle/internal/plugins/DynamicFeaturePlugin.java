@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.plugins;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl;
@@ -107,12 +106,11 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin<DynamicFeatureVarian
     @Override
     protected DynamicFeatureTaskManager createTaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder) {
         return new DynamicFeatureTaskManager(
-                globalScope, dataBindingBuilder, extension, toolingRegistry, threadRecorder);
+                globalScope, extension, toolingRegistry, threadRecorder);
     }
 
     @NonNull

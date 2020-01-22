@@ -46,7 +46,6 @@ public class TestVariantData extends ApkVariantData {
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull TestedVariantData testedVariantData,
             @NonNull GlobalScope globalScope,
-            @NonNull TaskManager taskManager,
             @NonNull MutableTaskContainer taskContainer) {
         super(
                 componentIdentity,
@@ -56,7 +55,6 @@ public class TestVariantData extends ApkVariantData {
                 paths,
                 artifacts,
                 globalScope,
-                taskManager,
                 taskContainer);
         this.testedVariantData = testedVariantData;
     }

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.component
 
+import android.databinding.tool.LayoutXmlProcessor
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 
@@ -25,6 +26,8 @@ interface BaseCreationConfig {
 
     val taskContainer: MutableTaskContainer
     val dslScope: DslScope
+
+    val layoutXmlProcessor: LayoutXmlProcessor
 
     fun computeTaskName(prefix: String, suffix: String = ""): String
 

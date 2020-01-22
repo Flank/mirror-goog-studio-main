@@ -85,7 +85,6 @@ public abstract class BaseVariantData {
     @NonNull protected final VariantDependencies variantDependencies;
 
     // Global Data
-    @NonNull protected final TaskManager taskManager;
     @NonNull protected final GlobalScope globalScope;
     @NonNull protected final MutableTaskContainer taskContainer;
 
@@ -108,10 +107,6 @@ public abstract class BaseVariantData {
 
     private ImmutableList<ConfigurableFileTree> defaultJavaSources;
 
-
-    @Nullable
-    private LayoutXmlProcessor layoutXmlProcessor;
-
     /**
      * If true, variant outputs will be considered signed. Only set if you manually set the outputs
      * to point to signed files built by other tasks.
@@ -131,7 +126,6 @@ public abstract class BaseVariantData {
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
-            @NonNull TaskManager taskManager,
             @NonNull MutableTaskContainer taskContainer) {
         this.componentIdentity = componentIdentity;
         this.variantDslInfo = variantDslInfo;
@@ -140,7 +134,6 @@ public abstract class BaseVariantData {
         this.paths = paths;
         this.artifacts = artifacts;
         this.globalScope = globalScope;
-        this.taskManager = taskManager;
         this.taskContainer = taskContainer;
 
         final Splits splits = globalScope.getExtension().getSplits();
@@ -170,29 +163,6 @@ public abstract class BaseVariantData {
 
         applicationIdTextResource =
                 globalScope.getProject().getResources().getText().fromString("");
-    }
-
-    @NonNull
-    public LayoutXmlProcessor getLayoutXmlProcessor() {
-        if (layoutXmlProcessor == null) {
-            File resourceBlameLogDir = paths.getResourceBlameLogDir();
-            final MergingLog mergingLog = new MergingLog(resourceBlameLogDir);
-            layoutXmlProcessor =
-                    new LayoutXmlProcessor(
-                            variantDslInfo.getOriginalApplicationId(),
-                            taskManager
-                                    .getDataBindingBuilder()
-                                    .createJavaFileWriter(paths.getClassOutputForDataBinding()),
-                            file -> {
-                                SourceFile input = new SourceFile(file);
-                                SourceFile original = mergingLog.find(input);
-                                // merged log api returns the file back if original cannot be found.
-                                // it is not what we want so we alter the response.
-                                return original == input ? null : original.getSourceFile();
-                            },
-                            globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X));
-        }
-        return layoutXmlProcessor;
     }
 
     @NonNull

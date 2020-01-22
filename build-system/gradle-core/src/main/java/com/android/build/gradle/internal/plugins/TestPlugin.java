@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.plugins;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
@@ -95,13 +94,11 @@ public class TestPlugin extends BasePlugin<TestVariantPropertiesImpl> {
     @Override
     protected TestApplicationTaskManager createTaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new TestApplicationTaskManager(
                 globalScope,
-                dataBindingBuilder,
                 extension,
                 toolingRegistry,
                 recorder);
