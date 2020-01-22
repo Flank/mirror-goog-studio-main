@@ -16,5 +16,6 @@
     <orderEntry type="library" scope="TEST" name="transport-proto" level="project" />
     <orderEntry type="library" scope="TEST" name="studio-grpc" level="project" />
     <orderEntry type="library" scope="TEST" name="studio-proto" level="project" />
+    <orderEntry type="library" name="androidx-annotations" level="project" />
   </component>
 </module>

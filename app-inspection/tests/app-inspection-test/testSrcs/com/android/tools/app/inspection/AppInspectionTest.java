@@ -21,6 +21,7 @@ import static com.android.tools.app.inspection.AppInspection.AppInspectionRespon
 import static com.android.tools.app.inspection.ServiceLayer.TIMEOUT_SECONDS;
 import static com.google.common.truth.Truth.assertThat;
 
+import androidx.annotation.NonNull;
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
 import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
 import com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status;
@@ -30,13 +31,12 @@ import com.android.tools.app.inspection.AppInspection.RawCommand;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.idea.protobuf.ByteString;
-import java.io.File;
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
-
 import com.android.tools.profiler.proto.Common;
 import com.android.tools.transport.TransportRule;
 import com.android.tools.transport.device.SdkLevel;
+import java.io.File;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -57,12 +57,14 @@ public final class AppInspectionTest {
     private FakeAndroidDriver androidDriver;
 
     public AppInspectionTest() {
-        TransportRule.Config ruleConfig = new TransportRule.Config() {
-            @Override
-            public void initDaemonConfig(Common.CommonConfig.Builder daemonConfig) {
-                daemonConfig.setProfilerUnifiedPipeline(true);
-            }
-        };
+        TransportRule.Config ruleConfig =
+                new TransportRule.Config() {
+                    @Override
+                    public void initDaemonConfig(
+                            @NonNull Common.CommonConfig.Builder daemonConfig) {
+                        daemonConfig.setProfilerUnifiedPipeline(true);
+                    }
+                };
         transportRule = new TransportRule(ACTIVITY_CLASS, SdkLevel.O, ruleConfig);
     }
 
@@ -180,13 +182,15 @@ public final class AppInspectionTest {
                 serviceLayer.sendCommandAndGetResponse(
                         createInspector("test.environment.inspector", onDevicePath)),
                 SUCCESS);
+        // TODO(b/145807282): Replace with real tests after these features are implemented
         assertInput(androidDriver, "FIND INSTANCES NOT IMPLEMENTED");
         assertInput(androidDriver, "REGISTER ENTRY HOOK NOT IMPLEMENTED");
         assertInput(androidDriver, "REGISTER EXIT HOOK NOT IMPLEMENTED");
     }
 
+    @NonNull
     private static AppInspectionCommand rawCommandInspector(
-            String inspectorId, byte[] commandData) {
+            @NonNull String inspectorId, @NonNull byte[] commandData) {
         return AppInspectionCommand.newBuilder()
                 .setInspectorId(inspectorId)
                 .setRawInspectorCommand(
@@ -196,6 +200,7 @@ public final class AppInspectionTest {
                 .build();
     }
 
+    @NonNull
     private static AppInspectionCommand createInspector(String inspectorId, String dexPath) {
         return AppInspectionCommand.newBuilder()
                 .setInspectorId(inspectorId)
@@ -204,7 +209,8 @@ public final class AppInspectionTest {
                 .build();
     }
 
-    private static AppInspectionCommand disposeInspector(String inspectorId) {
+    @NonNull
+    private static AppInspectionCommand disposeInspector(@NonNull String inspectorId) {
         return AppInspectionCommand.newBuilder()
                 .setInspectorId(inspectorId)
                 .setDisposeInspectorCommand(DisposeInspectorCommand.newBuilder().build())
@@ -212,24 +218,27 @@ public final class AppInspectionTest {
     }
 
     private static void assertResponseStatus(
-            AppInspection.AppInspectionResponse response, Status expected) {
+            @NonNull AppInspection.AppInspectionResponse response, @NonNull Status expected) {
         assertThat(response.hasServiceResponse()).isTrue();
         assertThat(response.getStatus()).isEqualTo(expected);
     }
 
     private static void assertCrashEvent(
-            AppInspectionEvent event, String inspectorId, String message) {
+            @NonNull AppInspectionEvent event,
+            @NonNull String inspectorId,
+            @NonNull String message) {
         assertThat(event.hasCrashEvent()).isTrue();
         assertThat(event.getInspectorId()).isEqualTo(inspectorId);
         assertThat(event.getCrashEvent().getErrorMessage()).isEqualTo(message);
     }
 
     private static void assertRawResponse(
-            AppInspection.AppInspectionResponse response, byte[] responseContent) {
+            @NonNull AppInspection.AppInspectionResponse response, byte[] responseContent) {
         assertThat(response.hasRawResponse()).isTrue();
         assertThat(response.getRawResponse().getContent().toByteArray()).isEqualTo(responseContent);
     }
 
+    @NonNull
     private static String injectInspectorDex() {
         File onHostinspector = new File(ProcessRunner.getProcessPath("test.inspector.dex.location"));
         assertThat(onHostinspector.exists()).isTrue();
@@ -239,7 +248,8 @@ public final class AppInspectionTest {
         return onDeviceInspector.getAbsolutePath();
     }
 
-    private static void assertInput(FakeAndroidDriver androidDriver, String expected) {
+    private static void assertInput(
+            @NonNull FakeAndroidDriver androidDriver, @NonNull String expected) {
         assertThat(androidDriver.waitForInput(expected)).isTrue();
     }
 }

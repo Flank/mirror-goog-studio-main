@@ -18,6 +18,7 @@ package com.android.tools.app.inspection;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import androidx.annotation.NonNull;
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
 import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
 import com.android.tools.profiler.proto.Commands;
@@ -27,19 +28,30 @@ import com.android.tools.profiler.proto.Transport.GetEventsRequest;
 import com.android.tools.profiler.proto.TransportServiceGrpc;
 import com.android.tools.profiler.proto.TransportServiceGrpc.TransportServiceBlockingStub;
 import com.android.tools.transport.TransportRule;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * A utility class for wrapping useful app-inspection gRPC operations, spinning up a separate thread
+ * to manage host / device communication.
+ *
+ * <p>While running, it polls the transport framework for events, which should be received after
+ * calls to {@link #sendCommand(AppInspectionCommand)}. You can fetch those events using {@link
+ * #sendCommandAndGetResponse(AppInspectionCommand)} instead, or by calling {@link
+ * #consumeCollectedEvent()}.
+ *
+ * <p>{@link #shutdown()} must be called to ensure the thread can finish.
+ */
 final class ServiceLayer implements Runnable {
     // All asynchronous operations are expected to be subseconds. so we choose a relatively small
     // but still generous timeout. If a callback didn't occur during the timeout, we fail the test.
     static final long TIMEOUT_SECONDS = 10;
 
-    static ServiceLayer create(TransportRule transportRule) {
+    @NonNull
+    static ServiceLayer create(@NonNull TransportRule transportRule) {
         TransportServiceBlockingStub transportStub = TransportServiceGrpc.newBlockingStub(transportRule.getGrpc().getChannel());
         ExecutorService executor = Executors.newSingleThreadExecutor();
         int pid = transportRule.getPid();
@@ -59,7 +71,9 @@ final class ServiceLayer implements Runnable {
     private LinkedBlockingQueue<Common.Event> events = new LinkedBlockingQueue<>();
 
     private ServiceLayer(
-            TransportServiceBlockingStub transportStub, ExecutorService executor, int pid) {
+            @NonNull TransportServiceBlockingStub transportStub,
+            @NonNull ExecutorService executor,
+            int pid) {
         this.transportStub = transportStub;
         this.executor = executor;
         this.pid = pid;
@@ -69,6 +83,8 @@ final class ServiceLayer implements Runnable {
         return events.size() > 0;
     }
 
+    /** Pulls one event off the event queue, asserting if there are no events. */
+    @NonNull
     AppInspectionEvent consumeCollectedEvent() throws Exception {
         Common.Event event = events.take();
         assertThat(event).isNotNull();
@@ -77,11 +93,10 @@ final class ServiceLayer implements Runnable {
         return event.getAppInspectionEvent();
     }
 
-    /*
-     * Sends the inspection command and returns a non-null response.
-     */
+    /** Sends the inspection command and returns a non-null response. */
+    @NonNull
     AppInspection.AppInspectionResponse sendCommandAndGetResponse(
-            AppInspectionCommand appInspectionCommand) throws Exception {
+            @NonNull AppInspectionCommand appInspectionCommand) throws Exception {
         CompletableFuture<Common.Event> local =
                 commandIdToFuture.get(sendCommand(appInspectionCommand));
         Common.Event response = local.get();
@@ -91,10 +106,8 @@ final class ServiceLayer implements Runnable {
         return response.getAppInspectionResponse();
     }
 
-    /*
-     * Sends the inspection command and returns its generated id.
-     */
-    int sendCommand(AppInspectionCommand appInspectionCommand) {
+    /** Sends the inspection command and returns its generated id. */
+    int sendCommand(@NonNull AppInspectionCommand appInspectionCommand) {
         int commandId = nextCommandId.getAndIncrement();
         AppInspectionCommand idAppInspectionCommand =
                 appInspectionCommand.toBuilder().setCommandId(commandId).build();
@@ -131,7 +144,7 @@ final class ServiceLayer implements Runnable {
         }
     }
 
-    private void handleCommandResponse(int commandId, Common.Event response) {
+    private void handleCommandResponse(int commandId, @NonNull Common.Event response) {
         CompletableFuture<Common.Event> localCommandCompleter = commandIdToFuture.get(commandId);
         if (localCommandCompleter == null) {
             unexpectedResponses.add(response);
