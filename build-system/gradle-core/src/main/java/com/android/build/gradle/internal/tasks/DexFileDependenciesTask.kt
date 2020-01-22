@@ -29,6 +29,7 @@ import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.sdklib.AndroidVersion
+import com.android.utils.FileUtils
 import com.google.common.io.Closer
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -82,6 +83,11 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
 
     // TODO: make incremental
     override fun doTaskAction() {
+        FileUtils.cleanOutputDir(outputDirectory.get().asFile)
+        if (outputKeepRules.isPresent) {
+            FileUtils.deleteIfExists(outputKeepRules.get().asFile)
+        }
+
         getWorkerFacadeWithWorkers().use { workerExecutorFacade ->
             val inputs = classes.files.toList()
             val totalClasspath = inputs + classpath.files
