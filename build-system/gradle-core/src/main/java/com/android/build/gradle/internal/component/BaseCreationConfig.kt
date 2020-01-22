@@ -41,6 +41,13 @@ import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 
+/**
+ * Base of the interfaces used internally to access *PropertiesImpl object.
+ *
+ * This allows a graph hierarchy rather than a strict tree, in order to have multiple
+ * supertype and make some tasks receive a generic type that does not fit the actual
+ * implementation hierarchy (see for instance ApkCreationConfig)
+ */
 interface BaseCreationConfig : ComponentIdentity {
     // ---------------------------------------------------------------------------------------------
     // BASIC INFO

@@ -524,6 +524,7 @@ public class VariantManager<
                     variantFactory.createAndroidTestObject(
                             variantDslInfo.getComponentIdentity(), variantDslInfo);
 
+            // run the action registered on the tested variant via androidTest {}
             testedVariant.executeAndroidTestActions(androidTestVariant);
 
             component = androidTestVariant;
@@ -533,6 +534,7 @@ public class VariantManager<
                     variantFactory.createUnitTestObject(
                             variantDslInfo.getComponentIdentity(), variantDslInfo);
 
+            // run the action registered on the tested variant via unitTest {}
             testedVariant.executeUnitTestActions(unitTestVariant);
 
             component = unitTestVariant;
@@ -659,7 +661,12 @@ public class VariantManager<
                             testVariantData,
                             testedVariantProperties,
                             transformManager);
+
+            // also execute the delayed actions registered on the Component via
+            // androidTest { onProperties {} }
             testComponent.executePropertiesActions(androidTestProperties);
+            // or on the tested variant via unitTestProperties {}
+            testedVariant.executeAndroidTestPropertiesActions(androidTestProperties);
 
             componentProperties = androidTestProperties;
         } else {
@@ -677,8 +684,11 @@ public class VariantManager<
                             testedVariantProperties,
                             transformManager);
 
-            // also execute the delayed actions registered on the Variant object itself
+            // execute the delayed actions registered on the Component via
+            // unitTest { onProperties {} }
             testComponent.executePropertiesActions(unitTestProperties);
+            // or on the tested variant via unitTestProperties {}
+            testedVariant.executeUnitTestPropertiesActions(unitTestProperties);
 
             componentProperties = unitTestProperties;
         }
