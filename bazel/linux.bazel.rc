@@ -16,9 +16,6 @@ build:remote --extra_execution_platforms=//tools/base/bazel/foundry:rbe_ubuntu16
 build:remote --host_platform=//tools/base/bazel/foundry:rbe_ubuntu16
 build:remote --platforms=//tools/base/bazel/foundry:rbe_ubuntu16
 
-build:remote --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
-build:remote --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
-
 build:release --copt=-fdata-sections
 build:release --cxxopt=-fdata-sections
 build:release --copt=-fno-exceptions
