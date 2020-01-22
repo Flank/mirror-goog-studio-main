@@ -29,6 +29,16 @@ mkdir .android
 if [ "$1" = "kill" ]; then
   echo "Killing emulator-$2"
   $adb -s emulator-$2 emu kill
+
+  # Wait for the emulator to disconnect.
+  while true; do
+    output=$($adb -s emulator-$2 get-state 2> /dev/null)
+    if [ -z "$output" ]; then
+      break
+    fi
+    echo "Emulator state=$output"
+    sleep 1
+  done
   exit $?
 fi
 
