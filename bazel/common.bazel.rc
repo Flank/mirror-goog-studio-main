@@ -89,17 +89,11 @@ build --stripopt=--strip-unneeded
 # default android native abis
 build --fat_apk_cpu=x86,x86_64,armeabi-v7a,armeabi,arm64-v8a
 
-# Remote execution configuration. Enable remote_common args which include
-# Upsalite test reporting.
 build:remote --config=remote_common
 build:remote --nobuild_runfile_links
 build:remote --strategy=CppCompile=remote
 build:remote --strategy=CppLink=remote
-
 build:remote --show_timestamps
-
-# Import several flags related to specifying the toolchain and (if applicable)
-# java properties.
 build:remote --host_javabase=//prebuilts/studio/jdk:jdk_runtime
 build:remote --javabase=//prebuilts/studio/jdk:jdk_runtime
 build:remote --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
