@@ -44,7 +44,7 @@ import org.junit.Test;
 import org.junit.rules.Timeout;
 
 public final class AppInspectionTest {
-    private static final String ACTIVITY_CLASS = "com.activity.SimpleActivity";
+    private static final String ACTIVITY_CLASS = "com.activity.EmptyActivity";
     private static final String EXPECTED_INSPECTOR_PREFIX = "TEST INSPECTOR ";
     private static final String EXPECTED_INSPECTOR_CREATED = EXPECTED_INSPECTOR_PREFIX + "CREATED";
     private static final String EXPECTED_INSPECTOR_DISPOSED =

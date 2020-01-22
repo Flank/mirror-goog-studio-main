@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/agent/app-inspection.agent.iml" filepath="$PROJECT_DIR$/../app-inspection/agent/app-inspection.agent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/test-app/app-inspection.test-app.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/test-app/app-inspection.test-app.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/test-inspector/app-inspection.test-inspector.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/test-inspector/app-inspection.test-inspector.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/app-inspection-test/app-inspection.tests.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/app-inspection-test/app-inspection.tests.iml" />
       <module fileurl="file://$PROJECT_DIR$/../fakeandroid/fakeandroid.iml" filepath="$PROJECT_DIR$/../fakeandroid/fakeandroid.iml" />
