@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="androidx-annotations">
+    <CLASSES>
+        <root url="jar://$PROJECT_DIR$/../../../prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0/annotation-1.1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

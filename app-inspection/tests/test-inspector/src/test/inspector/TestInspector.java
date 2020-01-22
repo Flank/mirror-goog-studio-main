@@ -16,13 +16,18 @@
 
 package test.inspector;
 
+import androidx.annotation.NonNull;
 import androidx.inspection.Connection;
 import androidx.inspection.Inspector;
 import java.util.Arrays;
 
+/**
+ * Basic inspector which prints the bytes it receives to the console and then sends back a unique
+ * (but otherwise arbitrary) byte array as a response.
+ */
 public class TestInspector extends Inspector {
 
-    TestInspector(Connection connection) {
+    TestInspector(@NonNull Connection connection) {
         super(connection);
         System.out.println("TEST INSPECTOR CREATED");
     }
@@ -33,7 +38,8 @@ public class TestInspector extends Inspector {
     }
 
     @Override
-    public void onReceiveCommand(byte[] bytes, Inspector.CommandCallback commandCallback) {
+    public void onReceiveCommand(
+            @NonNull byte[] bytes, @NonNull Inspector.CommandCallback commandCallback) {
         System.out.println("TEST INSPECTOR " + Arrays.toString(bytes));
         getConnection().sendEvent(new byte[] {8, 92, 43});
         commandCallback.reply(bytes);

@@ -16,12 +16,17 @@
 
 package test.inspector;
 
+import androidx.annotation.NonNull;
 import androidx.inspection.Connection;
 import androidx.inspection.Inspector;
 import java.util.Arrays;
 
+/**
+ * Inspector which throws an exception when it receives a command, allowing us to verify that the
+ * the pipeline can handle crashes in a robust manner.
+ */
 public class TestExceptionInspector extends Inspector {
-    public TestExceptionInspector(Connection connection) {
+    public TestExceptionInspector(@NonNull Connection connection) {
         super(connection);
         System.out.println("TEST INSPECTOR CREATED");
     }
@@ -32,7 +37,7 @@ public class TestExceptionInspector extends Inspector {
     }
 
     @Override
-    public void onReceiveCommand(byte[] bytes, CommandCallback commandCallback) {
+    public void onReceiveCommand(@NonNull byte[] bytes, @NonNull CommandCallback commandCallback) {
         System.out.println("TEST INSPECTOR " + Arrays.toString(bytes));
         throw new RuntimeException("This is an inspector exception.");
     }

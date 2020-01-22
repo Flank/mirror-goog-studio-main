@@ -16,6 +16,7 @@
 
 package test.inspector;
 
+import androidx.annotation.NonNull;
 import androidx.inspection.Connection;
 import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorFactory;
@@ -26,8 +27,10 @@ public class TestInspectorFactory extends InspectorFactory<TestInspector> {
         super("test.inspector");
     }
 
+    @NonNull
     @Override
-    public TestInspector createInspector(Connection connection, InspectorEnvironment environment) {
+    public TestInspector createInspector(
+            @NonNull Connection connection, @NonNull InspectorEnvironment environment) {
         return new TestInspector(connection);
     }
 }

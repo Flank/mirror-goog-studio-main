@@ -16,27 +16,34 @@
 
 package test.inspector;
 
+import androidx.annotation.NonNull;
 import androidx.inspection.Connection;
 import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorFactory;
 import java.util.List;
 
-// this factory accesses environment on createInspector call.
+/**
+ * Factory which accesses {@link InspectorEnvironment} in {@link #createInspector(Connection,
+ * InspectorEnvironment)}
+ */
 public class TestEnvironmentInspectorFactory extends InspectorFactory<TestInspector> {
 
     public TestEnvironmentInspectorFactory() {
         super("test.environment.inspector");
     }
 
+    @NonNull
     @Override
-    public TestInspector createInspector(Connection connection, InspectorEnvironment environment) {
+    public TestInspector createInspector(
+            @NonNull Connection connection, @NonNull InspectorEnvironment environment) {
+        // TODO(b/145807282): Update after these features are implemented
         environment.findInstances(TestInspector.class);
         environment.registerEntryHook(
                 TestInspectorFactory.class,
                 "_",
                 new InspectorEnvironment.EntryHook() {
                     @Override
-                    public void onEntry(Object o, List<Object> list) {}
+                    public void onEntry(Object o, @NonNull List<Object> list) {}
                 });
         environment.registerExitHook(
                 TestInspectorFactory.class,

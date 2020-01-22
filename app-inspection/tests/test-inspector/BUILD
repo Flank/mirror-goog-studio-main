@@ -6,6 +6,7 @@ java_library(
     resource_strip_prefix = "tools/base/app-inspection/tests/test-inspector",
     resources = glob(["META-INF/**"]),
     deps = [
+        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
     ],
 )
