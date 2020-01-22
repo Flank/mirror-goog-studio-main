@@ -21,7 +21,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST_METADATA;
 import static com.android.build.gradle.internal.variant.TestVariantFactory.getTestedApksConfigurationName;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
@@ -72,7 +71,7 @@ public class TestApplicationTaskManager extends AbstractAppTaskManager<TestVaria
     }
 
     @Override
-    public void createTasksForVariant(
+    protected void doCreateTasksForVariant(
             @NonNull TestVariantPropertiesImpl testVariantProperties,
             @NonNull List<TestVariantPropertiesImpl> allComponentsWithLint) {
 

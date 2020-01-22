@@ -41,7 +41,7 @@ internal class DynamicFeatureTaskManager(
     recorder
 ) {
 
-    override fun createTasksForVariant(
+    override fun doCreateTasksForVariant(
         variantProperties: DynamicFeatureVariantPropertiesImpl,
         allComponentsWithLint: MutableList<DynamicFeatureVariantPropertiesImpl>
     ) {

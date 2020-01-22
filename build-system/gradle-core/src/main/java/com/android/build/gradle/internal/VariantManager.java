@@ -51,7 +51,6 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
-import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
 import com.android.build.gradle.internal.dependency.DesugarLibConfiguration;
 import com.android.build.gradle.internal.dependency.DexingArtifactConfiguration;
 import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform;
@@ -96,7 +95,6 @@ import com.android.builder.model.CodeShrinker;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.utils.Pair;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.ApiVersion;
@@ -112,7 +110,6 @@ import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Attribute;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.model.ObjectFactory;
@@ -121,26 +118,11 @@ import org.gradle.api.provider.Provider;
 /** Class to create, manage variants. */
 public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
 
-    private static final String MULTIDEX_VERSION = "1.0.2";
-
-    protected static final String COM_ANDROID_SUPPORT_MULTIDEX =
-            "com.android.support:multidex:" + MULTIDEX_VERSION;
-    protected static final String COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION =
-            "com.android.support:multidex-instrumentation:" + MULTIDEX_VERSION;
-
-    protected static final String ANDROIDX_MULTIDEX_MULTIDEX =
-            AndroidXDependencySubstitution.getAndroidXMappings()
-                    .get("com.android.support:multidex");
-    protected static final String ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION =
-            AndroidXDependencySubstitution.getAndroidXMappings()
-                    .get("com.android.support:multidex-instrumentation");
-
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
     @NonNull private final BaseExtension extension;
     @NonNull private final VariantFactory<VariantPropertiesT> variantFactory;
     @NonNull private final VariantInputModel variantInputModel;
-    @NonNull private final TaskManager<VariantPropertiesT> taskManager;
     @NonNull private final SourceSetManager sourceSetManager;
     @NonNull private final Recorder recorder;
     @NonNull private final VariantFilter variantFilter;
@@ -165,7 +147,6 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
             @NonNull BaseExtension extension,
             @NonNull VariantFactory<VariantPropertiesT> variantFactory,
             @NonNull VariantInputModel variantInputModel,
-            @NonNull TaskManager<VariantPropertiesT> taskManager,
             @NonNull SourceSetManager sourceSetManager,
             @NonNull Recorder recorder) {
         this.globalScope = globalScope;
@@ -174,7 +155,6 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
         this.projectOptions = projectOptions;
         this.variantFactory = variantFactory;
         this.variantInputModel = variantInputModel;
-        this.taskManager = taskManager;
         this.sourceSetManager = sourceSetManager;
         this.recorder = recorder;
         this.signingOverride = createSigningOverride();
@@ -182,99 +162,49 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
         this.manifestParserMap = Maps.newHashMap();
     }
 
-    /** Returns a list of all created {@link VariantScope}s. */
+    /**
+     * Returns a list of all main components.
+     *
+     * @see #createVariants()
+     */
     @NonNull
     public List<VariantPropertiesT> getMainComponents() {
         return variants;
     }
 
+    /**
+     * Returns a list of all test components.
+     *
+     * @see #createVariants()
+     */
     @NonNull
     public List<TestComponentPropertiesImpl> getTestComponents() {
         return testComponents;
     }
 
+    /**
+     * Returns a list of all components.
+     *
+     * <p>This is the concatenation of {@link #getMainComponents()} and {@link
+     * #getTestComponents()}.
+     *
+     * @see #createVariants()
+     */
     @NonNull
     public List<ComponentPropertiesImpl> getAllComponents() {
         return allComponents;
     }
 
-    /** Creates the variants and their tasks. */
-    public void createVariantsAndTasks() {
+    /** Creates the variants. */
+    public void createVariants() {
         variantFactory.validateModel(variantInputModel);
         variantFactory.preVariantWork(project);
 
-        if (variants.isEmpty()) {
-            computeVariants();
-        }
-
-        // Create top level test tasks.
-        taskManager.createTopLevelTestTasks(!variantInputModel.getProductFlavors().isEmpty());
-
-        // Create tasks for all variants (main and tests)
-        for (VariantPropertiesT variant : variants) {
-            createTasksForVariant(variant);
-        }
-        for (TestComponentPropertiesImpl testComponent : testComponents) {
-            createTasksForTest(testComponent);
-        }
-
-        taskManager.createReportTasks(allComponents);
-    }
-
-    /** Create tasks for the specified variant. */
-    private void createTasksForVariant(@NonNull VariantPropertiesT variantProperties) {
-        final VariantType variantType = variantProperties.getVariantType();
-
-        taskManager.createAssembleTask(variantProperties);
-        if (variantType.isBaseModule()) {
-            taskManager.createBundleTask(variantProperties);
-        }
-        taskManager.createTasksForVariant(variantProperties, variants);
-    }
-
-    /** Create tasks for the specified variant. */
-    private void createTasksForTest(@NonNull TestComponentPropertiesImpl testComponent) {
-        taskManager.createAssembleTask(testComponent);
-
-        VariantPropertiesImpl testedVariant = testComponent.getTestedVariant();
-
-        VariantDslInfo variantDslInfo = testComponent.getVariantDslInfo();
-        VariantDependencies variantDependencies = testComponent.getVariantDependencies();
-
-        if (testedVariant.getVariantDslInfo().getRenderscriptSupportModeEnabled()) {
-            project.getDependencies()
-                    .add(
-                            variantDependencies.getCompileClasspath().getName(),
-                            project.files(
-                                    globalScope
-                                            .getSdkComponents()
-                                            .getRenderScriptSupportJarProvider()));
-        }
-
-        if (testComponent.getVariantType().isApk()) { // ANDROID_TEST
-            if (variantDslInfo.isLegacyMultiDexMode()) {
-                String multiDexInstrumentationDep =
-                        globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
-                                ? ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION
-                                : COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION;
-                project.getDependencies()
-                        .add(
-                                variantDependencies.getCompileClasspath().getName(),
-                                multiDexInstrumentationDep);
-                project.getDependencies()
-                        .add(
-                                variantDependencies.getRuntimeClasspath().getName(),
-                                multiDexInstrumentationDep);
-            }
-
-            taskManager.createAndroidTestVariantTasks((AndroidTestPropertiesImpl) testComponent);
-        } else { // UNIT_TEST
-            taskManager.createUnitTestVariantTasks((UnitTestPropertiesImpl) testComponent);
-        }
+        computeVariants();
     }
 
     /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs. */
-    public void publishBuildArtifacts(@NonNull ComponentPropertiesImpl componentProperties) {
+    public static void publishBuildArtifacts(@NonNull ComponentPropertiesImpl componentProperties) {
         BuildArtifactsHolder buildArtifactsHolder = componentProperties.getArtifacts();
         for (PublishingSpecs.OutputSpec outputSpec :
                 componentProperties.getVariantScope().getPublishingSpec().getOutputs()) {
@@ -407,8 +337,7 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
     }
 
     /** Create all variants. */
-    @VisibleForTesting
-    public void computeVariants() {
+    private void computeVariants() {
         List<String> flavorDimensionList = extension.getFlavorDimensionList();
 
         DimensionCombinator computer =
@@ -610,29 +539,6 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
                         variantScope,
                         variantData,
                         transformManager);
-
-        if (variantDslInfo.isLegacyMultiDexMode()) {
-            String multiDexDependency =
-                    globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
-                            ? ANDROIDX_MULTIDEX_MULTIDEX
-                            : COM_ANDROID_SUPPORT_MULTIDEX;
-            project.getDependencies()
-                    .add(variantDependencies.getCompileClasspath().getName(), multiDexDependency);
-            project.getDependencies()
-                    .add(variantDependencies.getRuntimeClasspath().getName(), multiDexDependency);
-        }
-
-        if (variantDslInfo.getRenderscriptSupportModeEnabled()) {
-            final ConfigurableFileCollection fileCollection =
-                    project.files(
-                            globalScope.getSdkComponents().getRenderScriptSupportJarProvider());
-            project.getDependencies()
-                    .add(variantDependencies.getCompileClasspath().getName(), fileCollection);
-            if (variantType.isApk() && !variantType.isForTesting()) {
-                project.getDependencies()
-                        .add(variantDependencies.getRuntimeClasspath().getName(), fileCollection);
-            }
-        }
 
         // Run the VariantProperties actions
         //noinspection unchecked

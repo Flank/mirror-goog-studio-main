@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.plugins;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
@@ -84,7 +83,6 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
-import com.android.build.gradle.options.SyncOptions.ErrorFormatMode;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.core.BuilderConstants;
@@ -455,7 +453,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                         extension,
                         variantFactory,
                         variantInputModel,
-                        taskManager,
                         sourceSetManager,
                         threadRecorder);
 
@@ -463,7 +460,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                 registry,
                 globalScope,
                 variantInputModel,
-                variantManager,
                 extension,
                 extraModelInfo);
 
@@ -504,7 +500,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
             @NonNull VariantInputModel variantInputModel,
-            @NonNull VariantManager variantManager,
             @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
         // Register a builder for the custom tooling model
@@ -512,7 +507,7 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                 new VariantModelImpl(
                         variantInputModel,
                         extension::getTestBuildType,
-                        variantManager,
+                        variantManager::getAllComponents,
                         globalScope.getDslScope().getIssueReporter());
 
         registerModelBuilder(registry, globalScope, variantModel, extension, extraModelInfo);
@@ -655,9 +650,16 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
         }
         AnalyticsUtil.recordFirebasePerformancePluginVersion(project);
 
-        variantManager.createVariantsAndTasks();
+        variantManager.createVariants();
+
         List<ComponentPropertiesImpl> allComponents = variantManager.getAllComponents();
         List<VariantPropertiesT> mainComponents = variantManager.getMainComponents();
+
+        taskManager.createTasks(
+                mainComponents,
+                variantManager.getTestComponents(),
+                allComponents,
+                !variantInputModel.getProductFlavors().isEmpty());
 
         new DependencyConfigurator(project, project.getName(), globalScope, variantInputModel)
                 .configureDependencies();
@@ -697,7 +699,7 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
         // now publish all variant artifacts for non test variants since
         // tests don't publish anything.
         for (ComponentPropertiesImpl component : mainComponents) {
-            variantManager.publishBuildArtifacts(component);
+            VariantManager.publishBuildArtifacts(component);
         }
 
         checkSplitConfiguration();

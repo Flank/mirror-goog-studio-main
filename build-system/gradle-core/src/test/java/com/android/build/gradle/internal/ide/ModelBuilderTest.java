@@ -145,7 +145,7 @@ public class ModelBuilderTest {
                 new VariantModelImpl(
                         new VariantInputModelBuilder(FakeDslScope.createFakeDslScope()).toModel(),
                         extension::getTestBuildType,
-                        variantManager,
+                        variantManager::getAllComponents,
                         syncIssueReporter);
 
         modelBuilder =

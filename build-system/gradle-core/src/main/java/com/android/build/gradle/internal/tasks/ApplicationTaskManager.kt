@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import android.databinding.tool.DataBindingBuilder
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
@@ -56,7 +55,7 @@ class ApplicationTaskManager(
     recorder
 ) {
 
-    override fun createTasksForVariant(
+    override fun doCreateTasksForVariant(
         variantProperties: ApplicationVariantPropertiesImpl,
         allComponentsWithLint: MutableList<ApplicationVariantPropertiesImpl>
     ) {

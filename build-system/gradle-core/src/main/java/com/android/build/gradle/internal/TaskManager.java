@@ -57,6 +57,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.PublicArtifactType;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
@@ -71,6 +72,8 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
+import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
@@ -248,6 +251,20 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Manages tasks creation. */
 public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesImpl> {
+    private static final String MULTIDEX_VERSION = "1.0.2";
+
+    private static final String COM_ANDROID_SUPPORT_MULTIDEX =
+            "com.android.support:multidex:" + MULTIDEX_VERSION;
+
+    private static final String ANDROIDX_MULTIDEX_MULTIDEX =
+            AndroidXDependencySubstitution.getAndroidXMappings()
+                    .get("com.android.support:multidex");
+
+    private static final String COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION =
+            "com.android.support:multidex-instrumentation:" + MULTIDEX_VERSION;
+    private static final String ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION =
+            AndroidXDependencySubstitution.getAndroidXMappings()
+                    .get("com.android.support:multidex-instrumentation");
 
     public static final String INSTALL_GROUP = "Install";
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP;
@@ -307,10 +324,110 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         taskFactory = new TaskFactoryImpl(project.getTasks());
     }
 
-    /** Creates the tasks for a given VariantPropertiesImpl. */
-    public abstract void createTasksForVariant(
+    /** This is the main entry point into the task manager */
+    public void createTasks(
+            @NonNull List<VariantPropertiesT> mainComponents,
+            @NonNull List<TestComponentPropertiesImpl> testComponents,
+            @NonNull List<ComponentPropertiesImpl> allComponents,
+            boolean hasFlavor) {
+        // Create top level test tasks.
+        createTopLevelTestTasks(hasFlavor);
+
+        // Create tasks for all variants (main and tests)
+        for (VariantPropertiesT variant : mainComponents) {
+            createTasksForVariant(variant, mainComponents);
+        }
+        for (TestComponentPropertiesImpl testComponent : testComponents) {
+            createTasksForTest(testComponent);
+        }
+
+        createReportTasks(allComponents);
+    }
+
+    /** Create tasks for the specified variant. */
+    private void createTasksForVariant(
             @NonNull VariantPropertiesT variantProperties,
-            @NonNull List<VariantPropertiesT> allComponentsWithLint);
+            @NonNull List<VariantPropertiesT> mainComponents) {
+        final VariantType variantType = variantProperties.getVariantType();
+
+        VariantDependencies variantDependencies = variantProperties.getVariantDependencies();
+
+        if (variantProperties.getVariantDslInfo().isLegacyMultiDexMode()) {
+            String multiDexDependency =
+                    globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
+                            ? ANDROIDX_MULTIDEX_MULTIDEX
+                            : COM_ANDROID_SUPPORT_MULTIDEX;
+            project.getDependencies()
+                    .add(variantDependencies.getCompileClasspath().getName(), multiDexDependency);
+            project.getDependencies()
+                    .add(variantDependencies.getRuntimeClasspath().getName(), multiDexDependency);
+        }
+
+        if (variantProperties.getVariantDslInfo().getRenderscriptSupportModeEnabled()) {
+            final ConfigurableFileCollection fileCollection =
+                    project.files(
+                            globalScope.getSdkComponents().getRenderScriptSupportJarProvider());
+            project.getDependencies()
+                    .add(variantDependencies.getCompileClasspath().getName(), fileCollection);
+            if (variantType.isApk() && !variantType.isForTesting()) {
+                project.getDependencies()
+                        .add(variantDependencies.getRuntimeClasspath().getName(), fileCollection);
+            }
+        }
+
+        createAssembleTask(variantProperties);
+        if (variantType.isBaseModule()) {
+            createBundleTask(variantProperties);
+        }
+        doCreateTasksForVariant(variantProperties, mainComponents);
+    }
+
+    /** Creates the tasks for a given VariantPropertiesImpl. */
+    protected abstract void doCreateTasksForVariant(
+            @NonNull VariantPropertiesT variantProperties,
+            @NonNull List<VariantPropertiesT> mainComponents);
+
+    /** Create tasks for the specified variant. */
+    private void createTasksForTest(@NonNull TestComponentPropertiesImpl testComponent) {
+        createAssembleTask(testComponent);
+
+        VariantPropertiesImpl testedVariant = testComponent.getTestedVariant();
+
+        VariantDslInfo variantDslInfo = testComponent.getVariantDslInfo();
+        VariantDependencies variantDependencies = testComponent.getVariantDependencies();
+
+        if (testedVariant.getVariantDslInfo().getRenderscriptSupportModeEnabled()) {
+            project.getDependencies()
+                    .add(
+                            variantDependencies.getCompileClasspath().getName(),
+                            project.files(
+                                    globalScope
+                                            .getSdkComponents()
+                                            .getRenderScriptSupportJarProvider()));
+        }
+
+        if (testComponent.getVariantType().isApk()) { // ANDROID_TEST
+            if (variantDslInfo.isLegacyMultiDexMode()) {
+                String multiDexInstrumentationDep =
+                        globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
+                                ? ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION
+                                : COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION;
+                project.getDependencies()
+                        .add(
+                                variantDependencies.getCompileClasspath().getName(),
+                                multiDexInstrumentationDep);
+                project.getDependencies()
+                        .add(
+                                variantDependencies.getRuntimeClasspath().getName(),
+                                multiDexInstrumentationDep);
+            }
+
+            createAndroidTestVariantTasks((AndroidTestPropertiesImpl) testComponent);
+        } else {
+            // UNIT_TEST
+            createUnitTestVariantTasks((UnitTestPropertiesImpl) testComponent);
+        }
+    }
 
     /**
      * Create tasks before the evaluation (on plugin apply). This is useful for tasks that could be
@@ -1407,7 +1524,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
     }
 
     /** Creates the tasks to build unit tests. */
-    public void createUnitTestVariantTasks(@NonNull UnitTestPropertiesImpl unitTestProperties) {
+    private void createUnitTestVariantTasks(@NonNull UnitTestPropertiesImpl unitTestProperties) {
         BuildArtifactsHolder artifacts = unitTestProperties.getArtifacts();
         final MutableTaskContainer taskContainer = unitTestProperties.getTaskContainer();
 
@@ -1555,7 +1672,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
     }
 
     /** Creates the tasks to build android tests. */
-    public void createAndroidTestVariantTasks(
+    private void createAndroidTestVariantTasks(
             @NonNull AndroidTestPropertiesImpl androidTestProperties) {
 
         createAnchorTasks(androidTestProperties);
@@ -1680,7 +1797,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         taskFactory.configure(JavaPlugin.TEST_TASK_NAME, test -> test.dependsOn(runTestsTask));
     }
 
-    public void createTopLevelTestTasks(boolean hasFlavors) {
+    private void createTopLevelTestTasks(boolean hasFlavors) {
         createMockableJarTask();
 
         final List<String> reportTasks = Lists.newArrayListWithExpectedSize(2);
@@ -2858,7 +2975,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         taskFactory.register(new ShrinkBundleResourcesTask.CreationAction(componentProperties));
     }
 
-    public void createReportTasks(final List<ComponentPropertiesImpl> components) {
+    private void createReportTasks(final List<ComponentPropertiesImpl> components) {
         taskFactory.register(
                 "androidDependencies",
                 DependencyReportTask.class,

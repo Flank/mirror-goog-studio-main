@@ -104,7 +104,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
     }
 
     @Override
-    public void createTasksForVariant(
+    protected void doCreateTasksForVariant(
             @NonNull LibraryVariantPropertiesImpl libVariantProperties,
             @NonNull List<LibraryVariantPropertiesImpl> allComponentsWithLint) {
 

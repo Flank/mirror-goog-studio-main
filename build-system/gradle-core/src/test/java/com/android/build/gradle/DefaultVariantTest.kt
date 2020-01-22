@@ -526,15 +526,11 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             }
         }
 
-        val variantManager = Mockito.mock(VariantManager::class.java).also {
-            Mockito.`when`(it.allComponents).thenReturn(components)
-        }
-
         // finally get the computed default variant
         return VariantModelImpl(
             given,
             { testBuildType },
-            variantManager,
+            { components },
             dslScope.issueReporter
         ).defaultVariant
     }
