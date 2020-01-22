@@ -116,7 +116,8 @@ public final class FakeAdbServer implements AutoCloseable {
                                     // read from the socket. Closing the socket leads to a race condition.
                                     //noinspection SocketOpenedButNotSafelyClosed
                                     Socket socket = mServerSocket.accept();
-                                    mThreadPoolExecutor.submit(new ConnectionHandler(this, socket));
+                                    ConnectionHandler handler = new ConnectionHandler(this, socket);
+                                    mThreadPoolExecutor.execute(handler);
                                 } catch (IOException ignored) {
                                     // close() is called in a separate thread, and will cause accept() to throw an
                                     // exception if closed here.
