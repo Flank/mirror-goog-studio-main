@@ -14,55 +14,32 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.build.gradle.internal.dsl
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
-import javax.inject.Inject;
-import org.gradle.api.Action;
-import org.gradle.api.model.ObjectFactory;
+import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.google.common.base.MoreObjects
+import org.gradle.api.Action
+import org.gradle.api.model.ObjectFactory
+import javax.inject.Inject
 
 /** DSL object for javaCompileOptions. */
-@SuppressWarnings("unused") // exposed in DSL
-public class JavaCompileOptions implements com.android.build.gradle.api.JavaCompileOptions {
-    @NonNull
-    private AnnotationProcessorOptions annotationProcessorOptions;
+open class JavaCompileOptions @Inject constructor(
+    objectFactory: ObjectFactory,
+    deprecationReporter: DeprecationReporter
+) : com.android.build.gradle.api.JavaCompileOptions {
+    /** Options for configuration the annotation processor. */
+    final override val annotationProcessorOptions: AnnotationProcessorOptions =
+        objectFactory.newInstance(AnnotationProcessorOptions::class.java, deprecationReporter)
 
-    @VisibleForTesting
-    public JavaCompileOptions(DeprecationReporter deprecationReporter) {
-        annotationProcessorOptions = new AnnotationProcessorOptions(deprecationReporter);
+    /** Configures annotation processor options. */
+    fun annotationProcessorOptions(configAction: Action<AnnotationProcessorOptions>) {
+        configAction.execute(annotationProcessorOptions)
     }
 
-    @Inject
-    public JavaCompileOptions(
-            ObjectFactory objectFactory, DeprecationReporter deprecationReporter) {
-        annotationProcessorOptions =
-                objectFactory.newInstance(AnnotationProcessorOptions.class, deprecationReporter);
-    }
-
-    /**
-     * Options for configuration the annotation processor.
-     */
-    @Override
-    @NonNull
-    public AnnotationProcessorOptions getAnnotationProcessorOptions() {
-        return annotationProcessorOptions;
-    }
-
-    /**
-     * Configures annotation processor options.
-     */
-    public void annotationProcessorOptions(Action<AnnotationProcessorOptions> configAction) {
-        configAction.execute(annotationProcessorOptions);
-    }
-
-    @Override
-    public String toString() {
+    override fun toString(): String {
         return MoreObjects.toStringHelper(this)
-                .add("annotationProcessorOptions", annotationProcessorOptions)
-                .toString();
+            .add("annotationProcessorOptions", annotationProcessorOptions)
+            .toString()
     }
 
 }

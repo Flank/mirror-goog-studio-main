@@ -1019,7 +1019,6 @@ com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setTargets: 
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setcFlags: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.targets: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.JavaCompileOptions implements com.android.build.gradle.api.JavaCompileOptions
-com.android.build.gradle.internal.dsl.JavaCompileOptions.<init>: com.android.build.gradle.internal.dsl.JavaCompileOptions (com.android.build.gradle.internal.errors.DeprecationReporter)
 com.android.build.gradle.internal.dsl.JavaCompileOptions.<init>: com.android.build.gradle.internal.dsl.JavaCompileOptions (org.gradle.api.model.ObjectFactory, com.android.build.gradle.internal.errors.DeprecationReporter)
 com.android.build.gradle.internal.dsl.JavaCompileOptions.annotationProcessorOptions: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.AnnotationProcessorOptions>)
 com.android.build.gradle.internal.dsl.JavaCompileOptions.getAnnotationProcessorOptions: com.android.build.gradle.api.AnnotationProcessorOptions ()
