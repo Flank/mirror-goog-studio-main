@@ -20,6 +20,7 @@ import static com.android.tools.app.inspection.AppInspection.AppInspectionRespon
 import static com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status.SUCCESS;
 import static com.android.tools.app.inspection.ServiceLayer.TIMEOUT_SECONDS;
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assume.assumeFalse;
 
 import androidx.annotation.NonNull;
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
@@ -179,17 +180,37 @@ public final class AppInspectionTest {
         assertInput(androidDriver, EXPECTED_INSPECTOR_DISPOSED);
     }
 
+    private static void assumeExperimentalFlag(boolean value) {
+        assumeFalse(
+                Boolean.parseBoolean(
+                        System.getProperty(
+                                "app.inspection.experimental", Boolean.toString(value))));
+    }
+
+    // TODO(b/145807282): Remove flag and delete this test
     @Test
-    public void inspectorEnvironmentNoOp() throws Exception {
+    public void inspectorEnvironmentNoOps_WhenExperimentalFlagDisabled() throws Exception {
+        assumeExperimentalFlag(false);
         String onDevicePath = injectInspectorDex();
         assertResponseStatus(
                 serviceLayer.sendCommandAndGetResponse(
                         createInspector("test.environment.inspector", onDevicePath)),
                 SUCCESS);
-        // TODO(b/145807282): Replace with real tests after these features are implemented
         assertInput(androidDriver, "FIND INSTANCES NOT IMPLEMENTED");
         assertInput(androidDriver, "REGISTER ENTRY HOOK NOT IMPLEMENTED");
         assertInput(androidDriver, "REGISTER EXIT HOOK NOT IMPLEMENTED");
+    }
+
+    @Test
+    public void findInstancesWorks_WhenExperimentalFlagEnabled() throws Exception {
+        assumeExperimentalFlag(true);
+        // TODO(b/145807282): Implement findInstances test
+    }
+
+    @Test
+    public void enterAndExitHooksWork_WhenExperimentalFlagEnabled() throws Exception {
+        assumeExperimentalFlag(true);
+        // TODO(b/145807282): Implement transformation test
     }
 
     @NonNull
