@@ -117,7 +117,11 @@ public class Deployer {
     public Result codeSwap(List<String> apks, Map<Integer, ClassRedefiner> redefiners)
             throws DeployerException {
         try (Trace ignored = Trace.begin("codeSwap")) {
-            return swap(apks, false /* Restart Activity */, redefiners);
+            if (supportsNewPipeline()) {
+                return swap2(apks, false /* Restart Activity */, redefiners);
+            } else {
+                return swap(apks, false /* Restart Activity */, redefiners);
+            }
         }
     }
 
@@ -196,5 +200,82 @@ public class Deployer {
         Result deployResult = new Result();
         deployResult.skippedInstall = sessionId.get().equals(ApkPreInstaller.SKIPPED_INSTALLATION);
         return deployResult;
+    }
+
+    private Result swap2(
+            List<String> argPaths, boolean argRestart, Map<Integer, ClassRedefiner> redefiners)
+            throws DeployerException {
+
+        if (!adb.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.O)) {
+            throw DeployerException.apiNotSupported();
+        }
+
+        // Inputs
+        Task<List<String>> paths = runner.create(argPaths);
+        Task<Boolean> restart = runner.create(argRestart);
+        Task<DexSplitter> splitter = runner.create(new CachedDexSplitter(db, new D8DexSplitter()));
+
+        // Get the list of files from the local apks
+        Task<List<Apk>> newFiles =
+                runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
+
+        // Get the list of files from the installed app
+        Task<ApplicationDumper.Dump> dumps =
+                runner.create(Tasks.DUMP, new ApplicationDumper(installer)::dump, newFiles);
+
+        // Calculate the difference between them
+        Task<List<FileDiff>> diffs =
+                runner.create(
+                        Tasks.DIFF,
+                        (dump, newApks) -> new ApkDiffer().diff(dump.apks, newApks),
+                        dumps,
+                        newFiles);
+
+        // Push and pre install the apks
+        Task<String> sessionId =
+                runner.create(
+                        Tasks.PREINSTALL,
+                        new ApkPreInstaller(adb, installer, logger)::preinstall,
+                        dumps,
+                        newFiles,
+                        diffs);
+
+        // Verify the changes are swappable and get only the dexes that we can change
+        Task<List<FileDiff>> dexDiffs =
+                runner.create(Tasks.VERIFY, new SwapVerifier()::verify, diffs, restart);
+
+        // Compare the local vs remote dex files.
+        Task<DexComparator.ChangedClasses> toSwap =
+                runner.create(Tasks.COMPARE, new DexComparator()::compare, dexDiffs, splitter);
+
+        // Do the swap
+        ApkSwapper swapper = new ApkSwapper(installer, redefiners, argRestart, adb, logger);
+        runner.create(Tasks.SWAP, swapper::swap, swapper::error, dumps, sessionId, toSwap);
+
+        TaskResult result = runner.run();
+        result.getMetrics().forEach(metrics::add);
+
+        // Update the database with the entire new apk. In the normal case this should
+        // be a no-op because the dexes that were modified were extracted at comparison time.
+        // However if the compare task doesn't get to execute we still update the database.
+        // Note we artificially block this task until swap is done.
+        if (result.isSuccess()) {
+            runner.create(Tasks.CACHE, DexSplitter::cache, splitter, newFiles);
+
+            // Wait only for swap to finish
+            runner.runAsync();
+        } else {
+            throw result.getException();
+        }
+
+        Result deployResult = new Result();
+        deployResult.skippedInstall = sessionId.get().equals(ApkPreInstaller.SKIPPED_INSTALLATION);
+        return deployResult;
+    }
+
+    private boolean supportsNewPipeline() {
+        // New API level is not yet determined yet.
+        String codeName = adb.getVersion().getCodename();
+        return codeName != null && codeName.equals("R");
     }
 }
