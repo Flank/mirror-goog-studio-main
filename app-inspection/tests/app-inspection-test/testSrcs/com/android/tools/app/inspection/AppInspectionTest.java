@@ -49,6 +49,8 @@ public final class AppInspectionTest {
     private static final String EXPECTED_INSPECTOR_CREATED = EXPECTED_INSPECTOR_PREFIX + "CREATED";
     private static final String EXPECTED_INSPECTOR_DISPOSED =
             EXPECTED_INSPECTOR_PREFIX + "DISPOSED";
+    private static final String EXPECTED_INSPECTOR_COMMAND_PREFIX =
+            EXPECTED_INSPECTOR_PREFIX + "COMMAND: ";
 
     @Rule public final TransportRule transportRule;
     @Rule public final Timeout timeout = new Timeout(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -138,19 +140,21 @@ public final class AppInspectionTest {
         String onDevicePath = injectInspectorDex();
         assertResponseStatus(
                 serviceLayer.sendCommandAndGetResponse(
-                        createInspector("test.inspector", onDevicePath)),
+                        createInspector("reverse.echo.inspector", onDevicePath)),
                 SUCCESS);
         assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
         byte[] commandBytes = new byte[] {1, 2, 127};
+        byte[] successReply = new byte[] {1};
         assertRawResponse(
                 serviceLayer.sendCommandAndGetResponse(
-                        rawCommandInspector("test.inspector", commandBytes)),
-                commandBytes);
-        assertInput(androidDriver, EXPECTED_INSPECTOR_PREFIX + Arrays.toString(commandBytes));
+                        rawCommandInspector("reverse.echo.inspector", commandBytes)),
+                successReply);
+        assertInput(
+                androidDriver, EXPECTED_INSPECTOR_COMMAND_PREFIX + Arrays.toString(commandBytes));
         AppInspection.AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
         assertThat(serviceLayer.hasEventToCollect()).isFalse();
         assertThat(event.getRawEvent().getContent().toByteArray())
-                .isEqualTo(new byte[] {8, 92, 43});
+                .isEqualTo(new byte[] {127, 2, 1});
     }
 
     @Test

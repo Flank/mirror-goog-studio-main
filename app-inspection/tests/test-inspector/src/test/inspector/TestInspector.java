@@ -22,8 +22,10 @@ import androidx.inspection.Inspector;
 import java.util.Arrays;
 
 /**
- * Basic inspector which prints the bytes it receives to the console and then sends back a unique
- * (but otherwise arbitrary) byte array as a response.
+ * A basic inspector, but also a base class for other test inspectors.
+ *
+ * <p>It logs when certain events happen, which tests can assert against, but otherwise no-ops.
+ * Various {@code handle} methods are exposed to child classes that want to override any behavior.
  */
 public class TestInspector extends Inspector {
 
@@ -33,15 +35,20 @@ public class TestInspector extends Inspector {
     }
 
     @Override
-    public void onDispose() {
+    public final void onDispose() {
+        handleDispose();
         System.out.println("TEST INSPECTOR DISPOSED");
     }
 
+    protected void handleDispose() {}
+
     @Override
-    public void onReceiveCommand(
+    public final void onReceiveCommand(
             @NonNull byte[] bytes, @NonNull Inspector.CommandCallback commandCallback) {
-        System.out.println("TEST INSPECTOR " + Arrays.toString(bytes));
-        getConnection().sendEvent(new byte[] {8, 92, 43});
-        commandCallback.reply(bytes);
+        System.out.println("TEST INSPECTOR COMMAND: " + Arrays.toString(bytes));
+        handleReceiveCommand(bytes);
+        commandCallback.reply(new byte[] {1}); // Dummy OK response
     }
+
+    protected void handleReceiveCommand(@NonNull byte[] bytes) {}
 }

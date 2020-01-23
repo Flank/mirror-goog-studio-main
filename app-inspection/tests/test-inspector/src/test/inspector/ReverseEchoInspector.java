@@ -20,16 +20,21 @@ import androidx.annotation.NonNull;
 import androidx.inspection.Connection;
 
 /**
- * Inspector which throws an exception when it receives a command, allowing us to verify that the
- * the pipeline can handle crashes in a robust manner.
+ * An inspector that replies to any bytes it receives in {@link #onReceiveCommand(byte[],
+ * CommandCallback)} with an event containing those bytes except in reverse.
  */
-public class TestExceptionInspector extends TestInspector {
-    public TestExceptionInspector(@NonNull Connection connection) {
+public final class ReverseEchoInspector extends TestInspector {
+
+    ReverseEchoInspector(@NonNull Connection connection) {
         super(connection);
     }
 
     @Override
     protected void handleReceiveCommand(@NonNull byte[] bytes) {
-        throw new RuntimeException("This is an inspector exception.");
+        byte[] reversed = new byte[bytes.length];
+        for (int i = 0; i < bytes.length; ++i) {
+            reversed[i] = bytes[bytes.length - i - 1];
+        }
+        getConnection().sendEvent(reversed);
     }
 }

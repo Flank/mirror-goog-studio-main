@@ -18,18 +18,18 @@ package test.inspector;
 
 import androidx.annotation.NonNull;
 import androidx.inspection.Connection;
+import androidx.inspection.InspectorEnvironment;
+import androidx.inspection.InspectorFactory;
 
-/**
- * Inspector which throws an exception when it receives a command, allowing us to verify that the
- * the pipeline can handle crashes in a robust manner.
- */
-public class TestExceptionInspector extends TestInspector {
-    public TestExceptionInspector(@NonNull Connection connection) {
-        super(connection);
+public final class ReverseEchoInspectorFactory extends InspectorFactory<TestInspector> {
+    public ReverseEchoInspectorFactory() {
+        super("reverse.echo.inspector");
     }
 
+    @NonNull
     @Override
-    protected void handleReceiveCommand(@NonNull byte[] bytes) {
-        throw new RuntimeException("This is an inspector exception.");
+    public TestInspector createInspector(
+            @NonNull Connection connection, @NonNull InspectorEnvironment environment) {
+        return new ReverseEchoInspector(connection);
     }
 }
