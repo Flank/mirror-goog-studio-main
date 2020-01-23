@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-1b819114dba51ae5af655ffed4e5671bd266a0c2e868793208670db7a23cf0fc
+ad22ffbd49906c24a2d8d674fcb25496fc7ebf55e7e0065ccaca97aeb30b215e
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -116,6 +116,19 @@ com.android.build.api.dsl.AdbOptions.installOptions: void (java.lang.String)
 com.android.build.api.dsl.AdbOptions.installOptions: void (java.lang.String[])
 com.android.build.api.dsl.AdbOptions.setInstallOptions: void (java.util.Collection<java.lang.String>)
 com.android.build.api.dsl.AdbOptions.setTimeOutInMs: void (int)
+com.android.build.api.dsl.AnnotationProcessorOptions
+com.android.build.api.dsl.AnnotationProcessorOptions.argument: void (java.lang.String, java.lang.String)
+com.android.build.api.dsl.AnnotationProcessorOptions.arguments: void (java.util.Map<java.lang.String, java.lang.String>)
+com.android.build.api.dsl.AnnotationProcessorOptions.className: void (java.lang.String)
+com.android.build.api.dsl.AnnotationProcessorOptions.classNames: void (java.lang.String[])
+com.android.build.api.dsl.AnnotationProcessorOptions.compilerArgumentProvider: void (org.gradle.process.CommandLineArgumentProvider)
+com.android.build.api.dsl.AnnotationProcessorOptions.compilerArgumentProviders: void (org.gradle.process.CommandLineArgumentProvider[])
+com.android.build.api.dsl.AnnotationProcessorOptions.getArguments: java.util.Map<java.lang.String, java.lang.String> ()
+com.android.build.api.dsl.AnnotationProcessorOptions.getClassNames: java.util.Collection<java.lang.String> ()
+com.android.build.api.dsl.AnnotationProcessorOptions.getCompilerArgumentProviders: java.util.Collection<org.gradle.process.CommandLineArgumentProvider> ()
+com.android.build.api.dsl.AnnotationProcessorOptions.setArguments: void (java.util.Map<java.lang.String, java.lang.String>)
+com.android.build.api.dsl.AnnotationProcessorOptions.setClassNames: void (java.util.Collection<java.lang.String>)
+com.android.build.api.dsl.AnnotationProcessorOptions.setCompilerArgumentProviders: void (java.util.Collection<? extends org.gradle.process.CommandLineArgumentProvider>)
 com.android.build.api.dsl.ApkExtension
 com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
