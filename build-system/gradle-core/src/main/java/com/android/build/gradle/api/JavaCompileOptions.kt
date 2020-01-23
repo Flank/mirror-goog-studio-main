@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.api;
-
-import com.android.annotations.NonNull;
+package com.android.build.gradle.api
 
 /** Options for configuring Java compilation. */
-public interface JavaCompileOptions {
-    /** Returns the {@link AnnotationProcessorOptions} for configuring Java annotation processor. */
-    @NonNull
-    AnnotationProcessorOptions getAnnotationProcessorOptions();
+interface JavaCompileOptions {
+    /** Returns the [AnnotationProcessorOptions] for configuring Java annotation processor. */
+    val annotationProcessorOptions: AnnotationProcessorOptions
 }
