@@ -75,7 +75,7 @@ data class DesugarLibConfiguration(
     private val minSdkVersion: Int) {
 
     /**
-     * Registers the transform which converts desugar_jdk_libs.jar to its dex file
+     * Registers the transform which converts desugar lib jar to its dex file
      */
     fun registerTransform(
         dependencyHandler: DependencyHandler

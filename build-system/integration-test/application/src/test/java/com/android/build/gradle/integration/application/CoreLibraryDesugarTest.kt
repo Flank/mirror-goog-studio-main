@@ -84,6 +84,7 @@ class CoreLibraryDesugarTest {
     private val unusedDesugarClass = "Lj$/time/Year;"
     private val unObfuscatedClass = "Lj$/util/stream/StreamSupport;"
     private val obfuscatedClass = "Lj$/util/stream/e;"
+    private val desugarConfigClass = "Lj$/time/TimeConversions;"
 
     private fun setUpTestProject(): TestProject {
         return MultiModuleTestProject.builder()
@@ -423,6 +424,17 @@ class CoreLibraryDesugarTest {
             .hasMethodThatInvokes("getText", "Ljava/util/stream/Stream;->findFirst()Ljava/util/Optional;")
         val desugarLibDex = getDexWithSpecificClass(usedDesugarClass, apk.allDexes)
         DexSubject.assertThat(desugarLibDex).isEqualTo(null)
+    }
+
+    // There are some classes in desugar lib configuration jar which need to be processed by L8
+    // and packaged as a separated dex
+    @Test
+    fun testConfigJarPackagedAsSeparateDex() {
+        project.executor().run(":app:assembleDebug")
+        var apk = app.getApk(GradleTestProject.ApkType.DEBUG)
+        var desugarConfigLibDex = getDexWithSpecificClass(desugarConfigClass, apk.allDexes)
+            ?: fail("Failed to find the dex with class name $desugarConfigClass")
+        DexSubject.assertThat(desugarConfigLibDex).doesNotContainClasses(programClass)
     }
 
     private fun addFileDependency(project: GradleTestProject) {
