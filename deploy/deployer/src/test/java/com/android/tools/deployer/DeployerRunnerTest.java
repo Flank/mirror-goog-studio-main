@@ -62,6 +62,25 @@ import org.junit.runners.Parameterized;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
+/*
+How these tests work:
+====================
+These tests use the FakeAdbServer infrastructure but none of the default Handler.
+Instead, we install our own FakeDeviceHandler.
+
+DeployerRunner -> DDMLIB -> FakeAdbServer -> FakeDeviceHandler | Fake sync (for install command)
+                                                               | Fake shell/exec ->| Fake ls
+                                                                                   | Fake mkdir
+                                                                                   | ...
+                                                                                   | installer (external command)
+
+The DeployerRunner runs as is and the DeviceHandler records all sync/exec/shell commands received by the device.
+As the end of each test, the list of commands received is compared against the list of commands expected.
+
+Concurrency: These tests are NEVER sharded on the same machine. Therefore, having one FakeAdbServer is not a problem.
+             A single FakeAdbServer can also be used in other tests.
+*/
+
 @RunWith(Parameterized.class)
 public class DeployerRunnerTest {
     @Rule public TestName name = new TestName();
