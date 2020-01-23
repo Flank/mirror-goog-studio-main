@@ -501,7 +501,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         @Override
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
-            component
+            creationConfig
                     .getArtifacts()
                     .republish(
                             InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
@@ -512,9 +512,9 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessTestManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            component.getTaskContainer().setProcessManifestTask(taskProvider);
+            creationConfig.getTaskContainer().setProcessManifestTask(taskProvider);
 
-            BuildArtifactsHolder artifacts = component.getArtifacts();
+            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
             artifacts.producesDir(
                     InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
                     taskProvider,
@@ -525,9 +525,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                     InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
                     taskProvider,
                     ProcessTestManifest::getMergeBlameFile,
-                    "manifest-merger-blame-"
-                            + component.getVariantDslInfo().getBaseName()
-                            + "-report.txt");
+                    "manifest-merger-blame-" + creationConfig.getBaseName() + "-report.txt");
         }
 
         @Override
@@ -536,8 +534,8 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             super.configure(task);
             Project project = task.getProject();
 
-            final VariantDslInfo variantDslInfo = component.getVariantDslInfo();
-            final VariantSources variantSources = component.getVariantSources();
+            final VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
+            final VariantSources variantSources = creationConfig.getVariantSources();
 
             // Use getMainManifestIfExists() instead of getMainManifestFilePath() because this task
             // accepts either a non-null file that exists or a null file, it does not accept a
@@ -546,20 +544,20 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                     .set(project.provider(variantSources::getMainManifestIfExists));
             task.getTestManifestFile().disallowChanges();
 
-            task.apkData = component.getOutputs().getMainSplit().getApkData();
+            task.apkData = creationConfig.getOutputs().getMainSplit().getApkData();
 
-            task.getVariantType().set(component.getVariantType().toString());
+            task.getVariantType().set(creationConfig.getVariantType().toString());
             task.getVariantType().disallowChanges();
 
             task.setTmpDir(
                     FileUtils.join(
-                            component.getPaths().getIntermediatesDir(),
+                            creationConfig.getPaths().getIntermediatesDir(),
                             "tmp",
                             "manifest",
-                            component.getVariantDslInfo().getDirName()));
+                            creationConfig.getDirName()));
 
             task.getMinSdkVersion()
-                    .set(project.provider(() -> variantDslInfo.getMinSdkVersion().getApiString()));
+                    .set(project.provider(() -> creationConfig.getMinSdkVersion().getApiString()));
             task.getMinSdkVersion().disallowChanges();
             task.getTargetSdkVersion()
                     .set(
@@ -591,7 +589,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             task.getTestLabel().disallowChanges();
 
             task.manifests =
-                    component
+                    creationConfig
                             .getVariantDependencies()
                             .getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
@@ -599,10 +597,10 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                     .set(project.provider(variantDslInfo::getManifestPlaceholders));
             task.getPlaceholdersValues().disallowChanges();
 
-            if (!component.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
+            if (!creationConfig.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
                 task.navigationJsons =
                         project.files(
-                                component
+                                creationConfig
                                         .getVariantDependencies()
                                         .getArtifactFileCollection(
                                                 RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));

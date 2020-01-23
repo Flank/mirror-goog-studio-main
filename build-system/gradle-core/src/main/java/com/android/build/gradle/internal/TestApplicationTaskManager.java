@@ -25,6 +25,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -33,8 +34,6 @@ import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
-import com.android.build.gradle.internal.variant.VariantFactory;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.CheckTestedAppObfuscation;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
@@ -46,7 +45,6 @@ import com.google.common.base.Preconditions;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.Directory;
@@ -59,34 +57,28 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
  * TaskManager for standalone test application that lives in a separate module from the tested
  * application.
  */
-public class TestApplicationTaskManager extends ApplicationTaskManager {
+public class TestApplicationTaskManager extends AbstractAppTaskManager<TestVariantPropertiesImpl> {
 
     public TestApplicationTaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull Project project,
-            @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
-            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
                 globalScope,
-                project,
-                projectOptions,
                 dataBindingBuilder,
                 extension,
-                variantFactory,
                 toolingRegistry,
                 recorder);
     }
 
     @Override
-    public void createTasksForVariantScope(
-            @NonNull VariantPropertiesImpl testVariantProperties,
-            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
+    public void createTasksForVariant(
+            @NonNull TestVariantPropertiesImpl testVariantProperties,
+            @NonNull List<TestVariantPropertiesImpl> allComponentsWithLint) {
 
-        super.createTasksForVariantScope(testVariantProperties, allComponentsWithLint);
+        createCommonTasks(testVariantProperties, allComponentsWithLint);
 
         Configuration testedApksConfig =
                 project.getConfigurations()
@@ -162,15 +154,15 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
     @Override
     public void createLintTasks(
-            @NonNull ComponentPropertiesImpl componentProperties,
-            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
+            @NonNull TestVariantPropertiesImpl componentProperties,
+            @NonNull List<TestVariantPropertiesImpl> allComponentsWithLint) {
         // do nothing
     }
 
     @Override
     public void maybeCreateLintVitalTask(
-            @NonNull VariantPropertiesImpl appVariant,
-            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
+            @NonNull TestVariantPropertiesImpl variant,
+            @NonNull List<TestVariantPropertiesImpl> allComponentsWithLint) {
         // do nothing
     }
 
@@ -180,7 +172,8 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     }
 
     @Override
-    public void configureGlobalLintTask(@NonNull Collection<ComponentPropertiesImpl> components) {
+    public void configureGlobalLintTask(
+            @NonNull Collection<? extends VariantPropertiesImpl> components) {
         // do nothing
     }
 

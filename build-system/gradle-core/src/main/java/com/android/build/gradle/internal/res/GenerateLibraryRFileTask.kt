@@ -214,16 +214,16 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             taskProvider: TaskProvider<out GenerateLibraryRFileTask>
         ) {
             super.handleProvider(taskProvider)
-            component.taskContainer.processAndroidResTask = taskProvider
+            creationConfig.taskContainer.processAndroidResTask = taskProvider
 
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
                 taskProvider,
                 GenerateLibraryRFileTask::rClassOutputJar,
                 fileName = "R.jar"
             )
 
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.COMPILE_SYMBOL_LIST,
                 taskProvider,
                 GenerateLibraryRFileTask::textSymbolOutputFileProperty,
@@ -232,7 +232,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
 
             // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
             // process resources for local subprojects.
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
                 taskProvider,
                 GenerateLibraryRFileTask::symbolsWithPackageNameOutputFile,
@@ -246,9 +246,9 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
         ) {
             super.configure(task)
 
-            val projectOptions = component.globalScope.projectOptions
+            val projectOptions = creationConfig.globalScope.projectOptions
 
-            task.platformAttrRTxt.fromDisallowChanges(component.globalScope.platformAttrs)
+            task.platformAttrRTxt.fromDisallowChanges(creationConfig.globalScope.platformAttrs)
 
             val namespacedRClass = projectOptions[BooleanOption.NAMESPACED_R_CLASS]
             val compileClasspathLibraryRClasses = projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES]
@@ -271,7 +271,8 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                     } else {
                         RUNTIME_CLASSPATH
                     }
-                task.dependencies.from(component.variantDependencies.getArtifactFileCollection(
+                task.dependencies.from(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
                     consumedConfigType,
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
@@ -282,14 +283,14 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task.compileClasspathLibraryRClasses.set(compileClasspathLibraryRClasses)
 
             task.packageForR.set(task.project.provider {
-                Strings.nullToEmpty(component.variantDslInfo.originalApplicationId)
+                Strings.nullToEmpty(creationConfig.variantDslInfo.originalApplicationId)
             })
             task.packageForR.disallowChanges()
 
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
 
-            task.mainSplit = component.outputs.getMainSplit().apkData
+            task.mainSplit = creationConfig.outputs.getMainSplit().apkData
 
             // This task can produce R classes with either constant IDs ("0") or sequential IDs
             // mimicking the way AAPT2 numbers IDs. If we're generating a compile time only R class
@@ -300,7 +301,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                 (projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS] && !isLibrary)
                         || projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES])
 
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
                 task.localResourcesFile)
         }
@@ -318,7 +319,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             taskProvider: TaskProvider<out GenerateLibraryRFileTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                 taskProvider,
                 GenerateLibraryRFileTask::rClassOutputJar,
@@ -330,15 +331,15 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task: GenerateLibraryRFileTask
         ) {
             super.configure(task)
-            val projectOptions = component.globalScope.projectOptions
+            val projectOptions = creationConfig.globalScope.projectOptions
 
-            task.platformAttrRTxt.fromDisallowChanges(component.globalScope.platformAttrs)
+            task.platformAttrRTxt.fromDisallowChanges(creationConfig.globalScope.platformAttrs)
 
             // We need the runtime dependencies for generating a set of consistent runtime R classes
             // for android test, and in the case of transitive R classes, we also need them
             // to include them in the local R class.
             task.dependencies.fromDisallowChanges(
-                    component.variantDependencies.getArtifactFileCollection(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
                         RUNTIME_CLASSPATH,
                         ALL,
                         AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
@@ -348,12 +349,12 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task.namespacedRClass.setDisallowChanges(projectOptions[BooleanOption.NAMESPACED_R_CLASS])
             task.compileClasspathLibraryRClasses.setDisallowChanges(false)
             task.packageForR.setDisallowChanges(task.project.provider {
-                Strings.nullToEmpty(component.variantDslInfo.originalApplicationId)
+                Strings.nullToEmpty(creationConfig.variantDslInfo.originalApplicationId)
             })
-            task.mainSplit = component.outputs.getMainSplit().apkData
+            task.mainSplit = creationConfig.outputs.getMainSplit().apkData
             task.useConstantIds.setDisallowChanges(false)
 
-            component.onTestedVariant {
+            creationConfig.onTestedVariant {
                 it.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles
                 )

@@ -116,9 +116,9 @@ cc_test(
     tags = ["no_windows"],
     deps = [
         ":perfd",
-        "//external:gmock_main",
         "//tools/base/profiler/native/test:testutils",
         "//tools/base/transport/native/daemon",
         "//tools/base/transport/proto:cc_proto",
+        "@googletest//:gtest_main",
     ],
 )

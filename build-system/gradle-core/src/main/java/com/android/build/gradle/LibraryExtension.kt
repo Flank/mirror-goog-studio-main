@@ -27,17 +27,21 @@ import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.AaptOptions
+import com.android.build.gradle.internal.dsl.AbiSplitOptions
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.AdbOptions
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
+import com.android.build.gradle.internal.dsl.DensitySplitOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
+import com.android.build.gradle.internal.dsl.LanguageSplitOptions
 import com.android.build.gradle.internal.dsl.LibraryExtensionImpl
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -75,17 +79,20 @@ open class LibraryExtension(
 ),
     com.android.build.api.dsl.LibraryExtension<
             AaptOptions,
+            AbiSplitOptions,
             AdbOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,
             DataBindingOptions,
             DefaultConfig,
+            DensitySplitOptions,
             ExternalNativeBuild,
             JacocoOptions,
             NdkBuildOptions,
             ProductFlavor,
             SigningConfig,
+            Splits,
             TestOptions,
             TestOptions.UnitTestOptions> by publicExtensionImpl,
     ActionableVariantObjectOperationsExecutor<com.android.build.api.variant.LibraryVariant, LibraryVariantProperties> by publicExtensionImpl {

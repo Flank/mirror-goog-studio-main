@@ -76,7 +76,7 @@ abstract class DataBindingMergeBaseClassLogTask: IncrementalTask() {
             taskProvider: TaskProvider<out DataBindingMergeBaseClassLogTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
                 taskProvider,
                 DataBindingMergeBaseClassLogTask::outFolder
@@ -89,13 +89,13 @@ abstract class DataBindingMergeBaseClassLogTask: IncrementalTask() {
             super.configure(task)
 
             // data binding related artifacts for external libs
-            task.moduleClassLog = component.variantDependencies.getArtifactFileCollection(
+            task.moduleClassLog = creationConfig.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH,
                 PROJECT,
                 ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
             )
 
-            task.externalClassLog = component.variantDependencies.getArtifactFileCollection(
+            task.externalClassLog = creationConfig.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH,
                 EXTERNAL,
                 ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT

@@ -90,7 +90,7 @@ abstract class GenerateResValues : NonIncrementalTask() {
             taskProvider: TaskProvider<out GenerateResValues>
         ) {
             super.handleProvider(taskProvider)
-            component.taskContainer.generateResValuesTask = taskProvider
+            creationConfig.taskContainer.generateResValuesTask = taskProvider
         }
 
         override fun configure(
@@ -98,11 +98,11 @@ abstract class GenerateResValues : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.items.set(component.globalScope.project.provider {
-                component.variantDslInfo.resValues
+            task.items.set(creationConfig.globalScope.project.provider {
+                creationConfig.variantDslInfo.resValues
             })
 
-            task.resOutputDir = component.paths.generatedResOutputDir
+            task.resOutputDir = creationConfig.paths.generatedResOutputDir
         }
     }
 }

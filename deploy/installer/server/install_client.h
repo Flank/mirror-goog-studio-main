@@ -18,6 +18,7 @@
 #define INSTALL_CLIENT_H
 
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "tools/base/deploy/common/proto_pipe.h"
@@ -36,10 +37,10 @@ class InstallClient {
     return output_.Write(message);
   }
 
-  // Waits up to timeout milliseconds for a message to be available from the
-  // client, then attempts to parse the data read into the specified proto.
-  bool Read(int timeout_ms, google::protobuf::MessageLite* message) {
-    return input_.Read(timeout_ms, message);
+  // Waits up for a message to be available from the client, then attempts to
+  // parse the data read into the specified proto.
+  bool Read(google::protobuf::MessageLite* message) {
+    return input_.Read(kDefaultTimeoutMs, message);
   }
 
   // Waits indefinitely for the server to start.
@@ -47,14 +48,13 @@ class InstallClient {
     return WaitForStatus(proto::InstallServerResponse::SERVER_STARTED);
   }
 
-  // Waits indefinitely for the server to exit.
-  bool WaitForExit() {
-    return WaitForStatus(proto::InstallServerResponse::SERVER_EXITED);
-  }
+  // Sends a server exit request and waits indefinitely for the server to exit.
+  bool KillServerAndWait();
 
  private:
   ProtoPipe input_;
   ProtoPipe output_;
+  const int kDefaultTimeoutMs = 5000;
 
   bool WaitForStatus(proto::InstallServerResponse::Status status);
 };

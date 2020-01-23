@@ -46,6 +46,7 @@ abstract class CommonExtensionImpl<
     override val signingConfigs: NamedDomainObjectContainer<SigningConfigT>
 ) : CommonExtension<
         AaptOptions,
+        AbiSplitOptions,
         AdbOptions,
         BuildFeaturesT,
         BuildTypeT,
@@ -53,11 +54,13 @@ abstract class CommonExtensionImpl<
         CompileOptions,
         DataBindingOptions,
         DefaultConfigT,
+        DensitySplitOptions,
         ExternalNativeBuild,
         JacocoOptions,
         NdkBuildOptions,
         ProductFlavorT,
         SigningConfigT,
+        Splits,
         TestOptions,
         TestOptions.UnitTestOptions,
         VariantT,
@@ -144,6 +147,13 @@ abstract class CommonExtensionImpl<
 
     override fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfigT>>) {
         action.execute(signingConfigs)
+    }
+
+    override val splits: Splits =
+        dslScope.objectFactory.newInstance(Splits::class.java, dslScope.objectFactory)
+
+    override fun splits(action: Splits.() -> Unit) {
+        action.invoke(splits)
     }
 
     override val testOptions: TestOptions =

@@ -98,8 +98,8 @@ cc_test(
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
-        "//external:gmock_main",
         "//tools/base/deploy/installer:installer_lib",
         "//tools/base/profiler/native/test:testutils",
+        "@googletest//:gtest_main",
     ],
 )

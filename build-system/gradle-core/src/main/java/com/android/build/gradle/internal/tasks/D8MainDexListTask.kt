@@ -187,7 +187,7 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out D8MainDexListTask>
         ) {
             super.handleProvider(taskProvider)
-            val request = component.artifacts.getOperations().setInitialProvider(
+            val request = creationConfig.artifacts.getOperations().setInitialProvider(
                 taskProvider, D8MainDexListTask::output
             ).withName("mainDexList.txt")
             if (includeDynamicFeatures) {
@@ -202,13 +202,13 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
                 task.aaptGeneratedRules
             )
 
-            val variantDslInfo = component.variantDslInfo
-            val project = component.globalScope.project
+            val variantDslInfo = creationConfig.variantDslInfo
+            val project = creationConfig.globalScope.project
 
             if (variantDslInfo.multiDexKeepProguard != null) {
                 task.userMultidexProguardRules.fileProvider(
@@ -227,10 +227,10 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
             task.inputClasses.from(inputClasses).disallowChanges()
             task.libraryClasses.from(libraryClasses).disallowChanges()
 
-            task.bootClasspath.from(component.variantScope.bootClasspath).disallowChanges()
+            task.bootClasspath.from(creationConfig.variantScope.bootClasspath).disallowChanges()
             task.errorFormat
                 .setDisallowChanges(
-                    SyncOptions.getErrorFormatMode(component.globalScope.projectOptions))
+                    SyncOptions.getErrorFormatMode(creationConfig.globalScope.projectOptions))
         }
     }
 }

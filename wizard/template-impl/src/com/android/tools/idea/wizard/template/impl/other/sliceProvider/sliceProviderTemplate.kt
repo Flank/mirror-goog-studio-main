@@ -28,6 +28,7 @@ import com.android.tools.idea.wizard.template.TemplateConstraint
 import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
+import com.android.tools.idea.wizard.template.packageNameToDomain
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
@@ -46,14 +47,14 @@ val sliceProviderTemplate
 
     val className = stringParameter {
       name = "Class Name"
-      default = "MySliceProvider "
+      default = "MySliceProvider"
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 
     val authorities = stringParameter {
       name = "URI Authorities"
       default = ""
-      help = "A semicolon separated list of one or more URI authorities that identify data under the purview of the SliceProvider. "
+      help = "A semicolon separated list of one or more URI authorities that identify data under the purview of the SliceProvider."
       constraints = listOf(NONEMPTY, URI_AUTHORITY)
       suggest = { packageName }
     }
@@ -61,17 +62,15 @@ val sliceProviderTemplate
     val hostUrl = stringParameter {
       name = "Host URL"
       default = ""
-      help = "An HTTP URL that will expose the SliceProvider. "
+      help = "An HTTP URL that will expose the SliceProvider."
       constraints = listOf(NONEMPTY)
-      // TODO: It may be better to add an additional field for companyDomain to WizardParameterData, but it may be too much given that
-      //  this is the only template that uses the domain
-      suggest = { "example.com" }
+      suggest = { packageNameToDomain(packageName) }
     }
 
     val pathPrefix = stringParameter {
       name = "Path Prefix"
       default = "/"
-      help = "A partial path in the URL that is matched to the SliceProvider. "
+      help = "A partial path in the URL that is matched to the SliceProvider."
       constraints = listOf(NONEMPTY)
     }
 

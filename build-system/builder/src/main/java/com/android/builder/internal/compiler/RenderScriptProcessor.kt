@@ -494,7 +494,7 @@ class RenderScriptProcessor(
 
         private fun getAbis(type: AbiType, buildToolsRevision: Revision): Array<Abi> {
             // The revision in which the new universal linker (lld) was added
-            val newLinkerRevision = Revision(99, 99, 99)
+            val newLinkerRevision = Revision(29, 0, 3)
 
             val useNewLinker = buildToolsRevision >= newLinkerRevision
 

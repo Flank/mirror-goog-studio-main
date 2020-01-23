@@ -79,6 +79,6 @@ cc_test(
     visibility = ["//visibility:public"],
     deps = [
         ":common_lib",
-        "//external:gmock_main",
+        "@googletest//:gtest_main",
     ],
 )

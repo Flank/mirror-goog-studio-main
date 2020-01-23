@@ -23,7 +23,6 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
@@ -47,7 +46,7 @@ import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import org.gradle.api.NamedDomainObjectContainer;
 
-public class LibraryVariantFactory extends BaseVariantFactory {
+public class LibraryVariantFactory extends BaseVariantFactory<LibraryVariantPropertiesImpl> {
 
     public LibraryVariantFactory(@NonNull GlobalScope globalScope) {
         super(globalScope);
@@ -68,7 +67,7 @@ public class LibraryVariantFactory extends BaseVariantFactory {
 
     @NonNull
     @Override
-    public VariantPropertiesImpl createVariantPropertiesObject(
+    public LibraryVariantPropertiesImpl createVariantPropertiesObject(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -100,7 +99,7 @@ public class LibraryVariantFactory extends BaseVariantFactory {
         String name =
                 globalScope.getProjectBaseName()
                         + "-"
-                        + variantDslInfo.getBaseName()
+                        + variantProperties.getBaseName()
                         + "."
                         + BuilderConstants.EXT_LIB_ARCHIVE;
         variantProperties.addVariantOutput(variantData.getOutputFactory().addMainOutput(name));
@@ -118,7 +117,7 @@ public class LibraryVariantFactory extends BaseVariantFactory {
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
-            @NonNull TaskManager taskManager,
+            @NonNull TaskManager<LibraryVariantPropertiesImpl> taskManager,
             @NonNull MutableTaskContainer taskContainer) {
         return new LibraryVariantData(
                 componentIdentity,

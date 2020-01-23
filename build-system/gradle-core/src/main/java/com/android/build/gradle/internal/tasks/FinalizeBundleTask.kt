@@ -162,28 +162,28 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            val bundleName = "${component.globalScope.projectBaseName}-${component.variantDslInfo.baseName}.aab"
-            val apkLocationOverride = component.globalScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
+            val bundleName = "${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}.aab"
+            val apkLocationOverride = creationConfig.globalScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
             if (apkLocationOverride == null) {
-                component.artifacts.producesFile(
+                creationConfig.artifacts.producesFile(
                     InternalArtifactType.BUNDLE,
                     taskProvider,
                     FinalizeBundleTask::finalBundleFile,
                     bundleName
                 )
             } else {
-                component.artifacts.producesFile(
+                creationConfig.artifacts.producesFile(
                     InternalArtifactType.BUNDLE,
                     taskProvider,
                     FinalizeBundleTask::finalBundleFile,
                     FileUtils.join(
-                        component.globalScope.project.file(apkLocationOverride),
-                        component.variantDslInfo.dirName).absolutePath,
+                        creationConfig.dslScope.file(apkLocationOverride),
+                        creationConfig.dirName).absolutePath,
                     bundleName
                 )
             }
 
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.BUNDLE_IDE_MODEL,
                 taskProvider,
                 FinalizeBundleTask::bundleIdeModel,
@@ -196,16 +196,16 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.INTERMEDIARY_BUNDLE,
                 task.intermediaryBundleFile)
 
             // Don't sign debuggable bundles.
-            if (!component.variantDslInfo.isDebuggable) {
-                task.signingConfig = SigningConfigProvider.create(component)
+            if (!creationConfig.variantDslInfo.isDebuggable) {
+                task.signingConfig = SigningConfigProvider.create(creationConfig)
             }
 
-            task.applicationId.setDisallowChanges(component.applicationId)
+            task.applicationId.setDisallowChanges(creationConfig.applicationId)
         }
 
     }

@@ -127,23 +127,26 @@ public abstract class UninstallTask extends NonIncrementalTask {
         public void configure(@NonNull UninstallTask task) {
             super.configure(task);
 
-            task.componentProperties = component;
+            task.componentProperties = creationConfig;
             task.setDescription(
-                    "Uninstalls the " + component.getVariantData().getDescription() + ".");
+                    "Uninstalls the " + creationConfig.getVariantData().getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             task.setTimeOutInMs(
-                    component.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
+                    creationConfig
+                            .getGlobalScope()
+                            .getExtension()
+                            .getAdbOptions()
+                            .getTimeOutInMs());
 
             task.adbExecutableProvider =
-                    component.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
-
+                    creationConfig.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
         }
 
         @Override
         public void handleProvider(
                 @NonNull TaskProvider<? extends UninstallTask> taskProvider) {
             super.handleProvider(taskProvider);
-            component.getTaskContainer().setUninstallTask(taskProvider);
+            creationConfig.getTaskContainer().setUninstallTask(taskProvider);
         }
     }
 }

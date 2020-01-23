@@ -308,53 +308,53 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.PROJECT_DEX_ARCHIVE,
                 taskProvider,
                 DexArchiveBuilderTask::projectOutputDex
             )
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE,
                 taskProvider,
                 DexArchiveBuilderTask::subProjectOutputDex
             )
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE,
                 taskProvider,
                 DexArchiveBuilderTask::externalLibsOutputDex
             )
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE,
                 taskProvider,
                 DexArchiveBuilderTask::mixedScopeOutputDex
             )
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.DEX_ARCHIVE_INPUT_JAR_HASHES,
                 taskProvider,
                 DexArchiveBuilderTask::inputJarHashesFile
             )
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.DESUGAR_GRAPH,
                 taskProvider,
                 DexArchiveBuilderTask::desugarGraphDir
             )
-            if (component.variantScope.needsShrinkDesugarLibrary) {
-                component.artifacts.producesDir(
+            if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
+                creationConfig.artifacts.producesDir(
                     InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES,
                     taskProvider,
                     DexArchiveBuilderTask::projectOutputKeepRules
                 )
-                component.artifacts.producesDir(
+                creationConfig.artifacts.producesDir(
                     InternalArtifactType.DESUGAR_LIB_SUBPROJECT_KEEP_RULES,
                     taskProvider,
                     DexArchiveBuilderTask::subProjectOutputKeepRules
                 )
-                component.artifacts.producesDir(
+                creationConfig.artifacts.producesDir(
                     InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES,
                     taskProvider,
                     DexArchiveBuilderTask::externalLibsOutputKeepRules
                 )
-                component.artifacts.producesDir(
+                creationConfig.artifacts.producesDir(
                     InternalArtifactType.DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES,
                     taskProvider,
                     DexArchiveBuilderTask::mixedScopeOutputKeepRules
@@ -367,7 +367,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         ) {
             super.configure(task)
 
-            val projectOptions = component.globalScope.projectOptions
+            val projectOptions = creationConfig.globalScope.projectOptions
 
             task.projectClasses.from(projectClasses)
             task.subProjectClasses.from(subProjectsClasses)
@@ -375,28 +375,28 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.mixedScopeClasses.from(mixedScopeClasses)
 
             task.incrementalDexingV2.setDisallowChanges(
-                component.globalScope.project.provider {
+                creationConfig.globalScope.project.provider {
                     projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2)
                 })
 
-            val minSdkVersion = component
+            val minSdkVersion = creationConfig
                 .variantDslInfo
                 .minSdkVersionWithTargetDeviceApi
                 .featureLevel
             task.dexParams.minSdkVersion.set(minSdkVersion)
             task.dexParams.withDesugaring
-                .set(component.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8)
-            if (component.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
+                .set(creationConfig.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8)
+            if (creationConfig.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
                 && minSdkVersion < AndroidVersion.VersionCodes.N
             ) {
                 // Set bootclasspath and classpath only if desugaring with D8 and minSdkVersion < 24
                 task.dexParams.desugarClasspath.from(desugaringClasspathClasses)
                 task.dexParams.desugarBootclasspath
-                    .from(component.globalScope.filteredBootClasspath)
+                    .from(creationConfig.globalScope.filteredBootClasspath)
             }
 
             task.dexParams.errorFormatMode.set(SyncOptions.getErrorFormatMode(projectOptions))
-            task.dexer.set(component.variantScope.dexer)
+            task.dexer.set(creationConfig.variantScope.dexer)
             task.useGradleWorkers.set(projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS))
             task.dxDexParams.inBufferSize.set(
                 (projectOptions.get(IntegerOption.DEXING_READ_BUFFER_SIZE)
@@ -407,10 +407,10 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
             )
             task.dexParams.debuggable.setDisallowChanges(
-                component.variantDslInfo.isDebuggable
+                creationConfig.variantDslInfo.isDebuggable
             )
             task.projectVariant.set(
-                "${component.globalScope.project.name}:${component.name}"
+                "${creationConfig.globalScope.project.name}:${creationConfig.name}"
             )
             task.numberOfBuckets.set(
                 projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS) ?: DEFAULT_NUM_BUCKETS
@@ -419,9 +419,9 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 dexOptions.additionalParameters.contains("--no-optimize")
             )
             task.userLevelCache = userLevelCache
-            if (component.variantScope.isCoreLibraryDesugaringEnabled) {
+            if (creationConfig.variantScope.isCoreLibraryDesugaringEnabled) {
                 task.dexParams.coreLibDesugarConfig
-                    .set(getDesugarLibConfig(component.globalScope.project))
+                    .set(getDesugarLibConfig(creationConfig.globalScope.project))
             }
         }
     }

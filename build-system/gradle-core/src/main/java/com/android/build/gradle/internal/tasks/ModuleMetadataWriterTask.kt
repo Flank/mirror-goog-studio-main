@@ -90,7 +90,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
             // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.BASE_MODULE_METADATA,
                 taskProvider,
                 ModuleMetadataWriterTask::outputFile,
@@ -102,13 +102,11 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
             task: ModuleMetadataWriterTask
         ) {
             super.configure(task)
-            task.applicationId.set(component.applicationId)
-            task.debuggable
-                .setDisallowChanges(component.variantDslInfo.isDebuggable)
-            task.versionCode.setDisallowChanges(component.outputs.getMainSplit().versionCode)
-            task.versionName.setDisallowChanges(component.outputs.getMainSplit().versionName)
-            task.abiFilters.set(component.variantDslInfo.supportedAbis?.sorted())
-            task.abiFilters.disallowChanges()
+            task.applicationId.set(creationConfig.applicationId)
+            task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+            task.versionCode.setDisallowChanges(creationConfig.outputs.getMainSplit().versionCode)
+            task.versionName.setDisallowChanges(creationConfig.outputs.getMainSplit().versionName)
+            task.abiFilters.setDisallowChanges(creationConfig.variantDslInfo.supportedAbis?.sorted())
         }
     }
 }

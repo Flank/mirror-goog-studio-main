@@ -32,6 +32,7 @@ import org.gradle.api.NamedDomainObjectContainer
 @Incubating
 interface CommonExtension<
         AaptOptionsT: AaptOptions,
+        AbiSplitT : AbiSplit,
         AdbOptionsT : AdbOptions,
         BuildFeaturesT: BuildFeatures,
         BuildTypeT : BuildType,
@@ -39,11 +40,13 @@ interface CommonExtension<
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,
         DefaultConfigT : DefaultConfig,
+        DensitySplitT : DensitySplit,
         ExternalNativeBuildT: ExternalNativeBuild<CMakeT, NdkBuildT>,
         JacocoOptionsT : JacocoOptions,
         NdkBuildT: NdkBuild,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
+        SplitsT : Splits<AbiSplitT, DensitySplitT>,
         TestOptionsT: TestOptions<UnitTestOptionsT>,
         UnitTestOptionsT: UnitTestOptions,
         VariantT : Variant<VariantPropertiesT>,
@@ -403,4 +406,22 @@ interface CommonExtension<
      * @areturn a [GenericFilteredComponentActionRegistrar] of [VariantPropertiesT]
      */
     val onVariantProperties: GenericFilteredComponentActionRegistrar<VariantPropertiesT>
+
+    /**
+     * Specifies configurations for
+     * [building multiple APKs](https://developer.android.com/studio/build/configure-apk-splits.html)
+     * or APK splits.
+     *
+     * For more information about the properties you can configure in this block, see [Splits].
+     */
+    val splits: SplitsT
+
+    /**
+     * Specifies configurations for
+     * [building multiple APKs](https://developer.android.com/studio/build/configure-apk-splits.html)
+     * or APK splits.
+     *
+     * For more information about the properties you can configure in this block, see [Splits].
+     */
+    fun splits(action: SplitsT.() -> Unit)
 }

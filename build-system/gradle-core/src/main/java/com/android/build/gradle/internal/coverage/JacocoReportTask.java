@@ -197,7 +197,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends JacocoReportTask> taskProvider) {
             super.handleProvider(taskProvider);
-            component.getTaskContainer().setCoverageReportTask(taskProvider);
+            creationConfig.getTaskContainer().setCoverageReportTask(taskProvider);
         }
 
         @Override
@@ -207,13 +207,13 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
             task.setDescription("Creates JaCoCo test coverage report from data gathered on the "
                     + "device.");
 
-            task.setReportName(component.getName());
+            task.setReportName(creationConfig.getName());
 
-            VariantPropertiesImpl testedVariant = component.getTestedVariant();
+            VariantPropertiesImpl testedVariant = creationConfig.getTestedVariant();
 
             task.jacocoClasspath = jacocoAntConfiguration;
 
-            component
+            creationConfig
                     .getArtifacts()
                     .setTaskInputToFinalProduct(
                             InternalArtifactType.CODE_COVERAGE.INSTANCE,
@@ -222,7 +222,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
             task.classFileCollection = testedVariant.getArtifacts().getAllClasses();
 
             task.sourceFolders =
-                    component
+                    creationConfig
                             .getGlobalScope()
                             .getProject()
                             .files(

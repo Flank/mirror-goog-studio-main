@@ -100,7 +100,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
                             getProjectName(),
                             componentProperties.getName(),
                             deviceProvider,
-                            variantDslInfo.getMinSdkVersion(),
+                            componentProperties.getMinSdkVersion(),
                             builtArtifacts,
                             variantDslInfo.getSupportedAbis(),
                             getInstallOptions(),
@@ -227,28 +227,36 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         @Override
         public void configure(@NonNull InstallVariantTask task) {
             super.configure(task);
-            task.componentProperties = component;
+            task.componentProperties = creationConfig;
 
             task.setDescription(
-                    "Installs the " + component.getVariantData().getDescription() + ".");
+                    "Installs the " + creationConfig.getVariantData().getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
-            component
+            creationConfig
                     .getArtifacts()
                     .setTaskInputToFinalProduct(
                             InternalArtifactType.APK.INSTANCE, task.getApkDirectory());
             task.setTimeOutInMs(
-                    component.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
+                    creationConfig
+                            .getGlobalScope()
+                            .getExtension()
+                            .getAdbOptions()
+                            .getTimeOutInMs());
             task.setInstallOptions(
-                    component.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
+                    creationConfig
+                            .getGlobalScope()
+                            .getExtension()
+                            .getAdbOptions()
+                            .getInstallOptions());
             task.adbExecutableProvider =
-                    component.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
+                    creationConfig.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
         }
 
         @Override
         public void handleProvider(
                 @NonNull TaskProvider<? extends InstallVariantTask> taskProvider) {
             super.handleProvider(taskProvider);
-            component.getTaskContainer().setInstallTask(taskProvider);
+            creationConfig.getTaskContainer().setInstallTask(taskProvider);
         }
     }
 }

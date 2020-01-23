@@ -114,7 +114,7 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LibraryDexingTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.getOperations().append(
+            creationConfig.artifacts.getOperations().append(
                 taskProvider,
                 LibraryDexingTask::output
             ).on(MultipleArtifactType.DEX)
@@ -124,22 +124,22 @@ abstract class LibraryDexingTask : NonIncrementalTask() {
             task: LibraryDexingTask
         ) {
             super.configure(task)
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR,
                 task.classes
             )
             val minSdkVersion =
-                component.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
+                creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
             task.minSdkVersion = minSdkVersion
             task.errorFormatMode =
-                SyncOptions.getErrorFormatMode(component.globalScope.projectOptions)
-            if (component.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8) {
+                SyncOptions.getErrorFormatMode(creationConfig.globalScope.projectOptions)
+            if (creationConfig.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8) {
                 task.enableDesugaring.set(true)
 
                 if (minSdkVersion < AndroidVersion.VersionCodes.N) {
-                    task.bootClasspath.from(component.globalScope.bootClasspath)
+                    task.bootClasspath.from(creationConfig.globalScope.bootClasspath)
                     task.classpath.from(
-                        component.variantDependencies.getArtifactFileCollection(
+                        creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.CLASSES_JAR

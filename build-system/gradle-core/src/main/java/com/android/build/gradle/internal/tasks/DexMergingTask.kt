@@ -184,7 +184,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out DexMergingTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.getOperations().append(
+            creationConfig.artifacts.getOperations().append(
                 taskProvider, DexMergingTask::outputDir).on(outputType)
         }
 
@@ -193,30 +193,30 @@ abstract class DexMergingTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.dexFiles = getDexFiles(component, action)
-            task.mergingThreshold = getMergingThreshold(action, task, component)
+            task.dexFiles = getDexFiles(creationConfig, action)
+            task.mergingThreshold = getMergingThreshold(action, task, creationConfig)
 
             task.dexingType = dexingType
             if (DexMergingAction.MERGE_ALL == action && dexingType === DexingType.LEGACY_MULTIDEX) {
-                component.artifacts.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST,
                     task.mainDexListFile)
             }
 
             task.errorFormatMode =
-                SyncOptions.getErrorFormatMode(component.globalScope.projectOptions)
-            task.dexMerger = component.variantScope.dexMerger
-            task.minSdkVersion = component.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
+                SyncOptions.getErrorFormatMode(creationConfig.globalScope.projectOptions)
+            task.dexMerger = creationConfig.variantScope.dexMerger
+            task.minSdkVersion = creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
             task.debuggable
-                .setDisallowChanges(component.variantDslInfo.isDebuggable)
-            if (component.globalScope.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
-                component.artifacts.setTaskInputToFinalProduct(
+                .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+            if (creationConfig.globalScope.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DUPLICATE_CLASSES_CHECK,
                     task.duplicateClassesCheck
                 )
             }
             if (separateFileDependenciesDexingTask) {
-                component.artifacts.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES,
                     task.fileDependencyDexFiles
                 )

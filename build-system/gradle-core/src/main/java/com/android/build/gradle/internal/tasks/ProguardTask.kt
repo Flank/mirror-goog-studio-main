@@ -175,8 +175,8 @@ abstract class ProguardTask : ProguardConfigurableTask() {
         ) {
             super.configure(task)
 
-            task.bootClasspath.from(component.variantScope.bootClasspath)
-            task.fullBootClasspath.from(component.globalScope.fullBootClasspath)
+            task.bootClasspath.from(creationConfig.variantScope.bootClasspath)
+            task.fullBootClasspath.from(creationConfig.globalScope.fullBootClasspath)
 
             task.keepRules.set(this.keepRules)
             task.dontWarnRules.set(this.dontWarnRules)
@@ -190,7 +190,7 @@ abstract class ProguardTask : ProguardConfigurableTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.SHRUNK_JAR,
                 taskProvider,
                 ProguardTask::shrunkJar,

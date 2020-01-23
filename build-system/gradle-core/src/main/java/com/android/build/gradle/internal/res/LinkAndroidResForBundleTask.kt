@@ -244,13 +244,12 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LinkAndroidResForBundleTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE,
                 taskProvider,
                 LinkAndroidResForBundleTask::bundledResFile,
                 "bundled-res.ap_"
             )
-
         }
 
         override fun configure(
@@ -258,36 +257,36 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val variantScope = component.variantScope
-            val projectOptions = component.globalScope.projectOptions
+            val variantScope = creationConfig.variantScope
+            val projectOptions = creationConfig.globalScope.projectOptions
 
-            task.incrementalFolder = component.paths.getIncrementalDir(name)
+            task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
 
-            val mainSplit = component.outputs.getMainSplit()
+            val mainSplit = creationConfig.outputs.getMainSplit()
             task.versionCode.setDisallowChanges(mainSplit.versionCode)
             task.versionName.setDisallowChanges(mainSplit.versionName)
 
             task.mainSplit = mainSplit.apkData
 
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,
                 task.manifestFiles)
 
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_RES,
                 task.getInputResourcesDir()
             )
 
-            task.featureResourcePackages = component.variantDependencies.getArtifactFileCollection(
+            task.featureResourcePackages = creationConfig.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG)
 
-            if (component.variantType.isDynamicFeature) {
+            if (creationConfig.variantType.isDynamicFeature) {
                 task.resOffset.set(variantScope.resOffset)
                 task.resOffset.disallowChanges()
             }
 
-            task.debuggable.setDisallowChanges(component.variantDslInfo.isDebuggable)
-            task.aaptOptions = component.globalScope.extension.aaptOptions.convert()
+            task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+            task.aaptOptions = creationConfig.globalScope.extension.aaptOptions.convert()
 
             task.excludeResSourcesForReleaseBundles
                 .setDisallowChanges(
@@ -297,26 +296,26 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.buildTargetDensity =
                     projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
-            task.mergeBlameLogFolder = component.paths.resourceBlameLogDir
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
+            task.mergeBlameLogFolder = creationConfig.paths.resourceBlameLogDir
+            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
-            task.minSdkVersion = component.variantDslInfo.minSdkVersion.apiLevel
+            task.minSdkVersion = creationConfig.minSdkVersion.apiLevel
 
-            task.resConfig = component.variantDslInfo.resourceConfigurations
+            task.resConfig = creationConfig.variantDslInfo.resourceConfigurations
 
-            task.androidJar = component.globalScope.sdkComponents.androidJarProvider
+            task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                component.globalScope.projectOptions
+                creationConfig.globalScope.projectOptions
             )
 
-            task.manifestMergeBlameFile = component.artifacts.getFinalProduct(
+            task.manifestMergeBlameFile = creationConfig.artifacts.getFinalProduct(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
 
             if (variantScope.isPrecompileDependenciesResourcesEnabled) {
-                task.compiledDependenciesResources = component.variantDependencies.getArtifactCollection(
+                task.compiledDependenciesResources = creationConfig.variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES

@@ -116,7 +116,7 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
             taskProvider: TaskProvider<out BundleLibraryJavaRes>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.LIBRARY_JAVA_RES,
                 taskProvider,
                 BundleLibraryJavaRes::output,
@@ -134,14 +134,14 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
                 task.resourcesAsJars = projectJavaResFromStreams
                 task.unfilteredResources = projectJavaResFromStreams
             } else {
-                val projectJavaRes = getProjectJavaRes(component)
+                val projectJavaRes = getProjectJavaRes(creationConfig)
                 task.unfilteredResources = projectJavaRes
                 task.resources = projectJavaRes.asFileTree.filter(MergeJavaResourceTask.spec)
             }
 
-            task.jarCreatorType = component.variantScope.jarCreatorType
+            task.jarCreatorType = creationConfig.variantScope.jarCreatorType
             task.debuggable
-                .setDisallowChanges(component.variantDslInfo.isDebuggable)
+                .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
         }
     }
 }

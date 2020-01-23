@@ -227,7 +227,7 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.COMPILED_LOCAL_RESOURCES,
                 taskProvider,
                 CompileLibraryResourcesTask::outputDir
@@ -239,26 +239,26 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
         ) {
             super.configure(task)
 
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_RES,
                 task.mergedLibraryResourcesDir
             )
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
+            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
-            task.pseudoLocalesEnabled = component
+            task.pseudoLocalesEnabled = creationConfig
                 .variantDslInfo
                 .isPseudoLocalesEnabled
 
-            task.crunchPng = component.variantScope.isCrunchPngs
+            task.crunchPng = creationConfig.variantScope.isCrunchPngs
 
             task.errorFormatMode =
-                SyncOptions.getErrorFormatMode(component.globalScope.projectOptions)
+                SyncOptions.getErrorFormatMode(creationConfig.globalScope.projectOptions)
 
             task.useJvmResourceCompiler =
-              component.globalScope.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
+              creationConfig.globalScope.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
             task.aapt2WorkersBuildService.set(getAapt2WorkersBuildService(task.project))
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }

@@ -69,7 +69,7 @@ abstract class CreateNonNamespacedLibraryManifestTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out CreateNonNamespacedLibraryManifestTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST,
                 taskProvider,
                 CreateNonNamespacedLibraryManifestTask::outputStrippedManifestFile,
@@ -81,7 +81,7 @@ abstract class CreateNonNamespacedLibraryManifestTask : NonIncrementalTask() {
             task: CreateNonNamespacedLibraryManifestTask
         ) {
             super.configure(task)
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LIBRARY_MANIFEST, task.libraryManifest)
         }
     }

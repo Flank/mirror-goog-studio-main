@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal
 
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.errors.SyncIssueReporter
@@ -37,7 +38,7 @@ import org.gradle.api.Project
 class AppModelBuilder(
     globalScope: GlobalScope,
     private val variantModel: VariantModel,
-    taskManager: TaskManager,
+    taskManager: TaskManager<out VariantPropertiesImpl>,
     config: BaseAppModuleExtension,
     extraModelInfo: ExtraModelInfo,
     syncIssueReporter: SyncIssueReporter,

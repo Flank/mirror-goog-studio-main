@@ -30,11 +30,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.component.ComponentIdentity;
-import com.android.build.api.component.TestComponentProperties;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -119,7 +119,7 @@ import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 
 /** Class to create, manage variants. */
-public class VariantManager {
+public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
 
     private static final String MULTIDEX_VERSION = "1.0.2";
 
@@ -138,13 +138,17 @@ public class VariantManager {
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
     @NonNull private final BaseExtension extension;
-    @NonNull private final VariantFactory variantFactory;
+    @NonNull private final VariantFactory<VariantPropertiesT> variantFactory;
     @NonNull private final VariantInputModel variantInputModel;
-    @NonNull private final TaskManager taskManager;
+    @NonNull private final TaskManager<VariantPropertiesT> taskManager;
     @NonNull private final SourceSetManager sourceSetManager;
     @NonNull private final Recorder recorder;
     @NonNull private final VariantFilter variantFilter;
-    @NonNull private final List<ComponentPropertiesImpl> components;
+
+    @NonNull private final List<VariantPropertiesT> variants = Lists.newArrayList();
+    @NonNull private final List<TestComponentPropertiesImpl> testComponents = Lists.newArrayList();
+    @NonNull private final List<ComponentPropertiesImpl> allComponents = Lists.newArrayList();
+
     @NonNull private final Map<File, ManifestAttributeSupplier> manifestParserMap;
     @NonNull protected final GlobalScope globalScope;
     @Nullable private final SigningConfig signingOverride;
@@ -159,9 +163,9 @@ public class VariantManager {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull BaseExtension extension,
-            @NonNull VariantFactory variantFactory,
+            @NonNull VariantFactory<VariantPropertiesT> variantFactory,
             @NonNull VariantInputModel variantInputModel,
-            @NonNull TaskManager taskManager,
+            @NonNull TaskManager<VariantPropertiesT> taskManager,
             @NonNull SourceSetManager sourceSetManager,
             @NonNull Recorder recorder) {
         this.globalScope = globalScope;
@@ -175,27 +179,31 @@ public class VariantManager {
         this.recorder = recorder;
         this.signingOverride = createSigningOverride();
         this.variantFilter = new VariantFilter(new ReadOnlyObjectProvider());
-        this.components = Lists.newArrayList();
         this.manifestParserMap = Maps.newHashMap();
-    }
-
-    /** Registers a new variant. */
-    private void addComponent(@NonNull ComponentPropertiesImpl component) {
-        components.add(component);
     }
 
     /** Returns a list of all created {@link VariantScope}s. */
     @NonNull
-    public List<ComponentPropertiesImpl> getComponents() {
-        return components;
+    public List<VariantPropertiesT> getMainComponents() {
+        return variants;
+    }
+
+    @NonNull
+    public List<TestComponentPropertiesImpl> getTestComponents() {
+        return testComponents;
+    }
+
+    @NonNull
+    public List<ComponentPropertiesImpl> getAllComponents() {
+        return allComponents;
     }
 
     /** Creates the variants and their tasks. */
-    public List<ComponentPropertiesImpl> createVariantsAndTasks() {
+    public void createVariantsAndTasks() {
         variantFactory.validateModel(variantInputModel);
         variantFactory.preVariantWork(project);
 
-        if (components.isEmpty()) {
+        if (variants.isEmpty()) {
             computeVariants();
         }
 
@@ -203,78 +211,66 @@ public class VariantManager {
         taskManager.createTopLevelTestTasks(!variantInputModel.getProductFlavors().isEmpty());
 
         // Create tasks for all variants (main and tests)
-        for (ComponentPropertiesImpl component : components) {
-            createTasksForVariant(component);
+        for (VariantPropertiesT variant : variants) {
+            createTasksForVariant(variant);
+        }
+        for (TestComponentPropertiesImpl testComponent : testComponents) {
+            createTasksForTest(testComponent);
         }
 
-        taskManager.createReportTasks(components);
-
-        return components;
+        taskManager.createReportTasks(allComponents);
     }
 
     /** Create tasks for the specified variant. */
-    private void createTasksForVariant(@NonNull ComponentPropertiesImpl componentProperties) {
-        final VariantType variantType = componentProperties.getVariantType();
+    private void createTasksForVariant(@NonNull VariantPropertiesT variantProperties) {
+        final VariantType variantType = variantProperties.getVariantType();
 
-        taskManager.createAssembleTask(componentProperties);
+        taskManager.createAssembleTask(variantProperties);
         if (variantType.isBaseModule()) {
-            taskManager.createBundleTask(componentProperties);
+            taskManager.createBundleTask(variantProperties);
+        }
+        taskManager.createTasksForVariant(variantProperties, variants);
+    }
+
+    /** Create tasks for the specified variant. */
+    private void createTasksForTest(@NonNull TestComponentPropertiesImpl testComponent) {
+        taskManager.createAssembleTask(testComponent);
+
+        VariantPropertiesImpl testedVariant = testComponent.getTestedVariant();
+
+        VariantDslInfo variantDslInfo = testComponent.getVariantDslInfo();
+        VariantDependencies variantDependencies = testComponent.getVariantDependencies();
+
+        if (testedVariant.getVariantDslInfo().getRenderscriptSupportModeEnabled()) {
+            project.getDependencies()
+                    .add(
+                            variantDependencies.getCompileClasspath().getName(),
+                            project.files(
+                                    globalScope
+                                            .getSdkComponents()
+                                            .getRenderScriptSupportJarProvider()));
         }
 
-        if (variantType.isTestComponent()) {
-            TestComponentProperties testComponent = (TestComponentProperties) componentProperties;
-            VariantPropertiesImpl testedVariant =
-                    (VariantPropertiesImpl) testComponent.getTestedVariant();
-
-            VariantDslInfo variantDslInfo = componentProperties.getVariantDslInfo();
-            VariantDependencies variantDependencies = componentProperties.getVariantDependencies();
-
-            if (testedVariant.getVariantDslInfo().getRenderscriptSupportModeEnabled()) {
+        if (testComponent.getVariantType().isApk()) { // ANDROID_TEST
+            if (variantDslInfo.isLegacyMultiDexMode()) {
+                String multiDexInstrumentationDep =
+                        globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
+                                ? ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION
+                                : COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION;
                 project.getDependencies()
                         .add(
                                 variantDependencies.getCompileClasspath().getName(),
-                                project.files(
-                                        globalScope
-                                                .getSdkComponents()
-                                                .getRenderScriptSupportJarProvider()));
+                                multiDexInstrumentationDep);
+                project.getDependencies()
+                        .add(
+                                variantDependencies.getRuntimeClasspath().getName(),
+                                multiDexInstrumentationDep);
             }
 
-            if (variantType.isApk()) { // ANDROID_TEST
-                if (variantDslInfo.isLegacyMultiDexMode()) {
-                    String multiDexInstrumentationDep =
-                            globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
-                                    ? ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION
-                                    : COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION;
-                    project.getDependencies()
-                            .add(
-                                    variantDependencies.getCompileClasspath().getName(),
-                                    multiDexInstrumentationDep);
-                    project.getDependencies()
-                            .add(
-                                    variantDependencies.getRuntimeClasspath().getName(),
-                                    multiDexInstrumentationDep);
-                }
-
-                taskManager.createAndroidTestVariantTasks(
-                        (AndroidTestPropertiesImpl) componentProperties,
-                        getVariantPropertiesList());
-            } else { // UNIT_TEST
-                taskManager.createUnitTestVariantTasks(
-                        (UnitTestPropertiesImpl) componentProperties);
-            }
-
-        } else {
-            taskManager.createTasksForVariantScope(
-                    (VariantPropertiesImpl) componentProperties, getVariantPropertiesList());
+            taskManager.createAndroidTestVariantTasks((AndroidTestPropertiesImpl) testComponent);
+        } else { // UNIT_TEST
+            taskManager.createUnitTestVariantTasks((UnitTestPropertiesImpl) testComponent);
         }
-    }
-
-    private List<VariantPropertiesImpl> getVariantPropertiesList() {
-        return components
-                .stream()
-                .filter(component -> component instanceof VariantPropertiesImpl)
-                .map(component -> (VariantPropertiesImpl) component)
-                .collect(Collectors.toList());
     }
 
     /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs. */
@@ -349,7 +345,7 @@ public class VariantManager {
 
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM)) {
             for (DexingArtifactConfiguration artifactConfiguration :
-                    getDexingArtifactConfigurations(components)) {
+                    getDexingArtifactConfigurations(allComponents)) {
                 artifactConfiguration.registerTransform(
                         globalScope.getProject().getName(),
                         dependencies,
@@ -362,8 +358,7 @@ public class VariantManager {
 
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION)) {
             Set<CodeShrinker> shrinkers =
-                    components
-                            .stream()
+                    allComponents.stream()
                             .map(component -> component.getVariantScope().getCodeShrinker())
                             .filter(Objects::nonNull)
                             .collect(Collectors.toSet());
@@ -390,7 +385,7 @@ public class VariantManager {
             }
         }
 
-        for (DesugarLibConfiguration configuration : getDesugarLibConfigurations(components)) {
+        for (DesugarLibConfiguration configuration : getDesugarLibConfigurations(allComponents)) {
             configuration.registerTransform(dependencies);
         }
 
@@ -455,7 +450,7 @@ public class VariantManager {
     }
 
     @Nullable
-    private Pair<VariantImpl<VariantPropertiesImpl>, VariantPropertiesImpl> createVariant(
+    private Pair<VariantImpl<VariantPropertiesImpl>, VariantPropertiesT> createVariant(
             @NonNull DimensionCombination dimensionCombination,
             @NonNull BuildTypeData buildTypeData,
             @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
@@ -605,7 +600,7 @@ public class VariantManager {
                         taskContainer);
 
         // then the new VariantProperties which will contain the 2 old objects.
-        VariantPropertiesImpl variantProperties =
+        VariantPropertiesT variantProperties =
                 variantFactory.createVariantPropertiesObject(
                         componentIdentity,
                         variantDslInfo,
@@ -645,7 +640,6 @@ public class VariantManager {
         commonExtension.executeVariantPropertiesOperations(variantProperties);
 
         // also execute the delayed actions registered on the Variant object itself
-        //noinspection unchecked
         variant.executePropertiesActions(variantProperties);
 
         return Pair.of(variant, variantProperties);
@@ -680,7 +674,7 @@ public class VariantManager {
 
     /** Create a TestVariantData for the specified testedVariantData. */
     @Nullable
-    public ComponentPropertiesImpl createTestComponents(
+    public TestComponentPropertiesImpl createTestComponents(
             @NonNull DimensionCombination dimensionCombination,
             @NonNull BuildTypeData buildTypeData,
             @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
@@ -858,7 +852,7 @@ public class VariantManager {
                         taskContainer);
 
         // this is ANDROID_TEST
-        ComponentPropertiesImpl componentProperties;
+        TestComponentPropertiesImpl componentProperties;
         if (variantType.isApk()) {
             AndroidTestPropertiesImpl androidTestProperties =
                     variantFactory.createAndroidTestProperties(
@@ -957,14 +951,14 @@ public class VariantManager {
 
         if (!ignore) {
             // create the prod variant
-            Pair<VariantImpl<VariantPropertiesImpl>, VariantPropertiesImpl> variantInfo =
+            Pair<VariantImpl<VariantPropertiesImpl>, VariantPropertiesT> variantInfo =
                     createVariant(
                             dimensionCombination,
                             buildTypeData,
                             productFlavorDataList,
                             variantType);
             if (variantInfo != null) {
-                addComponent(variantInfo.getSecond());
+                addVariant(variantInfo.getSecond());
 
                 VariantPropertiesImpl variantProperties = variantInfo.getSecond();
 
@@ -1036,7 +1030,7 @@ public class VariantManager {
 
                 if (variantFactory.hasTestScope()) {
                     if (buildTypeData == testBuildTypeData) {
-                        ComponentPropertiesImpl androidTestVariantProperties =
+                        TestComponentPropertiesImpl androidTestVariantProperties =
                                 createTestComponents(
                                         dimensionCombination,
                                         buildTypeData,
@@ -1045,11 +1039,11 @@ public class VariantManager {
                                         variantProperties,
                                         ANDROID_TEST);
                         if (androidTestVariantProperties != null) {
-                            addComponent(androidTestVariantProperties);
+                            addTestComponent(androidTestVariantProperties);
                         }
                     }
 
-                    ComponentPropertiesImpl unitTestVariantProperties =
+                    TestComponentPropertiesImpl unitTestVariantProperties =
                             createTestComponents(
                                     dimensionCombination,
                                     buildTypeData,
@@ -1058,11 +1052,21 @@ public class VariantManager {
                                     variantProperties,
                                     UNIT_TEST);
                     if (unitTestVariantProperties != null) {
-                        addComponent(unitTestVariantProperties);
+                        addTestComponent(unitTestVariantProperties);
                     }
                 }
             }
         }
+    }
+
+    private void addVariant(@NonNull VariantPropertiesT variant) {
+        variants.add(variant);
+        allComponents.add(variant);
+    }
+
+    private void addTestComponent(@NonNull TestComponentPropertiesImpl testComponent) {
+        testComponents.add(testComponent);
+        allComponents.add(testComponent);
     }
 
     private SigningConfig createSigningOverride() {

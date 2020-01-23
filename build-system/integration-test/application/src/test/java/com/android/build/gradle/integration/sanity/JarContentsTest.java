@@ -381,6 +381,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/api/artifact/",
                 "com/android/build/gradle/internal/api/dsl/",
                 "com/android/build/gradle/internal/attribution/",
+                "com/android/build/gradle/internal/component/",
                 "com/android/build/gradle/internal/core/",
                 "com/android/build/gradle/internal/coverage/",
                 "com/android/build/gradle/internal/crash/",

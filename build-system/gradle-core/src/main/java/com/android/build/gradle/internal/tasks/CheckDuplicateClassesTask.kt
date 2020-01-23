@@ -68,7 +68,7 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.DUPLICATE_CLASSES_CHECK,
                 taskProvider,
                 CheckDuplicateClassesTask::dummyOutputDirectory
@@ -81,7 +81,7 @@ abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
             super.configure(task)
 
             task.classesArtifacts =
-                    component.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES_JAR)
+                    creationConfig.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES_JAR)
         }
     }
 }

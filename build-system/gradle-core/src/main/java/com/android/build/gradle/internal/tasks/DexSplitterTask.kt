@@ -103,14 +103,14 @@ abstract class DexSplitterTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 artifactType = InternalArtifactType.FEATURE_DEX,
                 taskProvider = taskProvider,
                 productProvider = DexSplitterTask::featureDexDir,
                 fileName = ""
             )
 
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 artifactType = InternalArtifactType.BASE_DEX,
                 taskProvider = taskProvider,
                 productProvider = DexSplitterTask::baseDexDir,
@@ -123,10 +123,10 @@ abstract class DexSplitterTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val artifacts = component.artifacts
+            val artifacts = creationConfig.artifacts
 
             task.featureJars =
-                component.variantDependencies.getArtifactFileCollection(REVERSE_METADATA_VALUES, PROJECT, REVERSE_METADATA_CLASSES)
+                creationConfig.variantDependencies.getArtifactFileCollection(REVERSE_METADATA_VALUES, PROJECT, REVERSE_METADATA_CLASSES)
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,

@@ -196,7 +196,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             taskProvider: TaskProvider<out GenerateBuildConfig>
         ) {
             super.handleProvider(taskProvider)
-            component.taskContainer.generateBuildConfigTask = taskProvider
+            creationConfig.taskContainer.generateBuildConfigTask = taskProvider
         }
 
         override fun configure(
@@ -204,20 +204,20 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val variantDslInfo = component.variantDslInfo
+            val variantDslInfo = creationConfig.variantDslInfo
 
-            val project = component.globalScope.project
+            val project = creationConfig.globalScope.project
             task.buildConfigPackageName.set(project.provider {
                 variantDslInfo.originalApplicationId
             })
             task.buildConfigPackageName.disallowChanges()
 
-            if (!variantDslInfo.variantType.isAar) {
-                task.appPackageName.set(component.applicationId)
+            if (!creationConfig.variantType.isAar) {
+                task.appPackageName.set(creationConfig.applicationId)
             }
             task.appPackageName.disallowChanges()
 
-            val mainSplit = component.outputs.getMainSplit()
+            val mainSplit = creationConfig.outputs.getMainSplit()
             // check the variant API property first (if there is one) in case the variant
             // output version has been overridden, otherwise use the variant configuration
             task.versionCode.setDisallowChanges(
@@ -227,7 +227,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 mainSplit?.versionName
                     ?: task.project.provider { variantDslInfo.versionName })
 
-            task.debuggable.setDisallowChanges(component.variantDslInfo.isDebuggable)
+            task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
 
             task.buildTypeName = variantDslInfo.componentIdentity.buildType
 
@@ -243,15 +243,15 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             task.items.set(project.provider { variantDslInfo.buildConfigItems })
             task.items.disallowChanges()
 
-            task.sourceOutputDir = component.paths.buildConfigSourceOutputDir
+            task.sourceOutputDir = creationConfig.paths.buildConfigSourceOutputDir
 
-            if (component.variantDslInfo.variantType.isTestComponent) {
-                component.artifacts.setTaskInputToFinalProduct(
+            if (creationConfig.variantType.isTestComponent) {
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.MERGED_MANIFESTS, task.mergedManifests
                 )
             }
 
-            task.isLibrary = variantDslInfo.variantType.isAar
+            task.isLibrary = creationConfig.variantType.isAar
         }
     }
 }

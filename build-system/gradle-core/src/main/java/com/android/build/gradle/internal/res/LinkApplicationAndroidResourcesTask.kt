@@ -360,15 +360,15 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
         ) {
             super.handleProvider(taskProvider)
-            component.taskContainer.processAndroidResTask = taskProvider
-            component.artifacts.producesDir(
+            creationConfig.taskContainer.processAndroidResTask = taskProvider
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.PROCESSED_RES,
                 taskProvider,
                 LinkApplicationAndroidResourcesTask::resPackageOutputFolder
             )
 
-            if (generatesProguardOutputFile(component)) {
-                component.artifacts.producesFile(
+            if (generatesProguardOutputFile(creationConfig)) {
+                creationConfig.artifacts.producesFile(
                     InternalArtifactType.AAPT_PROGUARD_FILE,
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::proguardOutputFile,
@@ -377,7 +377,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             }
 
             if (generateLegacyMultidexMainDexProguardRules) {
-                component.artifacts.producesFile(
+                creationConfig.artifacts.producesFile(
                     InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::mainDexListProguardOutputFile,
@@ -390,21 +390,20 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task: LinkApplicationAndroidResourcesTask
         ) {
             super.configure(task)
-            val projectOptions = component.globalScope.projectOptions
-            val variantDslInfo = component.variantDslInfo
+            val projectOptions = creationConfig.globalScope.projectOptions
 
-            preconditionsCheck(component)
+            preconditionsCheck(creationConfig)
 
-            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(component.globalScope)
+            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
-            val project = component.globalScope.project
-            task.applicationId.setDisallowChanges(component.applicationId)
+            val project = creationConfig.globalScope.project
+            task.applicationId.setDisallowChanges(creationConfig.applicationId)
 
-            task.incrementalFolder = component.paths.getIncrementalDir(name)
-            if (component.variantType.canHaveSplits) {
-                val splits = component.globalScope.extension.splits
+            task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
+            if (creationConfig.variantType.canHaveSplits) {
+                val splits = creationConfig.globalScope.extension.splits
 
                 val densitySet = if (splits.density.isEnable)
                     ImmutableSet.copyOf(splits.densityFilters)
@@ -418,7 +417,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     ImmutableSet.copyOf(splits.abiFilters)
                 else
                     ImmutableSet.of()
-                val resConfigSet = component.variantDslInfo.resourceConfigurations
+                val resConfigSet = creationConfig.variantDslInfo.resourceConfigurations
 
                 task.splitList = SplitList(densitySet, languageSet, abiSet, resConfigSet)
             } else {
@@ -430,32 +429,32 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 )
             }
 
-            task.mainSplit = component.outputs.getMainSplitOrNull()?.apkData
-            task.originalApplicationId.set(project.provider { variantDslInfo.originalApplicationId })
+            task.mainSplit = creationConfig.outputs.getMainSplitOrNull()?.apkData
+            task.originalApplicationId.set(project.provider { creationConfig.variantDslInfo.originalApplicationId })
             task.originalApplicationId.disallowChanges()
 
-            val aaptFriendlyManifestsFilePresent = component
+            val aaptFriendlyManifestsFilePresent = creationConfig
                 .artifacts
                 .hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
             task.taskInputType = if (aaptFriendlyManifestsFilePresent)
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
             else
-                component.variantScope.manifestArtifactType
-            component.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
+                creationConfig.variantScope.manifestArtifactType
+            creationConfig.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
-            task.setType(variantDslInfo.variantType)
-            task.debuggable.setDisallowChanges(component.variantDslInfo.isDebuggable)
-            task.aaptOptions = component.globalScope.extension.aaptOptions.convert()
+            task.setType(creationConfig.variantType)
+            task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+            task.aaptOptions = creationConfig.globalScope.extension.aaptOptions.convert()
 
             task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
             task.useConditionalKeepRules = projectOptions.get(BooleanOption.CONDITIONAL_KEEP_RULES)
             task.useMinimalKeepRules = projectOptions.get(BooleanOption.MINIMAL_KEEP_RULES)
-            task.canHaveSplits.set(component.variantType.canHaveSplits)
+            task.canHaveSplits.set(creationConfig.variantType.canHaveSplits)
 
-            task.setMergeBlameLogFolder(component.paths.resourceBlameLogDir)
+            task.setMergeBlameLogFolder(creationConfig.paths.resourceBlameLogDir)
 
-            val variantType = component.variantType
+            val variantType = creationConfig.variantType
 
             // Tests should not have feature dependencies, however because they include the
             // tested production component in their dependency graph, we see the tested feature
@@ -463,27 +462,27 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.featureResourcePackages = if (variantType.isForTesting)
                 null
             else
-                component.variantDependencies.getArtifactFileCollection(
+                creationConfig.variantDependencies.getArtifactFileCollection(
                     COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG
                 )
 
             if (variantType.isDynamicFeature) {
-                task.resOffset.set(component.variantScope.resOffset)
+                task.resOffset.set(creationConfig.variantScope.resOffset)
                 task.resOffset.disallowChanges()
             }
 
             task.projectBaseName = baseName!!
             task.isLibrary = isLibrary
 
-            task.androidJar = component.globalScope.sdkComponents.androidJarProvider
+            task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
 
             task.useFinalIds = !projectOptions.get(BooleanOption.USE_NON_FINAL_RES_IDS)
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                component.globalScope.projectOptions
+                creationConfig.globalScope.projectOptions
             )
 
-            task.manifestMergeBlameFile = component.artifacts.getFinalProduct(
+            task.manifestMergeBlameFile = creationConfig.artifacts.getFinalProduct(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
@@ -520,15 +519,15 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.handleProvider(taskProvider)
 
-            if (component.globalScope.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
-                component.artifacts.producesDir(
+            if (creationConfig.globalScope.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
+                creationConfig.artifacts.producesDir(
                     InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::sourceOutputDirProperty,
                     fileName = SdkConstants.FD_RES_CLASS
                 )
             } else {
-                component
+                creationConfig
                     .artifacts
                     .producesFile(
                         InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
@@ -538,17 +537,17 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     )
             }
 
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.RUNTIME_SYMBOL_LIST,
                 taskProvider,
                 LinkApplicationAndroidResourcesTask::textSymbolOutputFileProperty,
                 SdkConstants.FN_RESOURCE_TEXT
             )
 
-            if (!component.globalScope.projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS]) {
+            if (!creationConfig.globalScope.projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS]) {
                 // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created
                 // in process resources for local subprojects.
-                component.artifacts.producesFile(
+                creationConfig.artifacts.producesFile(
                     InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::symbolsWithPackageNameOutputFile,
@@ -562,20 +561,20 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.configure(task)
 
-            task.dependenciesFileCollection = component
+            task.dependenciesFileCollection = creationConfig
                 .variantDependencies.getArtifactFileCollection(
                     RUNTIME_CLASSPATH,
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
                 )
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 sourceArtifactType.outputType,
                 task.inputResourcesDir
             )
 
-            if (component.variantScope.isPrecompileDependenciesResourcesEnabled) {
+            if (creationConfig.variantScope.isPrecompileDependenciesResourcesEnabled) {
                 task.compiledDependenciesResources =
-                    component.variantDependencies.getArtifactCollection(
+                    creationConfig.variantDependencies.getArtifactCollection(
                         RUNTIME_CLASSPATH,
                         ALL,
                         AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES
@@ -599,7 +598,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
                 taskProvider,
                 LinkApplicationAndroidResourcesTask::sourceOutputDirProperty,
@@ -612,34 +611,34 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.configure(task)
 
-            val projectOptions = component.globalScope.projectOptions
+            val projectOptions = creationConfig.globalScope.projectOptions
 
             val dependencies = ArrayList<FileCollection>(2)
             dependencies.add(
-                component.globalScope.project.files(
-                    component.artifacts.getFinalProduct(
+                creationConfig.globalScope.project.files(
+                    creationConfig.artifacts.getFinalProduct(
                         InternalArtifactType.RES_STATIC_LIBRARY))
             )
             dependencies.add(
-                component.variantDependencies.getArtifactFileCollection(
+                creationConfig.variantDependencies.getArtifactFileCollection(
                     RUNTIME_CLASSPATH,
                     ALL,
                     AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY
                 )
             )
-            if (component.globalScope.extension.aaptOptions.namespaced && projectOptions.get(
+            if (creationConfig.globalScope.extension.aaptOptions.namespaced && projectOptions.get(
                     BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES
                 )
             ) {
-                component.artifacts.setTaskInputToFinalProduct(
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
                     task.convertedLibraryDependencies)
             }
 
             task.dependenciesFileCollection =
-                component.globalScope.project.files(dependencies)
+                creationConfig.globalScope.project.files(dependencies)
 
-            task.sharedLibraryDependencies = component.variantDependencies.getArtifactFileCollection(
+            task.sharedLibraryDependencies = creationConfig.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY

@@ -32,6 +32,7 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
+import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping;
@@ -55,10 +56,8 @@ import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
-import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.BundleAar;
 import com.android.build.gradle.tasks.CompileLibraryResourcesTask;
@@ -66,6 +65,7 @@ import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
+import com.android.build.gradle.tasks.ProcessLibraryManifest;
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.errors.IssueReporter;
@@ -79,7 +79,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
-import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -90,32 +89,26 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** TaskManager for creating tasks in an Android library project. */
-public class LibraryTaskManager extends TaskManager {
+public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl> {
 
     public LibraryTaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull Project project,
-            @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
-            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
                 globalScope,
-                project,
-                projectOptions,
                 dataBindingBuilder,
                 extension,
-                variantFactory,
                 toolingRegistry,
                 recorder);
     }
 
     @Override
-    public void createTasksForVariantScope(
-            @NonNull VariantPropertiesImpl libVariantProperties,
-            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
+    public void createTasksForVariant(
+            @NonNull LibraryVariantPropertiesImpl libVariantProperties,
+            @NonNull List<LibraryVariantPropertiesImpl> allComponentsWithLint) {
 
         createAnchorTasks(libVariantProperties);
 
@@ -172,7 +165,7 @@ public class LibraryTaskManager extends TaskManager {
         // Add a task to check the manifest
         taskFactory.register(new CheckManifest.CreationAction(libVariantProperties));
 
-        createMergeLibManifestsTask(libVariantProperties);
+        taskFactory.register(new ProcessLibraryManifest.CreationAction(libVariantProperties));
 
         createRenderscriptTask(libVariantProperties);
 

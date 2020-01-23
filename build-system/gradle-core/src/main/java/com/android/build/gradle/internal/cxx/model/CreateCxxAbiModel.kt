@@ -48,7 +48,7 @@ fun createCxxAbiModel(
             join(variant.jsonFolder, abi.tag)
         }
         override val abiPlatformVersion by lazy {
-            val minSdkVersion = componentProperties.variantDslInfo.minSdkVersion
+            val minSdkVersion = componentProperties.minSdkVersion
             global
                 .sdkComponents
                 .ndkHandlerSupplier.get()

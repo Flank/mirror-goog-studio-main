@@ -179,7 +179,7 @@ public class ModelBuilderTest {
                         variantDslInfo,
                         ApplicationVariantPropertiesImpl.class,
                         null);
-        when(variantManager.getComponents()).thenReturn(ImmutableList.of(componentProperties));
+        when(variantManager.getAllComponents()).thenReturn(ImmutableList.of(componentProperties));
 
         assertThat(modelBuilder.buildMinimalisticModel()).isNotNull();
         Collection<VariantBuildOutput> variantsBuildOutput =
@@ -208,7 +208,7 @@ public class ModelBuilderTest {
                         ApplicationVariantPropertiesImpl.class,
                         null);
 
-        when(variantManager.getComponents()).thenReturn(ImmutableList.of(componentProperties));
+        when(variantManager.getAllComponents()).thenReturn(ImmutableList.of(componentProperties));
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
         File apkOutput = new File(variantOutputFolder, "main.apk");
@@ -273,7 +273,7 @@ public class ModelBuilderTest {
                         ApplicationVariantPropertiesImpl.class,
                         null);
 
-        when(variantManager.getComponents()).thenReturn(ImmutableList.of(componentProperties));
+        when(variantManager.getAllComponents()).thenReturn(ImmutableList.of(componentProperties));
 
         OutputFactory outputFactory = new OutputFactory(PROJECT, variantDslInfo);
 
@@ -376,7 +376,7 @@ public class ModelBuilderTest {
             components.add(componentProperties);
         }
 
-        when(variantManager.getComponents()).thenReturn(components.build());
+        when(variantManager.getAllComponents()).thenReturn(components.build());
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
         assertThat(projectBuildOutput).isNotNull();
@@ -442,7 +442,7 @@ public class ModelBuilderTest {
         when(testBuildableArtifact.iterator())
                 .thenReturn(ImmutableSet.of(temporaryFolder.getRoot()).iterator());
 
-        when(variantManager.getComponents())
+        when(variantManager.getAllComponents())
                 .thenReturn(ImmutableList.of(libProperties, unitTestProperties));
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));

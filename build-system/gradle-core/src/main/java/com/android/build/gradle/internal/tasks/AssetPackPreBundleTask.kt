@@ -96,7 +96,7 @@ abstract class AssetPackPreBundleTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out AssetPackPreBundleTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.ASSET_PACK_BUNDLE,
                 taskProvider,
                 AssetPackPreBundleTask::outputDir
@@ -107,7 +107,7 @@ abstract class AssetPackPreBundleTask : NonIncrementalTask() {
             task: AssetPackPreBundleTask
         ) {
             super.configure(task)
-            val artifacts = component.artifacts
+            val artifacts = creationConfig.artifacts
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LINKED_RES_FOR_ASSET_PACK, task.manifestFiles)

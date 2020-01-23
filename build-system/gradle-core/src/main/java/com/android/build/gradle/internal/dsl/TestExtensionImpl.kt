@@ -51,17 +51,20 @@ class TestExtensionImpl(
     ),
     TestExtension<
             AaptOptions,
+            AbiSplitOptions,
             AdbOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,
             DataBindingOptions,
             DefaultConfig,
+            DensitySplitOptions,
             ExternalNativeBuild,
             JacocoOptions,
             NdkBuildOptions,
             ProductFlavor,
             SigningConfig,
+            Splits,
             TestOptions,
             TestOptions.UnitTestOptions> {
 

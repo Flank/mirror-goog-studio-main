@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.resources.FileStatus
 import org.gradle.api.GradleException
@@ -158,7 +157,7 @@ abstract class MergeNativeLibsTask
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 MERGED_NATIVE_LIBS,
                 taskProvider,
                 MergeNativeLibsTask::outputDir,
@@ -173,33 +172,33 @@ abstract class MergeNativeLibsTask
 
             task.packagingOptions =
                     SerializablePackagingOptions(
-                        component.globalScope.extension.packagingOptions)
+                        creationConfig.globalScope.extension.packagingOptions)
             task.intermediateDir =
-                    component.paths.getIncrementalDir(
-                        "${component.name}-mergeNativeLibs")
+                    creationConfig.paths.getIncrementalDir(
+                        "${creationConfig.name}-mergeNativeLibs")
 
-            val project = component.globalScope.project
+            val project = creationConfig.globalScope.project
 
             task.cacheDir
                 .fileProvider(project.provider { File(task.intermediateDir, "zip-cache") })
                 .disallowChanges()
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
 
-            task.projectNativeLibs.from(getProjectNativeLibs(component).asFileTree.filter(spec))
+            task.projectNativeLibs.from(getProjectNativeLibs(creationConfig).asFileTree.filter(spec))
                 .disallowChanges()
 
             if (mergeScopes.contains(SUB_PROJECTS)) {
-                task.subProjectNativeLibs.from(getSubProjectNativeLibs(component))
+                task.subProjectNativeLibs.from(getSubProjectNativeLibs(creationConfig))
             }
             task.subProjectNativeLibs.disallowChanges()
 
             if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
-                task.externalLibNativeLibs.from(getExternalNativeLibs(component))
+                task.externalLibNativeLibs.from(getExternalNativeLibs(creationConfig))
             }
             task.externalLibNativeLibs.disallowChanges()
 
             task.unfilteredProjectNativeLibs
-                .from(getProjectNativeLibs(component)).disallowChanges()
+                .from(getProjectNativeLibs(creationConfig)).disallowChanges()
         }
     }
 

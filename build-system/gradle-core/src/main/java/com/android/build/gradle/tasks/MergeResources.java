@@ -702,9 +702,9 @@ public abstract class MergeResources extends ResourceAwareTask {
             // latter one wins: The mergeResources task with mergeType == MERGE is the one that is
             // finally registered in the current scope.
             // Filed https://issuetracker.google.com//110412851 to clean this up at some point.
-            component.getTaskContainer().setMergeResourcesTask(taskProvider);
+            creationConfig.getTaskContainer().setMergeResourcesTask(taskProvider);
 
-            component
+            creationConfig
                     .getArtifacts()
                     .producesDir(
                             mergeType == MERGE
@@ -719,21 +719,17 @@ public abstract class MergeResources extends ResourceAwareTask {
         public void configure(@NonNull MergeResources task) {
             super.configure(task);
 
-            VariantScope variantScope = component.getVariantScope();
-            GlobalScope globalScope = component.getGlobalScope();
-            BaseVariantData variantData = component.getVariantData();
-            VariantPathHelper paths = component.getPaths();
+            VariantScope variantScope = creationConfig.getVariantScope();
+            GlobalScope globalScope = creationConfig.getGlobalScope();
+            BaseVariantData variantData = creationConfig.getVariantData();
+            VariantPathHelper paths = creationConfig.getPaths();
 
             task.getMinSdk()
                     .set(
                             globalScope
                                     .getProject()
                                     .provider(
-                                            () ->
-                                                    variantData
-                                                            .getVariantDslInfo()
-                                                            .getMinSdkVersion()
-                                                            .getApiLevel()));
+                                            () -> creationConfig.getMinSdkVersion().getApiLevel()));
             task.getMinSdk().disallowChanges();
 
             Pair<FileCollection, String> aapt2AndVersion =
@@ -765,7 +761,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.vectorSupportLibraryIsUsed =
                     Boolean.TRUE.equals(vectorDrawablesOptions.getUseSupportLibrary());
 
-            task.getResourcesComputer().initFromVariantScope(component, includeDependencies);
+            task.getResourcesComputer().initFromVariantScope(creationConfig, includeDependencies);
 
             if (!task.disableVectorDrawables) {
                 task.generatedPngsOutputDir = paths.getGeneratedPngsOutputDir();
@@ -881,7 +877,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             task.mergedNotCompiledResourcesOutputDirectory = mergedNotCompiledOutputDirectory;
 
-            task.pseudoLocalesEnabled = component.getVariantDslInfo().isPseudoLocalesEnabled();
+            task.pseudoLocalesEnabled = creationConfig.getVariantDslInfo().isPseudoLocalesEnabled();
             task.flags = flags;
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(globalScope.getProjectOptions());
@@ -917,7 +913,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                 }));
             task.getResourceDirsOutsideRootProjectDir().disallowChanges();
 
-            task.dependsOn(component.getTaskContainer().getResourceGenTask());
+            task.dependsOn(creationConfig.getTaskContainer().getResourceGenTask());
 
             // TODO(141301405): when we compile resources AAPT2 stores the absolute path of the raw
             // resource in the proto (.flat) file, so we need to mark those inputs with absolute
@@ -930,7 +926,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                     .withPropertyName("rawLocalResources");
 
             task.useJvmResourceCompiler =
-                    component
+                    creationConfig
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER);

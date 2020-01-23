@@ -39,7 +39,8 @@ import com.android.builder.errors.IssueReporter.Type;
 import org.gradle.api.Project;
 
 /** Common superclass for all {@link VariantFactory} implementations. */
-public abstract class BaseVariantFactory implements VariantFactory {
+public abstract class BaseVariantFactory<VariantPropertiesT extends VariantPropertiesImpl>
+        implements VariantFactory<VariantPropertiesT> {
 
     @NonNull protected final GlobalScope globalScope;
 

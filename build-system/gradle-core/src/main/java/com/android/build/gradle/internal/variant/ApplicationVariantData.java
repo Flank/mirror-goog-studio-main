@@ -26,11 +26,14 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.builder.core.VariantType;
+import com.android.utils.StringHelper;
 import com.google.common.collect.Maps;
 import java.util.Map;
 
 /**
- * Data about a variant that produce an application APK
+ * Data about a variant that produce an application APK.
+ *
+ * <p>This includes application, dynamic-feature and standalone Test plugins.
  */
 public class ApplicationVariantData extends ApkVariantData implements TestedVariantData {
     private final Map<VariantType, TestVariantData> testVariants;
@@ -69,5 +72,21 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
     @Override
     public TestVariantData getTestVariantData(@NonNull VariantType type) {
         return testVariants.get(type);
+    }
+
+    @Override
+    @NonNull
+    public String getDescription() {
+        if (variantDslInfo.hasFlavors()) {
+            StringBuilder sb = new StringBuilder(50);
+            StringHelper.appendCapitalized(
+                    sb, variantDslInfo.getComponentIdentity().getBuildType());
+            StringHelper.appendCapitalized(sb, variantDslInfo.getComponentIdentity().getName());
+            sb.append(" build");
+            return sb.toString();
+        } else {
+            return StringHelper.capitalizeAndAppend(
+                    variantDslInfo.getComponentIdentity().getBuildType(), " build");
+        }
     }
 }

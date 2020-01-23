@@ -26,6 +26,7 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
@@ -43,6 +44,8 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantType
+import com.android.builder.dexing.DexingType
+import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import org.gradle.api.artifacts.ArtifactCollection
@@ -60,9 +63,9 @@ abstract class ComponentPropertiesImpl(
     val variantScope: VariantScope,
     val variantData: BaseVariantData,
     val transformManager: TransformManager,
-    val dslScope: DslScope,
+    override val dslScope: DslScope,
     val globalScope: GlobalScope
-): ComponentProperties, ComponentIdentity by componentIdentity {
+): ComponentProperties, BaseCreationConfig, ComponentIdentity by componentIdentity {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -83,12 +86,27 @@ abstract class ComponentPropertiesImpl(
     // ---------------------------------------------------------------------------------------------
 
     // Move as direct delegates
-    val taskContainer = variantData.taskContainer
+    override val taskContainer = variantData.taskContainer
 
     private val variantOutputs= mutableListOf<VariantOutputImpl>()
 
     val variantType: VariantType
         get() = variantDslInfo.variantType
+
+    val dexingType: DexingType
+        get() = variantDslInfo.dexingType
+
+    val needsMainDexList: Boolean
+        get() = variantDslInfo.dexingType.needsMainDexList
+
+    val minSdkVersion: AndroidVersion
+        get() = variantDslInfo.minSdkVersion
+
+    val dirName: String
+        get() = variantDslInfo.dirName
+
+    val baseName: String
+        get() = variantDslInfo.baseName
 
     /**
      * Returns the tested variant. This is null for [VariantPropertiesImpl] instances
@@ -167,8 +185,10 @@ abstract class ComponentPropertiesImpl(
         }
     }
 
-    @JvmOverloads
-    fun computeTaskName(prefix: String, suffix: String = ""): String =
+    fun computeTaskName(prefix: String): String =
+        prefix.appendCapitalized(name)
+
+    override fun computeTaskName(prefix: String, suffix: String): String =
         prefix.appendCapitalized(name, suffix)
 
     // -------------------------

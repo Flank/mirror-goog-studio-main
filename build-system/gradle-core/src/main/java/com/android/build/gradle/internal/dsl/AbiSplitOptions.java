@@ -24,13 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Set;
 
-/**
- * DSL object for configuring per-abi splits options.
- *
- * <p>See <a href="https://developer.android.com/studio/build/configure-apk-splits.html">FULL_APK
- * Splits</a>.
- */
-public class AbiSplitOptions extends SplitOptions {
+public class AbiSplitOptions extends SplitOptions implements com.android.build.api.dsl.AbiSplit {
 
     private boolean universalApk = false;
 
@@ -52,11 +46,12 @@ public class AbiSplitOptions extends SplitOptions {
         return builder.build();
     }
 
-    /** Whether to create an FULL_APK with all available ABIs. */
+    @Override
     public boolean isUniversalApk() {
         return universalApk;
     }
 
+    @Override
     public void setUniversalApk(boolean universalApk) {
         this.universalApk = universalApk;
     }

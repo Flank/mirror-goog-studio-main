@@ -156,7 +156,7 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends JavaPreCompileTask> taskProvider) {
             super.handleProvider(taskProvider);
-            component
+            creationConfig
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.ANNOTATION_PROCESSOR_LIST.INSTANCE,
@@ -170,10 +170,10 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
             super.configure(task);
 
             task.init(
-                    component
+                    creationConfig
                             .getVariantDependencies()
                             .getArtifactCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR),
-                    component
+                    creationConfig
                             .getVariantDslInfo()
                             .getJavaCompileOptions()
                             .getAnnotationProcessorOptions());

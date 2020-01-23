@@ -79,7 +79,7 @@ private class AndroidCollector : DataCollector {
         }
     }
 
-    private fun collectBuildConfig(dataHolder: ModuleInfo, plugin: BasePlugin) {
+    private fun collectBuildConfig(dataHolder: ModuleInfo, plugin: BasePlugin<*>) {
         plugin.extension.defaultConfig.minSdkVersion?.apiLevel?.let {
             dataHolder.androidBuildConfig.minSdkVersion = it }
         plugin.extension.defaultConfig.targetSdkVersion?.apiLevel?.let {
@@ -87,10 +87,10 @@ private class AndroidCollector : DataCollector {
 
         // extension.compileSdkVersion returns "android-27", we want just "27".
         dataHolder.androidBuildConfig.compileSdkVersion =
-                AndroidTargetHash.getPlatformVersion(plugin.extension.compileSdkVersion)!!.apiLevel
+                AndroidTargetHash.getPlatformVersion(plugin.extension.compileSdkVersion!!)!!.apiLevel
     }
 
-    private fun collectResources(dataHolder: ModuleInfo, plugin: BasePlugin) {
+    private fun collectResources(dataHolder: ModuleInfo, plugin: BasePlugin<*>) {
         val resources = plugin.extension.sourceSets
             .findByName(SourceSet.MAIN_SOURCE_SET_NAME)?.res ?: return
 

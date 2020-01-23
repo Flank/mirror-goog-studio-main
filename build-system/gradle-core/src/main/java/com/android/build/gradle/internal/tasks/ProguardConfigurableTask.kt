@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.VariantType
 import com.google.common.collect.Sets
@@ -194,7 +193,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            component
+            creationConfig
                 .artifacts
                 .producesFile(
                     APK_MAPPING,
@@ -217,7 +216,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 )
             } else if (isTestApplication) {
                 task.testedMappingFile.from(
-                    component.variantDependencies.getArtifactFileCollection(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.APK_MAPPING
@@ -237,7 +236,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
             task.referencedResources.from(referencedResources)
 
-            applyProguardRules(task, component, task.testedMappingFile, testedVariant)
+            applyProguardRules(task, creationConfig, task.testedMappingFile, testedVariant)
         }
 
         private fun applyProguardRules(

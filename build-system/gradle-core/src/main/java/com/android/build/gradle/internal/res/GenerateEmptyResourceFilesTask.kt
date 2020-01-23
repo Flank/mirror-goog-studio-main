@@ -85,27 +85,27 @@ abstract class GenerateEmptyResourceFilesTask : NonIncrementalTask() {
         ) {
 
         override val name: String
-            get() = component.computeTaskName("generate", "EmptyResourceFiles")
+            get() = computeTaskName("generate", "EmptyResourceFiles")
         override val type: Class<GenerateEmptyResourceFilesTask>
             get() = GenerateEmptyResourceFilesTask::class.java
 
         override fun handleProvider(taskProvider: TaskProvider<out GenerateEmptyResourceFilesTask>) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.COMPILE_SYMBOL_LIST,
                 taskProvider,
                 GenerateEmptyResourceFilesTask::emptyRDotTxt,
                 SdkConstants.FN_RESOURCE_TEXT
             )
 
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.PACKAGED_RES,
                 taskProvider,
                 GenerateEmptyResourceFilesTask::emptyMergedResources,
                 SdkConstants.FD_RES
             )
 
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
                 taskProvider,
                 GenerateEmptyResourceFilesTask::emptyRJar,
@@ -116,7 +116,7 @@ abstract class GenerateEmptyResourceFilesTask : NonIncrementalTask() {
         override fun configure(task: GenerateEmptyResourceFilesTask) {
             super.configure(task)
             task.packageForR.setDisallowChanges(task.project.provider {
-                Strings.nullToEmpty(component.variantDslInfo.originalApplicationId)
+                Strings.nullToEmpty(creationConfig.variantDslInfo.originalApplicationId)
             })
         }
     }

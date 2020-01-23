@@ -152,9 +152,8 @@ import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask;
-import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
+import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -250,7 +249,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Manages tasks creation. */
-public abstract class TaskManager {
+public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesImpl> {
 
     public static final String INSTALL_GROUP = "Install";
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP;
@@ -281,7 +280,6 @@ public abstract class TaskManager {
     @NonNull protected final ProjectOptions projectOptions;
     @NonNull protected final DataBindingBuilder dataBindingBuilder;
     @NonNull protected final BaseExtension extension;
-    @NonNull private final VariantFactory variantFactory;
     @NonNull protected final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull protected final GlobalScope globalScope;
     @NonNull protected final Recorder recorder;
@@ -294,19 +292,15 @@ public abstract class TaskManager {
 
     public TaskManager(
             @NonNull GlobalScope globalScope,
-            @NonNull Project project,
-            @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
-            @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         this.globalScope = globalScope;
-        this.project = project;
-        this.projectOptions = projectOptions;
+        this.project = globalScope.getProject();
+        this.projectOptions = globalScope.getProjectOptions();
         this.dataBindingBuilder = dataBindingBuilder;
         this.extension = extension;
-        this.variantFactory = variantFactory;
         this.toolingRegistry = toolingRegistry;
         this.recorder = recorder;
         this.logger = Logging.getLogger(this.getClass());
@@ -319,19 +313,14 @@ public abstract class TaskManager {
     }
 
     @NonNull
-    public TaskFactory getTaskFactory() {
-        return taskFactory;
-    }
-
-    @NonNull
     public DataBindingBuilder getDataBindingBuilder() {
         return dataBindingBuilder;
     }
 
-    /** Creates the tasks for a given BaseVariantData. */
-    public abstract void createTasksForVariantScope(
-            @NonNull VariantPropertiesImpl variantProperties,
-            @NonNull List<VariantPropertiesImpl> allComponentsWithLint);
+    /** Creates the tasks for a given VariantPropertiesImpl. */
+    public abstract void createTasksForVariant(
+            @NonNull VariantPropertiesT variantProperties,
+            @NonNull List<VariantPropertiesT> allComponentsWithLint);
 
     /**
      * Create tasks before the evaluation (on plugin apply). This is useful for tasks that could be
@@ -449,33 +438,26 @@ public abstract class TaskManager {
 
     // this is run after all the variants are created.
     public void configureGlobalLintTask(
-            @NonNull final Collection<ComponentPropertiesImpl> components) {
-        // we only care about non testing and non feature variants
-        List<ComponentPropertiesImpl> filteredVariants =
-                components.stream().filter(TaskManager::isLintVariant).collect(Collectors.toList());
-
-        if (filteredVariants.isEmpty()) {
-            return;
-        }
+            @NonNull final Collection<? extends VariantPropertiesImpl> variants) {
 
         // configure the global lint tasks.
         taskFactory.configure(
                 LINT,
                 LintGlobalTask.class,
                 task ->
-                        new LintGlobalTask.GlobalCreationAction(globalScope, filteredVariants)
+                        new LintGlobalTask.GlobalCreationAction(globalScope, variants)
                                 .configure(task));
         taskFactory.configure(
                 LINT_FIX,
                 LintFixTask.class,
                 task ->
-                        new LintFixTask.GlobalCreationAction(globalScope, filteredVariants)
+                        new LintFixTask.GlobalCreationAction(globalScope, variants)
                                 .configure(task));
 
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
-        for (ComponentPropertiesImpl component : components) {
-            component.getArtifacts().copy(LINT_PUBLISH_JAR.INSTANCE, globalScope.getArtifacts());
+        for (VariantPropertiesImpl variant : variants) {
+            variant.getArtifacts().copy(LINT_PUBLISH_JAR.INSTANCE, globalScope.getArtifacts());
         }
     }
 
@@ -712,7 +694,6 @@ public abstract class TaskManager {
                                     .getPublishingSpec()
                                     .getTestingSpec(
                                             componentProperties
-                                                    .getVariantDslInfo()
                                                     .getVariantType());
 
                     // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
@@ -766,9 +747,8 @@ public abstract class TaskManager {
     }
 
     public void createMergeApkManifestsTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        AndroidArtifactVariantData androidArtifactVariantData =
-                (AndroidArtifactVariantData) componentProperties.getVariantData();
-        Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
+        ApkVariantData apkVariantData = (ApkVariantData) componentProperties.getVariantData();
+        Set<String> screenSizes = apkVariantData.getCompatibleScreens();
 
         taskFactory.register(
                 new CompatibleScreensManifest.CreationAction(componentProperties, screenSizes));
@@ -816,10 +796,6 @@ public abstract class TaskManager {
                 new ProcessApplicationManifest.CreationAction(
                         componentProperties,
                         !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
-    }
-
-    public void createMergeLibManifestsTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        taskFactory.register(new ProcessLibraryManifest.CreationAction(componentProperties));
     }
 
     protected void createProcessTestManifestTask(
@@ -911,7 +887,7 @@ public abstract class TaskManager {
                         ? new File(
                                 globalScope.getIntermediatesDir()
                                         + "/merged-not-compiled-resources/"
-                                        + componentProperties.getVariantDslInfo().getDirName())
+                                        + componentProperties.getDirName())
                         : null;
 
         TaskProvider<MergeResources> mergeResourcesTask =
@@ -1060,7 +1036,8 @@ public abstract class TaskManager {
 
         // The manifest main dex list proguard rules are always needed for the bundle,
         // even if legacy multidex is not explicitly enabled.
-        boolean useAaptToGenerateLegacyMultidexMainDexProguardRules = scope.getNeedsMainDexList();
+        boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
+                componentProperties.getNeedsMainDexList();
 
         if (componentProperties.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             // TODO: make sure we generate the proguard rules in the namespaced case.
@@ -1378,42 +1355,12 @@ public abstract class TaskManager {
         }
     }
 
-    protected void createCompileTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        TaskProvider<? extends JavaCompile> javacTask = createJavacTask(componentProperties);
-        addJavacClassesStream(componentProperties);
-        setJavaCompilerTask(javacTask, componentProperties);
-        createPostCompilationTasks(componentProperties);
-    }
-
-
     /** Makes the given task the one used by top-level "compile" task. */
     public static void setJavaCompilerTask(
             @NonNull TaskProvider<? extends JavaCompile> javaCompilerTask,
             @NonNull ComponentPropertiesImpl componentProperties) {
         TaskFactoryUtils.dependsOn(
                 componentProperties.getTaskContainer().getCompileTask(), javaCompilerTask);
-    }
-
-    /**
-     * Creates the task that will handle micro apk.
-     *
-     * <p>New in 2.2, it now supports the unbundled mode, in which the apk is not bundled anymore,
-     * but we still have an XML resource packaged, and a custom entry in the manifest. This is
-     * triggered by passing a null {@link Configuration} object.
-     *
-     * @param variantProperties the variant scope
-     * @param config an optional Configuration object. if non null, this will embed the micro apk,
-     *     if null this will trigger the unbundled mode.
-     */
-    public void createGenerateMicroApkDataTask(
-            @NonNull VariantPropertiesImpl variantProperties, @Nullable FileCollection config) {
-        TaskProvider<GenerateApkDataTask> generateMicroApkTask =
-                taskFactory.register(
-                        new GenerateApkDataTask.CreationAction(variantProperties, config));
-
-        // the merge res task will need to run after this one.
-        TaskFactoryUtils.dependsOn(
-                variantProperties.getTaskContainer().getResourceGenTask(), generateMicroApkTask);
     }
 
     public void createExternalNativeBuildJsonGenerators(
@@ -1619,8 +1566,7 @@ public abstract class TaskManager {
 
     /** Creates the tasks to build android tests. */
     public void createAndroidTestVariantTasks(
-            @NonNull AndroidTestPropertiesImpl androidTestProperties,
-            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
+            @NonNull AndroidTestPropertiesImpl androidTestProperties) {
 
         createAnchorTasks(androidTestProperties);
 
@@ -1689,24 +1635,15 @@ public abstract class TaskManager {
         createConnectedTestForVariant(androidTestProperties);
     }
 
-    /** Is the given variant relevant for lint? */
-    static boolean isLintVariant(@NonNull ComponentPropertiesImpl componentProperties) {
-        // Only create lint targets for variants like debug and release, not debugTest
-        return !componentProperties.getVariantType().isForTesting();
-    }
-
     /**
      * Add tasks for running lint on individual variants. We've already added a lint task earlier
      * which runs on all variants.
      */
     public void createLintTasks(
-            @NonNull ComponentPropertiesImpl componentProperties,
-            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
-        if (!isLintVariant(componentProperties)) {
-            return;
-        }
+            @NonNull VariantPropertiesT variantProperties,
+            @NonNull List<VariantPropertiesT> allComponentsWithLint) {
         taskFactory.register(
-                new LintPerVariantTask.CreationAction(componentProperties, allComponentsWithLint));
+                new LintPerVariantTask.CreationAction(variantProperties, allComponentsWithLint));
     }
 
     /** Returns the full path of a task given its name. */
@@ -1717,24 +1654,21 @@ public abstract class TaskManager {
     }
 
     public void maybeCreateLintVitalTask(
-            @NonNull VariantPropertiesImpl appVariant,
-            @NonNull List<VariantPropertiesImpl> allComponentsWithLint) {
-        if (!isLintVariant(appVariant)
-                || appVariant.getVariantDslInfo().isDebuggable()
+            @NonNull VariantPropertiesT variant,
+            @NonNull List<VariantPropertiesT> allComponentsWithLint) {
+        if (variant.getVariantDslInfo().isDebuggable()
                 || !extension.getLintOptions().isCheckReleaseBuilds()) {
             return;
         }
 
         TaskProvider<LintPerVariantTask> lintReleaseCheck =
                 taskFactory.register(
-                        new LintPerVariantTask.VitalCreationAction(
-                                appVariant, allComponentsWithLint),
+                        new LintPerVariantTask.VitalCreationAction(variant, allComponentsWithLint),
                         null,
-                        task -> task.dependsOn(appVariant.getTaskContainer().getJavacTask()),
+                        task -> task.dependsOn(variant.getTaskContainer().getJavacTask()),
                         null);
 
-        TaskFactoryUtils.dependsOn(
-                appVariant.getTaskContainer().getAssembleTask(), lintReleaseCheck);
+        TaskFactoryUtils.dependsOn(variant.getTaskContainer().getAssembleTask(), lintReleaseCheck);
 
         // If lint is being run, we do not need to run lint vital.
         project.getGradle()
@@ -1991,7 +1925,7 @@ public abstract class TaskManager {
 
         maybeCreateDesugarTask(
                 componentProperties,
-                variantDslInfo.getMinSdkVersion(),
+                componentProperties.getMinSdkVersion(),
                 transformManager,
                 isTestCoverageEnabled);
 
@@ -2068,7 +2002,7 @@ public abstract class TaskManager {
         }
 
         // ----- Multi-Dex support
-        DexingType dexingType = variantScope.getDexingType();
+        DexingType dexingType = componentProperties.getDexingType();
 
         // Upgrade from legacy multi-dex to native multi-dex if possible when using with a device
         if (dexingType == DexingType.LEGACY_MULTIDEX) {
@@ -2079,7 +2013,7 @@ public abstract class TaskManager {
             }
         }
 
-        if (variantScope.getNeedsMainDexList()) {
+        if (componentProperties.getNeedsMainDexList()) {
             taskFactory.register(new D8MainDexListTask.CreationAction(componentProperties, false));
         }
 
@@ -3051,7 +2985,7 @@ public abstract class TaskManager {
         public void handleProvider(
                 @NonNull TaskProvider<? extends TaskT> taskProvider) {
             super.handleProvider(taskProvider);
-            component.getVariantData().getTaskContainer().setPreBuildTask(taskProvider);
+            creationConfig.getVariantData().getTaskContainer().setPreBuildTask(taskProvider);
         }
 
         @Override
@@ -3059,7 +2993,7 @@ public abstract class TaskManager {
             super.configure(task);
             task.dependsOn(MAIN_PREBUILD);
 
-            if (component.getVariantScope().getCodeShrinker() != null) {
+            if (creationConfig.getVariantScope().getCodeShrinker() != null) {
                 task.dependsOn(EXTRACT_PROGUARD_FILES);
             }
         }

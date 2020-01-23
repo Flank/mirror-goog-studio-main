@@ -291,14 +291,14 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 artifactType = InternalArtifactType.AAR_MAIN_JAR,
                 taskProvider = taskProvider,
                 productProvider = LibraryAarJarsTask::mainClassLocation,
                 fileName = SdkConstants.FN_CLASSES_JAR
             )
 
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 artifactType = InternalArtifactType.AAR_LIBS_DIRECTORY,
                 taskProvider = taskProvider,
                 productProvider = LibraryAarJarsTask::localJarsLocation,
@@ -312,13 +312,13 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             super.configure(task)
 
             task.excludeList.set(
-                component.globalScope.project.provider {
+                creationConfig.globalScope.project.provider {
                     excludeListProvider.get()
                 }
             )
             task.excludeList.disallowChanges()
 
-            val artifacts = component.artifacts
+            val artifacts = creationConfig.artifacts
 
             if (artifacts.hasFinalProduct(InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE)) {
                 artifacts.setTaskInputToFinalProduct(
@@ -328,16 +328,16 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             }
 
             task.packageName.set(
-                component.globalScope.project.provider {
-                    component.variantDslInfo.packageFromManifest
+                creationConfig.globalScope.project.provider {
+                    creationConfig.variantDslInfo.packageFromManifest
                 }
             )
             task.packageName.disallowChanges()
 
-            task.jarCreatorType.setDisallowChanges(component.variantScope.jarCreatorType)
+            task.jarCreatorType.setDisallowChanges(creationConfig.variantScope.jarCreatorType)
 
             task.debugBuild
-                .setDisallowChanges(component.variantDslInfo.isDebuggable)
+                .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
 
             /*
              * Only get files that are CLASS, and exclude files that are both CLASS and RESOURCES
@@ -354,7 +354,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                         .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES)
                         .get()
                 } else {
-                    component.transformManager
+                    creationConfig.transformManager
                         .getPipelineOutputAsFileCollection(
                             { contentTypes, scopes ->
                                 contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
@@ -376,7 +376,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                         .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_JAVA_RES)
                         .get()
                 } else {
-                    component.transformManager
+                    creationConfig.transformManager
                         .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                             contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES)
                                     && scopes.contains(Scope.PROJECT)
@@ -386,7 +386,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             task.mainScopeResourceFiles.disallowChanges()
 
             task.localScopeInputFiles.from(
-                component.transformManager
+                creationConfig.transformManager
                     .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                         (contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
                                 || contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES))

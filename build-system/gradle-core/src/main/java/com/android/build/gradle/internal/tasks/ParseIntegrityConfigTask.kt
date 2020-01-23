@@ -119,7 +119,7 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ParseIntegrityConfigTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.APP_INTEGRITY_CONFIG,
                 taskProvider,
                 ParseIntegrityConfigTask::appIntegrityConfigProto,
@@ -131,7 +131,7 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
             task: ParseIntegrityConfigTask
         ) {
             super.configure(task)
-            task.integrityConfigDir.set(getIntegrityConfigFolder(component))
+            task.integrityConfigDir.set(getIntegrityConfigFolder(creationConfig))
         }
 
         private fun getIntegrityConfigFolder(component: ComponentPropertiesImpl): Provider<out Directory> =

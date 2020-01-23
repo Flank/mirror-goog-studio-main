@@ -260,7 +260,7 @@ open class BasicModuleModelMock {
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk
-        doReturn(minSdkVersion).`when`(variantDslInfo).minSdkVersion
+        doReturn(minSdkVersion).`when`(componentProperties).minSdkVersion
         doReturn(":$appName").`when`(project).path
         return appFolder
     }

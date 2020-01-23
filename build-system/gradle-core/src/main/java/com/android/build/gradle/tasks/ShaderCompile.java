@@ -222,7 +222,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ShaderCompile> taskProvider) {
             super.handleProvider(taskProvider);
-            component
+            creationConfig
                     .getArtifacts()
                     .producesDir(
                             InternalArtifactType.SHADER_ASSETS.INSTANCE,
@@ -234,17 +234,21 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         @Override
         public void configure(@NonNull ShaderCompile task) {
             super.configure(task);
-            final VariantDslInfo variantDslInfo = component.getVariantDslInfo();
+            final VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
 
-            task.ndkLocation = component.getGlobalScope().getSdkComponents().getNdkFolderProvider();
-            component
+            task.ndkLocation =
+                    creationConfig.getGlobalScope().getSdkComponents().getNdkFolderProvider();
+            creationConfig
                     .getArtifacts()
                     .setTaskInputToFinalProduct(MERGED_SHADERS.INSTANCE, task.getSourceDir());
             task.setDefaultArgs(variantDslInfo.getDefaultGlslcArgs());
             task.setScopedArgs(variantDslInfo.getScopedGlslcArgs());
 
             task.buildToolInfoRevisionProvider =
-                    component.getGlobalScope().getSdkComponents().getBuildToolsRevisionProvider();
+                    creationConfig
+                            .getGlobalScope()
+                            .getSdkComponents()
+                            .getBuildToolsRevisionProvider();
         }
     }
 }

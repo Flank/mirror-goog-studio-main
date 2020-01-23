@@ -29,11 +29,11 @@ import java.util.Comparator
 class VariantModelImpl(
     override val inputs: VariantInputModel,
     private val testBuilderTypeProvider: () -> String?,
-    private val variantManager: VariantManager,
+    private val variantManager: VariantManager<*>,
     private val issueHandler: IssueReporter) : VariantModel {
 
     override val components: List<ComponentPropertiesImpl>
-        get() = variantManager.components
+        get() = variantManager.allComponents
 
     override val defaultVariant: String?
         get() = computeDefaultVariant()

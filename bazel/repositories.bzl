@@ -1,5 +1,3 @@
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
 # Bazel repository mapped to git repositories.
 _git = [
     {
@@ -28,14 +26,8 @@ _git = [
         "path": "external/libpng",
     },
     {
-        "name": "gmock_repo",
-        "build_file": "tools/base/profiler/native/external/gmock.BUILD",
-        "path": "external/googletest/googlemock",
-    },
-    {
-        "name": "gtest_repo",
-        "build_file": "tools/base/profiler/native/external/gtest.BUILD",
-        "path": "external/googletest/googletest",
+        "name": "googletest",
+        "path": "external/googletest",
     },
     {
         "name": "slicer_repo",
@@ -92,8 +84,7 @@ _archives = [
         # Offical proto rules relies on a hardcoded "@com_google_protobuf", so we cannot
         # name this as protobuf-3.9.0 or similar.
         "name": "com_google_protobuf",
-        "url": "prebuilts/tools/common/external-src-archives/protobuf/3.9.0/protobuf-3.9.0.tar.gz",
-        "sha256": "2ee9dcec820352671eb83e081295ba43f7a4157181dad549024d7070d079cf65",
+        "archive": "//prebuilts/tools/common/external-src-archives/protobuf/3.9.0:protobuf-3.9.0.tar.gz",
         "strip_prefix": "protobuf-3.9.0",
         "repo_mapping": {
             "@zlib": "@zlib_repo",
@@ -103,28 +94,24 @@ _archives = [
     # These are external dependencies to build Perfetto (from external/perfetto)
     {
         "name": "perfetto-jsoncpp-1.0.0",
-        "url": "prebuilts/tools/common/external-src-archives/jsoncpp/1.0.0/jsoncpp-1.0.0.tar.gz",
-        "sha256": "e7eeb9b96d10cfd2f6205a09899f9800931648f652e09731821854c9ce0c7a1a",
+        "archive": "//prebuilts/tools/common/external-src-archives/jsoncpp/1.0.0:jsoncpp-1.0.0.tar.gz",
         "strip_prefix": "jsoncpp-1.0.0",
         "build_file": "@perfetto//bazel:jsoncpp.BUILD",
     },
     {
         "name": "perfetto-linenoise-c894b9e",
-        "url": "prebuilts/tools/common/external-src-archives/linenoise/c894b9e/linenoise.git-c894b9e.tar.gz",
-        "sha256": "988a6922eedb9a3de2554801d11562d8a4a3df633c53a5dbc5fb1468b03ebcb2",
+        "archive": "//prebuilts/tools/common/external-src-archives/linenoise/c894b9e:linenoise.git-c894b9e.tar.gz",
         "build_file": "@perfetto//bazel:linenoise.BUILD",
     },
     {
         "name": "perfetto-sqlite-amalgamation-3250300",
-        "url": "prebuilts/tools/common/external-src-archives/sqlite-amalgamation/3250300/sqlite-amalgamation-3250300.zip",
-        "sha256": "2ad5379f3b665b60599492cc8a13ac480ea6d819f91b1ef32ed0e1ad152fafef",
+        "archive": "//prebuilts/tools/common/external-src-archives/sqlite-amalgamation/3250300:sqlite-amalgamation-3250300.zip",
         "strip_prefix": "sqlite-amalgamation-3250300",
         "build_file": "@perfetto//bazel:sqlite.BUILD",
     },
     {
         "name": "perfetto-sqlite-src-3250300",
-        "url": "prebuilts/tools/common/external-src-archives/sqlite-src/3250300/sqlite-src-3250300.zip",
-        "sha256": "c7922bc840a799481050ee9a76e679462da131adba1814687f05aa5c93766421",
+        "archive": "//prebuilts/tools/common/external-src-archives/sqlite-src/3250300:sqlite-src-3250300.zip",
         "strip_prefix": "sqlite-src-3250300",
         "build_file": "@perfetto//bazel:sqlite.BUILD",
     },
@@ -132,9 +119,6 @@ _archives = [
 ]
 
 _binds = {
-    "gtest_main": "@gtest_repo//:gtest_main",
-    "gtest": "@gtest_repo//:gtest",
-    "gmock_main": "@gmock_repo//:gmock_main",
     "slicer": "@slicer_repo//:slicer",
     "protobuf_clib": "@protobuf_repo//:protoc_lib",
     "nanopb": "@nanopb_repo//:nanopb",
@@ -147,6 +131,44 @@ _binds = {
     "madler_zlib": "@zlib_repo//:zlib",  # Needed for grpc
     "grpc-all-java": "//tools/base/third_party:io.grpc_grpc-all",
 }
+
+def _local_archive_impl(ctx):
+    """Implementation of local_archive rule."""
+
+    # Extract archive to the root of the repository.
+    path = ctx.path(ctx.attr.archive)
+    download_info = ctx.extract(path, "", ctx.attr.strip_prefix)
+
+    # Set up WORKSPACE to create @{name}// repository:
+    ctx.file("WORKSPACE", 'workspace(name = "{}")\n'.format(ctx.name))
+
+    # Link optional BUILD file:
+    if ctx.attr.build_file:
+        ctx.delete("BUILD.bazel")
+        ctx.symlink(ctx.attr.build_file, "BUILD.bazel")
+
+# We're using a custom repository_rule instead of a regular macro (calling
+# http_archive for example) because we need access to the repository_ctx object
+# in order to proper resolve the path of the archives we want to extract to
+# set up the repos.
+#
+# http_archive works nicely with absolute paths and urls, but fails to resolve
+# path to labels or proper resolve relative paths to the workspace root.
+local_archive = repository_rule(
+    implementation = _local_archive_impl,
+    attrs = {
+        "archive": attr.label(
+            mandatory = True,
+            allow_single_file = True,
+            doc = "Label for the archive that contains the target.",
+        ),
+        "strip_prefix": attr.string(doc = "Optional path prefix to strip from the extracted files."),
+        "build_file": attr.label(
+            allow_single_file = True,
+            doc = "Optional label for a BUILD file to be used when setting the repository.",
+        ),
+    },
+)
 
 def setup_external_repositories(prefix = ""):
     _setup_git_repos(prefix)
@@ -171,8 +193,7 @@ def _setup_git_repos(prefix = ""):
 def _setup_archive_repos(prefix = ""):
     for _repo in _archives:
         repo = dict(_repo)
-        repo["url"] = "file:///" + prefix + repo["url"]
-        http_archive(**repo)
+        local_archive(**repo)
 
 def _setup_binds():
     for name, actual in _binds.items():

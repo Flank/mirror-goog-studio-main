@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.resources.FileStatus
 import org.gradle.api.file.FileCollection
@@ -205,7 +204,7 @@ abstract class MergeJavaResourceTask
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 MERGED_JAVA_RES,
                 taskProvider,
                 MergeJavaResourceTask::outputFile,
@@ -222,14 +221,14 @@ abstract class MergeJavaResourceTask
                 task.projectJavaResAsJars = projectJavaResFromStreams
                 task.unfilteredProjectJavaRes = projectJavaResFromStreams
             } else {
-                val projectJavaRes = getProjectJavaRes(component)
+                val projectJavaRes = getProjectJavaRes(creationConfig)
                 task.unfilteredProjectJavaRes = projectJavaRes
                 task.projectJavaRes = projectJavaRes.asFileTree.filter(spec)
             }
 
             if (mergeScopes.contains(SUB_PROJECTS)) {
                 task.subProjectJavaRes =
-                    component.variantDependencies.getArtifactFileCollection(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.JAVA_RES
@@ -238,12 +237,12 @@ abstract class MergeJavaResourceTask
 
             if (mergeScopes.contains(EXTERNAL_LIBRARIES) || mergeScopes.contains(LOCAL_DEPS)) {
                 // Local jars are treated the same as external libraries
-                task.externalLibJavaRes = getExternalLibJavaRes(component, mergeScopes)
+                task.externalLibJavaRes = getExternalLibJavaRes(creationConfig, mergeScopes)
             }
 
             if (mergeScopes.contains(FEATURES)) {
                 task.featureJavaRes =
-                    component.variantDependencies.getArtifactFileCollection(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.REVERSE_METADATA_JAVA_RES
@@ -253,14 +252,14 @@ abstract class MergeJavaResourceTask
             task.mergeScopes = mergeScopes
             task.packagingOptions =
                 SerializablePackagingOptions(
-                    component.globalScope.extension.packagingOptions
+                    creationConfig.globalScope.extension.packagingOptions
                 )
             task.intermediateDir =
-                component.paths.getIncrementalDir("${component.name}-mergeJavaRes")
+                creationConfig.paths.getIncrementalDir("${creationConfig.name}-mergeJavaRes")
             task.cacheDir = File(task.intermediateDir, "zip-cache")
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
             task.noCompress =
-                component.globalScope.extension.aaptOptions.noCompress.toList().sorted()
+                creationConfig.globalScope.extension.aaptOptions.noCompress.toList().sorted()
         }
     }
 

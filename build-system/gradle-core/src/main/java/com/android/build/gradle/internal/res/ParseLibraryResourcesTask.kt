@@ -161,15 +161,15 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
             taskProvider: TaskProvider<out ParseLibraryResourcesTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                     InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
                     taskProvider,
                     ParseLibraryResourcesTask::librarySymbolsFile,
                     SdkConstants.FN_R_DEF_TXT
             )
-            if (component.globalScope
+            if (creationConfig.globalScope
                             .projectOptions[BooleanOption.ENABLE_PARTIAL_R_INCREMENTAL_BUILDS]) {
-                component.artifacts.producesDir(
+                creationConfig.artifacts.producesDir(
                         InternalArtifactType.LOCAL_ONLY_PARTIAL_SYMBOL_DIRECTORY,
                         taskProvider,
                         ParseLibraryResourcesTask::partialRDir,
@@ -182,11 +182,12 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
             task: ParseLibraryResourcesTask
         ) {
             super.configure(task)
-            task.platformAttrRTxt.set(component.globalScope.platformAttrs)
-            task.enablePartialRIncrementalBuilds.setDisallowChanges(component.globalScope
+            task.platformAttrRTxt.set(creationConfig.globalScope.platformAttrs)
+            task.enablePartialRIncrementalBuilds.setDisallowChanges(
+                creationConfig.globalScope
                     .projectOptions[BooleanOption.ENABLE_PARTIAL_R_INCREMENTAL_BUILDS])
 
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.PACKAGED_RES,
                     task.inputResourcesDir
             )

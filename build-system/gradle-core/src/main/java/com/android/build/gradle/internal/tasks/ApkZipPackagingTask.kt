@@ -101,7 +101,7 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.APK_ZIP,
                 taskProvider,
                 ApkZipPackagingTask::apkZipFile,
@@ -114,11 +114,11 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            component.artifacts.setTaskInputToFinalProduct(
+            creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APK, task.apkFolder
             )
-            if (component.artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING)) {
-                component.artifacts.setTaskInputToFinalProduct(
+            if (creationConfig.artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING)) {
+                creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.APK_MAPPING,
                     task.mappingFile
                 )

@@ -191,21 +191,21 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
                 check(outputType == CLASSES_JAR) {
                     "Expected CLASSES_JAR output type but found ${outputType.name}"
                 }
-                component.artifacts.getOperations()
+                creationConfig.artifacts.getOperations()
                     .setInitialProvider(
                         taskProvider,
                         BundleLibraryClasses::jarOutput
                     ).withName(FN_CLASSES_JAR).on(InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR)
             } else {
                 if (outputType == CLASSES_JAR) {
-                    component.artifacts.getOperations()
+                    creationConfig.artifacts.getOperations()
                         .setInitialProvider(
                             taskProvider,
                             BundleLibraryClasses::jarOutput
                         ).withName(FN_CLASSES_JAR)
                         .on(InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR)
                 } else {
-                    component.artifacts.getOperations()
+                    creationConfig.artifacts.getOperations()
                         .setInitialProvider(
                             taskProvider,
                             BundleLibraryClasses::dirOutput
@@ -220,21 +220,21 @@ abstract class BundleLibraryClasses : NewIncrementalTask() {
             super.configure(task)
 
             task.outputType.setDisallowChanges(outputType)
-            task.packageName = lazy { component.variantDslInfo.packageFromManifest }
+            task.packageName = lazy { creationConfig.variantDslInfo.packageFromManifest }
             task.classes.from(inputs)
             val packageRClass =
-                component.globalScope.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] &&
+                creationConfig.globalScope.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] &&
                         publishedType == PublishedConfigType.API_ELEMENTS &&
-                        !component.globalScope.extension.aaptOptions.namespaced
+                        !creationConfig.globalScope.extension.aaptOptions.namespaced
             task.packageRClass.set(packageRClass)
             if (packageRClass) {
-                task.classes.from(component.artifacts.getFinalProduct(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
+                task.classes.from(creationConfig.artifacts.getFinalProduct(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
             }
             // FIXME pass this as List<TextResources>
             task.toIgnoreRegExps.set(
-                component.globalScope.project.provider(toIgnoreRegExps::get)
+                creationConfig.globalScope.project.provider(toIgnoreRegExps::get)
             )
-            task.jarCreatorType = component.variantScope.jarCreatorType
+            task.jarCreatorType = creationConfig.variantScope.jarCreatorType
         }
     }
 }

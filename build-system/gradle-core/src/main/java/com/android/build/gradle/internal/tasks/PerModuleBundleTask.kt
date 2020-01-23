@@ -200,7 +200,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             taskProvider: TaskProvider<out PerModuleBundleTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.MODULE_BUNDLE,
                 taskProvider,
                 PerModuleBundleTask::outputDir
@@ -211,12 +211,12 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             task: PerModuleBundleTask
         ) {
             super.configure(task)
-            val artifacts = component.artifacts
+            val artifacts = creationConfig.artifacts
 
-            if (component.variantType.isBaseModule) {
+            if (creationConfig.variantType.isBaseModule) {
                 task.fileName.set("base.zip")
             } else {
-                task.fileName.set(component.variantScope.featureName.map { "$it.zip" })
+                task.fileName.set(creationConfig.variantScope.featureName.map { "$it.zip" })
             }
             task.fileName.disallowChanges()
 
@@ -224,7 +224,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                  InternalArtifactType.MERGED_ASSETS, task.assetsFiles)
 
             task.resFiles.set(
-                if (component.variantScope.useResourceShrinker()) {
+                if (creationConfig.variantScope.useResourceShrinker()) {
                     artifacts.getOperations().get(InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE)
                 } else {
                     artifacts.getOperations().get(InternalArtifactType.LINKED_RES_FOR_BUNDLE)
@@ -237,12 +237,12 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX).get()
                 } else if (artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {
-                    component.globalScope.project.files(
+                    creationConfig.globalScope.project.files(
                         artifacts
                         .getOperations()
                         .getAll(MultipleArtifactType.DEX))
                 } else {
-                    component.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
+                    creationConfig.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
                 }
             val desugarLibDexFile =
                 if (artifacts.hasFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX)) {
@@ -250,50 +250,50 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                         .getFinalProductAsFileCollection(InternalArtifactType.DESUGAR_LIB_DEX)
                         .get()
                 } else {
-                    getDesugarLibDexFromTransform(component)
+                    getDesugarLibDexFromTransform(creationConfig)
                 }
 
             task.dexFiles.from(programDexFiles.plus(desugarLibDexFile))
 
             task.featureDexFiles.from(
-                component.variantDependencies.getArtifactFileCollection(
+                creationConfig.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,
-                    mapOf(MODULE_PATH to component.globalScope.project.path)
+                    mapOf(MODULE_PATH to creationConfig.globalScope.project.path)
                 )
             )
             task.javaResFiles.from(
                 if (artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)) {
-                    component.globalScope.project.layout.files(
+                    creationConfig.globalScope.project.layout.files(
                         artifacts.getFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)
                     )
-                } else if (component.variantScope.needsMergedJavaResStream) {
-                    component.transformManager
+                } else if (creationConfig.variantScope.needsMergedJavaResStream) {
+                    creationConfig.transformManager
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES)
                 } else {
-                    component.globalScope.project.layout.files(
+                    creationConfig.globalScope.project.layout.files(
                         artifacts.getFinalProduct(InternalArtifactType.MERGED_JAVA_RES)
                     )
                 }
             )
-            task.nativeLibsFiles.from(getNativeLibsFiles(component, packageCustomClassDependencies))
+            task.nativeLibsFiles.from(getNativeLibsFiles(creationConfig, packageCustomClassDependencies))
 
-            if (component.variantType.isDynamicFeature) {
+            if (creationConfig.variantType.isDynamicFeature) {
                 // If this is a dynamic feature, we use the abiFilters published by the base module.
                 task.appMetadata.from(
-                    component.variantDependencies.getArtifactFileCollection(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA
                     )
                 )
             } else {
-                task.abiFilters = component.variantDslInfo.supportedAbis
+                task.abiFilters = creationConfig.variantDslInfo.supportedAbis
             }
             task.appMetadata.disallowChanges()
 
-            task.jarCreatorType.set(component.variantScope.jarCreatorType)
+            task.jarCreatorType.set(creationConfig.variantScope.jarCreatorType)
             task.jarCreatorType.disallowChanges()
         }
     }

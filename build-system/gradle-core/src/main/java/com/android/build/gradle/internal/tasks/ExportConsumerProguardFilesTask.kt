@@ -98,7 +98,7 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.CONSUMER_PROGUARD_DIR,
                 taskProvider,
                 ExportConsumerProguardFilesTask::outputDir,
@@ -111,19 +111,19 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.consumerProguardFiles.from(component.variantScope.consumerProguardFilesForFeatures)
-            task.isBaseModule = component.variantType.isBaseModule
-            task.isDynamicFeature = component.variantType.isDynamicFeature
+            task.consumerProguardFiles.from(creationConfig.variantScope.consumerProguardFilesForFeatures)
+            task.isBaseModule = creationConfig.variantType.isBaseModule
+            task.isDynamicFeature = creationConfig.variantType.isDynamicFeature
 
             task.inputFiles.from(
                 task.consumerProguardFiles,
-                component
+                creationConfig
                     .artifacts
                     .getFinalProduct(InternalArtifactType.GENERATED_PROGUARD_FILE)
             )
-            if (component.variantType.isDynamicFeature) {
+            if (creationConfig.variantType.isDynamicFeature) {
                 task.inputFiles.from(
-                    component.variantDependencies.getArtifactFileCollection(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.UNFILTERED_PROGUARD_RULES

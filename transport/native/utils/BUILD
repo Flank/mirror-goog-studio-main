@@ -157,10 +157,10 @@ cc_test(
     tags = ["no_windows"],
     deps = [
         ":utils",
-        "//external:gmock_main",
         "//tools/base/transport/native/daemon",
         "//tools/base/transport/native/tests/test:testutils",
         "//tools/base/transport/proto:cc_proto",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -182,6 +182,6 @@ cc_test(
     tags = ["no_windows"],
     deps = [
         ":utils",
-        "//external:gmock_main",
+        "@googletest//:gtest_main",
     ],
 )

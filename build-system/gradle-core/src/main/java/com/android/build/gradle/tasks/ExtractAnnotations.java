@@ -316,9 +316,9 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ExtractAnnotations> taskProvider) {
             super.handleProvider(taskProvider);
-            component.getTaskContainer().setGenerateAnnotationsTask(taskProvider);
+            creationConfig.getTaskContainer().setGenerateAnnotationsTask(taskProvider);
 
-            component
+            creationConfig
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.ANNOTATIONS_ZIP.INSTANCE,
@@ -326,7 +326,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                             ExtractAnnotations::getOutput,
                             SdkConstants.FN_ANNOTATIONS_ZIP);
 
-            component
+            creationConfig
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE.INSTANCE,
@@ -340,23 +340,27 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
             super.configure(task);
             task.setDescription(
                     "Extracts Android annotations for the "
-                            + component.getName()
+                            + creationConfig.getName()
                             + " variant into the archive file");
             task.setGroup(BasePlugin.BUILD_GROUP);
 
-            task.setClassDir(component.getArtifacts().getAllClasses());
+            task.setClassDir(creationConfig.getArtifacts().getAllClasses());
 
-            task.source(component.getVariantData().getJavaSources());
+            task.source(creationConfig.getVariantData().getJavaSources());
             task.setEncoding(
-                    component.getGlobalScope().getExtension().getCompileOptions().getEncoding());
-            task.classpath = component.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR);
+                    creationConfig
+                            .getGlobalScope()
+                            .getExtension()
+                            .getCompileOptions()
+                            .getEncoding());
+            task.classpath = creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR);
 
             task.libraries =
-                    component
+                    creationConfig
                             .getVariantDependencies()
                             .getArtifactCollection(COMPILE_CLASSPATH, EXTERNAL, CLASSES_JAR);
 
-            GlobalScope globalScope = component.getGlobalScope();
+            GlobalScope globalScope = creationConfig.getGlobalScope();
 
             // Setup the boot classpath just before the task actually runs since this will
             // force the sdk to be parsed. (Same as in compileTask)

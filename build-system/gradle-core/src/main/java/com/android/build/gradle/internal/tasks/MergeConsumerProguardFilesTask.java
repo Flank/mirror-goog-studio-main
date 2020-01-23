@@ -98,7 +98,7 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
                 @NonNull TaskProvider<? extends MergeConsumerProguardFilesTask> taskProvider) {
             super.handleProvider(taskProvider);
 
-            component
+            creationConfig
                     .getArtifacts()
                     .producesFile(
                             InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE.INSTANCE,
@@ -111,19 +111,19 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
         public void configure(
                 @NonNull MergeConsumerProguardFilesTask task) {
             super.configure(task);
-            GlobalScope globalScope = component.getGlobalScope();
+            GlobalScope globalScope = creationConfig.getGlobalScope();
             Project project = globalScope.getProject();
 
-            task.isBaseModule = component.getVariantType().isBaseModule();
-            task.isDynamicFeature = component.getVariantType().isDynamicFeature();
+            task.isBaseModule = creationConfig.getVariantType().isBaseModule();
+            task.isDynamicFeature = creationConfig.getVariantType().isDynamicFeature();
 
             task.getConsumerProguardFiles()
-                    .from(component.getVariantScope().getConsumerProguardFilesForFeatures());
+                    .from(creationConfig.getVariantScope().getConsumerProguardFilesForFeatures());
 
             ConfigurableFileCollection inputFiles =
                     project.files(
                             task.getConsumerProguardFiles(),
-                            component
+                            creationConfig
                                     .getArtifacts()
                                     .getFinalProduct(GENERATED_PROGUARD_FILE.INSTANCE));
             task.setInputFiles(inputFiles);

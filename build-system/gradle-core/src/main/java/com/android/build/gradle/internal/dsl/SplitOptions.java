@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.Set;
 
 /** Base data representing how an FULL_APK should be split for a given dimension (density, abi). */
-public abstract class SplitOptions {
+public abstract class SplitOptions implements com.android.build.api.dsl.SplitOptions {
 
     @NonNull
     private final Set<String> values;
@@ -42,37 +42,27 @@ public abstract class SplitOptions {
     protected abstract Set<String> getDefaultValues();
     protected abstract ImmutableSet<String> getAllowedValues();
 
-    /**
-     * Whether to split in this dimension.
-     */
+    @Override
     public boolean isEnable() {
         return enable;
     }
 
+    @Override
     public void setEnable(boolean enable) {
         this.enable = enable;
     }
 
-    /**
-     * excludes some values
-     */
+    @Override
     public void exclude(@NonNull String... excludes) {
         values.removeAll(Arrays.asList(excludes));
     }
 
-    /**
-     * includes some values
-     */
+    @Override
     public void include(@NonNull String... includes) {
         values.addAll(Arrays.asList(includes));
     }
 
-    /**
-     * Resets the list of included split configuration.
-     *
-     * <p>Use this before calling include, in order to manually configure the list of configuration
-     * to split on, rather than excluding from the default list.
-     */
+    @Override
     public void reset() {
         values.clear();
     }

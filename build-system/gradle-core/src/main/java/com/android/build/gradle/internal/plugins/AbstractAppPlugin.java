@@ -16,26 +16,18 @@
 
 package com.android.build.gradle.internal.plugins;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.AppExtension;
-import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.internal.ApplicationTaskManager;
-import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
-import com.android.build.gradle.internal.variant.VariantFactory;
-import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
-import org.gradle.api.Project;
 import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects. */
-public abstract class AbstractAppPlugin extends BasePlugin {
+public abstract class AbstractAppPlugin<VariantPropertiesT extends VariantPropertiesImpl>
+        extends BasePlugin<VariantPropertiesT> {
 
     @Inject
     public AbstractAppPlugin(
@@ -48,7 +40,6 @@ public abstract class AbstractAppPlugin extends BasePlugin {
         return AndroidProjectTypes.PROJECT_TYPE_APP;
     }
 
-
     @NonNull
     protected abstract Class<? extends AppExtension> getExtensionClass();
 
@@ -56,27 +47,5 @@ public abstract class AbstractAppPlugin extends BasePlugin {
     @Override
     protected GradleBuildProject.PluginType getAnalyticsPluginType() {
         return GradleBuildProject.PluginType.APPLICATION;
-    }
-
-    @NonNull
-    @Override
-    protected TaskManager createTaskManager(
-            @NonNull GlobalScope globalScope,
-            @NonNull Project project,
-            @NonNull ProjectOptions projectOptions,
-            @NonNull DataBindingBuilder dataBindingBuilder,
-            @NonNull BaseExtension extension,
-            @NonNull VariantFactory variantFactory,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
-            @NonNull Recorder recorder) {
-        return new ApplicationTaskManager(
-                globalScope,
-                project,
-                projectOptions,
-                dataBindingBuilder,
-                extension,
-                variantFactory,
-                toolingRegistry,
-                recorder);
     }
 }

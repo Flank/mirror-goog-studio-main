@@ -25,7 +25,7 @@ namespace deploy {
 
 bool InstallClient::WaitForStatus(ServerResponse::Status status) {
   ServerResponse message;
-  if (!Read(-1, &message)) {
+  if (!Read(&message)) {
     ErrEvent("Expected server status "_s + to_string(status) +
              " but did not receive a response.");
     return false;
@@ -37,4 +37,11 @@ bool InstallClient::WaitForStatus(ServerResponse::Status status) {
   }
   return true;
 }
+
+bool InstallClient::KillServerAndWait() {
+  proto::InstallServerRequest request;
+  request.set_type(proto::InstallServerRequest::SERVER_EXIT);
+  return Write(request) && WaitForStatus(ServerResponse::SERVER_EXITED);
+}
+
 }  // namespace deploy

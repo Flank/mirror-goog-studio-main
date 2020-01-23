@@ -88,7 +88,7 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
             taskProvider: TaskProvider<out ExtractDeepLinksTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesFile(
+            creationConfig.artifacts.producesFile(
                 artifactType = InternalArtifactType.NAVIGATION_JSON,
                 taskProvider = taskProvider,
                 productProvider = ExtractDeepLinksTask::navigationJson,
@@ -101,7 +101,7 @@ abstract class ExtractDeepLinksTask: AndroidVariantTask() {
         ) {
             super.configure(task)
             task.navFilesFolders =
-                component.variantSources
+                creationConfig.variantSources
                     .getResourceSets(false).stream()
                     .flatMap {
                         it.sourceFiles.stream().map { File(it, FD_RES_NAVIGATION) }

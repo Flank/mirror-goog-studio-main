@@ -216,6 +216,8 @@ com.android.build.gradle.LibraryExtension.getProductFlavors: java.util.Collectio
 com.android.build.gradle.LibraryExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
 com.android.build.gradle.LibraryExtension.getSigningConfigs: java.util.Collection ()
 com.android.build.gradle.LibraryExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig> ()
+com.android.build.gradle.LibraryExtension.getSplits: com.android.build.api.dsl.Splits ()
+com.android.build.gradle.LibraryExtension.getSplits: com.android.build.gradle.internal.dsl.Splits ()
 com.android.build.gradle.LibraryExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
 com.android.build.gradle.LibraryExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
 com.android.build.gradle.LibraryExtension.getViewBinding: com.android.build.gradle.api.ViewBindingOptions ()
@@ -228,6 +230,7 @@ com.android.build.gradle.LibraryExtension.productFlavors: void (org.gradle.api.A
 com.android.build.gradle.LibraryExtension.setAidlPackageWhiteList: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.LibraryExtension.setCompileSdkVersion: void (java.lang.String)
 com.android.build.gradle.LibraryExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>>)
+com.android.build.gradle.LibraryExtension.splits: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.Splits, kotlin.Unit>)
 com.android.build.gradle.LibraryExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.LibraryPlugin extends com.android.build.gradle.BasePlugin
 com.android.build.gradle.LibraryPlugin.<init>: com.android.build.gradle.LibraryPlugin ()
@@ -310,6 +313,8 @@ com.android.build.gradle.TestExtension.getProductFlavors: java.util.Collection (
 com.android.build.gradle.TestExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
 com.android.build.gradle.TestExtension.getSigningConfigs: java.util.Collection ()
 com.android.build.gradle.TestExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig> ()
+com.android.build.gradle.TestExtension.getSplits: com.android.build.api.dsl.Splits ()
+com.android.build.gradle.TestExtension.getSplits: com.android.build.gradle.internal.dsl.Splits ()
 com.android.build.gradle.TestExtension.getTargetProjectPath: java.lang.String ()
 com.android.build.gradle.TestExtension.getTargetVariant: java.lang.String ()
 com.android.build.gradle.TestExtension.getTestBuildType: java.lang.String ()
@@ -326,6 +331,7 @@ com.android.build.gradle.TestExtension.setCompileSdkVersion: void (java.lang.Str
 com.android.build.gradle.TestExtension.setTargetProjectPath: void (java.lang.String)
 com.android.build.gradle.TestExtension.setTargetVariant: void (java.lang.String)
 com.android.build.gradle.TestExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>>)
+com.android.build.gradle.TestExtension.splits: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.Splits, kotlin.Unit>)
 com.android.build.gradle.TestExtension.targetProjectPath: void (java.lang.String)
 com.android.build.gradle.TestExtension.targetVariant: void (java.lang.String)
 com.android.build.gradle.TestExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions, kotlin.Unit>)
@@ -573,7 +579,7 @@ com.android.build.gradle.internal.dsl.AaptOptions.setNoCompress: void (java.lang
 com.android.build.gradle.internal.dsl.AaptOptions.setNoCompress: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.internal.dsl.AaptOptions.setUseNewCruncher: void (boolean)
 com.android.build.gradle.internal.dsl.AaptOptions.useNewCruncher: void (boolean)
-com.android.build.gradle.internal.dsl.AbiSplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions
+com.android.build.gradle.internal.dsl.AbiSplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions implements com.android.build.api.dsl.AbiSplit
 com.android.build.gradle.internal.dsl.AbiSplitOptions.<init>: com.android.build.gradle.internal.dsl.AbiSplitOptions ()
 com.android.build.gradle.internal.dsl.AbiSplitOptions.getAbiFilters: com.google.common.collect.ImmutableSet<java.lang.String> (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.AbiSplitOptions.isUniversalApk: boolean ()
@@ -656,6 +662,8 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getProductFlavors: 
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getSigningConfigs: java.util.Collection ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig> ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getSplits: com.android.build.api.dsl.Splits ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getSplits: com.android.build.gradle.internal.dsl.Splits ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getViewBinding: com.android.build.gradle.api.ViewBindingOptions ()
@@ -669,6 +677,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.setAssetPacks: void
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.setCompileSdkVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.setDynamicFeatures: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>>)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.splits: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.Splits, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseFlavor extends com.android.builder.core.AbstractProductFlavor implements com.android.build.gradle.internal.dsl.CoreProductFlavor
 com.android.build.gradle.internal.dsl.BaseFlavor.<init>: com.android.build.gradle.internal.dsl.BaseFlavor (java.lang.String, com.android.build.gradle.internal.api.dsl.DslScope)
@@ -870,12 +879,14 @@ com.android.build.gradle.internal.dsl.DataBindingOptions.setEnabledForTests: voi
 com.android.build.gradle.internal.dsl.DataBindingOptions.setVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.DefaultConfig extends com.android.build.gradle.internal.dsl.BaseFlavor implements com.android.build.api.dsl.DefaultConfig
 com.android.build.gradle.internal.dsl.DefaultConfig.<init>: com.android.build.gradle.internal.dsl.DefaultConfig (java.lang.String, com.android.build.gradle.internal.api.dsl.DslScope)
-com.android.build.gradle.internal.dsl.DensitySplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions
+com.android.build.gradle.internal.dsl.DensitySplitOptions extends com.android.build.gradle.internal.dsl.SplitOptions implements com.android.build.api.dsl.DensitySplit
 com.android.build.gradle.internal.dsl.DensitySplitOptions.<init>: com.android.build.gradle.internal.dsl.DensitySplitOptions ()
 com.android.build.gradle.internal.dsl.DensitySplitOptions.compatibleScreens: void (java.lang.String[])
+com.android.build.gradle.internal.dsl.DensitySplitOptions.getCompatibleScreens: java.util.Collection ()
 com.android.build.gradle.internal.dsl.DensitySplitOptions.getCompatibleScreens: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.DensitySplitOptions.isStrict: boolean ()
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setAuto: void (boolean)
+com.android.build.gradle.internal.dsl.DensitySplitOptions.setCompatibleScreens: void (java.util.Collection<java.lang.String>)
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setCompatibleScreens: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.DensitySplitOptions.setStrict: void (boolean)
 com.android.build.gradle.internal.dsl.DexOptions extends com.android.builder.core.DefaultDexOptions
@@ -929,6 +940,8 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getProductFlavors:
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor> ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getSigningConfigs: java.util.Collection ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig> ()
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getSplits: com.android.build.api.dsl.Splits ()
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getSplits: com.android.build.gradle.internal.dsl.Splits ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getTestOptions: com.android.build.api.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getTestOptions: com.android.build.gradle.internal.dsl.TestOptions ()
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.getViewBinding: com.android.build.gradle.api.ViewBindingOptions ()
@@ -940,6 +953,7 @@ com.android.build.gradle.internal.dsl.DynamicFeatureExtension.onVariants: void (
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.ProductFlavor>>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.setCompileSdkVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>>)
+com.android.build.gradle.internal.dsl.DynamicFeatureExtension.splits: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.Splits, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.DynamicFeatureExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.ExternalNativeBuild implements com.android.build.gradle.internal.model.CoreExternalNativeBuild, com.android.build.api.dsl.ExternalNativeBuild
 com.android.build.gradle.internal.dsl.ExternalNativeBuild.<init>: com.android.build.gradle.internal.dsl.ExternalNativeBuild (com.android.build.gradle.internal.api.dsl.DslScope)
@@ -1190,20 +1204,26 @@ com.android.build.gradle.internal.dsl.SigningConfigFactory implements org.gradle
 com.android.build.gradle.internal.dsl.SigningConfigFactory.<init>: com.android.build.gradle.internal.dsl.SigningConfigFactory (org.gradle.api.model.ObjectFactory, java.io.File)
 com.android.build.gradle.internal.dsl.SigningConfigFactory.create: com.android.build.gradle.internal.dsl.SigningConfig (java.lang.String)
 com.android.build.gradle.internal.dsl.SigningConfigFactory.create: java.lang.Object (java.lang.String)
-com.android.build.gradle.internal.dsl.SplitOptions
+com.android.build.gradle.internal.dsl.SplitOptions implements com.android.build.api.dsl.SplitOptions
 com.android.build.gradle.internal.dsl.SplitOptions.exclude: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.SplitOptions.getApplicableFilters: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.SplitOptions.include: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.SplitOptions.isEnable: boolean ()
 com.android.build.gradle.internal.dsl.SplitOptions.reset: void ()
 com.android.build.gradle.internal.dsl.SplitOptions.setEnable: void (boolean)
-com.android.build.gradle.internal.dsl.Splits
+com.android.build.gradle.internal.dsl.Splits implements com.android.build.api.dsl.Splits
 com.android.build.gradle.internal.dsl.Splits.<init>: com.android.build.gradle.internal.dsl.Splits (org.gradle.api.model.ObjectFactory)
+com.android.build.gradle.internal.dsl.Splits.abi: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.AbiSplitOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.Splits.abi: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.AbiSplitOptions>)
+com.android.build.gradle.internal.dsl.Splits.density: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.DensitySplitOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.Splits.density: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.DensitySplitOptions>)
+com.android.build.gradle.internal.dsl.Splits.getAbi: com.android.build.api.dsl.AbiSplit ()
 com.android.build.gradle.internal.dsl.Splits.getAbi: com.android.build.gradle.internal.dsl.AbiSplitOptions ()
+com.android.build.gradle.internal.dsl.Splits.getAbiFilters: java.util.Collection ()
 com.android.build.gradle.internal.dsl.Splits.getAbiFilters: java.util.Set<java.lang.String> ()
+com.android.build.gradle.internal.dsl.Splits.getDensity: com.android.build.api.dsl.DensitySplit ()
 com.android.build.gradle.internal.dsl.Splits.getDensity: com.android.build.gradle.internal.dsl.DensitySplitOptions ()
+com.android.build.gradle.internal.dsl.Splits.getDensityFilters: java.util.Collection ()
 com.android.build.gradle.internal.dsl.Splits.getDensityFilters: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.Splits.getLanguage: com.android.build.gradle.internal.dsl.LanguageSplitOptions ()
 com.android.build.gradle.internal.dsl.Splits.getLanguageFilters: java.util.Set<java.lang.String> ()

@@ -645,7 +645,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         return new VariantImpl(
                 variantName,
-                variantDslInfo.getBaseName(),
+                componentProperties.getBaseName(),
                 componentProperties.getBuildType(),
                 getProductFlavorNames(componentProperties),
                 new ProductFlavorImpl(variantDslInfo.getMergedFlavor()),
@@ -886,7 +886,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         return new AndroidArtifactImpl(
                 name,
-                globalScope.getProjectBaseName() + "-" + variantDslInfo.getBaseName(),
+                globalScope.getProjectBaseName() + "-" + componentProperties.getBaseName(),
                 taskContainer.getAssembleTask().getName(),
                 artifacts
                         .getOperations()

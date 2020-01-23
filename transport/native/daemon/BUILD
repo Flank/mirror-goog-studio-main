@@ -59,9 +59,9 @@ cc_test(
     tags = ["no_windows"],
     deps = [
         ":daemon",
-        "//external:gmock_main",
         "//tools/base/profiler/native/perfd",
         "//tools/base/transport/proto:cc_proto",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -85,8 +85,8 @@ cc_test(
     ],
     deps = [
         ":daemon",
-        "//external:gmock_main",
         "//tools/base/profiler/native/perfd",
         "//tools/base/transport/proto:cc_proto",
+        "@googletest//:gtest_main",
     ],
 )

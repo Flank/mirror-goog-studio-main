@@ -55,7 +55,7 @@ abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
             taskProvider: TaskProvider<out PackageRenderscriptTask>
         ) {
             super.handleProvider(taskProvider)
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.RENDERSCRIPT_HEADERS,
                 taskProvider,
                 PackageRenderscriptTask::headersDir,
@@ -70,7 +70,7 @@ abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
 
             // package from 3 sources. the order is important to make sure the override works well.
             task
-                .from(component.variantSources.renderscriptSourceList)
+                .from(creationConfig.variantSources.renderscriptSourceList)
                 .include("**/*.rsh")
             task.into(task.headersDir)
         }

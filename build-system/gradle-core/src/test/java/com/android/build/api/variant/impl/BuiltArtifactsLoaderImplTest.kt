@@ -49,8 +49,8 @@ class BuiltArtifactsLoaderImplTest {
         assertThat(builtArtifacts).isNotNull()
 
         val newBuiltArtifacts = builtArtifacts!!.transform(PublicArtifactType.APK) {
-            assertThat(it.readText(Charsets.UTF_8)).isEqualTo("some manifest")
-            outFolder.newFile("${it.name}.new").also { file ->
+            assertThat(it.outputFile.toFile().readText(Charsets.UTF_8)).isEqualTo("some manifest")
+            outFolder.newFile("${it.outputFile.fileName}.new").also { file ->
                 file.writeText("updated APK")
             }
         }
@@ -123,8 +123,8 @@ class BuiltArtifactsLoaderImplTest {
 
         assertThat(builtArtifacts).isNotNull()
         val newBuiltArtifacts = builtArtifacts!!.transform(PublicArtifactType.APK) {
-            val manifestContent = it.readText(Charsets.UTF_8)
-            outFolder.newFile("${it.name}.new").also { file ->
+            val manifestContent = it.outputFile.toFile().readText(Charsets.UTF_8)
+            outFolder.newFile("${it.outputFile.fileName}.new").also { file ->
                 file.writeText("updated APK : $manifestContent")
             }
         }

@@ -71,9 +71,9 @@ abstract class CheckManifest : NonIncrementalTask() {
             taskProvider: TaskProvider<out CheckManifest>
         ) {
             super.handleProvider(taskProvider)
-            component.taskContainer.checkManifestTask = taskProvider
+            creationConfig.taskContainer.checkManifestTask = taskProvider
 
-            component.artifacts.producesDir(
+            creationConfig.artifacts.producesDir(
                 InternalArtifactType.CHECK_MANIFEST_RESULT,
                 taskProvider,
                 CheckManifest::fakeOutputDir,
@@ -86,9 +86,9 @@ abstract class CheckManifest : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.manifestRequired = component.variantType.requiresManifest
+            task.manifestRequired = creationConfig.variantType.requiresManifest
             task.manifestFile = task.project.provider {
-                component.variantSources.mainManifestFilePath
+                creationConfig.variantSources.mainManifestFilePath
             }
         }
     }

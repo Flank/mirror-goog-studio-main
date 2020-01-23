@@ -87,8 +87,8 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             taskProvider: TaskProvider<out BundleAar>
         ) {
             super.handleProvider(taskProvider)
-            component.taskContainer.bundleLibraryTask = taskProvider
-            component.artifacts.producesFile(
+            creationConfig.taskContainer.bundleLibraryTask = taskProvider
+            creationConfig.artifacts.producesFile(
                 InternalArtifactType.AAR,
                 taskProvider,
                 BundleAar::getArchiveFile
@@ -100,8 +100,8 @@ abstract class BundleAar : Zip(), VariantAwareTask {
         ) {
             super.configure(task)
 
-            val artifacts = component.artifacts
-            val buildFeatures = component.globalScope.buildFeatures
+            val artifacts = creationConfig.artifacts
+            val buildFeatures = creationConfig.globalScope.buildFeatures
 
             // Sanity check, there should never be duplicates.
             task.duplicatesStrategy = DuplicatesStrategy.FAIL
@@ -112,16 +112,16 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.isPreserveFileTimestamps = false
 
             task.description = ("Assembles a bundle containing the library in "
-                    + component.variantDslInfo.componentIdentity.name
+                    + creationConfig.variantDslInfo.componentIdentity.name
                     + ".")
 
-            task.archiveFileName.set(component.outputs.getMainSplit().apkData.outputFileName)
-            task.destinationDirectory.set(File(component.paths.aarLocation.absolutePath))
+            task.archiveFileName.set(creationConfig.outputs.getMainSplit().apkData.outputFileName)
+            task.destinationDirectory.set(File(creationConfig.paths.aarLocation.absolutePath))
             task.archiveExtension.set(BuilderConstants.EXT_LIB_ARCHIVE)
 
             if (buildFeatures.aidl) {
                 task.from(
-                    component.artifacts.getFinalProduct(
+                    creationConfig.artifacts.getFinalProduct(
                         InternalArtifactType.AIDL_PARCELABLE
                     ),
                     prependToCopyPath(SdkConstants.FD_AIDL)
@@ -133,13 +133,13 @@ abstract class BundleAar : Zip(), VariantAwareTask {
 
             if (buildFeatures.dataBinding && buildFeatures.androidResources) {
                 task.from(
-                    component.globalScope.project.provider {
-                        component.artifacts.getFinalProduct(
+                    creationConfig.globalScope.project.provider {
+                        creationConfig.artifacts.getFinalProduct(
                             InternalArtifactType.DATA_BINDING_ARTIFACT) },
                     prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR)
                 )
                 task.from(
-                    component.artifacts.getFinalProduct(
+                    creationConfig.artifacts.getFinalProduct(
                         InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
                     prependToCopyPath(
                         DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR
@@ -147,7 +147,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 )
             }
 
-            if (!component.globalScope.extension.aaptOptions.namespaced) {
+            if (!creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 // TODO: this should be unconditional b/69358522
                 task.from(
                     artifacts.getFinalProduct(
@@ -184,7 +184,8 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 artifacts.getFinalProduct(LIBRARY_AND_LOCAL_JARS_JNI),
                 prependToCopyPath(SdkConstants.FD_JNI)
             )
-            task.from(component.globalScope.artifacts
+            task.from(
+                creationConfig.globalScope.artifacts
                 .getFinalProduct(InternalArtifactType.LINT_PUBLISH_JAR))
             task.from(artifacts.getFinalProduct(InternalArtifactType.ANNOTATIONS_ZIP))
             task.from(artifacts.getFinalProduct(InternalArtifactType.AAR_MAIN_JAR))
@@ -193,15 +194,15 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 prependToCopyPath(SdkConstants.LIBS_FOLDER)
             )
             task.from(
-                component.artifacts
+                creationConfig.artifacts
                     .getFinalProduct(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
             task.localAarDeps.from(
-                component.variantScope.getLocalFileDependencies {
+                creationConfig.variantScope.getLocalFileDependencies {
                     it.name.toLowerCase(Locale.US).endsWith(SdkConstants.DOT_AAR)
                 }
             )
-            task.projectPath = component.globalScope.project.path
+            task.projectPath = creationConfig.globalScope.project.path
         }
 
         private fun prependToCopyPath(pathSegment: String) = Action { copySpec: CopySpec ->

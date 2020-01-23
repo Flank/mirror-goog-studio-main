@@ -181,8 +181,8 @@ abstract class AidlCompile : NonIncrementalTask() {
             taskProvider: TaskProvider<out AidlCompile>
         ) {
             super.handleProvider(taskProvider)
-            component.taskContainer.aidlCompileTask = taskProvider
-            component
+            creationConfig.taskContainer.aidlCompileTask = taskProvider
+            creationConfig
                 .artifacts
                 .producesDir(
                     InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR,
@@ -191,8 +191,8 @@ abstract class AidlCompile : NonIncrementalTask() {
                     "out"
                 )
 
-            if (component.variantDslInfo.variantType.isAar) {
-                component
+            if (creationConfig.variantType.isAar) {
+                creationConfig
                     .artifacts
                     .producesDir(
                         InternalArtifactType.AIDL_PARCELABLE,
@@ -207,11 +207,10 @@ abstract class AidlCompile : NonIncrementalTask() {
             task: AidlCompile
         ) {
             super.configure(task)
-            val globalScope = component.globalScope
+            val globalScope = creationConfig.globalScope
             val project = globalScope.project
 
-            val variantDslInfo = component.variantDslInfo
-            val variantSources = component.variantSources
+            val variantSources = creationConfig.variantSources
 
             val sdkComponents = globalScope.sdkComponents
             task.aidlExecutableProvider.set(sdkComponents.aidlExecutableProvider)
@@ -235,9 +234,9 @@ abstract class AidlCompile : NonIncrementalTask() {
                     })
             task.sourceFiles.disallowChanges()
 
-            task.importDirs = component.variantDependencies.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL)
+            task.importDirs = creationConfig.variantDependencies.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, AIDL)
 
-            if (variantDslInfo.variantType.isAar) {
+            if (creationConfig.variantType.isAar) {
                 task.packageWhitelist = globalScope.extension.aidlPackageWhiteList
             }
         }

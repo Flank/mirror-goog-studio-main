@@ -23,7 +23,6 @@ import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
-import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -60,7 +59,7 @@ public class ApplicationVariantImpl extends ApkVariantImpl implements Applicatio
 
     @Override
     @NonNull
-    public ApkVariantData getVariantData() {
+    public ApplicationVariantData getVariantData() {
         return variantData;
     }
 

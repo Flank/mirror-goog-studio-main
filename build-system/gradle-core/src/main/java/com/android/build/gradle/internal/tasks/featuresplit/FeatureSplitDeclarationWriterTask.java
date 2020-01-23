@@ -80,7 +80,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
                 @NonNull TaskProvider<? extends FeatureSplitDeclarationWriterTask> taskProvider) {
             super.handleProvider(taskProvider);
 
-            component
+            creationConfig
                     .getArtifacts()
                     .producesDir(
                             InternalArtifactType.METADATA_FEATURE_DECLARATION.INSTANCE,
@@ -94,10 +94,12 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
                 @NonNull FeatureSplitDeclarationWriterTask task) {
             super.configure(task);
 
-            final Project project = component.getGlobalScope().getProject();
+            final Project project = creationConfig.getGlobalScope().getProject();
             task.uniqueIdentifier = project.getPath();
             task.getApplicationId()
-                    .set(project.provider(component.getVariantDslInfo()::getOriginalApplicationId));
+                    .set(
+                            project.provider(
+                                    creationConfig.getVariantDslInfo()::getOriginalApplicationId));
             task.getApplicationId().disallowChanges();
         }
     }

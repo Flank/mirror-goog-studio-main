@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-63f41f26bb6b1fedd4c71ab984f0ae670b270a29fadba1ce0fdf7e2792e98a41
+52a51c4789c0fab3322533014df7d3f88aef78176b95423ab75eb3dc7e70f9f0
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -106,6 +106,9 @@ com.android.build.api.dsl.AaptOptions.setFailOnMissingConfigEntry: void (boolean
 com.android.build.api.dsl.AaptOptions.setIgnoreAssetsPattern: void (java.lang.String)
 com.android.build.api.dsl.AaptOptions.setNamespaced: void (boolean)
 com.android.build.api.dsl.AaptOptions.setNoCompress: void (java.util.Collection<java.lang.String>)
+com.android.build.api.dsl.AbiSplit implements com.android.build.api.dsl.SplitOptions
+com.android.build.api.dsl.AbiSplit.isUniversalApk: boolean ()
+com.android.build.api.dsl.AbiSplit.setUniversalApk: void (boolean)
 com.android.build.api.dsl.AdbOptions
 com.android.build.api.dsl.AdbOptions.getInstallOptions: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.AdbOptions.getTimeOutInMs: int ()
@@ -174,6 +177,7 @@ com.android.build.api.dsl.CommonExtension.getOnVariantProperties: com.android.bu
 com.android.build.api.dsl.CommonExtension.getOnVariants: com.android.build.api.component.GenericFilteredComponentActionRegistrar<VariantT> ()
 com.android.build.api.dsl.CommonExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<ProductFlavorT> ()
 com.android.build.api.dsl.CommonExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<SigningConfigT> ()
+com.android.build.api.dsl.CommonExtension.getSplits: SplitsT ()
 com.android.build.api.dsl.CommonExtension.getTestOptions: TestOptionsT ()
 com.android.build.api.dsl.CommonExtension.jacoco: void (kotlin.jvm.functions.Function1<? super JacocoOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.onVariantProperties: void (kotlin.jvm.functions.Function1<? super VariantPropertiesT, kotlin.Unit>)
@@ -183,6 +187,7 @@ com.android.build.api.dsl.CommonExtension.onVariants: void (org.gradle.api.Actio
 com.android.build.api.dsl.CommonExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<ProductFlavorT>>)
 com.android.build.api.dsl.CommonExtension.setCompileSdkVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<SigningConfigT>>)
+com.android.build.api.dsl.CommonExtension.splits: void (kotlin.jvm.functions.Function1<? super SplitsT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.testOptions: void (kotlin.jvm.functions.Function1<? super TestOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.CompileOptions.getEncoding: java.lang.String ()
@@ -205,6 +210,12 @@ com.android.build.api.dsl.DataBinding.setEnabled: void (boolean)
 com.android.build.api.dsl.DataBinding.setEnabledForTests: void (boolean)
 com.android.build.api.dsl.DataBinding.setVersion: void (java.lang.String)
 com.android.build.api.dsl.DefaultConfig
+com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.SplitOptions
+com.android.build.api.dsl.DensitySplit.compatibleScreens: void (java.lang.String[])
+com.android.build.api.dsl.DensitySplit.getCompatibleScreens: java.util.Collection<java.lang.String> ()
+com.android.build.api.dsl.DensitySplit.isStrict: boolean ()
+com.android.build.api.dsl.DensitySplit.setCompatibleScreens: void (java.util.Collection<java.lang.String>)
+com.android.build.api.dsl.DensitySplit.setStrict: void (boolean)
 com.android.build.api.dsl.DynamicDelivery
 com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
@@ -247,6 +258,19 @@ com.android.build.api.dsl.SigningConfig.setStorePassword: void (java.lang.String
 com.android.build.api.dsl.SigningConfig.setStoreType: void (java.lang.String)
 com.android.build.api.dsl.SigningConfig.setV1SigningEnabled: void (boolean)
 com.android.build.api.dsl.SigningConfig.setV2SigningEnabled: void (boolean)
+com.android.build.api.dsl.SplitOptions
+com.android.build.api.dsl.SplitOptions.exclude: void (java.lang.String[])
+com.android.build.api.dsl.SplitOptions.include: void (java.lang.String[])
+com.android.build.api.dsl.SplitOptions.isEnable: boolean ()
+com.android.build.api.dsl.SplitOptions.reset: void ()
+com.android.build.api.dsl.SplitOptions.setEnable: void (boolean)
+com.android.build.api.dsl.Splits
+com.android.build.api.dsl.Splits.abi: void (kotlin.jvm.functions.Function1<? super AbiSplitT, kotlin.Unit>)
+com.android.build.api.dsl.Splits.density: void (kotlin.jvm.functions.Function1<? super DensitySplitT, kotlin.Unit>)
+com.android.build.api.dsl.Splits.getAbi: AbiSplitT ()
+com.android.build.api.dsl.Splits.getAbiFilters: java.util.Collection<java.lang.String> ()
+com.android.build.api.dsl.Splits.getDensity: DensitySplitT ()
+com.android.build.api.dsl.Splits.getDensityFilters: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.TestBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.TestOptions
@@ -281,13 +305,16 @@ com.android.build.api.variant.BuiltArtifact.isEnabled: boolean ()
 com.android.build.api.variant.BuiltArtifacts
 com.android.build.api.variant.BuiltArtifacts$Companion
 com.android.build.api.variant.BuiltArtifacts$Companion.getLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
+com.android.build.api.variant.BuiltArtifacts$TransformParams implements org.gradle.workers.WorkParameters, java.io.Serializable
+com.android.build.api.variant.BuiltArtifacts$TransformParams.getOutput: java.io.File ()
 com.android.build.api.variant.BuiltArtifacts.getApplicationId: java.lang.String ()
 com.android.build.api.variant.BuiltArtifacts.getArtifactType: com.android.build.api.artifact.ArtifactType<?> ()
 com.android.build.api.variant.BuiltArtifacts.getElements: java.util.Collection<com.android.build.api.variant.BuiltArtifact> ()
 com.android.build.api.variant.BuiltArtifacts.getLoader: com.android.build.api.variant.BuiltArtifactsLoader ()
 com.android.build.api.variant.BuiltArtifacts.getVariantName: java.lang.String ()
 com.android.build.api.variant.BuiltArtifacts.save: void (org.gradle.api.file.Directory)
-com.android.build.api.variant.BuiltArtifacts.transform: com.android.build.api.variant.BuiltArtifacts (com.android.build.api.artifact.ArtifactType<?>, kotlin.jvm.functions.Function1<? super java.io.File, ? extends java.io.File>)
+com.android.build.api.variant.BuiltArtifacts.transform: com.android.build.api.variant.BuiltArtifacts (com.android.build.api.artifact.ArtifactType<org.gradle.api.file.Directory>, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.BuiltArtifact, ? extends java.io.File>)
+com.android.build.api.variant.BuiltArtifacts.transform: java.util.function.Supplier<com.android.build.api.variant.BuiltArtifacts> (com.android.build.api.artifact.ArtifactType<org.gradle.api.file.Directory>, org.gradle.workers.WorkQueue, java.lang.Class<? extends org.gradle.workers.WorkAction<ParamT>>, kotlin.jvm.functions.Function2<? super com.android.build.api.variant.BuiltArtifact, ? super ParamT, kotlin.Unit>)
 com.android.build.api.variant.BuiltArtifactsLoader
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.Directory)
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.FileCollection)
