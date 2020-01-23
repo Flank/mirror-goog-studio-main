@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-ad22ffbd49906c24a2d8d674fcb25496fc7ebf55e7e0065ccaca97aeb30b215e
+cc2db22c4b128a8edab0b06e75631b81e7b63bbc17cfedf410c00a5c54db12ec
 -------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
@@ -247,6 +247,9 @@ com.android.build.api.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functio
 com.android.build.api.dsl.JacocoOptions
 com.android.build.api.dsl.JacocoOptions.getVersion: java.lang.String ()
 com.android.build.api.dsl.JacocoOptions.setVersion: void (java.lang.String)
+com.android.build.api.dsl.JavaCompileOptions
+com.android.build.api.dsl.JavaCompileOptions.annotationProcessorOptions: void (kotlin.jvm.functions.Function1<? super AnnotationProcessorOptionsT, kotlin.Unit>)
+com.android.build.api.dsl.JavaCompileOptions.getAnnotationProcessorOptions: AnnotationProcessorOptionsT ()
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryBuildFeatures.getAndroidResources: java.lang.Boolean ()
 com.android.build.api.dsl.LibraryBuildFeatures.setAndroidResources: void (java.lang.Boolean)

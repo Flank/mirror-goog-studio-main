@@ -26,7 +26,8 @@ import javax.inject.Inject
 open class JavaCompileOptions @Inject constructor(
     objectFactory: ObjectFactory,
     deprecationReporter: DeprecationReporter
-) : com.android.build.gradle.api.JavaCompileOptions {
+) : com.android.build.gradle.api.JavaCompileOptions,
+    com.android.build.api.dsl.JavaCompileOptions<AnnotationProcessorOptions> {
     /** Options for configuration the annotation processor. */
     final override val annotationProcessorOptions: AnnotationProcessorOptions =
         objectFactory.newInstance(AnnotationProcessorOptions::class.java, deprecationReporter)
@@ -34,6 +35,10 @@ open class JavaCompileOptions @Inject constructor(
     /** Configures annotation processor options. */
     fun annotationProcessorOptions(configAction: Action<AnnotationProcessorOptions>) {
         configAction.execute(annotationProcessorOptions)
+    }
+
+    override fun annotationProcessorOptions(action: AnnotationProcessorOptions.() -> Unit) {
+        action.invoke(annotationProcessorOptions)
     }
 
     override fun toString(): String {
