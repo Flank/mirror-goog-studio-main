@@ -59,6 +59,11 @@ public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask 
         return useAndroidX;
     }
 
+    @Input
+    public String getGeneratedClassFileName() {
+        return xmlProcessor.get().getInfoClassFullName();
+    }
+
     @OutputDirectory
     public File getEmptyClassOutDir() {
         return emptyClassOutDir;

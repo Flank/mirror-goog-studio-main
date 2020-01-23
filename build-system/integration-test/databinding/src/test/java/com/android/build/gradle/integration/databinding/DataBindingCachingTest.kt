@@ -135,6 +135,26 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
     }
 
     @Test
+    fun `test different package names generate different DataBindingInfo classes`() {
+        projectCopy.file("src/main/AndroidManifest.xml").let {
+            val manifest = it.readText()
+            it.writeText(
+                manifest.replace(
+                    "package=\"android.databinding.testapp\"",
+                    "package=\"android.databinding.testapp2\""
+                )
+            )
+        }
+
+        CacheabilityTestHelper
+            .forProjects(project, projectCopy)
+            .withBuildCacheDir(buildCacheDirRoot.newFolder("gradle-build-cache"))
+            .withTasks("clean", ":dataBindingExportBuildInfoDebug")
+            .hasTaskStates(mapOf(":dataBindingExportBuildInfoDebug" to DID_WORK))
+    }
+
+
+    @Test
     fun `test main resources located outside root project directory, expect non-cacheable tasks`() {
         // Add some resources outside of the root project directory
         for (project in listOf(project, projectCopy)) {
