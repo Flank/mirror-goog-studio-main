@@ -21,23 +21,16 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.builder.symbols.exportToCompiledJava
-import com.android.ide.common.symbols.SymbolTable
 import com.android.utils.FileUtils
-import com.google.common.base.Strings
-import com.google.common.collect.ImmutableList
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 
 /**
- *  Task to create an empty R.txt, an empty res/ directory and an empty R class.
+ *  Task to create an empty R.txt and an empty res/ directory.
  *
  *  This task is used when resource processing in an Android Library module is disabled. Instead of
  *  multiple tasks merging, parsing and processing resources, the user can fully disable the
@@ -51,14 +44,8 @@ import org.gradle.api.tasks.TaskProvider
 @CacheableTask
 abstract class GenerateEmptyResourceFilesTask : NonIncrementalTask() {
 
-    @get:Input
-    abstract val packageForR: Property<String>
-
     @get:OutputFile
     abstract val emptyRDotTxt: RegularFileProperty
-
-    @get:OutputFile
-    abstract val emptyRJar: RegularFileProperty
 
     @get:OutputDirectory
     abstract val emptyMergedResources: DirectoryProperty
@@ -70,13 +57,6 @@ abstract class GenerateEmptyResourceFilesTask : NonIncrementalTask() {
 
         // Create empty res/ directory to bundle in the AAR.
         FileUtils.mkdirs(emptyMergedResources.asFile.get())
-
-        // And finally create an empty R.jar.
-        val emptySymbolTable = SymbolTable.FastBuilder()
-        emptySymbolTable.tablePackage(packageForR.get())
-        exportToCompiledJava(
-            ImmutableList.of(emptySymbolTable.build()),
-            emptyRJar.asFile.get().toPath())
     }
 
     class CreateAction(componentProperties: ComponentPropertiesImpl) :
@@ -104,20 +84,6 @@ abstract class GenerateEmptyResourceFilesTask : NonIncrementalTask() {
                 GenerateEmptyResourceFilesTask::emptyMergedResources,
                 SdkConstants.FD_RES
             )
-
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
-                taskProvider,
-                GenerateEmptyResourceFilesTask::emptyRJar,
-                SdkConstants.FN_INTERMEDIATE_RES_JAR
-            )
-        }
-
-        override fun configure(task: GenerateEmptyResourceFilesTask) {
-            super.configure(task)
-            task.packageForR.setDisallowChanges(task.project.provider {
-                Strings.nullToEmpty(creationConfig.variantDslInfo.originalApplicationId)
-            })
         }
     }
 }

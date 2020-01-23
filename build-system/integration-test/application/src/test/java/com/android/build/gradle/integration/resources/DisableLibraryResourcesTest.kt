@@ -70,8 +70,6 @@ class DisableLibraryResourcesTest {
             """
                 package com.example.app;
 
-                import com.example.localLib.R;
-
                 public class MyClass {
                     void test() {
                         int r = com.example.app.R.string.leaf_lib_string;
@@ -118,8 +116,8 @@ class DisableLibraryResourcesTest {
             .appendText("android.buildFeatures.androidResources = false")
         val result = project.executor().expectFailure().run(":app:assembleDebug")
         result.stderr.use {
+            ScannerSubject.assertThat(it).contains("package com.example.localLib.R does not exist")
             ScannerSubject.assertThat(it).contains("error: cannot find symbol")
-            ScannerSubject.assertThat(it).contains("com.example.localLib.R.string.leaf_lib_string")
             ScannerSubject.assertThat(it).contains("com.example.app.R.string.local_lib_string")
         }
     }
@@ -133,8 +131,7 @@ class DisableLibraryResourcesTest {
             .appendText("android.buildFeatures.androidResources = false")
         val appClass =
             project.getSubproject("app").file("src/main/java/com/example/app/MyClass.java")
-        // Remove the reference in the app's class. We still keep the import of the local lib's R
-        // class, because it should exist (just should be empty).
+        // Remove the reference in the app's class.
         TestFileUtils.searchAndReplace(appClass, "int r2 ","//int r2 ")
         TestFileUtils.searchAndReplace(appClass, "int r5 ","//int r5 ")
 

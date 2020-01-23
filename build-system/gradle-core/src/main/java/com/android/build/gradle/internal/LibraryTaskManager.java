@@ -339,6 +339,9 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
             rClassJar = InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR.INSTANCE;
         } else {
+            if (!globalScope.getBuildFeatures().getAndroidResources()) {
+                return;
+            }
             rClassJar = InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE;
         }
         QualifiedContent.ScopeType scopeType;
