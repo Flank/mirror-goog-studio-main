@@ -120,10 +120,7 @@ TEST_F(InstallServerTest, TestServerStartNoOverlay) {
   auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  proto::InstallServerRequest request;
-  ASSERT_TRUE(client->Write(request));
   ASSERT_TRUE(client->KillServerAndWait());
-
   fake_exec.JoinServerThread();
 };
 
@@ -299,9 +296,6 @@ TEST_F(InstallServerTest, TestNeedCopy) {
 
   auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
-
-  proto::InstallServerRequest request;
-  ASSERT_TRUE(client->Write(request));
 
   ASSERT_TRUE(client->KillServerAndWait());
 
