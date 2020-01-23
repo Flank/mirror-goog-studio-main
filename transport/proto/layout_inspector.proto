@@ -29,10 +29,16 @@ message LayoutInspectorEvent {
 
 message ComponentTreeEvent {
   int32 payload_id = 1;
-  View root = 2;
-  repeated StringEntry string = 3;
-  ResourceConfiguration resources = 4;
-  repeated int64 all_window_ids = 5;
+  enum PayloadType {
+    UNKNOWN = 0;
+    SKP = 1;
+    PNG = 2;
+  }
+  PayloadType payload_type = 2;
+  View root = 3;
+  repeated StringEntry string = 4;
+  ResourceConfiguration resources = 5;
+  repeated int64 all_window_ids = 6;
 }
 
 message PropertyEvent {

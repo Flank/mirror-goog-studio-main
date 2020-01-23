@@ -119,6 +119,8 @@
   <migrate old-name="android.support.constraint.Group" new-name="androidx.constraintlayout.widget.Group" type="CLASS"/>
   <migrate old-name="android.support.constraint.Placeholder" new-name="androidx.constraintlayout.widget.Placeholder" type="CLASS"/>
   <migrate old-name="android.support.constraint.ConstraintHelper" new-name="androidx.constraintlayout.widget.ConstraintHelper" type="CLASS"/>
+  <migrate old-name="android.support.constraint.helper.Layer" new-name="androidx.constraintlayout.helper.widget.Layer" type="CLASS"/>
+  <migrate old-name="android.support.constraint.helper.Flow" new-name="androidx.constraintlayout.helper.widget.Flow" type="CLASS"/>
   <migrate old-name="android.support.constraint.motion.MotionLayout" new-name="androidx.constraintlayout.motion.widget.MotionLayout" type="CLASS"/>
   <migrate old-name="android.support.constraint.motion.MotionHelper" new-name="androidx.constraintlayout.motion.widget.MotionHelper" type="CLASS"/>
   <migrate old-name="android.support.constraint.utils.MockView" new-name="androidx.constraintlayout.utils.widget.MockView" type="CLASS"/>

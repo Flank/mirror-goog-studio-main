@@ -109,7 +109,7 @@ Java_com_android_tools_agent_layoutinspector_LayoutInspectorService_initComponen
 JNIEXPORT void JNICALL
 Java_com_android_tools_agent_layoutinspector_LayoutInspectorService_sendComponentTree(
     JNIEnv *env, jclass clazz, jlong jrequest, jbyteArray jmessage, jint jlen,
-    jint id) {
+    jint id, jboolean fallbackToPng) {
   SendEventRequest request;
   request = *((SendEventRequest *)jrequest);
   profiler::JByteArrayWrapper message(env, jmessage, jlen);
@@ -122,12 +122,14 @@ Java_com_android_tools_agent_layoutinspector_LayoutInspectorService_sendComponen
   Agent::Instance().SubmitAgentTasks(profiler::CreateTasksToSendPayload(
       payload_name, std::string(message.get().data(), message.length()), true));
   Agent::Instance().SubmitAgentTasks(
-      {[request, id](AgentService::Stub &stub,
-                     grpc::ClientContext &ctx) mutable {
+      {[request, id, fallbackToPng](AgentService::Stub &stub,
+                                    grpc::ClientContext &ctx) mutable {
         auto *event = request.mutable_event();
         auto *inspector_event = event->mutable_layout_inspector_event();
         auto *tree = inspector_event->mutable_tree();
         tree->set_payload_id(id);
+        tree->set_payload_type(fallbackToPng ? ComponentTreeEvent::PNG
+                                             : ComponentTreeEvent::SKP);
         event->set_is_ended(true);
         event->set_kind(Event::LAYOUT_INSPECTOR);
         event->set_group_id(Event::COMPONENT_TREE);
