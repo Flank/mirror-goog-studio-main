@@ -8,5 +8,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="transport-test-app" />
+    <orderEntry type="library" name="android" level="project" />
   </component>
 </module>
