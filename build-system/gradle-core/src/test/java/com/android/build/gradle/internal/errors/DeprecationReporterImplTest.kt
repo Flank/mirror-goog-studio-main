@@ -71,7 +71,7 @@ class DeprecationReporterImplTest {
         Truth.assertThat(issueReporter.warnings).containsExactly(
             "The option setting 'android.enableD8=false' is deprecated.\n" +
                     "The current default is 'true'.\n" +
-                    "It will be removed in version 5.0 of the Android Gradle plugin.\n" +
+                    "It will be removed in a future version of the Android Gradle plugin.\n" +
                     "For more details, see https://d.android.com/r/studio-ui/d8-overview.html"
         )
     }
@@ -130,7 +130,7 @@ class DeprecationReporterImplTest {
                     "The current default is 'true'.",
             "The option setting 'android.enableD8=false' is deprecated.\n" +
                     "The current default is 'true'.\n" +
-                    "It will be removed in version 5.0 of the Android Gradle plugin.\n" +
+                    "It will be removed in a future version of the Android Gradle plugin.\n" +
                     "For more details, see https://d.android.com/r/studio-ui/d8-overview.html",
             "The option 'android.enableAapt2jni' is deprecated.\n" +
                     "The current default is 'false'.\n" +

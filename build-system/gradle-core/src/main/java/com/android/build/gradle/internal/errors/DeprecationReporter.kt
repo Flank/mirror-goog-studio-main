@@ -61,27 +61,30 @@ interface DeprecationReporter {
             "For more information, see http://d.android.com/r/tools/update-dependency-configurations.html."
         ),
 
+        // deprecation due to the move to the new DSL.
+        OLD_DSL(Version.FUTURE_VERSION),
+
+        // Obsolete Dex Options
+        DEX_OPTIONS(Version.FUTURE_VERSION),
+
         // When legacy dexer will be removed and fully replaced by D8.
         LEGACY_DEXER(
-            Version.VERSION_5_0,
+            Version.FUTURE_VERSION,
             "For more details, see https://d.android.com/r/studio-ui/d8-overview.html"
         ),
 
-        // Obsolete Dex Options
-        DEX_OPTIONS(LEGACY_DEXER.removalTarget),
+        // Deprecation of disabling Desugar
+        DESUGAR_TOOL(Version.FUTURE_VERSION),
 
         // Deprecation of Task Access in the variant API
-        TASK_ACCESS_VIA_VARIANT(Version.VERSION_5_0),
+        TASK_ACCESS_VIA_VARIANT(Version.FUTURE_VERSION, "Estimated removal time: end of 2019."),
 
         DSL_USE_PROGUARD(
             Version.FUTURE_VERSION,
             "Use 'android.enableR8' in gradle.properties to switch between R8 and Proguard."
         ),
 
-        ENABLE_R8(Version.VERSION_5_0, "You will no longer be able to disable R8"),
-
-        // Deprecation of disabling Desugar
-        DESUGAR_TOOL(ENABLE_R8.removalTarget),
+        ENABLE_R8(Version.FUTURE_VERSION, "You will no longer be able to disable R8"),
 
         USE_PROPERTIES(
             Version.FUTURE_VERSION,
@@ -89,7 +92,7 @@ interface DeprecationReporter {
         ),
 
         INCLUDE_COMPILE_CLASSPATH(
-            Version.VERSION_5_0,
+            Version.FUTURE_VERSION,
             "It does not do anything and AGP no longer includes annotation processors added on your project's compile classpath"
         ),
 
