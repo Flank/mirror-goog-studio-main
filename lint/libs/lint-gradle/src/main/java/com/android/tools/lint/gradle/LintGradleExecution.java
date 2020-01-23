@@ -376,7 +376,10 @@ public class LintGradleExecution {
 
                 // Sync issues are not used in lint.
                 return IdeAndroidProjectImpl.create(
-                        project, new IdeDependenciesFactory(), project.getVariants(), null);
+                        project,
+                        new IdeDependenciesFactory(),
+                        project.getVariants(),
+                        Collections.emptyList());
             } finally {
                 ext.set(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, null);
             }
