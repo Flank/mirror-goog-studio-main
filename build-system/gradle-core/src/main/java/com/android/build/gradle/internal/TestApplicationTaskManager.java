@@ -73,9 +73,9 @@ public class TestApplicationTaskManager extends AbstractAppTaskManager<TestVaria
     @Override
     protected void doCreateTasksForVariant(
             @NonNull TestVariantPropertiesImpl testVariantProperties,
-            @NonNull List<TestVariantPropertiesImpl> allComponentsWithLint) {
+            @NonNull List<TestVariantPropertiesImpl> allVariants) {
 
-        createCommonTasks(testVariantProperties, allComponentsWithLint);
+        createCommonTasks(testVariantProperties, allVariants);
 
         Configuration testedApksConfig =
                 project.getConfigurations()

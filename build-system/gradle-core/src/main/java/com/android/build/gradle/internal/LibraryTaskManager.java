@@ -106,7 +106,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
     @Override
     protected void doCreateTasksForVariant(
             @NonNull LibraryVariantPropertiesImpl libVariantProperties,
-            @NonNull List<LibraryVariantPropertiesImpl> allComponentsWithLint) {
+            @NonNull List<LibraryVariantPropertiesImpl> allVariants) {
 
         createAnchorTasks(libVariantProperties);
 
@@ -328,7 +328,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
                         libVariantProperties,
                         InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI.INSTANCE));
 
-        createLintTasks(libVariantProperties, allComponentsWithLint);
+        createLintTasks(libVariantProperties, allVariants);
         createBundleTask(libVariantProperties);
     }
 

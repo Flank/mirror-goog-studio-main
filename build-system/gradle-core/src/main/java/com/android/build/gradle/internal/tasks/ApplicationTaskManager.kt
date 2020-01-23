@@ -57,9 +57,9 @@ class ApplicationTaskManager(
 
     override fun doCreateTasksForVariant(
         variantProperties: ApplicationVariantPropertiesImpl,
-        allComponentsWithLint: MutableList<ApplicationVariantPropertiesImpl>
+        allVariants: MutableList<ApplicationVariantPropertiesImpl>
     ) {
-        createCommonTasks(variantProperties, allComponentsWithLint)
+        createCommonTasks(variantProperties, allVariants)
 
         // Base feature specific tasks.
         taskFactory.register(FeatureSetMetadataWriterTask.CreationAction(variantProperties))

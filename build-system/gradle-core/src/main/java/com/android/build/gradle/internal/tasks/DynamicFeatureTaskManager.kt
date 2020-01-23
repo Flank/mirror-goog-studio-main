@@ -43,9 +43,9 @@ internal class DynamicFeatureTaskManager(
 
     override fun doCreateTasksForVariant(
         variantProperties: DynamicFeatureVariantPropertiesImpl,
-        allComponentsWithLint: MutableList<DynamicFeatureVariantPropertiesImpl>
+        allVariants: MutableList<DynamicFeatureVariantPropertiesImpl>
     ) {
-        createCommonTasks(variantProperties, allComponentsWithLint)
+        createCommonTasks(variantProperties, allVariants)
 
         createDynamicBundleTask(variantProperties)
 

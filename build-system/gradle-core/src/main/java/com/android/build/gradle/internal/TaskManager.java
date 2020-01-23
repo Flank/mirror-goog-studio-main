@@ -324,9 +324,17 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         taskFactory = new TaskFactoryImpl(project.getTasks());
     }
 
-    /** This is the main entry point into the task manager */
+    /**
+     * This is the main entry point into the task manager
+     *
+     * <p>This creates the tasks for all the variants and all the test components
+     *
+     * @param variants these are all the variants
+     * @param testComponents these are all the test components
+     * @param allComponents this list is the concatenation of variants and test components.
+     */
     public void createTasks(
-            @NonNull List<VariantPropertiesT> mainComponents,
+            @NonNull List<VariantPropertiesT> variants,
             @NonNull List<TestComponentPropertiesImpl> testComponents,
             @NonNull List<ComponentPropertiesImpl> allComponents,
             boolean hasFlavor) {
@@ -334,8 +342,8 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         createTopLevelTestTasks(hasFlavor);
 
         // Create tasks for all variants (main and tests)
-        for (VariantPropertiesT variant : mainComponents) {
-            createTasksForVariant(variant, mainComponents);
+        for (VariantPropertiesT variant : variants) {
+            createTasksForVariant(variant, variants);
         }
         for (TestComponentPropertiesImpl testComponent : testComponents) {
             createTasksForTest(testComponent);
@@ -344,7 +352,11 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         createReportTasks(allComponents);
     }
 
-    /** Create tasks for the specified variant. */
+    /**
+     * Create tasks for the specified variant.
+     *
+     * <p>This creates tasks common to all variant types.
+     */
     private void createTasksForVariant(
             @NonNull VariantPropertiesT variantProperties,
             @NonNull List<VariantPropertiesT> mainComponents) {
@@ -382,10 +394,16 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         doCreateTasksForVariant(variantProperties, mainComponents);
     }
 
-    /** Creates the tasks for a given VariantPropertiesImpl. */
+    /**
+     * Entry point for each specialized TaskManager to create the tasks for a given
+     * VariantPropertiesT
+     *
+     * @param variantProperties the variant for which to create the tasks
+     * @param allVariants all the other variants. This is needed for lint.
+     */
     protected abstract void doCreateTasksForVariant(
             @NonNull VariantPropertiesT variantProperties,
-            @NonNull List<VariantPropertiesT> mainComponents);
+            @NonNull List<VariantPropertiesT> allVariants);
 
     /** Create tasks for the specified variant. */
     private void createTasksForTest(@NonNull TestComponentPropertiesImpl testComponent) {
