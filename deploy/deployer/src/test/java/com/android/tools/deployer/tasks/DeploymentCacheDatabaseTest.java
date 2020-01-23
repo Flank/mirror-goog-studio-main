@@ -28,11 +28,7 @@ public class DeploymentCacheDatabaseTest {
     @Test
     public void testSimpleAddAndRetrieve() throws DeployerException {
         DeploymentCacheDatabase db = new DeploymentCacheDatabase(10);
-        db.store(
-                "serialXYZ",
-                "com.example.xyz",
-                Lists.newArrayList(makeApk("mychecksum")),
-                "prevOverlayID");
+        db.store("serialXYZ", "com.example.xyz", Lists.newArrayList(makeApk("mychecksum")));
         DeploymentCacheDatabase.Entry entry = db.get("serialXYZ", "com.example.xyz");
         Assert.assertEquals(1, entry.getApks().size());
         Assert.assertEquals("mychecksum", entry.getApks().get(0).checksum);
@@ -41,11 +37,7 @@ public class DeploymentCacheDatabaseTest {
     @Test
     public void testNotExists() throws DeployerException {
         DeploymentCacheDatabase db = new DeploymentCacheDatabase(10);
-        db.store(
-                "serialXYZ",
-                "com.example.xyz",
-                Lists.newArrayList(makeApk("mychecksum")),
-                "prevOverlayID");
+        db.store("serialXYZ", "com.example.xyz", Lists.newArrayList(makeApk("mychecksum")));
         DeploymentCacheDatabase.Entry entry = db.get("serialXYZ", "com.example.xyz.missing");
         Assert.assertNull(entry);
     }
@@ -53,26 +45,10 @@ public class DeploymentCacheDatabaseTest {
     @Test
     public void testReinstall() throws DeployerException {
         DeploymentCacheDatabase db = new DeploymentCacheDatabase(3);
-        db.store(
-                "serialXYZ",
-                "com.example.xyz0",
-                Lists.newArrayList(makeApk("mychecksum0")),
-                "prevOverlayID0");
-        db.store(
-                "serialXYZ",
-                "com.example.xyz1",
-                Lists.newArrayList(makeApk("mychecksum1")),
-                "prevOverlayID1");
-        db.store(
-                "serialXYZ",
-                "com.example.xyz2",
-                Lists.newArrayList(makeApk("mychecksum2")),
-                "prevOverlayID2");
-        db.store(
-                "serialXYZ",
-                "com.example.xyz3",
-                Lists.newArrayList(makeApk("mychecksum3")),
-                "prevOverlayID3");
+        db.store("serialXYZ", "com.example.xyz0", Lists.newArrayList(makeApk("mychecksum0")));
+        db.store("serialXYZ", "com.example.xyz1", Lists.newArrayList(makeApk("mychecksum1")));
+        db.store("serialXYZ", "com.example.xyz2", Lists.newArrayList(makeApk("mychecksum2")));
+        db.store("serialXYZ", "com.example.xyz3", Lists.newArrayList(makeApk("mychecksum3")));
         DeploymentCacheDatabase.Entry entry = db.get("serialXYZ", "com.example.xyz3");
         Assert.assertEquals(1, entry.getApks().size());
         Assert.assertEquals("mychecksum3", entry.getApks().get(0).checksum);
@@ -84,26 +60,10 @@ public class DeploymentCacheDatabaseTest {
     @Test
     public void testEvict() throws DeployerException {
         DeploymentCacheDatabase db = new DeploymentCacheDatabase(3);
-        db.store(
-                "serialXYZ",
-                "com.example.xyz0",
-                Lists.newArrayList(makeApk("mychecksum0")),
-                "prevOverlayID0");
-        db.store(
-                "serialXYZ",
-                "com.example.xyz1",
-                Lists.newArrayList(makeApk("mychecksum1")),
-                "prevOverlayID1");
-        db.store(
-                "serialXYZ",
-                "com.example.xyz2",
-                Lists.newArrayList(makeApk("mychecksum2")),
-                "prevOverlayID2");
-        db.store(
-                "serialXYZ",
-                "com.example.xyz3",
-                Lists.newArrayList(makeApk("mychecksum3")),
-                "prevOverlayID3");
+        db.store("serialXYZ", "com.example.xyz0", Lists.newArrayList(makeApk("mychecksum0")));
+        db.store("serialXYZ", "com.example.xyz1", Lists.newArrayList(makeApk("mychecksum1")));
+        db.store("serialXYZ", "com.example.xyz2", Lists.newArrayList(makeApk("mychecksum2")));
+        db.store("serialXYZ", "com.example.xyz3", Lists.newArrayList(makeApk("mychecksum3")));
         DeploymentCacheDatabase.Entry entry = db.get("serialXYZ", "com.example.xyz3");
         Assert.assertEquals(1, entry.getApks().size());
         Assert.assertEquals("mychecksum3", entry.getApks().get(0).checksum);
@@ -112,16 +72,8 @@ public class DeploymentCacheDatabaseTest {
     @Test
     public void testTwoDevices() throws DeployerException {
         DeploymentCacheDatabase db = new DeploymentCacheDatabase(10);
-        db.store(
-                "serial0",
-                "com.example.xyz",
-                Lists.newArrayList(makeApk("mychecksum0")),
-                "prevOverlayID");
-        db.store(
-                "serial1",
-                "com.example.xyz",
-                Lists.newArrayList(makeApk("mychecksum1")),
-                "prevOverlayID");
+        db.store("serial0", "com.example.xyz", Lists.newArrayList(makeApk("mychecksum0")));
+        db.store("serial1", "com.example.xyz", Lists.newArrayList(makeApk("mychecksum1")));
 
         DeploymentCacheDatabase.Entry entry0 = db.get("serial0", "com.example.xyz");
         Assert.assertEquals(1, entry0.getApks().size());
@@ -135,16 +87,8 @@ public class DeploymentCacheDatabaseTest {
     @Test
     public void testDifferentApp() throws DeployerException {
         DeploymentCacheDatabase db = new DeploymentCacheDatabase(10);
-        db.store(
-                "serialXYZ",
-                "com.example.0",
-                Lists.newArrayList(makeApk("mychecksum0")),
-                "prevOverlayID");
-        db.store(
-                "serialXYZ",
-                "com.example.1",
-                Lists.newArrayList(makeApk("mychecksum1")),
-                "prevOverlayID");
+        db.store("serialXYZ", "com.example.0", Lists.newArrayList(makeApk("mychecksum0")));
+        db.store("serialXYZ", "com.example.1", Lists.newArrayList(makeApk("mychecksum1")));
 
         DeploymentCacheDatabase.Entry entry0 = db.get("serialXYZ", "com.example.0");
         Assert.assertEquals(1, entry0.getApks().size());
@@ -158,16 +102,8 @@ public class DeploymentCacheDatabaseTest {
     @Test
     public void testSwitchedDevice() throws DeployerException {
         DeploymentCacheDatabase db = new DeploymentCacheDatabase(10);
-        db.store(
-                "serial0",
-                "com.example.XYZ",
-                Lists.newArrayList(makeApk("mychecksum0")),
-                "prevOverlayID0");
-        db.store(
-                "serial1",
-                "com.example.XYZ",
-                Lists.newArrayList(makeApk("mychecksum1")),
-                "prevOverlayID1");
+        db.store("serial0", "com.example.XYZ", Lists.newArrayList(makeApk("mychecksum0")));
+        db.store("serial1", "com.example.XYZ", Lists.newArrayList(makeApk("mychecksum1")));
 
         DeploymentCacheDatabase.Entry entry0 = db.get("serial0", "com.example.XYZ");
         Assert.assertEquals(1, entry0.getApks().size());

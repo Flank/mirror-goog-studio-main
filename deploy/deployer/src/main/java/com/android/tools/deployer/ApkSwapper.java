@@ -150,6 +150,68 @@ public class ApkSwapper {
         }
         return true;
     }
+    /**
+     * Performs a swap with hopeful optimism.
+     *
+     * @param dump the application dump
+     * @param sessionId the installation session
+     * @param toSwap the actual dex classes to swap.
+     */
+    public boolean optimisticSwap(
+            String packageId,
+            List<Integer> pids,
+            Deploy.Arch arch,
+            DexComparator.ChangedClasses changedClasses)
+            throws DeployerException {
+        Deploy.OverlaySwapRequest swapRequest =
+                buildOverlaySwapRequest(packageId, pids, arch, changedClasses);
+        sendSwapRequest(swapRequest, new InstallerBasedClassRedefiner(installer));
+        return true;
+    }
+
+    private Deploy.OverlaySwapRequest buildOverlaySwapRequest(
+            String packageId,
+            List<Integer> pids,
+            Deploy.Arch arch,
+            DexComparator.ChangedClasses changedClasses)
+            throws DeployerException {
+        Deploy.OverlaySwapRequest.Builder swapRequest =
+                Deploy.OverlaySwapRequest.newBuilder()
+                        .setPackageName(packageId)
+                        .setRestartActivity(restart)
+                        .addAllProcessIds(pids)
+                        .setArch(arch);
+
+        Deploy.OverlayUpdateRequest.Builder updateRequest =
+                Deploy.OverlayUpdateRequest.newBuilder().setOverlayId("");
+        updateRequest.setOverlayPath(String.format("/data/data/%s/code_cache", packageId));
+
+        for (DexClass clazz : changedClasses.newClasses) {
+            // TODO: Untested yet. Not sure if it still works.
+            updateRequest.addAddedFiles(
+                    Deploy.OverlayFile.newBuilder()
+                            .setName(clazz.name)
+                            .setContent(ByteString.copyFrom(clazz.code))
+                            .setType(Deploy.OverlayFile.Type.DEX)
+                            .setPath(clazz.name + ".dex")
+                            .build());
+        }
+
+        for (DexClass clazz : changedClasses.modifiedClasses) {
+            // TODO: This should use modified files?
+            updateRequest.addAddedFiles(
+                    Deploy.OverlayFile.newBuilder()
+                            .setName(clazz.name)
+                            .setContent(ByteString.copyFrom(clazz.code))
+                            .setType(Deploy.OverlayFile.Type.DEX)
+                            .setPath(clazz.name + ".dex")
+                            .build());
+        }
+
+        // TODO: Debugger stuff. Given that this will be R+ we don't need the complicated workaround
+        // the JDI bug in O.
+        return swapRequest.setOverlayUpdate(updateRequest.build()).build();
+    }
 
     private Deploy.SwapRequest buildSwapRequest(
             ApplicationDumper.Dump dump,
@@ -158,10 +220,20 @@ public class ApkSwapper {
             throws DeployerException {
         Map.Entry<String, List<Integer>> onlyPackage =
                 Iterables.getOnlyElement(dump.packagePids.entrySet());
+        return buildSwapRequest(
+                onlyPackage.getKey(), onlyPackage.getValue(), dump.arch, sessionId, changedClasses);
+    }
 
+    private Deploy.SwapRequest buildSwapRequest(
+            String packageId,
+            List<Integer> pids,
+            Deploy.Arch arch,
+            String sessionId,
+            DexComparator.ChangedClasses changedClasses)
+            throws DeployerException {
         Deploy.SwapRequest.Builder request =
                 Deploy.SwapRequest.newBuilder()
-                        .setPackageName(onlyPackage.getKey())
+                        .setPackageName(packageId)
                         .setRestartActivity(restart)
                         .setSessionId(sessionId);
 
@@ -180,7 +252,7 @@ public class ApkSwapper {
         }
 
         int extraAgents = 0;
-        for (Integer pid : onlyPackage.getValue()) {
+        for (Integer pid : pids) {
             if (redefiners.containsKey(pid)) {
                 ClassRedefiner redefiner = redefiners.get(pid);
                 switch (redefiner.canRedefineClass().support) {
@@ -203,7 +275,7 @@ public class ApkSwapper {
         }
 
         request.setExtraAgents(extraAgents);
-        request.setArch(dump.arch);
+        request.setArch(arch);
         return request.build();
     }
 
@@ -217,6 +289,12 @@ public class ApkSwapper {
     }
 
     private static void sendSwapRequest(Deploy.SwapRequest request, ClassRedefiner redefiner)
+            throws DeployerException {
+        Deploy.SwapResponse swapResponse = redefiner.redefine(request);
+        new InstallerResponseHandler().handle(swapResponse);
+    }
+
+    private static void sendSwapRequest(Deploy.OverlaySwapRequest request, ClassRedefiner redefiner)
             throws DeployerException {
         Deploy.SwapResponse swapResponse = redefiner.redefine(request);
         new InstallerResponseHandler().handle(swapResponse);

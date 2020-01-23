@@ -21,6 +21,8 @@ import com.android.tools.deploy.proto.Deploy;
 public interface ClassRedefiner {
     Deploy.SwapResponse redefine(Deploy.SwapRequest request) throws DeployerException;
 
+    Deploy.SwapResponse redefine(Deploy.OverlaySwapRequest request) throws DeployerException;
+
     /**
      * This class's role strictly to deal with the lack of RedefineClasses capabilities in O.
      *

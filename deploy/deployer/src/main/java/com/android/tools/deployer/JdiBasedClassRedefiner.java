@@ -186,6 +186,12 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
     }
 
     @Override
+    public Deploy.SwapResponse redefine(Deploy.OverlaySwapRequest request)
+            throws DeployerException {
+        throw DeployerException.operationNotSupported("No overlay swaps for debuggers yet.");
+    }
+
+    @Override
     public RedefineClassSupportState canRedefineClass() {
         return redefineSupportState;
     }

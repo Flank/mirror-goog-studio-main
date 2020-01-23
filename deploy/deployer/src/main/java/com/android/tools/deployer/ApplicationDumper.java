@@ -33,6 +33,25 @@ public class ApplicationDumper {
         this.installer = installer;
     }
 
+    /** Fetch the single package name of a list of apks. */
+    public static String getPackageName(List<Apk> apks) throws DeployerException {
+        // The name of the package being swapped (the one that will actually be installed).
+        String packageName = null;
+
+        for (Apk apk : apks) {
+            if (packageName == null) {
+                packageName = apk.packageName;
+            }
+
+            if (!apk.packageName.equals(packageName)) {
+                // This is intentionally a swap failure, not a dump failure; we just discover it
+                // during dump.
+                throw DeployerException.swapMultiplePackages();
+            }
+        }
+
+        return packageName;
+    }
     /*
      * This method retrieves information on the application to be swapped; specifically, process ids
      * and currently installed files.

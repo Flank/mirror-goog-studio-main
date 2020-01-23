@@ -140,6 +140,49 @@ public class TaskRunner {
         return task;
     }
 
+    public <T, U, V, W, O, E extends Enum> Task<O> create(
+            E id,
+            ThrowingQuadFunction<T, U, V, W, O> function,
+            Task<T> input1,
+            Task<U> input2,
+            Task<V> input3,
+            Task<W> input4) {
+        return create(id, function, null, input1, input2, input3, input4);
+    }
+
+    public <T, U, V, W, O, E extends Enum> Task<O> create(
+            E id,
+            ThrowingQuadFunction<T, U, V, W, O> function,
+            ThrowingQuadFunction<T, U, V, W, Void> errorFunction,
+            Task<T> input1,
+            Task<U> input2,
+            Task<V> input3,
+            Task<W> input4) {
+        Callable<O> callable =
+                () -> {
+                    try {
+                        // The input value is already done
+                        T value1 = input1.future.get();
+                        U value2 = input2.future.get();
+                        V value3 = input3.future.get();
+                        W value4 = input4.future.get();
+                        return function.apply(value1, value2, value3, value4);
+                    } catch (Exception e) {
+                        T value1 = getTaskValue(input1);
+                        U value2 = getTaskValue(input2);
+                        V value3 = getTaskValue(input3);
+                        W value4 = getTaskValue(input4);
+                        if (errorFunction != null) {
+                            errorFunction.apply(value1, value2, value3, value4);
+                        }
+                        throw e;
+                    }
+                };
+        Task<O> task = new Task<>(id.name(), callable, input1, input2, input3, input4);
+        tasks.add(task);
+        return task;
+    }
+
     private <O> O getTaskValue(Task<O> task) {
         try {
             return task.get();
@@ -231,5 +274,9 @@ public class TaskRunner {
 
     public interface ThrowingTriFunction<T, U, V, R> {
         R apply(T t, U u, V v) throws Exception;
+    }
+
+    public interface ThrowingQuadFunction<T, U, V, W, R> {
+        R apply(T t, U u, V v, W w) throws Exception;
     }
 }
