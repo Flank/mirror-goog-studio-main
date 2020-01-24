@@ -24,8 +24,8 @@ import static com.android.build.gradle.internal.variant.TestVariantFactory.getTe
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.tasks.CheckTestedAppObfuscation;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
@@ -42,7 +43,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.profile.Recorder;
 import com.google.common.base.Preconditions;
-import java.util.Collection;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import org.gradle.api.Task;
@@ -51,32 +52,31 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
  * TaskManager for standalone test application that lives in a separate module from the tested
  * application.
  */
-public class TestApplicationTaskManager extends AbstractAppTaskManager<TestVariantPropertiesImpl> {
+public class TestApplicationTaskManager
+        extends AbstractAppTaskManager<TestVariantImpl, TestVariantPropertiesImpl> {
 
     public TestApplicationTaskManager(
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
                 globalScope,
                 extension,
-                toolingRegistry,
                 recorder);
     }
 
     @Override
     protected void doCreateTasksForVariant(
-            @NonNull TestVariantPropertiesImpl testVariantProperties,
-            @NonNull List<TestVariantPropertiesImpl> allVariants) {
+            @NonNull ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl> variant,
+            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> allVariants) {
+        createCommonTasks(variant, allVariants);
 
-        createCommonTasks(testVariantProperties, allVariants);
+        TestVariantPropertiesImpl testVariantProperties = variant.getProperties();
 
         Configuration testedApksConfig =
                 project.getConfigurations()
@@ -152,15 +152,15 @@ public class TestApplicationTaskManager extends AbstractAppTaskManager<TestVaria
 
     @Override
     public void createLintTasks(
-            @NonNull TestVariantPropertiesImpl componentProperties,
-            @NonNull List<TestVariantPropertiesImpl> allComponentsWithLint) {
+            @NonNull TestVariantPropertiesImpl variantProperties,
+            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> allVariants) {
         // do nothing
     }
 
     @Override
     public void maybeCreateLintVitalTask(
             @NonNull TestVariantPropertiesImpl variant,
-            @NonNull List<TestVariantPropertiesImpl> allComponentsWithLint) {
+            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> allVariants) {
         // do nothing
     }
 
@@ -170,8 +170,8 @@ public class TestApplicationTaskManager extends AbstractAppTaskManager<TestVaria
     }
 
     @Override
-    public void configureGlobalLintTask(
-            @NonNull Collection<? extends VariantPropertiesImpl> components) {
+    protected void configureGlobalLintTask(
+            @NonNull ImmutableList<TestVariantPropertiesImpl> variants) {
         // do nothing
     }
 

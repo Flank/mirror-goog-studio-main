@@ -16,13 +16,12 @@
 
 package com.android.build.gradle.internal
 
-import com.android.build.api.variant.impl.VariantPropertiesImpl
-import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.ide.DefaultAppBundleProjectBuildOutput
 import com.android.build.gradle.internal.ide.DefaultAppBundleVariantBuildOutput
 import com.android.build.gradle.internal.ide.ModelBuilder
+import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.variant.VariantModel
@@ -38,7 +37,6 @@ import org.gradle.api.Project
 class AppModelBuilder(
     globalScope: GlobalScope,
     private val variantModel: VariantModel,
-    taskManager: TaskManager<out VariantPropertiesImpl>,
     config: BaseAppModuleExtension,
     extraModelInfo: ExtraModelInfo,
     syncIssueReporter: SyncIssueReporter,
@@ -46,7 +44,6 @@ class AppModelBuilder(
 ) : ModelBuilder<BaseAppModuleExtension>(
     globalScope,
     variantModel,
-    taskManager,
     config,
     extraModelInfo,
     syncIssueReporter,
@@ -73,7 +70,7 @@ class AppModelBuilder(
     private fun buildMinimalisticModel(): Any {
         val variantsOutput = ImmutableList.builder<AppBundleVariantBuildOutput>()
 
-        for (component in variantModel.components) {
+        for (component in variantModel.variants) {
             val artifacts = component.artifacts
 
             if (artifacts.hasFinalProduct(InternalArtifactType.BUNDLE)) {

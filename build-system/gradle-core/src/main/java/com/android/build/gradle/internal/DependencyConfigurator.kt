@@ -18,7 +18,10 @@ package com.android.build.gradle.internal
 
 import com.android.build.api.attributes.BuildTypeAttr.Companion.ATTRIBUTE
 import com.android.build.api.attributes.ProductFlavorAttr
+import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform
 import com.android.build.gradle.internal.dependency.AarToClassTransform
@@ -50,6 +53,7 @@ import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
+import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.VariantInputModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
@@ -596,11 +600,11 @@ class DependencyConfigurator(
     }
 
     /** Configure artifact transforms that require variant-specific attribute information.  */
-    fun configureVariantTransforms(
-        variants: List<VariantPropertiesImpl>,
-        testComponents: List<TestComponentPropertiesImpl>
+    fun <VariantT: VariantImpl<VariantPropertiesT>, VariantPropertiesT: VariantPropertiesImpl> configureVariantTransforms(
+        variants: List<ComponentInfo<VariantT, VariantPropertiesT>>,
+        testComponents: List<ComponentInfo<TestComponentImpl<out TestComponentPropertiesImpl>, TestComponentPropertiesImpl>>
     ): DependencyConfigurator {
-        val allComponents = variants + testComponents
+        val allComponents: List<ComponentPropertiesImpl> = (variants + testComponents).map { it.properties }
 
         val dependencies = project.dependencies
         if (globalScope.projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]) {

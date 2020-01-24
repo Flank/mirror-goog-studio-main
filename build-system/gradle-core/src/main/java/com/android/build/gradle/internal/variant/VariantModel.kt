@@ -16,7 +16,8 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 
 /**
  * Model for the variants and their inputs.
@@ -27,7 +28,16 @@ interface VariantModel {
 
     val inputs: VariantInputModel
 
-    val components: List<ComponentPropertiesImpl>
+    /**
+     * the main variants. This is the output of the plugin (apk, aar, etc...) and does not
+     * include the test components (android test, unit test)
+     */
+    val variants: List<VariantPropertiesImpl>
+
+    /**
+     * the test components (android test, unit test)
+     */
+    val testComponents: List<TestComponentPropertiesImpl>
 
     val defaultVariant: String?
 }

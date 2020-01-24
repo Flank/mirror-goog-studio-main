@@ -41,7 +41,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-internal open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
+open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,

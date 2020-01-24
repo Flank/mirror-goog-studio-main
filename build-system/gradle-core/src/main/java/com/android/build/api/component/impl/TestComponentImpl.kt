@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.api.variant.impl
+package com.android.build.api.component.impl
 
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.variant.DynamicFeatureVariant
-import com.android.build.api.variant.DynamicFeatureVariantProperties
+import com.android.build.api.component.TestComponent
 import com.android.build.gradle.internal.core.VariantDslInfo
-import javax.inject.Inject
 
-open class DynamicFeatureVariantImpl @Inject constructor(
+abstract class TestComponentImpl<PropertiesT : TestComponentPropertiesImpl>(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity
-) : VariantImpl<DynamicFeatureVariantPropertiesImpl>(variantDslInfo, variantConfiguration), DynamicFeatureVariant<DynamicFeatureVariantPropertiesImpl> {
+) : ComponentImpl<PropertiesT>(variantDslInfo, variantConfiguration),
+    TestComponent<PropertiesT> {
 }

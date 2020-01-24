@@ -19,6 +19,8 @@ package com.android.build.gradle
 import com.android.build.api.variant.VariantFilter
 import com.android.build.api.component.impl.ComponentIdentityImpl
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.core.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -485,7 +487,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         )
 
         // convert to mock VariantScope
-        val components = mutableListOf<ComponentPropertiesImpl>()
+        val components = mutableListOf<VariantPropertiesImpl>()
 
         for (variant in variantComputer.computeVariants()) {
             val name = VariantBuilder.computeName(variant, variantType)
@@ -512,7 +514,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             // if not ignored, get the VariantScope
             // FIXME this should be simpler when we remove VariantData|Scope to use newer objects only.
             if (!ignore) {
-                val component = Mockito.mock(ComponentPropertiesImpl::class.java)
+                val component = Mockito.mock(VariantPropertiesImpl::class.java)
                 components.add(component)
 
                 Mockito.`when`(component.name).thenReturn(name)
@@ -531,6 +533,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             given,
             { testBuildType },
             { components },
+            { listOf<TestComponentPropertiesImpl>() },
             dslScope.issueReporter
         ).defaultVariant
     }

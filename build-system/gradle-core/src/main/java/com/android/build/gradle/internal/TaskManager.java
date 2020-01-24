@@ -57,6 +57,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.PublicArtifactType;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
@@ -64,6 +65,7 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
@@ -160,6 +162,7 @@ import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -211,6 +214,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Streams;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -249,10 +253,11 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskInputs;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Manages tasks creation. */
-public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesImpl> {
+public abstract class TaskManager<
+        VariantT extends VariantImpl<? extends VariantPropertiesT>,
+        VariantPropertiesT extends VariantPropertiesImpl> {
     private static final String MULTIDEX_VERSION = "1.0.2";
 
     private static final String COM_ANDROID_SUPPORT_MULTIDEX =
@@ -292,29 +297,24 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
     public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "0.1.0-dev03";
     public static final String COMPOSE_KOTLIN_COMPILER_VERSION =
             "1.3.61-dev-withExperimentalGoogleExtensions-20191127";
+    public static final String CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar";
 
     @NonNull protected final Project project;
     @NonNull protected final ProjectOptions projectOptions;
     @NonNull protected final BaseExtension extension;
-    @NonNull protected final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull protected final GlobalScope globalScope;
     @NonNull protected final Recorder recorder;
     @NonNull private final Logger logger;
     @NonNull protected final TaskFactory taskFactory;
 
-    // Tasks. TODO: remove the mutable state from here.
-    public TaskProvider<Task> createMockableJar;
-
     public TaskManager(
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         this.globalScope = globalScope;
         this.project = globalScope.getProject();
         this.projectOptions = globalScope.getProjectOptions();
         this.extension = extension;
-        this.toolingRegistry = toolingRegistry;
         this.recorder = recorder;
         this.logger = Logging.getLogger(this.getClass());
 
@@ -328,25 +328,87 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
      *
      * @param variants these are all the variants
      * @param testComponents these are all the test components
-     * @param allComponents this list is the concatenation of variants and test components.
      */
     public void createTasks(
-            @NonNull List<VariantPropertiesT> variants,
-            @NonNull List<TestComponentPropertiesImpl> testComponents,
-            @NonNull List<ComponentPropertiesImpl> allComponents,
+            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants,
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentPropertiesImpl>>
+                            testComponents,
             boolean hasFlavor) {
         // Create top level test tasks.
         createTopLevelTestTasks(hasFlavor);
 
         // Create tasks for all variants (main and tests)
-        for (VariantPropertiesT variant : variants) {
+        for (ComponentInfo<VariantT, VariantPropertiesT> variant : variants) {
             createTasksForVariant(variant, variants);
         }
-        for (TestComponentPropertiesImpl testComponent : testComponents) {
+        for (ComponentInfo<
+                        TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                        TestComponentPropertiesImpl>
+                testComponent : testComponents) {
             createTasksForTest(testComponent);
         }
 
-        createReportTasks(allComponents);
+        ImmutableList<VariantPropertiesT> variantPropertiesList =
+                variants.stream()
+                        .map(ComponentInfo::getProperties)
+                        .collect(ImmutableList.toImmutableList());
+        ImmutableList<TestComponentPropertiesImpl> testComponentPropertiesList =
+                testComponents.stream()
+                        .map(ComponentInfo::getProperties)
+                        .collect(ImmutableList.toImmutableList());
+
+        createReportTasks(variantPropertiesList, testComponentPropertiesList);
+    }
+
+    public void createPostApiTasks(
+            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants,
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentPropertiesImpl>>
+                            testComponents) {
+        ImmutableList<VariantPropertiesT> variantPropertiesList =
+                variants.stream()
+                        .map(ComponentInfo::getProperties)
+                        .collect(ImmutableList.toImmutableList());
+        ImmutableList<TestComponentPropertiesImpl> testComponentPropertiesList =
+                testComponents.stream()
+                        .map(ComponentInfo::getProperties)
+                        .collect(ImmutableList.toImmutableList());
+        ImmutableList<ComponentPropertiesImpl> allProperties =
+                ImmutableList.<ComponentPropertiesImpl>builder()
+                        .addAll(variantPropertiesList)
+                        .addAll(testComponentPropertiesList)
+                        .build();
+
+        // must run this after scopes are created so that we can configure kotlin
+        // kapt tasks
+        addBindingDependenciesIfNecessary(
+                globalScope.getBuildFeatures().getViewBinding(),
+                globalScope.getBuildFeatures().getDataBinding(),
+                extension.getDataBinding(),
+                allProperties);
+
+        // configure compose related tasks.
+        configureKotlinPluginTasksForComposeIfNecessary(globalScope, allProperties);
+
+        // create the global lint task that depends on all the variants
+        configureGlobalLintTask(variantPropertiesList);
+
+        int flavorDimensionCount = 0;
+        if (extension.getFlavorDimensionList() != null) {
+            flavorDimensionCount = extension.getFlavorDimensionList().size();
+        }
+
+        createAnchorAssembleTasks(
+                allProperties, extension.getProductFlavors().size(), flavorDimensionCount);
     }
 
     /**
@@ -355,8 +417,10 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
      * <p>This creates tasks common to all variant types.
      */
     private void createTasksForVariant(
-            @NonNull VariantPropertiesT variantProperties,
-            @NonNull List<VariantPropertiesT> mainComponents) {
+            @NonNull ComponentInfo<VariantT, VariantPropertiesT> variant,
+            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants) {
+        final VariantPropertiesT variantProperties = variant.getProperties();
+
         final VariantType variantType = variantProperties.getVariantType();
 
         VariantDependencies variantDependencies = variantProperties.getVariantDependencies();
@@ -388,28 +452,36 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         if (variantType.isBaseModule()) {
             createBundleTask(variantProperties);
         }
-        doCreateTasksForVariant(variantProperties, mainComponents);
+
+        doCreateTasksForVariant(variant, variants);
     }
 
     /**
      * Entry point for each specialized TaskManager to create the tasks for a given
      * VariantPropertiesT
      *
-     * @param variantProperties the variant for which to create the tasks
+     * @param variant the variant for which to create the tasks
      * @param allVariants all the other variants. This is needed for lint.
      */
     protected abstract void doCreateTasksForVariant(
-            @NonNull VariantPropertiesT variantProperties,
-            @NonNull List<VariantPropertiesT> allVariants);
+            @NonNull ComponentInfo<VariantT, VariantPropertiesT> variant,
+            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> allVariants);
 
     /** Create tasks for the specified variant. */
-    private void createTasksForTest(@NonNull TestComponentPropertiesImpl testComponent) {
-        createAssembleTask(testComponent);
+    private void createTasksForTest(
+            @NonNull
+                    ComponentInfo<
+                                    TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                                    TestComponentPropertiesImpl>
+                            testComponent) {
+        final TestComponentPropertiesImpl componentProperties = testComponent.getProperties();
 
-        VariantPropertiesImpl testedVariant = testComponent.getTestedVariant();
+        createAssembleTask(componentProperties);
 
-        VariantDslInfo variantDslInfo = testComponent.getVariantDslInfo();
-        VariantDependencies variantDependencies = testComponent.getVariantDependencies();
+        VariantPropertiesImpl testedVariant = componentProperties.getTestedVariant();
+
+        VariantDslInfo variantDslInfo = componentProperties.getVariantDslInfo();
+        VariantDependencies variantDependencies = componentProperties.getVariantDependencies();
 
         if (testedVariant.getVariantDslInfo().getRenderscriptSupportModeEnabled()) {
             project.getDependencies()
@@ -421,7 +493,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                                             .getRenderScriptSupportJarProvider()));
         }
 
-        if (testComponent.getVariantType().isApk()) { // ANDROID_TEST
+        if (componentProperties.getVariantType().isApk()) { // ANDROID_TEST
             if (variantDslInfo.isLegacyMultiDexMode()) {
                 String multiDexInstrumentationDep =
                         globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
@@ -437,10 +509,10 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                                 multiDexInstrumentationDep);
             }
 
-            createAndroidTestVariantTasks((AndroidTestPropertiesImpl) testComponent);
+            createAndroidTestVariantTasks((AndroidTestPropertiesImpl) componentProperties);
         } else {
             // UNIT_TEST
-            createUnitTestVariantTasks((UnitTestPropertiesImpl) testComponent);
+            createUnitTestVariantTasks((UnitTestPropertiesImpl) componentProperties);
         }
     }
 
@@ -555,8 +627,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
     }
 
     // this is run after all the variants are created.
-    public void configureGlobalLintTask(
-            @NonNull final Collection<? extends VariantPropertiesImpl> variants) {
+    protected void configureGlobalLintTask(@NonNull ImmutableList<VariantPropertiesT> variants) {
 
         // configure the global lint tasks.
         taskFactory.configure(
@@ -574,13 +645,14 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
 
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
-        for (VariantPropertiesImpl variant : variants) {
+        for (VariantPropertiesT variant : variants) {
             variant.getArtifacts().copy(LINT_PUBLISH_JAR.INSTANCE, globalScope.getArtifacts());
         }
     }
 
-    public void configureKotlinPluginTasksForComposeIfNecessary(
-            @NonNull GlobalScope globalScope, @NonNull List<ComponentPropertiesImpl> components) {
+    private void configureKotlinPluginTasksForComposeIfNecessary(
+            @NonNull GlobalScope globalScope,
+            @NonNull List<? extends ComponentPropertiesImpl> components) {
 
         boolean composeIsEnabled = globalScope.getBuildFeatures().getCompose();
         if (!composeIsEnabled) {
@@ -688,8 +760,9 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                                                         .getOrNull()));
 
         // Adding this task to help the IDE find the mockable JAR.
-        createMockableJar = project.getTasks().register("createMockableJar");
-        createMockableJar.configure(task -> task.dependsOn(globalScope.getMockableJarArtifact()));
+        taskFactory.register(
+                CREATE_MOCKABLE_JAR_TASK_NAME,
+                task -> task.dependsOn(globalScope.getMockableJarArtifact()));
     }
 
     @NonNull
@@ -1747,9 +1820,13 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
      */
     public void createLintTasks(
             @NonNull VariantPropertiesT variantProperties,
-            @NonNull List<VariantPropertiesT> allComponentsWithLint) {
+            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> allVariants) {
         taskFactory.register(
-                new LintPerVariantTask.CreationAction(variantProperties, allComponentsWithLint));
+                new LintPerVariantTask.CreationAction(
+                        variantProperties,
+                        allVariants.stream()
+                                .map(ComponentInfo::getProperties)
+                                .collect(Collectors.toList())));
     }
 
     /** Returns the full path of a task given its name. */
@@ -1761,7 +1838,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
 
     public void maybeCreateLintVitalTask(
             @NonNull VariantPropertiesT variant,
-            @NonNull List<VariantPropertiesT> allComponentsWithLint) {
+            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> allVariants) {
         if (variant.getVariantDslInfo().isDebuggable()
                 || !extension.getLintOptions().isCheckReleaseBuilds()) {
             return;
@@ -1769,7 +1846,11 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
 
         TaskProvider<LintPerVariantTask> lintReleaseCheck =
                 taskFactory.register(
-                        new LintPerVariantTask.VitalCreationAction(variant, allComponentsWithLint),
+                        new LintPerVariantTask.VitalCreationAction(
+                                variant,
+                                allVariants.stream()
+                                        .map(ComponentInfo::getProperties)
+                                        .collect(Collectors.toList())),
                         null,
                         task -> task.dependsOn(variant.getTaskContainer().getJavacTask()),
                         null);
@@ -2604,7 +2685,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
      * <p>This does not create the variant specific version of these tasks only the ones that are
      * per build-type, per-flavor, per-flavor-combo and the main 'assemble' and 'bundle' ones.
      *
-     * @param components the list of variant scopes.
+     * @param components the list of components
      * @param flavorCount the number of flavors
      * @param flavorDimensionCount whether there are flavor dimensions at all.
      */
@@ -2949,19 +3030,22 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         taskFactory.register(new ShrinkBundleResourcesTask.CreationAction(componentProperties));
     }
 
-    private void createReportTasks(final List<ComponentPropertiesImpl> components) {
+    private void createReportTasks(
+            @NonNull ImmutableList<VariantPropertiesT> variants,
+            @NonNull ImmutableList<TestComponentPropertiesImpl> testComponents) {
+
         taskFactory.register(
                 "androidDependencies",
                 DependencyReportTask.class,
                 task -> {
                     task.setDescription("Displays the Android dependencies of the project.");
-                    task.components = ImmutableList.copyOf(components);
+                    task.variants = variants;
+                    task.testComponents = testComponents;
                     task.setGroup(ANDROID_GROUP);
                 });
 
         List<ComponentPropertiesImpl> signingReportComponents =
-                components
-                        .stream()
+                Streams.concat(variants.stream(), testComponents.stream())
                         .filter(
                                 component ->
                                         component.getVariantType().isForTesting()
@@ -2979,13 +3063,19 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                     });
         }
 
-        createDependencyAnalyzerTask(components);
+        createDependencyAnalyzerTask(variants, testComponents);
     }
 
     protected void createDependencyAnalyzerTask(
-            @NonNull Collection<ComponentPropertiesImpl> components) {
-        for (ComponentPropertiesImpl component : components) {
-            taskFactory.register(new AnalyzeDependenciesTask.CreationAction(component));
+            @NonNull ImmutableList<VariantPropertiesT> variants,
+            @NonNull ImmutableList<TestComponentPropertiesImpl> testComponents) {
+
+        for (VariantPropertiesT variant : variants) {
+            taskFactory.register(new AnalyzeDependenciesTask.CreationAction(variant));
+        }
+
+        for (TestComponentPropertiesImpl testComponent : testComponents) {
+            taskFactory.register(new AnalyzeDependenciesTask.CreationAction(testComponent));
         }
     }
 
@@ -3107,7 +3197,7 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         return logger;
     }
 
-    public void addBindingDependenciesIfNecessary(
+    private void addBindingDependenciesIfNecessary(
             boolean viewBindingEnabled,
             boolean dataBindingEnabled,
             @NonNull DataBindingOptions dataBindingOptions,

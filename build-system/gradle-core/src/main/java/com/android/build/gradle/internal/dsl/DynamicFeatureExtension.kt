@@ -62,7 +62,7 @@ internal open class DynamicFeatureExtension(
         Splits,
         TestOptions,
         TestOptions.UnitTestOptions> by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor<DynamicFeatureVariant, DynamicFeatureVariantProperties> by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<DynamicFeatureVariant<DynamicFeatureVariantProperties>, DynamicFeatureVariantProperties> by publicExtensionImpl {
 
     override val viewBinding: ViewBindingOptions =
         dslScope.objectFactory.newInstance(

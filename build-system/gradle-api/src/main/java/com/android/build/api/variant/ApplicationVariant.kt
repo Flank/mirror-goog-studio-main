@@ -29,7 +29,7 @@ import org.gradle.api.Incubating
  * representing the variant build flows must be created.
  */
 @Incubating
-interface ApplicationVariant : Variant<ApplicationVariantProperties> {
+interface ApplicationVariant<PropertiesT: ApplicationVariantProperties> : Variant<PropertiesT> {
 
 
 }

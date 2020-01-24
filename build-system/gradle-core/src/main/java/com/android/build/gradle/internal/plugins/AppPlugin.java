@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.plugins;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
@@ -46,7 +47,8 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on the base application module */
-public class AppPlugin extends AbstractAppPlugin<ApplicationVariantPropertiesImpl> {
+public class AppPlugin
+        extends AbstractAppPlugin<ApplicationVariantImpl, ApplicationVariantPropertiesImpl> {
     @Inject
     public AppPlugin(
             ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
@@ -68,7 +70,6 @@ public class AppPlugin extends AbstractAppPlugin<ApplicationVariantPropertiesImp
                 new AppModelBuilder(
                         globalScope,
                         variantModel,
-                        taskManager,
                         (BaseAppModuleExtension) extension,
                         extraModelInfo,
                         syncIssueHandler,
@@ -117,9 +118,8 @@ public class AppPlugin extends AbstractAppPlugin<ApplicationVariantPropertiesImp
     protected ApplicationTaskManager createTaskManager(
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder) {
-        return new ApplicationTaskManager(globalScope, extension, toolingRegistry, threadRecorder);
+        return new ApplicationTaskManager(globalScope, extension, threadRecorder);
     }
 
     private static class DeprecatedConfigurationAction implements Action<Dependency> {

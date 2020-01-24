@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
@@ -25,26 +26,26 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTask
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask
+import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.builder.profile.Recorder
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 internal class DynamicFeatureTaskManager(
     globalScope: GlobalScope,
     extension: BaseExtension,
-    toolingRegistry: ToolingModelBuilderRegistry,
     recorder: Recorder
-) : AbstractAppTaskManager<DynamicFeatureVariantPropertiesImpl>(
+) : AbstractAppTaskManager<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl>(
     globalScope,
     extension,
-    toolingRegistry,
     recorder
 ) {
 
     override fun doCreateTasksForVariant(
-        variantProperties: DynamicFeatureVariantPropertiesImpl,
-        allVariants: MutableList<DynamicFeatureVariantPropertiesImpl>
+        variant: ComponentInfo<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl>,
+        allVariants: MutableList<ComponentInfo<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl>>
     ) {
-        createCommonTasks(variantProperties, allVariants)
+        createCommonTasks(variant, allVariants)
+
+        val variantProperties = variant.properties
 
         createDynamicBundleTask(variantProperties)
 

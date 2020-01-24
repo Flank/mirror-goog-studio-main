@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
@@ -41,7 +42,7 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'library' projects. */
-public class LibraryPlugin extends BasePlugin<LibraryVariantPropertiesImpl> {
+public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariantPropertiesImpl> {
 
     @Inject
     public LibraryPlugin(
@@ -106,12 +107,10 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantPropertiesImpl> {
     protected LibraryTaskManager createTaskManager(
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new LibraryTaskManager(
                 globalScope,
                 extension,
-                toolingRegistry,
                 recorder);
     }
 

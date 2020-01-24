@@ -21,12 +21,11 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.ComponentIdentity;
+import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
-import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
-import com.android.build.gradle.internal.api.LibraryVariantImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -45,7 +44,8 @@ import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import org.gradle.api.NamedDomainObjectContainer;
 
-public class LibraryVariantFactory extends BaseVariantFactory<LibraryVariantPropertiesImpl> {
+public class LibraryVariantFactory
+        extends BaseVariantFactory<LibraryVariantImpl, LibraryVariantPropertiesImpl> {
 
     public LibraryVariantFactory(@NonNull GlobalScope globalScope) {
         super(globalScope);
@@ -53,15 +53,12 @@ public class LibraryVariantFactory extends BaseVariantFactory<LibraryVariantProp
 
     @NonNull
     @Override
-    public VariantImpl createVariantObject(
+    public LibraryVariantImpl createVariantObject(
             @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
         return globalScope
                 .getDslScope()
                 .getObjectFactory()
-                .newInstance(
-                        com.android.build.api.variant.impl.LibraryVariantImpl.class,
-                        variantDslInfo,
-                        componentIdentity);
+                .newInstance(LibraryVariantImpl.class, variantDslInfo, componentIdentity);
     }
 
     @NonNull
@@ -133,7 +130,7 @@ public class LibraryVariantFactory extends BaseVariantFactory<LibraryVariantProp
     @NonNull
     public Class<? extends BaseVariantImpl> getVariantImplementationClass(
             @NonNull BaseVariantData variantData) {
-        return LibraryVariantImpl.class;
+        return com.android.build.gradle.internal.api.LibraryVariantImpl.class;
     }
 
     @NonNull

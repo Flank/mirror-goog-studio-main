@@ -24,6 +24,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
@@ -43,6 +44,7 @@ import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.featuresplit.PackagedDependenciesWriterTask;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
@@ -60,27 +62,27 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResourceFactory;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** TaskManager for creating tasks in an Android application project. */
-public abstract class AbstractAppTaskManager<VariantPropertiesT extends VariantPropertiesImpl>
-        extends TaskManager<VariantPropertiesT> {
+public abstract class AbstractAppTaskManager<
+                VariantT extends VariantImpl<VariantPropertiesT>,
+                VariantPropertiesT extends VariantPropertiesImpl>
+        extends TaskManager<VariantT, VariantPropertiesT> {
 
     protected AbstractAppTaskManager(
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
                 globalScope,
                 extension,
-                toolingRegistry,
                 recorder);
     }
 
     protected void createCommonTasks(
-            @NonNull VariantPropertiesT appVariantProperties,
-            @NonNull List<VariantPropertiesT> allComponentsWithLint) {
+            @NonNull ComponentInfo<VariantT, VariantPropertiesT> variant,
+            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> allComponentsWithLint) {
+        VariantPropertiesT appVariantProperties = variant.getProperties();
         ApkCreationConfig apkCreationConfig = (ApkCreationConfig) appVariantProperties;
 
         createAnchorTasks(appVariantProperties);

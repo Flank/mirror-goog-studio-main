@@ -64,7 +64,7 @@ interface LibraryExtension<
         SplitsT,
         TestOptionsT,
         UnitTestOptionsT,
-        LibraryVariant,
+        LibraryVariant<LibraryVariantProperties>,
         LibraryVariantProperties>,
     TestedExtension {
     // TODO(b/140406102)

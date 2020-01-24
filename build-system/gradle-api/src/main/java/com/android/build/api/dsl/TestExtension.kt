@@ -64,7 +64,7 @@ interface TestExtension<
             SplitsT,
             TestOptionsT,
             UnitTestOptionsT,
-            TestVariant,
+            TestVariant<TestVariantProperties>,
             TestVariantProperties> {
     // TODO(b/140406102)
 

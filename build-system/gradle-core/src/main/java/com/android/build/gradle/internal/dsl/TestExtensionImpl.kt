@@ -41,7 +41,7 @@ class TestExtensionImpl(
             DefaultConfig,
             ProductFlavor,
             SigningConfig,
-            TestVariant,
+            TestVariant<TestVariantProperties>,
             TestVariantProperties>(
         dslScope,
         buildTypes,
@@ -72,13 +72,13 @@ class TestExtensionImpl(
         dslScope.objectFactory.newInstance(TestBuildFeaturesImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericFilteredComponentActionRegistrar<TestVariant>
+    override val onVariants: GenericFilteredComponentActionRegistrar<TestVariant<TestVariantProperties>>
         get() = dslScope.objectFactory.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslScope,
             variantOperations,
             TestVariant::class.java
-        ) as GenericFilteredComponentActionRegistrar<TestVariant>
+        ) as GenericFilteredComponentActionRegistrar<TestVariant<TestVariantProperties>>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<TestVariantProperties>
         get() = dslScope.objectFactory.newInstance(

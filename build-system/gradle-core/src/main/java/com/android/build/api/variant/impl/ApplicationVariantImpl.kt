@@ -24,5 +24,5 @@ import javax.inject.Inject
 open class ApplicationVariantImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity
-) : VariantImpl<ApplicationVariantProperties>(variantDslInfo, variantConfiguration), ApplicationVariant {
+) : VariantImpl<ApplicationVariantPropertiesImpl>(variantDslInfo, variantConfiguration), ApplicationVariant<ApplicationVariantPropertiesImpl> {
 }

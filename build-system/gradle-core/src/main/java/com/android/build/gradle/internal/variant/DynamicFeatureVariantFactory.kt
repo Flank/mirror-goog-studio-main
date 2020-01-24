@@ -33,7 +33,7 @@ import com.android.builder.core.VariantTypeImpl
 
 internal class DynamicFeatureVariantFactory(
     globalScope: GlobalScope
-    ): AbstractAppVariantFactory<DynamicFeatureVariantPropertiesImpl>(globalScope) {
+    ): AbstractAppVariantFactory<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl>(globalScope) {
 
     override fun createVariantObject(
         componentIdentity: ComponentIdentity,

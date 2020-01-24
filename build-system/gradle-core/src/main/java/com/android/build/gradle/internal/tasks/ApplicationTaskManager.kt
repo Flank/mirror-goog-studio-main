@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.TaskManager
@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask
+import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.profile.Recorder
 import com.google.common.collect.ImmutableMap
@@ -46,20 +47,20 @@ import java.util.stream.Collectors
 class ApplicationTaskManager(
     globalScope: GlobalScope,
     extension: BaseExtension,
-    toolingRegistry: ToolingModelBuilderRegistry,
     recorder: Recorder
-) : AbstractAppTaskManager<ApplicationVariantPropertiesImpl>(
+) : AbstractAppTaskManager<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>(
     globalScope,
     extension,
-    toolingRegistry,
     recorder
 ) {
 
     override fun doCreateTasksForVariant(
-        variantProperties: ApplicationVariantPropertiesImpl,
-        allVariants: MutableList<ApplicationVariantPropertiesImpl>
+        variant: ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>,
+        allVariants: MutableList<ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>>
     ) {
-        createCommonTasks(variantProperties, allVariants)
+        createCommonTasks(variant, allVariants)
+
+        val variantProperties = variant.properties
 
         // Base feature specific tasks.
         taskFactory.register(FeatureSetMetadataWriterTask.CreationAction(variantProperties))

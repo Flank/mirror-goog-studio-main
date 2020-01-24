@@ -25,8 +25,7 @@ import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
-import com.android.build.api.component.impl.ComponentImpl;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
@@ -60,6 +59,7 @@ import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.DimensionCombination;
 import com.android.build.gradle.internal.variant.DimensionCombinator;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -76,7 +76,6 @@ import com.android.builder.core.VariantType;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
-import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.ApiVersion;
@@ -92,20 +91,28 @@ import org.gradle.api.attributes.Attribute;
 import org.gradle.api.model.ObjectFactory;
 
 /** Class to create, manage variants. */
-public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
+public class VariantManager<
+        VariantT extends VariantImpl<VariantPropertiesT>,
+        VariantPropertiesT extends VariantPropertiesImpl> {
 
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
     @NonNull private final BaseExtension extension;
-    @NonNull private final VariantFactory<VariantPropertiesT> variantFactory;
+    @NonNull private final VariantFactory<VariantT, VariantPropertiesT> variantFactory;
     @NonNull private final VariantInputModel variantInputModel;
     @NonNull private final SourceSetManager sourceSetManager;
     @NonNull private final Recorder recorder;
     @NonNull private final VariantFilter variantFilter;
 
-    @NonNull private final List<VariantPropertiesT> variants = Lists.newArrayList();
-    @NonNull private final List<TestComponentPropertiesImpl> testComponents = Lists.newArrayList();
-    @NonNull private final List<ComponentPropertiesImpl> allComponents = Lists.newArrayList();
+    @NonNull
+    private final List<ComponentInfo<VariantT, VariantPropertiesT>> variants = Lists.newArrayList();
+
+    @NonNull
+    private final List<
+                    ComponentInfo<
+                            TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                            TestComponentPropertiesImpl>>
+            testComponents = Lists.newArrayList();
 
     @NonNull private final Map<File, ManifestAttributeSupplier> manifestParserMap;
     @NonNull protected final GlobalScope globalScope;
@@ -121,7 +128,7 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull BaseExtension extension,
-            @NonNull VariantFactory<VariantPropertiesT> variantFactory,
+            @NonNull VariantFactory<VariantT, VariantPropertiesT> variantFactory,
             @NonNull VariantInputModel variantInputModel,
             @NonNull SourceSetManager sourceSetManager,
             @NonNull Recorder recorder) {
@@ -144,7 +151,7 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
      * @see #createVariants()
      */
     @NonNull
-    public List<VariantPropertiesT> getMainComponents() {
+    public List<ComponentInfo<VariantT, VariantPropertiesT>> getMainComponents() {
         return variants;
     }
 
@@ -154,21 +161,12 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
      * @see #createVariants()
      */
     @NonNull
-    public List<TestComponentPropertiesImpl> getTestComponents() {
+    public List<
+                    ComponentInfo<
+                            TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                            TestComponentPropertiesImpl>>
+            getTestComponents() {
         return testComponents;
-    }
-
-    /**
-     * Returns a list of all components.
-     *
-     * <p>This is the concatenation of {@link #getMainComponents()} and {@link
-     * #getTestComponents()}.
-     *
-     * @see #createVariants()
-     */
-    @NonNull
-    public List<ComponentPropertiesImpl> getAllComponents() {
-        return allComponents;
     }
 
     /** Creates the variants. */
@@ -255,7 +253,7 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
     }
 
     @Nullable
-    private Pair<VariantImpl<VariantPropertiesImpl>, VariantPropertiesT> createVariant(
+    private ComponentInfo<VariantT, VariantPropertiesT> createVariant(
             @NonNull DimensionCombination dimensionCombination,
             @NonNull BuildTypeData buildTypeData,
             @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
@@ -296,14 +294,14 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
 
         // create the Variant object so that we can run the action which may interrupt the creation
         // (in case of enabled = false)
-        VariantImpl<VariantPropertiesImpl> variant =
-                variantFactory.createVariantObject(componentIdentity, variantDslInfo);
+        VariantT variant = variantFactory.createVariantObject(componentIdentity, variantDslInfo);
 
         // HACK, we need access to the new type rather than the old. This will go away in the
         // future
-        ActionableVariantObjectOperationsExecutor commonExtension =
-                (ActionableVariantObjectOperationsExecutor) extension;
         //noinspection unchecked
+        ActionableVariantObjectOperationsExecutor<VariantT, VariantPropertiesT> commonExtension =
+                (ActionableVariantObjectOperationsExecutor<VariantT, VariantPropertiesT>) extension;
+
         commonExtension.executeVariantOperations(variant);
 
         if (!variant.getEnabled()) {
@@ -417,13 +415,12 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
                         transformManager);
 
         // Run the VariantProperties actions
-        //noinspection unchecked
         commonExtension.executeVariantPropertiesOperations(variantProperties);
 
         // also execute the delayed actions registered on the Variant object itself
         variant.executePropertiesActions(variantProperties);
 
-        return Pair.of(variant, variantProperties);
+        return new ComponentInfo<>(variant, variantProperties);
     }
 
     private static void createCompoundSourceSets(
@@ -455,13 +452,16 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
 
     /** Create a TestVariantData for the specified testedVariantData. */
     @Nullable
-    public TestComponentPropertiesImpl createTestComponents(
-            @NonNull DimensionCombination dimensionCombination,
-            @NonNull BuildTypeData buildTypeData,
-            @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
-            @NonNull VariantImpl<VariantPropertiesImpl> testedVariant,
-            @NonNull VariantPropertiesImpl testedVariantProperties,
-            @NonNull VariantType variantType) {
+    public ComponentInfo<
+                    TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                    TestComponentPropertiesImpl>
+            createTestComponents(
+                    @NonNull DimensionCombination dimensionCombination,
+                    @NonNull BuildTypeData buildTypeData,
+                    @NonNull List<ProductFlavorData<ProductFlavor>> productFlavorDataList,
+                    @NonNull VariantT testedVariant,
+                    @NonNull VariantPropertiesT testedVariantProperties,
+                    @NonNull VariantType variantType) {
 
         // handle test variant
         // need a suppress warning because ProductFlavor.getTestSourceSet(type) is annotated
@@ -510,8 +510,9 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
 
         VariantDslInfoImpl variantDslInfo = variantBuilder.createVariantDslInfo();
 
+        TestComponentImpl<? extends TestComponentPropertiesImpl> component;
+
         // this is ANDROID_TEST
-        ComponentImpl component;
         if (variantType.isApk()) {
             AndroidTestImpl androidTestVariant =
                     variantFactory.createAndroidTestObject(
@@ -631,8 +632,14 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
                         globalScope,
                         taskContainer);
 
-        // this is ANDROID_TEST
+        // in order to call executePropertiesActions, we need a slightly different type....
+        //noinspection unchecked
+        TestComponentImpl<TestComponentPropertiesImpl> testComponent =
+                (TestComponentImpl<TestComponentPropertiesImpl>) component;
+
         TestComponentPropertiesImpl componentProperties;
+
+        // this is ANDROID_TEST
         if (variantType.isApk()) {
             AndroidTestPropertiesImpl androidTestProperties =
                     variantFactory.createAndroidTestProperties(
@@ -646,8 +653,7 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
                             testVariantData,
                             testedVariantProperties,
                             transformManager);
-
-            component.executePropertiesActions(androidTestProperties);
+            testComponent.executePropertiesActions(androidTestProperties);
 
             componentProperties = androidTestProperties;
         } else {
@@ -666,7 +672,7 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
                             transformManager);
 
             // also execute the delayed actions registered on the Variant object itself
-            component.executePropertiesActions(unitTestProperties);
+            testComponent.executePropertiesActions(unitTestProperties);
 
             componentProperties = unitTestProperties;
         }
@@ -676,7 +682,7 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
                 .getTestComponents()
                 .put(variantDslInfo.getVariantType(), componentProperties);
 
-        return componentProperties;
+        return new ComponentInfo(component, componentProperties);
     }
 
     /**
@@ -731,16 +737,16 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
 
         if (!ignore) {
             // create the prod variant
-            Pair<VariantImpl<VariantPropertiesImpl>, VariantPropertiesT> variantInfo =
+            ComponentInfo<VariantT, VariantPropertiesT> variantInfo =
                     createVariant(
                             dimensionCombination,
                             buildTypeData,
                             productFlavorDataList,
                             variantType);
             if (variantInfo != null) {
-                addVariant(variantInfo.getSecond());
+                addVariant(variantInfo);
 
-                VariantPropertiesImpl variantProperties = variantInfo.getSecond();
+                VariantPropertiesT variantProperties = variantInfo.getProperties();
 
                 VariantDslInfo variantDslInfo = variantProperties.getVariantDslInfo();
                 VariantScope variantScope = variantProperties.getVariantScope();
@@ -810,43 +816,52 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
 
                 if (variantFactory.hasTestScope()) {
                     if (buildTypeData == testBuildTypeData) {
-                        TestComponentPropertiesImpl androidTestVariantProperties =
-                                createTestComponents(
-                                        dimensionCombination,
-                                        buildTypeData,
-                                        productFlavorDataList,
-                                        variantInfo.getFirst(),
-                                        variantProperties,
-                                        ANDROID_TEST);
-                        if (androidTestVariantProperties != null) {
-                            addTestComponent(androidTestVariantProperties);
+                        ComponentInfo<
+                                        TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                                        TestComponentPropertiesImpl>
+                                androidTest =
+                                        createTestComponents(
+                                                dimensionCombination,
+                                                buildTypeData,
+                                                productFlavorDataList,
+                                                variantInfo.getVariant(),
+                                                variantProperties,
+                                                ANDROID_TEST);
+                        if (androidTest != null) {
+                            addTestComponent(androidTest);
                         }
                     }
 
-                    TestComponentPropertiesImpl unitTestVariantProperties =
-                            createTestComponents(
-                                    dimensionCombination,
-                                    buildTypeData,
-                                    productFlavorDataList,
-                                    variantInfo.getFirst(),
-                                    variantProperties,
-                                    UNIT_TEST);
-                    if (unitTestVariantProperties != null) {
-                        addTestComponent(unitTestVariantProperties);
+                    ComponentInfo<
+                                    TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                                    TestComponentPropertiesImpl>
+                            unitTest =
+                                    createTestComponents(
+                                            dimensionCombination,
+                                            buildTypeData,
+                                            productFlavorDataList,
+                                            variantInfo.getVariant(),
+                                            variantProperties,
+                                            UNIT_TEST);
+                    if (unitTest != null) {
+                        addTestComponent(unitTest);
                     }
                 }
             }
         }
     }
 
-    private void addVariant(@NonNull VariantPropertiesT variant) {
+    private void addVariant(@NonNull ComponentInfo<VariantT, VariantPropertiesT> variant) {
         variants.add(variant);
-        allComponents.add(variant);
     }
 
-    private void addTestComponent(@NonNull TestComponentPropertiesImpl testComponent) {
+    private void addTestComponent(
+            @NonNull
+                    ComponentInfo<
+                                    TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                                    TestComponentPropertiesImpl>
+                            testComponent) {
         testComponents.add(testComponent);
-        allComponents.add(testComponent);
     }
 
     private SigningConfig createSigningOverride() {

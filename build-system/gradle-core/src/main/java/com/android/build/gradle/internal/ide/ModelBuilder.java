@@ -145,7 +145,6 @@ public class ModelBuilder<Extension extends BaseExtension>
     @NonNull protected final Extension extension;
     @NonNull private final ExtraModelInfo extraModelInfo;
     @NonNull private final VariantModel variantModel;
-    @NonNull private final TaskManager taskManager;
     @NonNull private final SyncIssueReporter syncIssueReporter;
     private final int projectType;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
@@ -160,7 +159,6 @@ public class ModelBuilder<Extension extends BaseExtension>
     public ModelBuilder(
             @NonNull GlobalScope globalScope,
             @NonNull VariantModel variantModel,
-            @NonNull TaskManager taskManager,
             @NonNull Extension extension,
             @NonNull ExtraModelInfo extraModelInfo,
             @NonNull SyncIssueReporter syncIssueReporter,
@@ -169,7 +167,6 @@ public class ModelBuilder<Extension extends BaseExtension>
         this.extension = extension;
         this.extraModelInfo = extraModelInfo;
         this.variantModel = variantModel;
-        this.taskManager = taskManager;
         this.syncIssueReporter = syncIssueReporter;
         this.projectType = projectType;
     }
@@ -255,36 +252,27 @@ public class ModelBuilder<Extension extends BaseExtension>
         ImmutableList.Builder<VariantBuildOutput> variantsOutput = ImmutableList.builder();
 
         // Loop on the tested variants
-        for (ComponentPropertiesImpl component : variantModel.getComponents()) {
-            // only process tested variants.
-            if (!component.getVariantType().isTestComponent()) {
-                VariantPropertiesImpl variantProperties = (VariantPropertiesImpl) component;
-                // get the output of their tests
-                Collection<TestVariantBuildOutput> testVariantBuildOutputs =
-                        variantProperties
-                                .getTestComponents()
-                                .values()
-                                .stream()
-                                .map(
-                                        testComponent ->
-                                                new DefaultTestVariantBuildOutput(
-                                                        testComponent.getName(),
-                                                        getBuildOutputSupplier(testComponent).get(),
-                                                        component.getName(),
-                                                        testComponent.getVariantType()
-                                                                        == VariantTypeImpl
-                                                                                .ANDROID_TEST
-                                                                ? TestVariantBuildOutput.TestType
-                                                                        .ANDROID_TEST
-                                                                : TestVariantBuildOutput.TestType
-                                                                        .UNIT))
-                                .collect(Collectors.toList());
-                variantsOutput.add(
-                        new DefaultVariantBuildOutput(
-                                component.getName(),
-                                getBuildOutputSupplier(component).get(),
-                                testVariantBuildOutputs));
-            }
+        for (VariantPropertiesImpl variantProperties : variantModel.getVariants()) {
+            // get the output of their tests
+            Collection<TestVariantBuildOutput> testVariantBuildOutputs =
+                    variantProperties.getTestComponents().values().stream()
+                            .map(
+                                    testComponent ->
+                                            new DefaultTestVariantBuildOutput(
+                                                    testComponent.getName(),
+                                                    getBuildOutputSupplier(testComponent).get(),
+                                                    variantProperties.getName(),
+                                                    testComponent.getVariantType()
+                                                                    == VariantTypeImpl.ANDROID_TEST
+                                                            ? TestVariantBuildOutput.TestType
+                                                                    .ANDROID_TEST
+                                                            : TestVariantBuildOutput.TestType.UNIT))
+                            .collect(Collectors.toList());
+            variantsOutput.add(
+                    new DefaultVariantBuildOutput(
+                            variantProperties.getName(),
+                            getBuildOutputSupplier(variantProperties).get(),
+                            testVariantBuildOutputs));
         }
 
         return new DefaultProjectBuildOutput(variantsOutput.build());
@@ -384,12 +372,10 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
 
         String defaultVariant = variantModel.getDefaultVariant();
-        for (ComponentPropertiesImpl component : variantModel.getComponents()) {
-            if (!component.getVariantType().isTestComponent()) {
-                variantNames.add(component.getName());
-                if (shouldBuildVariant) {
-                    variants.add(createVariant(component));
-                }
+        for (VariantPropertiesImpl variantProperties : variantModel.getVariants()) {
+            variantNames.add(variantProperties.getName());
+            if (shouldBuildVariant) {
+                variants.add(createVariant(variantProperties));
             }
         }
 
@@ -400,10 +386,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         // Collect all non test variants minimum information.
         Collection<VariantBuildInformation> variantBuildOutputs =
-                variantModel.getComponents().stream()
-                        .filter(
-                                componentProperties ->
-                                        !componentProperties.getVariantType().isTestComponent())
+                variantModel.getVariants().stream()
                         .map(this::createBuildInformation)
                         .collect(Collectors.toList());
 
@@ -570,10 +553,9 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (variantName == null) {
             throw new IllegalArgumentException("Variant name cannot be null.");
         }
-        for (ComponentPropertiesImpl component : variantModel.getComponents()) {
-            if (!component.getVariantType().isTestComponent()
-                    && component.getName().equals(variantName)) {
-                VariantImpl variant = createVariant(component);
+        for (VariantPropertiesImpl variantProperties : variantModel.getVariants()) {
+            if (variantProperties.getName().equals(variantName)) {
+                VariantImpl variant = createVariant(variantProperties);
                 if (shouldScheduleSourceGeneration) {
                     scheduleSourceGeneration(project, variant);
                 }
@@ -800,7 +782,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 variantType.getArtifactName(),
                 componentProperties.getTaskContainer().getAssembleTask().getName(),
                 componentProperties.getTaskContainer().getCompileTask().getName(),
-                Sets.newHashSet(taskManager.createMockableJar.getName()),
+                Sets.newHashSet(TaskManager.CREATE_MOCKABLE_JAR_TASK_NAME),
                 getGeneratedSourceFoldersForUnitTests(componentProperties),
                 artifacts.getFinalProduct(JAVAC.INSTANCE).get().getAsFile(),
                 additionalTestClasses,

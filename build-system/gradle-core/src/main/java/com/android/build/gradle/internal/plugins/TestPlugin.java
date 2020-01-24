@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestExtension;
@@ -42,7 +43,7 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'test' projects. */
-public class TestPlugin extends BasePlugin<TestVariantPropertiesImpl> {
+public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertiesImpl> {
     @Inject
     public TestPlugin(
             ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
@@ -95,12 +96,10 @@ public class TestPlugin extends BasePlugin<TestVariantPropertiesImpl> {
     protected TestApplicationTaskManager createTaskManager(
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new TestApplicationTaskManager(
                 globalScope,
                 extension,
-                toolingRegistry,
                 recorder);
     }
 

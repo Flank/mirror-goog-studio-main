@@ -16,32 +16,40 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.AndroidDependenciesRenderer
-import com.google.common.collect.ImmutableList
-import java.io.IOException
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.internal.logging.text.StyledTextOutputFactory
+import java.io.IOException
 
 open class DependencyReportTask : DefaultTask() {
 
     private val renderer = AndroidDependenciesRenderer()
 
     @get:Internal
-    lateinit var components: ImmutableList<ComponentPropertiesImpl>
+    lateinit var variants: List<VariantPropertiesImpl>
+    @get:Internal
+    lateinit var testComponents: List<TestComponentPropertiesImpl>
 
     @TaskAction
     @Throws(IOException::class)
     fun generate() {
         renderer.setOutput(services.get(StyledTextOutputFactory::class.java).create(javaClass))
-        val sortedComponents = components.sortedWith(compareBy { it.name })
+        val sortedVariants = variants.sortedWith(compareBy { it.name })
 
-        for (component in sortedComponents) {
-            renderer.startComponent(component)
-            renderer.render(component)
+        for (variant in sortedVariants) {
+            renderer.startComponent(variant)
+            renderer.render(variant)
+        }
+
+        val sortedTestComponents = testComponents.sortedWith(compareBy { it.name })
+
+        for (testComponent in sortedTestComponents) {
+            renderer.startComponent(testComponent)
+            renderer.render(testComponent)
         }
     }
-
 }

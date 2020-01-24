@@ -29,6 +29,7 @@ import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentIdentityImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.FilterConfiguration;
@@ -40,8 +41,6 @@ import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -79,6 +78,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -106,13 +106,14 @@ public class ModelBuilderTest {
     @Mock GlobalScope globalScope;
     @Mock Project project;
     @Mock Gradle gradle;
-    @Mock VariantManager variantManager;
-    @Mock TaskManager taskManager;
     @Mock BaseExtension extension;
     @Mock ExtraModelInfo extraModelInfo;
     @Mock BuildArtifactsHolder artifacts;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    private List<VariantPropertiesImpl> variantList = Lists.newArrayList();
+    private List<TestComponentPropertiesImpl> testComponentList = Lists.newArrayList();
 
     ModelBuilder modelBuilder;
     File apkLocation;
@@ -145,14 +146,14 @@ public class ModelBuilderTest {
                 new VariantModelImpl(
                         new VariantInputModelBuilder(FakeDslScope.createFakeDslScope()).toModel(),
                         extension::getTestBuildType,
-                        variantManager::getAllComponents,
+                        () -> variantList,
+                        () -> testComponentList,
                         syncIssueReporter);
 
         modelBuilder =
                 new ModelBuilder<>(
                         globalScope,
                         variantModel,
-                        taskManager,
                         extension,
                         extraModelInfo,
                         syncIssueReporter,
@@ -172,14 +173,14 @@ public class ModelBuilderTest {
         when(variantDslInfo.getDirName()).thenReturn("variant/name");
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
 
-        ComponentPropertiesImpl componentProperties =
+        VariantPropertiesImpl componentProperties =
                 createComponentProperties(
                         "variantName",
                         "variant/name",
                         variantDslInfo,
                         ApplicationVariantPropertiesImpl.class,
                         null);
-        when(variantManager.getAllComponents()).thenReturn(ImmutableList.of(componentProperties));
+        variantList.add(componentProperties);
 
         assertThat(modelBuilder.buildMinimalisticModel()).isNotNull();
         Collection<VariantBuildOutput> variantsBuildOutput =
@@ -200,15 +201,14 @@ public class ModelBuilderTest {
         when(variantDslInfo.getDirName()).thenReturn("variant/name");
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
 
-        ComponentPropertiesImpl componentProperties =
+        VariantPropertiesImpl componentProperties =
                 createComponentProperties(
                         "variantName",
                         "variant/name",
                         variantDslInfo,
                         ApplicationVariantPropertiesImpl.class,
                         null);
-
-        when(variantManager.getAllComponents()).thenReturn(ImmutableList.of(componentProperties));
+        variantList.add(componentProperties);
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
         File apkOutput = new File(variantOutputFolder, "main.apk");
@@ -265,17 +265,14 @@ public class ModelBuilderTest {
         when(variantDslInfo.getDirName()).thenReturn("variant/name");
         when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
 
-        ComponentPropertiesImpl componentProperties =
+        VariantPropertiesImpl componentProperties =
                 createComponentProperties(
                         "variantName",
                         "variant/name",
                         variantDslInfo,
                         ApplicationVariantPropertiesImpl.class,
                         null);
-
-        when(variantManager.getAllComponents()).thenReturn(ImmutableList.of(componentProperties));
-
-        OutputFactory outputFactory = new OutputFactory(PROJECT, variantDslInfo);
+        variantList.add(componentProperties);
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
 
@@ -333,14 +330,14 @@ public class ModelBuilderTest {
     public void testMultipleVariantWithOutputMinimalisticModel() throws IOException {
 
         List<String> expectedVariantNames = new ArrayList<>();
-        ImmutableList.Builder<ComponentPropertiesImpl> components = ImmutableList.builder();
+        ImmutableList.Builder<VariantPropertiesImpl> components = ImmutableList.builder();
         for (int i = 0; i < 5; i++) {
             VariantDslInfo variantDslInfo = Mockito.mock(VariantDslInfo.class);
             when(variantDslInfo.getDirName()).thenReturn("variant/name" + i);
             when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
 
             String variantName = "variantName" + i;
-            ComponentPropertiesImpl componentProperties =
+            VariantPropertiesImpl componentProperties =
                     createComponentProperties(
                             variantName,
                             "variant/name" + i,
@@ -376,7 +373,7 @@ public class ModelBuilderTest {
             components.add(componentProperties);
         }
 
-        when(variantManager.getAllComponents()).thenReturn(components.build());
+        variantList.addAll(components.build());
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
         assertThat(projectBuildOutput).isNotNull();
@@ -442,8 +439,8 @@ public class ModelBuilderTest {
         when(testBuildableArtifact.iterator())
                 .thenReturn(ImmutableSet.of(temporaryFolder.getRoot()).iterator());
 
-        when(variantManager.getAllComponents())
-                .thenReturn(ImmutableList.of(libProperties, unitTestProperties));
+        variantList.add(libProperties);
+        testComponentList.add(unitTestProperties);
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
         File apkOutput = new File(variantOutputFolder, "main.apk");

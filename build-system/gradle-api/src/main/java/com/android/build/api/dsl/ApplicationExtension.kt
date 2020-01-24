@@ -64,7 +64,7 @@ interface ApplicationExtension<
             SplitsT,
             TestOptionsT,
             UnitTestOptionsT,
-            ApplicationVariant,
+            ApplicationVariant<ApplicationVariantProperties>,
             ApplicationVariantProperties>,
     ApkExtension,
     TestedExtension {

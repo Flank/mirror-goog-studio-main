@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.impl.DynamicFeatureVariantImpl;
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
@@ -43,7 +44,8 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on an optional APK module */
-public class DynamicFeaturePlugin extends AbstractAppPlugin<DynamicFeatureVariantPropertiesImpl> {
+public class DynamicFeaturePlugin
+        extends AbstractAppPlugin<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl> {
     @Inject
     public DynamicFeaturePlugin(
             ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
@@ -107,10 +109,8 @@ public class DynamicFeaturePlugin extends AbstractAppPlugin<DynamicFeatureVarian
     protected DynamicFeatureTaskManager createTaskManager(
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder) {
-        return new DynamicFeatureTaskManager(
-                globalScope, extension, toolingRegistry, threadRecorder);
+        return new DynamicFeatureTaskManager(globalScope, extension, threadRecorder);
     }
 
     @NonNull

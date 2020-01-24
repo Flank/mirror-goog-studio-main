@@ -28,10 +28,10 @@ import org.gradle.api.Incubating
  * Variant object that contains properties that must be set during configuration time as it
  * changes the build flow for the variant.
  *
- * @param VariantPropertiesT the [VariantProperties] type associated with this [Variant]
+ * @param PropertiesT the [VariantProperties] type associated with this [Variant]
  */
 @Incubating
-interface Variant<VariantPropertiesT : VariantProperties>: Component<VariantPropertiesT>,
+interface Variant<PropertiesT : VariantProperties>: Component<PropertiesT>,
     ActionableComponentObject {
 
     fun unitTest(action: UnitTest<UnitTestProperties>.() -> Unit)

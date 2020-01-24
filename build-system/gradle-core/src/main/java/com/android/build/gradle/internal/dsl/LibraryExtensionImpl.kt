@@ -41,7 +41,7 @@ class LibraryExtensionImpl(
             DefaultConfig,
             ProductFlavor,
             SigningConfig,
-            LibraryVariant,
+            LibraryVariant<LibraryVariantProperties>,
             LibraryVariantProperties>(
         dslScope,
         buildTypes,
@@ -72,13 +72,13 @@ class LibraryExtensionImpl(
         dslScope.objectFactory.newInstance(LibraryBuildFeaturesImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericFilteredComponentActionRegistrar<LibraryVariant>
+    override val onVariants: GenericFilteredComponentActionRegistrar<LibraryVariant<LibraryVariantProperties>>
         get() = dslScope.objectFactory.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslScope,
             variantOperations,
             LibraryVariant::class.java
-        ) as GenericFilteredComponentActionRegistrar<LibraryVariant>
+        ) as GenericFilteredComponentActionRegistrar<LibraryVariant<LibraryVariantProperties>>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<LibraryVariantProperties>
         get() = dslScope.objectFactory.newInstance(

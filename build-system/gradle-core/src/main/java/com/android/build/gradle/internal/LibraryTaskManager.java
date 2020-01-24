@@ -31,6 +31,7 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
+import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -56,6 +57,7 @@ import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
@@ -86,27 +88,29 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** TaskManager for creating tasks in an Android library project. */
-public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl> {
+public class LibraryTaskManager
+        extends TaskManager<LibraryVariantImpl, LibraryVariantPropertiesImpl> {
 
     public LibraryTaskManager(
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
                 globalScope,
                 extension,
-                toolingRegistry,
                 recorder);
     }
 
     @Override
     protected void doCreateTasksForVariant(
-            @NonNull LibraryVariantPropertiesImpl libVariantProperties,
-            @NonNull List<LibraryVariantPropertiesImpl> allVariants) {
+            @NonNull ComponentInfo<LibraryVariantImpl, LibraryVariantPropertiesImpl> variant,
+            @NonNull
+                    List<ComponentInfo<LibraryVariantImpl, LibraryVariantPropertiesImpl>>
+                            allVariants) {
+
+        LibraryVariantPropertiesImpl libVariantProperties = variant.getProperties();
 
         createAnchorTasks(libVariantProperties);
 

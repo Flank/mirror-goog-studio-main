@@ -51,7 +51,7 @@ import java.util.stream.Collectors
 
 class ApplicationVariantFactory(
     globalScope: GlobalScope
-): AbstractAppVariantFactory<ApplicationVariantPropertiesImpl>(globalScope) {
+): AbstractAppVariantFactory<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>(globalScope) {
 
     override fun createVariantObject(
         componentIdentity: ComponentIdentity,

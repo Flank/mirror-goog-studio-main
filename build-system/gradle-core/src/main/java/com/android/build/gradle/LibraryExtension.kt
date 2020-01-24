@@ -95,7 +95,7 @@ open class LibraryExtension(
             Splits,
             TestOptions,
             TestOptions.UnitTestOptions> by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor<com.android.build.api.variant.LibraryVariant, LibraryVariantProperties> by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<com.android.build.api.variant.LibraryVariant<LibraryVariantProperties>, LibraryVariantProperties> by publicExtensionImpl {
 
     private val libraryVariantList: DomainObjectSet<LibraryVariant> =
         dslScope.objectFactory.domainObjectSet(LibraryVariant::class.java)

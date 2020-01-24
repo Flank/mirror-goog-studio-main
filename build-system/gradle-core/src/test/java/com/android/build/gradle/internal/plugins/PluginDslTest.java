@@ -16,15 +16,19 @@
 
 package com.android.build.gradle.internal.plugins;
 
+import static com.android.build.gradle.internal.plugins.AppPluginInternalTest.getComponents;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.Version;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
-import com.android.build.gradle.AppExtension;
-import com.android.build.gradle.BaseExtension;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.variant.impl.ApplicationVariantImpl;
+import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.fixture.BaseTestedVariant;
@@ -32,6 +36,7 @@ import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.SyncIssue;
@@ -59,54 +64,36 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Tests for checking the "application" and "atom" DSLs. */
-@RunWith(Parameterized.class)
 public class PluginDslTest {
 
     @Rule public TemporaryFolder projectDirectory = new TemporaryFolder();
-    private BasePlugin plugin;
-    private BaseExtension android;
+    private AppPlugin plugin;
+    private BaseAppModuleExtension android;
     private Project project;
     private VariantChecker checker;
-    private final TestProjects.Plugin pluginType;
-
-    @Parameterized.Parameters(name = "{0}")
-    public static TestProjects.Plugin[] generateStates() {
-        return new TestProjects.Plugin[] {TestProjects.Plugin.APP};
-    }
-
-    public PluginDslTest(TestProjects.Plugin pluginType) {
-        this.pluginType = pluginType;
-    }
-
 
     @Before
     public void setUp() throws Exception {
         project =
                 TestProjects.builder(projectDirectory.newFolder("project").toPath())
-                        .withPlugin(pluginType)
+                        .withPlugin(TestProjects.Plugin.APP)
                         .withProperty(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED, true)
                         .build();
 
-        android = project.getExtensions().getByType(pluginType.getExtensionClass());
+        android = project.getExtensions().getByType(BaseAppModuleExtension.class);
         android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION);
         android.setBuildToolsVersion(TestConstants.BUILD_TOOL_VERSION);
 
-        if (pluginType == TestProjects.Plugin.APP) {
-            plugin = (AppPlugin) project.getPlugins().getPlugin(pluginType.getPluginClass());
-            checker = VariantCheckers.createAppChecker((AppExtension) android);
-        } else {
-            throw new AssertionError("Unsupported plugin type");
-        }
+        plugin = project.getPlugins().getPlugin(AppPlugin.class);
+        checker = VariantCheckers.createAppChecker(android);
     }
 
     @Test
     public void testBasic() {
         plugin.createAndroidTasks();
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getAllComponents());
+        VariantCheckers.checkDefaultVariants(getComponents(plugin.getVariantManager()));
 
         // we can now call this since the variants/tasks have been created
         Set<BaseTestedVariant> variants = checker.getVariants();
@@ -129,7 +116,7 @@ public class PluginDslTest {
                         + "'\n        }\n");
 
         plugin.createAndroidTasks();
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getAllComponents());
+        VariantCheckers.checkDefaultVariants(getComponents(plugin.getVariantManager()));
 
         // we can now call this since the variants/tasks have been created
         Set<BaseTestedVariant> variants = checker.getVariants();
@@ -178,7 +165,7 @@ public class PluginDslTest {
         map.put("unitTest", 3);
         map.put("androidTests", 1);
         assertThat(VariantCheckers.countVariants(map))
-                .isEqualTo(plugin.getVariantManager().getAllComponents().size());
+                .isEqualTo(getComponents(plugin.getVariantManager()).size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -219,7 +206,7 @@ public class PluginDslTest {
         map.put("unitTest", 4);
         map.put("androidTests", 2);
         assertThat(VariantCheckers.countVariants(map))
-                .isEqualTo(plugin.getVariantManager().getAllComponents().size());
+                .isEqualTo(getComponents(plugin.getVariantManager()).size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -277,7 +264,7 @@ public class PluginDslTest {
         ImmutableMap<String, Integer> map =
                 ImmutableMap.of("appVariants", 12, "unitTests", 12, "androidTests", 6);
         assertThat(VariantCheckers.countVariants(map))
-                .isEqualTo(plugin.getVariantManager().getAllComponents().size());
+                .isEqualTo(getComponents(plugin.getVariantManager()).size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -348,7 +335,7 @@ public class PluginDslTest {
                         + "}\n");
 
         plugin.createAndroidTasks();
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getAllComponents());
+        VariantCheckers.checkDefaultVariants(getComponents(plugin.getVariantManager()));
 
         // we can now call this since the variants/tasks have been created
 
@@ -730,10 +717,18 @@ public class PluginDslTest {
 
     public Map<String, ComponentPropertiesImpl> getComponentMap() {
         Map<String, ComponentPropertiesImpl> result = new HashMap<>();
-        List<ComponentPropertiesImpl> allComponents = plugin.getVariantManager().getAllComponents();
-        for (ComponentPropertiesImpl componentProperties : allComponents) {
-            result.put(componentProperties.getName(), componentProperties);
+        for (ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl> variant :
+                plugin.getVariantManager().getMainComponents()) {
+            result.put(variant.getProperties().getName(), variant.getProperties());
         }
+
+        for (ComponentInfo<
+                        TestComponentImpl<? extends TestComponentPropertiesImpl>,
+                        TestComponentPropertiesImpl>
+                testComponent : plugin.getVariantManager().getTestComponents()) {
+            result.put(testComponent.getProperties().getName(), testComponent.getProperties());
+        }
+
         return result;
     }
 }

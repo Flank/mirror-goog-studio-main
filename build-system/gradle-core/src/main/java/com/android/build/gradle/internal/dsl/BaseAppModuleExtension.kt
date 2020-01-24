@@ -69,7 +69,7 @@ open class BaseAppModuleExtension(
         Splits,
         TestOptions,
         TestOptions.UnitTestOptions> by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor<ApplicationVariant, ApplicationVariantProperties> by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<ApplicationVariant<ApplicationVariantProperties>, ApplicationVariantProperties> by publicExtensionImpl {
 
     override val viewBinding: ViewBindingOptions =
         dslScope.objectFactory.newInstance(

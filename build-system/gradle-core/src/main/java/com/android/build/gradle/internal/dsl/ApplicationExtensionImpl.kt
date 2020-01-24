@@ -43,7 +43,7 @@ class ApplicationExtensionImpl(
             DefaultConfig,
             ProductFlavor,
             SigningConfig,
-            ApplicationVariant,
+            ApplicationVariant<ApplicationVariantProperties>,
             ApplicationVariantProperties>(
         dslScope,
         buildTypes,
@@ -74,13 +74,13 @@ class ApplicationExtensionImpl(
         dslScope.objectFactory.newInstance(ApplicationBuildFeaturesImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericFilteredComponentActionRegistrar<ApplicationVariant>
+    override val onVariants: GenericFilteredComponentActionRegistrar<ApplicationVariant<ApplicationVariantProperties>>
         get() = dslScope.objectFactory.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslScope,
             variantOperations,
             ApplicationVariant::class.java
-        ) as GenericFilteredComponentActionRegistrar<ApplicationVariant>
+        ) as GenericFilteredComponentActionRegistrar<ApplicationVariant<ApplicationVariantProperties>>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<ApplicationVariantProperties>
         get() = dslScope.objectFactory.newInstance(

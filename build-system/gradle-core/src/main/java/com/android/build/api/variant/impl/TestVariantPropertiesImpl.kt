@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableSet
 import org.gradle.api.provider.Property
 import javax.inject.Inject
 
-internal open class TestVariantPropertiesImpl @Inject constructor(
+open class TestVariantPropertiesImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
