@@ -662,7 +662,8 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                 !variantInputModel.getProductFlavors().isEmpty());
 
         new DependencyConfigurator(project, project.getName(), globalScope, variantInputModel)
-                .configureDependencies();
+                .configureGeneralTransforms()
+                .configureVariantTransforms(mainComponents, variantManager.getTestComponents());
 
         // Run the old Variant API, after the variants and tasks have been created.
         ApiObjectFactory apiObjectFactory =

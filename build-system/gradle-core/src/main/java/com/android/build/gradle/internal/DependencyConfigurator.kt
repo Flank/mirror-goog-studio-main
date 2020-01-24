@@ -18,6 +18,8 @@ package com.android.build.gradle.internal
 
 import com.android.build.api.attributes.BuildTypeAttr.Companion.ATTRIBUTE
 import com.android.build.api.attributes.ProductFlavorAttr
+import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform
 import com.android.build.gradle.internal.dependency.AarToClassTransform
 import com.android.build.gradle.internal.dependency.AarTransform
@@ -27,6 +29,7 @@ import com.android.build.gradle.internal.dependency.AndroidXDependencySubstituti
 import com.android.build.gradle.internal.dependency.ClassesDirToClassesTransform
 import com.android.build.gradle.internal.dependency.ExtractAarTransform
 import com.android.build.gradle.internal.dependency.ExtractProGuardRulesTransform
+import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
 import com.android.build.gradle.internal.dependency.JetifyTransform
@@ -35,6 +38,10 @@ import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform
 import com.android.build.gradle.internal.dependency.MockableJarTransform
 import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule.Companion.setUp
 import com.android.build.gradle.internal.dependency.PlatformAttrTransform
+import com.android.build.gradle.internal.dependency.VersionedCodeShrinker.Companion.of
+import com.android.build.gradle.internal.dependency.getDesugarLibConfigurations
+import com.android.build.gradle.internal.dependency.getDexingArtifactConfigurations
+import com.android.build.gradle.internal.dependency.registerDexingOutputSplitTransform
 import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.ProductFlavor
@@ -42,10 +49,12 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
+import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.variant.VariantInputModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
+import com.android.builder.model.CodeShrinker
 import com.google.common.base.Strings
 import com.google.common.collect.Maps
 import org.gradle.api.Action
@@ -70,7 +79,7 @@ class DependencyConfigurator(
     private val variantInputModel: VariantInputModel
 ) {
 
-    fun configureDependencies() {
+    fun configureGeneralTransforms(): DependencyConfigurator {
         val dependencies: DependencyHandler = project.dependencies
 
         // USE_ANDROID_X indicates that the developers want to be in the AndroidX world, whereas
@@ -489,6 +498,8 @@ class DependencyConfigurator(
         setBuildTypeStrategy(schema)
         setupFlavorStrategy(schema)
         setupModelStrategy(schema)
+
+        return this
     }
 
     private fun setBuildTypeStrategy(schema: AttributesSchema) {
@@ -582,6 +593,73 @@ class DependencyConfigurator(
                 dimensionMap[value.requested] = value.fallbacks
             }
         }
+    }
+
+    /** Configure artifact transforms that require variant-specific attribute information.  */
+    fun configureVariantTransforms(
+        variants: List<VariantPropertiesImpl>,
+        testComponents: List<TestComponentPropertiesImpl>
+    ): DependencyConfigurator {
+        val allComponents = variants + testComponents
+
+        val dependencies = project.dependencies
+        if (globalScope.projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]) {
+            for (artifactConfiguration in getDexingArtifactConfigurations(
+                allComponents
+            )) {
+                artifactConfiguration.registerTransform(
+                    globalScope.project.name,
+                    dependencies,
+                    globalScope.bootClasspath,
+                    getDesugarLibConfig(globalScope.project),
+                    SyncOptions.getErrorFormatMode(globalScope.projectOptions),
+                    globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2)
+                )
+            }
+        }
+        if (globalScope.projectOptions[BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION]) {
+            val shrinkers: Set<CodeShrinker> = allComponents
+                .asSequence()
+                .map { it.variantScope.codeShrinker }
+                .filterNotNull()
+                .toSet()
+            for (shrinker in shrinkers) {
+                dependencies.registerTransform(
+                    FilterShrinkerRulesTransform::class.java
+                ) { reg: TransformSpec<FilterShrinkerRulesTransform.Parameters> ->
+                    reg.from
+                        .attribute(
+                            ArtifactAttributes.ARTIFACT_FORMAT,
+                            AndroidArtifacts.ArtifactType.UNFILTERED_PROGUARD_RULES.type
+                        )
+                    reg.to
+                        .attribute(
+                            ArtifactAttributes.ARTIFACT_FORMAT,
+                            AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES.type
+                        )
+                    reg.from.attribute(
+                        VariantManager.SHRINKER_ATTR,
+                        shrinker.toString()
+                    )
+                    reg.to.attribute(
+                        VariantManager.SHRINKER_ATTR,
+                        shrinker.toString()
+                    )
+                    reg.parameters { params: FilterShrinkerRulesTransform.Parameters ->
+                        params.shrinker
+                            .set(of(shrinker))
+                        params.projectName.set(project.name)
+                    }
+                }
+            }
+        }
+
+        for (configuration in getDesugarLibConfigurations(allComponents)) {
+            configuration.registerTransform(dependencies)
+        }
+        registerDexingOutputSplitTransform(dependencies)
+
+        return this
     }
 
     companion object {

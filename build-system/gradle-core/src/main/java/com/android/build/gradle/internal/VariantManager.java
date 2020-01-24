@@ -269,58 +269,7 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
 
     }
 
-    /** Configure artifact transforms that require variant-specific attribute information. */
-    private void configureVariantArtifactTransforms() {
-        DependencyHandler dependencies = project.getDependencies();
 
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM)) {
-            for (DexingArtifactConfiguration artifactConfiguration :
-                    getDexingArtifactConfigurations(allComponents)) {
-                artifactConfiguration.registerTransform(
-                        globalScope.getProject().getName(),
-                        dependencies,
-                        globalScope.getBootClasspath(),
-                        getDesugarLibConfig(globalScope.getProject()),
-                        SyncOptions.getErrorFormatMode(globalScope.getProjectOptions()),
-                        projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2));
-            }
-        }
-
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION)) {
-            Set<CodeShrinker> shrinkers =
-                    allComponents.stream()
-                            .map(component -> component.getVariantScope().getCodeShrinker())
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.toSet());
-            for (CodeShrinker shrinker : shrinkers) {
-                dependencies.registerTransform(
-                        FilterShrinkerRulesTransform.class,
-                        reg -> {
-                            reg.getFrom()
-                                    .attribute(
-                                            ARTIFACT_FORMAT, UNFILTERED_PROGUARD_RULES.getType());
-                            reg.getTo()
-                                    .attribute(ARTIFACT_FORMAT, FILTERED_PROGUARD_RULES.getType());
-
-                            reg.getFrom().attribute(SHRINKER_ATTR, shrinker.toString());
-                            reg.getTo().attribute(SHRINKER_ATTR, shrinker.toString());
-
-                            reg.parameters(
-                                    params -> {
-                                        params.getShrinker()
-                                                .set(VersionedCodeShrinker.of(shrinker));
-                                        params.getProjectName().set(project.getName());
-                                    });
-                        });
-            }
-        }
-
-        for (DesugarLibConfiguration configuration : getDesugarLibConfigurations(allComponents)) {
-            configuration.registerTransform(dependencies);
-        }
-
-        registerDexingOutputSplitTransform(dependencies);
-    }
 
     /**
      * Returns a modified name.
@@ -356,8 +305,6 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
         for (DimensionCombination variant : variants) {
             createVariantsFromCombination(variant, testBuildTypeData);
         }
-
-        configureVariantArtifactTransforms();
     }
 
     @Nullable
