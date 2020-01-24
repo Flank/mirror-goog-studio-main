@@ -1,6 +1,5 @@
 package com.android.build.gradle.integration.application
 
-import android.databinding.tool.ext.toCamelCase
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -31,6 +30,8 @@ class AnalyzeDependenciesTest {
             .appendToBuild(
                     """
                 dependencies {
+                implementation project(path: ':usedLocalLib')
+                implementation project(path: ':unUsedLocalLib')
                 implementation 'com.analyzedependenciesTest:emptyaar:1'
                 implementation 'com.analyzedependenciesTest:usedaar:1'
                  }
@@ -41,11 +42,40 @@ class AnalyzeDependenciesTest {
                 package com.example.app;
                 
                 import com.android.build.gradle.integration.application.AnalyzeDependenciesTest.UsedClass;
+                import com.example.usedlocallib.UsedLocalLib;
                 
                 public class MyClass {
-                    void test() {
+                    void testUsedAarClass() {
                         UsedClass usedClass = new UsedClass();
                         usedClass.getTrue();
+                    }
+                    void testUsedLocalLibClass() {
+                        UsedLocalLib usedLocalLib = new UsedLocalLib();
+                        usedLocalLib.getFoo();
+                    }
+                }
+            """.trimIndent())
+
+    private val usedLocalLib = MinimalSubProject.lib("com.example.usedlocallib")
+            .withFile("src/main/java/com/example/usedlocallib/UsedLocalLib.java",
+                    """
+                package com.example.usedlocallib;
+
+                public class UsedLocalLib {
+                    public String getFoo() {
+                        return "Foo";
+                    }
+                }
+            """.trimIndent())
+
+    private val unUsedLocalLib = MinimalSubProject.lib("com.example.unusedlocallib")
+            .withFile("src/main/java/com/example/usedlocallib/UnUsedLocalLib.java",
+                    """
+                package com.example.unusedlocallib;
+
+                public class UnUsedLocalLib {
+                    public String getBar() {
+                        return "Bar";
                     }
                 }
             """.trimIndent())
@@ -63,6 +93,10 @@ class AnalyzeDependenciesTest {
     private val testApp =
             MultiModuleTestProject.builder()
                     .subproject(":app", app)
+                    .subproject(":usedLocalLib", usedLocalLib)
+                    .subproject(":unUsedLocalLib", unUsedLocalLib)
+                    .dependency(app, usedLocalLib)
+                    .dependency(app, unUsedLocalLib)
                     .build()
 
     @get:Rule
@@ -74,8 +108,10 @@ class AnalyzeDependenciesTest {
     @Test
     fun `Verify correct dependencies report is produced, only considering class references`() {
         val buildType = "debug"
-        project.execute(":app:assemble${buildType.toCamelCase()}")
-        project.execute(":app:analyze${buildType.toCamelCase()}Dependencies")
+        project.execute(
+                ":app:assemble${buildType.toUpperCase()}",
+                ":app:analyze${buildType.toUpperCase()}Dependencies"
+        )
 
         val dependencyAnalysisReport = project.getSubproject(":app").getIntermediateFile(
                 "analyze_dependencies_report",
@@ -89,8 +125,8 @@ class AnalyzeDependenciesTest {
         val parsedJson =
                 Gson().fromJson(dependencyReportJson, DependenciesUsageReport::class.java)
 
+        assertThat(parsedJson.remove).containsExactly("com.analyzedependenciesTest:emptyaar:1")
         assertThat(parsedJson.add.size).isEqualTo(0)
         assertThat(parsedJson.remove.size).isEqualTo(1)
-        assertThat(parsedJson.remove).contains("com.analyzedependenciesTest:emptyaar:1")
     }
 }

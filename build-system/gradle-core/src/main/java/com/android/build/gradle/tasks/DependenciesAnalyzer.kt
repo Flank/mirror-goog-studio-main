@@ -57,7 +57,6 @@ class DependenciesAnalyzer {
     /** Finds all the dependencies in a .class file */
     fun findAllDependencies(bytecode: InputStream): List<String> {
         return visitClass(bytecode).keys.toList()
-
     }
 
     /** Finds only the dependencies that the .class file exposes in its public components */

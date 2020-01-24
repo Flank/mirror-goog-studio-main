@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
 import com.android.build.gradle.internal.dependency.JetifyTransform
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform
+import com.android.build.gradle.internal.dependency.LibraryClasspathsTransform
 import com.android.build.gradle.internal.dependency.MockableJarTransform
 import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule.Companion.setUp
 import com.android.build.gradle.internal.dependency.PlatformAttrTransform
@@ -502,6 +503,21 @@ class DependencyConfigurator(
                 )
             }
         )
+        dependencies.registerTransform(
+                LibraryClasspathsTransform::class.java,
+                Action { spec: TransformSpec<GenericTransformParameters> ->
+                    spec.parameters.projectName.set(projectName)
+                    spec.from.attribute(
+                            ArtifactAttributes.ARTIFACT_FORMAT,
+                            AndroidArtifacts.ArtifactType.EXPLODED_AAR.type
+                    )
+                    spec.to.attribute(
+                            ArtifactAttributes.ARTIFACT_FORMAT,
+                            AndroidArtifacts.ArtifactType.AAR_CLASS_LIST.type
+                    )
+                }
+        )
+
 
         // When consuming classes from Java libraries, there are 2 transforms:
         //     1. `java-classes-directory` -> `android-classes`
