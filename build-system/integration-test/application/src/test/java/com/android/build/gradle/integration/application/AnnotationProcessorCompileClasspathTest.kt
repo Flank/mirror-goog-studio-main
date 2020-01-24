@@ -62,7 +62,7 @@ class AnnotationProcessorCompileClasspathTest {
         result.stdout.use {
             ScannerSubject.assertThat(it).contains(
                 "DSL element 'annotationProcessorOptions.includeCompileClasspath' is obsolete.\n"
-                        + "It will be removed in a future version of the Android Gradle plugin.\n"
+                        + "It will be removed in version 5.0 of the Android Gradle plugin.\n"
                         + "It does not do anything and AGP no longer includes annotation processors added on your project's compile classpath"
 
             )
