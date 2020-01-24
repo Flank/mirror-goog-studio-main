@@ -71,7 +71,7 @@ cc_library(
 
 # to compile app-inspection with experimental code run following command:
 # bazel build //tools/adt/idea/android:artifacts --define app_inspection_experimental=true
-# TODO(b/145807282): Delete this flag
+# TODO(b/145807005): Delete this flag
 config_setting(
     name = "app_inspection_experimental",
     values = {

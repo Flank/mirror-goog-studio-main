@@ -187,7 +187,7 @@ public final class AppInspectionTest {
                                 "app.inspection.experimental", Boolean.toString(value))));
     }
 
-    // TODO(b/145807282): Remove flag and delete this test
+    // TODO(b/145807005): Remove flag and delete this test
     @Test
     public void inspectorEnvironmentNoOps_WhenExperimentalFlagDisabled() throws Exception {
         assumeExperimentalFlag(false);
