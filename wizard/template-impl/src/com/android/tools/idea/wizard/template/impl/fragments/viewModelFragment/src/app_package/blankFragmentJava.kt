@@ -26,10 +26,15 @@ fun blankFragmentJava(
   packageName: String,
   useAndroidX: Boolean,
   viewModelName: String
-) = """
+): String {
+
+  val viewModelInitializationBlock = if (useAndroidX) "new ViewModelProvider(this).get(${viewModelName}.class);"
+  else "new ViewModelProvider(this, new ViewModelProvider.NewInstanceFactory()).get(${viewModelName}.class);"
+
+  return """
 package ${packageName};
 
-import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProviders", useAndroidX)};
+import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)};
 import android.os.Bundle;
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
 import ${getMaterialComponentName("android.support.annotation.Nullable", useAndroidX)};
@@ -56,9 +61,10 @@ public class ${fragmentClass} extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mViewModel = ViewModelProviders.of(this).get(${viewModelName}.class);
+        mViewModel = $viewModelInitializationBlock
         // TODO: Use the ViewModel
     }
 
 }
 """
+}

@@ -20,8 +20,16 @@ import com.android.tools.idea.wizard.template.getMaterialComponentName
 
 
 fun firstFragmentKt(
-  packageName: String, firstFragmentClass: String, navFragmentPrefix: String, navViewModelClass: String, useAndroidX: Boolean
-) = """
+  packageName: String,
+  firstFragmentClass: String,
+  navFragmentPrefix: String,
+  navViewModelClass: String,
+  useAndroidX: Boolean
+): String {
+  val viewModelInitializationBlock = if (useAndroidX) "ViewModelProvider(this).get(${navViewModelClass}::class.java)"
+  else "ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(${navViewModelClass}::class.java)"
+
+  return """
 package ${packageName}.ui.${navFragmentPrefix}
 
 import android.os.Bundle
@@ -31,7 +39,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)}
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)}
-import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProviders", useAndroidX)}
+import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)}
 import ${escapeKotlinIdentifier(packageName)}.R
 
 class ${firstFragmentClass} : Fragment() {
@@ -44,7 +52,7 @@ class ${firstFragmentClass} : Fragment() {
     savedInstanceState: Bundle?
   ): View? {
     ${navFragmentPrefix}ViewModel =
-    ViewModelProviders.of(this).get(${navViewModelClass}::class.java)
+            $viewModelInitializationBlock
     val root = inflater.inflate(R.layout.fragment_${navFragmentPrefix}, container, false)
     val textView: TextView = root.findViewById(R.id.text_${navFragmentPrefix})
     ${navFragmentPrefix}ViewModel.text.observe(viewLifecycleOwner, Observer {
@@ -54,3 +62,4 @@ class ${firstFragmentClass} : Fragment() {
   }
 }
 """
+}

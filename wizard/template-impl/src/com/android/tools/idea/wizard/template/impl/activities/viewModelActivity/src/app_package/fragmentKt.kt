@@ -25,11 +25,14 @@ fun fragmentKt(
   fragmentPackage: String,
   packageName: String,
   useAndroidX: Boolean,
-  viewModelClass: String) =
+  viewModelClass: String): String {
 
-  """package ${escapeKotlinIdentifier(packageName)}.${escapeKotlinIdentifier(fragmentPackage)}
+  val viewModelInitializationBlock = if (useAndroidX) "ViewModelProvider(this).get(${viewModelClass}::class.java)"
+  else "ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(${viewModelClass}::class.java)"
 
-import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProviders", useAndroidX)}
+  return """package ${escapeKotlinIdentifier(packageName)}.${escapeKotlinIdentifier(fragmentPackage)}
+
+import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)}
 import android.os.Bundle
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)}
 import android.view.LayoutInflater
@@ -52,9 +55,10 @@ class ${fragmentClass} : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(${viewModelClass}::class.java)
+        viewModel = $viewModelInitializationBlock
         // TODO: Use the ViewModel
     }
 
 }
 """
+}

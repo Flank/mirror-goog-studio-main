@@ -27,7 +27,7 @@ fun loginActivityJava(
 
 import android.app.Activity;
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)};
-import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProviders", useAndroidX)};
+import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)};
 import android.os.Bundle;
 import ${getMaterialComponentName("android.support.annotation.Nullable", useAndroidX)};
 import ${getMaterialComponentName("android.support.annotation.StringRes", useAndroidX)};
@@ -55,7 +55,7 @@ public class LoginActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
-        loginViewModel = ViewModelProviders.of(this, new LoginViewModelFactory())
+        loginViewModel = new ViewModelProvider(this, new LoginViewModelFactory())
                 .get(LoginViewModel.class);
 
         final EditText usernameEditText = findViewById(R.id.username);

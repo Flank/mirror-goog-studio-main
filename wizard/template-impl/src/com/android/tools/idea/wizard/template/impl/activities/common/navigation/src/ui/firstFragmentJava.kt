@@ -19,8 +19,16 @@ import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 
 fun firstFragmentJava(
-  packageName: String, firstFragmentClass: String, navFragmentPrefix: String, navViewModelClass: String, useAndroidX: Boolean
-) = """
+  packageName: String,
+  firstFragmentClass: String,
+  navFragmentPrefix: String,
+  navViewModelClass: String,
+  useAndroidX: Boolean
+): String {
+  val viewModelInitializationBlock = if (useAndroidX) "new ViewModelProvider(this).get(${navViewModelClass}.class);"
+  else "new ViewModelProvider(this, new ViewModelProvider.NewInstanceFactory()).get(${navViewModelClass}.class);"
+
+  return """
 package ${packageName}.ui.${navFragmentPrefix};
 
 import android.os.Bundle;
@@ -32,7 +40,7 @@ import ${getMaterialComponentName("android.support.annotation.NonNull", useAndro
 import ${getMaterialComponentName("android.support.annotation.Nullable", useAndroidX)};
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)};
-import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProviders", useAndroidX)};
+import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)};
 import ${packageName}.R;
 
 public class ${firstFragmentClass} extends Fragment {
@@ -42,7 +50,7 @@ public class ${firstFragmentClass} extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
             ViewGroup container, Bundle savedInstanceState) {
         ${navFragmentPrefix}ViewModel =
-                ViewModelProviders.of(this).get(${navViewModelClass}.class);
+                $viewModelInitializationBlock
         View root = inflater.inflate(R.layout.fragment_${navFragmentPrefix}, container, false);
         final TextView textView = root.findViewById(R.id.text_${navFragmentPrefix});
         ${navFragmentPrefix}ViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
@@ -55,3 +63,4 @@ public class ${firstFragmentClass} extends Fragment {
     }
 }
 """
+}

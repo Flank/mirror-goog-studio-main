@@ -243,3 +243,13 @@ fun RecipeExecutor.generateAppBar(
 
   generateNoActionBarStyles(baseFeatureResOut, resDir, themesData)
 }
+
+fun RecipeExecutor.addLifecycleDependencies(useAndroidX: Boolean) {
+  if (useAndroidX) {
+    addDependency("androidx.lifecycle:lifecycle-livedata-ktx:+")
+    addDependency("androidx.lifecycle:lifecycle-viewmodel-ktx:+")
+  } else {
+    addDependency("android.arch.lifecycle:livedata:+")
+    addDependency("android.arch.lifecycle:viewmodel:+")
+  }
+}

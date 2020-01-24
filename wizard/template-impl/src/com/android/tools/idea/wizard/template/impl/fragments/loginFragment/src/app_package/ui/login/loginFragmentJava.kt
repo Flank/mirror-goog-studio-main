@@ -27,7 +27,7 @@ fun loginFragmentJava(
 package  ${packageName}.ui.login;
 
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)};
-import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProviders", useAndroidX)};
+import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)};
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
 import ${getMaterialComponentName("android.support.annotation.Nullable", useAndroidX)};
 import ${getMaterialComponentName("android.support.annotation.StringRes", useAndroidX)};
@@ -64,7 +64,7 @@ public class ${fragmentClass} extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        loginViewModel = ViewModelProviders.of(this, new LoginViewModelFactory())
+        loginViewModel = new ViewModelProvider(this, new LoginViewModelFactory())
                 .get(LoginViewModel.class);
 
         final EditText usernameEditText = view.findViewById(R.id.username);

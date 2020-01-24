@@ -20,6 +20,7 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addLifecycleDependencies
 import com.android.tools.idea.wizard.template.impl.fragments.loginFragment.res.layout.fragmentLoginXml
 import com.android.tools.idea.wizard.template.impl.fragments.loginFragment.res.values.dimensXml
 import com.android.tools.idea.wizard.template.impl.fragments.loginFragment.res.values.stringsXml
@@ -61,7 +62,7 @@ fun RecipeExecutor.loginFragmentRecipe(
   addDependency("com.android.support:design:${appCompatVersion}.+")
   addDependency("com.android.support:support-annotations:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
-  addDependency("android.arch.lifecycle:extensions:+")
+  addLifecycleDependencies(useAndroidX)
 
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))

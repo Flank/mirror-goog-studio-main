@@ -20,9 +20,15 @@ import com.android.tools.idea.wizard.template.getMaterialComponentName
 
 fun placeholderFragmentJava(
   packageName: String,
-  useAndroidX: Boolean) =
+  useAndroidX: Boolean): String {
 
-  """package ${packageName}.ui.main;
+  val viewModelInitializationBlock = if (useAndroidX) {
+    "pageViewModel = new ViewModelProvider(this).get(PageViewModel.class);"
+  } else {
+    """pageViewModel = new ViewModelProvider(this, 
+               new ViewModelProvider.NewInstanceFactory()).get(PageViewModel.class);"""
+  }
+  return """package ${packageName}.ui.main;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -33,7 +39,7 @@ import ${getMaterialComponentName("android.support.annotation.Nullable", useAndr
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)};
-import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProviders", useAndroidX)};
+import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)};
 import ${packageName}.R;
 
 /**
@@ -56,7 +62,7 @@ public class PlaceholderFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        pageViewModel = ViewModelProviders.of(this).get(PageViewModel.class);
+        $viewModelInitializationBlock
         int index = 1;
         if (getArguments() != null) {
             index = getArguments().getInt(ARG_SECTION_NUMBER);
@@ -79,3 +85,4 @@ public class PlaceholderFragment extends Fragment {
         return root;
     }
 }"""
+}

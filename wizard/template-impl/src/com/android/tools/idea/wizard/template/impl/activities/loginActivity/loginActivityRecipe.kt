@@ -21,6 +21,7 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addLifecycleDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifestStrings
 import com.android.tools.idea.wizard.template.impl.activities.common.generateThemeStyles
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.layout.activityLoginXml
@@ -66,7 +67,7 @@ fun RecipeExecutor.loginActivityRecipe(
   addDependency("com.android.support:design:${appCompatVersion}.+")
   addDependency("com.android.support:support-annotations:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
-  addDependency("android.arch.lifecycle:extensions:+")
+  addLifecycleDependencies(useAndroidX)
 
   val baseFeatureResOut = moduleData.baseFeature?.resDir ?: resOut
   val isDynamicFeature = moduleData.baseFeature != null

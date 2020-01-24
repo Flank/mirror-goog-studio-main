@@ -22,13 +22,13 @@ import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 fun loginActivityKt(
   activityClass: String,
   packageName: String,
-  useAndroidX: Boolean) =
-
-  """package ${escapeKotlinIdentifier(packageName)}.ui.login
+  useAndroidX: Boolean
+) = """
+package ${escapeKotlinIdentifier(packageName)}.ui.login
 
 import android.app.Activity
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)}
-import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProviders", useAndroidX)}
+import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)}
 import android.os.Bundle
 import ${getMaterialComponentName("android.support.annotation.StringRes", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
@@ -57,7 +57,7 @@ class ${activityClass} : AppCompatActivity() {
         val login = findViewById<Button>(R.id.login)
         val loading = findViewById<ProgressBar>(R.id.loading)
 
-        loginViewModel = ViewModelProviders.of(this, LoginViewModelFactory())
+        loginViewModel = ViewModelProvider(this, LoginViewModelFactory())
             .get(LoginViewModel::class.java)
 
         loginViewModel.loginFormState.observe(this@LoginActivity, Observer {
