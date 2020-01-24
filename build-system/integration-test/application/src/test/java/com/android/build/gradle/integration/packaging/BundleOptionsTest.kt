@@ -86,7 +86,7 @@ class BundleOptionsTest {
             assertThat(bundleInfo!!.elements).hasSize(1)
             val bundleFile = bundleInfo.elements.first().outputFile
             assertThat(bundleFile).isNotNull()
-            assertThat(bundleFile.toFile().exists()).isTrue()
+            assertThat(File(bundleFile).exists()).isTrue()
         }
 
         val projectModel = project.executeAndReturnModel(":bundleDebug")

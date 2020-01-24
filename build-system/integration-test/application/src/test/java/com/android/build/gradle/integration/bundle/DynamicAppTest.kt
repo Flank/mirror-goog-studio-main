@@ -551,9 +551,9 @@ class DynamicAppTest {
             val singleOutput = apkFromBundleModel.elements.first()
             assertThat(singleOutput).isNotNull()
             assertThat(singleOutput.outputFile).isNotNull()
-            assertThat(singleOutput.outputFile.toFile()).exists()
+            assertThat(File(singleOutput.outputFile)).exists()
             // 2 files, the apk and the output listing file.
-            assertThat(singleOutput.outputFile.toFile().listFiles()).hasLength(2)
+            assertThat(File(singleOutput.outputFile).listFiles()).hasLength(2)
         }
         val appModel = rootBuildModelMap[":app"]
         val variantsBuildInformation = appModel?.variantsBuildInformation

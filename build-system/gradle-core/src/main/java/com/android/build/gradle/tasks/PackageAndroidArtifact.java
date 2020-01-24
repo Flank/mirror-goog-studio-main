@@ -422,15 +422,11 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .into(getInternalArtifactType());
 
         List<BuiltArtifactImpl> builtArtifactList =
-                apkBuiltElements
-                        .stream()
+                apkBuiltElements.stream()
                         .map(
                                 builtElement -> {
                                     List<FilterConfiguration> filters =
-                                            builtElement
-                                                    .getApkData()
-                                                    .getFilters()
-                                                    .stream()
+                                            builtElement.getApkData().getFilters().stream()
                                                     .map(
                                                             filterData ->
                                                                     new FilterConfiguration(
@@ -444,7 +440,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                                     .collect(Collectors.toList());
 
                                     return new BuiltArtifactImpl(
-                                            builtElement.getOutputFile().toPath(),
+                                            builtElement.getOutputFile().getAbsolutePath(),
                                             builtElement.getProperties(),
                                             builtElement.getVersionCode(),
                                             String.valueOf(builtElement.getVersionCode()),

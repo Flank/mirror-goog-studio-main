@@ -224,7 +224,7 @@ public class ModelBuilderTest {
                         "debug",
                         ImmutableList.of(
                                 new BuiltArtifactImpl(
-                                        apkOutput.toPath(),
+                                        apkOutput.getAbsolutePath(),
                                         ImmutableMap.of(),
                                         123,
                                         "version_name",
@@ -283,7 +283,7 @@ public class ModelBuilderTest {
 
             builtArtifactsBuilder.add(
                     new BuiltArtifactImpl(
-                            apkOutput.toPath(),
+                            apkOutput.getAbsolutePath(),
                             ImmutableMap.of(),
                             123,
                             "version_name",
@@ -359,7 +359,7 @@ public class ModelBuilderTest {
                             "debug",
                             ImmutableList.of(
                                     new BuiltArtifactImpl(
-                                            apkOutput.toPath(),
+                                            apkOutput.getAbsolutePath(),
                                             ImmutableMap.of(),
                                             123,
                                             "version_name",

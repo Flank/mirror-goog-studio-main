@@ -138,7 +138,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 variantName = params.variantName,
                 elements = listOf(
                     BuiltArtifactImpl(
-                        outputFile = params.finalBundleFile.toPath(),
+                        outputFile = params.finalBundleFile.absolutePath,
                         outputType = VariantOutputConfiguration.OutputType.SINGLE)
                 )
             ).saveToFile(params.bundleIdeModel)

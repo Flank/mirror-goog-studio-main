@@ -137,7 +137,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
                 variantName = params.variantName,
                 elements = listOf(
                     BuiltArtifactImpl(
-                        outputFile = params.outputDir.toPath(),
+                        outputFile = params.outputDir.absolutePath,
                         outputType = VariantOutputConfiguration.OutputType.SINGLE
                     )
                 )

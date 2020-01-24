@@ -79,7 +79,7 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
     @Throws(IOException::class)
     fun read(reader: JsonReader,
         handleAttribute: (attributeName: String) -> Unit,
-        instantiate: (outputFile: Path,
+        instantiate: (outputFile: String,
             properties: Map<String, String>,
             versionCode: Int,
             versionName: String,
@@ -106,7 +106,7 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
         reader.endObject()
 
         return instantiate(
-            FileSystems.getDefault().getPath(outputFile!!),
+            outputFile!!,
             properties.build(),
             versionCode,
             versionName.orEmpty(),
@@ -166,7 +166,7 @@ internal class GenericBuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<G
                     else -> reader.nextString()
                 }
             },
-            { outputFile: Path,
+            { outputFile: String,
                 properties: Map<String, String>,
                 versionCode: Int,
                 versionName: String,

@@ -28,10 +28,11 @@ import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import java.io.IOException
+import java.io.Serializable
 import java.nio.file.Path
 
 data class BuiltArtifactImpl(
-    override val outputFile: Path,
+    override val outputFile: String,
     override val properties: Map<String, String> = mapOf(),
     override val versionCode: Int = -1,
     override val versionName: String = "",
@@ -40,11 +41,11 @@ data class BuiltArtifactImpl(
     override val filters: Collection<FilterConfiguration> = listOf(),
     val baseName: String = "",
     val fullName: String = ""
-) : BuiltArtifact, CommonBuiltArtifact {
+) : BuiltArtifact, CommonBuiltArtifact, Serializable {
 
     fun newOutput(newOutputFile: Path): BuiltArtifactImpl {
         return BuiltArtifactImpl(
-            outputFile = newOutputFile,
+            outputFile = newOutputFile.toString(),
             properties = properties,
             versionCode = versionCode,
             versionName = versionName,
@@ -88,7 +89,7 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
                     "filters" -> readFilters(reader, filters)
                 }
             },
-            { outputFile: Path,
+            { outputFile: String,
                 properties: Map<String, String>,
                 versionCode: Int,
                 versionName: String,

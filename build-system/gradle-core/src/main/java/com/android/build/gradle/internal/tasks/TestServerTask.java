@@ -27,7 +27,6 @@ import com.android.builder.testing.api.TestServer;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.gradle.api.file.DirectoryProperty;
@@ -49,12 +48,10 @@ public abstract class TestServerTask extends NonIncrementalTask {
         List<File> testedApkFiles =
                 getTestedApks().isPresent()
                         ? new BuiltArtifactsLoaderImpl()
-                                .load(getTestedApks().get())
-                                .getElements()
-                                .stream()
-                                .map(BuiltArtifact::getOutputFile)
-                                .map(Path::toFile)
-                                .collect(Collectors.toList())
+                                .load(getTestedApks().get()).getElements().stream()
+                                        .map(BuiltArtifact::getOutputFile)
+                                        .map(File::new)
+                                        .collect(Collectors.toList())
                         : ImmutableList.of();
 
         if (testedApkFiles.size() > 1) {
@@ -63,12 +60,10 @@ public abstract class TestServerTask extends NonIncrementalTask {
         File testedApkFile = testedApkFiles.isEmpty() ? null : testedApkFiles.get(0);
         List<File> testApkFiles =
                 new BuiltArtifactsLoaderImpl()
-                        .load(getTestApks().get())
-                        .getElements()
-                        .stream()
-                        .map(BuiltArtifact::getOutputFile)
-                        .map(Path::toFile)
-                        .collect(Collectors.toList());
+                        .load(getTestApks().get()).getElements().stream()
+                                .map(BuiltArtifact::getOutputFile)
+                                .map(File::new)
+                                .collect(Collectors.toList());
         if (testApkFiles.size() > 1) {
             throw new RuntimeException("Cannot handle split APKs in test APKs");
         }

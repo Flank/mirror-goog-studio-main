@@ -132,10 +132,10 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
             FileUtils.mkdirs(rawDir)
 
             val to = File(rawDir, ANDROID_WEAR_MICRO_APK + DOT_ANDROID_PACKAGE)
-            Files.copy(apk.toFile(), to)
+            Files.copy(File(apk), to)
 
             generateApkData(
-                apk.toFile(), outDir, mainPkgName.get(), aapt2Executable.singleFile
+                File(apk), outDir, mainPkgName.get(), aapt2Executable.singleFile
             )
         } else {
             generateUnbundledWearApkData(outDir, mainPkgName.get())

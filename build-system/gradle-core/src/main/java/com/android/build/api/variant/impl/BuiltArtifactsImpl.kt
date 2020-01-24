@@ -28,7 +28,9 @@ import org.gradle.api.file.Directory
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkQueue
 import java.io.File
+import java.io.Serializable
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.function.Supplier
 
 class BuiltArtifactsImpl(
@@ -37,7 +39,7 @@ class BuiltArtifactsImpl(
     override val applicationId: String,
     override val variantName: String,
     override val elements: Collection<BuiltArtifactImpl>)
-    : CommonBuiltArtifacts, BuiltArtifacts {
+    : CommonBuiltArtifacts, BuiltArtifacts, Serializable {
 
     companion object {
         const val METADATA_FILE_NAME = "output.json"
@@ -203,7 +205,8 @@ class BuiltArtifactsImpl(
                 .asSequence()
                 .map { builtArtifact ->
                     BuiltArtifactImpl(
-                        outputFile = projectPath.relativize(builtArtifact.outputFile),
+                        outputFile = projectPath.relativize(
+                            Paths.get(builtArtifact.outputFile)).toString(),
                         properties = builtArtifact.properties,
                         versionCode = builtArtifact.versionCode,
                         versionName = builtArtifact.versionName,

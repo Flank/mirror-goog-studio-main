@@ -38,7 +38,9 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.ObjectOutputStream
 import javax.inject.Inject
 
 /**
@@ -58,7 +60,7 @@ class BuiltArtifactsImplTest {
             variantName = "debug",
             elements = listOf(
                 BuiltArtifactImpl(
-                    outputFile = File(outputFolder, "file1.apk").toPath(),
+                    outputFile = File(outputFolder, "file1.apk").absolutePath,
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
@@ -109,7 +111,7 @@ class BuiltArtifactsImplTest {
             variantName = "debug",
             elements = listOf(
                 BuiltArtifactImpl(
-                    outputFile = File(outputFolder, "file1.apk").toPath(),
+                    outputFile = File(outputFolder, "file1.apk").absolutePath,
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
@@ -120,7 +122,7 @@ class BuiltArtifactsImplTest {
                     )
                 ),
                 BuiltArtifactImpl(
-                    outputFile = File(outputFolder, "file2.apk").toPath(),
+                    outputFile = File(outputFolder, "file2.apk").absolutePath,
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
@@ -131,7 +133,7 @@ class BuiltArtifactsImplTest {
                     )
                 ),
                 BuiltArtifactImpl(
-                    outputFile = File(outputFolder, "file3.apk").toPath(),
+                    outputFile = File(outputFolder, "file3.apk").absolutePath,
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
@@ -292,7 +294,7 @@ class BuiltArtifactsImplTest {
         val builtArtifactsList = builtArtifacts.elements
         Truth.assertThat(builtArtifactsList.size).isEqualTo(2)
         builtArtifactsList.forEach { builtArtifact ->
-            Truth.assertThat(builtArtifact.outputFile.fileName.toString())
+            Truth.assertThat(File(builtArtifact.outputFile).name)
                 .isAnyOf("file1.apk", "file2.apk")
             Truth.assertThat(builtArtifact.versionCode).isAnyOf(123, 124)
             Truth.assertThat(builtArtifact.versionName).isAnyOf("123", "124")
@@ -374,7 +376,7 @@ class BuiltArtifactsImplTest {
         Truth.assertThat(updatedArtifacts.variantName).isEqualTo(sourceArtifacts.variantName)
         Truth.assertThat(updatedArtifacts.elements.count()).isEqualTo(sourceArtifacts.elements.count())
         updatedArtifacts.elements.forEach { updatedArtifact ->
-            Truth.assertThat(updatedArtifact.outputFile.fileName.toString())
+            Truth.assertThat(File(updatedArtifact.outputFile).name)
                 .isEqualTo(updatedArtifact.filters.joinToString { it.toString() })
         }
     }
@@ -462,11 +464,31 @@ class BuiltArtifactsImplTest {
         Truth.assertThat(updatedArtifacts.variantName).isEqualTo(sourceArtifacts.variantName)
         Truth.assertThat(updatedArtifacts.elements.count()).isEqualTo(sourceArtifacts.elements.count())
         updatedArtifacts.elements.forEach { updatedArtifact ->
-            Truth.assertThat(updatedArtifact.outputFile.fileName.toString())
+            Truth.assertThat(File(updatedArtifact.outputFile).name)
                 .isEqualTo(updatedArtifact.filters.joinToString { it.toString() })
         }
         Truth.assertThat(parameterArgumentCaptor.value.simpleName)
             .isEqualTo("testAgpInternalWorkItemsSubmission\$TestAction")
+    }
+
+    @Test
+    fun testSerialization() {
+        val artifacts = createBuiltArtifacts(
+            createBuiltArtifact(
+                outputFolder = tmpFolder.root,
+                fileName = "file1", versionCode = 123, densityValue = "xhdpi"
+            ),
+            createBuiltArtifact(
+                outputFolder = tmpFolder.root, fileName = "file2",
+                versionCode = 123, densityValue = "xxhdpi"
+            ),
+            createBuiltArtifact(
+                outputFolder = tmpFolder.root, fileName = "file3",
+                versionCode = 123, densityValue = "xxxhdpi"
+            )
+        )
+
+        ObjectOutputStream(ByteArrayOutputStream()).writeObject(artifacts)
     }
 
     private fun createBuiltArtifact(
@@ -476,7 +498,7 @@ class BuiltArtifactsImplTest {
         densityValue: String
     ) =
         BuiltArtifactImpl(
-            outputFile = File(outputFolder, "$fileName.apk").toPath(),
+            outputFile = File(outputFolder, "$fileName.apk").absolutePath,
             properties = mapOf("key1" to "value1", "key2" to "value2"),
             versionCode = versionCode,
             versionName = versionCode.toString(),

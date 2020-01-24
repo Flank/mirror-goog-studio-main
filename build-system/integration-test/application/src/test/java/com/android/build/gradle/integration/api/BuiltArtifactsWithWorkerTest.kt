@@ -105,7 +105,7 @@ abstract class ProducerTask extends DefaultTask {
       writer.write("task " + getName() + " was here !")
       writer.close()
       return new BuiltArtifactImpl(
-        outputFile.toPath(),
+        outputFile.getAbsolutePath(),
         new HashMap<String, String>(),
         123,
         "123",
@@ -159,7 +159,7 @@ abstract class ConsumerTask extends DefaultTask {
         WorkItem.class,
         { builtArtifact, parameters ->
             parameters.output = getOutputDir().get().file(
-              builtArtifact.getOutputFile().getFileName().toString() + ".mf")
+              new File(builtArtifact.getOutputFile()).getName() + ".mf")
             .getAsFile()
         }
       ).get().save(getOutputDir().get())
@@ -178,7 +178,7 @@ abstract class VerifierTask extends DefaultTask {
       assert transformed != null
       assert transformed.elements.size == 3
       transformed.elements.each { builtArtifact ->
-        assert builtArtifact.getOutputFile().getFileName().toString().endsWith(".mf") 
+        assert new File(builtArtifact.getOutputFile()).getName().toString().endsWith(".mf") 
       }
       System.out.println("Verification finished successfully")
     }

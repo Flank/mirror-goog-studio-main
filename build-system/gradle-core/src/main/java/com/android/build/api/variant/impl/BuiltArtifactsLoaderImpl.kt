@@ -25,6 +25,7 @@ import org.gradle.api.file.FileCollection
 import java.io.File
 import java.io.FileReader
 import java.nio.file.Path
+import java.nio.file.Paths
 
 class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
 
@@ -76,7 +77,8 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
                     .asSequence()
                     .map { builtArtifact ->
                         BuiltArtifactImpl(
-                            outputFile = relativePath.resolve(builtArtifact.outputFile),
+                            outputFile = relativePath.resolve(
+                                Paths.get(builtArtifact.outputFile)).toString(),
                             properties = mapOf(),
                             versionCode = builtArtifact.versionCode,
                             versionName = builtArtifact.versionName,

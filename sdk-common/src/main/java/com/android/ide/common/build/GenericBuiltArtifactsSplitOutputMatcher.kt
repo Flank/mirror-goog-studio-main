@@ -21,7 +21,6 @@ import com.google.common.base.Strings
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Lists
 import java.io.File
-import java.util.ArrayList
 import java.util.Collections
 
 object GenericBuiltArtifactsSplitOutputMatcher {
@@ -41,8 +40,6 @@ object GenericBuiltArtifactsSplitOutputMatcher {
         builtArtifacts: GenericBuiltArtifacts,
         variantAbiFilters: Collection<String?>?
     ): List<File> {
-        val apkFiles: MutableList<File> =
-            ArrayList()
         // now look for a matching output file
         return computeBestOutput(
             builtArtifacts,
@@ -112,7 +109,7 @@ object GenericBuiltArtifactsSplitOutputMatcher {
                 variantAbiFilters,
                 deviceAbis
             )
-        ) ImmutableList.of(match.outputFile.toFile()) else ImmutableList.of()
+        ) ImmutableList.of(File(match.outputFile)) else ImmutableList.of()
     }
 
     /**
