@@ -16,7 +16,9 @@
 
 package com.android.tools.agent.layoutinspector.testing;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -207,6 +209,12 @@ public class ViewBuilder<V extends View, L extends ViewGroup.LayoutParams> {
     }
 
     @NonNull
+    public ViewBuilder<V, L> withAttachedToWindow(boolean value) {
+        when(myView.isAttachedToWindow()).thenReturn(value);
+        return this;
+    }
+
+    @NonNull
     public V build() {
         return myView;
     }
@@ -219,5 +227,13 @@ public class ViewBuilder<V extends View, L extends ViewGroup.LayoutParams> {
         // Hack: This data is read in CompanionSupplierRule as if these attributes were set
         // in the View itself.
         when(myView.getTag()).thenReturn(myFakeData);
+        // Always run the Runnable given to the post() method.
+        doAnswer(
+                        invocation -> {
+                            invocation.<Runnable>getArgument(0).run();
+                            return null;
+                        })
+                .when(view)
+                .post(any(Runnable.class));
     }
 }

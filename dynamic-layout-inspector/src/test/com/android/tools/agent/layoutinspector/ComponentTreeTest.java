@@ -51,7 +51,7 @@ public class ComponentTreeTest {
         assertThat(layout.getScrollY()).isEqualTo(0);
         assertThat(layout.getWidth()).isEqualTo(980);
         assertThat(layout.getHeight()).isEqualTo(2000);
-        assertThat(table.get(layout.getClassName())).isEqualTo("LinearLayout");
+        assertThat(table.get(layout.getClassName())).isEqualTo("RootLinearLayout");
         assertThat(table.get(layout.getPackageName())).isEqualTo("android.widget");
         assertThat(table.get(layout.getTextValue())).isEqualTo("");
         assertThat(layout.getLayoutFlags())
