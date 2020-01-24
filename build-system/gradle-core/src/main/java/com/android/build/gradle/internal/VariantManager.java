@@ -16,15 +16,8 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.build.gradle.internal.dependency.DexingOutputSplitTransformKt.registerDexingOutputSplitTransform;
-import static com.android.build.gradle.internal.dependency.DexingTransformKt.getDexingArtifactConfigurations;
-import static com.android.build.gradle.internal.dependency.L8DexDesugarLibTransformKt.getDesugarLibConfigurations;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.UNFILTERED_PROGUARD_RULES;
-import static com.android.build.gradle.internal.utils.DesugarLibUtils.getDesugarLibConfig;
 import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
 import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
-import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -44,20 +37,15 @@ import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
-import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
 import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.core.VariantBuilder;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
-import com.android.build.gradle.internal.dependency.DesugarLibConfiguration;
-import com.android.build.gradle.internal.dependency.DexingArtifactConfiguration;
-import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder;
-import com.android.build.gradle.internal.dependency.VersionedCodeShrinker;
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -66,12 +54,8 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
-import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
@@ -86,12 +70,10 @@ import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
-import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.IssueReporter;
-import com.android.builder.model.CodeShrinker;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.utils.Pair;
@@ -103,17 +85,11 @@ import java.io.File;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Attribute;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.provider.Provider;
 
 /** Class to create, manage variants. */
 public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
@@ -201,53 +177,6 @@ public class VariantManager<VariantPropertiesT extends VariantPropertiesImpl> {
         variantFactory.preVariantWork(project);
 
         computeVariants();
-    }
-
-    /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs. */
-    public static void publishBuildArtifacts(@NonNull ComponentPropertiesImpl componentProperties) {
-        BuildArtifactsHolder buildArtifactsHolder = componentProperties.getArtifacts();
-        for (PublishingSpecs.OutputSpec outputSpec :
-                componentProperties.getVariantScope().getPublishingSpec().getOutputs()) {
-            SingleArtifactType<? extends FileSystemLocation> buildArtifactType =
-                    outputSpec.getOutputType();
-
-            // Gradle only support publishing single file.  Therefore, unless Gradle starts
-            // supporting publishing multiple files, PublishingSpecs should not contain any
-            // OutputSpec with an appendable ArtifactType.
-            if (BuildArtifactSpec.Companion.has(buildArtifactType)
-                    && BuildArtifactSpec.Companion.get(buildArtifactType).getAppendable()) {
-                throw new RuntimeException(
-                        String.format(
-                                "Appendable ArtifactType '%1s' cannot be published.",
-                                buildArtifactType.name()));
-            }
-
-            if (buildArtifactsHolder.hasFinalProduct(buildArtifactType)) {
-                Provider<? extends FileSystemLocation> artifact =
-                        buildArtifactsHolder.getFinalProduct(buildArtifactType);
-
-                componentProperties
-                        .getVariantScope()
-                        .publishIntermediateArtifact(
-                                artifact,
-                                outputSpec.getArtifactType(),
-                                outputSpec.getPublishedConfigTypes());
-            } else {
-                if (buildArtifactType == InternalArtifactType.ALL_CLASSES.INSTANCE) {
-                    Provider<FileCollection> allClasses =
-                            buildArtifactsHolder.getFinalProductAsFileCollection(
-                                    InternalArtifactType.ALL_CLASSES.INSTANCE);
-                    Provider<File> file = allClasses.map(FileCollection::getSingleFile);
-
-                    componentProperties
-                            .getVariantScope()
-                            .publishIntermediateArtifact(
-                                    file,
-                                    outputSpec.getArtifactType(),
-                                    outputSpec.getPublishedConfigTypes());
-                }
-            }
-        }
     }
 
     @NonNull

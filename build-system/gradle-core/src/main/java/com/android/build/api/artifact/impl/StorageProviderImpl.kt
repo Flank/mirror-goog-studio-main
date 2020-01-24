@@ -39,7 +39,7 @@ class StorageProviderImpl {
         objectFactory -> objectFactory.directoryProperty()
     }
 
-    fun <T: FileSystemLocation> getStorage(artifactKind: ArtifactKind<T>): TypedStorageProvider<T> {
+    fun <T: FileSystemLocation> getStorage(artifactKind: ArtifactKind<out T>): TypedStorageProvider<T> {
         @Suppress("Unchecked_cast")
         return when(artifactKind) {
             ArtifactKind.FILE -> fileStorage
@@ -56,7 +56,7 @@ class TypedStorageProvider<T :FileSystemLocation>(private val propertyAllocator:
     @Synchronized
     internal fun <ARTIFACT_TYPE> getArtifact(objects: ObjectFactory, artifactType: ARTIFACT_TYPE): SingleArtifactContainer<T> where
         ARTIFACT_TYPE: ArtifactType.Single,
-        ARTIFACT_TYPE: ArtifactType<T> {
+        ARTIFACT_TYPE: ArtifactType<out T> {
 
         return singleStorage.getOrPut(artifactType) {
             SingleArtifactContainer<T> {

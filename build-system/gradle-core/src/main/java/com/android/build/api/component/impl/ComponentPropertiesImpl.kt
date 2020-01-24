@@ -27,6 +27,8 @@ import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec.Companion.get
+import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -291,4 +293,39 @@ abstract class ComponentPropertiesImpl(
             InternalArtifactType.INSTANT_APP_MANIFEST
         else
             InternalArtifactType.MERGED_MANIFESTS
+
+    /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs.  */
+    open fun publishBuildArtifacts() {
+        for (outputSpec in variantScope.publishingSpec.outputs) {
+            val buildArtifactType = outputSpec.outputType
+            // Gradle only support publishing single file.  Therefore, unless Gradle starts
+            // supporting publishing multiple files, PublishingSpecs should not contain any
+            // OutputSpec with an appendable ArtifactType.
+            if (has(buildArtifactType) && get(buildArtifactType).appendable) {
+                throw RuntimeException(
+                    "Appendable ArtifactType '${buildArtifactType.name()}' cannot be published."
+                )
+            }
+            if (artifacts.hasFinalProduct(buildArtifactType)) {
+                variantScope
+                    .publishIntermediateArtifact(
+                        artifacts.getFinalProduct(buildArtifactType),
+                        outputSpec.artifactType,
+                        outputSpec.publishedConfigTypes
+                    )
+            } else {
+                if (buildArtifactType === InternalArtifactType.ALL_CLASSES) {
+                    val allClasses =
+                        artifacts.getFinalProductAsFileCollection(InternalArtifactType.ALL_CLASSES)
+                    val file = allClasses.map { it.singleFile }
+                    variantScope
+                        .publishIntermediateArtifact(
+                            file,
+                            outputSpec.artifactType,
+                            outputSpec.publishedConfigTypes
+                        )
+                }
+            }
+        }
+    }
 }

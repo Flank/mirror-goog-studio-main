@@ -51,7 +51,7 @@ class OperationsImpl(
     private val storageProvider = StorageProviderImpl()
 
     override fun <FILE_TYPE : FileSystemLocation, ARTIFACT_TYPE> get(type: ARTIFACT_TYPE): Provider<FILE_TYPE>
-            where ARTIFACT_TYPE : ArtifactType<FILE_TYPE>, ARTIFACT_TYPE : ArtifactType.Single
+            where ARTIFACT_TYPE : ArtifactType<out FILE_TYPE>, ARTIFACT_TYPE : ArtifactType.Single
             = getArtifactContainer(type).get()
 
     override fun <FILE_TYPE : FileSystemLocation, ARTIFACT_TYPE> getAll(type: ARTIFACT_TYPE): Provider<List<FILE_TYPE>>
@@ -96,7 +96,7 @@ class OperationsImpl(
      */
     internal fun <ARTIFACT_TYPE, FILE_TYPE> getArtifactContainer(type: ARTIFACT_TYPE): SingleArtifactContainer<FILE_TYPE> where
             ARTIFACT_TYPE : ArtifactType.Single,
-            ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
+            ARTIFACT_TYPE : ArtifactType<out FILE_TYPE>,
             FILE_TYPE : FileSystemLocation {
 
         return storageProvider.getStorage(type.kind).getArtifact(objects, type)

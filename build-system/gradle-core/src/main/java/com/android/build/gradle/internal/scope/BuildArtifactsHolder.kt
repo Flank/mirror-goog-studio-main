@@ -258,7 +258,7 @@ abstract class BuildArtifactsHolder(
      * @param artifactType the identifier for the built artifact.
      */
     fun <T: FileSystemLocation, ARTIFACT_TYPE> hasFinalProduct(artifactType: ARTIFACT_TYPE)
-        where ARTIFACT_TYPE: ArtifactType<T>,
+        where ARTIFACT_TYPE: ArtifactType<out T>,
               ARTIFACT_TYPE: ArtifactType.Single
             = !operations.getArtifactContainer(artifactType).needInitialProducer().get()
 
@@ -288,7 +288,7 @@ abstract class BuildArtifactsHolder(
      */
     fun <T: FileSystemLocation, ARTIFACT_TYPE> getFinalProduct(
         artifactType: ARTIFACT_TYPE): Provider<T>
-        where ARTIFACT_TYPE: ArtifactType<T>,
+        where ARTIFACT_TYPE: ArtifactType<out T>,
               ARTIFACT_TYPE: ArtifactType.Single {
 
         return operations.get(artifactType)

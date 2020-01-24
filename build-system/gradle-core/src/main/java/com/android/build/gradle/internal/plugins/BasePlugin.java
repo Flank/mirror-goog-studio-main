@@ -700,7 +700,7 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
         // now publish all variant artifacts for non test variants since
         // tests don't publish anything.
         for (ComponentPropertiesImpl component : mainComponents) {
-            VariantManager.publishBuildArtifacts(component);
+            component.publishBuildArtifacts();
         }
 
         checkSplitConfiguration();
