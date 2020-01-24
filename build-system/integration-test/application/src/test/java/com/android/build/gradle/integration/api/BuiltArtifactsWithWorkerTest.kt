@@ -68,9 +68,11 @@ import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
+import com.android.build.api.artifact.WorkItemParameters
 
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
+import com.android.build.api.artifact.ArtifactTransformationRequest
 
 abstract class ProducerTask extends DefaultTask {
 
@@ -135,17 +137,32 @@ abstract class ConsumerTask extends DefaultTask {
       this.workerExecutor = workerExecutor
     }
 
-    static abstract class WorkItemParameters extends BuiltArtifacts.TransformParams {
-      File output;
+    @org.gradle.api.tasks.Internal
+    ArtifactTransformationRequest replacementRequest
 
-      File getOutput() {
-        return output
+    static class MyWorkItemParameters extends WorkItemParameters implements Serializable {
+      File outputFile
+
+      File getOutputFile() {
+       return outputFile
+      }
+
+      File initProperties(BuiltArtifact builtArtifact, Directory outputLocation) {
+        this.outputFile = outputLocation.file(new File(builtArtifact.outputFile).name).getAsFile()
+        return this.outputFile
       }
     }
 
-    abstract static class WorkItem extends WorkAction<WorkItemParameters> {
+    abstract static class WorkItem extends WorkAction<MyWorkItemParameters> {
+      MyWorkItemParameters myParameters
+
+      @Inject
+      WorkItem(MyWorkItemParameters parameters) {
+         myParameters = parameters;
+      }
+
       void execute() {
-         FileWriter writer = new FileWriter(getParameters().getOutput())
+         FileWriter writer = new FileWriter(myParameters.getOutputFile())
          writer.write("task " + getName() + " was here !")
          writer.close()
       }
@@ -153,16 +170,11 @@ abstract class ConsumerTask extends DefaultTask {
 
     @TaskAction
     void taskAction() {
-      BuiltArtifacts.getLoader().load(getCompatibleManifests().get()).transform(
-        InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-        workerExecutor.noIsolation(),
-        WorkItem.class,
-        { builtArtifact, parameters ->
-            parameters.output = getOutputDir().get().file(
-              new File(builtArtifact.getOutputFile()).getName() + ".mf")
-            .getAsFile()
-        }
-      ).get().save(getOutputDir().get())
+      replacementRequest.submit(
+                workerExecutor.noIsolation(),
+                MyWorkItemParameters.class,
+                WorkItem.class
+            ) { }
     }
 }
 
@@ -178,7 +190,7 @@ abstract class VerifierTask extends DefaultTask {
       assert transformed != null
       assert transformed.elements.size == 3
       transformed.elements.each { builtArtifact ->
-        assert new File(builtArtifact.getOutputFile()).getName().toString().endsWith(".mf") 
+        assert new File(builtArtifact.getOutputFile()).getName().toString().equals(builtArtifact.getFilters().first().identifier)
       }
       System.out.println("Verification finished successfully")
     }
@@ -189,21 +201,27 @@ File currentDir = new File(System.getProperty("user.dir"))
 android.onVariantProperties {
   TaskProvider outputTask = tasks.register(it.getName() + 'ProducerTask', ProducerTask) { task ->
     task.getVariantName().set(it.getName())
-    task.getOutputDir().set(project.getLayout().getBuildDirectory().dir("producer/" + it.getName()))
   }
-  TaskProvider consumerTask = tasks.register(it.getName() + 'ConsumerTask', ConsumerTask) { task ->
-    task.getCompatibleManifests().set(
-      outputTask.flatMap { producerTask -> producerTask.getOutputDir() }
-    )
-    task.getOutputDir().set(project.getLayout().getBuildDirectory().dir("consumer/" + it.getName()))
+
+  it.operations.replace(outputTask) { it.getOutputDir() }.on(
+    InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE)
+
+  TaskProvider consumerTask = tasks.register(it.getName() + 'ConsumerTask', ConsumerTask)
+  ArtifactTransformationRequest replacementRequest = it.operations.use(consumerTask)
+    .toRead(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE) { it.getCompatibleManifests() }
+    .andWrite(InternalArtifactType.MERGED_MANIFESTS.INSTANCE) { it.getOutputDir() }
+
+  consumerTask.configure { task ->
+    task.replacementRequest = replacementRequest
   }
+
   tasks.register(it.getName() + 'Verifier', VerifierTask) { task ->
     task.getInputDir().set(
-      consumerTask.flatMap { _task -> _task.getOutputDir() }
+      it.operations.get(InternalArtifactType.MERGED_MANIFESTS.INSTANCE)
     )
   }
 }
-                """.trimIndent()
+        """.trimIndent()
         )
         val result = project.executor().run("clean", "debugVerifier")
         Truth.assertThat(result.didWorkTasks).containsExactly(

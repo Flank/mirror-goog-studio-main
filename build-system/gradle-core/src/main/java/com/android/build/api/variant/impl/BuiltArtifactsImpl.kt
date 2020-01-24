@@ -45,53 +45,6 @@ class BuiltArtifactsImpl(
         const val METADATA_FILE_NAME = "output.json"
     }
 
-    override fun transform(
-        newArtifactType: ArtifactType<Directory>,
-        transformer: (input: BuiltArtifact) -> File
-    ): BuiltArtifacts =
-        BuiltArtifactsImpl(
-            version,
-            newArtifactType,
-            applicationId,
-            variantName,
-            elements.map {
-                it.newOutput(transformer(it).toPath())
-            })
-
-    /**
-     * This is for external users only, internally we should use the [transform] below.
-     */
-    override fun <paramT : BuiltArtifacts.TransformParams> transform(
-        newArtifactType: ArtifactType<Directory>,
-        workers: WorkQueue,
-        transformRunnableClass: Class<out WorkAction<paramT>>,
-        parameterConfigurator: (builtArtifact: BuiltArtifact, parameters: paramT) -> Unit
-    ): Supplier<BuiltArtifacts> {
-
-        val parametersList = mutableMapOf<BuiltArtifact, paramT>()
-        elements.forEach { builtArtifact ->
-            workers.submit(transformRunnableClass) {
-                parameterConfigurator(builtArtifact, it)
-                parametersList[builtArtifact] = it
-            }
-        }
-        return Supplier {
-            workers.await()
-            BuiltArtifactsImpl(
-                version,
-                newArtifactType,
-                applicationId,
-                variantName,
-                elements.map { builtArtifact ->
-                    builtArtifact.newOutput(
-                        parametersList[builtArtifact]?.output?.toPath()
-                            ?: throw java.lang.RuntimeException("Cannot find BuiltArtifact")
-                    )
-                }
-            )
-        }
-    }
-
     override fun save(out: Directory) {
         val outFile = File(out.asFile, METADATA_FILE_NAME)
         saveToFile(outFile)
@@ -99,6 +52,8 @@ class BuiltArtifactsImpl(
 
     /**
      * Similar implementation of [BuiltArtifacts.transform] using the [WorkerExecutorFacade]
+     *
+     * TODO : move those 2 APIs to TaskBaseOperationsImpl class.
      */
     internal fun <T: BuiltArtifacts.TransformParams> transform(
         newArtifactType: ArtifactType<Directory>,

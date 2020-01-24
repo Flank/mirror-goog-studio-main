@@ -48,12 +48,19 @@ class BuiltArtifactsLoaderImplTest {
 
         assertThat(builtArtifacts).isNotNull()
 
-        val newBuiltArtifacts = builtArtifacts!!.transform(PublicArtifactType.APK) {
-            assertThat(File(it.outputFile).readText(Charsets.UTF_8)).isEqualTo("some manifest")
-            outFolder.newFile("${File(it.outputFile).name}.new").also { file ->
-                file.writeText("updated APK")
+        val newBuiltArtifacts = BuiltArtifactsImpl(
+            artifactType = PublicArtifactType.APK,
+            applicationId = builtArtifacts!!.applicationId,
+            variantName = builtArtifacts.variantName,
+            elements = builtArtifacts.elements.map {
+                assertThat(File(it.outputFile).readText(Charsets.UTF_8)).isEqualTo(
+                    "some manifest")
+                (it as BuiltArtifactImpl).newOutput(
+                    outFolder.newFile("${File(it.outputFile).name}.new").also { file ->
+                        file.writeText("updated APK")
+                    }.toPath())
             }
-        }
+        )
 
         newBuiltArtifacts.save(FakeGradleDirectory(outFolder.root))
 
@@ -122,12 +129,19 @@ class BuiltArtifactsLoaderImplTest {
             FakeGradleDirectory(tmpFolder.root))
 
         assertThat(builtArtifacts).isNotNull()
-        val newBuiltArtifacts = builtArtifacts!!.transform(PublicArtifactType.APK) {
-            val manifestContent = File(it.outputFile).readText(Charsets.UTF_8)
-            outFolder.newFile("${File(it.outputFile).name}.new").also { file ->
-                file.writeText("updated APK : $manifestContent")
+        val newBuiltArtifacts = BuiltArtifactsImpl(
+            artifactType = PublicArtifactType.APK,
+            applicationId = builtArtifacts!!.applicationId,
+            variantName = builtArtifacts.variantName,
+            elements = builtArtifacts.elements.map {
+                assertThat(File(it.outputFile).readText(Charsets.UTF_8)).isEqualTo(
+                    it.filters.joinToString { filter -> filter.identifier })
+                (it as BuiltArtifactImpl).newOutput(
+                    outFolder.newFile("${File(it.outputFile).name}.new").also { file ->
+                        file.writeText("updated APK : ${it.filters.joinToString { filter -> filter.identifier }}")
+                    }.toPath())
             }
-        }
+        )
 
         newBuiltArtifacts.save(FakeGradleDirectory(outFolder.root))
 

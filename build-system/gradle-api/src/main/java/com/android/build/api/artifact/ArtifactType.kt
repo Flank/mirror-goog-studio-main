@@ -97,6 +97,20 @@ abstract class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind<T>): S
         fun name(): String
     }
 
+
+    /**
+     * Denotes a single [DIRECTORY] that may contain zero to many
+     * [com.android.build.api.variant.BuiltArtifact].
+     *
+     * Artifact types annotated with this marker interface are backed up by a [DIRECTORY] which
+     * content should be read using the [com.android.build.api.variant.BuiltArtifactsLoader].
+     *
+     * If producing an artifact type annotated with this marker interface, content should be
+     * written using the [com.android.build.api.variant.BuiltArtifacts.save] methods.
+     */
+    @Incubating
+    interface Many
+
     /**
      * Denotes an artifact type that can be appended to.
      * Appending means that existing artifacts produced by other tasks are untouched and a

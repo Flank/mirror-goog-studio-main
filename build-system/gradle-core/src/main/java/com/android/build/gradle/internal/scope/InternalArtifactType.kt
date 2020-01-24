@@ -253,8 +253,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // removed it yet for compatibility reasons.
     object CHECK_MANIFEST_RESULT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
-    object COMPATIBLE_SCREEN_MANIFEST: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    object MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object COMPATIBLE_SCREEN_MANIFEST: InternalArtifactType<Directory>(DIRECTORY), Replaceable, Many
+    object MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable, Many
     object LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Same as above: InternalArtifactType<RegularFile>(FILE), Replaceable but the resource references have stripped namespaces.
     object NON_NAMESPACED_LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable

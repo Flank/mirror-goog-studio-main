@@ -22,6 +22,7 @@ import com.android.build.api.variant.BuiltArtifactsLoader
 import com.google.gson.GsonBuilder
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import java.io.File
 import java.io.FileReader
 import java.nio.file.Path
@@ -29,17 +30,19 @@ import java.nio.file.Paths
 
 class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
 
-    override fun load(folder: Directory): BuiltArtifacts? {
+    override fun load(folder: Directory): BuiltArtifactsImpl? {
         return loadFromFile(
             File(folder.asFile, BuiltArtifactsImpl.METADATA_FILE_NAME),
             folder.asFile.toPath())
     }
 
-    override fun load(fileCollection: FileCollection): BuiltArtifacts? {
+    override fun load(fileCollection: FileCollection): BuiltArtifactsImpl? {
         val metadataFile =
             fileCollection.asFileTree.files.find { it.name == BuiltArtifactsImpl.METADATA_FILE_NAME }
         return loadFromFile(metadataFile, metadataFile?.parentFile?.toPath())
     }
+
+    fun load(folder: Provider<Directory>): BuiltArtifactsImpl? = load(folder.get())
 
     companion object {
         @JvmStatic
@@ -48,7 +51,7 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
 
 
         @JvmStatic
-        fun loadFromFile(metadataFile: File?, relativePath: Path? = metadataFile?.parentFile?.toPath()): BuiltArtifacts? {
+        fun loadFromFile(metadataFile: File?, relativePath: Path? = metadataFile?.parentFile?.toPath()): BuiltArtifactsImpl? {
             if (metadataFile == null || relativePath == null || !metadataFile.exists()) {
                 return null
             }

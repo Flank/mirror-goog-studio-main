@@ -21,6 +21,7 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.MultipleTransformRequest
 import com.android.build.api.artifact.Operations
 import com.android.build.api.artifact.ReplaceRequest
+import com.android.build.api.artifact.TaskBasedOperations
 import com.android.build.api.artifact.TransformRequest
 import com.android.build.gradle.internal.scope.getOutputDirectory
 import org.gradle.api.Task
@@ -81,6 +82,10 @@ class OperationsImpl(
         taskProvider: TaskProvider<TASK>,
         with: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
     ): ReplaceRequest<FILE_TYPE> = ReplaceRequestImpl(this, taskProvider, with)
+
+    override fun <TASK : Task> use(taskProvider: TaskProvider<TASK>): TaskBasedOperations<TASK> {
+        return TaskBasedOperationsImpl<TASK>(this, taskProvider)
+    }
 
     // End of public API implementation, start of private AGP services.
 

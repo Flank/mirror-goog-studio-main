@@ -199,6 +199,17 @@ interface Operations {
     ): MultipleTransformRequest<FILE_TYPE>
 
     /**
+     * Access [Task] based operations.
+     *
+     * @param taskProvider the [TaskProvider] for the [TASK] that will be producing and or
+     * consuming artifact types.
+     * @return a [TaskBasedOperations] using the passed [TaskProvider] for all its operations/
+     */
+    fun <TASK: Task> use(
+        taskProvider: TaskProvider<TASK>
+    ): TaskBasedOperations<TASK>
+
+    /**
      * Initiates a replacement request
      *
      * @param taskProvider a [TaskProvider] for the task producing an instance of [FILE_TYPE]
