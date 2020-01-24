@@ -17,14 +17,12 @@
 #include "skia.grpc.pb.h"
 #include "tree_building_canvas.h"
 
-using std::cerr;
-using std::endl;
-using namespace ::layoutinspector::proto;
-
-class SkiaParserServiceImpl final : public SkiaParserService::Service {
-  ::grpc::Status GetViewTree(::grpc::ServerContext* context,
-                             const GetViewTreeRequest* request,
-                             GetViewTreeResponse* response) override {
+class SkiaParserServiceImpl final
+    : public ::layoutinspector::proto::SkiaParserService::Service {
+  ::grpc::Status GetViewTree(
+      ::grpc::ServerContext* context,
+      const ::layoutinspector::proto::GetViewTreeRequest* request,
+      ::layoutinspector::proto::GetViewTreeResponse* response) override {
     TreeBuildingCanvas::ParsePicture(request->skp().data(),
                                      request->skp().length(),
                                      response->mutable_root());
@@ -46,7 +44,7 @@ void RunServer(char* port) {
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {
-    cerr << "usage: SkiaParserServer <port>" << endl;
+    std::cerr << "usage: SkiaParserServer <port>" << std::endl;
     return 1;
   }
 
