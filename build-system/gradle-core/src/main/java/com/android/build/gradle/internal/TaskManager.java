@@ -166,7 +166,6 @@ import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
-import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
@@ -201,7 +200,6 @@ import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
-import com.android.builder.utils.FileCache;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
@@ -302,7 +300,6 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
     @NonNull protected final GlobalScope globalScope;
     @NonNull protected final Recorder recorder;
     @NonNull private final Logger logger;
-    @Nullable private final FileCache buildCache;
     @NonNull protected final TaskFactory taskFactory;
 
     // Tasks. TODO: remove the mutable state from here.
@@ -320,10 +317,6 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         this.toolingRegistry = toolingRegistry;
         this.recorder = recorder;
         this.logger = Logging.getLogger(this.getClass());
-
-        // It's too early to materialize the project-level cache, we'll need to get it from
-        // globalScope later on.
-        this.buildCache = globalScope.getBuildCache();
 
         taskFactory = new TaskFactoryImpl(project.getTasks());
     }
@@ -504,10 +497,6 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
         configureCustomLintChecksConfig();
 
         globalScope.setAndroidJarConfig(createAndroidJarConfig(project));
-
-        if (buildCache != null) {
-            taskFactory.register(new CleanBuildCache.CreationAction(buildCache));
-        }
 
         // for testing only.
         taskFactory.register(
@@ -2341,26 +2330,6 @@ public abstract class TaskManager<VariantPropertiesT extends VariantPropertiesIm
                                 dexingUsingArtifactTransforms);
                 taskFactory.register(configAction);
             }
-        }
-    }
-
-    @Nullable
-    private FileCache getUserDexCache(boolean isMinifiedEnabled, boolean preDexLibraries) {
-        if (!preDexLibraries || isMinifiedEnabled) {
-            return null;
-        }
-
-        return getUserIntermediatesCache();
-    }
-
-    @Nullable
-    private FileCache getUserIntermediatesCache() {
-        if (globalScope
-                .getProjectOptions()
-                .get(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE)) {
-            return globalScope.getBuildCache();
-        } else {
-            return null;
         }
     }
 

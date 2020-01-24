@@ -16,14 +16,13 @@
 
 package com.android.build.gradle.options
 
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.model.AndroidProject
 
 enum class StringOption(
     override val propertyName: String,
     stage: ApiStage
 ) : Option<String> {
-    BUILD_CACHE_DIR("android.buildCacheDir", ApiStage.Stable),
-
     IDE_BUILD_TARGET_DENSITY(AndroidProject.PROPERTY_BUILD_DENSITY, ApiStage.Stable),
     IDE_BUILD_TARGET_ABI(AndroidProject.PROPERTY_BUILD_ABI, ApiStage.Stable),
 
@@ -73,6 +72,12 @@ enum class StringOption(
 
     // Jetifier: List of regular expressions for libraries that should not be jetified
     JETIFIER_BLACKLIST("android.jetifier.blacklist", ApiStage.Experimental),
+
+    @Suppress("unused")
+    BUILD_CACHE_DIR(
+        "android.buildCacheDir",
+        ApiStage.Deprecated(DeprecationReporter.DeprecationTarget.AGP_BUILD_CACHE)
+    ),
 
     ;
 

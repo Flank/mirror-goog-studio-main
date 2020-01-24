@@ -93,6 +93,11 @@ interface DeprecationReporter {
             "It does not do anything and AGP no longer includes annotation processors added on your project's compile classpath"
         ),
 
+        AGP_BUILD_CACHE(
+            Version.VERSION_5_0,
+            "It does not do anything and AGP is now using Gradle caching"
+        ),
+
         ;
 
         fun getDeprecationTargetMessage(): String {

@@ -111,7 +111,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             arguments.add("--build-file=" + buildDotGradleFile.toString());
         }
         this.memoryRequirement = memoryRequirement;
-        with(StringOption.BUILD_CACHE_DIR, getBuildCacheDir().getAbsolutePath());
 
         if (profileDirectory != null) {
             with(StringOption.PROFILE_OUTPUT_DIR, profileDirectory.toString());

@@ -17,11 +17,8 @@
 package com.android.build.gradle.options
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.options.Version.*
 import com.android.builder.model.AndroidProject
-import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
-import com.android.build.gradle.options.Version.VERSION_3_5
-import com.android.build.gradle.options.Version.VERSION_3_6
-import com.android.build.gradle.options.Version.VERSION_4_0
 
 enum class BooleanOption(
     override val propertyName: String,
@@ -119,8 +116,6 @@ enum class BooleanOption(
 
     ENABLE_APP_COMPILE_TIME_R_CLASS("android.enableAppCompileTimeRClass", false, FeatureStage.Experimental),
     COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", true, FeatureStage.Experimental),
-    ENABLE_BUILD_CACHE("android.enableBuildCache", true, FeatureStage.Experimental),
-    ENABLE_INTERMEDIATE_ARTIFACTS_CACHE("android.enableIntermediateArtifactsCache", true, FeatureStage.Experimental),
     ENABLE_EXTRACT_ANNOTATIONS("android.enableExtractAnnotations", true, FeatureStage.Experimental),
     ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", true, FeatureStage.Experimental),
     ENABLE_D8_DESUGARING("android.enableD8.desugaring", true, FeatureStage.Experimental),
@@ -164,6 +159,18 @@ enum class BooleanOption(
 
     /** Whether Jetifier will skip libraries that already support AndroidX. */
     JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.FUTURE_VERSION)),
+    @Suppress("unused")
+    ENABLE_BUILD_CACHE(
+        "android.enableBuildCache",
+        true,
+        FeatureStage.Deprecated(DeprecationReporter.DeprecationTarget.AGP_BUILD_CACHE)
+    ),
+    @Suppress("unused")
+    ENABLE_INTERMEDIATE_ARTIFACTS_CACHE(
+        "android.enableIntermediateArtifactsCache",
+        true,
+        FeatureStage.Deprecated(DeprecationReporter.DeprecationTarget.AGP_BUILD_CACHE)
+    ),
 
     /* -----------------
      * ENFORCED FEATURES

@@ -31,7 +31,6 @@ import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApiObjectFactory;
 import com.android.build.gradle.internal.BadPluginException;
-import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.ClasspathVerifier;
 import com.android.build.gradle.internal.DependencyConfigurator;
 import com.android.build.gradle.internal.DependencyResolutionChecks;
@@ -91,7 +90,6 @@ import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
-import com.android.builder.utils.FileCache;
 import com.android.dx.command.dexer.Main;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.SdkVersionInfo;
@@ -325,9 +323,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                         projectOptions,
                         project::file);
 
-        @Nullable
-        FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
-
         MessageReceiverImpl messageReceiver =
                 new MessageReceiverImpl(SyncOptions.getErrorFormatMode(projectOptions), logger);
 
@@ -338,7 +333,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                         dslScope,
                         sdkComponents,
                         registry,
-                        buildCache,
                         messageReceiver,
                         componentFactory);
 
