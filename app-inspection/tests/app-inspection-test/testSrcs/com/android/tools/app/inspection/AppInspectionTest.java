@@ -43,6 +43,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
+import test.inspector.api.TestInspectorApi;
 
 public final class AppInspectionTest {
     private static final String ACTIVITY_CLASS = "com.activity.EmptyActivity";
@@ -145,11 +146,10 @@ public final class AppInspectionTest {
                 SUCCESS);
         assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
         byte[] commandBytes = new byte[] {1, 2, 127};
-        byte[] successReply = new byte[] {1};
         assertRawResponse(
                 serviceLayer.sendCommandAndGetResponse(
                         rawCommandInspector("reverse.echo.inspector", commandBytes)),
-                successReply);
+                TestInspectorApi.Reply.SUCCESS.toByteArray());
         assertInput(
                 androidDriver, EXPECTED_INSPECTOR_COMMAND_PREFIX + Arrays.toString(commandBytes));
         AppInspection.AppInspectionEvent event = serviceLayer.consumeCollectedEvent();

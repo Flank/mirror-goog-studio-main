@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.inspection.Connection;
 import androidx.inspection.Inspector;
 import java.util.Arrays;
+import test.inspector.api.TestInspectorApi;
 
 /**
  * A basic inspector, but also a base class for other test inspectors.
@@ -47,7 +48,7 @@ public class TestInspector extends Inspector {
             @NonNull byte[] bytes, @NonNull Inspector.CommandCallback commandCallback) {
         System.out.println("TEST INSPECTOR COMMAND: " + Arrays.toString(bytes));
         handleReceiveCommand(bytes);
-        commandCallback.reply(new byte[] {1}); // Dummy OK response
+        commandCallback.reply(TestInspectorApi.Reply.SUCCESS.toByteArray());
     }
 
     protected void handleReceiveCommand(@NonNull byte[] bytes) {}
