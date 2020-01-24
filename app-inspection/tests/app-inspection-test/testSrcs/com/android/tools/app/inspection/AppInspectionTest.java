@@ -20,7 +20,7 @@ import static com.android.tools.app.inspection.AppInspection.AppInspectionRespon
 import static com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status.SUCCESS;
 import static com.android.tools.app.inspection.ServiceLayer.TIMEOUT_SECONDS;
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assume.assumeFalse;
+import static com.google.common.truth.TruthJUnit.assume;
 
 import androidx.annotation.NonNull;
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
@@ -181,10 +181,10 @@ public final class AppInspectionTest {
     }
 
     private static void assumeExperimentalFlag(boolean value) {
-        assumeFalse(
-                Boolean.parseBoolean(
-                        System.getProperty(
-                                "app.inspection.experimental", Boolean.toString(value))));
+        assume().that(
+                        Boolean.parseBoolean(
+                                System.getProperty("app.inspection.experimental", "false")))
+                .isEqualTo(value);
     }
 
     // TODO(b/145807005): Remove flag and delete this test
