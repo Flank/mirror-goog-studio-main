@@ -36,7 +36,8 @@ public class TestEnvironmentInspectorFactory extends InspectorFactory<TestInspec
     @Override
     public TestInspector createInspector(
             @NonNull Connection connection, @NonNull InspectorEnvironment environment) {
-        // TODO(b/145807282): Update after these features are implemented
+        // TODO(b/145807282): We can delete this class after these features are implemented,
+        //  as their testing will be handled by TodoInspector
         environment.findInstances(TestInspector.class);
         environment.registerEntryHook(
                 TestInspectorFactory.class,

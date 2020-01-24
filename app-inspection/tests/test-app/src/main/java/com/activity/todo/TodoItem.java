@@ -14,26 +14,32 @@
  * limitations under the License.
  */
 
-package test.inspector.api;
+package com.activity.todo;
 
 import androidx.annotation.NonNull;
 
-public final class TestInspectorApi {
-    public enum Reply {
-        ERROR((byte) -2),
-        SUCCESS((byte) -1);
+public final class TodoItem {
+    @NonNull private String description;
+    private boolean completed;
 
-        private final byte value;
+    public TodoItem(@NonNull String description) {
+        this.description = description;
+    }
 
-        Reply(byte value) {
-            // Use negative numbers so these enums don't compete with other enum oridinal() values.
-            assert (value < 0);
-            this.value = value;
-        }
+    @NonNull
+    public String getDescription() {
+        return description;
+    }
 
-        @NonNull
-        public byte[] toByteArray() {
-            return new byte[] {value};
-        }
+    public void setDescription(@NonNull String description) {
+        this.description = description;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
     }
 }

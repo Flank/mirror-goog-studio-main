@@ -28,8 +28,9 @@ public class TestExceptionInspector extends TestInspector {
         super(connection);
     }
 
+    @NonNull
     @Override
-    protected void handleReceiveCommand(@NonNull byte[] bytes) {
+    protected byte[] handleReceiveCommand(@NonNull byte[] bytes) {
         throw new RuntimeException("This is an inspector exception.");
     }
 }

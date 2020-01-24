@@ -18,25 +18,19 @@ package test.inspector;
 
 import androidx.annotation.NonNull;
 import androidx.inspection.Connection;
+import androidx.inspection.InspectorEnvironment;
+import androidx.inspection.InspectorFactory;
 
-/**
- * An inspector that replies to any bytes it receives in {@link #onReceiveCommand(byte[],
- * CommandCallback)} with an event containing those bytes except in reverse.
- */
-public final class ReverseEchoInspector extends TestInspector {
+public class TodoInspectorFactory extends InspectorFactory<TodoInspector> {
 
-    ReverseEchoInspector(@NonNull Connection connection) {
-        super(connection);
+    public TodoInspectorFactory() {
+        super("todo.inspector");
     }
 
     @NonNull
     @Override
-    protected byte[] handleReceiveCommand(@NonNull byte[] bytes) {
-        byte[] reversed = new byte[bytes.length];
-        for (int i = 0; i < bytes.length; ++i) {
-            reversed[i] = bytes[bytes.length - i - 1];
-        }
-        getConnection().sendEvent(reversed);
-        return super.handleReceiveCommand(bytes);
+    public TodoInspector createInspector(
+            @NonNull Connection connection, @NonNull InspectorEnvironment environment) {
+        return new TodoInspector(connection, environment);
     }
 }

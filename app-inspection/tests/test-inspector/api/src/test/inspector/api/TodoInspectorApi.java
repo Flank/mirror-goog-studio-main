@@ -18,22 +18,28 @@ package test.inspector.api;
 
 import androidx.annotation.NonNull;
 
-public final class TestInspectorApi {
-    public enum Reply {
-        ERROR((byte) -2),
-        SUCCESS((byte) -1);
+public final class TodoInspectorApi {
+    public enum Command {
+        UNKNOWN,
 
-        private final byte value;
-
-        Reply(byte value) {
-            // Use negative numbers so these enums don't compete with other enum oridinal() values.
-            assert (value < 0);
-            this.value = value;
-        }
+        COUNT_TODO_GROUPS,
+        COUNT_TODO_ITEMS;
 
         @NonNull
         public byte[] toByteArray() {
-            return new byte[] {value};
+            return new byte[] {(byte) ordinal()};
+        }
+    }
+
+    public enum Event {
+        UNKNOWN,
+
+        TODO_GROUP_CREATED,
+        TODO_ITEM_CREATED;
+
+        @NonNull
+        public byte[] toByteArray() {
+            return new byte[] {(byte) ordinal()};
         }
     }
 }

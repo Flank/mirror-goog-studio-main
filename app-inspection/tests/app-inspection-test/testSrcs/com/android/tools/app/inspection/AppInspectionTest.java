@@ -44,9 +44,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import test.inspector.api.TestInspectorApi;
+import test.inspector.api.TodoInspectorApi;
 
 public final class AppInspectionTest {
-    private static final String ACTIVITY_CLASS = "com.activity.EmptyActivity";
+    private static final String TODO_ACTIVITY = "com.activity.todo.TodoActivity";
     private static final String EXPECTED_INSPECTOR_PREFIX = "TEST INSPECTOR ";
     private static final String EXPECTED_INSPECTOR_CREATED = EXPECTED_INSPECTOR_PREFIX + "CREATED";
     private static final String EXPECTED_INSPECTOR_DISPOSED =
@@ -69,7 +70,7 @@ public final class AppInspectionTest {
                         daemonConfig.setProfilerUnifiedPipeline(true);
                     }
                 };
-        transportRule = new TransportRule(ACTIVITY_CLASS, SdkLevel.O, ruleConfig);
+        transportRule = new TransportRule(TODO_ACTIVITY, SdkLevel.O, ruleConfig);
     }
 
     @Before
@@ -201,10 +202,65 @@ public final class AppInspectionTest {
         assertInput(androidDriver, "REGISTER EXIT HOOK NOT IMPLEMENTED");
     }
 
+    /**
+     * The inspector framework includes features for finding object instances on the heap. This test
+     * indirectly verifies it works.
+     *
+     * <p>See the {@code TodoInspector} in the test-inspector project for the relevant code.
+     */
     @Test
     public void findInstancesWorks_WhenExperimentalFlagEnabled() throws Exception {
         assumeExperimentalFlag(true);
-        // TODO(b/145807282): Implement findInstances test
+
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+
+        String inspectorId = "todo.inspector";
+        assertResponseStatus(
+                serviceLayer.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+        assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
+
+        // Ensure you can find object instances that were created before the inspector was attached.
+        assertRawResponse(
+                serviceLayer.sendCommandAndGetResponse(
+                        rawCommandInspector(
+                                inspectorId,
+                                TodoInspectorApi.Command.COUNT_TODO_GROUPS.toByteArray())),
+                new byte[] {(byte) 2});
+
+        assertRawResponse(
+                serviceLayer.sendCommandAndGetResponse(
+                        rawCommandInspector(
+                                inspectorId,
+                                TodoInspectorApi.Command.COUNT_TODO_ITEMS.toByteArray())),
+                new byte[] {(byte) 3});
+
+        // Add more objects and ensure those instances get picked up as well
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+
+        assertRawResponse(
+                serviceLayer.sendCommandAndGetResponse(
+                        rawCommandInspector(
+                                inspectorId,
+                                TodoInspectorApi.Command.COUNT_TODO_GROUPS.toByteArray())),
+                new byte[] {(byte) 4});
+
+        assertRawResponse(
+                serviceLayer.sendCommandAndGetResponse(
+                        rawCommandInspector(
+                                inspectorId,
+                                TodoInspectorApi.Command.COUNT_TODO_ITEMS.toByteArray())),
+                new byte[] {(byte) 7});
     }
 
     @Test

@@ -9,5 +9,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="transport-test-app" />
     <orderEntry type="library" name="android" level="project" />
+    <orderEntry type="library" name="androidx-annotations" level="project" />
   </component>
 </module>
