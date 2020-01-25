@@ -16,8 +16,9 @@
 package com.android.ide.common.vectordrawable;
 
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_CLIP_RULE;
+import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_FILL;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_FILL_RULE;
-import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_COLOR;
+import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_WIDTH;
 
 import com.android.annotations.NonNull;
@@ -220,13 +221,13 @@ abstract class SvgNode {
         }
         logger.log(Level.FINE, ">>>> PROP " + name + " = " + value);
         if (value.startsWith("url(")) {
-            if (!name.equals("fill") && !name.equals("stroke")) {
+            if (!name.equals(SVG_FILL) && !name.equals(SVG_STROKE)) {
                 logError("Unsupported URL value: " + value);
                 return;
             }
         }
         if (name.equals(SVG_STROKE_WIDTH) && value.equals("0")) {
-            mVdAttributesMap.remove(SVG_STROKE_COLOR);
+            mVdAttributesMap.remove(SVG_STROKE);
         }
         mVdAttributesMap.put(name, value);
     }
@@ -238,9 +239,9 @@ abstract class SvgNode {
     public void fillEmptyAttributes(@NonNull Map<String, String> parentAttributesMap) {
         // Go through the parents' attributes, if the child misses any, then fill it.
         for (Map.Entry<String, String> entry : parentAttributesMap.entrySet()) {
-            String key = entry.getKey();
-            if (!mVdAttributesMap.containsKey(key)) {
-                mVdAttributesMap.put(key, entry.getValue());
+            String name = entry.getKey();
+            if (!mVdAttributesMap.containsKey(name)) {
+                mVdAttributesMap.put(name, entry.getValue());
             }
         }
     }
