@@ -88,17 +88,17 @@ public class Svg2Vector {
 
     public static final ImmutableMap<String, String> presentationMap =
             ImmutableMap.<String, String>builder()
+                    .put(SVG_CLIP, "android:clip")
+                    .put(SVG_CLIP_RULE, "") // Treated individually.
+                    .put(SVG_FILL, "android:fillColor")
+                    .put(SVG_FILL_RULE, "android:fillType")
+                    .put(SVG_FILL_OPACITY, "android:fillAlpha")
+                    .put(SVG_OPACITY, "") // Treated individually.
                     .put(SVG_STROKE_COLOR, "android:strokeColor")
                     .put(SVG_STROKE_OPACITY, "android:strokeAlpha")
                     .put(SVG_STROKE_LINEJOIN, "android:strokeLineJoin")
                     .put(SVG_STROKE_LINECAP, "android:strokeLineCap")
                     .put(SVG_STROKE_WIDTH, "android:strokeWidth")
-                    .put(SVG_FILL, "android:fillColor")
-                    .put(SVG_FILL_OPACITY, "android:fillAlpha")
-                    .put(SVG_CLIP, "android:clip")
-                    .put(SVG_OPACITY, "android:fillAlpha")
-                    .put(SVG_FILL_RULE, "android:fillType")
-                    .put(SVG_CLIP_RULE, "android:fillType")
                     .build();
 
     public static final ImmutableMap<String, String> gradientMap =

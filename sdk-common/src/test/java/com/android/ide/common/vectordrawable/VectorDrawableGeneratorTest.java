@@ -623,6 +623,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_clip_path_evenodd_and_nonzero");
     }
 
+    public void testSvgClipRuleOutsideOfClipPath() throws Exception {
+        checkSvgConversion("test_clip_rule_outside_of_clippath");
+    }
+
     public void testSvgMask() throws Exception {
         checkSvgConversion("test_mask");
     }
