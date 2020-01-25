@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
@@ -26,7 +25,6 @@ import com.android.builder.core.VariantType;
 import java.io.IOException;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
-import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.diagnostics.AbstractReportTask;
 import org.gradle.api.tasks.diagnostics.internal.ReportRenderer;
 import org.gradle.api.tasks.diagnostics.internal.TextReportRenderer;
@@ -39,52 +37,40 @@ public class SourceSetsTask extends AbstractReportTask {
 
     private final TextReportRenderer mRenderer = new TextReportRenderer();
 
-    private BaseExtension extension;
+    private Iterable<AndroidSourceSet> sourceSetContainer;
 
     @Override
     protected ReportRenderer getRenderer() {
         return mRenderer;
     }
 
-    @Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
-    public BaseExtension getExtension() {
-        return extension;
-    }
-
-    public void setExtension(BaseExtension extension) {
-        this.extension = extension;
-    }
-
     @Override
     protected void generate(Project project) throws IOException {
-        if (extension != null) {
-            for (AndroidSourceSet sourceSet : extension.getSourceSets()) {
-                mRenderer.getBuilder().subheading(sourceSet.getName());
+        for (AndroidSourceSet sourceSet : sourceSetContainer) {
+            mRenderer.getBuilder().subheading(sourceSet.getName());
 
+            renderKeyValue("Compile configuration: ", sourceSet.getCompileConfigurationName());
+            renderKeyValue("build.gradle name: ", "android.sourceSets." + sourceSet.getName());
 
-                renderKeyValue("Compile configuration: ", sourceSet.getCompileConfigurationName());
-                renderKeyValue("build.gradle name: ", "android.sourceSets." + sourceSet.getName());
+            renderDirectorySet("Java sources", sourceSet.getJava(), project);
 
-                renderDirectorySet("Java sources", sourceSet.getJava(), project);
+            if (!sourceSet.getName().startsWith(VariantType.UNIT_TEST_PREFIX)) {
+                renderKeyValue(
+                        "Manifest file: ",
+                        project.getRootProject()
+                                .relativePath(sourceSet.getManifest().getSrcFile()));
 
-                if (!sourceSet.getName().startsWith(VariantType.UNIT_TEST_PREFIX)) {
-                    renderKeyValue(
-                            "Manifest file: ",
-                            project.getRootProject().relativePath(
-                                    sourceSet.getManifest().getSrcFile()));
-
-                    renderDirectorySet("Android resources", sourceSet.getRes(), project);
-                    renderDirectorySet("Assets", sourceSet.getAssets(), project);
-                    renderDirectorySet("AIDL sources", sourceSet.getAidl(), project);
-                    renderDirectorySet("RenderScript sources", sourceSet.getRenderscript(), project);
-                    renderDirectorySet("JNI sources", sourceSet.getJni(), project);
-                    renderDirectorySet("JNI libraries", sourceSet.getJniLibs(), project);
-                }
-
-                renderDirectorySet("Java-style resources", sourceSet.getResources(), project);
-
-                mRenderer.getTextOutput().println();
+                renderDirectorySet("Android resources", sourceSet.getRes(), project);
+                renderDirectorySet("Assets", sourceSet.getAssets(), project);
+                renderDirectorySet("AIDL sources", sourceSet.getAidl(), project);
+                renderDirectorySet("RenderScript sources", sourceSet.getRenderscript(), project);
+                renderDirectorySet("JNI sources", sourceSet.getJni(), project);
+                renderDirectorySet("JNI libraries", sourceSet.getJniLibs(), project);
             }
+
+            renderDirectorySet("Java-style resources", sourceSet.getResources(), project);
+
+            mRenderer.getTextOutput().println();
         }
 
         mRenderer.complete();
@@ -112,10 +98,10 @@ public class SourceSetsTask extends AbstractReportTask {
 
     public static class CreationAction extends TaskCreationAction<SourceSetsTask> {
 
-        private final BaseExtension extension;
+        @NonNull private final Iterable<AndroidSourceSet> sourceSetContainer;
 
-        public CreationAction(@NonNull BaseExtension extension) {
-            this.extension = extension;
+        public CreationAction(@NonNull Iterable<AndroidSourceSet> sourceSetContainer) {
+            this.sourceSetContainer = sourceSetContainer;
         }
 
         @NonNull
@@ -132,7 +118,7 @@ public class SourceSetsTask extends AbstractReportTask {
 
         @Override
         public void configure(@NonNull SourceSetsTask sourceSetsTask) {
-            sourceSetsTask.setExtension(extension);
+            sourceSetsTask.sourceSetContainer = sourceSetContainer;
             sourceSetsTask.setDescription(
                     "Prints out all the source sets defined in this project.");
             sourceSetsTask.setGroup(TaskManager.ANDROID_GROUP);

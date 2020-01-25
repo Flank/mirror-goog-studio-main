@@ -18,7 +18,6 @@ package com.android.build.api.variant.impl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.internal.api.dsl.DslScope
-import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -28,12 +27,8 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.utils.init
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.builder.dexing.DexingType
-import com.android.builder.model.ApiVersion
-import com.google.common.collect.ImmutableSet
 import org.gradle.api.provider.Property
 import javax.inject.Inject
 

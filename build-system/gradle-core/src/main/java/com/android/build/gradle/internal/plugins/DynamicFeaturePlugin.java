@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl;
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl;
 import com.android.build.gradle.AppExtension;
@@ -34,9 +36,11 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.tasks.DynamicFeatureTaskManager;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.DynamicFeatureVariantFactory;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
+import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -107,10 +111,25 @@ public class DynamicFeaturePlugin
     @NonNull
     @Override
     protected DynamicFeatureTaskManager createTaskManager(
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            DynamicFeatureVariantImpl,
+                                            DynamicFeatureVariantPropertiesImpl>>
+                            variants,
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentPropertiesImpl>>
+                            testComponents,
+            boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
             @NonNull Recorder threadRecorder) {
-        return new DynamicFeatureTaskManager(globalScope, extension, threadRecorder);
+        return new DynamicFeatureTaskManager(
+                variants, testComponents, hasFlavors, globalScope, extension, threadRecorder);
     }
 
     @NonNull

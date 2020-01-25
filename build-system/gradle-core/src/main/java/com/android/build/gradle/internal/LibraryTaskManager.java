@@ -27,6 +27,8 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
@@ -94,13 +96,19 @@ public class LibraryTaskManager
         extends TaskManager<LibraryVariantImpl, LibraryVariantPropertiesImpl> {
 
     public LibraryTaskManager(
+            @NonNull List<ComponentInfo<LibraryVariantImpl, LibraryVariantPropertiesImpl>> variants,
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentPropertiesImpl>>
+                            testComponents,
+            boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
             @NonNull Recorder recorder) {
-        super(
-                globalScope,
-                extension,
-                recorder);
+        super(variants, testComponents, hasFlavors, globalScope, extension, recorder);
     }
 
     @Override

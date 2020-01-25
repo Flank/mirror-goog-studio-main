@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.plugins;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.gradle.AppExtension;
@@ -36,8 +38,10 @@ import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.tasks.ApplicationTaskManager;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.builder.profile.Recorder;
+import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -116,10 +120,22 @@ public class AppPlugin
     @NonNull
     @Override
     protected ApplicationTaskManager createTaskManager(
+            @NonNull
+                    List<ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>>
+                            variants,
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentPropertiesImpl>>
+                            testComponents,
+            boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
             @NonNull Recorder threadRecorder) {
-        return new ApplicationTaskManager(globalScope, extension, threadRecorder);
+        return new ApplicationTaskManager(
+                variants, testComponents, hasFlavors, globalScope, extension, threadRecorder);
     }
 
     private static class DeprecatedConfigurationAction implements Action<Dependency> {

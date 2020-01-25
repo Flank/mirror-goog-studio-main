@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.TestComponentImpl
+import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
@@ -38,17 +40,21 @@ import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.FileCollection
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import java.io.File
-import java.lang.Boolean
 import java.util.ArrayList
 import java.util.stream.Collectors
 
 class ApplicationTaskManager(
+    variants: List<ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>>,
+    testComponents: List<ComponentInfo<TestComponentImpl<out TestComponentPropertiesImpl>, TestComponentPropertiesImpl>>,
+    hasFlavors: Boolean,
     globalScope: GlobalScope,
     extension: BaseExtension,
     recorder: Recorder
 ) : AbstractAppTaskManager<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>(
+    variants,
+    testComponents,
+    hasFlavors,
     globalScope,
     extension,
     recorder
@@ -106,8 +112,8 @@ class ApplicationTaskManager(
         val variantDslInfo = variantProperties.variantDslInfo
         val variantType = variantProperties.variantType
         if (variantType.isBaseModule) {
-            val unbundledWearApp = variantDslInfo.isWearAppUnbundled
-            if (Boolean.TRUE != unbundledWearApp && variantDslInfo.isEmbedMicroApp) {
+            val unbundledWearApp: Boolean? = variantDslInfo.isWearAppUnbundled
+            if (unbundledWearApp != true && variantDslInfo.isEmbedMicroApp) {
                 val wearApp =
                     variantProperties.variantDependencies.wearAppConfiguration
                         ?: error("Wear app with no wearApp configuration")
@@ -129,7 +135,7 @@ class ApplicationTaskManager(
                     createGenerateMicroApkDataTask(variantProperties, files)
                 }
             } else {
-                if (Boolean.TRUE == unbundledWearApp) {
+                if (unbundledWearApp == true) {
                     createGenerateMicroApkDataTask(variantProperties)
                 }
             }

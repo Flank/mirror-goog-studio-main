@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -33,9 +35,11 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.TestExtensionImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
+import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -94,13 +98,20 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
     @NonNull
     @Override
     protected TestApplicationTaskManager createTaskManager(
+            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> variants,
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentPropertiesImpl>>
+                            testComponents,
+            boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
             @NonNull Recorder recorder) {
         return new TestApplicationTaskManager(
-                globalScope,
-                extension,
-                recorder);
+                variants, testComponents, hasFlavors, globalScope, extension, recorder);
     }
 
     @Override

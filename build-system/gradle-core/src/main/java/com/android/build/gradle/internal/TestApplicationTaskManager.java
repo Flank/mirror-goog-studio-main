@@ -24,6 +24,8 @@ import static com.android.build.gradle.internal.variant.TestVariantFactory.getTe
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -43,7 +45,6 @@ import com.android.builder.core.VariantType;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.profile.Recorder;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import org.gradle.api.Task;
@@ -61,13 +62,19 @@ public class TestApplicationTaskManager
         extends AbstractAppTaskManager<TestVariantImpl, TestVariantPropertiesImpl> {
 
     public TestApplicationTaskManager(
+            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> variants,
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentPropertiesImpl>>
+                            testComponents,
+            boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
             @NonNull Recorder recorder) {
-        super(
-                globalScope,
-                extension,
-                recorder);
+        super(variants, testComponents, hasFlavors, globalScope, extension, recorder);
     }
 
     @Override
@@ -165,13 +172,7 @@ public class TestApplicationTaskManager
     }
 
     @Override
-    public void createGlobalLintTask() {
-        // do nothing
-    }
-
-    @Override
-    protected void configureGlobalLintTask(
-            @NonNull ImmutableList<TestVariantPropertiesImpl> variants) {
+    protected void configureGlobalLintTask() {
         // do nothing
     }
 

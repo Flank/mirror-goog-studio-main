@@ -139,7 +139,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.PackageRenderscriptTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.ProcessJavaResTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.SigningReportTask::setComponents",
-                "com.android.build.gradle.internal.tasks.SourceSetsTask::setExtension",
                 "com.android.build.gradle.internal.tasks.TestServerTask::setTestServer",
                 "com.android.build.gradle.internal.tasks.UninstallTask::setTimeOutInMs",
                 "com.android.build.gradle.tasks.factory.AndroidUnitTest::setVariantName",

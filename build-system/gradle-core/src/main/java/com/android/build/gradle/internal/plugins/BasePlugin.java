@@ -23,6 +23,8 @@ import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -138,8 +140,6 @@ public abstract class BasePlugin<
     private VariantManager<VariantT, VariantPropertiesT> variantManager;
     private VariantInputModelImpl variantInputModel;
 
-    protected TaskManager<VariantT, VariantPropertiesT> taskManager;
-
     protected Project project;
 
     protected ProjectOptions projectOptions;
@@ -195,6 +195,15 @@ public abstract class BasePlugin<
 
     @NonNull
     protected abstract TaskManager<VariantT, VariantPropertiesT> createTaskManager(
+            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants,
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentPropertiesImpl>>
+                            testComponents,
+            boolean hasFlavors,
             @NonNull GlobalScope globalScope,
             @NonNull BaseExtension extension,
             @NonNull Recorder threadRecorder);
@@ -435,12 +444,6 @@ public abstract class BasePlugin<
 
         variantFactory = createVariantFactory(globalScope);
 
-        taskManager =
-                createTaskManager(
-                        globalScope,
-                        extension,
-                        threadRecorder);
-
         variantInputModel =
                 new VariantInputModelImpl(globalScope, extension, variantFactory, sourceSetManager);
         variantManager =
@@ -558,7 +561,11 @@ public abstract class BasePlugin<
                 ExecutionType.TASK_MANAGER_CREATE_TASKS,
                 project.getPath(),
                 null,
-                () -> taskManager.createTasksBeforeEvaluate());
+                () ->
+                        TaskManager.createTasksBeforeEvaluate(
+                                globalScope,
+                                variantFactory.getVariantType(),
+                                extension.getSourceSets()));
 
         project.afterEvaluate(
                 CrashReporting.afterEvaluate(
@@ -640,8 +647,6 @@ public abstract class BasePlugin<
         extension.disableWrite();
         globalScope.getDslScope().getVariableFactory().disableWrite();
 
-        taskManager.configureCustomLintChecks();
-
         ProcessProfileWriter.getProject(project.getPath())
                 .setCompileSdk(extension.getCompileSdkVersion())
                 .setBuildToolsVersion(extension.getBuildToolsRevision().toString())
@@ -659,10 +664,16 @@ public abstract class BasePlugin<
         List<ComponentInfo<VariantT, VariantPropertiesT>> variants =
                 variantManager.getMainComponents();
 
-        taskManager.createTasks(
-                variants,
-                variantManager.getTestComponents(),
-                !variantInputModel.getProductFlavors().isEmpty());
+        TaskManager<VariantT, VariantPropertiesT> taskManager =
+                createTaskManager(
+                        variants,
+                        variantManager.getTestComponents(),
+                        !variantInputModel.getProductFlavors().isEmpty(),
+                        globalScope,
+                        extension,
+                        threadRecorder);
+
+        taskManager.createTasks();
 
         new DependencyConfigurator(project, project.getName(), globalScope, variantInputModel)
                 .configureGeneralTransforms()
@@ -685,7 +696,7 @@ public abstract class BasePlugin<
         sourceSetManager.checkForUnconfiguredSourceSets();
 
         // configure compose related tasks.
-        taskManager.createPostApiTasks(variants, variantManager.getTestComponents());
+        taskManager.createPostApiTasks();
 
         // now publish all variant artifacts for non test variants since
         // tests don't publish anything.
