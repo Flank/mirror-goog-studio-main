@@ -24,6 +24,7 @@ import com.android.tools.build.apkzlib.zfile.ApkCreator
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode
 import com.android.zipflinger.BytesSource
+import com.android.zipflinger.SynchronizedArchive
 import com.android.zipflinger.ZipArchive
 import com.android.zipflinger.ZipSource
 import com.google.common.base.Function
