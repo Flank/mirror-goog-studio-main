@@ -36,10 +36,12 @@ fun RecipeExecutor.composeActivityRecipe(
   val (_, srcOut, resOut, _) = moduleData
   addAllKotlinDependencies(moduleData)
 
-  addDependency(mavenCoordinate = "androidx.ui:ui-framework:+", minRev = "0.1.0-dev03")
-  addDependency(mavenCoordinate = "androidx.ui:ui-layout:+", minRev = "0.1.0-dev03")
-  addDependency(mavenCoordinate = "androidx.ui:ui-material:+", minRev = "0.1.0-dev03")
-  addDependency(mavenCoordinate = "androidx.ui:ui-tooling:+", minRev = "0.1.0-dev03")
+  val composeVersion = "0.1.0-dev03"
+  // Note: Don't use minRev = "0.1.0-devXX" because compose and Studio are in lock step at the moment.
+  addDependency(mavenCoordinate = "androidx.ui:ui-framework:$composeVersion")
+  addDependency(mavenCoordinate = "androidx.ui:ui-layout:$composeVersion")
+  addDependency(mavenCoordinate = "androidx.ui:ui-material:$composeVersion")
+  addDependency(mavenCoordinate = "androidx.ui:ui-tooling:$composeVersion")
   generateManifest(
     moduleData, activityClass, activityTitle, packageName, isLauncher, true,
     requireTheme = false, generateActivityTitle = true, useMaterial2 = true
