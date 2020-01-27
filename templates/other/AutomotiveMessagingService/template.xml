@@ -38,6 +38,7 @@
         name="Package name"
         type="string"
         constraints="package"
+        default="com.mycompany.myapp"
         help="The package where the messaging service will be created." />
 
     <globals file="globals.xml.ftl" />

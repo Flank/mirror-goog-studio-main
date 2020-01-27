@@ -22,6 +22,7 @@
         name="Package name"
         type="string"
         constraints="package"
+        default="com.mycompany.myapp"
         help="The package where the media service will be created" />
 
     <parameter
