@@ -54,6 +54,7 @@ import com.android.tools.idea.wizard.template.impl.other.folders.folderTemplates
 import com.android.tools.idea.wizard.template.impl.other.intentService.intentServiceTemplate
 import com.android.tools.idea.wizard.template.impl.other.service.serviceTemplate
 import com.android.tools.idea.wizard.template.impl.other.sliceProvider.sliceProviderTemplate
+import com.android.tools.idea.wizard.template.impl.other.watchFaceService.watchFaceServiceTemplate
 
 /**
  * Implementation of the Android Wizard Template plugin extension point.
@@ -96,6 +97,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     customViewTemplate,
     intentServiceTemplate,
     serviceTemplate,
-    sliceProviderTemplate
+    sliceProviderTemplate,
+    watchFaceServiceTemplate
   ) + folderTemplates
 }

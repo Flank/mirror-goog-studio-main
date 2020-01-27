@@ -26,8 +26,8 @@
 
     <copy from="root/res/drawable-nodpi/preview_analog.png"
             to="${escapeXmlAttribute(resOut)}/drawable-nodpi/preview_analog.png" />
-    <copy from="root/res/drawable-nodpi/bg.png"
-            to="${escapeXmlAttribute(resOut)}/drawable-nodpi/bg.png" />
+    <copy from="root/res/drawable-nodpi/watchface_service_bg.png"
+            to="${escapeXmlAttribute(resOut)}/drawable-nodpi/watchface_service_bg.png" />
 <#elseif style == "digital">
     <merge from="root/res/values/dimens.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values/dimens.xml" />

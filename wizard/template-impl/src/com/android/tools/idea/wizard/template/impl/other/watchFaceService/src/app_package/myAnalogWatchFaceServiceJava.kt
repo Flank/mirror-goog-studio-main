@@ -1,3 +1,30 @@
+/*
+ * Copyright (C) 2020 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.idea.wizard.template.impl.other.watchFaceService.src.app_package
+
+import com.android.tools.idea.wizard.template.getMaterialComponentName
+import com.android.tools.idea.wizard.template.renderIf
+
+fun myAnalogWatchFaceServiceJava(
+  isInteractive: Boolean,
+  packageName: String,
+  serviceClass: String,
+  useAndroidX: Boolean
+) = """
 package ${packageName};
 
 import android.content.BroadcastReceiver;
@@ -15,12 +42,12 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import ${getMaterialComponentName('android.support.v7.graphics.Palette', useAndroidX)};
-import ${getMaterialComponentName('android.support.wearable.watchface.CanvasWatchFaceService', useAndroidX)};
-import ${getMaterialComponentName('android.support.wearable.watchface.WatchFaceService', useAndroidX)};
-import ${getMaterialComponentName('android.support.wearable.watchface.WatchFaceStyle', useAndroidX)};
+import ${getMaterialComponentName("android.support.v7.graphics.Palette", useAndroidX)};
+import ${getMaterialComponentName("android.support.wearable.watchface.CanvasWatchFaceService", useAndroidX)};
+import ${getMaterialComponentName("android.support.wearable.watchface.WatchFaceService", useAndroidX)};
+import ${getMaterialComponentName("android.support.wearable.watchface.WatchFaceStyle", useAndroidX)};
 import android.view.SurfaceHolder;
-<#if isInteractive>import android.widget.Toast;</#if>
+${renderIf(isInteractive) { "import android.widget.Toast;" }}
 
 import java.lang.ref.WeakReference;
 import java.util.Calendar;
@@ -28,7 +55,7 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Analog watch face with a ticking second hand. In ambient mode, the second hand isn't
+ * Analog watch face with a ticking second hand. In ambient mode, the second hand isn"t
  * shown. On devices with low-bit ambient mode, the hands are drawn without anti-aliasing in ambient
  * mode. The watch face is drawn with less contrast in mute mode.
  *
@@ -111,9 +138,7 @@ public class ${serviceClass} extends CanvasWatchFaceService {
             super.onCreate(holder);
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(${serviceClass}.this)
-<#if isInteractive>
-                    .setAcceptsTapEvents(true)
-</#if>
+                     ${renderIf(isInteractive) { ".setAcceptsTapEvents(true)" }}
                     .build());
 
             mCalendar = Calendar.getInstance();
@@ -285,11 +310,11 @@ public class ${serviceClass} extends CanvasWatchFaceService {
 
             /*
              * Create a gray version of the image only if it will look nice on the device in
-             * ambient mode. That means we don't want devices that support burn-in
+             * ambient mode. That means we don"t want devices that support burn-in
              * protection (slight movements in pixels, not great for images going all the way to
              * edges) and low ambient mode (degrades image quality).
              *
-             * Also, if your watch face will know about all images ahead of time (users aren't
+             * Also, if your watch face will know about all images ahead of time (users aren"t
              * selecting their own photos for the watch face), it will be more
              * efficient to create a black/white version (png, etc.) and load that when you need it.
              */
@@ -311,7 +336,7 @@ public class ${serviceClass} extends CanvasWatchFaceService {
             grayPaint.setColorFilter(filter);
             canvas.drawBitmap(mBackgroundBitmap, 0, 0, grayPaint);
         }
-<#if isInteractive>
+${renderIf(isInteractive) { """
         /**
          * Captures tap event (and tap type). The {@link WatchFaceService#TAP_TYPE_TAP} case can be
          * used for implementing specific logic to handle the gesture.
@@ -334,7 +359,8 @@ public class ${serviceClass} extends CanvasWatchFaceService {
             }
             invalidate();
         }
-</#if>
+""" }}
+
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
             long now = System.currentTimeMillis();
@@ -428,7 +454,7 @@ public class ${serviceClass} extends CanvasWatchFaceService {
                     CENTER_GAP_AND_CIRCLE_RADIUS,
                     mTickAndCirclePaint);
 
-            /* Restore the canvas' original orientation. */
+            /* Restore the canvas" original orientation. */
             canvas.restore();
         }
 
@@ -438,7 +464,7 @@ public class ${serviceClass} extends CanvasWatchFaceService {
 
             if (visible) {
                 registerReceiver();
-                /* Update time zone in case it changed while we weren't visible. */
+                /* Update time zone in case it changed while we weren"t visible. */
                 mCalendar.setTimeZone(TimeZone.getDefault());
                 invalidate();
             } else {
@@ -518,3 +544,4 @@ public class ${serviceClass} extends CanvasWatchFaceService {
         }
     }
 }
+"""
