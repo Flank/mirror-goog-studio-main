@@ -74,7 +74,7 @@ java_binary(
     visibility = ["//visibility:public"],
     runtime_deps = [
         "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.11:jar",
+        "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-reflect",
     ],
     deps = [
         ":utils",
