@@ -46,6 +46,7 @@ import com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.mo
 import com.android.tools.idea.wizard.template.impl.fragments.scrollFragment.scrollFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.settingsFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.viewModelFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.other.appWidget.appWidgetTemplate
 import com.android.tools.idea.wizard.template.impl.other.automotiveMessagingService.automotiveMessagingServiceTemplate
 import com.android.tools.idea.wizard.template.impl.other.broadcastReceiver.broadcastReceiverTemplate
 import com.android.tools.idea.wizard.template.impl.other.contentProvider.contentProviderTemplate
@@ -91,6 +92,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     scrollFragmentTemplate,
     viewModelFragmentTemplate,
 
+    appWidgetTemplate,
     automotiveMessagingServiceTemplate,
     broadcastReceiverTemplate,
     contentProviderTemplate,
