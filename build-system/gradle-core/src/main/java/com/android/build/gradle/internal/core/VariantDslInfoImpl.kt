@@ -147,7 +147,6 @@ open class VariantDslInfoImpl internal constructor(
         mergeOptions()
     }
 
-
     /**
      * Returns a full name that includes the given splits name.
      *
@@ -168,7 +167,7 @@ open class VariantDslInfoImpl internal constructor(
      *
      * @return the name of the variant
      */
-    override val baseName : String by lazy {
+    override val baseName: String by lazy {
         VariantBuilder.computeBaseName(this, variantType)
     }
 
@@ -283,7 +282,6 @@ open class VariantDslInfoImpl internal constructor(
             }
             return names
         }
-
 
     override fun hasFlavors(): Boolean {
         return productFlavorList.isNotEmpty()
@@ -486,11 +484,10 @@ open class VariantDslInfoImpl internal constructor(
             if (testedVariantImpl != null) {
                 return testedVariantImpl.minSdkVersion
             }
-            var minSdkVersion = mergedFlavor.minSdkVersion
-            if (minSdkVersion == null) { // default to 1 for minSdkVersion.
-                minSdkVersion =
-                    DefaultApiVersion.create(Integer.valueOf(1))
-            }
+            // default to 1 for minSdkVersion.
+            val minSdkVersion =
+                mergedFlavor.minSdkVersion ?: DefaultApiVersion.create(Integer.valueOf(1))
+
             return AndroidVersion(
                 minSdkVersion.apiLevel,
                 minSdkVersion.codename
@@ -513,13 +510,9 @@ open class VariantDslInfoImpl internal constructor(
             if (testedVariantImpl != null) {
                 return testedVariantImpl.targetSdkVersion
             }
-            var targetSdkVersion =
-                mergedFlavor.targetSdkVersion
-            if (targetSdkVersion == null) { // default to -1 if not in build.gradle file.
-                targetSdkVersion =
-                    DefaultApiVersion.create(Integer.valueOf(-1))
-            }
-            return targetSdkVersion
+            return mergedFlavor.targetSdkVersion
+                // default to -1 if not in build.gradle file.
+                ?: DefaultApiVersion.create(Integer.valueOf(-1))
         }
 
     override val renderscriptTarget: Int
@@ -553,7 +546,9 @@ open class VariantDslInfoImpl internal constructor(
      * @param value the value of the field
      */
     override fun addBuildConfigField(
-        type: String, name: String, value: String
+        type: String,
+        name: String,
+        value: String
     ) {
         val classField: ClassField = ClassFieldImpl(type, name, value)
         mBuildConfigFields[name] = classField
@@ -569,7 +564,7 @@ open class VariantDslInfoImpl internal constructor(
     override fun addResValue(type: String, name: String, value: String) {
         val classField: ClassField = ClassFieldImpl(type, name, value)
         mResValues[name] = classField
-    }// keep track of the names already added. This is because we show where the items
+    } // keep track of the names already added. This is because we show where the items
 // come from so we cannot just put everything a map and let the new ones override the
 // old ones.
 
@@ -614,7 +609,7 @@ open class VariantDslInfoImpl internal constructor(
                 fillFieldList(fullList, usedFieldNames, list)
             }
             return fullList
-        }// start from the lowest priority and just add it all. Higher priority fields
+        } // start from the lowest priority and just add it all. Higher priority fields
 // will replace lower priority ones.
 
     /**
@@ -727,7 +722,7 @@ open class VariantDslInfoImpl internal constructor(
         }
 
     override val isTestCoverageEnabled: Boolean
-        get() = buildTypeObj.isTestCoverageEnabled// so far, blindly override the build type placeholders
+        get() = buildTypeObj.isTestCoverageEnabled // so far, blindly override the build type placeholders
 
     /**
      * Returns the merged manifest placeholders. All product flavors are merged first, then build
@@ -737,8 +732,7 @@ open class VariantDslInfoImpl internal constructor(
      */
     override val manifestPlaceholders: Map<String, Any>
         get() {
-            val mergedFlavorsPlaceholders =
-                mergedFlavor.manifestPlaceholders
+            val mergedFlavorsPlaceholders = HashMap(mergedFlavor.manifestPlaceholders)
             // so far, blindly override the build type placeholders
             mergedFlavorsPlaceholders.putAll(buildTypeObj.manifestPlaceholders)
             return mergedFlavorsPlaceholders
@@ -779,15 +773,15 @@ open class VariantDslInfoImpl internal constructor(
     // dynamic features can always be build in native multidex mode
     override val dexingType: DexingType
         get() = if (variantType.isDynamicFeature) {
-            if (buildTypeObj.multiDexEnabled != null
-                || mergedFlavor.multiDexEnabled != null
+            if (buildTypeObj.multiDexEnabled != null ||
+                mergedFlavor.multiDexEnabled != null
             ) {
                 issueReporter
                     .reportWarning(
                         IssueReporter.Type.GENERIC,
-                        "Native multidex is always used for dynamic features. Please "
-                                + "remove 'multiDexEnabled true|false' from your "
-                                + "build.gradle file."
+                        "Native multidex is always used for dynamic features. Please " +
+                                "remove 'multiDexEnabled true|false' from your " +
+                                "build.gradle file."
                     )
             }
             // dynamic features can always be build in native multidex mode
@@ -815,7 +809,7 @@ open class VariantDslInfoImpl internal constructor(
 
     /** Returns true if the variant output is a bundle.  */
     override val isBundled: Boolean
-        get() = variantType.isAar// Consider runtime API passed from the IDE only if multi-dex is enabled and the app is debuggable.
+        get() = variantType.isAar // Consider runtime API passed from the IDE only if multi-dex is enabled and the app is debuggable.
 
     /**
      * Returns the minimum SDK version for this variant, potentially overridden by a property passed
@@ -867,7 +861,6 @@ open class VariantDslInfoImpl internal constructor(
     override val externalNativeBuildOptions: CoreExternalNativeBuildOptions
         get() = mergedExternalNativeBuildOptions
 
-
     /**
      * Returns the ABI filters associated with the artifact, or null if there are no filters.
      *
@@ -876,7 +869,6 @@ open class VariantDslInfoImpl internal constructor(
      */
     override val supportedAbis: Set<String>?
         get() = if (variantType.isDynamicFeature) null else mergedNdkConfig.abiFilters
-
 
     override fun gatherProguardFiles(type: ProguardFileType): List<File> {
         val result: MutableList<File> = ArrayList(defaultConfig.getProguardFiles(type))
@@ -904,7 +896,7 @@ open class VariantDslInfoImpl internal constructor(
      * @param <CoreOptionsT> The core type of the option being merge.
      * @param <MergedOptionsT> The merge option type.
     </MergedOptionsT></CoreOptionsT> */
-    private fun <CoreOptionsT, MergedOptionsT: MergedOptions<CoreOptionsT>> computeMergedOptions(
+    private fun <CoreOptionsT, MergedOptionsT : MergedOptions<CoreOptionsT>> computeMergedOptions(
         mergedOption: MergedOptionsT,
         getFlavorOption: BaseFlavor.() -> CoreOptionsT?,
         getBuildTypeOption: BuildType.() -> CoreOptionsT?
@@ -1110,7 +1102,7 @@ open class VariantDslInfoImpl internal constructor(
     }
 }
 
-private fun BaseConfig.getProguardFiles(type: ProguardFileType): Collection<File> = when(type) {
+private fun BaseConfig.getProguardFiles(type: ProguardFileType): Collection<File> = when (type) {
     ProguardFileType.EXPLICIT -> this.proguardFiles
     ProguardFileType.TEST -> this.testProguardFiles
     ProguardFileType.CONSUMER -> this.consumerProguardFiles

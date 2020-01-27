@@ -13,31 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.dsl
 
-package com.android.build.gradle.internal.dsl;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.api.JavaCompileOptions;
-import com.android.builder.model.ProductFlavor;
-import org.gradle.api.Named;
+import com.android.build.gradle.api.JavaCompileOptions
+import com.android.builder.model.ProductFlavor
+import org.gradle.api.Named
 
 /**
  * A product flavor with addition properties for building with Gradle plugin. @Deprecated do not
  * use. Use a more specific type instead
  */
-@Deprecated
-public interface CoreProductFlavor extends ProductFlavor, Named {
-
-    @Nullable
-    CoreNdkOptions getNdkConfig();
-
-    @Nullable
-    CoreExternalNativeBuildOptions getExternalNativeBuildOptions();
-
-    @NonNull
-    JavaCompileOptions getJavaCompileOptions();
-
-    @NonNull
-    CoreShaderOptions getShaders();
+@Deprecated("Use com.android.build.api.dsl.ProductFlavor instead")
+interface CoreProductFlavor : ProductFlavor, Named {
+    val ndkConfig: CoreNdkOptions
+    val externalNativeBuildOptions: CoreExternalNativeBuildOptions
+    val javaCompileOptions: JavaCompileOptions
+    val shaders: CoreShaderOptions
 }

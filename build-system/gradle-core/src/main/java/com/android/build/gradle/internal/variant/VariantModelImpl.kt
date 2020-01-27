@@ -93,14 +93,10 @@ class VariantModelImpl(
     /** Prevent any subsequent modifications to the default variant DSL properties.  */
     private fun finalizeDefaultVariantDsl() {
         for (buildTypeData in inputs.buildTypes.values) {
-            @Suppress("DEPRECATION")
-            buildTypeData.buildType.isDefaultProp.finalizeValue()
+            buildTypeData.buildType.getIsDefault().finalizeValue()
         }
         for (productFlavorData in inputs.productFlavors.values) {
-            @Suppress("DEPRECATION")
-            productFlavorData.productFlavor
-                .isDefaultProp
-                .finalizeValue()
+            productFlavorData.productFlavor.getIsDefault().finalizeValue()
         }
     }
 
@@ -113,8 +109,7 @@ class VariantModelImpl(
         // First look for the user setting
         val buildTypesMarkedAsDefault: MutableList<String> = ArrayList(1)
         for (buildType in inputs.buildTypes.values) {
-            @Suppress("DEPRECATION")
-            if (buildType.buildType.isDefaultProp.get()) {
+            if (buildType.buildType.isDefault) {
                 buildTypesMarkedAsDefault.add(buildType.buildType.name)
             }
         }
@@ -158,7 +153,7 @@ class VariantModelImpl(
             val dimension = productFlavor.dimension!!
 
             @Suppress("DEPRECATION")
-            if (productFlavor.isDefaultProp.get()) {
+            if (productFlavor.getIsDefault().get()) {
                 userDefaults.put(dimension, productFlavor.name)
             }
         }

@@ -13,58 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.dsl
 
-package com.android.build.gradle.internal.dsl;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.api.JavaCompileOptions;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.model.BuildType;
-import org.gradle.api.provider.Property;
+import com.android.build.gradle.api.JavaCompileOptions
+import com.android.builder.model.BuildType
+import org.gradle.api.provider.Property
 
 /**
- * A build type with addition properties for building with Gradle plugin. @Deprecated do not use.
- * Use a more specific type instead
+ * A build type with addition properties for building with Gradle plugin.
  */
-@Deprecated
-public interface CoreBuildType extends BuildType {
+@Deprecated("Use a more specific type instead")
+interface CoreBuildType : BuildType {
+    val ndkConfig: CoreNdkOptions?
+    val externalNativeBuildOptions: CoreExternalNativeBuildOptions?
+    val javaCompileOptions: JavaCompileOptions
+    val shaders: CoreShaderOptions
 
-    @Nullable
-    CoreNdkOptions getNdkConfig();
+    @get:Deprecated("Use {@link VariantScope#useResourceShrinker()} instead. ")
+    val isShrinkResources: Boolean
 
-    @Nullable
-    CoreExternalNativeBuildOptions getExternalNativeBuildOptions();
+    @get:Deprecated("Use {@link VariantScope#getCodeShrinker()} instead. ")
+    val isUseProguard: Boolean?
 
-    @NonNull
-    JavaCompileOptions getJavaCompileOptions();
+    val isCrunchPngs: Boolean?
 
-    @NonNull
-    CoreShaderOptions getShaders();
+    @get:Deprecated("Can go away once {@link AaptOptions#cruncherEnabled} is removed. ")
+    val isCrunchPngsDefault: Boolean
 
-    /** @deprecated Use {@link VariantScope#useResourceShrinker()} instead. */
-    @Deprecated
-    boolean isShrinkResources();
-
-    /** @deprecated Use {@link VariantScope#getCodeShrinker()} instead. */
-    @Deprecated
-    Boolean isUseProguard();
-    /**
-     * Whether to crunch PNGs.
-     *
-     * <p>Setting this property to <code>true</code> reduces of PNG resources that are not already
-     * optimally compressed. However, this process increases build times.
-     *
-     * <p>PNG crunching is enabled by default in the release build type and disabled by default in
-     * the debug build type.
-     */
-    @Nullable
-    Boolean isCrunchPngs();
-
-    /** @deprecated Can go away once {@link AaptOptions#cruncherEnabled} is removed. */
-    @Deprecated
-    boolean isCrunchPngsDefault();
-
-    /** Whether this product flavor should be selected in Studio by default */
-    Property<Boolean> getIsDefault();
+    fun getIsDefault(): Property<Boolean>
 }

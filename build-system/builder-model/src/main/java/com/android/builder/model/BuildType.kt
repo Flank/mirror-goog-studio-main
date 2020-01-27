@@ -13,11 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.builder.model;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
+package com.android.builder.model
 
 /**
  * a Build Type. This is only the configuration of the build type.
@@ -25,92 +21,51 @@ import com.android.annotations.Nullable;
  * It does not include the sources or the dependencies. Those are available on the container
  * or in the artifact info.
  *
+ * This is an interface for the gradle tooling api, and should only be used from Android Studio.
+ * It is not part of the DSL & API interfaces of the Android Gradle Plugin.
+ *
  * @see BuildTypeContainer
- * @see AndroidArtifact#getDependencies()
+ * @see AndroidArtifact.getDependencies
  */
-public interface BuildType extends BaseConfig {
+interface BuildType : BaseConfig {
+    /** The name of the build type.*/
+    override fun getName(): String
 
-    /**
-     * Returns the name of the build type.
-     *
-     * @return the name of the build type.
-     */
-    @Override
-    @NonNull
-    String getName();
+    /** Whether the build type is configured to generate a debuggable apk. */
+    val isDebuggable: Boolean
 
-    /**
-     * Returns whether the build type is configured to generate a debuggable apk.
-     *
-     * @return true if the apk is debuggable
-     */
-    boolean isDebuggable();
+    /** Whether the build type is configured to be build with support for code coverage. */
+    val isTestCoverageEnabled: Boolean
 
-    /**
-     * Returns whether the build type is configured to be build with support for code coverage.
-     *
-     * @return true if code coverage is enabled.
-     */
-    boolean isTestCoverageEnabled();
+    /** Whether the build type is configured to be build with support for pseudolocales. */
+    val isPseudoLocalesEnabled: Boolean
 
-    /**
-     * Returns whether the build type is configured to be build with support for pseudolocales.
-     *
-     * @return true if code coverage is enabled.
-     */
-    boolean isPseudoLocalesEnabled();
+    /** Whether the build type is configured to generate an apk with debuggable native code. */
+    val isJniDebuggable: Boolean
 
-    /**
-     * Returns whether the build type is configured to generate an apk with debuggable native code.
-     *
-     * @return true if the apk is debuggable
-     */
-    boolean isJniDebuggable();
+    /** Whether the build type is configured to generate an apk with debuggable renderscript code. */
+    val isRenderscriptDebuggable: Boolean
 
-    /**
-     * Returns whether the build type is configured to generate an apk with debuggable
-     * renderscript code.
-     *
-     * @return true if the apk is debuggable
-     */
-    boolean isRenderscriptDebuggable();
-
-    /**
-     * Returns the optimization level of the renderscript compilation.
-     *
-     * @return the optimization level.
-     */
-    int getRenderscriptOptimLevel();
+    /** The optimization level of the renderscript compilation. */
+    val renderscriptOptimLevel: Int
 
     /**
      * Specifies whether to enable code shrinking for this build type.
      *
-     * <p>By default, when you enable code shrinking by setting this property to <code>true</code>,
+     * By default, when you enable code shrinking by setting this property to `true`,
      * the Android plugin uses ProGuard.
      *
-     * <p>To learn more, read <a
-     * href="https://developer.android.com/studio/build/shrink-code.html">Shrink Your Code and
-     * Resources</a>.
-     *
-     * @return true if code shrinking is enabled.
+     * To learn more, read
+     * [Shrink Your Code and Resources](https://developer.android.com/studio/build/shrink-code.html).
      */
-    boolean isMinifyEnabled();
+    val isMinifyEnabled: Boolean
 
-    /**
-     * Return whether zipalign is enabled for this build type.
-     *
-     * @return true if zipalign is enabled.
-     */
-    boolean isZipAlignEnabled();
+    /** Whether zipalign is enabled for this build type. */
+    val isZipAlignEnabled: Boolean
 
-    /**
-     * Returns whether the variant embeds the micro app.
-     */
-    boolean isEmbedMicroApp();
+    /**Whether the variant embeds the micro app. */
+    val isEmbedMicroApp: Boolean
 
-    /**
-     * Returns the associated signing config or null if none are set on the build type.
-     */
-    @Nullable
-    SigningConfig getSigningConfig();
+    /** The associated signing config or null if none are set on the build type. */
+    val signingConfig: SigningConfig?
 }

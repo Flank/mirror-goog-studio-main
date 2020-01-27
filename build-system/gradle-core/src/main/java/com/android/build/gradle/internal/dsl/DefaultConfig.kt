@@ -13,32 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.dsl
 
-package com.android.build.gradle.internal.dsl;
+import com.android.build.api.dsl.DefaultConfig
+import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.resources.Density
+import com.google.common.collect.Sets
+import javax.inject.Inject
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.api.dsl.DslScope;
-import com.android.resources.Density;
-import com.google.common.collect.Sets;
-import java.util.Set;
-import javax.inject.Inject;
+/** DSL object for the defaultConfig object.  */
+// Exposed in the DSL.
+open class DefaultConfig @Inject constructor(name: String, dslScope: DslScope) :
+    BaseFlavor(name, dslScope), DefaultConfig {
 
-/** DSL object for the defaultConfig object. */
-@SuppressWarnings({"WeakerAccess", "unused"}) // Exposed in the DSL.
-public class DefaultConfig extends BaseFlavor implements com.android.build.api.dsl.DefaultConfig {
-    @Inject
-    public DefaultConfig(@NonNull String name, @NonNull DslScope dslScope) {
-        super(name, dslScope);
-        setDefaultConfigValues();
-    }
-
-    private void setDefaultConfigValues() {
-        Set<Density> densities = Density.getRecommendedValuesForDevice();
-        Set<String> strings = Sets.newHashSetWithExpectedSize(densities.size());
-        for (Density density : densities) {
-            strings.add(density.getResourceValue());
+    init {
+        val densities = Density.getRecommendedValuesForDevice()
+        val strings: MutableSet<String> =
+            Sets.newHashSetWithExpectedSize(densities.size)
+        for (density in densities) {
+            strings.add(density.resourceValue)
         }
-        getVectorDrawables().setGeneratedDensities(strings);
-        getVectorDrawables().setUseSupportLibrary(false);
+        vectorDrawables.setGeneratedDensities(strings)
+        vectorDrawables.useSupportLibrary = false
     }
 }

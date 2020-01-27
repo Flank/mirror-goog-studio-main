@@ -13,497 +13,404 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.dsl
 
-package com.android.build.gradle.internal.dsl;
+import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.builder.core.AbstractProductFlavor
+import com.android.builder.core.BuilderConstants
+import com.android.builder.core.DefaultApiVersion
+import com.android.builder.internal.ClassFieldImpl
+import com.android.builder.model.ApiVersion
+import com.android.builder.model.ProductFlavor
+import com.google.common.base.Strings
+import org.gradle.api.Action
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.api.dsl.DslScope;
-import com.android.builder.core.AbstractProductFlavor;
-import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.DefaultApiVersion;
-import com.android.builder.internal.ClassFieldImpl;
-import com.android.builder.model.ApiVersion;
-import com.android.builder.model.ClassField;
-import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import org.gradle.api.Action;
-import org.gradle.api.model.ObjectFactory;
+/** Base DSL object used to configure product flavors.  */
+abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
+    AbstractProductFlavor(
+        name,
+        dslScope.objectFactory.newInstance(
+            VectorDrawablesOptions::class.java
+        )
+    ), CoreProductFlavor {
 
-/** Base DSL object used to configure product flavors. */
-@SuppressWarnings("deprecation")
-public abstract class BaseFlavor extends AbstractProductFlavor implements CoreProductFlavor {
+    /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
+    val ndk: NdkOptions = dslScope.objectFactory.newInstance(NdkOptions::class.java)
 
-    @NonNull private DslScope dslScope;
-
-    @NonNull private final NdkOptions ndkConfig;
-
-    @NonNull private final ExternalNativeBuildOptions externalNativeBuildOptions;
-
-    @NonNull private final JavaCompileOptions javaCompileOptions;
-
-    @NonNull private final ShaderOptions shaderOptions;
-
-    public BaseFlavor(@NonNull String name, @NonNull DslScope dslScope) {
-        super(name, dslScope.getObjectFactory().newInstance(VectorDrawablesOptions.class));
-        this.dslScope = dslScope;
-        ObjectFactory objectFactory = dslScope.getObjectFactory();
-        ndkConfig = objectFactory.newInstance(NdkOptions.class);
-        externalNativeBuildOptions =
-                objectFactory.newInstance(ExternalNativeBuildOptions.class, objectFactory);
-        javaCompileOptions =
-                objectFactory.newInstance(
-                        JavaCompileOptions.class, objectFactory, dslScope.getDeprecationReporter());
-        shaderOptions = objectFactory.newInstance(ShaderOptions.class);
-    }
-
-    /** Encapsulates per-variant configurations for the NDK, such as ABI filters. */
-    @Nullable
-    public NdkOptions getNdk() {
-        return ndkConfig;
-    }
-
-    @Override
-    @Nullable
-    public CoreNdkOptions getNdkConfig() {
-        return ndkConfig;
-    }
+    override val ndkConfig: CoreNdkOptions
+        get() {
+            return ndk
+        }
 
     /**
      * Encapsulates per-variant CMake and ndk-build configurations for your external native build.
      *
-     * <p>To learn more, see <a
-     * href="http://developer.android.com/studio/projects/add-native-code.html#">Add C and C++ Code
-     * to Your Project</a>.
+     * To learn more, see
+     * [Add C and C++ Code to Your Project](http://developer.android.com/studio/projects/add-native-code.html#).
      */
-    @NonNull
-    public ExternalNativeBuildOptions getExternalNativeBuild() {
-        return externalNativeBuildOptions;
-    }
 
-    @NonNull
-    @Override
-    public CoreExternalNativeBuildOptions getExternalNativeBuildOptions() {
-        return externalNativeBuildOptions;
-    }
+    val externalNativeBuild: ExternalNativeBuildOptions =
+        dslScope.objectFactory.newInstance(
+            ExternalNativeBuildOptions::class.java,
+            dslScope.objectFactory
+        )
 
-    public void setMinSdkVersion(int minSdkVersion) {
-        setMinSdkVersion(new DefaultApiVersion(minSdkVersion));
+    override val externalNativeBuildOptions: CoreExternalNativeBuildOptions
+        get() {
+            return this.externalNativeBuild
+        }
+
+    fun setMinSdkVersion(minSdkVersion: Int) {
+        setMinSdkVersion(DefaultApiVersion(minSdkVersion))
     }
 
     /**
      * Sets minimum SDK version.
      *
-     * <p>See <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html">
-     * uses-sdk element documentation</a>.
+     * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    public void minSdkVersion(int minSdkVersion) {
-        setMinSdkVersion(minSdkVersion);
+    open fun minSdkVersion(minSdkVersion: Int) {
+        setMinSdkVersion(minSdkVersion)
     }
 
-    public void setMinSdkVersion(@Nullable String minSdkVersion) {
-        setMinSdkVersion(getApiVersion(minSdkVersion));
+    open fun setMinSdkVersion(minSdkVersion: String?) {
+        setMinSdkVersion(getApiVersion(minSdkVersion))
     }
 
     /**
      * Sets minimum SDK version.
      *
-     * <p>See <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html">
-     * uses-sdk element documentation</a>.
+     * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    public void minSdkVersion(@Nullable String minSdkVersion) {
-        setMinSdkVersion(minSdkVersion);
+    open fun minSdkVersion(minSdkVersion: String?) {
+        setMinSdkVersion(minSdkVersion)
     }
 
-    @NonNull
-    public com.android.builder.model.ProductFlavor setTargetSdkVersion(int targetSdkVersion) {
-        setTargetSdkVersion(new DefaultApiVersion(targetSdkVersion));
-        return this;
+    fun setTargetSdkVersion(targetSdkVersion: Int): ProductFlavor {
+        setTargetSdkVersion(DefaultApiVersion(targetSdkVersion))
+        return this
     }
 
     /**
      * Sets the target SDK version to the given value.
      *
-     * <p>See <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html">
-     * uses-sdk element documentation</a>.
+     * See [
+ * uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    public void targetSdkVersion(int targetSdkVersion) {
-        setTargetSdkVersion(targetSdkVersion);
+    open fun targetSdkVersion(targetSdkVersion: Int) {
+        setTargetSdkVersion(targetSdkVersion)
     }
 
-    public void setTargetSdkVersion(@Nullable String targetSdkVersion) {
-        setTargetSdkVersion(getApiVersion(targetSdkVersion));
+    fun setTargetSdkVersion(targetSdkVersion: String?) {
+        setTargetSdkVersion(getApiVersion(targetSdkVersion))
     }
 
     /**
      * Sets the target SDK version to the given value.
      *
-     * <p>See <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html">
-     * uses-sdk element documentation</a>.
+     * See [
+ * uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    public void targetSdkVersion(@Nullable String targetSdkVersion) {
-        setTargetSdkVersion(targetSdkVersion);
+    open fun targetSdkVersion(targetSdkVersion: String?) {
+        setTargetSdkVersion(targetSdkVersion)
     }
 
     /**
      * Sets the maximum SDK version to the given value.
      *
-     * <p>See <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html">
-     * uses-sdk element documentation</a>.
+     * See [
+ * uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    public void maxSdkVersion(int maxSdkVersion) {
-        setMaxSdkVersion(maxSdkVersion);
-    }
-
-    @Nullable
-    private static ApiVersion getApiVersion(@Nullable String value) {
-        if (!Strings.isNullOrEmpty(value)) {
-            if (Character.isDigit(value.charAt(0))) {
-                try {
-                    int apiLevel = Integer.valueOf(value);
-                    return new DefaultApiVersion(apiLevel);
-                } catch (NumberFormatException e) {
-                    throw new RuntimeException("'" + value + "' is not a valid API level. ", e);
-                }
-            }
-
-            return new DefaultApiVersion(value);
-        }
-
-        return null;
+    open fun maxSdkVersion(maxSdkVersion: Int) {
+        setMaxSdkVersion(maxSdkVersion)
     }
 
     /**
      * Adds a custom argument to the test instrumentation runner, e.g:
      *
-     * <p>
+     * `testInstrumentationRunnerArgument "size", "medium"`
      *
-     * <pre>testInstrumentationRunnerArgument "size", "medium"</pre>
+     * Test runner arguments can also be specified from the command line
      *
-     * <p>Test runner arguments can also be specified from the command line:
-     *
-     * <p>
-     *
-     * <pre>
+     * ```
      * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.size=medium
      * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.foo=bar
-     * </pre>
+     * ```
      */
-    public void testInstrumentationRunnerArgument(@NonNull String key, @NonNull String value) {
-        getTestInstrumentationRunnerArguments().put(key, value);
+    fun testInstrumentationRunnerArgument(key: String, value: String) {
+        testInstrumentationRunnerArguments[key] = value
     }
 
     /**
      * Adds custom arguments to the test instrumentation runner, e.g:
      *
-     * <p>
+     * `testInstrumentationRunnerArguments(size: "medium", foo: "bar")`
+
+     * Test runner arguments can also be specified from the command line:
      *
-     * <pre>testInstrumentationRunnerArguments(size: "medium", foo: "bar")</pre>
-     *
-     * <p>Test runner arguments can also be specified from the command line:
-     *
-     * <p>
-     *
-     * <pre>
+     * ```
      * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.size=medium
      * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.foo=bar
-     * </pre>
+     * ```
      */
-    public void testInstrumentationRunnerArguments(@NonNull Map<String, String> args) {
-        getTestInstrumentationRunnerArguments().putAll(args);
+    open fun testInstrumentationRunnerArguments(args: Map<String, String>) {
+        testInstrumentationRunnerArguments.putAll(args)
     }
 
-    /** Signing config used by this product flavor. */
-    @Override
-    @Nullable
-    public SigningConfig getSigningConfig() {
-        return (SigningConfig) super.getSigningConfig();
-    }
+    /** Signing config used by this product flavor.  */
+    override var signingConfig: SigningConfig?
+        get() = super.signingConfig as SigningConfig?
+        set(value) { super.setSigningConfig(value) }
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
-
     /**
      * Adds a new field to the generated BuildConfig class.
      *
-     * <p>The field is generated as: {@code <type> <name> = <value>;}
+     * The field is generated as: `<type> <name> = <value>;`
      *
-     * <p>This means each of these must have valid Java content. If the type is a String, then the
+     * This means each of these must have valid Java content. If the type is a String, then the
      * value should include quotes.
      *
      * @param type the type of the field
      * @param name the name of the field
      * @param value the value of the field
      */
-    public void buildConfigField(
-            @NonNull String type, @NonNull String name, @NonNull String value) {
-        ClassField alreadyPresent = getBuildConfigFields().get(name);
+    fun buildConfigField(
+        type: String,
+        name: String,
+        value: String
+    ) {
+        val alreadyPresent = buildConfigFields[name]
         if (alreadyPresent != null) {
-            String flavorName = getName();
-            if (BuilderConstants.MAIN.equals(flavorName)) {
-                dslScope.getLogger()
-                        .info(
-                                "DefaultConfig: buildConfigField '{}' value is being replaced: {} -> {}",
-                                name,
-                                alreadyPresent.getValue(),
-                                value);
+            val flavorName = getName()
+            if (BuilderConstants.MAIN == flavorName) {
+                dslScope.logger
+                    .info(
+                        "DefaultConfig: buildConfigField '{}' value is being replaced: {} -> {}",
+                        name,
+                        alreadyPresent.value,
+                        value
+                    )
             } else {
-                dslScope.getLogger()
-                        .info(
-                                "ProductFlavor({}): buildConfigField '{}' "
-                                        + "value is being replaced: {} -> {}",
-                                flavorName,
-                                name,
-                                alreadyPresent.getValue(),
-                                value);
+                dslScope.logger
+                    .info(
+                        "ProductFlavor({}): buildConfigField '{}' " +
+                                "value is being replaced: {} -> {}",
+                        flavorName,
+                        name,
+                        alreadyPresent.value,
+                        value
+                    )
             }
         }
-        addBuildConfigField(new ClassFieldImpl(type, name, value));
+        addBuildConfigField(ClassFieldImpl(type, name, value))
     }
 
     /**
      * Adds a new generated resource.
      *
-     * <p>This is equivalent to specifying a resource in res/values.
+     * This is equivalent to specifying a resource in res/values.
      *
-     * <p>See <a
-     * href="http://developer.android.com/guide/topics/resources/available-resources.html">Resource
-     * Types</a>.
+     * See [Resource
+ * Types](http://developer.android.com/guide/topics/resources/available-resources.html).
      *
      * @param type the type of the resource
      * @param name the name of the resource
      * @param value the value of the resource
      */
-    public void resValue(@NonNull String type, @NonNull String name, @NonNull String value) {
-        ClassField alreadyPresent = getResValues().get(name);
+    fun resValue(type: String, name: String, value: String) {
+        val alreadyPresent = resValues[name]
         if (alreadyPresent != null) {
-            String flavorName = getName();
-            if (BuilderConstants.MAIN.equals(flavorName)) {
-                dslScope.getLogger()
-                        .info(
-                                "DefaultConfig: resValue '{}' value is being replaced: {} -> {}",
-                                name,
-                                alreadyPresent.getValue(),
-                                value);
+            val flavorName = getName()
+            if (BuilderConstants.MAIN == flavorName) {
+                dslScope.logger
+                    .info(
+                        "DefaultConfig: resValue '{}' value is being replaced: {} -> {}",
+                        name,
+                        alreadyPresent.value,
+                        value
+                    )
             } else {
-                dslScope.getLogger()
-                        .info(
-                                "ProductFlavor({}): resValue '{}' value is being replaced: {} -> {}",
-                                flavorName,
-                                name,
-                                alreadyPresent.getValue(),
-                                value);
+                dslScope.logger
+                    .info(
+                        "ProductFlavor({}): resValue '{}' value is being replaced: {} -> {}",
+                        flavorName,
+                        name,
+                        alreadyPresent.value,
+                        value
+                    )
             }
         }
-        addResValue(new ClassFieldImpl(type, name, value));
+        addResValue(ClassFieldImpl(type, name, value))
     }
 
     /**
      * Specifies a ProGuard configuration file that the plugin should use.
      *
-     * <p>There are two ProGuard rules files that ship with the Android plugin and are used by
+     * There are two ProGuard rules files that ship with the Android plugin and are used by
      * default:
      *
-     * <ul>
-     *   <li>proguard-android.txt
-     *   <li>proguard-android-optimize.txt
-     * </ul>
+     *  * proguard-android.txt
+     *  * proguard-android-optimize.txt
      *
-     * <p><code>proguard-android-optimize.txt</code> is identical to <code>proguard-android.txt
-     * </code>, exccept with optimizations enabled. You can use <code>
-     * getDefaultProguardFile(String filename)</code> to return the full path of each file.
+     * `proguard-android-optimize.txt` is identical to `proguard-android.txt
+    ` * , exccept with optimizations enabled. You can use `
+     * getDefaultProguardFile(String filename)` to return the full path of each file.
      */
-    public void proguardFile(@NonNull Object proguardFile) {
-        getProguardFiles().add(dslScope.file(proguardFile));
+    fun proguardFile(proguardFile: Any) {
+        proguardFiles.add(dslScope.file(proguardFile))
     }
 
     /**
      * Specifies ProGuard configuration files that the plugin should use.
      *
-     * <p>There are two ProGuard rules files that ship with the Android plugin and are used by
+     * There are two ProGuard rules files that ship with the Android plugin and are used by
      * default:
      *
-     * <ul>
-     *   <li>proguard-android.txt
-     *   <li>proguard-android-optimize.txt
-     * </ul>
+     *  * proguard-android.txt
+     *  * proguard-android-optimize.txt
      *
-     * <p><code>proguard-android-optimize.txt</code> is identical to <code>proguard-android.txt
-     * </code>, exccept with optimizations enabled. You can use <code>
-     * getDefaultProguardFile(String filename)</code> to return the full path of each file.
+     * `proguard-android-optimize.txt` is identical to `proguard-android.txt
+    ` * , exccept with optimizations enabled. You can use `
+     * getDefaultProguardFile(String filename)` to return the full path of each file.
      */
-    public void proguardFiles(@NonNull Object... files) {
-        for (Object file : files) {
-            proguardFile(file);
+    fun proguardFiles(vararg files: Any) {
+        for (file in files) {
+            proguardFile(file)
         }
     }
 
     /**
      * Sets the ProGuard configuration files.
      *
-     * <p>There are two ProGuard rules files that ship with the Android plugin and are used by
+     * There are two ProGuard rules files that ship with the Android plugin and are used by
      * default:
      *
-     * <ul>
-     *   <li>proguard-android.txt
-     *   <li>proguard-android-optimize.txt
-     * </ul>
+     *  * proguard-android.txt
+     *  * proguard-android-optimize.txt
      *
-     * <p><code>proguard-android-optimize.txt</code> is identical to <code>proguard-android.txt
-     * </code>, exccept with optimizations enabled. You can use <code>
-     * getDefaultProguardFile(String filename)</code> to return the full path of the files.
+     * `proguard-android-optimize.txt` is identical to `proguard-android.txt
+    ` * , exccept with optimizations enabled. You can use `
+     * getDefaultProguardFile(String filename)` to return the full path of the files.
      */
-    public void setProguardFiles(@NonNull Iterable<?> proguardFileIterable) {
-        getProguardFiles().clear();
-        proguardFiles(Iterables.toArray(proguardFileIterable, Object.class));
+    fun setProguardFiles(proguardFileIterable: Iterable<Any>) {
+        proguardFiles.clear()
+        for (file in proguardFileIterable) {
+            proguardFile(file)
+        }
     }
 
     /**
      * Adds a proguard rule file to be used when processing test code.
      *
-     * <p>Test code needs to be processed to apply the same obfuscation as was done to main code.
+     * Test code needs to be processed to apply the same obfuscation as was done to main code.
      */
-    public void testProguardFile(@NonNull Object proguardFile) {
-        getTestProguardFiles().add(dslScope.file(proguardFile));
+    fun testProguardFile(proguardFile: Any) {
+        testProguardFiles.add(dslScope.file(proguardFile))
     }
 
     /**
      * Adds proguard rule files to be used when processing test code.
      *
-     * <p>Test code needs to be processed to apply the same obfuscation as was done to main code.
+     * Test code needs to be processed to apply the same obfuscation as was done to main code.
      */
-    public void testProguardFiles(@NonNull Object... proguardFiles) {
-        for (Object proguardFile : proguardFiles) {
-            testProguardFile(proguardFile);
+    fun testProguardFiles(vararg proguardFiles: Any) {
+        for (proguardFile in proguardFiles) {
+            testProguardFile(proguardFile)
         }
     }
 
     /**
      * Specifies proguard rule files to be used when processing test code.
      *
-     * <p>Test code needs to be processed to apply the same obfuscation as was done to main code.
+     * Test code needs to be processed to apply the same obfuscation as was done to main code.
      */
-    public void setTestProguardFiles(@NonNull Iterable<?> files) {
-        getTestProguardFiles().clear();
-        testProguardFiles(Iterables.toArray(files, Object.class));
+    fun setTestProguardFiles(files: Iterable<Any>) {
+        testProguardFiles.clear()
+        for (proguardFile in files) {
+            testProguardFile(proguardFile)
+        }
     }
 
     /**
      * Adds a proguard rule file to be included in the published AAR.
      *
-     * <p>This proguard rule file will then be used by any application project that consume the AAR
+     * This proguard rule file will then be used by any application project that consume the AAR
      * (if proguard is enabled).
      *
-     * <p>This allows AAR to specify shrinking or obfuscation exclude rules.
+     * This allows AAR to specify shrinking or obfuscation exclude rules.
      *
-     * <p>This is only valid for Library project. This is ignored in Application project.
+     * This is only valid for Library project. This is ignored in Application project.
      */
-    public void consumerProguardFile(@NonNull Object proguardFile) {
-        getConsumerProguardFiles().add(dslScope.file(proguardFile));
+    fun consumerProguardFile(proguardFile: Any) {
+        consumerProguardFiles.add(dslScope.file(proguardFile))
     }
 
     /**
      * Adds proguard rule files to be included in the published AAR.
      *
-     * <p>This proguard rule file will then be used by any application project that consume the AAR
+     * This proguard rule file will then be used by any application project that consume the AAR
      * (if proguard is enabled).
      *
-     * <p>This allows AAR to specify shrinking or obfuscation exclude rules.
+     * This allows AAR to specify shrinking or obfuscation exclude rules.
      *
-     * <p>This is only valid for Library project. This is ignored in Application project.
+     * This is only valid for Library project. This is ignored in Application project.
      */
-    public void consumerProguardFiles(@NonNull Object... proguardFiles) {
-        for (Object proguardFile : proguardFiles) {
-            consumerProguardFile(proguardFile);
+    fun consumerProguardFiles(vararg proguardFiles: Any) {
+        for (proguardFile in proguardFiles) {
+            consumerProguardFile(proguardFile)
         }
     }
 
     /**
      * Specifies a proguard rule file to be included in the published AAR.
      *
-     * <p>This proguard rule file will then be used by any application project that consume the AAR
+     * This proguard rule file will then be used by any application project that consume the AAR
      * (if proguard is enabled).
      *
-     * <p>This allows AAR to specify shrinking or obfuscation exclude rules.
+     * This allows AAR to specify shrinking or obfuscation exclude rules.
      *
-     * <p>This is only valid for Library project. This is ignored in Application project.
+     * This is only valid for Library project. This is ignored in Application project.
      */
-    public void setConsumerProguardFiles(@NonNull Iterable<?> proguardFileIterable) {
-        getConsumerProguardFiles().clear();
-        consumerProguardFiles(Iterables.toArray(proguardFileIterable, Object.class));
+    fun setConsumerProguardFiles(proguardFileIterable: Iterable<Any>) {
+        consumerProguardFiles.clear()
+        for (proguardFile in proguardFileIterable) {
+            consumerProguardFile(proguardFile)
+        }
     }
 
-    /** Encapsulates per-variant configurations for the NDK, such as ABI filters. */
-    public void ndk(Action<NdkOptions> action) {
-        action.execute(ndkConfig);
+    /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
+    fun ndk(action: Action<NdkOptions>) {
+        action.execute(ndk)
     }
 
     /**
      * Encapsulates per-variant CMake and ndk-build configurations for your external native build.
      *
-     * <p>To learn more, see <a
-     * href="http://developer.android.com/studio/projects/add-native-code.html#">Add C and C++ Code
-     * to Your Project</a>.
+     * To learn more, see
+     * [Add C and C++ Code to Your Project](http://developer.android.com/studio/projects/add-native-code.html#).
      */
-    public void externalNativeBuild(@NonNull Action<ExternalNativeBuildOptions> action) {
-        action.execute(externalNativeBuildOptions);
+    fun externalNativeBuild(action: Action<ExternalNativeBuildOptions>) {
+        action.execute(externalNativeBuild)
+    }
+
+    fun externalNativeBuild(action: ExternalNativeBuildOptions.() -> Unit) {
+        action.invoke(externalNativeBuild)
     }
 
     /**
-     * Specifies an <a
-     * href="https://d.android.com/guide/topics/resources/providing-resources.html#AlternativeResources">
-     * alternative resource</a> to keep.
+     * Specifies a list of
+     * [alternative resources](https://d.android.com/guide/topics/resources/providing-resources.html#AlternativeResources)
+     * to keep.
      *
-     * <p>For example, if you are using a library that includes language resources (such as
-     * AppCompat or Google Play Services), then your APK includes all translated language strings
-     * for the messages in those libraries whether the rest of your app is translated to the same
-     * languages or not. If you'd like to keep only the language that your app officially supports,
-     * you can specify those languages using the <code>resConfig</code> property, as shown in the
-     * sample below. Any resources for languages not specified are removed.
-     *
-     * <pre>
-     * android {
-     *     defaultConfig {
-     *         ...
-     *         // Keeps language resources for only the locale specified below.
-     *         resConfig "en"
-     *     }
-     * }
-     * </pre>
-     *
-     * <p>You can also use this property to filter resources for screen densities. For example,
-     * specifying <code>hdpi</code> removes all other screen density resources (such as <code>mdpi
-     * </code>, <code>xhdpi</code>, etc) from the final APK.
-     *
-     * <p><b>Note:</b> <code>auto</code> is no longer supported because it created a number of
-     * issues with multi-module projects. Instead, you should specify the locale that your app
-     * supports, as shown in the sample above. Android plugin 3.1.0 and higher ignore the <code>auto
-     * </code> argument, and Gradle packages all string resources your app and its dependencies
-     * provide.
-     *
-     * <p>To learn more, see <a
-     * href="https://d.android.com/studio/build/shrink-code.html#unused-alt-resources">Remove unused
-     * alternative resources</a>.
-     */
-    public void resConfig(@NonNull String config) {
-        addResourceConfiguration(config);
-    }
-
-    /**
-     * Specifies a list of <a
-     * href="https://d.android.com/guide/topics/resources/providing-resources.html#AlternativeResources">
-     * alternative resources</a> to keep.
-     *
-     * <p>For example, if you are using a library that includes language resources (such as
+     * For example, if you are using a library that includes language resources (such as
      * AppCompat or Google Play Services), then your APK includes all translated language strings
      * for the messages in those libraries whether the rest of your app is translated to the same
      * languages or not. If you'd like to keep only the languages that your app officially supports,
-     * you can specify those languages using the <code>resConfigs</code> property, as shown in the
+     * you can specify those languages using the `resConfigs` property, as shown in the
      * sample below. Any resources for languages not specified are removed.
      *
-     * <pre>
+     * ````
      * android {
      *     defaultConfig {
      *         ...
@@ -511,39 +418,38 @@ public abstract class BaseFlavor extends AbstractProductFlavor implements CorePr
      *         resConfigs "en", "fr"
      *     }
      * }
-     * </pre>
+     * ````
      *
-     * <p>You can also use this property to filter resources for screen densities. For example,
-     * specifying <code>hdpi</code> removes all other screen density resources (such as <code>mdpi
-     * </code>, <code>xhdpi</code>, etc) from the final APK.
+     * You can also use this property to filter resources for screen densities. For example,
+     * specifying `hdpi` removes all other screen density resources (such as `mdpi`,
+     * `xhdpi`, etc) from the final APK.
      *
-     * <p><b>Note:</b> <code>auto</code> is no longer supported because it created a number of
+     * **Note:** `auto` is no longer supported because it created a number of
      * issues with multi-module projects. Instead, you should specify a list of locales that your
-     * app supports, as shown in the sample above. Android plugin 3.1.0 and higher ignore the <code>
-     * auto</code> argument, and Gradle packages all string resources your app and its dependencies
+     * app supports, as shown in the sample above. Android plugin 3.1.0 and higher ignore the `
+     * auto` argument, and Gradle packages all string resources your app and its dependencies
      * provide.
      *
-     * <p>To learn more, see <a
-     * href="https://d.android.com/studio/build/shrink-code.html#unused-alt-resources">Remove unused
-     * alternative resources</a>.
+     * To learn more, see
+     * [Remove unused alternative resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
      */
-    public void resConfigs(@NonNull String... config) {
-        addResourceConfigurations(config);
+    fun resConfig(config: String) {
+        addResourceConfiguration(config)
     }
 
     /**
-     * Specifies a list of <a
-     * href="https://d.android.com/guide/topics/resources/providing-resources.html#AlternativeResources">
-     * alternative resources</a> to keep.
+     * Specifies a list of
+     * [alternative resources](https://d.android.com/guide/topics/resources/providing-resources.html#AlternativeResources)
+     * to keep.
      *
-     * <p>For example, if you are using a library that includes language resources (such as
+     * For example, if you are using a library that includes language resources (such as
      * AppCompat or Google Play Services), then your APK includes all translated language strings
      * for the messages in those libraries whether the rest of your app is translated to the same
      * languages or not. If you'd like to keep only the languages that your app officially supports,
-     * you can specify those languages using the <code>resConfigs</code> property, as shown in the
+     * you can specify those languages using the `resConfigs` property, as shown in the
      * sample below. Any resources for languages not specified are removed.
      *
-     * <pre>
+     * ````
      * android {
      *     defaultConfig {
      *         ...
@@ -551,84 +457,128 @@ public abstract class BaseFlavor extends AbstractProductFlavor implements CorePr
      *         resConfigs "en", "fr"
      *     }
      * }
-     * </pre>
+     * ````
      *
-     * <p>You can also use this property to filter resources for screen densities. For example,
-     * specifying <code>hdpi</code> removes all other screen density resources (such as <code>mdpi
-     * </code>, <code>xhdpi</code>, etc) from the final APK.
+     * You can also use this property to filter resources for screen densities. For example,
+     * specifying `hdpi` removes all other screen density resources (such as `mdpi`,
+     * `xhdpi`, etc) from the final APK.
      *
-     * <p><b>Note:</b> <code>auto</code> is no longer supported because it created a number of
+     * **Note:** `auto` is no longer supported because it created a number of
      * issues with multi-module projects. Instead, you should specify a list of locales that your
-     * app supports, as shown in the sample above. Android plugin 3.1.0 and higher ignore the <code>
-     * auto</code> argument, and Gradle packages all string resources your app and its dependencies
+     * app supports, as shown in the sample above. Android plugin 3.1.0 and higher ignore the `
+     * auto` argument, and Gradle packages all string resources your app and its dependencies
      * provide.
      *
-     * <p>To learn more, see <a
-     * href="https://d.android.com/studio/build/shrink-code.html#unused-alt-resources">Remove unused
-     * alternative resources</a>.
+     * To learn more, see
+     * [Remove unused alternative resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
      */
-    public void resConfigs(@NonNull Collection<String> config) {
-        addResourceConfigurations(config);
-    }
-
-    /** Options for configuration Java compilation. */
-    @Override
-    @NonNull
-    public JavaCompileOptions getJavaCompileOptions() {
-        return javaCompileOptions;
-    }
-
-    public void javaCompileOptions(@NonNull Action<JavaCompileOptions> action) {
-        action.execute(javaCompileOptions);
-    }
-
-    /** Options for configuring the shader compiler. */
-    @NonNull
-    @Override
-    public CoreShaderOptions getShaders() {
-        return shaderOptions;
-    }
-
-    /** Configure the shader compiler options for this product flavor. */
-    public void shaders(@NonNull Action<ShaderOptions> action) {
-        action.execute(shaderOptions);
+    fun resConfigs(vararg config: String) {
+        addResourceConfigurations(*config)
     }
 
     /**
-     * Deprecated equivalent of {@code vectorDrawablesOptions.generatedDensities}.
+     * Specifies a list of
+     * [alternative resources](https://d.android.com/guide/topics/resources/providing-resources.html#AlternativeResources)
+     * to keep.
      *
-     * @deprecated
+     * For example, if you are using a library that includes language resources (such as
+     * AppCompat or Google Play Services), then your APK includes all translated language strings
+     * for the messages in those libraries whether the rest of your app is translated to the same
+     * languages or not. If you'd like to keep only the languages that your app officially supports,
+     * you can specify those languages using the `resConfigs` property, as shown in the
+     * sample below. Any resources for languages not specified are removed.
+     *
+     * ````
+     * android {
+     *     defaultConfig {
+     *         ...
+     *         // Keeps language resources for only the locales specified below.
+     *         resConfigs "en", "fr"
+     *     }
+     * }
+     * ````
+     *
+     * You can also use this property to filter resources for screen densities. For example,
+     * specifying `hdpi` removes all other screen density resources (such as `mdpi`,
+     * `xhdpi`, etc) from the final APK.
+     *
+     * **Note:** `auto` is no longer supported because it created a number of
+     * issues with multi-module projects. Instead, you should specify a list of locales that your
+     * app supports, as shown in the sample above. Android plugin 3.1.0 and higher ignore the `
+     * auto` argument, and Gradle packages all string resources your app and its dependencies
+     * provide.
+     *
+     * To learn more, see
+     * [Remove unused alternative resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
      */
-    @Deprecated
-    @Nullable
-    public Set<String> getGeneratedDensities() {
-        return getVectorDrawables().getGeneratedDensities();
+    fun resConfigs(config: Collection<String>) {
+        addResourceConfigurations(config)
     }
 
-    @Deprecated
-    public void setGeneratedDensities(@Nullable Iterable<String> densities) {
-        getVectorDrawables().setGeneratedDensities(densities);
+    /** Options for configuration Java compilation.  */
+    override val javaCompileOptions: JavaCompileOptions =
+        dslScope.objectFactory.newInstance(
+            JavaCompileOptions::class.java,
+            dslScope.objectFactory,
+            dslScope.deprecationReporter
+        )
+
+    fun javaCompileOptions(action: Action<JavaCompileOptions>) {
+        action.execute(javaCompileOptions)
     }
 
-    /** Configures {@link VectorDrawablesOptions}. */
-    public void vectorDrawables(Action<VectorDrawablesOptions> action) {
-        action.execute(getVectorDrawables());
+    /** Options for configuring the shader compiler.  */
+    override val shaders: ShaderOptions =
+        dslScope.objectFactory.newInstance(ShaderOptions::class.java)
+
+    /** Configure the shader compiler options for this product flavor.  */
+    fun shaders(action: Action<ShaderOptions>) {
+        action.execute(shaders)
     }
 
-    /** Options to configure the build-time support for {@code vector} drawables. */
-    @NonNull
-    @Override
-    public VectorDrawablesOptions getVectorDrawables() {
-        return (VectorDrawablesOptions) super.getVectorDrawables();
+    /**
+     * Deprecated equivalent of `vectorDrawablesOptions.generatedDensities`.
+     */
+    @Deprecated("Replace with vectorDrawablesOptions.generatedDensities")
+    var generatedDensities: Set<String>?
+        get() = vectorDrawables.generatedDensities
+        set(densities) {
+            vectorDrawables.setGeneratedDensities(densities)
+        }
+
+    fun setGeneratedDensities(generatedDensities: Iterable<String>) {
+        vectorDrawables.setGeneratedDensities(generatedDensities)
     }
+
+    /** Configures [VectorDrawablesOptions].  */
+    fun vectorDrawables(action: Action<VectorDrawablesOptions>) {
+        action.execute(vectorDrawables)
+    }
+
+    /** Options to configure the build-time support for `vector` drawables.  */
+    override val vectorDrawables: VectorDrawablesOptions
+        get() = super.vectorDrawables as VectorDrawablesOptions
 
     /**
      * Sets whether to enable unbundling mode for embedded wear app.
      *
-     * <p>If true, this enables the app to transition from an embedded wear app to one distributed
+     * If true, this enables the app to transition from an embedded wear app to one distributed
      * by the play store directly.
      */
-    public void wearAppUnbundled(@Nullable Boolean wearAppUnbundled) {
-        setWearAppUnbundled(wearAppUnbundled);
+    open fun wearAppUnbundled(wearAppUnbundled: Boolean?) {
+        this.wearAppUnbundled = wearAppUnbundled
+    }
+
+    private fun getApiVersion(value: String?): ApiVersion? {
+        return if (!Strings.isNullOrEmpty(value)) {
+            if (Character.isDigit(value!![0])) {
+                try {
+                    val apiLevel = Integer.valueOf(value)
+                    DefaultApiVersion(apiLevel)
+                } catch (e: NumberFormatException) {
+                    throw RuntimeException("'$value' is not a valid API level. ", e)
+                }
+            } else DefaultApiVersion(value)
+        } else null
     }
 }

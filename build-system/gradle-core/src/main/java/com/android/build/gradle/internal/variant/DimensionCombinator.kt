@@ -159,7 +159,7 @@ class DimensionCombinator(
                 val productFlavor = flavor.productFlavor
                 val dim = productFlavor.dimension
                 if (dim == null) {
-                    productFlavor.setDimension(FAKE_DIMENSION)
+                    productFlavor.dimension = FAKE_DIMENSION
                 } else {
                     dimensions.add(dim)
                 }
@@ -178,7 +178,7 @@ class DimensionCombinator(
             for (flavorData in variantInputModel.productFlavors.values) {
                 val flavor = flavorData.productFlavor
                 if (flavor.dimension == null) {
-                    flavor.setDimension(dimensionName)
+                    flavor.dimension = dimensionName
                 }
             }
         }

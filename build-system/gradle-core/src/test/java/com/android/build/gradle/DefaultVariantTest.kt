@@ -85,7 +85,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         }
 
         withVariantFilter { variant ->
-            if (variant.buildType.name == "debug") {
+            if (variant.buildType.getName() == "debug") {
                 variant.ignore = true
             }
         }
@@ -319,7 +319,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
                 (variant.name == "f2FbFxDebug") ||
                         (variant.name == "f2FbFyDebug") ||
                         (variant.name == "f2FaFyDebug") ||
-                        (variant.buildType.name == "release")
+                        (variant.buildType.getName() == "release")
         }
 
         // Left to right comparison this would be f2FaFxDebug, (as f1 is first)
@@ -389,7 +389,6 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
                         "Please only set `isDefault = true` " +
                         "for one product flavor in each flavor dimension."
             )
-
         }
 
         expect { "f1Debug" }

@@ -1764,7 +1764,7 @@ fun getSourceProviders(
 
     for (flavorName in variant.productFlavors) {
         for (flavor in project.productFlavors) {
-            if (flavorName == flavor.productFlavor.name) {
+            if (flavorName == flavor.productFlavor.getName()) {
                 providers.add(flavor.sourceProvider)
                 break
             }
@@ -1778,7 +1778,7 @@ fun getSourceProviders(
 
     val buildTypeName = variant.buildType
     for (buildType in project.buildTypes) {
-        if (buildTypeName == buildType.buildType.name) {
+        if (buildTypeName == buildType.buildType.getName()) {
             providers.add(buildType.sourceProvider)
             break
         }
@@ -1812,7 +1812,7 @@ fun getTestSourceProviders(
 
     for (flavorName in variant.productFlavors) {
         for (flavor in project.productFlavors) {
-            if (flavorName == flavor.productFlavor.name) {
+            if (flavorName == flavor.productFlavor.getName()) {
                 for (extra in flavor.extraSourceProviders) {
                     if (isTestArtifact(extra)) {
                         providers.add(extra.sourceProvider)
@@ -1824,7 +1824,7 @@ fun getTestSourceProviders(
 
     val buildTypeName = variant.buildType
     for (buildType in project.buildTypes) {
-        if (buildTypeName == buildType.buildType.name) {
+        if (buildTypeName == buildType.buildType.getName()) {
             for (extra in buildType.extraSourceProviders) {
                 if (isTestArtifact(extra)) {
                     providers.add(extra.sourceProvider)

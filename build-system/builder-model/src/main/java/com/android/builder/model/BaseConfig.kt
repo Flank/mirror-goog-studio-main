@@ -13,115 +13,79 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.builder.model
 
-package com.android.builder.model;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import java.io.File;
-import java.util.Collection;
-import java.util.Map;
+import java.io.File
 
 /**
  * Base config object for Build Type and Product flavor.
+ *
+ * This is an interface for the gradle tooling api, and should only be used from Android Studio.
+ * It is not part of the DSL & API interfaces of the Android Gradle Plugin.
  */
-public interface BaseConfig {
-
-    @NonNull
-    String getName();
-
+interface BaseConfig {
+    fun getName(): String
     /**
-     * Returns the application id suffix applied to this base config.
-     * To get the final application id, use {@link AndroidArtifact#getApplicationId()}.
-     *
-     * @return the application id
+     * The application id suffix applied to this base config.
+     * To get the final application id, use [AndroidArtifact.getApplicationId].
      */
-    @Nullable
-    String getApplicationIdSuffix();
+    val applicationIdSuffix: String?
 
     /**
-     * Returns the version name suffix of this flavor or null if none have been set.
+     * The version name suffix of this flavor or null if none have been set.
      * This is only the value set on this product flavor, not necessarily the actual
      * version name suffix used.
-     *
-     * @return the version name suffix, or {@code null} if not specified
      */
-    @Nullable
-    String getVersionNameSuffix();
+    val versionNameSuffix: String?
 
     /**
      * Map of Build Config Fields where the key is the field name.
-     *
-     * @return a non-null map of class fields (possibly empty).
      */
-    @NonNull
-    Map<String, ClassField> getBuildConfigFields();
+    val buildConfigFields: Map<String, ClassField>
 
     /**
      * Map of generated res values where the key is the res name.
-     *
-     * @return a non-null map of class fields (possibly empty).
      */
-    @NonNull
-    Map<String, ClassField> getResValues();
+    val resValues: Map<String, ClassField>
 
     /**
      * Specifies the ProGuard configuration files that the plugin should use.
      *
-     * <p>There are two ProGuard rules files that ship with the Android plugin and are used by
+     * There are two ProGuard rules files that ship with the Android plugin and are used by
      * default:
      *
-     * <ul>
-     *   <li>proguard-android.txt
-     *   <li>proguard-android-optimize.txt
-     * </ul>
+     *  * proguard-android.txt
+     *  * proguard-android-optimize.txt
      *
-     * <p><code>proguard-android-optimize.txt</code> is identical to <code>proguard-android.txt
-     * </code>, exccept with optimizations enabled. You can use <code>
-     * getDefaultProguardFile(String filename)</code> to return the full path of the files.
+     * `proguard-android-optimize.txt` is identical to `proguard-android.txt`,
+     * except with optimizations enabled. You can use [getDefaultProguardFile(String)]
+     * to return the full path of the files.
      *
      * @return a non-null collection of files.
-     * @see #getTestProguardFiles()
+     * @see .getTestProguardFiles
      */
-    @NonNull
-    Collection<File> getProguardFiles();
+    val proguardFiles: Collection<File>
+
+    /** The collection of proguard rule files for consumers of the library to use. */
+    val consumerProguardFiles: Collection<File>
+
+    /** The collection of proguard rule files to use for the test APK. */
+    val testProguardFiles: Collection<File>
 
     /**
-     * Returns the collection of proguard rule files for consumers of the library to use.
-     *
-     * @return a non-null collection of files.
-     */
-    @NonNull
-    Collection<File> getConsumerProguardFiles();
-
-    /**
-     * Returns the collection of proguard rule files to use for the test APK.
-     *
-     * @return a non-null collection of files.
-     */
-    @NonNull
-    Collection<File> getTestProguardFiles();
-
-    /**
-     * Returns the map of key value pairs for placeholder substitution in the android manifest file.
+     * The map of key value pairs for placeholder substitution in the android manifest file.
      *
      * This map will be used by the manifest merger.
-     * @return the map of key value pairs.
      */
-    @NonNull
-    Map<String, Object> getManifestPlaceholders();
+    val manifestPlaceholders: Map<String, Any>
 
     /**
      * Returns whether multi-dex is enabled.
      *
      * This can be null if the flag is not set, in which case the default value is used.
      */
-    @Nullable
-    Boolean getMultiDexEnabled();
+    val multiDexEnabled: Boolean?
 
-    @Nullable
-    File getMultiDexKeepFile();
-
-    @Nullable
-    File getMultiDexKeepProguard();
+    val multiDexKeepFile: File?
+    val multiDexKeepProguard: File?
 }

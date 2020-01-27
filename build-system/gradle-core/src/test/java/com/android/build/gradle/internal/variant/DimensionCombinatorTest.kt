@@ -22,7 +22,7 @@ import com.android.builder.model.SyncIssue
 import com.google.common.truth.Truth
 import org.junit.Test
 
-class DimensionCombinatorTest: AbstractVariantInputModelTest<List<DimensionCombination>>() {
+class DimensionCombinatorTest : AbstractVariantInputModelTest<List<DimensionCombination>>() {
     @Test
     fun `test default config`() {
         given {
@@ -59,11 +59,11 @@ class DimensionCombinatorTest: AbstractVariantInputModelTest<List<DimensionCombi
                 productFlavors {
                     create("flavor1") {
                         // FIXME once we clear up the ProductFlavor inheritance
-                        setDimension("one")
+                        dimension = "one"
                     }
                     create("flavor2") {
                         // FIXME once we clear up the ProductFlavor inheritance
-                        setDimension("one")
+                        dimension = "one"
                     }
                 }
             }
@@ -102,19 +102,19 @@ class DimensionCombinatorTest: AbstractVariantInputModelTest<List<DimensionCombi
                 productFlavors {
                     create("flavor1") {
                         // FIXME once we clear up the ProductFlavor inheritance
-                        setDimension("one")
+                        dimension = "one"
                     }
                     create("flavor2") {
                         // FIXME once we clear up the ProductFlavor inheritance
-                        setDimension("one")
+                        dimension = "one"
                     }
                     create("flavorA") {
                         // FIXME once we clear up the ProductFlavor inheritance
-                        setDimension("two")
+                        dimension = "two"
                     }
                     create("flavorB") {
                         // FIXME once we clear up the ProductFlavor inheritance
-                        setDimension("two")
+                        dimension = "two"
                     }
                 }
             }
@@ -186,11 +186,11 @@ class DimensionCombinatorTest: AbstractVariantInputModelTest<List<DimensionCombi
                 productFlavors {
                     create("flavor1") {
                         // FIXME once we clear up the ProductFlavor inheritance
-                        setDimension("one")
+                        dimension = "one"
                     }
                     create("flavor2") {
                         // FIXME once we clear up the ProductFlavor inheritance
-                        setDimension("one")
+                        dimension = "one"
                     }
                 }
             }
@@ -313,11 +313,11 @@ class DimensionCombinatorTest: AbstractVariantInputModelTest<List<DimensionCombi
                 productFlavors {
                     create("flavor1") {
                         // FIXME once we clear up the ProductFlavor inheritance
-                        setDimension("one")
+                        dimension = "one"
                     }
                     create("flavor2") {
                         // FIXME once we clear up the ProductFlavor inheritance
-                        setDimension("one")
+                        dimension = "one"
                     }
                 }
             }
@@ -370,4 +370,3 @@ class DimensionCombinatorTest: AbstractVariantInputModelTest<List<DimensionCombi
         Truth.assertThat(actual).containsExactlyElementsIn(expected)
     }
 }
-

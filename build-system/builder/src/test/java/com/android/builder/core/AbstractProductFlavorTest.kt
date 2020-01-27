@@ -13,52 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.builder.core
 
-package com.android.builder.core;
+import com.android.builder.internal.ClassFieldImpl
+import com.google.common.collect.ImmutableMap
+import junit.framework.TestCase
 
-import com.android.annotations.NonNull;
-import com.android.builder.internal.ClassFieldImpl;
-import com.google.common.collect.ImmutableMap;
-import junit.framework.TestCase;
+class AbstractProductFlavorTest : TestCase() {
+    private lateinit var custom: ProductFlavorImpl
 
-@SuppressWarnings("deprecation")
-public class AbstractProductFlavorTest extends TestCase {
-
-    private AbstractProductFlavor custom;
-
-    @Override
-    protected void setUp() throws Exception {
-        custom = new ProductFlavorImpl("custom");
-        custom.setMinSdkVersion(new DefaultApiVersion(42));
-        custom.setTargetSdkVersion(new DefaultApiVersion(43));
-        custom.setRenderscriptTargetApi(17);
-        custom.setVersionCode(44);
-        custom.setVersionName("42.0");
-        custom.setApplicationId("com.forty.two");
-        custom.setTestApplicationId("com.forty.two.test");
-        custom.setTestInstrumentationRunner("com.forty.two.test.Runner");
-        custom.setTestHandleProfiling(true);
-        custom.setTestFunctionalTest(true);
-        custom.addResourceConfiguration("hdpi");
-        custom.addManifestPlaceholders(ImmutableMap.of("one", "oneValue", "two", "twoValue"));
-
-        custom.addResValue(new ClassFieldImpl("foo", "one", "oneValue"));
-        custom.addResValue(new ClassFieldImpl("foo", "two", "twoValue"));
-        custom.addBuildConfigField(new ClassFieldImpl("foo", "one", "oneValue"));
-        custom.addBuildConfigField(new ClassFieldImpl("foo", "two", "twoValue"));
-        custom.setVersionNameSuffix("custom");
-        custom.setApplicationIdSuffix("custom");
+    override fun setUp() {
+        custom = ProductFlavorImpl("custom")
+        custom.setMinSdkVersion(DefaultApiVersion(42))
+        custom.setTargetSdkVersion(DefaultApiVersion(43))
+        custom.renderscriptTargetApi = 17
+        custom.setVersionCode(44)
+        custom.setVersionName("42.0")
+        custom.setApplicationId("com.forty.two")
+        custom.setTestApplicationId("com.forty.two.test")
+        custom.setTestInstrumentationRunner("com.forty.two.test.Runner")
+        custom.setTestHandleProfiling(true)
+        custom.setTestFunctionalTest(true)
+        custom.addResourceConfiguration("hdpi")
+        custom.addManifestPlaceholders(
+            ImmutableMap.of(
+                "one",
+                "oneValue",
+                "two",
+                "twoValue"
+            )
+        )
+        custom.addResValue(ClassFieldImpl("foo", "one", "oneValue"))
+        custom.addResValue(ClassFieldImpl("foo", "two", "twoValue"))
+        custom.addBuildConfigField(ClassFieldImpl("foo", "one", "oneValue"))
+        custom.addBuildConfigField(ClassFieldImpl("foo", "two", "twoValue"))
+        custom.setVersionNameSuffix("custom")
+        custom.setApplicationIdSuffix("custom")
     }
 
-    public void test_initWith() {
-        AbstractProductFlavor flavor = new ProductFlavorImpl(custom.getName());
-        flavor._initWith(custom);
-        assertEquals(custom.toString(), flavor.toString());
+    fun test_initWith() {
+        val flavor: AbstractProductFlavor =
+            ProductFlavorImpl(custom!!.getName())
+        flavor._initWith(custom!!)
+        assertEquals(custom.toString(), flavor.toString())
     }
 
-    private static final class ProductFlavorImpl extends AbstractProductFlavor {
-        public ProductFlavorImpl(@NonNull String name) {
-            super(name);
-        }
-    }
+    private class ProductFlavorImpl(name: String) :
+        AbstractProductFlavor(name)
 }

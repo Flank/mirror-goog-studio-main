@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.builder.core
+package com.android.build.gradle.internal.dsl
 
+import com.android.build.gradle.internal.core.MergedFlavor
+import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
+import com.android.build.gradle.internal.variant2.createFakeDslScope
+import com.android.builder.core.ManifestAttributeSupplier
+import com.android.builder.core.VariantAttributesProvider
 import com.android.testutils.TestResources
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
@@ -35,35 +40,35 @@ class VariantAttributesProviderTest {
 
     @Rule
     @JvmField
-    var rule = MockitoJUnit.rule()
+    val rule = MockitoJUnit.rule()
 
     @Mock
     private lateinit var manifestSupplier: ManifestAttributeSupplier
 
     private lateinit var manifestFile: File
 
-    private lateinit var mergedFlavor: AbstractProductFlavor
-
-    private lateinit var buildType: AbstractBuildType
+    private lateinit var defaultConfig: DefaultConfig
+    private lateinit var buildType: BuildType
 
     private var isTestVariant: Boolean = false
 
     private val provider: VariantAttributesProvider
         get() = VariantAttributesProvider(
-                mergedFlavor,
-                buildType,
-                isTestVariant,
-                manifestSupplier,
-                manifestFile,
-                "full.name")
+            MergedFlavor.mergeFlavors(defaultConfig, listOf(), FakeSyncIssueReporter(true)),
+            buildType,
+            isTestVariant,
+            manifestSupplier,
+            manifestFile,
+            "full.name"
+        )
 
     @Before
     @Throws(Exception::class)
     fun before() {
-        mergedFlavor = ProductFlavorImpl("flavor")
-        buildType = BuildTypeImpl("debug")
+        defaultConfig = DefaultConfig("main", createFakeDslScope())
+        buildType = BuildType("debug", createFakeDslScope())
         `when`(manifestSupplier.`package`).thenReturn(PACKAGE_NAME)
-        manifestFile = TestResources.getFile("/testData/core/AndroidManifest.xml")
+        manifestFile = TestResources.getFile(this.javaClass,"AndroidManifest.xml")
     }
 
     @Test
@@ -79,13 +84,13 @@ class VariantAttributesProviderTest {
 
     @Test
     fun testIdOverrideIdFromFlavor() {
-        mergedFlavor.applicationId = "foo.bar"
+        defaultConfig.applicationId = "foo.bar"
         assertThat(provider.idOverride).isEqualTo("foo.bar")
     }
 
     @Test
     fun testPackageOverridePackageFromFlavorWithSuffix() {
-        mergedFlavor.applicationId = "foo.bar"
+        defaultConfig.applicationId = "foo.bar"
         buildType.applicationIdSuffix = ".fortytwo"
 
         assertThat(provider.idOverride).isEqualTo("foo.bar.fortytwo")
@@ -93,7 +98,7 @@ class VariantAttributesProviderTest {
 
     @Test
     fun testPackageOverridePackageFromFlavorWithSuffix2() {
-        mergedFlavor.applicationId = "foo.bar"
+        defaultConfig.applicationId = "foo.bar"
         buildType.applicationIdSuffix = "fortytwo"
 
         val supplier = provider
@@ -115,14 +120,14 @@ class VariantAttributesProviderTest {
 
     @Test
     fun testApplicationIdFromOverride() {
-        mergedFlavor.applicationId = "foo.bar"
+        defaultConfig.applicationId = "foo.bar"
         assertThat(provider.getApplicationId("")).isEqualTo("foo.bar")
     }
 
     @Test
     fun testApplicationIdWithTestVariant() {
         isTestVariant = true
-        mergedFlavor.testApplicationId = "foo.bar.test"
+        defaultConfig.testApplicationId = "foo.bar.test"
 
         assertThat(provider.getApplicationId("foo.tested")).isEqualTo("foo.bar.test")
     }
@@ -130,7 +135,7 @@ class VariantAttributesProviderTest {
     @Test
     fun testOriginalApplicationIdWithTestVariant() {
         isTestVariant = true
-        mergedFlavor.testApplicationId = "foo.bar.test"
+        defaultConfig.testApplicationId = "foo.bar.test"
 
         assertThat(provider.getOriginalApplicationId("")).isEqualTo("foo.bar.test")
     }
@@ -148,7 +153,7 @@ class VariantAttributesProviderTest {
 
     @Test
     fun testVersionNameFromFlavorWithSuffix() {
-        mergedFlavor.versionName = "1.0"
+        defaultConfig.versionName = "1.0"
         buildType.versionNameSuffix = "-DEBUG"
         assertThat(provider.getVersionName()).isEqualTo("1.0-DEBUG")
     }
@@ -174,7 +179,7 @@ class VariantAttributesProviderTest {
 
     @Test
     fun testVersionCodeFromFlavor() {
-        mergedFlavor.versionCode = 32
+        defaultConfig.versionCode = 32
 
         assertThat(provider.getVersionCode()).isEqualTo(32)
     }
@@ -187,7 +192,7 @@ class VariantAttributesProviderTest {
 
     @Test
     fun testInstrumentationRunnerFromFlavor() {
-        mergedFlavor.testInstrumentationRunner = "instrumentation-flavor"
+        defaultConfig.testInstrumentationRunner = "instrumentation-flavor"
         assertThat(provider.instrumentationRunner).isEqualTo("instrumentation-flavor")
     }
 
@@ -200,7 +205,7 @@ class VariantAttributesProviderTest {
 
     @Test
     fun testFunctionalTestFromFlavor() {
-        mergedFlavor.setTestFunctionalTest(true)
+        defaultConfig.setTestFunctionalTest(true)
         assertThat(provider.functionalTest).isEqualTo(true)
     }
 
@@ -212,7 +217,7 @@ class VariantAttributesProviderTest {
 
     @Test
     fun testHandleProfilingFromFlavor() {
-        mergedFlavor.setTestHandleProfiling(true)
+        defaultConfig.setTestHandleProfiling(true)
 
         assertThat(provider.handleProfiling).isEqualTo(true)
     }
@@ -237,8 +242,4 @@ class VariantAttributesProviderTest {
 
         assertThat(provider.targetPackage).isEqualTo("target.package")
     }
-
-    // class to instantiate BT/PF for tests
-    private class BuildTypeImpl(name: String) : AbstractBuildType(name)
-    private class ProductFlavorImpl(name: String) : AbstractProductFlavor(name)
 }

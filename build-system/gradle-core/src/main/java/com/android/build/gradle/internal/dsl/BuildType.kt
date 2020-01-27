@@ -13,138 +13,171 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.dsl
 
-package com.android.build.gradle.internal.dsl;
+import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.builder.core.AbstractBuildType
+import com.android.builder.core.BuilderConstants
+import com.android.builder.errors.IssueReporter
+import com.android.builder.internal.ClassFieldImpl
+import com.android.builder.model.BaseConfig
+import com.android.builder.model.CodeShrinker
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.Iterables
+import java.io.Serializable
+import javax.inject.Inject
+import org.gradle.api.Action
+import org.gradle.api.Incubating
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Internal
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.api.JavaCompileOptions;
-import com.android.build.gradle.internal.api.dsl.DslScope;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.builder.core.AbstractBuildType;
-import com.android.builder.core.BuilderConstants;
-import com.android.builder.errors.IssueReporter.Type;
-import com.android.builder.internal.ClassFieldImpl;
-import com.android.builder.model.BaseConfig;
-import com.android.builder.model.ClassField;
-import com.android.builder.model.CodeShrinker;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import java.io.Serializable;
-import java.util.List;
-import java.util.function.Supplier;
-import javax.inject.Inject;
-import org.gradle.api.Action;
-import org.gradle.api.Incubating;
-import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.Internal;
-
-/** DSL object to configure build types. */
-@SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue", "Convert2Lambda", "deprecation"})
-public class BuildType extends AbstractBuildType
-        implements CoreBuildType, Serializable, com.android.build.api.dsl.BuildType {
-
-    private static final long serialVersionUID = 1L;
+/** DSL object to configure build types.  */
+open class BuildType @Inject constructor(private val name: String, private val dslScope: DslScope) :
+    AbstractBuildType(), CoreBuildType, Serializable,
+    com.android.build.api.dsl.BuildType {
 
     /**
-     * Whether the current thread should check that the both the old and new way of configuring
-     * bytecode postProcessing are not used at the same time.
-     *
-     * <p>The checks are disabled during {@link #initWith(com.android.builder.model.BuildType)}.
+     * Name of this build type.
      */
-    private static ThreadLocal<Boolean> dslChecksEnabled =
-            ThreadLocal.withInitial(
-                    new Supplier<Boolean>() {
-                        @Override
-                        public Boolean get() {
-                            return true;
-                        }
-                    });
+    override fun getName(): String {
+        return name
+    }
+
+    /** Whether this build type should generate a debuggable apk.  */
+    override var isDebuggable: Boolean = false
+        get() = // Accessing coverage data requires a debuggable package.
+            field || isTestCoverageEnabled
+        set(value) {
+            field = value
+        }
+
+    /**
+     * Whether test coverage is enabled for this build type.
+     *
+     * If enabled this uses Jacoco to capture coverage and creates a report in the build
+     * directory.
+     *
+     * The version of Jacoco can be configured with:
+     * ```
+     * android {
+     *     jacoco {
+     *         version = '0.6.2.201302030002'
+     *     }
+     * }
+     * ```
+     */
+    override var isTestCoverageEnabled: Boolean = false
+
+    /**
+     * Specifies whether the plugin should generate resources for pseudolocales.
+     *
+     * A pseudolocale is a locale that simulates characteristics of languages that cause UI,
+     * layout, and other translation-related problems when an app is localized. Pseudolocales can
+     * aid your development workflow because you can test and make adjustments to your UI before you
+     * finalize text for translation.
+     *
+     * When you set this property to `true` as shown below, the plugin generates
+     * resources for the following pseudo locales and makes them available in your connected
+     * device's language preferences: `en-XA` and `ar-XB`.
+     *
+     * ```
+     * android {
+     *     buildTypes {
+     *         debug {
+     *             pseudoLocalesEnabled true
+     *         }
+     *     }
+     * }
+     * ```
+     *
+     * When you build your app, the plugin includes the pseudolocale resources in your APK. If
+     * you notice that your APK does not include those locale resources, make sure your build
+     * configuration isn't limiting which locale resources are packaged with your APK, such as using
+     * the `resConfigs` property to
+     * [remove unused locale resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
+     *
+     * To learn more, read
+     * [Test Your App with Pseudolocales](https://d.android.com/guide/topics/resources/pseudolocales.html).
+     */
+    override var isPseudoLocalesEnabled: Boolean = false
+
+    /**
+     * Whether this build type is configured to generate an APK with debuggable native code.
+     */
+    override var isJniDebuggable: Boolean = false
+
+    /**
+     * Whether the build type is configured to generate an apk with debuggable RenderScript code.
+     */
+    override var isRenderscriptDebuggable: Boolean = false
+
+    /** Optimization level to use by the renderscript compiler.  */
+    override var renderscriptOptimLevel = 3
+
+    /** Whether zipalign is enabled for this build type.  */
+    override var isZipAlignEnabled: Boolean = true
 
     /**
      * Describes how code postProcessing is configured. We don't allow mixing the old and new DSLs.
      */
-    public enum PostProcessingConfiguration {
-        POSTPROCESSING_BLOCK,
-        OLD_DSL,
+    enum class PostProcessingConfiguration {
+        POSTPROCESSING_BLOCK, OLD_DSL
     }
 
-    @NonNull private DslScope dslScope;
-    @NonNull private final NdkOptions ndkConfig;
-    @NonNull private final ExternalNativeBuildOptions externalNativeBuildOptions;
-    @NonNull
-    private final com.android.build.gradle.internal.dsl.JavaCompileOptions javaCompileOptions;
-    @NonNull private final ShaderOptions shaderOptions;
-    @NonNull private final PostProcessingBlock postProcessingBlock;
+    override val ndkConfig: NdkOptions = dslScope.objectFactory.newInstance(NdkOptions::class.java)
+    override val externalNativeBuildOptions: ExternalNativeBuildOptions = dslScope.objectFactory.newInstance(
+        ExternalNativeBuildOptions::class.java, dslScope.objectFactory
+    )
 
-    @Nullable private PostProcessingConfiguration postProcessingConfiguration;
-    @Nullable private String postProcessingDslMethodUsed;
+    private val _postProcessing: PostProcessingBlock = dslScope.objectFactory.newInstance(
+        PostProcessingBlock::class.java,
+        dslScope
+    )
+    private var _postProcessingConfiguration: PostProcessingConfiguration? = null
+    private var postProcessingDslMethodUsed: String? = null
+    private var _shrinkResources = false
 
-    private boolean shrinkResources = false;
-    private Boolean useProguard = false;
-    private Boolean crunchPngs;
-    private boolean isCrunchPngsDefault = true;
-    private final Property<Boolean> isDefault;
+    /*
+     * (Non javadoc): Whether png crunching should be enabled if not explicitly overridden.
+     *
+     * Can be removed once the AaptOptions crunch method is removed.
+     */
+    override var isCrunchPngsDefault = true
 
-    @Inject
-    public BuildType(@NonNull String name, @NonNull DslScope dslScope) {
-        super(name);
-        this.dslScope = dslScope;
+    private val _isDefaultProperty: Property<Boolean> =
+        dslScope.objectFactory.property(Boolean::class.java).convention(false)
 
-        ObjectFactory objectFactory = dslScope.getObjectFactory();
-        javaCompileOptions =
-                objectFactory.newInstance(
-                        com.android.build.gradle.internal.dsl.JavaCompileOptions.class,
-                        objectFactory,
-                        dslScope.getDeprecationReporter());
-        shaderOptions = objectFactory.newInstance(ShaderOptions.class);
-        ndkConfig = objectFactory.newInstance(NdkOptions.class);
-        externalNativeBuildOptions =
-                objectFactory.newInstance(ExternalNativeBuildOptions.class, objectFactory);
-        postProcessingBlock = objectFactory.newInstance(PostProcessingBlock.class, dslScope);
-        isDefault = objectFactory.property(Boolean.class).convention(false);
-    }
-
-    private ImmutableList<String> matchingFallbacks;
-
-    public void setMatchingFallbacks(String... fallbacks) {
-        this.matchingFallbacks = ImmutableList.copyOf(fallbacks);
-    }
-
-    public void setMatchingFallbacks(List<String> fallbacks) {
-        this.matchingFallbacks = ImmutableList.copyOf(fallbacks);
-    }
-
-    public void setMatchingFallbacks(String fallback) {
-        this.matchingFallbacks = ImmutableList.of(fallback);
-    }
+    var _matchingFallbacks: ImmutableList<String>? = null
 
     /**
      * Specifies a sorted list of build types that the plugin should try to use when a direct
      * variant match with a local module dependency is not possible.
      *
-     * <p>Android plugin 3.0.0 and higher try to match each variant of your module with the same one
+     *
+     * Android plugin 3.0.0 and higher try to match each variant of your module with the same one
      * from its dependencies. For example, when you build a "freeDebug" version of your app, the
      * plugin tries to match it with "freeDebug" versions of the local library modules the app
      * depends on.
      *
-     * <p>However, there may be situations in which <b>your app includes build types that a
-     * dependency does not</b>. For example, consider if your app includes a "stage" build type, but
+     *
+     * However, there may be situations in which **your app includes build types that a
+     * dependency does not**. For example, consider if your app includes a "stage" build type, but
      * a dependency includes only a "debug" and "release" build type. When the plugin tries to build
      * the "stage" version of your app, it won't know which version of the dependency to use, and
      * you'll see an error message similar to the following:
      *
-     * <pre>
+     * ```
      * Error:Failed to resolve: Could not resolve project :mylibrary.
      * Required by:
-     *     project :app
-     * </pre>
+     * project :app
+     * ```
      *
-     * <p>In this situation, you can use <code>matchingFallbacks</code> to specify alternative
+     *
+     * In this situation, you can use `matchingFallbacks` to specify alternative
      * matches for the app's "stage" build type, as shown below:
      *
-     * <pre>
+     * ```
      * // In the app's build.gradle file.
      * android {
      *     buildTypes {
@@ -162,55 +195,46 @@ public class BuildType extends AbstractBuildType
      *         }
      *     }
      * }
-     * </pre>
+     * ```
      *
-     * <p>Note that there is no issue when a library dependency includes a build type that your app
+     *
+     * Note that there is no issue when a library dependency includes a build type that your app
      * does not. That's because the plugin simply never requests that build type from the
      * dependency.
      *
      * @return the names of product flavors to use, in descending priority order
      */
-    public List<String> getMatchingFallbacks() {
-        if (matchingFallbacks == null) {
-            return ImmutableList.of();
-        }
-        return matchingFallbacks;
+    var matchingFallbacks: List<String>
+        get() = _matchingFallbacks ?: ImmutableList.of()
+        set(value) { _matchingFallbacks = ImmutableList.copyOf(value) }
+
+    fun setMatchingFallbacks(vararg fallbacks: String) {
+        matchingFallbacks =
+            ImmutableList.copyOf(fallbacks)
     }
 
-    @Override
-    @NonNull
-    public CoreNdkOptions getNdkConfig() {
-        return ndkConfig;
+    fun setMatchingFallbacks(fallback: String) {
+        matchingFallbacks = ImmutableList.of(fallback)
     }
 
-    @Override
-    @NonNull
-    public ExternalNativeBuildOptions getExternalNativeBuildOptions() {
-        return externalNativeBuildOptions;
-    }
+    /** Options for configuration Java compilation.  */
+    override val javaCompileOptions: JavaCompileOptions = dslScope.objectFactory.newInstance(
+        JavaCompileOptions::class.java,
+        dslScope.objectFactory,
+        dslScope.deprecationReporter
+    )
 
-    /** Options for configuration Java compilation. */
-    @Override
-    @NonNull
-    public JavaCompileOptions getJavaCompileOptions() {
-        return javaCompileOptions;
-    }
-
-    @NonNull
-    @Override
-    public CoreShaderOptions getShaders() {
-        return shaderOptions;
-    }
+    override val shaders: ShaderOptions = dslScope.objectFactory.newInstance(ShaderOptions::class.java)
 
     /**
      * Initialize the DSL object with the debug signingConfig. Not meant to be used from the build
      * scripts.
      */
-    public void init(SigningConfig debugSigningConfig) {
-        init();
-        if (BuilderConstants.DEBUG.equals(getName())) {
-            assert debugSigningConfig != null;
-            setSigningConfig(debugSigningConfig);
+    fun init(debugSigningConfig: SigningConfig?) {
+        init()
+        if (BuilderConstants.DEBUG == name) {
+            assert(debugSigningConfig != null)
+            setSigningConfig(debugSigningConfig)
         }
     }
 
@@ -218,488 +242,520 @@ public class BuildType extends AbstractBuildType
      * Initialize the DSL object without the signingConfig. Not meant to be used from the build
      * scripts.
      */
-    public void init() {
-        if (BuilderConstants.DEBUG.equals(getName())) {
-            setDebuggable(true);
-            setEmbedMicroApp(false);
-            isCrunchPngsDefault = false;
+    fun init() {
+        if (BuilderConstants.DEBUG == name) {
+            setDebuggable(true)
+            isEmbedMicroApp = false
+            isCrunchPngsDefault = false
         }
     }
 
-    /** The signing configuration. */
-    @Override
-    @Nullable
-    public SigningConfig getSigningConfig() {
-        return (SigningConfig) super.getSigningConfig();
+    /** The signing configuration. e.g.: `signingConfig signingConfigs.myConfig`  */
+    override var signingConfig: SigningConfig? = null
+
+    override fun setSigningConfig(signingConfig: com.android.builder.model.SigningConfig?): com.android.builder.model.BuildType {
+        this.signingConfig = signingConfig as SigningConfig?
+        return this
     }
 
+    /**
+     * Whether a linked Android Wear app should be embedded in variant using this build type.
+     *
+     * Wear apps can be linked with the following code:
+     *
+     * ```
+     * dependencies {
+     *     freeWearApp project(:wear:free') // applies to variant using the free flavor
+     *     wearApp project(':wear:base') // applies to all other variants
+     * }
+     * ```
+     */
+    override var isEmbedMicroApp: Boolean = true
 
-    /** {@inheritDoc} */
-    @SuppressWarnings("UnnecessaryInheritDoc")
-    @Override
-    public Property<Boolean> getIsDefault() {
-        return isDefault;
+    /** Whether this product flavor should be selected in Studio by default  */
+    override fun getIsDefault(): Property<Boolean> {
+        return _isDefaultProperty
     }
 
-    // Temp HACK. we need a way to access the Property<Boolean> from Kotlin
-    // DO NOT USE
-    @Deprecated
-    public Property<Boolean> getIsDefaultProp() {
-        return isDefault;
+    override var isDefault: Boolean
+        get() = _isDefaultProperty.get()
+        set(value) { _isDefaultProperty.set(value) }
+
+    fun setIsDefault(isDefault: Boolean) {
+        this.isDefault = isDefault
     }
 
-    @Override
-    public boolean isDefault() {
-        return this.isDefault.get();
-    }
-
-    @Override
-    public void setDefault(boolean isDefault) {
-        this.isDefault.set(isDefault);
-    }
-
-    public void setIsDefault(boolean isDefault) {
-        this.isDefault.set(isDefault);
-    }
-
-    @Override
-    protected void _initWith(@NonNull BaseConfig that) {
-        super._initWith(that);
-        BuildType thatBuildType = (BuildType) that;
-        ndkConfig._initWith(thatBuildType.getNdkConfig());
-        javaCompileOptions.getAnnotationProcessorOptions()._initWith(
-                thatBuildType.getJavaCompileOptions().getAnnotationProcessorOptions());
-        shrinkResources = thatBuildType.isShrinkResources();
-        shaderOptions._initWith(thatBuildType.getShaders());
-        externalNativeBuildOptions._initWith(thatBuildType.getExternalNativeBuildOptions());
-        useProguard = thatBuildType.isUseProguard();
-        postProcessingBlock.initWith(((BuildType) that).getPostprocessing());
-        crunchPngs = thatBuildType.isCrunchPngs();
-        //noinspection deprecation Must still be copied.
-        isCrunchPngsDefault = thatBuildType.isCrunchPngsDefault();
-        matchingFallbacks = ImmutableList.copyOf(thatBuildType.getMatchingFallbacks());
+    override fun _initWith(that: BaseConfig) {
+        super._initWith(that)
+        val thatBuildType =
+            that as BuildType
+        ndkConfig._initWith(thatBuildType.ndkConfig)
+        javaCompileOptions.annotationProcessorOptions._initWith(
+            thatBuildType.javaCompileOptions.annotationProcessorOptions
+        )
+        _shrinkResources = thatBuildType._shrinkResources
+        shaders._initWith(thatBuildType.shaders)
+        externalNativeBuildOptions._initWith(thatBuildType.externalNativeBuildOptions)
+        _postProcessing.initWith(that.postprocessing)
+        isCrunchPngs = thatBuildType.isCrunchPngs
+        isCrunchPngsDefault = thatBuildType.isCrunchPngsDefault
+        matchingFallbacks = thatBuildType.matchingFallbacks
         // we don't want to dynamically link these values. We just want to copy the current value.
-        isDefault.set(thatBuildType.isDefault());
+        isDefault = thatBuildType.isDefault
     }
 
-    /** Override as DSL objects have no reason to be compared for equality. */
-    @Override
-    public int hashCode() {
-        return System.identityHashCode(this);
+    /** Override as DSL objects have no reason to be compared for equality.  */
+    override fun hashCode(): Int {
+        return System.identityHashCode(this)
     }
 
-    /** Override as DSL objects have no reason to be compared for equality. */
-    @Override
-    public boolean equals(Object o) {
-        return this == o;
+    /** Override as DSL objects have no reason to be compared for equality.  */
+    override fun equals(o: Any?): Boolean {
+        return this === o
     }
-
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
-
     /**
      * Adds a new field to the generated BuildConfig class.
      *
-     * <p>The field is generated as: {@code <type> <name> = <value>;}
      *
-     * <p>This means each of these must have valid Java content. If the type is a String, then the
+     * The field is generated as: `<type> <name> = <value>;`
+     *
+     *
+     * This means each of these must have valid Java content. If the type is a String, then the
      * value should include quotes.
      *
      * @param type the type of the field
      * @param name the name of the field
      * @param value the value of the field
      */
-    public void buildConfigField(
-            @NonNull String type,
-            @NonNull String name,
-            @NonNull String value) {
-        ClassField alreadyPresent = getBuildConfigFields().get(name);
+    fun buildConfigField(
+        type: String,
+        name: String,
+        value: String
+    ) {
+        val alreadyPresent = buildConfigFields[name]
         if (alreadyPresent != null) {
-            String message =
-                    String.format(
-                            "BuildType(%s): buildConfigField '%s' value is being replaced: %s -> %s",
-                            getName(), name, alreadyPresent.getValue(), value);
-            dslScope.getIssueReporter().reportWarning(Type.GENERIC, message);
+            val message = String.format(
+                "BuildType(%s): buildConfigField '%s' value is being replaced: %s -> %s",
+                getName(), name, alreadyPresent.value, value
+            )
+            dslScope.issueReporter.reportWarning(
+                IssueReporter.Type.GENERIC,
+                message
+            )
         }
-        addBuildConfigField(new ClassFieldImpl(type, name, value));
+        addBuildConfigField(ClassFieldImpl(type, name, value))
     }
 
     /**
      * Adds a new generated resource.
      *
-     * <p>This is equivalent to specifying a resource in res/values.
      *
-     * <p>See <a href="http://developer.android.com/guide/topics/resources/available-resources.html">Resource Types</a>.
+     * This is equivalent to specifying a resource in res/values.
+     *
+     *
+     * See [Resource Types](http://developer.android.com/guide/topics/resources/available-resources.html).
      *
      * @param type the type of the resource
      * @param name the name of the resource
      * @param value the value of the resource
      */
-    public void resValue(
-            @NonNull String type,
-            @NonNull String name,
-            @NonNull String value) {
-        ClassField alreadyPresent = getResValues().get(name);
+    fun resValue(
+        type: String,
+        name: String,
+        value: String
+    ) {
+        val alreadyPresent = resValues[name]
         if (alreadyPresent != null) {
-            String message =
-                    String.format(
-                            "BuildType(%s): resValue '%s' value is being replaced: %s -> %s",
-                            getName(), name, alreadyPresent.getValue(), value);
-            dslScope.getIssueReporter().reportWarning(Type.GENERIC, message);
+            val message = String.format(
+                "BuildType(%s): resValue '%s' value is being replaced: %s -> %s",
+                getName(), name, alreadyPresent.value, value
+            )
+            dslScope.issueReporter.reportWarning(
+                IssueReporter.Type.GENERIC,
+                message
+            )
         }
-        addResValue(new ClassFieldImpl(type, name, value));
+        addResValue(ClassFieldImpl(type, name, value))
     }
 
     /**
      * Adds a new ProGuard configuration file.
      *
-     * <p><code>proguardFile getDefaultProguardFile('proguard-android.txt')</code></p>
      *
-     * <p>There are 2 default rules files
-     * <ul>
-     *     <li>proguard-android.txt
-     *     <li>proguard-android-optimize.txt
-     * </ul>
-     * <p>They are located in the SDK. Using <code>getDefaultProguardFile(String filename)</code> will return the
+     * `proguardFile getDefaultProguardFile('proguard-android.txt')`
+     *
+     *
+     * There are 2 default rules files
+     *
+     *  * proguard-android.txt
+     *  * proguard-android-optimize.txt
+     *
+     *
+     * They are located in the SDK. Using `getDefaultProguardFile(String filename)` will return the
      * full path to the files. They are identical except for enabling optimizations.
      */
-    @NonNull
-    public BuildType proguardFile(@NonNull Object proguardFile) {
-        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "proguardFile");
-        getProguardFiles().add(dslScope.file(proguardFile));
-        return this;
+    fun proguardFile(proguardFile: Any): BuildType {
+        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "proguardFile")
+        proguardFiles.add(dslScope.file(proguardFile))
+        return this
     }
 
     /**
      * Adds new ProGuard configuration files.
      *
-     * <p>There are 2 default rules files
-     * <ul>
-     *     <li>proguard-android.txt
-     *     <li>proguard-android-optimize.txt
-     * </ul>
-     * <p>They are located in the SDK. Using <code>getDefaultProguardFile(String filename)</code> will return the
+     *
+     * There are 2 default rules files
+     *
+     *  * proguard-android.txt
+     *  * proguard-android-optimize.txt
+     *
+     *
+     * They are located in the SDK. Using `getDefaultProguardFile(String filename)` will return the
      * full path to the files. They are identical except for enabling optimizations.
      */
-    @NonNull
-    public BuildType proguardFiles(@NonNull Object... files) {
-        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "proguardFiles");
-        for (Object file : files) {
-            proguardFile(file);
+    fun proguardFiles(vararg files: Any): BuildType {
+        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "proguardFiles")
+        for (file in files) {
+            proguardFile(file)
         }
-        return this;
+        return this
     }
 
     /**
      * Sets the ProGuard configuration files.
      *
-     * <p>There are 2 default rules files
-     * <ul>
-     *     <li>proguard-android.txt
-     *     <li>proguard-android-optimize.txt
-     * </ul>
-     * <p>They are located in the SDK. Using <code>getDefaultProguardFile(String filename)</code> will return the
+     *
+     * There are 2 default rules files
+     *
+     *  * proguard-android.txt
+     *  * proguard-android-optimize.txt
+     *
+     *
+     * They are located in the SDK. Using `getDefaultProguardFile(String filename)` will return the
      * full path to the files. They are identical except for enabling optimizations.
      */
-    @NonNull
-    public BuildType setProguardFiles(@NonNull Iterable<?> proguardFileIterable) {
-        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setProguardFiles");
-        getProguardFiles().clear();
-        proguardFiles(Iterables.toArray(proguardFileIterable, Object.class));
-        return this;
+    fun setProguardFiles(proguardFileIterable: Iterable<*>): BuildType {
+        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setProguardFiles")
+        proguardFiles.clear()
+        proguardFiles(
+            *Iterables.toArray(
+                proguardFileIterable,
+                Any::class.java
+            )
+        )
+        return this
     }
 
     /**
      * Adds a proguard rule file to be used when processing test code.
      *
-     * <p>Test code needs to be processed to apply the same obfuscation as was done to main code.
+     *
+     * Test code needs to be processed to apply the same obfuscation as was done to main code.
      */
-    @NonNull
-    public BuildType testProguardFile(@NonNull Object proguardFile) {
-        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "testProguardFile");
-        getTestProguardFiles().add(dslScope.file(proguardFile));
-        return this;
+    fun testProguardFile(proguardFile: Any): BuildType {
+        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "testProguardFile")
+        testProguardFiles.add(dslScope.file(proguardFile))
+        return this
     }
 
     /**
      * Adds proguard rule files to be used when processing test code.
      *
-     * <p>Test code needs to be processed to apply the same obfuscation as was done to main code.
+     *
+     * Test code needs to be processed to apply the same obfuscation as was done to main code.
      */
-    @NonNull
-    public BuildType testProguardFiles(@NonNull Object... proguardFiles) {
-        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "testProguardFiles");
-        for (Object proguardFile : proguardFiles) {
-            testProguardFile(proguardFile);
+    fun testProguardFiles(vararg proguardFiles: Any): BuildType {
+        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "testProguardFiles")
+        for (proguardFile in proguardFiles) {
+            testProguardFile(proguardFile)
         }
-        return this;
+        return this
     }
 
     /**
      * Specifies proguard rule files to be used when processing test code.
      *
-     * <p>Test code needs to be processed to apply the same obfuscation as was done to main code.
+     *
+     * Test code needs to be processed to apply the same obfuscation as was done to main code.
      */
-    @NonNull
-    public BuildType setTestProguardFiles(@NonNull Iterable<?> files) {
+    fun setTestProguardFiles(files: Iterable<*>): BuildType {
         checkPostProcessingConfiguration(
-                PostProcessingConfiguration.OLD_DSL, "setTestProguardFiles");
-        getTestProguardFiles().clear();
-        testProguardFiles(Iterables.toArray(files, Object.class));
-        return this;
+            PostProcessingConfiguration.OLD_DSL, "setTestProguardFiles"
+        )
+        testProguardFiles.clear()
+        testProguardFiles(
+            *Iterables.toArray(
+                files,
+                Any::class.java
+            )
+        )
+        return this
     }
 
     /**
      * Adds a proguard rule file to be included in the published AAR.
      *
-     * <p>This proguard rule file will then be used by any application project that consume the AAR
+     *
+     * This proguard rule file will then be used by any application project that consume the AAR
      * (if proguard is enabled).
      *
-     * <p>This allows AAR to specify shrinking or obfuscation exclude rules.
      *
-     * <p>This is only valid for Library project. This is ignored in Application project.
+     * This allows AAR to specify shrinking or obfuscation exclude rules.
+     *
+     *
+     * This is only valid for Library project. This is ignored in Application project.
      */
-    @NonNull
-    public BuildType consumerProguardFile(@NonNull Object proguardFile) {
+    fun consumerProguardFile(proguardFile: Any): BuildType {
         checkPostProcessingConfiguration(
-                PostProcessingConfiguration.OLD_DSL, "consumerProguardFile");
-        getConsumerProguardFiles().add(dslScope.file(proguardFile));
-        return this;
+            PostProcessingConfiguration.OLD_DSL, "consumerProguardFile"
+        )
+        consumerProguardFiles.add(dslScope.file(proguardFile))
+        return this
     }
 
     /**
      * Adds proguard rule files to be included in the published AAR.
      *
-     * <p>This proguard rule file will then be used by any application project that consume the AAR
+     *
+     * This proguard rule file will then be used by any application project that consume the AAR
      * (if proguard is enabled).
      *
-     * <p>This allows AAR to specify shrinking or obfuscation exclude rules.
      *
-     * <p>This is only valid for Library project. This is ignored in Application project.
+     * This allows AAR to specify shrinking or obfuscation exclude rules.
+     *
+     *
+     * This is only valid for Library project. This is ignored in Application project.
      */
-    @NonNull
-    public BuildType consumerProguardFiles(@NonNull Object... proguardFiles) {
+    fun consumerProguardFiles(vararg proguardFiles: Any): BuildType {
         checkPostProcessingConfiguration(
-                PostProcessingConfiguration.OLD_DSL, "consumerProguardFiles");
-        for (Object proguardFile : proguardFiles) {
-            consumerProguardFile(proguardFile);
+            PostProcessingConfiguration.OLD_DSL, "consumerProguardFiles"
+        )
+        for (proguardFile in proguardFiles) {
+            consumerProguardFile(proguardFile)
         }
-
-        return this;
+        return this
     }
 
     /**
      * Specifies a proguard rule file to be included in the published AAR.
      *
-     * <p>This proguard rule file will then be used by any application project that consume the AAR
+     *
+     * This proguard rule file will then be used by any application project that consume the AAR
      * (if proguard is enabled).
      *
-     * <p>This allows AAR to specify shrinking or obfuscation exclude rules.
      *
-     * <p>This is only valid for Library project. This is ignored in Application project.
+     * This allows AAR to specify shrinking or obfuscation exclude rules.
+     *
+     *
+     * This is only valid for Library project. This is ignored in Application project.
      */
-    @NonNull
-    public BuildType setConsumerProguardFiles(@NonNull Iterable<?> proguardFileIterable) {
+    fun setConsumerProguardFiles(proguardFileIterable: Iterable<*>): BuildType {
         checkPostProcessingConfiguration(
-                PostProcessingConfiguration.OLD_DSL, "setConsumerProguardFiles");
-        getConsumerProguardFiles().clear();
-        consumerProguardFiles(Iterables.toArray(proguardFileIterable, Object.class));
-        return this;
+            PostProcessingConfiguration.OLD_DSL, "setConsumerProguardFiles"
+        )
+        consumerProguardFiles.clear()
+        consumerProguardFiles(
+            *Iterables.toArray(
+                proguardFileIterable,
+                Any::class.java
+            )
+        )
+        return this
     }
 
-
-    public void ndk(@NonNull Action<NdkOptions> action) {
-        action.execute(ndkConfig);
+    fun ndk(action: Action<NdkOptions?>) {
+        action.execute(ndkConfig)
     }
 
     /**
      * Configure native build options.
      */
-    public ExternalNativeBuildOptions externalNativeBuild(@NonNull Action<ExternalNativeBuildOptions> action) {
-        action.execute(externalNativeBuildOptions);
-        return externalNativeBuildOptions;
+    fun externalNativeBuild(action: Action<ExternalNativeBuildOptions?>): ExternalNativeBuildOptions {
+        action.execute(externalNativeBuildOptions)
+        return externalNativeBuildOptions
     }
 
     /**
      * Configure shader compiler options for this build type.
      */
-    public void shaders(@NonNull Action<ShaderOptions> action) {
-        action.execute(shaderOptions);
-    }
-
-    @NonNull
-    @Override
-    public com.android.builder.model.BuildType setMinifyEnabled(boolean enabled) {
-        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setMinifyEnabled");
-        return super.setMinifyEnabled(enabled);
+    fun shaders(action: Action<ShaderOptions?>) {
+        action.execute(shaders)
     }
 
     /**
      * Whether removal of unused java code is enabled.
      *
-     * <p>Default is false.
+     * Default is false.
      */
-    @Override
-    public boolean isMinifyEnabled() {
-        // Try to return a sensible value for the model and third party plugins inspecting the DSL.
-        if (postProcessingConfiguration != PostProcessingConfiguration.POSTPROCESSING_BLOCK) {
-            return super.isMinifyEnabled();
-        } else {
-            return postProcessingBlock.isRemoveUnusedCode()
-                    || postProcessingBlock.isObfuscate()
-                    || postProcessingBlock.isOptimizeCode();
+    override var isMinifyEnabled: Boolean = false
+        get() =
+            // Try to return a sensible value for the model and other Gradle plugins inspecting the DSL.
+            if (_postProcessingConfiguration != PostProcessingConfiguration.POSTPROCESSING_BLOCK) {
+                field
+            } else {
+                (_postProcessing.isRemoveUnusedCode ||
+                        _postProcessing.isObfuscate ||
+                        _postProcessing.isOptimizeCode)
+            }
+        set(value) {
+            checkPostProcessingConfiguration(
+                PostProcessingConfiguration.OLD_DSL,
+                "setMinifyEnabled"
+            )
+            field = value
         }
-    }
 
     /**
      * Whether shrinking of unused resources is enabled.
      *
      * Default is false;
      */
-    @Override
-    public boolean isShrinkResources() {
-        // Try to return a sensible value for the model and third party plugins inspecting the DSL.
-        if (postProcessingConfiguration != PostProcessingConfiguration.POSTPROCESSING_BLOCK) {
-            return shrinkResources;
-        } else {
-            return postProcessingBlock.isRemoveUnusedResources();
+    override var isShrinkResources: Boolean
+        get() =
+            // Try to return a sensible value for the model and other Gradle plugins inspecting the DSL.
+            if (_postProcessingConfiguration != PostProcessingConfiguration.POSTPROCESSING_BLOCK) {
+                _shrinkResources
+            } else {
+                _postProcessing.isRemoveUnusedResources
+            }
+        set(value) {
+            checkPostProcessingConfiguration(
+                PostProcessingConfiguration.OLD_DSL,
+                "setShrinkResources"
+            )
+            this._shrinkResources = value
         }
-    }
-
-    public void setShrinkResources(boolean shrinkResources) {
-        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setShrinkResources");
-        this.shrinkResources = shrinkResources;
-    }
 
     /**
      * Specifies whether to always use ProGuard for code and resource shrinking.
      *
-     * <p>By default, when you enable code shrinking by setting <a
-     * href="com.android.build.gradle.internal.dsl.BuildType.html#com.android.build.gradle.internal.dsl.BuildType:minifyEnabled">
-     * <code>minifyEnabled</code></a> to <code>true</code>, the Android plugin uses R8. If you set
-     * this property to <code>true</code>, the Android plugin uses ProGuard.
+     * By default, when you enable code shrinking by setting
+     * [`minifyEnabled`](com.android.build.gradle.internal.dsl.BuildType.html#com.android.build.gradle.internal.dsl.BuildType:minifyEnabled) to `true`, the Android plugin uses R8. If you set
+     * this property to `true`, the Android plugin uses ProGuard.
      *
-     * <p>To learn more, read <a
-     * href="https://developer.android.com/studio/build/shrink-code.html">Shrink, obfuscate, and
-     * optimize your app</a>.
+     * To learn more, read
+     * [Shrink, obfuscate, and optimize your app](https://developer.android.com/studio/build/shrink-code.html).
      */
-    @Override
-    public Boolean isUseProguard() {
-        // Try to return a sensible value for the model and third party plugins inspecting the DSL.
-        if (postProcessingConfiguration != PostProcessingConfiguration.POSTPROCESSING_BLOCK) {
-            return useProguard;
+    override var isUseProguard: Boolean?
+        get() = if (_postProcessingConfiguration != PostProcessingConfiguration.POSTPROCESSING_BLOCK) {
+            false
         } else {
-            return postProcessingBlock.getCodeShrinkerEnum() == CodeShrinker.PROGUARD;
+            _postProcessing.codeShrinkerEnum == CodeShrinker.PROGUARD
         }
-    }
-
-    public void setUseProguard(boolean useProguard) {
-        checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setUseProguard");
-        if (dslChecksEnabled.get()) {
-            dslScope.getDeprecationReporter()
+        set(_: Boolean?) {
+            checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setUseProguard")
+            if (dslChecksEnabled.get()) {
+                dslScope.deprecationReporter
                     .reportObsoleteUsage(
-                            "useProguard", DeprecationReporter.DeprecationTarget.DSL_USE_PROGUARD);
-        }
+                        "useProguard", DeprecationReporter.DeprecationTarget.DSL_USE_PROGUARD
+                    )
+            }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public Boolean isCrunchPngs() {
-        return crunchPngs;
+    fun setUseProguard(useProguard: Boolean) {
+        isUseProguard = useProguard
     }
 
-    public void setCrunchPngs(Boolean crunchPngs) {
-        this.crunchPngs = crunchPngs;
-    }
-
-    /*
-     * (Non javadoc): Whether png crunching should be enabled if not explicitly overridden.
+    /**
+     * Whether to crunch PNGs.
      *
-     * Can be removed once the AaptOptions crunch method is removed.
+     * Setting this property to `true` reduces of PNG resources that are not already
+     * optimally compressed. However, this process increases build times.
+     *
+     * PNG crunching is enabled by default in the release build type and disabled by default in
+     * the debug build type.
      */
-    @Override
-    @Deprecated
-    public boolean isCrunchPngsDefault() {
-        return isCrunchPngsDefault;
-    }
+    override var isCrunchPngs: Boolean? = null
 
-    /** This DSL is incubating and subject to change. */
+    /** This DSL is incubating and subject to change.  */
+    @get:Internal
+    @get:Incubating
+    val postprocessing: PostProcessingBlock
+        get() {
+            checkPostProcessingConfiguration(
+                PostProcessingConfiguration.POSTPROCESSING_BLOCK, "getPostProcessing"
+            )
+            return _postProcessing
+        }
+
+    /** This DSL is incubating and subject to change.  */
     @Incubating
     @Internal
-    @NonNull
-    public PostProcessingBlock getPostprocessing() {
+    fun postprocessing(action: Action<PostProcessingBlock?>) {
         checkPostProcessingConfiguration(
-                PostProcessingConfiguration.POSTPROCESSING_BLOCK, "getPostProcessing");
-        return postProcessingBlock;
+            PostProcessingConfiguration.POSTPROCESSING_BLOCK, "postProcessing"
+        )
+        action.execute(_postProcessing)
     }
 
-    /** This DSL is incubating and subject to change. */
-    @Incubating
-    @Internal
-    public void postprocessing(@NonNull Action<PostProcessingBlock> action) {
-        checkPostProcessingConfiguration(
-                PostProcessingConfiguration.POSTPROCESSING_BLOCK, "postProcessing");
-        action.execute(postProcessingBlock);
-    }
-
-    /** Describes how postProcessing was configured. Not to be used from the DSL. */
-    @NonNull
-    public PostProcessingConfiguration getPostProcessingConfiguration() {
+    /** Describes how postProcessing was configured. Not to be used from the DSL.  */
+    // TODO(b/140406102): Should be internal.
+    val postProcessingConfiguration: PostProcessingConfiguration
         // If the user didn't configure anything, stick to the old DSL.
-        return postProcessingConfiguration != null
-                ? postProcessingConfiguration
-                : PostProcessingConfiguration.OLD_DSL;
-    }
+        get() = _postProcessingConfiguration ?: PostProcessingConfiguration.OLD_DSL
 
     /**
      * Checks that the user is consistently using either the new or old DSL for configuring bytecode
      * postProcessing.
      */
-    private void checkPostProcessingConfiguration(
-            @NonNull PostProcessingConfiguration used, @NonNull String methodName) {
+    private fun checkPostProcessingConfiguration(
+        used: PostProcessingConfiguration,
+        methodName: String
+    ) {
         if (!dslChecksEnabled.get()) {
-            return;
+            return
         }
-
-        if (this.postProcessingConfiguration == null) {
-            this.postProcessingConfiguration = used;
-            this.postProcessingDslMethodUsed = methodName;
-        } else if (this.postProcessingConfiguration != used) {
-            assert postProcessingDslMethodUsed != null;
-            String message;
-            switch (used) {
-                case POSTPROCESSING_BLOCK:
-                    // TODO: URL with more details.
-                    message =
-                            String.format(
-                                    "The `postProcessing` block cannot be used with together with the `%s` method.",
-                                    postProcessingDslMethodUsed);
-                    break;
-                case OLD_DSL:
-                    // TODO: URL with more details.
-                    message =
-                            String.format(
-                                    "The `%s` method cannot be used with together with the `postProcessing` block.",
-                                    methodName);
-                    break;
-                default:
-                    throw new AssertionError("Unknown value " + used);
+        if (_postProcessingConfiguration == null) {
+            _postProcessingConfiguration = used
+            postProcessingDslMethodUsed = methodName
+        } else if (_postProcessingConfiguration != used) {
+            assert(postProcessingDslMethodUsed != null)
+            val message: String
+            message = when (used) {
+                PostProcessingConfiguration.POSTPROCESSING_BLOCK -> // TODO: URL with more details.
+                    String.format(
+                        "The `postProcessing` block cannot be used with together with the `%s` method.",
+                        postProcessingDslMethodUsed
+                    )
+                PostProcessingConfiguration.OLD_DSL -> // TODO: URL with more details.
+                    String.format(
+                        "The `%s` method cannot be used with together with the `postProcessing` block.",
+                        methodName
+                    )
+                else -> throw AssertionError("Unknown value $used")
             }
-            dslScope.getIssueReporter().reportError(Type.GENERIC, message, methodName);
+            dslScope.issueReporter.reportError(
+                IssueReporter.Type.GENERIC,
+                message,
+                methodName
+            )
         }
     }
 
-    @Override
-    public BuildType initWith(com.android.builder.model.BuildType that) {
+    override fun initWith(that: com.android.builder.model.BuildType): BuildType {
         // we need to avoid doing this because of Property objects that cannot
         // be set from themselves
-        if (that == this) {
-            return this;
+        if (that === this) {
+            return this
         }
-        dslChecksEnabled.set(false);
-        try {
-            return (BuildType) super.initWith(that);
+        dslChecksEnabled.set(false)
+        return try {
+            super.initWith(that) as BuildType
         } finally {
-            dslChecksEnabled.set(true);
+            dslChecksEnabled.set(true)
         }
+    }
+
+    companion object {
+        private const val serialVersionUID = 1L
+        /**
+         * Whether the current thread should check that the both the old and new way of configuring
+         * bytecode postProcessing are not used at the same time.
+         *
+         * The checks are disabled during [.initWith].
+         */
+        private val dslChecksEnabled =
+            ThreadLocal.withInitial { true }
     }
 }

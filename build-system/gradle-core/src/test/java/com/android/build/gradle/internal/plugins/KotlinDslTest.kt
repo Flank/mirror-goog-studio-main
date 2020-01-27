@@ -126,13 +126,13 @@ class KotlinDslTest {
             externalNativeBuild.cmake.arguments("x")
 
             // Check the action methods use the more specific type
-            externalNativeBuild { externalNativeBuildOptions -> // TODO(b/140406102): Convert to this
-                externalNativeBuildOptions.ndkBuild { externalNativeNdkBuildOptions -> // TODO(b/140406102): Convert to this
+            externalNativeBuild {
+                ndkBuild { externalNativeNdkBuildOptions -> // TODO(b/140406102): Convert to this
                     externalNativeNdkBuildOptions.arguments("b")
                 }
             }
-            externalNativeBuild { externalNativeBuildOptions -> // TODO(b/140406102): Convert to this
-                externalNativeBuildOptions.cmake { externalNativeCmakeOptions -> // TODO(b/140406102): Convert to this
+            externalNativeBuild {
+                cmake { externalNativeCmakeOptions -> // TODO(b/140406102): Convert to this
                     externalNativeCmakeOptions.arguments("y")
                 }
             }

@@ -13,35 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.builder.model;
-
-import com.android.annotations.Nullable;
+package com.android.builder.model
 
 /**
  * Interface for objects has a dimension.
+ *
+ * This is an interface for the gradle tooling api, and should only be used from Android Studio.
+ * It is not part of the DSL & API interfaces of the Android Gradle Plugin.
  */
-public interface DimensionAware {
-
+interface DimensionAware {
     /**
      * Specifies the flavor dimension that this product flavor belongs to.
      *
-     * <p>When configuring product flavors with Android plugin 3.0.0 and higher, you must specify at
-     * least one flavor dimension, using the <a
-     * href="com.android.build.gradle.BaseExtension.html#com.android.build.gradle.BaseExtension:flavorDimensions(java.lang.String[])">
-     * <code>flavorDimensions</code></a> property, and then assign each flavor to a dimension.
+     *
+     * When configuring product flavors with Android plugin 3.0.0 and higher, you must specify at
+     * least one flavor dimension, using the `flavorDimensions` property, and then assign each
+     * flavor to a dimension.
      * Otherwise, you will get the following build error:
      *
-     * <pre>
+     * ```
      * Error:All flavors must now belong to a named flavor dimension.
      * The flavor 'flavor_name' is not assigned to a flavor dimension.
-     * </pre>
+     * ```
      *
-     * <p>By default, when you specify only one dimension, all flavors you configure automatically
+     *
+     * By default, when you specify only one dimension, all flavors you configure automatically
      * belong to that dimension. If you specify more than one dimension, you need to manually assign
      * each flavor to a dimension, as shown in the sample below:
      *
-     * <pre>
+     * ```
      * android {
      *     ...
      *     // Specifies the flavor dimensions you want to use. The order in which you
@@ -49,42 +49,40 @@ public interface DimensionAware {
      *     // when Gradle merges variant sources and configurations. You must assign
      *     // each product flavor you configure to one of the flavor dimensions.
      *     flavorDimensions 'api', 'version'
-     *
+     *    
      *     productFlavors {
-     *       demo {
-     *         // Assigns this product flavor to the 'version' flavor dimension.
-     *         dimension 'version'
-     *         ...
+     *         demo {
+     *             // Assigns this product flavor to the 'version' flavor dimension.
+     *             dimension 'version'
+     *             ...
+     *         }
+     *            
+     *         full {
+     *             dimension 'version'
+     *             ...
+     *         }
+     *            
+     *         minApi24 {
+     *             // Assigns this flavor to the 'api' dimension.
+     *             dimension 'api'
+     *             minSdkVersion '24'
+     *             versionNameSuffix "-minApi24"
+     *             ...
+     *         }
+     *            
+     *         minApi21 {
+     *             dimension "api"
+     *             minSdkVersion '21'
+     *             versionNameSuffix "-minApi21"
+     *             ...
+     *         }
      *     }
-     *
-     *       full {
-     *         dimension 'version'
-     *         ...
-     *       }
-     *
-     *       minApi24 {
-     *         // Assigns this flavor to the 'api' dimension.
-     *         dimension 'api'
-     *         minSdkVersion '24'
-     *         versionNameSuffix "-minApi24"
-     *         ...
-     *       }
-     *
-     *       minApi21 {
-     *         dimension "api"
-     *         minSdkVersion '21'
-     *         versionNameSuffix "-minApi21"
-     *         ...
-     *       }
-     *    }
      * }
-     * </pre>
+     * ```
      *
-     * <p>To learn more about configuring flavor dimensions, read <a
-     * href="https://developer.android.com/studio/build/build-variants.html#flavor-dimensions">
-     * Combine multiple flavors</a>.
+     *
+     * To learn more about configuring flavor dimensions, read
+     * [Combine multiple flavors](https://developer.android.com/studio/build/build-variants.html#flavor-dimensions).
      */
-    @Nullable
-    String getDimension();
-
+    val dimension: String?
 }

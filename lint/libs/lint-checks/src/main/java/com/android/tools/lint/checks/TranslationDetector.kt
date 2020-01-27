@@ -796,7 +796,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         container: ProductFlavorContainer
     ) {
         val flavor = container.productFlavor
-        if (variantFlavors == null || variantFlavors.contains(flavor.name)) {
+        if (variantFlavors == null || variantFlavors.contains(flavor.getName())) {
             if (!flavor.resourceConfigurations.isEmpty()) {
                 for (resConfig in flavor.resourceConfigurations) {
                     // Look for languages; these are of length 2. (ResConfigs
