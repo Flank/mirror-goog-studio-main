@@ -120,7 +120,11 @@ TEST_F(InstallServerTest, TestServerStartNoOverlay) {
   auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  ASSERT_TRUE(client->KillServerAndWait());
+  proto::InstallServerRequest request;
+  proto::InstallServerResponse response;
+  ASSERT_TRUE(client->Write(request));
+  ASSERT_TRUE(client->KillServerAndWait(&response));
+
   fake_exec.JoinServerThread();
 };
 
@@ -145,7 +149,7 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
   ASSERT_EQ(proto::OverlayUpdateResponse::OK,
             response.overlay_response().status());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   fake_exec.JoinServerThread();
 
@@ -161,7 +165,7 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
   ASSERT_EQ(proto::OverlayUpdateResponse::ID_MISMATCH,
             response.overlay_response().status());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   fake_exec.JoinServerThread();
 
@@ -178,7 +182,7 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   EXPECT_EQ(proto::OverlayUpdateResponse::OK,
             response.overlay_response().status());
   EXPECT_EQ("", response.overlay_response().error_message());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   fake_exec.JoinServerThread();
 };
@@ -204,7 +208,7 @@ TEST_F(InstallServerTest, TestOverlayEmptyIdCheck) {
   ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
   ASSERT_EQ(proto::OverlayUpdateResponse::OK,
             response.overlay_response().status());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   fake_exec.JoinServerThread();
 
@@ -219,7 +223,7 @@ TEST_F(InstallServerTest, TestOverlayEmptyIdCheck) {
   ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
   ASSERT_EQ(proto::OverlayUpdateResponse::ID_MISMATCH,
             response.overlay_response().status());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   fake_exec.JoinServerThread();
 }
@@ -250,7 +254,7 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
   ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
   ASSERT_EQ(proto::OverlayUpdateResponse::OK,
             response.overlay_response().status());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   std::string content;
   ASSERT_TRUE(deploy::ReadFile(".overlay/apk/hello.txt", &content));
@@ -275,7 +279,7 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
   ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
   ASSERT_EQ(proto::OverlayUpdateResponse::OK,
             response.overlay_response().status());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   content.clear();
   ASSERT_FALSE(deploy::ReadFile(".overlay/apk/hello.txt", &content));
@@ -297,7 +301,11 @@ TEST_F(InstallServerTest, TestNeedCopy) {
   auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  ASSERT_TRUE(client->KillServerAndWait());
+  proto::InstallServerRequest request;
+  proto::InstallServerResponse response;
+  ASSERT_TRUE(client->Write(request));
+
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   // Make sure we consumed all the exec results.
   ASSERT_TRUE(success.empty());

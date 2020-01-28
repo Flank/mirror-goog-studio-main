@@ -147,8 +147,7 @@ void OverlaySwapCommand::ProcessResponse(proto::SwapResponse* response) {
     response->set_status(proto::SwapResponse::INSTALLATION_FAILED);
   }
 
-  // Wait for server exit message.
-  if (!client_->Read(&install_response)) {
+  if (!client_->KillServerAndWait(&install_response)) {
     response->set_status(proto::SwapResponse::READ_FROM_SERVER_FAILED);
     return;
   }

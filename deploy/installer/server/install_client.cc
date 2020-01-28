@@ -38,10 +38,14 @@ bool InstallClient::WaitForStatus(ServerResponse::Status status) {
   return true;
 }
 
-bool InstallClient::KillServerAndWait() {
+bool InstallClient::KillServerAndWait(proto::InstallServerResponse* response) {
   proto::InstallServerRequest request;
   request.set_type(proto::InstallServerRequest::SERVER_EXIT);
-  return Write(request) && WaitForStatus(ServerResponse::SERVER_EXITED);
+  if (!Write(request)) {
+    return false;
+  }
+  output_.Close();
+  return Read(response);
 }
 
 }  // namespace deploy
