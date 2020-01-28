@@ -16,26 +16,28 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.GradleProject
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
+
+import com.android.build.gradle.integration.common.category.DeviceTests
+import com.android.build.gradle.integration.common.fixture.Adb
+import com.android.build.gradle.integration.common.fixture.GradleProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.AnnotationProcessorLib
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.utils.*
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.integration.common.utils.getAndroidTestArtifact
-import com.android.build.gradle.integration.common.utils.getDebugVariant
-import com.android.build.gradle.integration.common.utils.getUnitTestArtifact
-import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.base.Charsets
 import com.google.common.io.Files
+import java.io.File
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.io.File
+import org.junit.experimental.categories.Category
 
 /**
  * Tests for annotation processor.
@@ -54,6 +56,10 @@ class AnnotationProcessorTest {
                 )
             )
         ).create()
+
+    @Rule
+    @JvmField
+    var adb = Adb()
 
     @Before
     fun setUp() {
@@ -178,6 +184,21 @@ class AnnotationProcessorTest {
             "apply plugin: 'com.neenbedankt.android-apt'\n")
 
         project.executor().expectFailure().run("assembleDebug")
+    }
+
+    @Test
+    @Category(DeviceTests::class)
+    fun connectedCheck() {
+        TestFileUtils.appendToFile(
+            project.getSubproject(":app").buildFile,
+            """
+            dependencies {
+                api project(':lib')
+                annotationProcessor project(':lib-compiler')
+            }
+            """.trimIndent()
+        )
+        project.executeConnectedCheck()
     }
 
     companion object {

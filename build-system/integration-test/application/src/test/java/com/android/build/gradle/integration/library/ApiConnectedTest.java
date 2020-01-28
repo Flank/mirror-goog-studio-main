@@ -14,35 +14,23 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.connected.application;
+package com.android.build.gradle.integration.library;
 
+import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
-import com.android.tools.bazel.avd.Emulator;
+import java.io.IOException;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-public class BasicConnectedTest {
-
-    @ClassRule public static final Emulator emulator = EmulatorUtils.getEmulator();
-
+public class ApiConnectedTest {
     @ClassRule
     public static GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("basic").withoutNdk().create();
+            GradleTestProject.builder().fromTestProject("api").create();
 
     @Test
-    public void install() throws Exception {
-        try {
-            project.execute("installDebug", "uninstallAll");
-            // b/37498215 - Try again.  Behavior may be different when tasks are up-to-date.
-            project.execute("installDebug");
-        } finally {
-            project.execute("uninstallAll");
-        }
-    }
-
-    @Test
-    public void connectedCheck() throws Exception {
+    @Category(DeviceTests.class)
+    public void connectedCheck() throws IOException, InterruptedException {
         project.executeConnectedCheck();
     }
 }

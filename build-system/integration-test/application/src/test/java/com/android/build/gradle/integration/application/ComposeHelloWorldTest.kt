@@ -16,9 +16,12 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.sdklib.devices.Device
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 class ComposeHelloWorldTest {
 
@@ -29,5 +32,11 @@ class ComposeHelloWorldTest {
     @Test
     fun appBuildsSuccessfully() {
         project.execute("assembleDebug")
+    }
+
+    @Test
+    @Category(DeviceTests::class)
+    fun connectedCheck() {
+        project.executeConnectedCheck()
     }
 }
