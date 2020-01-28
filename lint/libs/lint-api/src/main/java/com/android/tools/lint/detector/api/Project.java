@@ -85,6 +85,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
+import com.intellij.pom.java.LanguageLevel;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -99,6 +100,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -122,6 +124,8 @@ public class Project {
 
     protected AndroidVersion manifestMinSdk = AndroidVersion.DEFAULT;
     protected AndroidVersion manifestTargetSdk = AndroidVersion.DEFAULT;
+    protected LanguageLevel javaLanguageLevel;
+    protected LanguageVersionSettings kotlinLanguageLevel;
 
     protected boolean library;
     protected boolean externalLibrary;
@@ -851,6 +855,26 @@ public class Project {
     @NonNull
     public AndroidVersion getTargetSdkVersion() {
         return manifestTargetSdk == AndroidVersion.DEFAULT ? getMinSdkVersion() : manifestTargetSdk;
+    }
+
+    /** Returns the expected language level for Java source files in this project */
+    @NonNull
+    public LanguageLevel getJavaLanguageLevel() {
+        if (javaLanguageLevel == null) {
+            javaLanguageLevel = client.getJavaLanguageLevel(this);
+        }
+
+        return javaLanguageLevel;
+    }
+
+    /** Returns the expected language level for Kotlin source files in this project */
+    @NonNull
+    public LanguageVersionSettings getKotlinLanguageLevel() {
+        if (kotlinLanguageLevel == null) {
+            kotlinLanguageLevel = client.getKotlinLanguageLevel(this);
+        }
+
+        return kotlinLanguageLevel;
     }
 
     /**

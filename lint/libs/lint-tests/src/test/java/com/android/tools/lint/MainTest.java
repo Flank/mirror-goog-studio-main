@@ -302,6 +302,8 @@ public class MainTest extends AbstractCheckTest {
                     new File(project, "myres2").getPath(),
                     "--compile-sdk-version",
                     "15",
+                    "--java-language-level",
+                    "11",
                     project.getPath(),
                 });
     }
@@ -490,8 +492,7 @@ public class MainTest extends AbstractCheckTest {
 
         // Skip the first three lines that contain just the version which can change.
         String newBaseline =
-                Files.readAllLines(baseline.toPath())
-                        .stream()
+                Files.readAllLines(baseline.toPath()).stream()
                         .skip(3)
                         .collect(Collectors.joining("\n"));
 

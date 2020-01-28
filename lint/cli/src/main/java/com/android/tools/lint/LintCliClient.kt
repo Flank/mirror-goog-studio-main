@@ -60,6 +60,7 @@ import com.android.tools.lint.detector.api.describeCounts
 import com.android.tools.lint.detector.api.getEncodedString
 import com.android.tools.lint.detector.api.getSourceProviders
 import com.android.tools.lint.detector.api.guessGradleLocation
+import com.android.tools.lint.detector.api.isJdkFolder
 import com.android.tools.lint.helpers.DefaultUastParser
 import com.android.utils.CharSequences
 import com.android.utils.StdLogger
@@ -87,6 +88,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
 import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndexImpl
 import org.jetbrains.kotlin.cli.jvm.index.SingleJavaFileRootsIndex
+import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.util.PerformanceCounter.Companion.resetAllCounters
 import org.w3c.dom.Document
 import org.xml.sax.SAXException
@@ -1020,14 +1022,9 @@ open class LintCliClient : LintClient {
         addBootClassPath(knownProjects, files)
         var maxLevel = LanguageLevel.JDK_1_7
         for (project in knownProjects) {
-            val model = project.gradleProjectModel
-            if (model != null) {
-                val javaCompileOptions = model.javaCompileOptions
-                val sourceCompatibility = javaCompileOptions.sourceCompatibility
-                val level = LanguageLevel.parse(sourceCompatibility)
-                if (level != null && maxLevel.isLessThan(level)) {
-                    maxLevel = level
-                }
+            val level = project.javaLanguageLevel
+            if (maxLevel.isLessThan(level)) {
+                maxLevel = level
             }
         }
         val parentDisposable = Disposer.newDisposable()
@@ -1088,13 +1085,13 @@ open class LintCliClient : LintClient {
         for (project in knownProjects) {
             if (project.isAndroidProject) {
                 isAndroid = true
-            }
-            val t = project.buildTarget
-            if (t != null) {
-                if (buildTarget == null) {
-                    buildTarget = t
-                } else if (buildTarget.version > t.version) {
-                    buildTarget = t
+                val t = project.buildTarget
+                if (t != null) {
+                    if (buildTarget == null) {
+                        buildTarget = t
+                    } else if (buildTarget.version > t.version) {
+                        buildTarget = t
+                    }
                 }
             }
         }
@@ -1106,24 +1103,18 @@ open class LintCliClient : LintClient {
                 return true
             }
         }
+
         if (!isAndroid) {
-            // Non android project, e.g. perhaps a pure Kotlin project
-            // Gradle doesn't let you configure separate SDKs; it runs the Gradle
-            // daemon on the JDK that should be used for compilation so look up the
-            // current environment:
-            var javaHome = System.getProperty("java.home")
-            if (javaHome == null) {
-                javaHome = System.getenv("JAVA_HOME")
-            }
-            if (javaHome != null) { // but java.home should always be set...
-                val home = File(javaHome)
-                val isJre = home.name == "jre"
-                val roots = JavaSdkUtil.getJdkClassesRoots(home, isJre)
+            val jdkHome = getJdkHome()
+            if (jdkHome != null) {
+                val isJre = !isJdkFolder(jdkHome)
+                val roots = JavaSdkUtil.getJdkClassesRoots(jdkHome, isJre)
                 for (root in roots) {
                     if (root.exists()) {
                         files.add(root)
                     }
                 }
+
                 return true
             }
         }
@@ -1341,7 +1332,9 @@ open class LintCliClient : LintClient {
         DefaultUastParser(project, ideaProject!!) {
         override fun prepare(
             contexts: List<JavaContext>,
-            testContexts: List<JavaContext>
+            testContexts: List<JavaContext>,
+            javaLanguageLevel: LanguageLevel?,
+            kotlinLanguageLevel: LanguageVersionSettings?
         ): Boolean {
             // If we're using Kotlin, ensure we initialize the bridge
             val kotlinFiles: MutableList<File> = ArrayList()
@@ -1369,10 +1362,13 @@ open class LintCliClient : LintClient {
                 KotlinLintAnalyzerFacade(kotlinPerformanceManager).analyze(
                     kotlinFiles,
                     paths,
-                    project
+                    project,
+                    environment,
+                    javaLanguageLevel,
+                    kotlinLanguageLevel
                 )
             }
-            val ok = super.prepare(contexts, testContexts)
+            val ok = super.prepare(contexts, testContexts, javaLanguageLevel, kotlinLanguageLevel)
             if (project == null || contexts.isEmpty() && testContexts.isEmpty()) {
                 return ok
             }

@@ -266,7 +266,7 @@ public class ExtractAnnotationsDriver {
             }
         }
 
-        new KotlinLintAnalyzerFacade().analyze(ktFiles, joined, project);
+        new KotlinLintAnalyzerFacade().analyze(ktFiles, joined, project, environment, null, null);
         extractor.extractFromProjectSource(units);
 
         for (File jar : mergePaths) {
