@@ -67,8 +67,10 @@ import com.google.common.collect.Iterables
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import com.intellij.openapi.Disposable
+import com.intellij.pom.java.LanguageLevel
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
+import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.w3c.dom.Document
@@ -787,7 +789,11 @@ class LintUtilsTest : TestCase() {
             dir: File,
             relativePath: File,
             source: String,
-            libs: List<File> = emptyList()
+            libs: List<File> = emptyList(),
+            library: Boolean = false,
+            android: Boolean = true,
+            javaLanguageLevel: LanguageLevel? = null,
+            kotlinLanguageLevel: LanguageVersionSettings? = null
         ): Project {
             val fullPath = File(dir, relativePath.path)
             fullPath.parentFile.mkdirs()
@@ -805,6 +811,9 @@ class LintUtilsTest : TestCase() {
                 }
 
                 override fun getCompileTarget(project: Project): IAndroidTarget? {
+                    if (!android) {
+                        return null
+                    }
                     val targets = getTargets()
                     for (i in targets.indices.reversed()) {
                         val target = targets[i]
@@ -816,8 +825,41 @@ class LintUtilsTest : TestCase() {
                     return super.getCompileTarget(project)
                 }
 
+                override fun getJavaSourceFolders(project: Project): List<File> {
+                    return listOf(dir)
+                }
+
                 override fun getSdkHome(): File {
                     return TestUtils.getSdk()
+                }
+
+                override fun getJavaLanguageLevel(project: Project): LanguageLevel {
+                    if (javaLanguageLevel != null) {
+                        return javaLanguageLevel
+                    }
+                    return super.getJavaLanguageLevel(project)
+                }
+
+                override fun getKotlinLanguageLevel(project: Project): LanguageVersionSettings {
+                    if (kotlinLanguageLevel != null) {
+                        return kotlinLanguageLevel
+                    }
+                    return super.getKotlinLanguageLevel(project)
+                }
+
+                override fun createProject(dir: File, referenceDir: File): Project {
+                    val clone = super.createProject(dir, referenceDir)
+                    val p = object : TestLintClient.TestProject(this, dir, referenceDir, null, null) {
+                        override fun isLibrary(): Boolean {
+                            return library
+                        }
+                        override fun isAndroidProject(): Boolean {
+                            return android
+                        }
+                    }
+                    p.buildTargetHash = clone.buildTargetHash
+                    p.ideaProject = clone.ideaProject
+                    return p
                 }
 
                 override fun getJavaLibraries(
@@ -954,7 +996,20 @@ class LintUtilsTest : TestCase() {
 
         @JvmStatic
         fun parse(vararg testFiles: TestFile): Pair<JavaContext, Disposable> {
-            val dir = Files.createTempDir()
+            return parse(testFiles = *testFiles, javaLanguageLevel = null)
+        }
+
+        @JvmStatic
+        fun parse(
+            vararg testFiles: TestFile = emptyArray(),
+            javaLanguageLevel: LanguageLevel? = null,
+            kotlinLanguageLevel: LanguageVersionSettings? = null,
+            library: Boolean = false,
+            android: Boolean = true
+        ): Pair<JavaContext, Disposable> {
+            val temp = Files.createTempDir()
+            val dir = File(temp, "src")
+            dir.mkdir()
 
             val libs: List<File> = if (testFiles.size > 1) {
                 val projects = TestLintTask().files(*testFiles).createProjects(dir)
@@ -969,8 +1024,8 @@ class LintUtilsTest : TestCase() {
             val source = primary.getContents()!!
 
             val fullPath = File(dir, relativePath.path)
-            val project = createTestProjectForFile(dir, relativePath, source, libs)
-
+            val project = createTestProjectForFile(dir, relativePath, source, libs,
+                library, android, javaLanguageLevel, kotlinLanguageLevel)
             val client = project.getClient() as LintCliClient
             val request = LintRequest(client, listOf(fullPath))
 
@@ -980,21 +1035,23 @@ class LintUtilsTest : TestCase() {
             val uastParser = client.getUastParser(project)
             assertNotNull(uastParser)
             context.uastParser = uastParser
-            uastParser.prepare(listOf(context), emptyList())
+            uastParser.prepare(listOf(context), emptyList(), javaLanguageLevel, kotlinLanguageLevel)
             val uFile = uastParser.parse(context)
             context.uastFile = uFile
             assert(uFile != null)
             context.setJavaFile(uFile!!.psi)
             val disposable = Disposable {
                 client.disposeProjects(listOf(project))
-                dir.deleteRecursively()
+                temp.deleteRecursively()
             }
             return Pair.of<JavaContext, Disposable>(context, disposable)
         }
 
         @JvmStatic
         fun parseAll(vararg testFiles: TestFile): Pair<List<JavaContext>, Disposable> {
-            val dir = Files.createTempDir()
+            val temp = Files.createTempDir()
+            val dir = File(temp, "src")
+            dir.mkdir()
 
             val libs: List<File> = if (testFiles.size > 1) {
                 val projects = TestLintTask().files(*testFiles).createProjects(dir)
@@ -1031,7 +1088,7 @@ class LintUtilsTest : TestCase() {
 
             val disposable = Disposable {
                 client.disposeProjects(listOf(project))
-                dir.deleteRecursively()
+                temp.deleteRecursively()
             }
             return Pair.of<List<JavaContext>, Disposable>(contexts, disposable)
         }

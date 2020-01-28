@@ -72,6 +72,8 @@ import com.intellij.openapi.util.Computable
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.pom.java.LanguageLevel.JDK_1_7
 import com.intellij.pom.java.LanguageLevel.JDK_1_8
+import org.jetbrains.kotlin.config.LanguageVersionSettings
+import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.kxml2.io.KXmlParser
 import org.w3c.dom.Document
 import org.w3c.dom.Element
@@ -465,6 +467,26 @@ abstract class LintClient {
         @Suppress("DEPRECATION")
         return getFileFromEnvVar(SdkConstants.ANDROID_SDK_ROOT_ENV)
             ?: getFileFromEnvVar(SdkConstants.ANDROID_HOME_ENV)
+    }
+
+    /** Returns the JDK to use when analyzing non-Android code for the given project */
+    open fun getJdkHome(project: Project? = null): File? {
+        // Non android project, e.g. perhaps a pure Kotlin project
+        // Gradle doesn't let you configure separate SDKs; it runs the Gradle
+        // daemon on the JDK that should be used for compilation so look up the
+        // current environment:
+        var javaHome = System.getProperty("java.home")
+        if (javaHome == null) {
+            javaHome = System.getenv("JAVA_HOME")
+        }
+        if (javaHome != null) { // but java.home should always be set...
+            val jdkHome = File(javaHome)
+            if (jdkHome.isDirectory) {
+                return jdkHome
+            }
+        }
+
+        return null
     }
 
     private fun getFileFromEnvVar(name: String): File? {
@@ -974,6 +996,26 @@ abstract class LintClient {
 
             return max
         }
+
+    /** Returns the expected language level for Java source files in the given project */
+    open fun getJavaLanguageLevel(project: Project): LanguageLevel {
+        val model = project.gradleProjectModel
+        if (model != null) {
+            val javaCompileOptions = model.javaCompileOptions
+            val sourceCompatibility = javaCompileOptions.sourceCompatibility
+            val javaLanguageLevel = LanguageLevel.parse(sourceCompatibility)
+            if (javaLanguageLevel != null) {
+                return javaLanguageLevel
+            }
+        }
+
+        return if (project.isAndroidProject) JDK_1_7 else LanguageLevel.JDK_11
+    }
+
+    /** Returns the expected language level for Kotlin source files in the given project */
+    open fun getKotlinLanguageLevel(project: Project): LanguageVersionSettings {
+        return LanguageVersionSettingsImpl.DEFAULT
+    }
 
     /**
      * Returns the specific version of the build tools being used for the given project, if known

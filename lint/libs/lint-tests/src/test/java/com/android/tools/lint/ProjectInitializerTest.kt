@@ -349,7 +349,7 @@ class ProjectInitializerTest {
         val descriptor = """
             <project>
             <sdk dir='${TestUtils.getSdk()}'/>
-            <module name="Foo:App" android="true" library="true">
+            <module name="Foo:App" android="true" library="true" javaLanguage="1000" kotlinLanguage="1.3">
               <unknown file="foo.Bar" />
               <resource file="res/values/strings.xml" />
               <dep module="NonExistent" />
@@ -363,10 +363,13 @@ class ProjectInitializerTest {
         MainTest.checkDriver(
             """
             app: Error: No .class files were found in project "Foo:App", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]
+            project.xml:3: Error: Invalid Java language level "1000" [LintError]
+            <module name="Foo:App" android="true" library="true" javaLanguage="1000" kotlinLanguage="1.3">
+            ^
             project.xml:4: Error: Unexpected tag unknown [LintError]
               <unknown file="foo.Bar" />
               ~~~~~~~~~~~~~~~~~~~~~~~~~~
-            2 errors, 0 warnings
+            3 errors, 0 warnings
             """,
             "",
 
@@ -1111,6 +1114,81 @@ class ProjectInitializerTest {
                 descriptorFile.path
             ),
 
+            null, null
+        )
+    }
+
+    @Test
+    fun testJava14() {
+        // Tests Java language support for some recent features, such as
+        // switch expressions
+        val root = temp.newFolder()
+
+        val projects = lint().projects(ProjectDescription(
+            java(
+                """
+                package test.pkg;
+                import android.support.annotation.IntDef;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+                public class Java14Test {
+                    @IntDef({LENGTH_INDEFINITE, LENGTH_SHORT, LENGTH_LONG})
+                    @Retention(RetentionPolicy.SOURCE)
+                    public @interface Duration {
+                    }
+                    public static final int LENGTH_INDEFINITE = -2;
+                    public static final int LENGTH_SHORT = -1;
+                    public static final int LENGTH_LONG = 0;
+
+                    // Switch expression -- missing one of the cases; should generate warning
+                    // when we're correctly handling the AST for this
+                    public static boolean test(@Duration int duration) {
+                        return switch (duration) {
+                            // Missing LENGTH_INDEFINITE handling
+                            case LENGTH_SHORT, LENGTH_LONG -> true;
+                            default -> false;
+                        };
+                    }
+                }
+                """
+            ).indented(),
+            base64gzip("libs/support-annotations.jar", SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP),
+            xml(
+                "project.xml", """
+                <project>
+                <root dir="$root/project" />
+                <sdk dir='${TestUtils.getSdk()}'/>
+                <module name="M" android="true" library="false" javaLanguage="14">
+                <classpath jar="libs/support-annotations.jar" />
+                <src file="src/test/pkg/Java14Test.java" />
+                </module>
+                </project>
+            """
+            ).indented()
+        ).name("project")).createProjects(root)
+        val projectDir = projects[0]
+        val descriptorFile = File(projectDir, "project.xml")
+
+        MainTest.checkDriver(
+            """
+            src/test/pkg/Java14Test.java:17: Warning: Switch statement on an int with known associated constant missing case LENGTH_INDEFINITE [SwitchIntDef]
+                    return switch (duration) {
+                           ^
+            0 errors, 1 warnings
+            """.replace('/', File.separatorChar),
+            "",
+
+            // Expected exit code
+            ERRNO_SUCCESS,
+
+            // Args
+            arrayOf(
+                "--quiet",
+                "--check",
+                "SwitchIntDef",
+                "--project",
+                descriptorFile.path
+            ),
             null, null
         )
     }
