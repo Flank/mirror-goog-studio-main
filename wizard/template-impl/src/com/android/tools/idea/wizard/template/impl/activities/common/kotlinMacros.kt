@@ -32,8 +32,9 @@ fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData) {
     applyPlugin("kotlin-android")
     applyPlugin("kotlin-android-extensions")
     if (!hasKotlinStdlib()) {
-      addDependency("$stdlibBaseArtifact:\$kotlin_version")
+      // Make sure to add the extra variable before using it as injection within the dependency.
       setKotlinVersion(projectData.kotlinVersion)
+      addDependency("$stdlibBaseArtifact:\$kotlin_version")
     }
   }
 }
