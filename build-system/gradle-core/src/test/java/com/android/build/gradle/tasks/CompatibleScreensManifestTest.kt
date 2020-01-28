@@ -22,7 +22,6 @@ import com.android.build.api.component.impl.ComponentIdentityImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
-import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
@@ -32,8 +31,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.createFakeVariantPropertiesApiScope
 import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.build.gradle.internal.variant2.createFakeDslScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
@@ -82,7 +81,7 @@ class CompatibleScreensManifestTest {
 
         task = project.tasks.create("test", CompatibleScreensManifest::class.java)
 
-        val dslScope = createFakeDslScope()
+        val variantApiScope = createFakeVariantPropertiesApiScope()
 
         MockitoAnnotations.initMocks(this)
         `when`(variantProperties.name).thenReturn("fullVariantName")
@@ -94,7 +93,7 @@ class CompatibleScreensManifestTest {
         `when`(variantProperties.variantScope).thenReturn(scope)
         `when`(variantProperties.variantType).thenReturn(VariantTypeImpl.BASE_APK)
         `when`(variantProperties.variantData).thenReturn(variantData)
-        `when`(variantProperties.dslScope).thenReturn(dslScope)
+        `when`(variantProperties.variantApiScope).thenReturn(variantApiScope)
         `when`<AndroidVersion>(variantProperties.minSdkVersion).thenReturn(AndroidVersion(21))
 
 

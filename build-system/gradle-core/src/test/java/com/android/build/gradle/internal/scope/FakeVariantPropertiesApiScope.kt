@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,52 +14,41 @@
  * limitations under the License.
  */
 
-@file:JvmName("FakeDslScope")
+@file:JvmName("FakeVariantPropertiesApiScope")
+package com.android.build.gradle.internal.scope
 
-package com.android.build.gradle.internal.variant2
-
-import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.errors.SyncIssueReporter
-import com.android.build.gradle.internal.fixtures.FakeBuildFeatureValues
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.fixtures.ProjectFactory
-import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.ProjectScope
 import com.android.build.gradle.options.ProjectOptions
 import com.google.common.collect.ImmutableMap
-import org.gradle.api.file.ProjectLayout
-import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ProviderFactory
 import java.io.File
 
 @JvmOverloads
-fun createFakeDslScope(
+fun createFakeVariantPropertiesApiScope(
     issueReporter: SyncIssueReporter = FakeSyncIssueReporter(),
     deprecationReporter: DeprecationReporter = FakeDeprecationReporter(),
     objectFactory: ObjectFactory = FakeObjectFactory.factory,
-    logger: Logger = FakeLogger(),
-    buildFeatures: BuildFeatureValues = FakeBuildFeatureValues(),
     providerFactory: ProviderFactory = FakeProviderFactory.factory,
-    dslVariableFactory: DslVariableFactory = DslVariableFactory(issueReporter),
-    projectLayout: ProjectLayout = ProjectFactory.project.layout,
     projectOptions: ProjectOptions = ProjectOptions(ImmutableMap.of()),
     fileResolver: (Any) -> File = { File(it.toString()) }
-): DslScopeImpl {
+): VariantPropertiesApiScope {
     val projectScope = ProjectScope(
         issueReporter,
         deprecationReporter,
         objectFactory,
-        logger,
+        FakeLogger(),
         providerFactory,
-        projectLayout,
+        ProjectFactory.project.layout,
         projectOptions,
         fileResolver)
 
-    return DslScopeImpl(projectScope, buildFeatures, dslVariableFactory)
+    return VariantPropertiesApiScopeImpl(projectScope)
 }

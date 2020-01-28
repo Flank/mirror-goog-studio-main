@@ -72,6 +72,11 @@ import com.android.build.gradle.internal.profile.RecordingBuildListener;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.ProjectScope;
+import com.android.build.gradle.internal.scope.VariantApiScope;
+import com.android.build.gradle.internal.scope.VariantApiScopeImpl;
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScopeImpl;
 import com.android.build.gradle.internal.services.Aapt2Daemon;
 import com.android.build.gradle.internal.services.Aapt2Workers;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
@@ -144,6 +149,7 @@ public abstract class BasePlugin<
 
     protected ProjectOptions projectOptions;
 
+    private ProjectScope projectScope;
     GlobalScope globalScope;
     protected SyncIssueReporterImpl syncIssueHandler;
 
@@ -191,6 +197,8 @@ public abstract class BasePlugin<
 
     @NonNull
     protected abstract VariantFactory<VariantT, VariantPropertiesT> createVariantFactory(
+            @NonNull VariantApiScope variantApiScope,
+            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
             @NonNull GlobalScope globalScope);
 
     @NonNull
@@ -324,18 +332,22 @@ public abstract class BasePlugin<
         // Apply the Java plugin
         project.getPlugins().apply(JavaBasePlugin.class);
 
-        DslScopeImpl dslScope =
-                new DslScopeImpl(
+        projectScope =
+                new ProjectScope(
                         syncIssueHandler,
                         deprecationReporter,
                         objectFactory,
                         project.getLogger(),
-                        new BuildFeatureValuesImpl(projectOptions),
                         project.getProviders(),
-                        new DslVariableFactory(syncIssueHandler),
                         project.getLayout(),
                         projectOptions,
                         project::file);
+
+        DslScopeImpl dslScope =
+                new DslScopeImpl(
+                        projectScope,
+                        new BuildFeatureValuesImpl(projectOptions),
+                        new DslVariableFactory(syncIssueHandler));
 
         MessageReceiverImpl messageReceiver =
                 new MessageReceiverImpl(SyncOptions.getErrorFormatMode(projectOptions), logger);
@@ -442,12 +454,17 @@ public abstract class BasePlugin<
 
         globalScope.setExtension(extension);
 
-        variantFactory = createVariantFactory(globalScope);
+        VariantApiScope variantApiScope = new VariantApiScopeImpl(projectScope);
+        VariantPropertiesApiScopeImpl variantPropertiesApiScope =
+                new VariantPropertiesApiScopeImpl(projectScope);
+
+        variantFactory =
+                createVariantFactory(variantApiScope, variantPropertiesApiScope, globalScope);
 
         variantInputModel =
                 new VariantInputModelImpl(globalScope, extension, variantFactory, sourceSetManager);
         variantManager =
-                new VariantManager(
+                new VariantManager<>(
                         globalScope,
                         project,
                         projectOptions,
@@ -691,6 +708,10 @@ public abstract class BasePlugin<
         for (ComponentPropertiesImpl componentProperties : allProperties) {
             apiObjectFactory.create(componentProperties);
         }
+
+        // lock the Properties of the variant API after the old API because
+        // of the versionCode/versionName properties that are shared between the old and new APIs.
+        variantFactory.getVariantPropertiesApiScope().lockProperties();
 
         // Make sure no SourceSets were added through the DSL without being properly configured
         sourceSetManager.checkForUnconfiguredSourceSets();

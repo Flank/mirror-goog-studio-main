@@ -16,8 +16,8 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariantProperties
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -25,11 +25,12 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.utils.init
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import org.gradle.api.provider.Property
+import java.util.concurrent.Callable
 import javax.inject.Inject
 
 open class ApplicationVariantPropertiesImpl @Inject constructor(
@@ -41,8 +42,9 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     artifacts: BuildArtifactsHolder,
     variantScope: VariantScope,
     variantData: BaseVariantData,
+    variantDependencyInfo: com.android.build.api.variant.DependenciesInfo,
     transformManager: TransformManager,
-    dslScope: DslScope,
+    variantApiScope: VariantPropertiesApiScope,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
     componentIdentity,
@@ -54,7 +56,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    dslScope,
+    variantApiScope,
     globalScope
 ), ApplicationVariantProperties, ApplicationCreationConfig {
 
@@ -65,14 +67,15 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> = dslScope.objectFactory.property(String::class.java)
-        .init(dslScope.providerFactory.provider { variantDslInfo.applicationId })
+    override val applicationId: Property<String> = variantApiScope.propertyOf(String::class.java, Callable{variantDslInfo.applicationId})
 
     override val embedsMicroApp: Boolean
         get() = variantDslInfo.isEmbedMicroApp
 
     override val manifestPlaceholders: Map<String, Any>
         get() = variantDslInfo.manifestPlaceholders
+
+    override val dependenciesInfo: com.android.build.api.variant.DependenciesInfo = variantDependencyInfo
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

@@ -84,6 +84,9 @@ enum class BooleanOption(
     ENABLE_PREFAB("android.enablePrefab", false, FeatureStage.Supported),
     INCLUDE_DEPENDENCY_INFO_IN_APKS("android.includeDependencyInfoInApks", false, FeatureStage.Supported),
 
+    // FIXME switch to false once we know we don't use these getters internally.
+    DISABLE_MEMOIZATION("android.compatibility.disableMemoization", true, FeatureStage.Supported),
+
     /* ---------------------
      * EXPERIMENTAL FEATURES
      */

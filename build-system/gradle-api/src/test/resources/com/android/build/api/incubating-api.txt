@@ -241,8 +241,8 @@ com.android.build.api.dsl.DensitySplit.isStrict: boolean ()
 com.android.build.api.dsl.DensitySplit.setCompatibleScreens: void (java.util.Collection<java.lang.String>)
 com.android.build.api.dsl.DensitySplit.setStrict: void (boolean)
 com.android.build.api.dsl.DependenciesInfo
-com.android.build.api.dsl.DependenciesInfo.getInclude: boolean ()
-com.android.build.api.dsl.DependenciesInfo.setInclude: void (boolean)
+com.android.build.api.dsl.DependenciesInfo.getIncludeInApk: boolean ()
+com.android.build.api.dsl.DependenciesInfo.setIncludeInApk: void (boolean)
 com.android.build.api.dsl.DynamicDelivery
 com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
@@ -323,8 +323,12 @@ com.android.build.api.dsl.UnitTestOptions.setIncludeAndroidResources: void (bool
 com.android.build.api.dsl.UnitTestOptions.setReturnDefaultValues: void (boolean)
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
 com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.ApplicationVariant.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
+com.android.build.api.variant.ApplicationVariant.getDebuggable: boolean ()
+com.android.build.api.variant.ApplicationVariant.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
 com.android.build.api.variant.ApplicationVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.ApplicationVariantProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.variant.ApplicationVariantProperties.getDependenciesInfo: com.android.build.api.variant.DependenciesInfo ()
 com.android.build.api.variant.BuiltArtifact
 com.android.build.api.variant.BuiltArtifact.getFilters: java.util.Collection<com.android.build.api.variant.FilterConfiguration> ()
 com.android.build.api.variant.BuiltArtifact.getOutputFile: java.lang.String ()
@@ -347,6 +351,8 @@ com.android.build.api.variant.BuiltArtifacts.save: void (org.gradle.api.file.Dir
 com.android.build.api.variant.BuiltArtifactsLoader
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.Directory)
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.FileCollection)
+com.android.build.api.variant.DependenciesInfo
+com.android.build.api.variant.DependenciesInfo.getIncludeInApk: boolean ()
 com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.DynamicFeatureVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.DynamicFeatureVariantProperties.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()

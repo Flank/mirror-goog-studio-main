@@ -18,7 +18,6 @@ package com.android.build.api.variant.impl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.VariantProperties
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -26,6 +25,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -41,7 +41,7 @@ abstract class VariantPropertiesImpl(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    dslScope: DslScope,
+    variantApiScope: VariantPropertiesApiScope,
     globalScope: GlobalScope
 ) : ComponentPropertiesImpl(
     componentIdentity,
@@ -53,7 +53,7 @@ abstract class VariantPropertiesImpl(
     variantScope,
     variantData,
     transformManager,
-    dslScope,
+    variantApiScope,
     globalScope
 ), VariantProperties, VariantCreationConfig {
 

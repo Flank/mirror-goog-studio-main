@@ -45,10 +45,3 @@ fun <T> ListProperty<T>.setDisallowChanges(value: Iterable<T>?) {
     set(value)
     disallowChanges()
 }
-
-fun <T> Property<T>.init(value: Provider<T>): Property<T> {
-    set(value)
-    disallowChanges()
-    finalizeValueOnRead()
-    return this
-}

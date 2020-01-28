@@ -32,6 +32,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.api.variant.DependenciesInfo;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.VariantOutputConfiguration;
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
@@ -54,10 +55,12 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.FakeVariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.OutputFactory;
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantInputModelBuilder;
@@ -498,7 +501,8 @@ public class ModelBuilderTest {
             @Nullable VariantPropertiesImpl testedVariant) {
         // prepare the objects required for the constructor
         final VariantType type = variantDslInfo.getVariantType();
-        DslScopeImpl dslScope = FakeDslScope.createFakeDslScope();
+        VariantPropertiesApiScope variantApiScope =
+                FakeVariantPropertiesApiScope.createFakeVariantPropertiesApiScope();
 
         ComponentIdentity componentIdentity =
                 new ComponentIdentityImpl(variantName, "flavorName", "debug", ImmutableList.of());
@@ -522,21 +526,20 @@ public class ModelBuilderTest {
                 || componentClass.equals(AndroidTestPropertiesImpl.class)) {
             assertThat(testedVariant).named("tested variant").isNotNull();
             ComponentT unitTestComponent =
-                    dslScope.getObjectFactory()
-                            .newInstance(
-                                    componentClass,
-                                    componentIdentity,
-                                    variantDslInfo,
-                                    variantDependencies,
-                                    variantSources,
-                                    paths,
-                                    artifacts,
-                                    variantScope,
-                                    variantData,
-                                    testedVariant,
-                                    Mockito.mock(TransformManager.class),
-                                    dslScope,
-                                    globalScope);
+                    variantApiScope.newInstance(
+                            componentClass,
+                            componentIdentity,
+                            variantDslInfo,
+                            variantDependencies,
+                            variantSources,
+                            paths,
+                            artifacts,
+                            variantScope,
+                            variantData,
+                            testedVariant,
+                            Mockito.mock(TransformManager.class),
+                            variantApiScope,
+                            globalScope);
 
             testedVariant
                     .getTestComponents()
@@ -547,20 +550,38 @@ public class ModelBuilderTest {
 
         assertThat(testedVariant).named("tested variant").isNull();
 
-        return dslScope.getObjectFactory()
-                .newInstance(
-                        componentClass,
-                        componentIdentity,
-                        variantDslInfo,
-                        variantDependencies,
-                        variantSources,
-                        paths,
-                        artifacts,
-                        variantScope,
-                        variantData,
-                        Mockito.mock(TransformManager.class),
-                        dslScope,
-                        globalScope);
+        if (componentClass.equals(ApplicationVariantPropertiesImpl.class)) {
+            DependenciesInfo dependenciesInfo = Mockito.mock(DependenciesInfo.class);
+
+            return variantApiScope.newInstance(
+                    componentClass,
+                    componentIdentity,
+                    variantDslInfo,
+                    variantDependencies,
+                    variantSources,
+                    paths,
+                    artifacts,
+                    variantScope,
+                    variantData,
+                    dependenciesInfo,
+                    Mockito.mock(TransformManager.class),
+                    variantApiScope,
+                    globalScope);
+        }
+
+        return variantApiScope.newInstance(
+                componentClass,
+                componentIdentity,
+                variantDslInfo,
+                variantDependencies,
+                variantSources,
+                paths,
+                artifacts,
+                variantScope,
+                variantData,
+                Mockito.mock(TransformManager.class),
+                variantApiScope,
+                globalScope);
     }
 
     private static File createApk(File variantOutputFolder, String fileName) throws IOException {

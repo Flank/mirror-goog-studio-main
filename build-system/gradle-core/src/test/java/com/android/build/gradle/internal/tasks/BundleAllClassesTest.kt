@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.createFakeVariantPropertiesApiScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant2.createFakeDslScope
 import com.android.build.gradle.options.BooleanOption
@@ -66,13 +67,19 @@ class BundleAllClassesTest {
 
     @Before
     fun setUp() {
-        val dslScope = createFakeDslScope(
-            projectOptions = ProjectOptions(
-                ImmutableMap.of<String, Any>(
-                    BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
-                    false
-                )
+        val projectOptions = ProjectOptions(
+            ImmutableMap.of<String, Any>(
+                BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
+                false
             )
+        )
+
+        val dslScope = createFakeDslScope(
+            projectOptions = projectOptions
+        )
+
+        val variantApiScope = createFakeVariantPropertiesApiScope(
+            projectOptions = projectOptions
         )
 
         MockitoAnnotations.initMocks(this)
@@ -82,12 +89,12 @@ class BundleAllClassesTest {
         Mockito.`when`(componentProperties.variantScope).thenReturn(scope)
         Mockito.`when`(componentProperties.taskContainer).thenReturn(taskContainer)
         Mockito.`when`(componentProperties.variantData).thenReturn(variantData)
-        Mockito.`when`(componentProperties.dslScope).thenReturn(dslScope)
+        Mockito.`when`(componentProperties.variantApiScope).thenReturn(variantApiScope)
         Mockito.`when`(variantData.allPostJavacGeneratedBytecode).thenReturn(postJavacClasses)
         Mockito.`when`(variantData.allPreJavacGeneratedBytecode).thenReturn(preJavacClasses)
         Mockito.`when`(globalScope.extension).thenReturn(extension)
         Mockito.`when`(globalScope.dslScope).thenReturn(dslScope)
-        Mockito.`when`(globalScope.projectOptions).thenReturn(dslScope.projectOptions)
+        Mockito.`when`(globalScope.projectOptions).thenReturn(projectOptions)
         Mockito.`when`(extension.aaptOptions).thenReturn(aaptOptions)
         Mockito.`when`(aaptOptions.namespaced).thenReturn(false)
         Mockito.`when`(preJavacClasses.asFileTree).thenReturn(fileTree)

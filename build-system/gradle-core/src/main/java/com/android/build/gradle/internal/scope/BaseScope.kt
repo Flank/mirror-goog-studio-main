@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.build.api.component.impl
+package com.android.build.gradle.internal.scope
 
-import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.TestComponent
-import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.scope.VariantApiScope
+import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.options.ProjectOptions
+import com.android.builder.errors.IssueReporter
 
-abstract class TestComponentImpl<PropertiesT : TestComponentPropertiesImpl>(
-    variantDslInfo: VariantDslInfo,
-    variantConfiguration: ComponentIdentity,
-    variantApiScope: VariantApiScope
-) : ComponentImpl<PropertiesT>(variantDslInfo, variantConfiguration, variantApiScope),
-    TestComponent<PropertiesT> {
+/**
+ * Base Scope providing features useful everywhere.
+ */
+interface BaseScope {
+
+    val issueReporter: IssueReporter
+    val deprecationReporter: DeprecationReporter
+    val projectOptions: ProjectOptions
+
+    fun <T> newInstance(type: Class<T>, vararg args: Any?): T
 }

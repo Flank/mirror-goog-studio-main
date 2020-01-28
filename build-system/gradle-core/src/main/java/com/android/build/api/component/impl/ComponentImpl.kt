@@ -20,11 +20,13 @@ import com.android.build.api.component.Component
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.impl.DelayedActionExecutor
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.scope.VariantApiScope
 import org.gradle.api.Action
 
 abstract class ComponentImpl<PropertiesT : ComponentPropertiesImpl>(
     protected val variantDslInfo: VariantDslInfo,
-    variantConfiguration: ComponentIdentity
+    variantConfiguration: ComponentIdentity,
+    protected val variantApiScope: VariantApiScope
 ) :
     Component<PropertiesT>, ComponentIdentity by variantConfiguration {
 

@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.api.component.impl
+package com.android.build.api.variant
 
-import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.TestComponent
-import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.scope.VariantApiScope
+import org.gradle.api.Incubating
 
-abstract class TestComponentImpl<PropertiesT : TestComponentPropertiesImpl>(
-    variantDslInfo: VariantDslInfo,
-    variantConfiguration: ComponentIdentity,
-    variantApiScope: VariantApiScope
-) : ComponentImpl<PropertiesT>(variantDslInfo, variantConfiguration, variantApiScope),
-    TestComponent<PropertiesT> {
+/**
+ * Read-only object to access dependencies information properties during [com.android.build.api.dsl.CommonExtension.onVariantProperties]
+ */
+@Incubating
+interface DependenciesInfo {
+
+    val includeInApk: Boolean
 }

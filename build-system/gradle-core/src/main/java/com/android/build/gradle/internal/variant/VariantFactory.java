@@ -39,6 +39,8 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
+import com.android.build.gradle.internal.scope.VariantApiScope;
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.VariantType;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -56,6 +58,12 @@ public interface VariantFactory<
         VariantPropertiesT extends VariantPropertiesImpl> {
 
     @NonNull
+    VariantApiScope getVariantApiScope();
+
+    @NonNull
+    VariantPropertiesApiScope getVariantPropertiesApiScope();
+
+    @NonNull
     VariantT createVariantObject(
             @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo);
 
@@ -69,6 +77,7 @@ public interface VariantFactory<
 
     @NonNull
     VariantPropertiesT createVariantPropertiesObject(
+            @NonNull VariantT variant,
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,

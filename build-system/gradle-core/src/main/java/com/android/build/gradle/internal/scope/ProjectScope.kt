@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.api.dsl
+package com.android.build.gradle.internal.scope
 
-import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
 import org.gradle.api.file.ProjectLayout
@@ -28,32 +26,23 @@ import org.gradle.api.provider.ProviderFactory
 import java.io.File
 
 /**
- * Scope of the DSL objects.
+ * Simple scope objects, containing a bunch of project-provided items that can be exposed
+ * to different stages of the plugin work.
  *
- * This contains whatever is needed by all the DSL objects.
+ * This is not meant to be exposed directly though. It's meant to be a convenient storage for
+ * all these objects so that they don't have to be recreated or passed to methods/constructors
+ * all the time.
  *
- * This is meant to be transient and only available by the DSL objects. Other stages of the
- * plugin will use different scope objects.
+ * Stage-specific scope should expose only part of what these objects expose, based on the need
+ * of the context.
  */
-interface DslScope {
-
-    val issueReporter: IssueReporter
-
-    val deprecationReporter: DeprecationReporter
-
-    val objectFactory: ObjectFactory
-
-    val logger: Logger
-
-    val buildFeatures: BuildFeatureValues
-
-    val providerFactory: ProviderFactory
-
-    val variableFactory: DslVariableFactory
-
-    val projectLayout: ProjectLayout
-
-    val projectOptions: ProjectOptions
-
-    fun file(file: Any): File
-}
+class ProjectScope(
+    val issueReporter: IssueReporter,
+    val deprecationReporter: DeprecationReporter,
+    val objectFactory: ObjectFactory,
+    val logger: Logger,
+    val providerFactory: ProviderFactory,
+    val projectLayout: ProjectLayout,
+    val projectOptions: ProjectOptions,
+    val fileResolver: (Any) -> File
+)

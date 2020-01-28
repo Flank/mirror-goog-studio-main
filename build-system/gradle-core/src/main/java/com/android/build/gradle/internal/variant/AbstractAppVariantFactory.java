@@ -35,6 +35,8 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
+import com.android.build.gradle.internal.scope.VariantApiScope;
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -49,8 +51,11 @@ public abstract class AbstractAppVariantFactory<
                 VariantPropertiesT extends VariantPropertiesImpl>
         extends BaseVariantFactory<VariantT, VariantPropertiesT> {
 
-    public AbstractAppVariantFactory(@NonNull GlobalScope globalScope) {
-        super(globalScope);
+    public AbstractAppVariantFactory(
+            @NonNull VariantApiScope variantApiScope,
+            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull GlobalScope globalScope) {
+        super(variantApiScope, variantPropertiesApiScope, globalScope);
     }
 
     @Override

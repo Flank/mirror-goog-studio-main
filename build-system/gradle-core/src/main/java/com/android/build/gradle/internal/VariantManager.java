@@ -232,6 +232,11 @@ public class VariantManager<
         for (DimensionCombination variant : variants) {
             createVariantsFromCombination(variant, testBuildTypeData);
         }
+
+        // FIXME we should lock the variant API properties after all the onVariants, and
+        // before any onVariantProperties to avoid cross access between the two.
+        // This means changing the way to run onVariants vs onVariantProperties.
+        variantFactory.getVariantApiScope().lockValues();
     }
 
     @Nullable
@@ -404,6 +409,7 @@ public class VariantManager<
         // then the new VariantProperties which will contain the 2 old objects.
         VariantPropertiesT variantProperties =
                 variantFactory.createVariantPropertiesObject(
+                        variant,
                         componentIdentity,
                         variantDslInfo,
                         variantDependencies,

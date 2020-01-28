@@ -25,15 +25,17 @@ import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.scope.VariantApiScope
 import org.gradle.api.Action
 
 abstract class VariantImpl<PropertiesT: VariantPropertiesImpl>(
     variantDslInfo: VariantDslInfo,
-    componentIdentity: ComponentIdentity
-):
-    ComponentImpl<PropertiesT>(variantDslInfo, componentIdentity), Variant<PropertiesT> {
+    componentIdentity: ComponentIdentity,
+    variantApiScope: VariantApiScope
+) :
+    ComponentImpl<PropertiesT>(variantDslInfo, componentIdentity, variantApiScope),
+    Variant<PropertiesT> {
 
     private val unitTestActions = DelayedActionExecutor<UnitTest<UnitTestProperties>>()
     private val androidTestActions = DelayedActionExecutor<AndroidTest<AndroidTestProperties>>()

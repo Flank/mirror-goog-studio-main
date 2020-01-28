@@ -16,13 +16,46 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariant
-import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.scope.VariantApiScope
+import org.gradle.api.Action
 import javax.inject.Inject
 
 open class ApplicationVariantImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
-    variantConfiguration: ComponentIdentity
-) : VariantImpl<ApplicationVariantPropertiesImpl>(variantDslInfo, variantConfiguration), ApplicationVariant<ApplicationVariantPropertiesImpl> {
+    dslDependencyInfo: DependenciesInfo,
+    variantConfiguration: ComponentIdentity,
+    variantApiScope: VariantApiScope
+) : VariantImpl<ApplicationVariantPropertiesImpl>(
+    variantDslInfo,
+    variantConfiguration,
+    variantApiScope
+), ApplicationVariant<ApplicationVariantPropertiesImpl> {
+
+    override val debuggable: Boolean
+        get() = variantDslInfo.isDebuggable
+
+    // only instantiate this if this is needed. This allows non-built variant to not do too much work.
+    override val dependenciesInfo: DependenciesInfo by lazy {
+        if (variantApiScope.isPostVariantApi) {
+            // this is queried after the Variant API, so we can just return the DSL object.
+            dslDependencyInfo
+        } else {
+            variantApiScope.newInstance(
+                MutableDependenciesInfoImpl::class.java,
+                dslDependencyInfo,
+                variantApiScope
+            )
+        }
+    }
+
+    override fun dependenciesInfo(action: DependenciesInfo.() -> Unit) {
+        action.invoke(dependenciesInfo)
+    }
+
+    fun dependenciesInfo(action: Action<DependenciesInfo>) {
+        action.execute(dependenciesInfo)
+    }
 }

@@ -22,14 +22,12 @@ import com.android.build.api.artifact.Operations
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.ComponentProperties
 import com.android.build.api.variant.FilterConfiguration
-import com.android.build.api.variant.impl.GradleProperty
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec.Companion.get
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec.Companion.has
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -44,6 +42,7 @@ import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -60,8 +59,8 @@ import com.google.common.collect.ImmutableSet
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Property
 import java.io.File
+import java.util.concurrent.Callable
 
 abstract class ComponentPropertiesImpl(
     componentIdentity: ComponentIdentity,
@@ -73,7 +72,7 @@ abstract class ComponentPropertiesImpl(
     override val variantScope: VariantScope,
     val variantData: BaseVariantData,
     override val transformManager: TransformManager,
-    override val dslScope: DslScope,
+    override val variantApiScope: VariantPropertiesApiScope,
     override val globalScope: GlobalScope
 ): ComponentProperties, BaseCreationConfig, ComponentIdentity by componentIdentity {
 
@@ -184,25 +183,30 @@ abstract class ComponentPropertiesImpl(
         // the DSL objects are now locked, if the versionCode is provided, use that
         // otherwise use the lazy manifest reader to extract the value from the manifest
         // file.
-        val versionCode = variantDslInfo.getVersionCode(true)
-        val versionCodeProperty = initializeProperty(Int::class.java, "$name::versionCode")
-        if (versionCode <= 0) {
-            versionCodeProperty.set(
-                dslScope.providerFactory.provider {
+        val versionCodeProperty = variantApiScope.newPropertyBackingDeprecatedApi(
+            Int::class.java,
+            Callable {
+                val versionCode = variantDslInfo.getVersionCode(true)
+                if (versionCode <= 0) {
                     variantDslInfo.manifestVersionCodeSupplier.asInt
-                })
-        } else {
-            versionCodeProperty.set(versionCode)
-        }
+                } else {
+                    versionCode
+                }
+            },
+            "$name::versionCode"
+        )
+
         // the DSL objects are now locked, if the versionName is provided, use that; otherwise use
         // the lazy manifest reader to extract the value from the manifest file.
         val versionName = variantDslInfo.getVersionName(true)
-        val versionNameProperty = initializeProperty(String::class.java, "$name::versionName")
-        versionNameProperty.set(
-            dslScope.providerFactory.provider {
-                versionName ?: variantDslInfo.manifestVersionNameSupplier.get()
-            }
+        val versionNameProperty = variantApiScope.newPropertyBackingDeprecatedApi(
+            String::class.java,
+            Callable {
+                versionName ?: variantDslInfo.manifestVersionNameSupplier.get() ?: ""
+            },
+            "$name::versionName"
         )
+
         val variantOutputConfiguration = VariantOutputConfigurationImpl(
             apkData.isUniversal,
             apkData.filters.map { filterData ->
@@ -214,20 +218,12 @@ abstract class ComponentPropertiesImpl(
         return VariantOutputImpl(
             versionCodeProperty,
             versionNameProperty,
-            initializeProperty(Boolean::class.java, "$name::isEnabled").value(true),
+            variantApiScope.newPropertyBackingDeprecatedApi(Boolean::class.java, true, "$name::isEnabled"),
             variantOutputConfiguration,
             apkData
         ).also {
             apkData.variantOutput = it
             variantOutputs.add(it)
-        }
-    }
-
-    protected fun <T> initializeProperty(type: Class<T>, id: String): Property<T> {
-        return if (dslScope.projectOptions[BooleanOption.USE_SAFE_PROPERTIES]) {
-            GradleProperty.safeReadingBeforeExecution(id, dslScope.objectFactory.property(type))
-        } else {
-            dslScope.objectFactory.property(type)
         }
     }
 

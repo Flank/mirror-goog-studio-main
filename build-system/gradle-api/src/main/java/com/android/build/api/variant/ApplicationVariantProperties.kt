@@ -30,4 +30,7 @@ interface ApplicationVariantProperties : VariantProperties {
      */
     override val applicationId: Property<String>
 
+    /** Specify whether to include SDK dependency information in APKs and Bundles. */
+    val dependenciesInfo: DependenciesInfo
+
 }

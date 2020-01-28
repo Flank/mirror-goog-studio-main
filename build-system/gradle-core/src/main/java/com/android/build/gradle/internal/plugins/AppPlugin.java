@@ -36,6 +36,8 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantApiScope;
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.tasks.ApplicationTaskManager;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.ComponentInfo;
@@ -168,7 +170,11 @@ public class AppPlugin
 
     @NonNull
     @Override
-    protected ApplicationVariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
-        return new ApplicationVariantFactory(globalScope);
+    protected ApplicationVariantFactory createVariantFactory(
+            @NonNull VariantApiScope variantApiScope,
+            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull GlobalScope globalScope) {
+        return new ApplicationVariantFactory(
+                variantApiScope, variantPropertiesApiScope, globalScope);
     }
 }

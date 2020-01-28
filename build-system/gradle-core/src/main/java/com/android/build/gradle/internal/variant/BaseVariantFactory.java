@@ -34,6 +34,8 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantApiScope;
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
@@ -45,10 +47,29 @@ public abstract class BaseVariantFactory<
                 VariantPropertiesT extends VariantPropertiesImpl>
         implements VariantFactory<VariantT, VariantPropertiesT> {
 
+    @NonNull protected final VariantApiScope variantApiScope;
+    @NonNull protected final VariantPropertiesApiScope variantPropertiesApiScope;
     @NonNull protected final GlobalScope globalScope;
 
-    public BaseVariantFactory(@NonNull GlobalScope globalScope) {
+    public BaseVariantFactory(
+            @NonNull VariantApiScope variantApiScope,
+            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull GlobalScope globalScope) {
+        this.variantApiScope = variantApiScope;
+        this.variantPropertiesApiScope = variantPropertiesApiScope;
         this.globalScope = globalScope;
+    }
+
+    @Override
+    @NonNull
+    public VariantApiScope getVariantApiScope() {
+        return variantApiScope;
+    }
+
+    @Override
+    @NonNull
+    public VariantPropertiesApiScope getVariantPropertiesApiScope() {
+        return variantPropertiesApiScope;
     }
 
     @NonNull
@@ -58,7 +79,8 @@ public abstract class BaseVariantFactory<
         return globalScope
                 .getDslScope()
                 .getObjectFactory()
-                .newInstance(UnitTestImpl.class, variantDslInfo, componentIdentity);
+                .newInstance(
+                        UnitTestImpl.class, variantDslInfo, componentIdentity, variantApiScope);
     }
 
     @NonNull
@@ -68,7 +90,8 @@ public abstract class BaseVariantFactory<
         return globalScope
                 .getDslScope()
                 .getObjectFactory()
-                .newInstance(AndroidTestImpl.class, variantDslInfo, componentIdentity);
+                .newInstance(
+                        AndroidTestImpl.class, variantDslInfo, componentIdentity, variantApiScope);
     }
 
     @NonNull
@@ -100,7 +123,7 @@ public abstract class BaseVariantFactory<
                                 variantData,
                                 testedVariantProperties,
                                 transformManager,
-                                globalScope.getDslScope(),
+                                variantPropertiesApiScope,
                                 globalScope);
 
         unitTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
@@ -137,7 +160,7 @@ public abstract class BaseVariantFactory<
                                 variantData,
                                 testedVariantProperties,
                                 transformManager,
-                                globalScope.getDslScope(),
+                                variantPropertiesApiScope,
                                 globalScope);
 
         androidTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());

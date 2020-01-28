@@ -18,7 +18,6 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.DynamicFeatureVariantProperties
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -29,14 +28,12 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.ModuleMetadata
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
-import com.android.build.gradle.internal.utils.init
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.builder.dexing.DexingType
-import com.google.common.collect.ImmutableSet
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -51,7 +48,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    dslScope: DslScope,
+    variantApiScope: VariantPropertiesApiScope,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
     componentIdentity,
@@ -63,15 +60,15 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    dslScope,
+    variantApiScope,
     globalScope
 ), DynamicFeatureVariantProperties, DynamicFeatureCreationConfig {
 
     /*
      * Providers of data coming from the base modules. These are loaded just once and finalized.
      */
-    private val baseModuleMetadata: Provider<ModuleMetadata> = instantiateBaseModuleMetadata(dslScope, variantDependencies)
-    private val featureSetMetadata: Provider<FeatureSetMetadata>  = instantiateFeatureSetMetadata(dslScope, variantDependencies)
+    private val baseModuleMetadata: Provider<ModuleMetadata> = instantiateBaseModuleMetadata(variantDependencies)
+    private val featureSetMetadata: Provider<FeatureSetMetadata>  = instantiateFeatureSetMetadata(variantDependencies)
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -80,8 +77,8 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> = dslScope.objectFactory.property(String::class.java)
-        .init(baseModuleMetadata.map { it.applicationId })
+    override val applicationId: Property<String> =
+        variantApiScope.propertyOf(String::class.java, baseModuleMetadata.map { it.applicationId })
 
     override val manifestPlaceholders: Map<String, Any>
         get() = variantDslInfo.manifestPlaceholders
@@ -97,17 +94,20 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     override val testOnlyApk: Boolean
         get() = variantScope.isTestOnly
 
-    override val baseModuleDebuggable: Provider<Boolean> = dslScope.objectFactory.property(Boolean::class.java)
-        .init(baseModuleMetadata.map { it.debuggable })
+    override val baseModuleDebuggable: Provider<Boolean> = variantApiScope.providerOf(
+        Boolean::class.java,
+        baseModuleMetadata.map { it.debuggable })
 
-    override val baseModuleVersionCode: Provider<Int> = dslScope.objectFactory.property(Int::class.java)
-        .init(baseModuleMetadata.map { Integer.parseInt(it.versionCode) })
+    override val baseModuleVersionCode: Provider<Int> = variantApiScope.providerOf(
+        Int::class.java,
+        baseModuleMetadata.map { Integer.parseInt(it.versionCode) })
 
-    override val baseModuleVersionName: Provider<String> = dslScope.objectFactory.property(String::class.java)
-        .init(baseModuleMetadata.map { it.versionName ?: "" })
+    override val baseModuleVersionName: Provider<String> = variantApiScope.providerOf(
+        String::class.java,
+        baseModuleMetadata.map { it.versionName ?: "" })
 
-    override val featureName: Provider<String> = dslScope.objectFactory.property(String::class.java)
-        .init(featureSetMetadata.map {
+    override val featureName: Provider<String> =
+        variantApiScope.providerOf(String::class.java, featureSetMetadata.map {
             val path = globalScope.project.path
             it.getFeatureNameFor(path)
                 ?: throw RuntimeException("Failed to find feature name for $path in ${it.sourceFile}")
@@ -116,8 +116,8 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     /**
      * resource offset for resource compilation of a feature.
      * This is computed by the base module and consumed by the features. */
-    override val resOffset: Provider<Int> = dslScope.objectFactory.property(Int::class.java)
-        .init(featureSetMetadata.map {
+    override val resOffset: Provider<Int> =
+        variantApiScope.providerOf(Int::class.java, featureSetMetadata.map {
             val path = globalScope.project.path
             it.getResOffsetFor(path)
                 ?: throw RuntimeException("Failed to find resource offset for $path in ${it.sourceFile}")
@@ -129,13 +129,8 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     private fun instantiateBaseModuleMetadata(
-        dslScope: DslScope,
         variantDependencies: VariantDependencies
     ): Provider<ModuleMetadata> {
-        // Create a property instead of just returning the result of artifact.elements.map
-        // because we cannot yet call finalizeValueOnRead on providers
-        val property = dslScope.objectFactory.property(ModuleMetadata::class.java)
-
         val artifact = variantDependencies
             .getArtifactFileCollection(
                 ConsumedConfigType.COMPILE_CLASSPATH,
@@ -143,28 +138,27 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
                 AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA
             )
 
-        return property.init(artifact.elements.map {
-            ModuleMetadata.load(it.single().asFile)
-        })
+        // Have to wrap the return of artifact.elements.map because we cannot call
+        // finalizeValueOnRead directly on Provider
+        return variantApiScope.providerOf(
+            ModuleMetadata::class.java,
+            artifact.elements.map { ModuleMetadata.load(it.single().asFile) })
     }
 
 
     private fun instantiateFeatureSetMetadata(
-        dslScope: DslScope,
         variantDependencies: VariantDependencies
     ): Provider<FeatureSetMetadata> {
-        // Create a property instead of just returning the result of artifact.elements.map
-        // because we cannot yet call finalizeValueOnRead on providers
-        val property = dslScope.objectFactory.property(FeatureSetMetadata::class.java)
-
         val artifact = variantDependencies.getArtifactFileCollection(
             ConsumedConfigType.COMPILE_CLASSPATH,
             ArtifactScope.PROJECT,
             AndroidArtifacts.ArtifactType.FEATURE_SET_METADATA
         )
 
-        return property.init(artifact.elements.map {
-            FeatureSetMetadata.load(it.single().asFile)
-        })
+        // Have to wrap the return of artifact.elements.map because we cannot call
+        // finalizeValueOnRead directly on Provider
+        return variantApiScope.providerOf(
+            FeatureSetMetadata::class.java,
+            artifact.elements.map { FeatureSetMetadata.load(it.single().asFile) })
     }
 }
