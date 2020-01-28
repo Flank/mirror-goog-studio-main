@@ -8,7 +8,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library">
-      <library name="com.google.flatbuffers:flatbuffers-java:1.11.1" type="repository">
+      <library name="flatbuffers-java" type="repository">
         <properties maven-id="com.google.flatbuffers:flatbuffers-java:1.11.1" />
         <CLASSES>
           <root url="jar://$MAVEN_REPOSITORY$/com/google/flatbuffers/flatbuffers-java/1.11.1/flatbuffers-java-1.11.1.jar!/" />
@@ -18,7 +18,7 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="org.tensorflow:tensorflow-lite-support:0.0.0-experimental-metadata" type="repository">
+      <library name="tensorflow-lite-support" type="repository">
         <properties maven-id="org.tensorflow:tensorflow-lite-support:0.0.0-experimental-metadata" />
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata/tensorflow-lite-support-0.0.0-experimental-metadata.jar!/" />
