@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <template
     format="5"
-    revision="3"
+    revision="4"
     name="App Widget"
     description="Creates a new App Widget"
-    minApi="4"
+    minApi="16"
     minBuildApi="16">
 
     <category value="Widget" />
@@ -30,7 +30,7 @@
 
         <parameter
             id="resizable"
-            name="Resizable (API 12+)"
+            name="Resizable"
             type="enum"
             default="both"
             help="Allow the user to resize the widget. Feature only available on Android 3.1 and above.">
