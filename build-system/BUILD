@@ -120,8 +120,8 @@ filegroup(
 )
 
 filegroup(
-    name = "gradle-distrib-6.2-20191223230027+0000",
-    srcs = ["//tools/external/gradle:gradle-distrib-6.2-20191223230027+0000"],
+    name = "gradle-distrib-6.2-20200127141515+0000",
+    srcs = ["//tools/external/gradle:gradle-distrib-6.2-20200127141515+0000"],
     visibility = ["//visibility:public"],
 )
 
