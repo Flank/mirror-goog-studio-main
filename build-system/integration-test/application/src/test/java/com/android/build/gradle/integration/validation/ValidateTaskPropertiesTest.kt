@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.validation
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.testutils.AssumeUtil.assumeNotWindows
 import com.android.testutils.TestInputsGenerator
 import com.google.common.reflect.ClassPath
 
@@ -54,18 +53,18 @@ class ValidateTaskPropertiesTest {
         TestInputsGenerator.pathWithClasses(classes.toPath(), classesList)
 
         val classpath = (classLoader as URLClassLoader).urLs.joinToString(",") {
-            "'" + File(it.toURI()).absolutePath + "'"
+            "'" + File(it.toURI()).invariantSeparatorsPath + "'"
         }
 
         project.buildFile.appendText("\n" +
-            """
+                """
             apply plugin: 'java-gradle-plugin'
 
             tasks {
                 validatePlugins {
                     failOnWarning.set(true)
                     enableStricterValidation.set(true)
-                    classes.setFrom('$classes')
+                    classes.setFrom('${classes.invariantSeparatorsPath}')
                     classpath.setFrom($classpath)
                 }
              }
@@ -77,7 +76,6 @@ class ValidateTaskPropertiesTest {
 
     @Test
     fun validate() {
-        assumeNotWindows() // b/145232764
         project.execute("validatePlugins")
     }
 }
