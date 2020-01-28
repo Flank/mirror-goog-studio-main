@@ -23,9 +23,9 @@ import android.util.Log;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalTime;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class InstrumentationHooks {
@@ -46,6 +46,45 @@ public final class InstrumentationHooks {
 
     public static void setRestart(boolean restart) {
         mRestart = restart;
+    }
+
+    public static List<File> handleSplitDexPathExit(List<File> dexPathFiles) {
+        try {
+            Class<?> clazz = Class.forName("android.app.ActivityThread");
+            String packageName = call(clazz, "currentPackageName").toString();
+
+            Object activityThread = call(clazz, "currentActivityThread");
+            Object loadedApk =
+                    call(
+                            activityThread,
+                            "peekPackageInfo",
+                            arg(packageName),
+                            arg(true, boolean.class));
+
+            HashSet<Object> apkPaths = new HashSet<>();
+            apkPaths.add(call(loadedApk, "getAppDir"));
+
+            Object[] splitPaths = (Object[]) call(loadedApk, "getSplitAppDirs");
+            if (splitPaths != null) {
+                for (Object path : splitPaths) {
+                    apkPaths.add(path);
+                }
+            }
+
+            // If the classloader being created references any of the APKs in the
+            // application, we insert the overlay dex into the front of the list.
+            for (File file : dexPathFiles) {
+                if (apkPaths.contains(file.toString())) {
+                    Overlay overlay = new Overlay(packageName);
+                    dexPathFiles.addAll(0, overlay.getDexFiles());
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Exception", e);
+        }
+
+        return dexPathFiles;
     }
 
     // Instruments DexPathList$Element#findResource(). Checks to see if an Element object refers

@@ -17,13 +17,13 @@
 
 #include "tools/base/deploy/agent/native/instrumenter.h"
 
-#include <string>
-
 #include <fcntl.h>
 #include <jni.h>
 #include <jvmti.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include <string>
 
 #include "tools/base/deploy/agent/native/instrumentation.jar.cc"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
@@ -42,6 +42,9 @@ const char* kDexUtilityClass = "com/android/tools/deploy/instrument/DexUtility";
 
 const std::string kInstrumentationJarName =
     "instruments-"_s + instrumentation_jar_hash + ".jar";
+
+const std::string kNoEntryHook = "";
+const std::string kNoExitHook = "";
 
 const Transform* current_transform = nullptr;
 
@@ -151,13 +154,23 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
   }
 
   const Transform activity_thread = Transform(
-      "android/app/ActivityThread", "handleDispatchPackageBroadcast",
-      "(I[Ljava/lang/String;)V", "handleDispatchPackageBroadcastEntry",
+      /* target class */ "android/app/ActivityThread",
+      /* target method */ "handleDispatchPackageBroadcast",
+      /* target signature */ "(I[Ljava/lang/String;)V",
+      "handleDispatchPackageBroadcastEntry",
       "handleDispatchPackageBroadcastExit");
 
-  const Transform dex_path_list = Transform(
-      "dalvik/system/DexPathList$Element", "findResource",
-      "(Ljava/lang/String;)Ljava/net/URL;", "handleFindResourceEntry", "");
+  const Transform dex_path_list_element = Transform(
+      /* target class */ "dalvik/system/DexPathList$Element",
+      /* target method */ "findResource",
+      /* target signature */ "(Ljava/lang/String;)Ljava/net/URL;",
+      "handleFindResourceEntry", kNoExitHook);
+
+  const Transform dex_path_list(
+      /* target class */ "dalvik/system/DexPathList",
+      /* target method */ "splitDexPath",
+      /* target signature */ "(Ljava/lang/String;)Ljava/util/List;",
+      kNoEntryHook, "handleSplitDexPathExit");
 
   bool success = true;
   success &=
@@ -166,6 +179,7 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
                  "Could not enable class file load hook event");
 
   success &= ApplyTransform(jvmti, jni, activity_thread);
+  success &= ApplyTransform(jvmti, jni, dex_path_list_element);
   success &= ApplyTransform(jvmti, jni, dex_path_list);
 
   // Failing to disable this event does not actually have any bearing on
