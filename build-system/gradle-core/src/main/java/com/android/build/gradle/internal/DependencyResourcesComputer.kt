@@ -129,7 +129,11 @@ class DependencyResourcesComputer {
         // add the generated files to the main set.
         if (sourceFolderSets.isNotEmpty()) {
             val mainResourceSet = sourceFolderSets[0]
-            assert(mainResourceSet.configName == BuilderConstants.MAIN)
+            assert(
+                mainResourceSet.configName == BuilderConstants.MAIN ||
+                        // The main source set will not be included when building app android test
+                        mainResourceSet.configName == BuilderConstants.ANDROID_TEST
+            )
             mainResourceSet.addSources(generatedResFolders)
         }
 
