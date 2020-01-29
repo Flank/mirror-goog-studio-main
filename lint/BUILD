@@ -85,7 +85,10 @@ iml_module(
 kotlin_library(
     name = "tools.lint-api",
     # TODO: move resources out of java?
-    srcs = ["libs/lint-api/src/main/java"],
+    srcs = glob([
+        "libs/lint-api/src/main/java/**/*.kt",
+        "libs/lint-api/src/main/java/**/*.java",
+    ]),
     module_name = "lint-api",
     pom = "lint-api.pom",
     resource_strip_prefix = "tools/base/lint/libs/lint-api",
@@ -177,7 +180,10 @@ iml_module(
 
 kotlin_library(
     name = "tools.lint-checks",
-    srcs = ["libs/lint-checks/src/main/java"],
+    srcs = glob([
+        "libs/lint-checks/src/main/java/**/*.kt",
+        "libs/lint-checks/src/main/java/**/*.java",
+    ]),
     lint_baseline = "libs/lint-checks/lint_baseline.xml",
     module_name = "lint-checks",
     pom = "lint-checks.pom",
@@ -216,7 +222,10 @@ maven_pom(
 kotlin_library(
     name = "tools.lint-gradle-api",
     # TODO: move resources out of java?
-    srcs = ["libs/lint-gradle-api/src/main/java"],
+    srcs = glob([
+        "libs/lint-gradle-api/src/main/java/**/*.kt",
+        "libs/lint-gradle-api/src/main/java/**/*.java",
+    ]),
     module_name = "lint-gradle-api",
     pom = "lint-gradle-api.pom",
     resource_strip_prefix = "tools/base/lint/libs/lint-gradle-api",
@@ -249,7 +258,10 @@ maven_pom(
 kotlin_library(
     name = "tools.lint-gradle",
     # TODO: move resources out of java?
-    srcs = ["libs/lint-gradle/src/main/java"],
+    srcs = glob([
+        "libs/lint-gradle/src/main/java/**/*.kt",
+        "libs/lint-gradle/src/main/java/**/*.java",
+    ]),
     module_name = "lint-gradle",
     pom = "lint-gradle.pom",
     resource_strip_prefix = "tools/base/lint/libs/lint-gradle",
@@ -302,7 +314,10 @@ maven_pom(
 
 kotlin_test(
     name = "tests",
-    srcs = ["libs/lint-gradle/src/test/java"],
+    srcs = glob([
+        "libs/lint-gradle/src/test/java/**/*.kt",
+        "libs/lint-gradle/src/test/java/**/*.java",
+    ]),
     coverage = True,
     data = [
         "//prebuilts/studio/sdk:platform-tools",
@@ -348,7 +363,10 @@ kotlin_test(
 
 kotlin_library(
     name = "studio-checks",
-    srcs = ["studio-checks/src/main/java"],
+    srcs = glob([
+        "studio-checks/src/main/java/**/*.kt",
+        "studio-checks/src/main/java/**/*.java",
+    ]),
     lint_baseline = "studio-checks/empty_baseline.xml",
     lint_classpath = ["//tools/base/lint/cli"],
     visibility = ["//visibility:public"],
@@ -370,7 +388,10 @@ replace_manifest(
 
 kotlin_test(
     name = "studio-checks-tests",
-    srcs = ["studio-checks/src/test/java"],
+    srcs = glob([
+        "studio-checks/src/test/java/**/*.kt",
+        "studio-checks/src/test/java/**/*.java",
+    ]),
     coverage = True,
     jvm_flags = [
         "-Dtest.suite.jar=studio-checks-tests.jar",

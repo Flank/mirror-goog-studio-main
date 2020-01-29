@@ -2,7 +2,10 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 kotlin_library(
     name = "profile",
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     visibility = ["//tools/base/build-system/builder:__pkg__"],
     deps = [
         "//tools/analytics-library/protos/src/main/proto",
@@ -19,7 +22,10 @@ kotlin_library(
 
 kotlin_test(
     name = "tests",
-    srcs = ["src/test/java"],
+    srcs = glob([
+        "src/test/java/**/*.kt",
+        "src/test/java/**/*.java",
+    ]),
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = ["//tools/base/testutils:tools.testutils"],

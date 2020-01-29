@@ -97,7 +97,10 @@ java_binary(
 
 kotlin_library(
     name = "original_kotlin",
-    srcs = ["data/kotlin"],
+    srcs = glob([
+        "data/kotlin/**/*.kt",
+        "data/kotlin/**/*.java",
+    ]),
 )
 
 dex_library(
@@ -126,5 +129,8 @@ java_binary(
 
 kotlin_library(
     name = "swapped_kotlin",
-    srcs = ["data/kotlin_swap"],
+    srcs = glob([
+        "data/kotlin_swap/**/*.kt",
+        "data/kotlin_swap/**/*.java",
+    ]),
 )

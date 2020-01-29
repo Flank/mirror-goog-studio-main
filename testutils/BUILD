@@ -49,7 +49,10 @@ iml_module(
 
 kotlin_library(
     name = "tools.testutils",
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     pom = ":pom",
     resource_strip_prefix = "tools/base/testutils",
     visibility = ["//visibility:public"],
@@ -76,7 +79,10 @@ maven_pom(
 
 kotlin_test(
     name = "tools.tests",
-    srcs = ["src/test/java"],
+    srcs = glob([
+        "src/test/java/**/*.kt",
+        "src/test/java/**/*.java",
+    ]),
     coverage = True,
     data = ["//prebuilts/studio/sdk:platforms/latest"] + glob(["src/test/data/**"]),
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],

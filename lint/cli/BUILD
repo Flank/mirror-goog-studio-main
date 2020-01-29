@@ -5,7 +5,10 @@ load("//tools/base/sdklib:sdk.bzl", "sdk_java_binary")
 kotlin_library(
     name = "cli",
     # TODO: move resources out of java?
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     pom = ":pom",
     resource_strip_prefix = "tools/base/lint/cli",
     resources = glob(

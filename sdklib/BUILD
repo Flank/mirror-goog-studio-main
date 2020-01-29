@@ -104,7 +104,10 @@ maven_pom(
 kotlin_test(
     name = "tools.tests",
     # TODO: Why are the xml files not under resources?
-    srcs = ["src/test/java"],
+    srcs = glob([
+        "src/test/java/**/*.kt",
+        "src/test/java/**/*.java",
+    ]),
     coverage = True,
     data = ["//prebuilts/studio/sdk:platforms/latest"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],

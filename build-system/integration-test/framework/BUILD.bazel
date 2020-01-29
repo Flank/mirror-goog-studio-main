@@ -1,9 +1,12 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "kotlin_jar")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_jar", "kotlin_library", "kotlin_test")
 
 kotlin_library(
     name = "framework",
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     visibility = ["//tools/base/build-system/integration-test:__subpackages__"],
     deps = [
         "//tools/analytics-library/protos/src/main/proto",
@@ -46,7 +49,10 @@ kotlin_library(
 
 kotlin_test(
     name = "framework_tests",
-    srcs = ["src/test/java"],
+    srcs = glob([
+        "src/test/java/**/*.kt",
+        "src/test/java/**/*.java",
+    ]),
     coverage = True,
     jvm_flags = [
         "-Dtest.suite.jar=/framework_tests.jar",

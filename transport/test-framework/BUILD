@@ -5,7 +5,10 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 # host / device connection using the Transport API.
 kotlin_library(
     name = "test-framework",
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/bazel:studio-grpc",

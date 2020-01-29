@@ -50,7 +50,10 @@ fileset(
 
 kotlin_library(
     name = "tools.repository",
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     pom = ":pom",
     resource_strip_prefix = "tools/base/repository",
     resources = [":tools.resources"],

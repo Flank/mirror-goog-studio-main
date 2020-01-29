@@ -1,5 +1,5 @@
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_repo", "maven_pom")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom", "maven_repo")
 
 # Test just kotlin
 java_library(
@@ -9,14 +9,17 @@ java_library(
 
 kotlin_library(
     name = "test_only_kotlin",
-    srcs = ["kotlin0"],
+    srcs = ["kotlin0/pkg/K0.kt"],
     deps = [":test_only_java"],
 )
 
 # Test circular dependencies with kotlin and java
 kotlin_library(
     name = "test_kotlin_and_java",
-    srcs = ["java1_kotlin1"],
+    srcs = [
+        "java1_kotlin1/pkg/J1.java",
+        "java1_kotlin1/pkg/K1.kt",
+    ],
     deps = [":test_only_java"],
 )
 
@@ -47,7 +50,7 @@ maven_pom(
 
 kotlin_library(
     name = "test_maven_only_kotlin",
-    srcs = ["kotlin0"],
+    srcs = ["kotlin0/pkg/K0.kt"],
     pom = ":test_maven_only_kotlin_pom",
     deps = [":test_maven_only_java"],
 )
@@ -62,7 +65,10 @@ maven_pom(
 # Test circular dependencies with kotlin and java
 kotlin_library(
     name = "test_maven_kotlin_and_java",
-    srcs = ["java1_kotlin1"],
+    srcs = [
+        "java1_kotlin1/pkg/J1.java",
+        "java1_kotlin1/pkg/K1.kt",
+    ],
     pom = ":test_maven_kotlin_and_java_pom",
     deps = [":test_maven_only_java"],
 )
@@ -109,7 +115,7 @@ maven_repo(
 
 kotlin_test(
     name = "only_java_tests",
-    srcs = ["java0_test"],
+    srcs = ["java0_test/pkg/J0Test.java"],
     test_class = "pkg.J0Test",
     deps = [
         ":test_only_java",
@@ -119,7 +125,7 @@ kotlin_test(
 
 kotlin_test(
     name = "only_kotlin_tests",
-    srcs = ["kotlin0_test"],
+    srcs = ["kotlin0_test/pkg/K0Test.kt"],
     test_class = "pkg.K0Test",
     deps = [
         ":test_only_kotlin",
@@ -129,7 +135,10 @@ kotlin_test(
 
 kotlin_test(
     name = "java_kotlin_tests",
-    srcs = ["java1_kotlin1_test"],
+    srcs = [
+        "java1_kotlin1_test/pkg/J1Test.java",
+        "java1_kotlin1_test/pkg/K1Test.kt",
+    ],
     test_class = "pkg.K1Test",
     deps = [
         ":test_kotlin_and_java",

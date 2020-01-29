@@ -65,7 +65,10 @@ fileset(
 
 kotlin_library(
     name = "tools.sdk-common",
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     bundled_deps = [
         "//tools/base/sdk-common/aia-manifest-jar-generator:tools.proto",
     ],
@@ -112,7 +115,10 @@ maven_pom(
 
 kotlin_test(
     name = "tools.tests",
-    srcs = ["src/test/java"],
+    srcs = glob([
+        "src/test/java/**/*.kt",
+        "src/test/java/**/*.java",
+    ]),
     coverage = True,
     data = ["//prebuilts/studio/sdk:platform-tools"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],

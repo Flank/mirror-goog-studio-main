@@ -39,7 +39,10 @@ iml_module(
 # for bundled_deps support.
 kotlin_library(
     name = "tools.ddmlib",
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     bundled_deps = [
         ":am-instrumentation-data-proto",
     ],
@@ -65,7 +68,10 @@ maven_pom(
 
 kotlin_test(
     name = "tools.tests",
-    srcs = ["src/test/java"],
+    srcs = glob([
+        "src/test/java/**/*.kt",
+        "src/test/java/**/*.java",
+    ]),
     coverage = True,
     data = ["//prebuilts/studio/sdk:platform-tools"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],

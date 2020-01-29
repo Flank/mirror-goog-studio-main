@@ -6,7 +6,10 @@ load("@exec_properties//:constants.bzl", "EMULATOR_MACHINE")
 
 kotlin_library(
     name = "connected",
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     #keep sorted
     deps = [
         "//tools/base/bazel/avd:emulator_rule",

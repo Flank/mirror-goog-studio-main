@@ -3,7 +3,10 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 kotlin_library(
     name = "aaptcompiler",
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/aaptcompiler",
     visibility = ["//visibility:public"],
