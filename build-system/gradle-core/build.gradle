@@ -142,6 +142,8 @@ test {
     maxParallelForks = Runtime.runtime.availableProcessors() / 2
 
     exclude "**/GradleCoreBazelSuite*"
+
+    maxHeapSize = "2048m"
 }
 
 javadoc {
