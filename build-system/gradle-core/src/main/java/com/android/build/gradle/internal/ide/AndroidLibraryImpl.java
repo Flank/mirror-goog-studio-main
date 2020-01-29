@@ -62,6 +62,7 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
     private final Collection<JavaLibrary> javaLibraries;
     @NonNull
     private final Collection<File> localJars;
+    @Nullable private final File lintJar;
 
     private final int hashcode;
 
@@ -77,7 +78,8 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
             boolean isSkipped,
             @NonNull List<AndroidLibrary> androidLibraries,
             @NonNull Collection<JavaLibrary> javaLibraries,
-            @NonNull Collection<File> localJavaLibraries) {
+            @NonNull Collection<File> localJavaLibraries,
+            @Nullable File lintJar) {
         super(buildId, projectPath, null, coordinates, isSkipped, isProvided);
         this.resStaticLibrary = resStaticLibrary;
         this.androidLibraries = ImmutableList.copyOf(androidLibraries);
@@ -86,6 +88,7 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
         this.variant = variant;
         this.bundle = bundle;
         this.folder = extractedFolder;
+        this.lintJar = lintJar;
         hashcode = computeHashCode();
     }
 
@@ -192,7 +195,11 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
     @NonNull
     @Override
     public File getLintJar() {
-        return new File(getJarFile().getParentFile(), FN_LINT_JAR);
+        if (lintJar == null) {
+            return new File(getJarFile().getParentFile(), FN_LINT_JAR);
+        } else {
+            return lintJar;
+        }
     }
 
 
@@ -245,7 +252,8 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
                 && Objects.equal(resStaticLibrary, that.resStaticLibrary)
                 && Objects.equal(androidLibraries, that.androidLibraries)
                 && Objects.equal(javaLibraries, that.javaLibraries)
-                && Objects.equal(localJars, that.localJars);
+                && Objects.equal(localJars, that.localJars)
+                && Objects.equal(lintJar, that.lintJar);
     }
 
     @Override
@@ -262,7 +270,8 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
                 resStaticLibrary,
                 androidLibraries,
                 javaLibraries,
-                localJars);
+                localJars,
+                lintJar);
     }
 
     @Override
@@ -277,6 +286,7 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
                 .add("androidLibraries", androidLibraries)
                 .add("javaLibraries", javaLibraries)
                 .add("localJars", localJars)
+                .add("lintJar", lintJar)
                 .add("super", super.toString())
                 .toString();
     }

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.ide;
 
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,7 +47,8 @@ public class AndroidLibraryImplTest {
                                 false,
                                 ImmutableList.of(),
                                 ImmutableList.of(),
-                                ImmutableList.of()))
+                                ImmutableList.of(),
+                                null))
                 .verify();
     }
 }
