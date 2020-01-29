@@ -52,7 +52,14 @@ fun isInvalidResourceNameCharacter(c: Char): Boolean {
 
 /**
  * Returns the given id without an `@id/` or `@+id` prefix.
+ *
+ * @see com.android.resources.ResourceUrl.parse
+ * @see ValueResourceNameValidator.getErrorText
  */
+@Deprecated(
+  "Use `ResourceUrl.parse` instead and handle wrong resource type, invalid name, trailing whitespace etc.",
+  replaceWith = ReplaceWith("ResourceUrl.parse(id)?.name ?: id", imports = ["com.android.resources.ResourceUrl"])
+)
 fun stripPrefixFromId(id: String): String {
   return when {
     id.startsWith(SdkConstants.NEW_ID_PREFIX) -> id.substring(SdkConstants.NEW_ID_PREFIX.length)
