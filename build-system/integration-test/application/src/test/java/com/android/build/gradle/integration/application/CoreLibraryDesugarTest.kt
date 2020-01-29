@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
-import com.android.testutils.AssumeUtil.assumeNotWindows
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestInputsGenerator.jarWithClasses
@@ -217,32 +216,30 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testKeepRulesGenerationFromAppProject() {
-        assumeNotWindows() //b/145232747
         project.executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)
-        val expectedKeepRules = "-keep class j\$.util.Optional {\n" +
-                "    java.lang.Object get();\n" +
-                "}\n" +
-                "-keep class j\$.util.Collection\$-EL {\n" +
-                "    j\$.util.stream.Stream stream(java.util.Collection);\n" +
-                "}\n" +
-                "-keep class j\$.util.stream.Stream {\n" +
-                "    j\$.util.Optional findFirst();\n" +
-                "}\n"
+        val expectedKeepRules = "-keep class j\$.util.Optional {$lineSeparator" +
+                "    java.lang.Object get();$lineSeparator" +
+                "}$lineSeparator" +
+                "-keep class j\$.util.Collection\$-EL {$lineSeparator" +
+                "    j\$.util.stream.Stream stream(java.util.Collection);$lineSeparator" +
+                "}$lineSeparator" +
+                "-keep class j\$.util.stream.Stream {$lineSeparator" +
+                "    j\$.util.Optional findFirst();$lineSeparator" +
+                "}$lineSeparator"
         assertTrue { collectKeepRulesUnderDirectory(out) == expectedKeepRules }
     }
 
     @Test
     fun testKeepRulesGenerationFromFileDependencies() {
-        assumeNotWindows() //b/145232747
         addFileDependency(app)
 
         project.executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES
             .getOutputDir(app.buildDir)
-        val expectedKeepRules = "-keep class j\$.time.LocalTime {\n" +
-                "    j\$.time.LocalTime MIDNIGHT;\n" +
-                "}\n"
+        val expectedKeepRules = "-keep class j\$.time.LocalTime {$lineSeparator" +
+                "    j\$.time.LocalTime MIDNIGHT;$lineSeparator" +
+                "}$lineSeparator"
         assertTrue { collectKeepRulesUnderDirectory(out) == expectedKeepRules }
     }
 
@@ -308,7 +305,6 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testExternalLibsKeepRulesGenerationWithoutArtifactTransform() {
-        assumeNotWindows() //b/145232747
         addExternalDependency(app)
 
         project.executor()
@@ -318,15 +314,14 @@ class CoreLibraryDesugarTest {
 
         val out =
             InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES.getOutputDir(app.buildDir)
-        val expectedKeepRules = "-keep class j\$.time.LocalTime {\n" +
-                "    j\$.time.LocalTime MIDNIGHT;\n" +
-                "}\n"
+        val expectedKeepRules = "-keep class j\$.time.LocalTime {$lineSeparator" +
+                "    j\$.time.LocalTime MIDNIGHT;$lineSeparator" +
+                "}$lineSeparator"
         assertThat(collectKeepRulesUnderDirectory(out)).isEqualTo(expectedKeepRules)
     }
 
     @Test
     fun testExternalLibsKeepRulesGenerationWithTransformsForExtLibsOnly() {
-        assumeNotWindows() //b/145232747
         addExternalDependency(app)
 
         project.executor()
@@ -336,9 +331,9 @@ class CoreLibraryDesugarTest {
 
         val out =
             InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES.getOutputDir(app.buildDir).resolve("release/out")
-        val expectedKeepRules = "-keep class j\$.time.LocalTime {\n" +
-                "    j\$.time.LocalTime MIDNIGHT;\n" +
-                "}\n"
+        val expectedKeepRules = "-keep class j\$.time.LocalTime {$lineSeparator" +
+                "    j\$.time.LocalTime MIDNIGHT;$lineSeparator" +
+                "}$lineSeparator"
         assertThat(collectKeepRulesUnderDirectory(out)).isEqualTo(expectedKeepRules)
         Truth.assertThat(out.list()).asList().containsExactly("core_lib_keep_rules_0.txt", "core_lib_keep_rules_1.txt")
     }
