@@ -4,6 +4,9 @@ apply plugin: 'jacoco-tools-base'
 dependencies {
     implementation libs.flatbuffers
     implementation libs.tensorflow_lite_support
+
+    testCompile libs.junit
+    testCompile libs.apache_commons_io
 }
 
 
