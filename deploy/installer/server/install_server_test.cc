@@ -244,7 +244,7 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
   request.mutable_overlay_request()->set_overlay_id("id");
   request.mutable_overlay_request()->set_overlay_path(".");
   proto::OverlayFile* added =
-      request.mutable_overlay_request()->add_added_files();
+      request.mutable_overlay_request()->add_files_to_write();
   added->set_path("apk/hello.txt");
   added->set_content("hello world");
 
@@ -268,11 +268,11 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
 
   request.mutable_overlay_request()->set_expected_overlay_id("id");
   request.mutable_overlay_request()->set_overlay_id("next-id");
-  request.mutable_overlay_request()->clear_added_files();
-  added = request.mutable_overlay_request()->add_added_files();
+  request.mutable_overlay_request()->clear_files_to_write();
+  added = request.mutable_overlay_request()->add_files_to_write();
   added->set_path("apk/hello_2.txt");
   added->set_content("hello again world");
-  request.mutable_overlay_request()->add_deleted_files("apk/hello.txt");
+  request.mutable_overlay_request()->add_files_to_delete("apk/hello.txt");
   ASSERT_TRUE(client->Write(request));
 
   ASSERT_TRUE(client->Read(&response));

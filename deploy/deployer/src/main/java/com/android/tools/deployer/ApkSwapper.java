@@ -175,42 +175,32 @@ public class ApkSwapper {
             Deploy.Arch arch,
             DexComparator.ChangedClasses changedClasses)
             throws DeployerException {
-        Deploy.OverlaySwapRequest.Builder swapRequest =
+        Deploy.OverlaySwapRequest.Builder request =
                 Deploy.OverlaySwapRequest.newBuilder()
                         .setPackageName(packageId)
                         .setRestartActivity(restart)
                         .addAllProcessIds(pids)
-                        .setArch(arch);
-
-        Deploy.OverlayUpdateRequest.Builder updateRequest =
-                Deploy.OverlayUpdateRequest.newBuilder().setOverlayId("");
-        updateRequest.setOverlayPath(String.format("/data/data/%s/code_cache", packageId));
+                        .setArch(arch)
+                        .setOverlayId("")
+                        .setExpectedOverlayId("");
 
         for (DexClass clazz : changedClasses.newClasses) {
-            // TODO: Untested yet. Not sure if it still works.
-            updateRequest.addAddedFiles(
-                    Deploy.OverlayFile.newBuilder()
+            request.addNewClasses(
+                    Deploy.ClassDef.newBuilder()
                             .setName(clazz.name)
-                            .setContent(ByteString.copyFrom(clazz.code))
-                            .setType(Deploy.OverlayFile.Type.DEX)
-                            .setPath(clazz.name + ".dex")
-                            .build());
+                            .setDex(ByteString.copyFrom(clazz.code)));
         }
 
         for (DexClass clazz : changedClasses.modifiedClasses) {
-            // TODO: This should use modified files?
-            updateRequest.addAddedFiles(
-                    Deploy.OverlayFile.newBuilder()
+            request.addModifiedClasses(
+                    Deploy.ClassDef.newBuilder()
                             .setName(clazz.name)
-                            .setContent(ByteString.copyFrom(clazz.code))
-                            .setType(Deploy.OverlayFile.Type.DEX)
-                            .setPath(clazz.name + ".dex")
-                            .build());
+                            .setDex(ByteString.copyFrom(clazz.code)));
         }
 
         // TODO: Debugger stuff. Given that this will be R+ we don't need the complicated workaround
         // the JDI bug in O.
-        return swapRequest.setOverlayUpdate(updateRequest.build()).build();
+        return request.build();
     }
 
     private Deploy.SwapRequest buildSwapRequest(

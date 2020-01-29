@@ -37,17 +37,24 @@ message OverlaySwapRequest {
   // If true, restarts the current activity after a successful hot-swap.
   bool restart_activity = 2;
 
-  // The overlay update that will persist the swapped changes.
-  OverlayUpdateRequest overlay_update = 3;
+  // The classes to be hot-swapped.
+  repeated ClassDef new_classes = 3;
+  repeated ClassDef modified_classes = 4;
+
+  // The id that should be used for the persistent overlay.
+  string overlay_id = 5;
+
+  // The id that is expected for the existing overlay.
+  string expected_overlay_id = 6;
 
   // The processes to code swap.
-  repeated int32 process_ids = 4;
+  repeated int32 process_ids = 7;
 
   // The number of extra agents that the server should wait for.
   // Those are agents that the server is not responsible to start.
-  int32 extra_agents = 5;
+  int32 extra_agents = 8;
 
-  Arch arch = 6;
+  Arch arch = 9;
 }
 
 message ClassDef {
@@ -271,23 +278,13 @@ message OverlayUpdateRequest {
   string overlay_path = 1;
   string overlay_id = 2;
   string expected_overlay_id = 3;
-  repeated OverlayFile added_files = 4;
-  repeated OverlayFile modified_files = 5;
-  repeated string deleted_files = 6;
+  repeated OverlayFile files_to_write = 4;
+  repeated string files_to_delete = 5;
 }
 
 message OverlayFile {
-  enum Type {
-    UNINITIALIZED = 0;
-    DEX = 1;
-    RES = 2;
-    LIB = 3;
-  }
-
-  Type type = 1;
-  string name = 2;
-  string path = 3;
-  bytes content = 4;
+  string path = 1;
+  bytes content = 2;
 }
 
 message OverlayUpdateResponse {

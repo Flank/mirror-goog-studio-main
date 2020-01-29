@@ -100,23 +100,36 @@ proto::SwapRequest OverlaySwapCommand::PrepareAndBuildRequest(
   }
 
   SetAgentPaths(agent_path, agent_server_path);
-  PopulateClasses(request_.overlay_update().added_files(), &request);
-  PopulateClasses(request_.overlay_update().modified_files(), &request);
+
+  for (auto& clazz : request_.new_classes()) {
+    request.add_new_classes()->CopyFrom(clazz);
+  }
+
+  for (auto& clazz : request_.modified_classes()) {
+    request.add_modified_classes()->CopyFrom(clazz);
+  }
 
   request.set_package_name(package_name_);
   request.set_restart_activity(request_.restart_activity());
   return request;
 }
 
-void OverlaySwapCommand::PopulateClasses(
-    google::protobuf::RepeatedPtrField<proto::OverlayFile> overlay_files,
-    proto::SwapRequest* swap_request) {
-  for (auto& file : overlay_files) {
-    if (file.type() == proto::OverlayFile::DEX) {
-      auto def = swap_request->add_modified_classes();
-      def->set_name(file.name());
-      def->set_dex(file.content());
-    }
+void OverlaySwapCommand::BuildOverlayUpdateRequest(
+    proto::OverlayUpdateRequest* request) {
+  request->set_overlay_id(request_.overlay_id());
+  request->set_expected_overlay_id(request_.expected_overlay_id());
+  request->set_overlay_path("code_cache");
+
+  for (auto clazz : request_.new_classes()) {
+    auto file = request->add_files_to_write();
+    file->set_path(clazz.name() + ".dex");
+    file->set_allocated_content(clazz.release_dex());
+  }
+
+  for (auto clazz : request_.modified_classes()) {
+    auto file = request->add_files_to_write();
+    file->set_path(clazz.name() + ".dex");
+    file->set_allocated_content(clazz.release_dex());
   }
 }
 
@@ -128,8 +141,8 @@ void OverlaySwapCommand::ProcessResponse(proto::SwapResponse* response) {
 
   proto::InstallServerRequest install_request;
   install_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
-  install_request.set_allocated_overlay_request(
-      request_.release_overlay_update());
+  BuildOverlayUpdateRequest(install_request.mutable_overlay_request());
+
   if (!client_->Write(install_request)) {
     response->set_status(proto::SwapResponse::WRITE_TO_SERVER_FAILED);
     return;
