@@ -215,6 +215,44 @@ class CoreLibraryDesugarTest {
     }
 
     @Test
+    fun testModelLintFileFetching() {
+        var model = app.model().fetchAndroidProjects().rootBuildModelMap[":app"]
+        Truth.assertThat(model!!.variants.first().desugarLibLintFiles).hasSize(1)
+
+        // variants have different minSdkVersions
+        app.buildFile.appendText("""
+
+            android {
+                flavorDimensions 'sdk'
+                productFlavors {
+                    sdk20 {
+                        minSdkVersion 20
+                    }
+                    sdk21_1 {
+                        minSdkVersion 21
+                    }
+                    sdk21_2 {
+                        minSdkVersion 21
+                    }
+                }
+            }
+        """.trimIndent())
+        model = app.model().fetchAndroidProjects().rootBuildModelMap[":app"]
+        // make sure two different lint files are extracted as there are two different
+        // minSdkVersion(one is 21+, the other one is less than 21)
+        val lintFiles = model!!.variants.map { it.desugarLibLintFiles }.toSet()
+        Truth.assertThat(lintFiles).hasSize(2)
+
+        // coreLibraryDesugaring is disabled
+        app.buildFile.appendText("""
+
+            android.compileOptions.coreLibraryDesugaringEnabled = false
+        """.trimIndent())
+        model = app.model().fetchAndroidProjects().rootBuildModelMap[":app"]
+        Truth.assertThat(model!!.variants.first().desugarLibLintFiles).hasSize(0)
+    }
+
+    @Test
     fun testKeepRulesGenerationFromAppProject() {
         project.executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)
