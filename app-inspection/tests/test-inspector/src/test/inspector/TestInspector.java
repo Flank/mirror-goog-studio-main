@@ -76,7 +76,7 @@ public class TestInspector extends Inspector {
      * search by class name instead.
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected List<Class<?>> findInstances(@NonNull String className) {
+    protected List<?> findInstances(@NonNull String className) {
         // NOTE: This method is quite a hack in its current state, although at least it's isolated
         // to test code only. On Android, Class.forName(className) works,  but for some reason,
         // in our fake environment, it does not. We work around this (until we can think of a
@@ -99,12 +99,12 @@ public class TestInspector extends Inspector {
             }
         }
 
-        List<Class<?>> instances = new ArrayList<>();
+        List instances = new ArrayList<>();
         for (Class<?> matchingClass : matchingClasses) {
             // For some reason we don't yet understand, we find two instances of many Class
             // entries, where one of them is not the real one. For now, we just iterate through all
             // of them, as only one actually finds anything.
-            instances.addAll((List<Class<?>>) environment.findInstances(matchingClass));
+            instances.addAll(environment.findInstances(matchingClass));
         }
         return instances;
     }
