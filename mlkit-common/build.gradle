@@ -1,0 +1,22 @@
+apply plugin: 'java-library'
+apply plugin: 'jacoco-tools-base'
+
+dependencies {
+    implementation libs.flatbuffers
+    implementation libs.tensorflow_lite_support
+}
+
+
+// Export the sources jar.
+configurations {
+    sourcesOnly
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    sourcesOnly sourcesJar 
+}

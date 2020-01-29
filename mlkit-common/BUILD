@@ -12,3 +12,13 @@ iml_module(
         "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata:jar",
     ],
 )
+
+java_library(
+    name = "tools.mlkit-common",
+    srcs = glob(["src/main/java/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/third_party:com.google.flatbuffers_flatbuffers-java",
+        "//tools/base/third_party:org.tensorflow_tensorflow-lite-support",
+    ],
+)
