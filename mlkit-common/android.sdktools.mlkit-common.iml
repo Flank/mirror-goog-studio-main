@@ -17,6 +17,15 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="tensorflow-lite-support" level="project" />
+    <orderEntry type="module-library">
+      <library name="org.tensorflow:tensorflow-lite-support:0.0.0-experimental-metadata" type="repository">
+        <properties maven-id="org.tensorflow:tensorflow-lite-support:0.0.0-experimental-metadata" />
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata/tensorflow-lite-support-0.0.0-experimental-metadata.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

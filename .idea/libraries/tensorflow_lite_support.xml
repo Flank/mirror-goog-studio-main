@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="tensorflow-lite-support">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata/tensorflow-lite-support-0.0.0-experimental-metadata.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
