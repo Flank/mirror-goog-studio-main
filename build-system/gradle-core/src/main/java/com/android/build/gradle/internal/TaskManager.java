@@ -1181,7 +1181,7 @@ public abstract class TaskManager<
     }
 
     public void createMlkitTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (BooleanOption.ENABLE_MLKIT.getDefaultValue()) {
+        if (projectOptions.get(BooleanOption.ENABLE_MLKIT)) {
             VariantScope scope = componentProperties.getVariantScope();
             TaskProvider<GenerateMlModelClass> generateMlModelClassTask =
                     taskFactory.register(
