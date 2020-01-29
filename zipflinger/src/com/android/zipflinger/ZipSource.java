@@ -117,4 +117,8 @@ public class ZipSource {
         // The entry needs to be deflated.
         return new ZipSourceEntryDeflater(newName, entry, zipSource, compressionLevel);
     }
+
+    String getName() {
+        return file.getAbsolutePath();
+    }
 }
