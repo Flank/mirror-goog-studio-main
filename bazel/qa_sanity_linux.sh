@@ -104,31 +104,6 @@ else #Executes normally on linux as before
   if [[ -d "${dist_dir}" ]]; then
     echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
   fi
-
-  # Generate a UUID for use as the bazel invocation id
-  readonly invocation_id_emu="$(uuidgen)"
-
-  # Run Bazel tests - only emulator tests should run here
-  target_filters=qa_sanity_emu,-qa_unreliable,-no_linux,-no_test_linux
-  QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
-    --max_idle_secs=60 \
-    test \
-    --keep_going \
-    ${config_options} \
-    --invocation_id=${invocation_id_emu} \
-    --build_tag_filters=${target_filters} \
-    --test_tag_filters=${target_filters} \
-    --tool_tag=${script_name} \
-    --define external_emulator=true \
-    --define=meta_android_build_number=${build_number} \
-    -- \
-    //tools/adt/idea/android-uitests/...
-
-  readonly bazel_status_emu=$?
-
-  if [[ -d "${dist_dir}" ]]; then
-    echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id_emu}'\" />" > "${dist_dir}"/upsalite_emu_test_results.html
-  fi
 fi
 
 if [[ -d "${dist_dir}" ]]; then
