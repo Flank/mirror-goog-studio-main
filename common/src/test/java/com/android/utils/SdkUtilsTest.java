@@ -258,14 +258,6 @@ public class SdkUtilsTest extends TestCase {
         assertEquals("XML_NAME", SdkUtils.camelCaseToConstantName("xmlName"));
     }
 
-    public void testGetResourceFieldName() {
-        assertEquals("", SdkUtils.getResourceFieldName(""));
-        assertEquals("foo", SdkUtils.getResourceFieldName("foo"));
-        assertEquals("Theme_Light", SdkUtils.getResourceFieldName("Theme.Light"));
-        assertEquals("Theme_Light", SdkUtils.getResourceFieldName("Theme.Light"));
-        assertEquals("abc____", SdkUtils.getResourceFieldName("abc:-._"));
-    }
-
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void testGlobToRegexp() {
         assertEquals("^foo$", globToRegexp("foo"));

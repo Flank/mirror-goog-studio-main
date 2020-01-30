@@ -21,11 +21,11 @@ import org.junit.Test
 class ResourcesUtilTest {
   @Test
   fun testFlattenResourceName() {
-    assertEquals("", flattenResourceName(""))
-    assertEquals("my_key_test", flattenResourceName("my.key:test"))
-    assertEquals("my_key_test", flattenResourceName("my_key_test"))
-    assertEquals("_key_test", flattenResourceName(".key_test"))
-    assertEquals("_key_test_", flattenResourceName(".key_test:"))
-    assertEquals("_key test_", flattenResourceName("-key test:"))
+    assertEquals("", resourceNameToFieldName(""))
+    assertEquals("my_key_test", resourceNameToFieldName("my.key:test"))
+    assertEquals("my_key_test", resourceNameToFieldName("my_key_test"))
+    assertEquals("_key_test", resourceNameToFieldName(".key_test"))
+    assertEquals("_key_test_", resourceNameToFieldName(".key_test:"))
+    assertEquals("_key test_", resourceNameToFieldName("-key test:"))
   }
 }
