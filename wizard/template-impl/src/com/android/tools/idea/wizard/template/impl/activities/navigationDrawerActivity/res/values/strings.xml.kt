@@ -27,7 +27,5 @@ fun strings() = """
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
-
-    <string name="home_second">Home Second</string>
 </resources>
 """

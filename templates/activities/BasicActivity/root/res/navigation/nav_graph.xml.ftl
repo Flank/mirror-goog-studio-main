@@ -24,9 +24,5 @@
         <action
             android:id="@+id/action_${secondFragmentClass}_to_${firstFragmentClass}"
             app:destination="@id/${firstFragmentClass}" />
-
-        <argument
-            android:name="myArg"
-            app:argType="string" />
     </fragment>
 </navigation>
