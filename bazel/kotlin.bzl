@@ -112,8 +112,8 @@ def kotlin_library(
         lint_classpath = [],
         module_name = None,
         **kwargs):
-    kotlins = native.glob([src + "/**/*.kt" for src in srcs])
-    javas = native.glob([src + "/**/*.java" for src in srcs]) + java_srcs
+    kotlins = [src for src in srcs if src.endswith(".kt")]
+    javas = [src for src in srcs if src.endswith(".java")] + java_srcs
 
     if not kotlins and not javas:
         print("No sources found for kotlin_library " + name)

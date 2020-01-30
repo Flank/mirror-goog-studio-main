@@ -30,6 +30,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VfsUtilCore
+import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -37,6 +38,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiPlainTextFile
 import com.intellij.psi.impl.light.LightElement
+import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
@@ -83,7 +85,9 @@ open class DefaultUastParser(
      */
     override fun prepare(
         contexts: List<JavaContext>,
-        testContexts: List<JavaContext>
+        testContexts: List<JavaContext>,
+        javaLanguageLevel: LanguageLevel?,
+        kotlinLanguageLevel: LanguageVersionSettings?
     ): Boolean = true
 
     /**

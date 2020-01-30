@@ -427,6 +427,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/tasks/factory/",
                 "com/android/build/gradle/internal/tasks/featuresplit/",
                 "com/android/build/gradle/internal/tasks/manifest/",
+                "com/android/build/gradle/internal/tasks/mlkit/",
                 "com/android/build/gradle/internal/tasks/structureplugin/",
                 "com/android/build/gradle/internal/tasks/",
                 "com/android/build/gradle/internal/test/",

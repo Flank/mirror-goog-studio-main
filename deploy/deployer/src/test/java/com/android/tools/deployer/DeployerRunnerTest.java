@@ -17,6 +17,7 @@ package com.android.tools.deployer;
 
 import static com.android.tools.deployer.DeployerException.Error.CANNOT_SWAP_BEFORE_API_26;
 import static com.android.tools.deployer.DeployerException.Error.CANNOT_SWAP_RESOURCE;
+import static com.android.tools.deployer.DeployerException.Error.DUMP_FAILED;
 import static com.android.tools.deployer.DeployerException.Error.DUMP_UNKNOWN_PROCESS;
 import static com.android.tools.deployer.DeployerException.Error.NO_ERROR;
 import static org.junit.Assert.assertArrayEquals;
@@ -25,8 +26,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.fakeadbserver.FakeAdbServer;
@@ -38,6 +37,7 @@ import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.FakeDeviceHandler;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.FakeDeviceLibrary.DeviceId;
+import com.android.tools.deployer.devices.shell.FailingMkdir;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.tracer.Trace;
 import com.android.utils.FileUtils;
@@ -62,14 +62,34 @@ import org.junit.runners.Parameterized;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
+/*
+How these tests work:
+====================
+These tests use the FakeAdbServer infrastructure but none of the default Handler.
+Instead, we install our own FakeDeviceHandler.
+
+DeployerRunner -> DDMLIB -> FakeAdbServer -> FakeDeviceHandler | Fake sync (for install command)
+                                                               | Fake shell/exec ->| Fake ls
+                                                                                   | Fake mkdir
+                                                                                   | ...
+                                                                                   | installer (external command)
+
+The DeployerRunner runs as is and the DeviceHandler records all sync/exec/shell commands received by the device.
+As the end of each test, the list of commands received is compared against the list of commands expected.
+
+Concurrency: These tests are NEVER sharded on the same machine. Therefore, having one FakeAdbServer is not a problem.
+             A single FakeAdbServer can also be used in other tests.
+*/
+
 @RunWith(Parameterized.class)
 public class DeployerRunnerTest {
     @Rule public TestName name = new TestName();
 
     private static final String BASE = "tools/base/deploy/deployer/src/test/resource/";
 
-    private static File cachedDb;
-    private ApkFileDatabase db;
+    private static File dexDbFile;
+    private DeploymentCacheDatabase cacheDb;
+    private ApkFileDatabase dexDB;
     private UIService service;
     private final FakeDevice device;
     private FakeAdbServer myAdbServer;
@@ -89,10 +109,10 @@ public class DeployerRunnerTest {
 
     @BeforeClass
     public static void prepare() throws Exception {
-        cachedDb = File.createTempFile("cached_db", ".bin");
-        cachedDb.delete();
-        new SqlApkFileDatabase(cachedDb, null);
-        cachedDb.deleteOnExit();
+        dexDbFile = File.createTempFile("cached_db", ".bin");
+        dexDbFile.delete();
+        new SqlApkFileDatabase(dexDbFile, null);
+        dexDbFile.deleteOnExit();
     }
 
     @Before
@@ -112,8 +132,9 @@ public class DeployerRunnerTest {
 
         File dbFile = File.createTempFile("test_db", ".bin");
         dbFile.deleteOnExit();
-        FileUtils.copyFile(cachedDb, dbFile);
-        db = new SqlApkFileDatabase(dbFile, null);
+        FileUtils.copyFile(dexDbFile, dbFile);
+        dexDB = new SqlApkFileDatabase(dbFile, null);
+        cacheDb = new DeploymentCacheDatabase(2);
 
         if ("true".equals(System.getProperty("dashboards.enabled"))) {
             // Put all APIs (parameters) of a particular test into one benchmark.
@@ -151,7 +172,7 @@ public class DeployerRunnerTest {
     @Test
     public void testFullInstallSuccessful() throws Exception {
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
         String[] args = {
             "install", "com.example.helloworld", file.getAbsolutePath(), "--force-full-install"
@@ -174,7 +195,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
         String[] args = {
@@ -226,6 +247,7 @@ public class DeployerRunnerTest {
                     device,
                     "getprop",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.helloworld",
+                    "rm -fr /data/local/tmp/.studio",
                     "mkdir -p /data/local/tmp/.studio/bin",
                     "chmod +x /data/local/tmp/.studio/bin/installer",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.helloworld",
@@ -243,7 +265,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
 
@@ -287,6 +309,7 @@ public class DeployerRunnerTest {
                     device,
                     "getprop",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "rm -fr /data/local/tmp/.studio",
                     "mkdir -p /data/local/tmp/.studio/bin",
                     "chmod +x /data/local/tmp/.studio/bin/installer",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
@@ -304,7 +327,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
 
@@ -349,6 +372,7 @@ public class DeployerRunnerTest {
                     device,
                     "getprop",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "rm -fr /data/local/tmp/.studio",
                     "mkdir -p /data/local/tmp/.studio/bin",
                     "chmod +x /data/local/tmp/.studio/bin/installer",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
@@ -373,7 +397,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File v2 = TestUtils.getWorkspaceFile(BASE + "apks/simple+ver.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
 
@@ -436,6 +460,7 @@ public class DeployerRunnerTest {
                     device,
                     "getprop",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "rm -fr /data/local/tmp/.studio",
                     "mkdir -p /data/local/tmp/.studio/bin",
                     "chmod +x /data/local/tmp/.studio/bin/installer",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
@@ -461,7 +486,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
 
@@ -496,7 +521,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split+ver.apk");
 
@@ -528,7 +553,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
@@ -603,6 +628,7 @@ public class DeployerRunnerTest {
                         device,
                         "getprop",
                         "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                        "rm -fr /data/local/tmp/.studio",
                         "mkdir -p /data/local/tmp/.studio/bin",
                         "chmod +x /data/local/tmp/.studio/bin/installer",
                         "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
@@ -629,7 +655,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
@@ -706,6 +732,7 @@ public class DeployerRunnerTest {
                         device,
                         "getprop",
                         "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                        "rm -fr /data/local/tmp/.studio",
                         "mkdir -p /data/local/tmp/.studio/bin",
                         "chmod +x /data/local/tmp/.studio/bin/installer",
                         "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
@@ -731,7 +758,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
@@ -810,6 +837,7 @@ public class DeployerRunnerTest {
                         device,
                         "getprop",
                         "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                        "rm -fr /data/local/tmp/.studio",
                         "mkdir -p /data/local/tmp/.studio/bin",
                         "chmod +x /data/local/tmp/.studio/bin/installer",
                         "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
@@ -837,7 +865,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split1 = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
         File split2 = TestUtils.getWorkspaceFile(BASE + "apks/split2.apk");
@@ -915,6 +943,7 @@ public class DeployerRunnerTest {
                         device,
                         "getprop",
                         "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                        "rm -fr /data/local/tmp/.studio",
                         "mkdir -p /data/local/tmp/.studio/bin",
                         "chmod +x /data/local/tmp/.studio/bin/installer",
                         "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
@@ -941,7 +970,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
 
@@ -986,6 +1015,7 @@ public class DeployerRunnerTest {
                     device,
                     "getprop",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "rm -fr /data/local/tmp/.studio",
                     "mkdir -p /data/local/tmp/.studio/bin",
                     "chmod +x /data/local/tmp/.studio/bin/installer",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
@@ -1010,7 +1040,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
@@ -1087,6 +1117,7 @@ public class DeployerRunnerTest {
                         device,
                         "getprop",
                         "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                        "rm -fr /data/local/tmp/.studio",
                         "mkdir -p /data/local/tmp/.studio/bin",
                         "chmod +x /data/local/tmp/.studio/bin/installer",
                         "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
@@ -1114,7 +1145,7 @@ public class DeployerRunnerTest {
         File installersPath = DeployerTestUtils.prepareInstaller();
 
         // Install the base apk:
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         String[] args = {
             "install",
@@ -1165,7 +1196,7 @@ public class DeployerRunnerTest {
         // Install the base apk:
         assertTrue(device.getApps().isEmpty());
         File installersPath = DeployerTestUtils.prepareInstaller();
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         String[] args = {
             "install",
@@ -1204,19 +1235,23 @@ public class DeployerRunnerTest {
                 };
 
         // We create a empty database. This simulate an installed APK not found in the database.
-        db = new SqlApkFileDatabase(File.createTempFile("test_db_empty", ".bin"), null);
+        dexDB = new SqlApkFileDatabase(File.createTempFile("test_db_empty", ".bin"), null);
         device.getShell().clearHistory();
-        runner = new DeployerRunner(db, service);
+        runner = new DeployerRunner(cacheDb, dexDB, service);
         retcode = runner.run(args, logger);
         if (device.supportsJvmti()) {
-            assertEquals(DeployerException.Error.REMOTE_APK_NOT_FOUND_IN_DB.ordinal(), retcode);
+            // TODO WIP. This is WRONG, this is where optimistic swap should fail because of
+            // OverlayID mismatch.
+            if (device.getApi() < 30) {
+                assertEquals(DeployerException.Error.REMOTE_APK_NOT_FOUND_IN_DB.ordinal(), retcode);
+            }
         } else {
             assertEquals(DeployerException.Error.CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
         }
         if (device.getApi() < 26) {
             assertTrue(runner.getMetrics().isEmpty());
             assertHistory(device, "getprop");
-        } else {
+        } else if (device.getApi() < 30) {
             String packageCommand = device.getApi() < 28 ? "dump" : "path";
             assertMetrics(
                     runner.getMetrics(),
@@ -1252,7 +1287,7 @@ public class DeployerRunnerTest {
         String packageName = "com.example.simpleapp";
         assertTrue(device.getApps().isEmpty());
         File installersPath = DeployerTestUtils.prepareInstaller();
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
 
         AndroidDebugBridge.init(false);
         AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
@@ -1309,7 +1344,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
 
@@ -1340,12 +1375,13 @@ public class DeployerRunnerTest {
         if (device.getApi() < 26) {
             assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
             assertMetrics(runner.getMetrics()); // No metrics
-        } else {
+        } else if (device.getApi() < 30) {
             assertEquals(DUMP_UNKNOWN_PROCESS.ordinal(), retcode);
             assertHistory(
                     device,
                     "getprop",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "rm -fr /data/local/tmp/.studio",
                     "mkdir -p /data/local/tmp/.studio/bin",
                     "chmod +x /data/local/tmp/.studio/bin/installer",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
@@ -1372,6 +1408,8 @@ public class DeployerRunnerTest {
                     "COMPARE:Success",
                     "SWAP:Failed");
         }
+
+        // TODO: API 30 tests.
     }
 
     @Test
@@ -1379,7 +1417,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
 
@@ -1415,12 +1453,13 @@ public class DeployerRunnerTest {
         if (device.getApi() < 26) {
             assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
             assertMetrics(runner.getMetrics()); // No metrics
-        } else {
+        } else if (device.getApi() < 30) {
             assertEquals(NO_ERROR.ordinal(), retcode);
             assertHistory(
                     device,
                     "getprop",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "rm -fr /data/local/tmp/.studio",
                     "mkdir -p /data/local/tmp/.studio/bin",
                     "chmod +x /data/local/tmp/.studio/bin/installer",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
@@ -1452,6 +1491,8 @@ public class DeployerRunnerTest {
                     "VERIFY:Success",
                     "COMPARE:Success",
                     "SWAP:Success");
+        } else {
+            // TODO Add R+ tests.
         }
     }
 
@@ -1460,7 +1501,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
 
@@ -1496,12 +1537,13 @@ public class DeployerRunnerTest {
         if (device.getApi() < 26) {
             assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
             assertMetrics(runner.getMetrics()); // No metrics
-        } else {
+        } else if (device.getApi() < 30) {
             assertEquals(CANNOT_SWAP_RESOURCE.ordinal(), retcode);
             assertHistory(
                     device,
                     "getprop",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "rm -fr /data/local/tmp/.studio",
                     "mkdir -p /data/local/tmp/.studio/bin",
                     "chmod +x /data/local/tmp/.studio/bin/installer",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
@@ -1525,6 +1567,8 @@ public class DeployerRunnerTest {
                     "DIFF:Success",
                     "PREINSTALL:Success",
                     "VERIFY:Failed");
+        } else {
+            // TODO: Pipeline 2.0 tests.
         }
     }
 
@@ -1533,7 +1577,7 @@ public class DeployerRunnerTest {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
         assertTrue(device.getApps().isEmpty());
-        DeployerRunner runner = new DeployerRunner(db, service);
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = DeployerTestUtils.prepareInstaller();
 
@@ -1569,12 +1613,13 @@ public class DeployerRunnerTest {
         if (device.getApi() < 26) {
             assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
             assertMetrics(runner.getMetrics()); // No metrics
-        } else {
+        } else if (device.getApi() < 30) {
             assertEquals(NO_ERROR.ordinal(), retcode);
             assertHistory(
                     device,
                     "getprop",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "rm -fr /data/local/tmp/.studio",
                     "mkdir -p /data/local/tmp/.studio/bin",
                     "chmod +x /data/local/tmp/.studio/bin/installer",
                     "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
@@ -1606,6 +1651,44 @@ public class DeployerRunnerTest {
                     "VERIFY:Success",
                     "COMPARE:Success",
                     "SWAP:Success");
+        } else {
+            // TODO: Pipeline 2.0 Tests.
+        }
+    }
+
+    @Test
+    public void checkFailingMkDir() throws IOException {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        assertTrue(device.getApps().isEmpty());
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
+        File installersPath = DeployerTestUtils.prepareInstaller();
+        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
+
+        // Set device to fail on any attempt to mkdir
+        device.getShell().addCommand(new FailingMkdir());
+        String[] args =
+                new String[] {
+                    "codeswap",
+                    "com.example.simpleapp",
+                    file.getAbsolutePath(),
+                    "--installers-path=" + installersPath.getAbsolutePath()
+                };
+        int retcode = runner.run(args, logger);
+
+        if (device.getApi() < 26) {
+            assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
+            assertMetrics(runner.getMetrics()); // No metrics
+        } else if (device.getApi() < 30) {
+            assertEquals(DUMP_FAILED.ordinal(), retcode);
+            assertHistory(
+                    device,
+                    "getprop",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "rm -fr /data/local/tmp/.studio",
+                    "mkdir -p /data/local/tmp/.studio/bin");
+        } else {
+            // TODO: Add R+ tests.
         }
     }
 
@@ -1656,32 +1739,5 @@ public class DeployerRunnerTest {
                         .map(m -> m.getName() + (m.hasStatus() ? ":" + m.getStatus() : ""))
                         .toArray(String[]::new);
         assertArrayEquals(expected, actual);
-    }
-
-    private static class TestLogger implements ILogger {
-        List<String> errors = new ArrayList<>();
-        List<String> warnings = new ArrayList<>();
-        List<String> infos = new ArrayList<>();
-        List<String> verboses = new ArrayList<>();
-
-        @Override
-        public void error(@Nullable Throwable t, @Nullable String msgFormat, Object... args) {
-            errors.add(String.format(msgFormat, args));
-        }
-
-        @Override
-        public void warning(@NonNull String msgFormat, Object... args) {
-            warnings.add(String.format(msgFormat, args));
-        }
-
-        @Override
-        public void info(@NonNull String msgFormat, Object... args) {
-            infos.add(String.format(msgFormat, args));
-        }
-
-        @Override
-        public void verbose(@NonNull String msgFormat, Object... args) {
-            verboses.add(String.format(msgFormat, args));
-        }
     }
 }

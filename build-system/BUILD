@@ -33,7 +33,10 @@ iml_module(
 
 kotlin_library(
     name = "tools.manifest-merger",
-    srcs = ["manifest-merger/src/main/java"],
+    srcs = glob([
+        "manifest-merger/src/main/java/**/*.kt",
+        "manifest-merger/src/main/java/**/*.java",
+    ]),
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     pom = ":manifest-merger.pom",
     resource_strip_prefix = "tools/base/build-system/manifest-merger",
@@ -61,7 +64,10 @@ maven_pom(
 kotlin_test(
     name = "tools.manifest-merger_tests",
     # TODO: Why are the xml files not under resources?
-    srcs = ["manifest-merger/src/test/java"],
+    srcs = glob([
+        "manifest-merger/src/test/java/**/*.kt",
+        "manifest-merger/src/test/java/**/*.java",
+    ]),
     coverage = True,
     jvm_flags = ["-Dtest.suite.jar=tools.manifest-merger_tests.jar"],
     resources = glob(
@@ -120,8 +126,8 @@ filegroup(
 )
 
 filegroup(
-    name = "gradle-distrib-6.2-20191223230027+0000",
-    srcs = ["//tools/external/gradle:gradle-distrib-6.2-20191223230027+0000"],
+    name = "gradle-distrib-6.2-20200127141515+0000",
+    srcs = ["//tools/external/gradle:gradle-distrib-6.2-20200127141515+0000"],
     visibility = ["//visibility:public"],
 )
 

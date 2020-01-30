@@ -38,7 +38,9 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.ObjectOutputStream
 import javax.inject.Inject
 
 /**
@@ -58,7 +60,7 @@ class BuiltArtifactsImplTest {
             variantName = "debug",
             elements = listOf(
                 BuiltArtifactImpl(
-                    outputFile = File(outputFolder, "file1.apk").toPath(),
+                    outputFile = File(outputFolder, "file1.apk").absolutePath,
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
@@ -109,7 +111,7 @@ class BuiltArtifactsImplTest {
             variantName = "debug",
             elements = listOf(
                 BuiltArtifactImpl(
-                    outputFile = File(outputFolder, "file1.apk").toPath(),
+                    outputFile = File(outputFolder, "file1.apk").absolutePath,
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
@@ -120,7 +122,7 @@ class BuiltArtifactsImplTest {
                     )
                 ),
                 BuiltArtifactImpl(
-                    outputFile = File(outputFolder, "file2.apk").toPath(),
+                    outputFile = File(outputFolder, "file2.apk").absolutePath,
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
@@ -131,7 +133,7 @@ class BuiltArtifactsImplTest {
                     )
                 ),
                 BuiltArtifactImpl(
-                    outputFile = File(outputFolder, "file3.apk").toPath(),
+                    outputFile = File(outputFolder, "file3.apk").absolutePath,
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
@@ -292,7 +294,7 @@ class BuiltArtifactsImplTest {
         val builtArtifactsList = builtArtifacts.elements
         Truth.assertThat(builtArtifactsList.size).isEqualTo(2)
         builtArtifactsList.forEach { builtArtifact ->
-            Truth.assertThat(builtArtifact.outputFile.fileName.toString())
+            Truth.assertThat(File(builtArtifact.outputFile).name)
                 .isAnyOf("file1.apk", "file2.apk")
             Truth.assertThat(builtArtifact.versionCode).isAnyOf(123, 124)
             Truth.assertThat(builtArtifact.versionName).isAnyOf("123", "124")
@@ -310,72 +312,6 @@ class BuiltArtifactsImplTest {
                 Truth.assertThat(it.key).isAnyOf("key1", "key2")
                 Truth.assertThat(it.value).isAnyOf("value1", "value2")
             }
-        }
-    }
-
-    @Test
-    fun testPublicWorkItemsSubmission() {
-        val outputFolder = tmpFolder.newFolder("some_folder")
-        val sourceArtifacts = createBuiltArtifacts(
-            createBuiltArtifact(
-                outputFolder = outputFolder,
-                fileName = "file1", versionCode = 123, densityValue = "xhdpi"
-            ),
-            createBuiltArtifact(
-                outputFolder = outputFolder, fileName = "file2",
-                versionCode = 123, densityValue = "xxhdpi"
-            ),
-            createBuiltArtifact(
-                outputFolder = outputFolder, fileName = "file3",
-                versionCode = 123, densityValue = "xxxhdpi"
-            )
-        )
-
-        class Parameters : BuiltArtifacts.TransformParams {
-            override lateinit var output: File
-        }
-
-        class TestAction: WorkAction<Parameters> {
-            var params: Parameters? = null
-            override fun getParameters(): Parameters = params!!
-            override fun execute() {
-                Truth.assertThat(parameters.output).isNotNull()
-            }
-        }
-        
-        class FakeGradleWorkQueue: WorkQueue {
-            override fun <T : WorkParameters?> submit(
-                p0: Class<out WorkAction<T>>?,
-                p1: Action<in T>?
-            ) {
-                val testAction = p0?.newInstance() as TestAction
-                val parameters = Parameters()
-                @Suppress("UNCHECKED_CAST")
-                p1?.execute(parameters as T)
-                testAction.params = parameters
-                testAction.execute()
-            }
-
-            override fun await() {}
-        }
-
-        val workQueue = FakeGradleWorkQueue()
-
-        val updatedBuiltArtifacts = sourceArtifacts.transform(
-            InternalArtifactType.PACKAGED_RES,
-            workQueue,
-            TestAction::class.java) { builtArtifact, parameters ->
-                parameters.output = tmpFolder.newFile(
-                            builtArtifact.filters.joinToString { it.toString() })
-            }
-        val updatedArtifacts = updatedBuiltArtifacts.get()
-        Truth.assertThat(updatedArtifacts.applicationId).isEqualTo(sourceArtifacts.applicationId)
-        Truth.assertThat(updatedArtifacts.artifactType).isEqualTo(InternalArtifactType.PACKAGED_RES)
-        Truth.assertThat(updatedArtifacts.variantName).isEqualTo(sourceArtifacts.variantName)
-        Truth.assertThat(updatedArtifacts.elements.count()).isEqualTo(sourceArtifacts.elements.count())
-        updatedArtifacts.elements.forEach { updatedArtifact ->
-            Truth.assertThat(updatedArtifact.outputFile.fileName.toString())
-                .isEqualTo(updatedArtifact.filters.joinToString { it.toString() })
         }
     }
 
@@ -462,11 +398,31 @@ class BuiltArtifactsImplTest {
         Truth.assertThat(updatedArtifacts.variantName).isEqualTo(sourceArtifacts.variantName)
         Truth.assertThat(updatedArtifacts.elements.count()).isEqualTo(sourceArtifacts.elements.count())
         updatedArtifacts.elements.forEach { updatedArtifact ->
-            Truth.assertThat(updatedArtifact.outputFile.fileName.toString())
+            Truth.assertThat(File(updatedArtifact.outputFile).name)
                 .isEqualTo(updatedArtifact.filters.joinToString { it.toString() })
         }
         Truth.assertThat(parameterArgumentCaptor.value.simpleName)
             .isEqualTo("testAgpInternalWorkItemsSubmission\$TestAction")
+    }
+
+    @Test
+    fun testSerialization() {
+        val artifacts = createBuiltArtifacts(
+            createBuiltArtifact(
+                outputFolder = tmpFolder.root,
+                fileName = "file1", versionCode = 123, densityValue = "xhdpi"
+            ),
+            createBuiltArtifact(
+                outputFolder = tmpFolder.root, fileName = "file2",
+                versionCode = 123, densityValue = "xxhdpi"
+            ),
+            createBuiltArtifact(
+                outputFolder = tmpFolder.root, fileName = "file3",
+                versionCode = 123, densityValue = "xxxhdpi"
+            )
+        )
+
+        ObjectOutputStream(ByteArrayOutputStream()).writeObject(artifacts)
     }
 
     private fun createBuiltArtifact(
@@ -476,7 +432,7 @@ class BuiltArtifactsImplTest {
         densityValue: String
     ) =
         BuiltArtifactImpl(
-            outputFile = File(outputFolder, "$fileName.apk").toPath(),
+            outputFile = File(outputFolder, "$fileName.apk").absolutePath,
             properties = mapOf("key1" to "value1", "key2" to "value2"),
             versionCode = versionCode,
             versionName = versionCode.toString(),

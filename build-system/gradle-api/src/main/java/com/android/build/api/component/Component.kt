@@ -20,8 +20,14 @@ import com.android.build.api.variant.VariantProperties
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 
+/**
+ * Component object that contains properties that must be set during configuration time as it
+ * changes the build flow for the variant.
+ *
+ * @param PropertiesT the [ComponentProperties] type associated with this [Component]
+ */
 @Incubating
-interface Component<ComponentPropertiesT : ComponentProperties>: ComponentIdentity,
+interface Component<PropertiesT : ComponentProperties>: ComponentIdentity,
     ActionableComponentObject {
 
     /**
@@ -32,6 +38,6 @@ interface Component<ComponentPropertiesT : ComponentProperties>: ComponentIdenti
     /**
      * Runs the [Action] block on the [VariantProperties] object once created.
      */
-    fun onProperties(action: ComponentPropertiesT.() -> Unit)
+    fun onProperties(action: PropertiesT.() -> Unit)
 
 }

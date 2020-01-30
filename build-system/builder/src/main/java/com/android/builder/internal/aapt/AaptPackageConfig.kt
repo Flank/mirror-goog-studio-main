@@ -40,7 +40,6 @@ data class AaptPackageConfig(
     val proguardOutputFile: File? = null,
     val mainDexListProguardOutputFile: File? = null,
     val splits: ImmutableCollection<String>? = null,
-    val debuggable: Boolean = false,
     val customPackageForR: String? = null,
     val preferredDensity: String? = null,
     val resourceConfigs: ImmutableSet<String> = ImmutableSet.of(),
@@ -86,7 +85,6 @@ data class AaptPackageConfig(
         private var proguardOutputFile: File? = null
         private var mainDexListProguardOutputFile: File? = null
         private var splits: ImmutableCollection<String>? = null
-        private var debuggable: Boolean = false
         private var customPackageForR: String? = null
         private var preferredDensity: String? = null
         private var androidJarPath: String? = null
@@ -125,7 +123,6 @@ data class AaptPackageConfig(
                 proguardOutputFile = proguardOutputFile,
                 mainDexListProguardOutputFile = mainDexListProguardOutputFile,
                 splits = splits,
-                debuggable = debuggable,
                 customPackageForR = customPackageForR,
                 preferredDensity = preferredDensity,
                 resourceConfigs = resourceConfigs,
@@ -219,11 +216,6 @@ data class AaptPackageConfig(
                 this.splits = ImmutableList.copyOf(splits)
             }
 
-            return this
-        }
-
-        fun setDebuggable(debuggable: Boolean): Builder {
-            this.debuggable = debuggable
             return this
         }
 

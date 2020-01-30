@@ -87,6 +87,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.awt.image.BufferedImage;
@@ -105,6 +106,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.imageio.ImageIO;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -818,8 +820,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 @Override
                 public boolean prepare(
                         @NonNull List<? extends JavaContext> contexts,
-                        @NonNull List<? extends JavaContext> testContexts) {
-                    boolean ok = super.prepare(contexts, testContexts);
+                        @NonNull List<? extends JavaContext> testContexts,
+                        @Nullable LanguageLevel javaLanguageLevel,
+                        @Nullable LanguageVersionSettings kotlinLanguageLevel) {
+                    boolean ok =
+                            super.prepare(
+                                    contexts, testContexts, javaLanguageLevel, kotlinLanguageLevel);
                     if (forceErrors()) {
                         ok = false;
                     }

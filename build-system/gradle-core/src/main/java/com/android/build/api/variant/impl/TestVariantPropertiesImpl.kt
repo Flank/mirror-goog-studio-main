@@ -19,6 +19,7 @@ package com.android.build.api.variant.impl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.TestVariantProperties
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -26,11 +27,16 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.utils.init
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.builder.dexing.DexingType
+import com.google.common.collect.ImmutableSet
+import org.gradle.api.provider.Property
 import javax.inject.Inject
 
-internal open class TestVariantPropertiesImpl @Inject constructor(
+open class TestVariantPropertiesImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -54,15 +60,30 @@ internal open class TestVariantPropertiesImpl @Inject constructor(
     transformManager,
     dslScope,
     globalScope
-), TestVariantProperties {
+), TestVariantProperties, ApkCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
 
+    override val debuggable: Boolean
+        get() = variantDslInfo.isDebuggable
+
+    override val applicationId: Property<String> = dslScope.objectFactory.property(String::class.java)
+        .init(dslScope.providerFactory.provider { variantDslInfo.applicationId })
+
+    override val manifestPlaceholders: Map<String, Any>
+        get() = variantDslInfo.manifestPlaceholders
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
+    // always false for this type
+    override val embedsMicroApp: Boolean
+        get() = false
+
+    // always true for this kind
+    override val testOnlyApk: Boolean
+        get() = true
 }

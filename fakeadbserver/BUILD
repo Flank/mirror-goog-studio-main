@@ -23,7 +23,10 @@ iml_module(
 
 kotlin_library(
     name = "tools.fakeadbserver",
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     pom = ":pom",
     resource_strip_prefix = "tools/base/fakeadbserver",
     visibility = ["//visibility:public"],

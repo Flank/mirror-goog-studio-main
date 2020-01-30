@@ -21,6 +21,7 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.MultipleTransformRequest
 import com.android.build.api.artifact.Operations
 import com.android.build.api.artifact.ReplaceRequest
+import com.android.build.api.artifact.TaskBasedOperations
 import com.android.build.api.artifact.TransformRequest
 import com.android.build.gradle.internal.scope.getOutputDirectory
 import org.gradle.api.Task
@@ -51,7 +52,7 @@ class OperationsImpl(
     private val storageProvider = StorageProviderImpl()
 
     override fun <FILE_TYPE : FileSystemLocation, ARTIFACT_TYPE> get(type: ARTIFACT_TYPE): Provider<FILE_TYPE>
-            where ARTIFACT_TYPE : ArtifactType<FILE_TYPE>, ARTIFACT_TYPE : ArtifactType.Single
+            where ARTIFACT_TYPE : ArtifactType<out FILE_TYPE>, ARTIFACT_TYPE : ArtifactType.Single
             = getArtifactContainer(type).get()
 
     override fun <FILE_TYPE : FileSystemLocation, ARTIFACT_TYPE> getAll(type: ARTIFACT_TYPE): Provider<List<FILE_TYPE>>
@@ -82,6 +83,10 @@ class OperationsImpl(
         with: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
     ): ReplaceRequest<FILE_TYPE> = ReplaceRequestImpl(this, taskProvider, with)
 
+    override fun <TASK : Task> use(taskProvider: TaskProvider<TASK>): TaskBasedOperations<TASK> {
+        return TaskBasedOperationsImpl<TASK>(this, taskProvider)
+    }
+
     // End of public API implementation, start of private AGP services.
 
     internal fun <T: FileSystemLocation> getOutputDirectory(type: ArtifactType<T>, vararg paths: String)=
@@ -96,7 +101,7 @@ class OperationsImpl(
      */
     internal fun <ARTIFACT_TYPE, FILE_TYPE> getArtifactContainer(type: ARTIFACT_TYPE): SingleArtifactContainer<FILE_TYPE> where
             ARTIFACT_TYPE : ArtifactType.Single,
-            ARTIFACT_TYPE : ArtifactType<FILE_TYPE>,
+            ARTIFACT_TYPE : ArtifactType<out FILE_TYPE>,
             FILE_TYPE : FileSystemLocation {
 
         return storageProvider.getStorage(type.kind).getArtifact(objects, type)

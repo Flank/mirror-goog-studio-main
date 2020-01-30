@@ -17,6 +17,7 @@
 package com.android.tools.deployer;
 
 import com.android.sdklib.AndroidVersion;
+import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.deployer.tasks.Task;
@@ -35,28 +36,36 @@ public class Deployer {
     public static final String INSTALLER_DIRECTORY = BASE_DIRECTORY + "/bin";
 
     private final AdbClient adb;
-    private final ApkFileDatabase db;
+    private final ApkFileDatabase dexDb;
+    private final DeploymentCacheDatabase deployCache;
     private final Installer installer;
     private final TaskRunner runner;
     private final UIService service;
     private final Collection<DeployMetric> metrics;
     private final ILogger logger;
 
+    // Temp flag.
+    private final boolean useOptimisticSwap;
+
     public Deployer(
             AdbClient adb,
-            ApkFileDatabase db,
+            DeploymentCacheDatabase deployCache,
+            ApkFileDatabase dexDb,
             TaskRunner runner,
             Installer installer,
             UIService service,
             Collection<DeployMetric> metrics,
-            ILogger logger) {
+            ILogger logger,
+            boolean useOptimisticSwap) {
         this.adb = adb;
-        this.db = db;
+        this.deployCache = deployCache;
+        this.dexDb = dexDb;
         this.runner = runner;
         this.installer = installer;
         this.service = service;
         this.metrics = metrics;
         this.logger = logger;
+        this.useOptimisticSwap = useOptimisticSwap;
     }
 
     enum Tasks {
@@ -67,7 +76,17 @@ public class Deployer {
         VERIFY,
         COMPARE,
         SWAP,
-        PARSE_PATHS
+        PARSE_PATHS,
+
+        // pipeline 2.0
+        PARSE_APP_IDS,
+        DEPLOY_CACHE_STORE,
+        SPEC_DUMP,
+        SPEC_SWAP,
+
+        // New DDMLib
+        GET_PIDS,
+        GET_ARCH,
     }
 
     public enum InstallMode {
@@ -100,7 +119,7 @@ public class Deployer {
 
             // Inputs
             Task<List<String>> paths = runner.create(apks);
-            CachedDexSplitter splitter = new CachedDexSplitter(db, new D8DexSplitter());
+            CachedDexSplitter splitter = new CachedDexSplitter(dexDb, new D8DexSplitter());
 
             // Parse the apks
             Task<List<Apk>> apkList =
@@ -108,6 +127,19 @@ public class Deployer {
 
             // Update the database
             runner.create(Tasks.CACHE, splitter::cache, apkList);
+
+            if (supportsNewPipeline()) {
+                Task<String> deviceSerial = runner.create(adb.getSerial());
+                Task<String> appIds =
+                        runner.create(
+                                Tasks.PARSE_APP_IDS, ApplicationDumper::getPackageName, apkList);
+                runner.create(
+                        Tasks.DEPLOY_CACHE_STORE,
+                        deployCache::store,
+                        deviceSerial,
+                        appIds,
+                        apkList);
+            }
 
             runner.runAsync();
             return result;
@@ -117,7 +149,11 @@ public class Deployer {
     public Result codeSwap(List<String> apks, Map<Integer, ClassRedefiner> redefiners)
             throws DeployerException {
         try (Trace ignored = Trace.begin("codeSwap")) {
-            return swap(apks, false /* Restart Activity */, redefiners);
+            if (supportsNewPipeline()) {
+                return optimisticSwap(apks, false /* Restart Activity */, redefiners);
+            } else {
+                return swap(apks, false /* Restart Activity */, redefiners);
+            }
         }
     }
 
@@ -138,7 +174,8 @@ public class Deployer {
         // Inputs
         Task<List<String>> paths = runner.create(argPaths);
         Task<Boolean> restart = runner.create(argRestart);
-        Task<DexSplitter> splitter = runner.create(new CachedDexSplitter(db, new D8DexSplitter()));
+        Task<DexSplitter> splitter =
+                runner.create(new CachedDexSplitter(dexDb, new D8DexSplitter()));
 
         // Get the list of files from the local apks
         Task<List<Apk>> newFiles =
@@ -196,5 +233,86 @@ public class Deployer {
         Result deployResult = new Result();
         deployResult.skippedInstall = sessionId.get().equals(ApkPreInstaller.SKIPPED_INSTALLATION);
         return deployResult;
+    }
+
+    private Result optimisticSwap(
+            List<String> argPaths, boolean argRestart, Map<Integer, ClassRedefiner> redefiners)
+            throws DeployerException {
+
+        if (!adb.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.O)) {
+            throw DeployerException.apiNotSupported();
+        }
+
+        // Inputs
+        Task<List<String>> paths = runner.create(argPaths);
+        Task<Boolean> restart = runner.create(argRestart);
+        Task<DexSplitter> splitter =
+                runner.create(new CachedDexSplitter(dexDb, new D8DexSplitter()));
+        Task<String> deviceSerial = runner.create(adb.getSerial());
+
+        // Get the list of files from the local apks
+        Task<List<Apk>> newFiles =
+                runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
+
+        // Get the App info. Some from the APK, some from DDMLib.
+        Task<String> packageName =
+                runner.create(Tasks.PARSE_APP_IDS, ApplicationDumper::getPackageName, newFiles);
+        Task<List<Integer>> pids = runner.create(Tasks.GET_PIDS, adb::getPids, packageName);
+        Task<Deploy.Arch> arch = runner.create(Tasks.GET_ARCH, adb::getArch, pids);
+
+        // Get the list of files from the installed app assuming deployment cache is correct.
+        Task<DeploymentCacheDatabase.Entry> speculativeDump =
+                runner.create(Tasks.SPEC_DUMP, deployCache::get, deviceSerial, packageName);
+
+        // Calculate the difference between them speculating the deployment cache is correct.
+        Task<List<FileDiff>> diffs =
+                runner.create(Tasks.DIFF, new ApkDiffer()::specDiff, speculativeDump, newFiles);
+
+        // Verify the changes are swappable and get only the dexes that we can change
+        Task<List<FileDiff>> dexDiffs =
+                runner.create(Tasks.VERIFY, new SwapVerifier()::verify, diffs, restart);
+
+        // Compare the local vs remote dex files.
+        Task<DexComparator.ChangedClasses> toSwap =
+                runner.create(Tasks.COMPARE, new DexComparator()::compare, dexDiffs, splitter);
+
+        // Do the swap
+        ApkSwapper swapper = new ApkSwapper(installer, redefiners, argRestart, adb, logger);
+        runner.create(Tasks.SPEC_SWAP, swapper::optimisticSwap, packageName, pids, arch, toSwap);
+
+        TaskResult result = runner.run();
+        result.getMetrics().forEach(metrics::add);
+
+        // Update the database with the entire new apk. In the normal case this should
+        // be a no-op because the dexes that were modified were extracted at comparison time.
+        // However if the compare task doesn't get to execute we still update the database.
+        // Note we artificially block this task until swap is done.
+        if (result.isSuccess()) {
+            runner.create(Tasks.CACHE, DexSplitter::cache, splitter, newFiles);
+
+            // Wait only for swap to finish
+            runner.runAsync();
+        } else {
+            throw result.getException();
+        }
+
+        runner.create(
+                Tasks.DEPLOY_CACHE_STORE, deployCache::store, deviceSerial, packageName, newFiles);
+
+        Result deployResult = new Result();
+        // TODO: May be notify user we IWI'ed.
+        // deployResult.didIwi = true;
+        return deployResult;
+    }
+
+    private boolean supportsNewPipeline() {
+        // New API level is not yet determined yet so this is only for fake android tests:
+        if (adb.getVersion().getApiLevel() > 29) {
+            return true;
+        }
+
+        // This check works on real device only.
+        String codeName = adb.getVersion().getCodename();
+        return useOptimisticSwap && codeName != null && codeName.equals("R");
     }
 }

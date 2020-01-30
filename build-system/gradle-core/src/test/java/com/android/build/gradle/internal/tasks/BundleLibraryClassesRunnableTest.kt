@@ -117,7 +117,6 @@ class BundleLibraryClassesRunnableTest(private val outputType: AndroidArtifacts.
             BundleLibraryClassesRunnable.Params(
                 packageName = "",
                 toIgnore = listOf(),
-                outputType = outputType,
                 output = output,
                 input = input,
                 incremental = false,
@@ -149,7 +148,6 @@ class BundleLibraryClassesRunnableTest(private val outputType: AndroidArtifacts.
             BundleLibraryClassesRunnable.Params(
                 packageName = "com.example",
                 toIgnore = listOf(),
-                outputType = outputType,
                 output = output,
                 input = input,
                 incremental = false,
@@ -181,7 +179,6 @@ class BundleLibraryClassesRunnableTest(private val outputType: AndroidArtifacts.
             BundleLibraryClassesRunnable.Params(
                 packageName = "com.example",
                 toIgnore = listOf(),
-                outputType = outputType,
                 output = output,
                 input = input,
                 incremental = false,
@@ -217,7 +214,6 @@ class BundleLibraryClassesRunnableTest(private val outputType: AndroidArtifacts.
             BundleLibraryClassesRunnable.Params(
                 packageName = "",
                 toIgnore = listOf(),
-                outputType = outputType,
                 output = output,
                 input = setOf(inputJar),
                 incremental = false,
@@ -254,7 +250,6 @@ class BundleLibraryClassesRunnableTest(private val outputType: AndroidArtifacts.
             BundleLibraryClassesRunnable.Params(
                 packageName = "",
                 toIgnore = listOf(".*A\\.class$"),
-                outputType = outputType,
                 output = output,
                 input = setOf(inputJar),
                 incremental = false,
@@ -289,7 +284,6 @@ class BundleLibraryClassesRunnableTest(private val outputType: AndroidArtifacts.
             BundleLibraryClassesRunnable.Params(
                 packageName = "",
                 toIgnore = listOf(),
-                outputType = outputType,
                 output = output,
                 input = setOf(inputDir),
                 incremental = false,
@@ -322,7 +316,6 @@ class BundleLibraryClassesRunnableTest(private val outputType: AndroidArtifacts.
             BundleLibraryClassesRunnable.Params(
                 packageName = "",
                 toIgnore = listOf(),
-                outputType = outputType,
                 output = output,
                 input = setOf(inputDir),
                 incremental = true,

@@ -16,6 +16,7 @@
 package com.android.ide.common.vectordrawable;
 
 import static com.android.SdkConstants.TAG_CLIP_PATH;
+import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_CLIP_RULE;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_MASK;
 
 import com.android.annotations.NonNull;
@@ -135,7 +136,7 @@ class SvgClipPathNode extends SvgGroupNode {
                 String pathData = ((SvgLeafNode) node).getPathData();
                 if (pathData != null && !pathData.isEmpty()) {
                     ClipRule clipRule =
-                            "evenOdd".equals(node.mVdAttributesMap.get("clip-rule"))
+                            "evenOdd".equals(node.mVdAttributesMap.get(SVG_CLIP_RULE))
                                     ? ClipRule.EVEN_ODD
                                     : ClipRule.NON_ZERO;
                     List<String> paths =

@@ -1,0 +1,197 @@
+load("//tools/base/bazel:maven.bzl", "maven_repo")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_jar", "kotlin_library", "kotlin_test")
+load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test")
+load("//tools/base/bazel/avd:avd.bzl", "avd")
+load("@exec_properties//:constants.bzl", "EMULATOR_MACHINE")
+
+kotlin_library(
+    name = "connected",
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
+    #keep sorted
+    deps = [
+        "//tools/base/bazel/avd:emulator_rule",
+        "//tools/base/third_party:junit_junit",
+    ],
+)
+
+#keep sorted
+TEST_DEPS = [
+    ":connected",
+    "//tools/analytics-library/protos/src/main/proto",
+    "//tools/apksig",
+    "//tools/apkzlib",
+    "//tools/base/annotations",
+    "//tools/base/bazel/avd:emulator_rule",
+    "//tools/base/build-system:gradle-api",
+    "//tools/base/build-system/builder",
+    "//tools/base/build-system/builder-model",
+    "//tools/base/build-system/builder-test-api:tools.builder-test-api",
+    "//tools/base/build-system/gradle-api",
+    "//tools/base/build-system/gradle-core",
+    "//tools/base/build-system/integration-test/framework",
+    "//tools/base/build-system/integration-test/framework/src/main/proto",
+    "//tools/base/common:tools.common",
+    "//tools/base/ddmlib:tools.ddmlib",
+    "//tools/base/repository:tools.testlib",
+    "//tools/base/sdk-common:tools.sdk-common",
+    "//tools/base/sdklib:tools.sdklib",
+    "//tools/base/testutils:tools.testutils",
+    "//tools/base/third_party:com.google.guava_guava",
+    "//tools/base/third_party:com.google.protobuf_protobuf-java",
+    "//tools/base/third_party:com.google.protobuf_protobuf-java-util",
+    "//tools/base/third_party:com.google.truth.extensions_truth-java8-extension",
+    "//tools/base/third_party:com.google.truth_truth",
+    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions-runtime",
+    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
+    "//tools/base/zipflinger",
+]
+
+avd(name = "avd")
+
+#keep sorted
+TEST_DATA = [
+    ":avd",
+    "//prebuilts/studio/sdk:build-tools/latest",
+    "//prebuilts/studio/sdk:platform-tools",
+    "//prebuilts/studio/sdk:platforms/latest",
+    "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
+    "//tools/base/build-system:gradle-distrib",
+    "//tools/base/build-system/aapt2:aapt2_for_tests",
+]
+
+gradle_integration_test(
+    name = "connected_tests_1",
+    srcs = glob([
+        "src/test/java/**/AnnotationProcessorConnectedTest.kt",
+        "src/test/java/**/ApiConnectedTest.java",
+        "src/test/java/**/BasicConnectedTest.java",
+        "src/test/java/**/BasicConnectedTest2.java",
+        "src/test/java/**/ComposeHelloWorldConnectedTest.kt",
+        "src/test/java/**/ParentLibsConnectedTest.java",
+    ]),
+    data = TEST_DATA + [
+        #keep sorted
+        "//tools/base/build-system/integration-test:test-projects/api",
+        "//tools/base/build-system/integration-test:test-projects/basic",
+        "//tools/base/build-system/integration-test:test-projects/composeHelloWorld",
+        "//tools/base/build-system/integration-test:test-projects/parentLibsTest",
+    ],
+    exec_properties = EMULATOR_MACHINE,
+    #keep sorted
+    maven_repos = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system/integration-test:androidx_latest",
+        "//tools/base/build-system/integration-test:support_library_latest",
+        "//tools/base/build-system/integration-test/connected:prebuilts",
+        "//tools/base/third_party/kotlin:kotlin-m2repository",
+    ],
+    tags = [
+        "no_mac",
+        "no_windows",
+    ],
+    deps = TEST_DEPS,
+)
+
+# Maven repo with all the dependencies required by test projects.
+#
+# Quick way of updating this list:
+# - Run the new test with bazel
+# - Copy the output log to $PWD/test.log
+# - Run this command:
+# grep -F '> Could not find' test.log \
+#   | sed -e 's:> Could not find :"//prebuilts/tools/common/m2/repository/:' \
+#   | sed -e 's/:/\//g' \
+#   | sed -e 's/\.$/:jar",/' \
+#   | sed -e 's/\([a-z]\)\.\([a-z]\)/\1\/\2/g'
+maven_repo(
+    name = "prebuilts",
+    # keep sorted
+    artifacts = [
+        "//prebuilts/tools/common/m2/repository/android/arch/core/common/1.0.0:jar",
+        "//prebuilts/tools/common/m2/repository/android/arch/core/common/1.1.0:jar",
+        "//prebuilts/tools/common/m2/repository/android/arch/core/runtime/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/android/arch/lifecycle/common/1.1.0:jar",
+        "//prebuilts/tools/common/m2/repository/android/arch/lifecycle/livedata-core/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/android/arch/lifecycle/livedata/1.1.1:aar",
+        "//prebuilts/tools/common/m2/repository/android/arch/lifecycle/runtime/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/android/arch/lifecycle/viewmodel/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/android/arch/navigation/navigation-common/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/android/arch/navigation/navigation-fragment/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/android/arch/navigation/navigation-runtime/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/activity/activity/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/appcompat/appcompat-resources/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/appcompat/appcompat/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/arch/core/core-common/2.1.0:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/collection/collection/1.1.0:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/compose-compiler/0.1.0-dev04:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/compose/compose-runtime/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/constraintlayout/constraintlayout-solver/2.0.0-beta3:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/constraintlayout/constraintlayout/2.0.0-beta3:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/core/core-ktx/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/core/core/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/dynamicanimation/dynamicanimation/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/fragment/fragment/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-common/2.1.0:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-runtime/2.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-viewmodel/2.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/navigation/navigation-common/2.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/navigation/navigation-fragment/2.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/navigation/navigation-runtime/2.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/savedstate/savedstate/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/core/1.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/espresso/espresso-core/3.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/espresso/espresso-idling-resource/3.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/ext/junit/1.1.1:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/monitor/1.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/rules/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/runner/1.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-android-text/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-animation-core/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-animation/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-core/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-foundation/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-framework/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-geometry/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-graphics/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-layout/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-material/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-platform/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-text/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-tooling/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-unit/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-util/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/ui/ui-vector/0.1.0-dev04:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/vectordrawable/vectordrawable-animated/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/vectordrawable/vectordrawable/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/versionedparcelable/versionedparcelable/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-base/15.0.1:aar",
+        "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-basement/15.0.1:aar",
+        "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-tasks/15.0.1:aar",
+        "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/2.0.1:jar",
+        "//prebuilts/tools/common/m2/repository/com/squareup/javawriter/2.1.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-integration/1.3:jar",
+        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.agent/0.7.4.201502262128:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.agent/0.7.9:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.ant/0.7.4.201502262128:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.ant/0.7.9:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.4.201502262128:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.9:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.4.201502262128:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.9:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-embeddable/1.3.61-dev-withExperimentalGoogleExtensions-20191127:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.3.0:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.3.0:jar",
+        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.0.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-debug-all/5.0.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-debug-all/5.2:jar",
+        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.0.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.1:jar",
+    ],
+    visibility = ["__subpackages__"],
+)

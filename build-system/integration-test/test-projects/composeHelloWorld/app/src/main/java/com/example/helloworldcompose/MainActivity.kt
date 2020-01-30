@@ -4,12 +4,13 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
 import androidx.ui.core.Text
-import androidx.ui.core.dp
 import androidx.ui.core.setContent
 import androidx.ui.layout.Column
 import androidx.ui.layout.LayoutSize
 import androidx.ui.layout.Spacing
 import androidx.ui.tooling.preview.Preview
+import androidx.ui.unit.dp
+
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

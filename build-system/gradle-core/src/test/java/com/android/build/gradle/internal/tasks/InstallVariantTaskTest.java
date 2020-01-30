@@ -83,7 +83,7 @@ public class InstallVariantTaskTest {
                         "debug",
                         ImmutableList.of(
                                 new BuiltArtifactImpl(
-                                        mainOutputFileApk.toPath(),
+                                        mainOutputFileApk.getAbsolutePath(),
                                         ImmutableMap.of(),
                                         123,
                                         "version_name",

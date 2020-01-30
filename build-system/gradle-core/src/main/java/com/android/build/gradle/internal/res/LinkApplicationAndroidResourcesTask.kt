@@ -21,9 +21,11 @@ import com.android.SdkConstants.FN_RES_BASE
 import com.android.SdkConstants.FN_R_CLASS_JAR
 import com.android.SdkConstants.RES_QUALIFIER_SEP
 import com.android.build.VariantOutput
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -156,9 +158,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
     @get:Input
     val canHaveSplits: Property<Boolean> = objects.property(Boolean::class.java)
-
-    @get:Input
-    abstract val debuggable: Property<Boolean>
 
     private lateinit var aaptOptions: AaptOptions
 
@@ -340,12 +339,12 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     }
 
     abstract class BaseCreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: BaseCreationConfig,
         private val generateLegacyMultidexMainDexProguardRules: Boolean,
         private val baseName: String?,
         private val isLibrary: Boolean
-    ) : VariantTaskCreationAction<LinkApplicationAndroidResourcesTask, ComponentPropertiesImpl>(
-        componentProperties
+    ) : VariantTaskCreationAction<LinkApplicationAndroidResourcesTask, BaseCreationConfig>(
+        creationConfig
     ) {
 
         override val name: String
@@ -354,7 +353,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         override val type: Class<LinkApplicationAndroidResourcesTask>
             get() = LinkApplicationAndroidResourcesTask::class.java
 
-        protected open fun preconditionsCheck(component: ComponentPropertiesImpl) {}
+        protected open fun preconditionsCheck(creationConfig: BaseCreationConfig) {}
 
         override fun handleProvider(
             taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
@@ -417,7 +416,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     ImmutableSet.copyOf(splits.abiFilters)
                 else
                     ImmutableSet.of()
-                val resConfigSet = creationConfig.variantDslInfo.resourceConfigurations
+                val resConfigSet = creationConfig.resourceConfigurations
 
                 task.splitList = SplitList(densitySet, languageSet, abiSet, resConfigSet)
             } else {
@@ -430,8 +429,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             }
 
             task.mainSplit = creationConfig.outputs.getMainSplitOrNull()?.apkData
-            task.originalApplicationId.set(project.provider { creationConfig.variantDslInfo.originalApplicationId })
-            task.originalApplicationId.disallowChanges()
+            task.originalApplicationId.setDisallowChanges(project.provider { creationConfig.originalApplicationId })
 
             val aaptFriendlyManifestsFilePresent = creationConfig
                 .artifacts
@@ -439,11 +437,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.taskInputType = if (aaptFriendlyManifestsFilePresent)
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
             else
-                creationConfig.variantScope.manifestArtifactType
+                creationConfig.manifestArtifactType
             creationConfig.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
             task.setType(creationConfig.variantType)
-            task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
             task.aaptOptions = creationConfig.globalScope.extension.aaptOptions.convert()
 
             task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
@@ -466,8 +463,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG
                 )
 
-            if (variantType.isDynamicFeature) {
-                task.resOffset.set(creationConfig.variantScope.resOffset)
+            if (variantType.isDynamicFeature && creationConfig is DynamicFeatureCreationConfig) {
+                task.resOffset.set(creationConfig.resOffset)
                 task.resOffset.disallowChanges()
             }
 
@@ -490,20 +487,20 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     }
 
     internal class CreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: BaseCreationConfig,
         generateLegacyMultidexMainDexProguardRules: Boolean,
         private val sourceArtifactType: TaskManager.MergeType,
         baseName: String,
         isLibrary: Boolean
     ) : BaseCreationAction(
-        componentProperties,
+        creationConfig,
         generateLegacyMultidexMainDexProguardRules,
         baseName,
         isLibrary
     ) {
 
-        override fun preconditionsCheck(component: ComponentPropertiesImpl) {
-            if (component.variantType.isAar) {
+        override fun preconditionsCheck(creationConfig: BaseCreationConfig) {
+            if (creationConfig.variantType.isAar) {
                 throw IllegalArgumentException("Use GenerateLibraryRFileTask")
             } else {
                 Preconditions.checkState(
@@ -572,7 +569,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 task.inputResourcesDir
             )
 
-            if (creationConfig.variantScope.isPrecompileDependenciesResourcesEnabled) {
+            if (creationConfig.isPrecompileDependenciesResourcesEnabled) {
                 task.compiledDependenciesResources =
                     creationConfig.variantDependencies.getArtifactCollection(
                         RUNTIME_CLASSPATH,
@@ -588,10 +585,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
      * discovery task.
      */
     class NamespacedCreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: ApkCreationConfig,
         generateLegacyMultidexMainDexProguardRules: Boolean,
         baseName: String?
-    ) : BaseCreationAction(componentProperties, generateLegacyMultidexMainDexProguardRules, baseName, false) {
+    ) : BaseCreationAction(creationConfig, generateLegacyMultidexMainDexProguardRules, baseName, false) {
 
         override fun handleProvider(
             taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>
@@ -745,7 +742,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         .setProguardOutputFile(proguardOutputFile)
                         .setMainDexListProguardOutputFile(mainDexListProguardOutputFile)
                         .setVariantType(params.variantType)
-                        .setDebuggable(params.debuggable)
                         .setResourceConfigs(params.resourceConfigs)
                         .setPreferredDensity(preferredDensity)
                         .setPackageId(params.packageId)
@@ -859,7 +855,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val buildTargetDensity: String? = task.buildTargetDensity
         val aaptOptions: AaptOptions = task.aaptOptions
         val variantType: VariantType = task.type
-        val debuggable: Boolean = task.debuggable.get()
         val packageId: Int? = task.resOffset.orNull
         val incrementalFolder: File = task.incrementalFolder!!
         val androidJarPath: String =

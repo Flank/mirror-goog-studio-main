@@ -40,7 +40,6 @@ public abstract class ApkVariantData extends BaseVariantData {
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
-            @NonNull TaskManager taskManager,
             @NonNull MutableTaskContainer taskContainer) {
         super(
                 componentIdentity,
@@ -50,7 +49,6 @@ public abstract class ApkVariantData extends BaseVariantData {
                 paths,
                 artifacts,
                 globalScope,
-                taskManager,
                 taskContainer);
     }
 

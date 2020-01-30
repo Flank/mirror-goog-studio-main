@@ -15,8 +15,10 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_FILL;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_FILL_OPACITY;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_OPACITY;
+import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_OPACITY;
 import static com.android.ide.common.vectordrawable.Svg2Vector.presentationMap;
 
@@ -65,19 +67,21 @@ class SvgLeafNode extends SvgNode {
         parsePathOpacity();
 
         for (Map.Entry<String, String> entry : mVdAttributesMap.entrySet()) {
-            String key = entry.getKey();
-            String attribute = presentationMap.get(key);
+            String name = entry.getKey();
+            String attribute = presentationMap.get(name);
+            if (attribute.isEmpty()) {
+                continue;
+            }
             String svgValue = entry.getValue().trim();
-            String vdValue;
-            vdValue = colorSvg2Vd(svgValue, "#000000");
+            String vdValue = colorSvg2Vd(svgValue, "#000000");
 
             if (vdValue == null) {
                 if (svgValue.endsWith("px")) {
                     vdValue = svgValue.substring(0, svgValue.length() - 2).trim();
                 } else if (svgValue.startsWith("url(#") && svgValue.endsWith(")")) {
-                    // Copies gradient from tree
+                    // Copies gradient from tree.
                     vdValue = svgValue.substring(5, svgValue.length() - 1);
-                    if (key.equals("fill")) {
+                    if (name.equals(SVG_FILL)) {
                         SvgNode node = getTree().getSvgNodeFromId(vdValue);
                         if (node == null) {
                             continue;
@@ -85,7 +89,7 @@ class SvgLeafNode extends SvgNode {
                         mFillGradientNode = (SvgGradientNode)node.deepCopy();
                         mFillGradientNode.setSvgLeafNode(this);
                         mFillGradientNode.setGradientUsage(SvgGradientNode.GradientUsage.FILL);
-                    } else if (key.equals("stroke")) {
+                    } else if (name.equals(SVG_STROKE)) {
                         SvgNode node = getTree().getSvgNodeFromId(vdValue);
                         if (node == null) {
                             continue;
@@ -113,15 +117,15 @@ class SvgLeafNode extends SvgNode {
      * A utility function to get the opacity value as a floating point number.
      *
      * @param key The key of the opacity
-     * @return the clamped opacity value, return 1 if not found.
+     * @return the clamped opacity value, return 1 if not found
      */
-    private float getOpacityValueFromMap(String key) {
+    private double getOpacityValueFromMap(@NonNull String key) {
         // Default opacity is 1.
-        float result = 1;
+        double result = 1;
         String opacity = mVdAttributesMap.get(key);
         if (opacity != null) {
             try {
-                result = Float.parseFloat(opacity);
+                result = Double.parseDouble(opacity);
             } catch (NumberFormatException e) {
                 // Ignore here, invalid value is replaced as default value 1.
             }
@@ -133,11 +137,11 @@ class SvgLeafNode extends SvgNode {
      * Parses the SVG path's opacity attribute into fill and stroke.
      */
     private void parsePathOpacity() {
-        float opacity = getOpacityValueFromMap(SVG_OPACITY);
+        double opacity = getOpacityValueFromMap(SVG_OPACITY);
         // If opacity is 1, then nothing need to change.
         if (opacity < 1) {
-            float fillOpacity = getOpacityValueFromMap(SVG_FILL_OPACITY);
-            float strokeOpacity = getOpacityValueFromMap(SVG_STROKE_OPACITY);
+            double fillOpacity = getOpacityValueFromMap(SVG_FILL_OPACITY);
+            double strokeOpacity = getOpacityValueFromMap(SVG_STROKE_OPACITY);
             mVdAttributesMap.put(
                     SVG_FILL_OPACITY, XmlUtils.formatFloatValue(fillOpacity * opacity));
             mVdAttributesMap.put(
@@ -205,8 +209,8 @@ class SvgLeafNode extends SvgNode {
             return; // No path to draw.
         }
 
-        String fillColor = mVdAttributesMap.get(Svg2Vector.SVG_FILL);
-        String strokeColor = mVdAttributesMap.get(Svg2Vector.SVG_STROKE_COLOR);
+        String fillColor = mVdAttributesMap.get(SVG_FILL);
+        String strokeColor = mVdAttributesMap.get(SVG_STROKE);
         logger.log(Level.FINE, "fill color " + fillColor);
         boolean emptyFill = "none".equals(fillColor) || "#00000000".equals(fillColor);
         boolean emptyStroke = strokeColor == null || "none".equals(strokeColor);

@@ -148,8 +148,14 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                         attributes
                     ).artifactFiles
                 } else {
-                    creationConfig.artifacts.getFinalProductAsFileCollection(
-                        InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES)
+                    task.project.files(
+                        creationConfig.artifacts.getFinalProductAsFileCollection(
+                            InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES
+                        ),
+                        creationConfig.artifacts.getFinalProductAsFileCollection(
+                            InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES
+                        )
+                    )
                 }
 
             task.keepRulesFiles.from(
@@ -200,6 +206,12 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                         AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.FILE,
                         AndroidArtifacts.ArtifactType.DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES)
+                )
+                task.keepRulesFiles.from(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                        AndroidArtifacts.ArtifactScope.FILE,
+                        AndroidArtifacts.ArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES)
                 )
             }
             // make sure non-minified release build is not obfuscated

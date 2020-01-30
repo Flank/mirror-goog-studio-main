@@ -44,6 +44,9 @@ android {
     buildFeatures {
         compose true
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "+"
+    }
 }
         """.trimIndent()
         )

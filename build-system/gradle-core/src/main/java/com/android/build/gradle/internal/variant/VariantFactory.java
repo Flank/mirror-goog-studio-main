@@ -27,7 +27,6 @@ import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
-import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.VariantDslInfo;
@@ -52,10 +51,12 @@ import org.gradle.api.model.ObjectFactory;
  * <p>While VariantManager is the general variant management, implementation of this interface
  * provides variant type (app, lib) specific implementation.
  */
-public interface VariantFactory<VariantPropertiesT extends VariantPropertiesImpl> {
+public interface VariantFactory<
+        VariantT extends VariantImpl<VariantPropertiesT>,
+        VariantPropertiesT extends VariantPropertiesImpl> {
 
     @NonNull
-    VariantImpl createVariantObject(
+    VariantT createVariantObject(
             @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo);
 
     @NonNull
@@ -113,7 +114,6 @@ public interface VariantFactory<VariantPropertiesT extends VariantPropertiesImpl
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
-            @NonNull TaskManager<VariantPropertiesT> taskManager,
             @NonNull MutableTaskContainer taskContainer);
 
     @NonNull

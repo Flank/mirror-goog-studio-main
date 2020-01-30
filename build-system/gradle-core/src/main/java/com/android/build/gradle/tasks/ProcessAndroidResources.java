@@ -17,7 +17,8 @@
 package com.android.build.gradle.tasks;
 
 import com.android.SdkConstants;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.utils.FileUtils;
@@ -55,8 +56,8 @@ public abstract class ProcessAndroidResources extends IncrementalTask {
     }
 
     protected static boolean generatesProguardOutputFile(
-            ComponentPropertiesImpl componentProperties) {
-        return componentProperties.getVariantScope().getCodeShrinker() != null
-                || componentProperties.getVariantType().isDynamicFeature();
+            @NonNull BaseCreationConfig creationConfig) {
+        return creationConfig.getVariantScope().getCodeShrinker() != null
+                || creationConfig.getVariantType().isDynamicFeature();
     }
 }

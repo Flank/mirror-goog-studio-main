@@ -29,6 +29,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.utils.SdkUtils;
 import java.io.File;
 import java.util.List;
+import java.util.function.IntPredicate;
 import javax.lang.model.SourceVersion;
 
 public final class FileResourceNameValidator {
@@ -132,16 +133,15 @@ public final class FileResourceNameValidator {
             return null;
         }
 
-        char first = fileNameWithoutExt.charAt(0);
-        if (!Character.isJavaIdentifierStart(first)) {
+        if (fileNameWithoutExt.isEmpty()
+                || !Character.isJavaIdentifierStart(fileNameWithoutExt.codePointAt(0))) {
             return "The resource name must start with a letter";
         }
 
         // AAPT only allows lowercase+digits+_:
         // "%s: Invalid file name: must contain only [a-z0-9_.]","
-        for (int i = 0, n = fileNameWithoutExt.length(); i < n; i++) {
-            char c = fileNameWithoutExt.charAt(i);
-            if (!((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_')) {
+        for (int c : fileNameWithoutExt.codePoints().toArray()) {
+            if (!isValidCharacter(c)) {
                 return String.format("'%1$c' is not a valid file-based resource name character: "
                         + "File-based resource names must contain only lowercase a-z, 0-9,"
                         + " or underscore", c);
@@ -156,6 +156,60 @@ public final class FileResourceNameValidator {
 
         // Success!
         return null;
+    }
+
+    private static boolean isValidCharacter(int c) {
+        return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_';
+    }
+
+    /**
+     * Turns a file name (without extension) into a valid file resource name.
+     *
+     * <p>The result is guaranteed to be non-empty and considered valid by {@link
+     * #getErrorTextForNameWithoutExtension(String, ResourceFolderType)}. Note that the it may still
+     * not pass {@link #getErrorTextForFileResource(String, ResourceFolderType)} if the combined
+     * with an extension that doesn't match the {@link ResourceFolderType}.
+     *
+     * @see SdkUtils#fileNameToResourceName(String)
+     */
+    @NonNull
+    public static String getValidResourceFileName(@NonNull String fileNameWithoutExtension) {
+        if (fileNameWithoutExtension.isEmpty()) {
+            return "resource";
+        }
+
+        if (SourceVersion.isKeyword(fileNameWithoutExtension)) {
+            return "resource_" + fileNameWithoutExtension;
+        }
+
+        StringBuilder result = new StringBuilder();
+        int first = fileNameWithoutExtension.codePointAt(0);
+        checkAndAppend(
+                first, result, c -> Character.isJavaIdentifierStart(c) && isValidCharacter(c));
+
+        fileNameWithoutExtension
+                .codePoints()
+                .skip(1)
+                .forEach(
+                        c -> {
+                            checkAndAppend(c, result, FileResourceNameValidator::isValidCharacter);
+                        });
+
+        return result.toString();
+    }
+
+    private static void checkAndAppend(
+            int codePoint, @NonNull StringBuilder result, IntPredicate predicate) {
+        if (predicate.test(codePoint)) {
+            result.appendCodePoint(codePoint);
+        } else {
+            int lowerCase = Character.toLowerCase(codePoint);
+            if (predicate.test(lowerCase)) {
+                result.appendCodePoint(lowerCase);
+            } else {
+                result.append('_');
+            }
+        }
     }
 
     private static String removeSingleExtension(String fileNameWithExt) {

@@ -25,5 +25,5 @@ import javax.inject.Inject
 open class AndroidTestImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity
-): ComponentImpl<AndroidTestProperties>(variantConfiguration), AndroidTest<AndroidTestProperties> {
+): TestComponentImpl<AndroidTestPropertiesImpl>(variantDslInfo, variantConfiguration), AndroidTest<AndroidTestPropertiesImpl> {
 }

@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DEFINED_ONLY_SYMBOL_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES
+import com.android.build.gradle.internal.scope.InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES
 import com.android.build.gradle.internal.scope.InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES
 import com.android.build.gradle.internal.scope.InternalArtifactType.DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES
 import com.android.build.gradle.internal.scope.InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES
@@ -217,6 +218,7 @@ class PublishingSpecs {
                 reverseMetadata(DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES, ArtifactType.DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES)
                 reverseMetadata(DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES, ArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES)
                 reverseMetadata(DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES, ArtifactType.DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES)
+                reverseMetadata(DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES, ArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES)
 
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
                 runtime(FEATURE_NAME, ArtifactType.FEATURE_NAME)

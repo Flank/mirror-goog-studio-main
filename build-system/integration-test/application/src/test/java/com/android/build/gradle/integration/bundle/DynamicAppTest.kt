@@ -541,21 +541,38 @@ class DynamicAppTest {
             .fetchAndroidProjects()
             .rootBuildModelMap
 
+        fun checkApkFromBundleModelFile(postApkFromBundleTaskModelFile: String) {
+            assertThat(postApkFromBundleTaskModelFile).isNotNull()
+            assertThat(File(postApkFromBundleTaskModelFile)).exists()
+            val apkFromBundleModel = BuiltArtifactsLoaderImpl.loadFromFile(
+                File(postApkFromBundleTaskModelFile)
+            )
+            assertThat(apkFromBundleModel!!.elements).hasSize(1)
+            val singleOutput = apkFromBundleModel.elements.first()
+            assertThat(singleOutput).isNotNull()
+            assertThat(singleOutput.outputFile).isNotNull()
+            assertThat(File(singleOutput.outputFile)).exists()
+            // 2 files, the apk and the output listing file.
+            assertThat(File(singleOutput.outputFile).listFiles()).hasLength(2)
+        }
         val appModel = rootBuildModelMap[":app"]
+        val variantsBuildInformation = appModel?.variantsBuildInformation
+        assertThat(variantsBuildInformation).hasSize(2)
+        variantsBuildInformation?.forEach { buildInformation ->
+            assertThat(buildInformation.variantName).isAnyOf("debug", "release")
+            assertThat(buildInformation.apkFromBundleTaskName).isNotNull()
+            assertThat(buildInformation.assembleTaskOutputListingFile).isNotNull()
+            assertThat(buildInformation.bundleTaskName).isNotNull()
+            assertThat(buildInformation.bundleTaskOutputListingFile).isNotNull()
+            if (buildInformation.variantName == "debug") {
+                checkApkFromBundleModelFile(buildInformation.apkFromBundleTaskOutputListingFile!!)
+            }
+        }
         val debugVariantModule = appModel?.getVariantByName("debug")
         val postApkFromBundleTaskModelFile =
             debugVariantModule?.mainArtifact?.apkFromBundleTaskOutputListingFile
         assertThat(postApkFromBundleTaskModelFile).isNotNull()
-        assertThat(File(postApkFromBundleTaskModelFile!!)).exists()
-        val apkFromBundleModel = BuiltArtifactsLoaderImpl.loadFromFile(
-            File(postApkFromBundleTaskModelFile))
-        assertThat(apkFromBundleModel!!.elements).hasSize(1)
-        val singleOutput = apkFromBundleModel.elements.first()
-        assertThat(singleOutput).isNotNull()
-        assertThat(singleOutput.outputFile).isNotNull()
-        assertThat(singleOutput.outputFile.toFile()).exists()
-        // 2 files, the apk and the output listing file.
-        assertThat(singleOutput.outputFile.toFile().listFiles()).hasLength(2)
+        checkApkFromBundleModelFile(postApkFromBundleTaskModelFile!!)
 
         // -------------
         // build apks for API 18

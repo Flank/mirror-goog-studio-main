@@ -87,7 +87,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getUniversalOutput(1).also { match = it })
         val result = computeBestOutput(list, 160, "foo")
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -100,7 +100,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getDensityOutput(320, 3))
         val result = computeBestOutput(list, 160, "foo")
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -113,7 +113,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getDensityOutput(480, 1))
         val result = computeBestOutput(list, 160, "foo")
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -135,7 +135,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getDensityOutput(480, 3))
         val result = computeBestOutput(list, 1, "foo")
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -147,7 +147,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getDensityOutput(0xFFFE, 3))
         val result = computeBestOutput(list, 400, "foo")
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -159,7 +159,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getAbiOutput("bar", 3))
         val result = computeBestOutput(list, 160, "foo")
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -174,7 +174,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         val result =
             computeBestOutput(list, 160, "bar", "foo")
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -190,7 +190,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         val result =
             computeBestOutput(list, 160, "bar", "foo")
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -206,7 +206,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         val result =
             computeBestOutput(list, 160, "bar", "foo")
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -221,7 +221,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         val result =
             computeBestOutput(list, 160, "foo", "bar")
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -233,7 +233,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getAbiOutput("bar", 3))
         val result = computeBestOutput(list, 160, "zzz")
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -255,7 +255,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getOutput(320, "foo", 3))
         val result = computeBestOutput(list, 160, "foo")
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -268,7 +268,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         list.add(getOutput(320, "foo", 1))
         val result = computeBestOutput(list, 160, "zzz")
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -295,7 +295,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
             "zzz"
         )
         TestCase.assertEquals(1, result.size)
-        TestCase.assertEquals(match.outputFile.toFile(), result[0])
+        TestCase.assertEquals(File(match.outputFile), result[0])
     }
 
     @Test
@@ -332,7 +332,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
     private fun getUniversalOutput(versionCode: Int): GenericBuiltArtifact {
         return GenericBuiltArtifact(
             outputType = "UNIVERSAL",
-            outputFile = File("null").toPath(),
+            outputFile = File("null").absolutePath,
             versionCode = versionCode
         )
     }
@@ -344,7 +344,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         val densityEnum = Density.getEnum(densityFilter)
         return GenericBuiltArtifact(
             outputType = "ONE_OF_MANY",
-            outputFile = File(densityEnum!!.resourceValue).toPath(),
+            outputFile = File(densityEnum!!.resourceValue).absolutePath,
             versionCode = versionCode,
             filters = listOf(
                 GenericFilterConfiguration("DENSITY", densityEnum.resourceValue))
@@ -357,7 +357,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
     ): GenericBuiltArtifact {
         return GenericBuiltArtifact(
             outputType = "ONE_OF_MANY",
-            outputFile = File(filter).toPath(),
+            outputFile = File(filter).absolutePath,
             versionCode = versionCode,
             filters = listOf(
                 GenericFilterConfiguration("ABI", filter))
@@ -369,7 +369,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
     ): GenericBuiltArtifact {
         return GenericBuiltArtifact(
             outputType = "ONE_OF_MANY",
-            outputFile = File(file).toPath(),
+            outputFile = File(file).absolutePath,
             versionCode = 1,
             filters = listOf(
                 GenericFilterConfiguration("ABI", "bar"))
@@ -384,7 +384,7 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
         val densityEnum = Density.getEnum(densityFilter)!!.resourceValue
         return GenericBuiltArtifact(
             outputType = "ONE_OF_MANY",
-            outputFile = File(densityEnum + abiFilter).toPath(),
+            outputFile = File(densityEnum + abiFilter).absolutePath,
             versionCode = versionCode,
             filters = listOf(
                 GenericFilterConfiguration("DENSITY", densityEnum),

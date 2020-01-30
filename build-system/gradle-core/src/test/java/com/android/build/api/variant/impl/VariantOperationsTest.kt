@@ -18,6 +18,7 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.component.impl.FilteredComponentAction
 import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.Variant
 import com.google.common.truth.Truth
@@ -35,11 +36,12 @@ class VariantOperationsTest {
     @Test
     fun unfilteredActionsTest() {
         val counter = AtomicInteger(0)
-        val operations = VariantOperations<ApplicationVariant>()
+        val operations = VariantOperations<ApplicationVariant<ApplicationVariantProperties>>()
         for (i in 1..5) {
             operations.actions.add(Action { counter.getAndAdd(10.0.pow(i - 1).toInt())})
         }
-        val variant = createVariant(ApplicationVariant::class.java)
+        @Suppress("UNCHECKED_CAST")
+        val variant = createVariant(ApplicationVariant::class.java) as ApplicationVariant<ApplicationVariantProperties>
 
         operations.executeActions(variant)
         Truth.assertThat(counter.get()).isEqualTo(11111)
@@ -48,14 +50,16 @@ class VariantOperationsTest {
     @Test
     fun singleFilteredActionTest() {
         val counter = AtomicInteger(0)
-        val operations = VariantOperations<ApplicationVariant>()
+        val operations = VariantOperations<ApplicationVariant<ApplicationVariantProperties>>()
+        @Suppress("UNCHECKED_CAST")
         operations.addFilteredAction(
             FilteredComponentAction(
                 specificType = ApplicationVariant::class.java,
-                action = Action { counter.incrementAndGet() })
+                action = Action { counter.incrementAndGet() }) as FilteredComponentAction<ApplicationVariant<ApplicationVariantProperties>>
         )
 
-        val variant = createVariant(ApplicationVariant::class.java)
+        @Suppress("UNCHECKED_CAST")
+        val variant = createVariant(ApplicationVariant::class.java) as ApplicationVariant<ApplicationVariantProperties>
         operations.executeActions(variant)
         Truth.assertThat(counter.get()).isEqualTo(1)
     }

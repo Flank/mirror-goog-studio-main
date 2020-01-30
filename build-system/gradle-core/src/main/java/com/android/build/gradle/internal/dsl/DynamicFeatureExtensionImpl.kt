@@ -40,7 +40,7 @@ class DynamicFeatureExtensionImpl(
             DefaultConfig,
             ProductFlavor,
             SigningConfig,
-            DynamicFeatureVariant,
+            DynamicFeatureVariant<DynamicFeatureVariantProperties>,
             DynamicFeatureVariantProperties>(
         dslScope,
         buildTypes,
@@ -72,13 +72,13 @@ class DynamicFeatureExtensionImpl(
         dslScope.objectFactory.newInstance(DynamicFeatureBuildFeaturesImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    override val onVariants: GenericFilteredComponentActionRegistrar<DynamicFeatureVariant>
+    override val onVariants: GenericFilteredComponentActionRegistrar<DynamicFeatureVariant<DynamicFeatureVariantProperties>>
         get() = dslScope.objectFactory.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
             dslScope,
             variantOperations,
             DynamicFeatureVariant::class.java
-        ) as GenericFilteredComponentActionRegistrar<DynamicFeatureVariant>
+        ) as GenericFilteredComponentActionRegistrar<DynamicFeatureVariant<DynamicFeatureVariantProperties>>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<DynamicFeatureVariantProperties>
         get() = dslScope.objectFactory.newInstance(

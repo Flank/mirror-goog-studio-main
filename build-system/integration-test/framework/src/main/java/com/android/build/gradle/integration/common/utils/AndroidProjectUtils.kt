@@ -25,6 +25,7 @@ import com.android.builder.model.ArtifactMetaData
 import com.android.builder.model.ProductFlavorContainer
 import com.android.builder.model.SigningConfig
 import com.android.builder.model.Variant
+import com.android.builder.model.VariantBuildInformation
 import java.io.File
 
 /**
@@ -44,6 +45,10 @@ fun AndroidProject.findVariantByName(name: String): Variant? {
 
 fun AndroidProject.getVariantByName(name: String): Variant {
     return searchForExistingItem(variants, name, Variant::getName, "Variant")
+}
+
+fun AndroidProject.getVariantBuildInformationByName(name: String): VariantBuildInformation {
+    return variantsBuildInformation.first { it.variantName == name }
 }
 
 fun AndroidProject.getDebugVariant() = getVariantByName("debug")

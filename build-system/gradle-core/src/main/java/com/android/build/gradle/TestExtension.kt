@@ -72,7 +72,7 @@ open class TestExtension(
             Splits,
             TestOptions,
             TestOptions.UnitTestOptions> by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor<TestVariant, TestVariantProperties> by publicExtensionImpl {
+    ActionableVariantObjectOperationsExecutor<TestVariant<TestVariantProperties>, TestVariantProperties> by publicExtensionImpl {
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =
         dslScope.objectFactory.domainObjectSet(ApplicationVariant::class.java)

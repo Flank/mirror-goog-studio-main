@@ -100,8 +100,8 @@ public class LintGlobalTask extends LintBaseTask {
             lintTask.variantInputMap =
                     variants.stream()
                             .map(
-                                    variantScope -> {
-                                        VariantInputs inputs = new VariantInputs(variantScope);
+                                    variantProperties -> {
+                                        VariantInputs inputs = new VariantInputs(variantProperties);
                                         lintTask.allInputs.from(inputs.getAllInputs());
                                         return inputs;
                                     })

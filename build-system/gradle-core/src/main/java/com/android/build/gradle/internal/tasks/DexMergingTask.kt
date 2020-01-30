@@ -241,14 +241,17 @@ abstract class DexMergingTask : NonIncrementalTask() {
                             } else {
                                 AndroidArtifacts.ArtifactScope.EXTERNAL
                             }
-                             component.variantDependencies.getArtifactFileCollection(
+                            component.variantDependencies.getArtifactFileCollection(
                                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                                 artifactScope,
                                 AndroidArtifacts.ArtifactType.DEX,
                                 attributes
                             )
                         } else {
-                            component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE).get()
+                            component.globalScope.project.files(
+                                component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE).get(),
+                                component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE_WITH_ARTIFACT_TRANSFORMS).get()
+                            )
                         }
                     }
                     DexMergingAction.MERGE_LIBRARY_PROJECTS -> {
@@ -272,7 +275,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
 
                         val variantType = component.variantType
                         if (variantType.isApk) {
-                            component.onTestedVariant {
+                            component.onTestedConfig {
                                 if (dexingUsingArtifactTransforms && it.variantType.isAar) {
                                     // If dexing using artifact transforms, library production code will
                                     // be dex'ed in a task, so we need to fetch the output directly.
@@ -308,9 +311,9 @@ abstract class DexMergingTask : NonIncrementalTask() {
                             }
                         }
                         return component.globalScope.project.files(
-                                forAction(DexMergingAction.MERGE_PROJECT),
-                                forAction(DexMergingAction.MERGE_LIBRARY_PROJECTS),
-                                external)
+                            forAction(DexMergingAction.MERGE_PROJECT),
+                            forAction(DexMergingAction.MERGE_LIBRARY_PROJECTS),
+                            external)
                     }
                 }
             }

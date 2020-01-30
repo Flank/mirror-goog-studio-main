@@ -25,8 +25,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.component.BaseCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -475,14 +475,14 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<ProcessTestManifest, ComponentPropertiesImpl> {
+            extends VariantTaskCreationAction<ProcessTestManifest, BaseCreationConfig> {
 
         @NonNull private final FileCollection testTargetMetadata;
 
         public CreationAction(
-                @NonNull ComponentPropertiesImpl componentProperties,
+                @NonNull BaseCreationConfig creationConfig,
                 @NonNull FileCollection testTargetMetadata) {
-            super(componentProperties);
+            super(creationConfig);
             this.testTargetMetadata = testTargetMetadata;
         }
 

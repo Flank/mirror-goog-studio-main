@@ -16,6 +16,8 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -183,9 +185,9 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
     // ----- Config Action -----
 
-    internal class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<GenerateBuildConfig, ComponentPropertiesImpl>(
-            componentProperties
+    internal class CreationAction(creationConfig: BaseCreationConfig) :
+        VariantTaskCreationAction<GenerateBuildConfig, BaseCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String = computeTaskName("generate", "BuildConfig")
@@ -212,7 +214,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             })
             task.buildConfigPackageName.disallowChanges()
 
-            if (!creationConfig.variantType.isAar) {
+            if (creationConfig is ApkCreationConfig) {
                 task.appPackageName.set(creationConfig.applicationId)
             }
             task.appPackageName.disallowChanges()

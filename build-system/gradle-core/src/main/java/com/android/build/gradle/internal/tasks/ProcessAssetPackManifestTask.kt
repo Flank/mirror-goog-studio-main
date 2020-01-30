@@ -16,14 +16,16 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -43,7 +45,8 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
     @get:OutputDirectory
     abstract val processedManifests: DirectoryProperty
 
-    private lateinit var applicationId: Property<String>
+    @get:Input
+    abstract val applicationId: Property<String>
 
     private lateinit var assetPackNames: Set<String>
 
@@ -66,11 +69,11 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
     }
 
     internal class CreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: ApkCreationConfig,
         private val assetPackManifestFileCollection: FileCollection,
         private val assetPackNames: Set<String>
-    ) : VariantTaskCreationAction<ProcessAssetPackManifestTask, ComponentPropertiesImpl>(
-        componentProperties
+    ) : VariantTaskCreationAction<ProcessAssetPackManifestTask, ApkCreationConfig>(
+        creationConfig
     ) {
         override val type = ProcessAssetPackManifestTask::class.java
         override val name = computeTaskName("process", "AssetPackManifests")
@@ -91,7 +94,7 @@ abstract class ProcessAssetPackManifestTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.applicationId = creationConfig.applicationId
+            task.applicationId.setDisallowChanges(creationConfig.applicationId)
             task.assetPackManifests.from(assetPackManifestFileCollection)
             task.assetPackNames = assetPackNames
         }

@@ -34,7 +34,10 @@ iml_module(
 
 kotlin_library(
     name = "builder-model",
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     javacopts = [
         "-source 6",
         "-target 6",
@@ -58,7 +61,10 @@ maven_pom(
 kotlin_test(
     name = "tests",
     size = "small",
-    srcs = ["src/test/java"],
+    srcs = glob([
+        "src/test/java/**/*.kt",
+        "src/test/java/**/*.java",
+    ]),
     coverage = True,
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),

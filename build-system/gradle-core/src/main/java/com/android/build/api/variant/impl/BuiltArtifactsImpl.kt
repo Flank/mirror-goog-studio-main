@@ -28,7 +28,9 @@ import org.gradle.api.file.Directory
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkQueue
 import java.io.File
+import java.io.Serializable
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.function.Supplier
 
 class BuiltArtifactsImpl(
@@ -37,57 +39,10 @@ class BuiltArtifactsImpl(
     override val applicationId: String,
     override val variantName: String,
     override val elements: Collection<BuiltArtifactImpl>)
-    : CommonBuiltArtifacts, BuiltArtifacts {
+    : CommonBuiltArtifacts, BuiltArtifacts, Serializable {
 
     companion object {
         const val METADATA_FILE_NAME = "output.json"
-    }
-
-    override fun transform(
-        newArtifactType: ArtifactType<Directory>,
-        transformer: (input: BuiltArtifact) -> File
-    ): BuiltArtifacts =
-        BuiltArtifactsImpl(
-            version,
-            newArtifactType,
-            applicationId,
-            variantName,
-            elements.map {
-                it.newOutput(transformer(it).toPath())
-            })
-
-    /**
-     * This is for external users only, internally we should use the [transform] below.
-     */
-    override fun <paramT : BuiltArtifacts.TransformParams> transform(
-        newArtifactType: ArtifactType<Directory>,
-        workers: WorkQueue,
-        transformRunnableClass: Class<out WorkAction<paramT>>,
-        parameterConfigurator: (builtArtifact: BuiltArtifact, parameters: paramT) -> Unit
-    ): Supplier<BuiltArtifacts> {
-
-        val parametersList = mutableMapOf<BuiltArtifact, paramT>()
-        elements.forEach { builtArtifact ->
-            workers.submit(transformRunnableClass) {
-                parameterConfigurator(builtArtifact, it)
-                parametersList[builtArtifact] = it
-            }
-        }
-        return Supplier {
-            workers.await()
-            BuiltArtifactsImpl(
-                version,
-                newArtifactType,
-                applicationId,
-                variantName,
-                elements.map { builtArtifact ->
-                    builtArtifact.newOutput(
-                        parametersList[builtArtifact]?.output?.toPath()
-                            ?: throw java.lang.RuntimeException("Cannot find BuiltArtifact")
-                    )
-                }
-            )
-        }
     }
 
     override fun save(out: Directory) {
@@ -97,6 +52,8 @@ class BuiltArtifactsImpl(
 
     /**
      * Similar implementation of [BuiltArtifacts.transform] using the [WorkerExecutorFacade]
+     *
+     * TODO : move those 2 APIs to TaskBaseOperationsImpl class.
      */
     internal fun <T: BuiltArtifacts.TransformParams> transform(
         newArtifactType: ArtifactType<Directory>,
@@ -203,7 +160,8 @@ class BuiltArtifactsImpl(
                 .asSequence()
                 .map { builtArtifact ->
                     BuiltArtifactImpl(
-                        outputFile = projectPath.relativize(builtArtifact.outputFile),
+                        outputFile = projectPath.relativize(
+                            Paths.get(builtArtifact.outputFile)).toString(),
                         properties = builtArtifact.properties,
                         versionCode = builtArtifact.versionCode,
                         versionName = builtArtifact.versionName,

@@ -25,5 +25,5 @@ import javax.inject.Inject
 open class UnitTestImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity
-): ComponentImpl<UnitTestProperties>(variantConfiguration), UnitTest<UnitTestProperties> {
+): TestComponentImpl<UnitTestPropertiesImpl>(variantDslInfo, variantConfiguration), UnitTest<UnitTestPropertiesImpl> {
 }

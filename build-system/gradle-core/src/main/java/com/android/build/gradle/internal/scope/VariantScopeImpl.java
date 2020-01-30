@@ -18,10 +18,8 @@ package com.android.build.gradle.internal.scope;
 
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_SET_METADATA;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SHARED_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
@@ -55,12 +53,10 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
@@ -82,11 +78,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -102,9 +96,7 @@ import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.ConfigurableFileTree;
-import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 
@@ -581,10 +573,12 @@ public class VariantScopeImpl implements VariantScope {
                                 && !variantType.isForTesting();
 
                 if (variantType.isAar() || useCompileRClassInApp) {
-                    Provider<RegularFile> rJar =
-                            artifacts.getFinalProduct(
-                                    COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-                    mainCollection = project.files(rJar);
+                    if (globalScope.getBuildFeatures().getAndroidResources()) {
+                        Provider<RegularFile> rJar =
+                                artifacts.getFinalProduct(
+                                        COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
+                        mainCollection = project.files(rJar);
+                    }
                 } else {
                     checkState(variantType.isApk(), "Expected APK type but found: " + variantType);
                     Provider<FileCollection> rJar =
@@ -812,14 +806,6 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public InternalArtifactType<Directory> getManifestArtifactType() {
-        return globalScope.getProjectOptions().get(BooleanOption.IDE_DEPLOY_AS_INSTANT_APP)
-                ? InternalArtifactType.INSTANT_APP_MANIFEST.INSTANCE
-                : InternalArtifactType.MERGED_MANIFESTS.INSTANCE;
-    }
-
-    @NonNull
-    @Override
     public JarCreatorType getJarCreatorType() {
         if (globalScope.getProjectOptions().get(USE_NEW_JAR_CREATOR)) {
             return JarCreatorType.JAR_FLINGER;
@@ -837,90 +823,4 @@ public class VariantScopeImpl implements VariantScope {
             return ApkCreatorType.APK_Z_FILE_CREATOR;
         }
     }
-
-    private Provider<FeatureSetMetadata> featureSetProvider = null;
-
-    @NonNull
-    private Provider<FeatureSetMetadata> getFeatureSetProvider() {
-        if (featureSetProvider == null) {
-            FileCollection fc =
-                    variantDependencies.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            PROJECT,
-                            FEATURE_SET_METADATA);
-            featureSetProvider =
-                    fc.getElements()
-                            .map(
-                                    entries -> {
-                                        FileSystemLocation file = Iterables.getOnlyElement(entries);
-                                        try {
-                                            return FeatureSetMetadata.load(file.getAsFile());
-                                        } catch (IOException e) {
-                                            throw new RuntimeException(e);
-                                        }
-                                    });
-
-        }
-
-        return featureSetProvider;
-    }
-
-    private Provider<String> featureName = null;
-
-    @NonNull
-    @Override
-    public Provider<String> getFeatureName() {
-        if (featureName == null) {
-            final String gradlePath = globalScope.getProject().getPath();
-
-            featureName =
-                    getFeatureSetProvider()
-                            .map(
-                                    featureSetMetadata -> {
-                                        String featureName =
-                                                featureSetMetadata.getFeatureNameFor(gradlePath);
-
-                                        if (featureName == null) {
-                                            throw new RuntimeException(
-                                                    String.format(
-                                                            "Failed to find feature name for %s in %s",
-                                                            gradlePath,
-                                                            featureSetMetadata.getSourceFile()));
-                                        }
-                                        return featureName;
-                                    });
-        }
-
-        return featureName;
-    }
-
-    private Provider<Integer> resOffset = null;
-
-    @NonNull
-    @Override
-    public Provider<Integer> getResOffset() {
-        if (resOffset == null) {
-            final String gradlePath = globalScope.getProject().getPath();
-
-            resOffset =
-                    getFeatureSetProvider()
-                            .map(
-                                    featureSetMetadata -> {
-                                        Integer resOffset =
-                                                featureSetMetadata.getResOffsetFor(gradlePath);
-
-                                        if (resOffset == null) {
-                                            throw new RuntimeException(
-                                                    String.format(
-                                                            "Failed to find resource offset for %s in %s",
-                                                            gradlePath,
-                                                            featureSetMetadata.getSourceFile()));
-                                        }
-                                        return resOffset;
-                                    });
-        }
-
-        return resOffset;
-    }
-
 }

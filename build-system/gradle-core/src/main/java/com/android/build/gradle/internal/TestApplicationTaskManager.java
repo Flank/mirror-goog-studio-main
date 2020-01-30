@@ -21,19 +21,22 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST_METADATA;
 import static com.android.build.gradle.internal.variant.TestVariantFactory.getTestedApksConfigurationName;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.tasks.CheckTestedAppObfuscation;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
@@ -42,7 +45,6 @@ import com.android.builder.core.VariantType;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.profile.Recorder;
 import com.google.common.base.Preconditions;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import org.gradle.api.Task;
@@ -51,34 +53,37 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
  * TaskManager for standalone test application that lives in a separate module from the tested
  * application.
  */
-public class TestApplicationTaskManager extends AbstractAppTaskManager<TestVariantPropertiesImpl> {
+public class TestApplicationTaskManager
+        extends AbstractAppTaskManager<TestVariantImpl, TestVariantPropertiesImpl> {
 
     public TestApplicationTaskManager(
+            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> variants,
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentPropertiesImpl>>
+                            testComponents,
+            boolean hasFlavors,
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
-        super(
-                globalScope,
-                dataBindingBuilder,
-                extension,
-                toolingRegistry,
-                recorder);
+        super(variants, testComponents, hasFlavors, globalScope, extension, recorder);
     }
 
     @Override
-    public void createTasksForVariant(
-            @NonNull TestVariantPropertiesImpl testVariantProperties,
-            @NonNull List<TestVariantPropertiesImpl> allComponentsWithLint) {
+    protected void doCreateTasksForVariant(
+            @NonNull ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl> variant,
+            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> allVariants) {
+        createCommonTasks(variant, allVariants);
 
-        createCommonTasks(testVariantProperties, allComponentsWithLint);
+        TestVariantPropertiesImpl testVariantProperties = variant.getProperties();
 
         Configuration testedApksConfig =
                 project.getConfigurations()
@@ -154,26 +159,20 @@ public class TestApplicationTaskManager extends AbstractAppTaskManager<TestVaria
 
     @Override
     public void createLintTasks(
-            @NonNull TestVariantPropertiesImpl componentProperties,
-            @NonNull List<TestVariantPropertiesImpl> allComponentsWithLint) {
+            @NonNull TestVariantPropertiesImpl variantProperties,
+            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> allVariants) {
         // do nothing
     }
 
     @Override
     public void maybeCreateLintVitalTask(
             @NonNull TestVariantPropertiesImpl variant,
-            @NonNull List<TestVariantPropertiesImpl> allComponentsWithLint) {
+            @NonNull List<ComponentInfo<TestVariantImpl, TestVariantPropertiesImpl>> allVariants) {
         // do nothing
     }
 
     @Override
-    public void createGlobalLintTask() {
-        // do nothing
-    }
-
-    @Override
-    public void configureGlobalLintTask(
-            @NonNull Collection<? extends VariantPropertiesImpl> components) {
+    protected void configureGlobalLintTask() {
         // do nothing
     }
 
@@ -198,9 +197,8 @@ public class TestApplicationTaskManager extends AbstractAppTaskManager<TestVaria
 
     /** Returns the manifest configuration of the tested application */
     @NonNull
-    private FileCollection getTestedManifestMetadata(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-        return componentProperties
+    private FileCollection getTestedManifestMetadata(@NonNull ApkCreationConfig creationConfig) {
+        return creationConfig
                 .getVariantDependencies()
                 .getCompileClasspath()
                 .getIncoming()
@@ -218,11 +216,11 @@ public class TestApplicationTaskManager extends AbstractAppTaskManager<TestVaria
     @Override
     @NonNull
     protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTask(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull ApkCreationConfig creationConfig) {
 
         return taskFactory.register(
                 new ProcessTestManifest.CreationAction(
-                        componentProperties, getTestedManifestMetadata(componentProperties)));
+                        creationConfig, getTestedManifestMetadata(creationConfig)));
     }
 
     @Override

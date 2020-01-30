@@ -25,5 +25,5 @@ import javax.inject.Inject
 open class DynamicFeatureVariantImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity
-) : VariantImpl<DynamicFeatureVariantProperties>(variantDslInfo, variantConfiguration), DynamicFeatureVariant {
+) : VariantImpl<DynamicFeatureVariantPropertiesImpl>(variantDslInfo, variantConfiguration), DynamicFeatureVariant<DynamicFeatureVariantPropertiesImpl> {
 }

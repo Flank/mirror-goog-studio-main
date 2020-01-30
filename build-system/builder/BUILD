@@ -19,7 +19,10 @@ fileset(
 
 kotlin_library(
     name = "builder",
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     bundled_deps = [
         "//tools/base/build-system/profile",
         "//tools/dx/dalvik/dx",
@@ -78,7 +81,10 @@ maven_pom(
 
 kotlin_test(
     name = "tests",
-    srcs = ["src/test/java"],
+    srcs = glob([
+        "src/test/java/**/*.kt",
+        "src/test/java/**/*.java",
+    ]),
     coverage = True,
     data = [
         "//prebuilts/studio/sdk:build-tools/latest",

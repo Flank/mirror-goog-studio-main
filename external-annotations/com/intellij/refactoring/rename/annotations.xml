@@ -1,0 +1,10 @@
+<root>
+  <item
+      name='com.intellij.refactoring.rename.RenamePsiElementProcessor void prepareRenaming(com.intellij.psi.PsiElement, java.lang.String, java.util.Map&lt;com.intellij.psi.PsiElement,java.lang.String&gt;)'>
+    <annotation name='com.android.annotations.concurrency.UiThread'/>
+  </item>
+  <item
+      name='com.intellij.refactoring.rename.RenamePsiElementProcessor void prepareRenaming(com.intellij.psi.PsiElement, java.lang.String, java.util.Map&lt;com.intellij.psi.PsiElement,java.lang.String&gt;, com.intellij.psi.search.SearchScope)'>
+    <annotation name='com.android.annotations.concurrency.UiThread'/>
+  </item>
+</root>

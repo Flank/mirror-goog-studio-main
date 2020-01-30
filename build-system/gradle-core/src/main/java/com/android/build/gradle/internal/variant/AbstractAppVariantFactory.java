@@ -21,10 +21,10 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.ComponentIdentity;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
-import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
@@ -44,8 +44,10 @@ import org.gradle.api.NamedDomainObjectContainer;
  *
  * <p>This can be an app project, or a test-only project, though the default behavior is app.
  */
-public abstract class AbstractAppVariantFactory<VariantPropertiesT extends VariantPropertiesImpl>
-        extends BaseVariantFactory<VariantPropertiesT> {
+public abstract class AbstractAppVariantFactory<
+                VariantT extends VariantImpl<VariantPropertiesT>,
+                VariantPropertiesT extends VariantPropertiesImpl>
+        extends BaseVariantFactory<VariantT, VariantPropertiesT> {
 
     public AbstractAppVariantFactory(@NonNull GlobalScope globalScope) {
         super(globalScope);
@@ -61,7 +63,6 @@ public abstract class AbstractAppVariantFactory<VariantPropertiesT extends Varia
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
-            @NonNull TaskManager<VariantPropertiesT> taskManager,
             @NonNull MutableTaskContainer taskContainer) {
         return new ApplicationVariantData(
                 componentIdentity,
@@ -71,7 +72,6 @@ public abstract class AbstractAppVariantFactory<VariantPropertiesT extends Varia
                 paths,
                 artifacts,
                 globalScope,
-                taskManager,
                 taskContainer);
     }
 

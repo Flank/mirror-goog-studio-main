@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.transforms.testdata.Tiger
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.DexerTool
-import com.android.builder.utils.FileCache
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.MoreTruth.assertThatDex
@@ -325,40 +324,6 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
         assertThat(toyTimestamp).isEqualTo(getDex(Toy::class.java).lastModified())
     }
 
-    /** Regression test to make sure we do not add unchanged files to cache.  */
-    @Test
-    fun test_incremental_notChangedNotAddedToCache() {
-        val jar = tmpDir.root.toPath().resolve("input.jar")
-        TestInputsGenerator.pathWithClasses(
-            jar,
-            setOf(CarbonForm::class.java, Animal::class.java)
-        )
-
-        val inputJarHashes = tmpDir.newFile()
-        val cache = FileCache.getInstanceWithSingleProcessLocking(tmpDir.newFolder())
-        getDelegate(
-            userCache = cache,
-            externalLibClasses = setOf(jar.toFile()),
-            inputJarHashes = inputJarHashes
-
-        ).doProcess()
-
-        val numEntries = Objects.requireNonNull(cache.cacheDirectory.list())
-
-        val referencedJar = tmpDir.newFile("referenced.jar")
-        TestInputsGenerator.jarWithEmptyClasses(referencedJar.toPath(), listOf("A"))
-
-        getDelegate(
-            isIncremental = true,
-            userCache = cache,
-            externalLibClasses = setOf(jar.toFile()),
-            desugaringClasspath = setOf(referencedJar),
-            inputJarHashes = inputJarHashes
-        ).doProcess()
-
-        assertThat(cache.cacheDirectory.list()).named("cache entries").isEqualTo(numEntries)
-    }
-
     @Test
     fun test_duplicateClasspathEntries() {
         val lib1 = tmpDir.root.toPath().resolve("lib1.jar")
@@ -437,7 +402,6 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
     }
 
     private fun getDelegate(
-        userCache: FileCache? = null,
         minSdkVersion: Int = 15,
         isDebuggable: Boolean = true,
         includeAndroidJar: Boolean = false,
@@ -500,7 +464,6 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingV
             numberOfBuckets = 2,
             useGradleWorkers = false,
             workerExecutor = workerExecutor,
-            userLevelCache = userCache,
             messageReceiver = NoOpMessageReceiver()
         )
     }

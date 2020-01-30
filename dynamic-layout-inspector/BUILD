@@ -7,7 +7,10 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 kotlin_test(
     name = "agent_tests",
     testonly = 1,
-    srcs = ["src/test"],
+    srcs = glob([
+        "src/test/**/*.kt",
+        "src/test/**/*.java",
+    ]),
     coverage = True,
     data = select({
         "windows": [],

@@ -23,6 +23,7 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BaseExtension;
@@ -31,8 +32,8 @@ import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.model.OptionalCompilationStep;
-import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MessageReceiver;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -51,11 +52,11 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public class GlobalScope {
 
     @NonNull private final Project project;
+    @NonNull private final DataBindingBuilder dataBindingBuilder;
     @NonNull private BaseExtension extension;
     @NonNull private final SdkComponents sdkComponents;
     @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
-    @Nullable private final FileCache buildCache;
     @NonNull private final MessageReceiver messageReceiver;
     @NonNull private final SoftwareComponentFactory componentFactory;
 
@@ -77,7 +78,6 @@ public class GlobalScope {
             @NonNull DslScope dslScope,
             @NonNull SdkComponents sdkComponents,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
-            @Nullable FileCache buildCache,
             @NonNull MessageReceiver messageReceiver,
             @NonNull SoftwareComponentFactory componentFactory) {
         // Attention: remember that this code runs early in the build lifecycle, project may not
@@ -89,13 +89,17 @@ public class GlobalScope {
         this.toolingRegistry = checkNotNull(toolingRegistry);
         this.optionalCompilationSteps =
                 checkNotNull(dslScope.getProjectOptions().getOptionalCompilationSteps());
-        this.buildCache = buildCache;
         this.messageReceiver = messageReceiver;
         this.componentFactory = componentFactory;
         this.globalArtifacts = new GlobalBuildArtifactsHolder(project, this::getBuildDir);
 
         // Create empty configurations before these have been set.
         this.lintChecks = project.getConfigurations().detachedConfiguration();
+
+        this.dataBindingBuilder = new DataBindingBuilder();
+        dataBindingBuilder.setPrintMachineReadableOutput(
+                SyncOptions.getErrorFormatMode(dslScope.getProjectOptions())
+                        == SyncOptions.ErrorFormatMode.MACHINE_PARSABLE);
     }
 
     public void setExtension(@NonNull BaseExtension extension) {
@@ -120,6 +124,11 @@ public class GlobalScope {
     @NonNull
     public BaseExtension getExtension() {
         return extension;
+    }
+
+    @NonNull
+    public DataBindingBuilder getDataBindingBuilder() {
+        return dataBindingBuilder;
     }
 
     @NonNull
@@ -192,11 +201,6 @@ public class GlobalScope {
     @NonNull
     public ProjectOptions getProjectOptions() {
         return dslScope.getProjectOptions();
-    }
-
-    @Nullable
-    public FileCache getBuildCache() {
-        return buildCache;
     }
 
     public void setLintChecks(@NonNull Configuration lintChecks) {

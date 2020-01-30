@@ -230,7 +230,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
         // else and cannot be known at config time.
         if (componentProperties.getVariantType().isDynamicFeature()) {
             componentProperties
-                    .getGlobalScope()
                     .getDslScope()
                     .getIssueReporter()
                     .reportError(
@@ -244,6 +243,14 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public TextResource getApplicationIdTextResource() {
+        componentProperties
+                .getDslScope()
+                .getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "VariantProperties.applicationId",
+                        "BaseVariant.getApplicationIdTextResource",
+                        "TBD",
+                        DeprecationReporter.DeprecationTarget.VERSION_5_0);
         return getVariantData().applicationIdTextResource;
     }
 

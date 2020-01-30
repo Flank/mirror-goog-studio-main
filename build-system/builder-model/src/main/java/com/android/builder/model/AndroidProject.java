@@ -419,4 +419,13 @@ public interface AndroidProject {
     /** Returns the AGP flags for this project. */
     @NonNull
     AndroidGradlePluginProjectFlags getFlags();
+
+    /**
+     * Returns the minimal information of variants for this project, excluding test related
+     * variants.
+     *
+     * @since 4.1
+     */
+    @NonNull
+    Collection<VariantBuildInformation> getVariantsBuildInformation();
 }

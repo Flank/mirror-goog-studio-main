@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar
-import com.android.testutils.AssumeUtil.assumeNotWindows
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -42,7 +41,7 @@ class GenFolderKotlinOnlyApiTest {
 
     @Before
     fun setUp() {
-        val generatedSources = tmp.newFolder().also {
+        project.file("gen_src").also {
             val sourceFile = it.resolve("test/Generated.kt")
             sourceFile.parentFile.mkdirs()
             sourceFile.writeText(
@@ -57,7 +56,7 @@ class GenFolderKotlinOnlyApiTest {
             def emptyTask = tasks.create("emptyTask")
             android.libraryVariants.all {
               it.getGenerateBuildConfigProvider().configure { it.enabled = false }
-              it.registerJavaGeneratingTask(emptyTask, new File("${generatedSources.canonicalPath}"))
+              it.registerJavaGeneratingTask(emptyTask, new File("gen_src"))
             }
         """.trimIndent()
         )
@@ -65,7 +64,6 @@ class GenFolderKotlinOnlyApiTest {
 
     @Test
     fun testBuildSucceeds() {
-        assumeNotWindows() // b/145232798
         project.executor().run("assembleDebug")
         val aar = project.getAar("debug")
         assertThatAar(aar).containsClass("Ltest/Generated;")

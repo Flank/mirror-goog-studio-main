@@ -16,13 +16,14 @@
 
 package com.android.build.gradle.internal.tasks
 
-import android.databinding.tool.DataBindingBuilder
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.TestComponentImpl
+import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
@@ -30,6 +31,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask
+import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.profile.Recorder
 import com.google.common.collect.ImmutableMap
@@ -38,31 +40,33 @@ import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.FileCollection
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import java.io.File
-import java.lang.Boolean
 import java.util.ArrayList
 import java.util.stream.Collectors
 
 class ApplicationTaskManager(
+    variants: List<ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>>,
+    testComponents: List<ComponentInfo<TestComponentImpl<out TestComponentPropertiesImpl>, TestComponentPropertiesImpl>>,
+    hasFlavors: Boolean,
     globalScope: GlobalScope,
-    databindingBuilder: DataBindingBuilder,
     extension: BaseExtension,
-    toolingRegistry: ToolingModelBuilderRegistry,
     recorder: Recorder
-) : AbstractAppTaskManager<ApplicationVariantPropertiesImpl>(
+) : AbstractAppTaskManager<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>(
+    variants,
+    testComponents,
+    hasFlavors,
     globalScope,
-    databindingBuilder,
     extension,
-    toolingRegistry,
     recorder
 ) {
 
-    override fun createTasksForVariant(
-        variantProperties: ApplicationVariantPropertiesImpl,
-        allComponentsWithLint: MutableList<ApplicationVariantPropertiesImpl>
+    override fun doCreateTasksForVariant(
+        variant: ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>,
+        allVariants: MutableList<ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>>
     ) {
-        createCommonTasks(variantProperties, allComponentsWithLint)
+        createCommonTasks(variant, allVariants)
+
+        val variantProperties = variant.properties
 
         // Base feature specific tasks.
         taskFactory.register(FeatureSetMetadataWriterTask.CreationAction(variantProperties))
@@ -108,8 +112,8 @@ class ApplicationTaskManager(
         val variantDslInfo = variantProperties.variantDslInfo
         val variantType = variantProperties.variantType
         if (variantType.isBaseModule) {
-            val unbundledWearApp = variantDslInfo.isWearAppUnbundled
-            if (Boolean.TRUE != unbundledWearApp && variantDslInfo.isEmbedMicroApp) {
+            val unbundledWearApp: Boolean? = variantDslInfo.isWearAppUnbundled
+            if (unbundledWearApp != true && variantDslInfo.isEmbedMicroApp) {
                 val wearApp =
                     variantProperties.variantDependencies.wearAppConfiguration
                         ?: error("Wear app with no wearApp configuration")
@@ -131,7 +135,7 @@ class ApplicationTaskManager(
                     createGenerateMicroApkDataTask(variantProperties, files)
                 }
             } else {
-                if (Boolean.TRUE == unbundledWearApp) {
+                if (unbundledWearApp == true) {
                     createGenerateMicroApkDataTask(variantProperties)
                 }
             }
@@ -167,7 +171,7 @@ class ApplicationTaskManager(
         )
     }
 
-    private fun createAssetPackTasks(variantProperties: VariantPropertiesImpl) {
+    private fun createAssetPackTasks(variantProperties: ApplicationVariantPropertiesImpl) {
         val depHandler = project.dependencies
         val notFound: MutableList<String> =
             ArrayList()
@@ -237,7 +241,7 @@ class ApplicationTaskManager(
         }
     }
 
-    private fun createDynamicBundleTask(variantProperties: VariantPropertiesImpl) {
+    private fun createDynamicBundleTask(variantProperties: ApplicationVariantPropertiesImpl) {
 
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
         // and the bundle can't be created. For now, just don't add the bundle task.
@@ -253,16 +257,16 @@ class ApplicationTaskManager(
             )
         )
 
-        val debuggable = variantProperties.variantDslInfo.isDebuggable
+        val addDependenciesTask = addDependenciesTask(variantProperties)
 
-        if (!debuggable) {
+        if (addDependenciesTask) {
             taskFactory.register(PerModuleReportDependenciesTask.CreationAction(variantProperties))
         }
         if (variantProperties.variantType.isBaseModule) {
             taskFactory.register(ParseIntegrityConfigTask.CreationAction(variantProperties))
             taskFactory.register(PackageBundleTask.CreationAction(variantProperties))
             taskFactory.register(FinalizeBundleTask.CreationAction(variantProperties))
-            if (!debuggable) {
+            if (addDependenciesTask) {
                 taskFactory.register(BundleReportDependenciesTask.CreationAction(variantProperties))
                 if (variantProperties.globalScope
                         .projectOptions[BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS]
@@ -277,7 +281,7 @@ class ApplicationTaskManager(
     }
 
     private fun createSoftwareComponent(
-        variantProperties: VariantPropertiesImpl,
+        variantProperties: ApplicationVariantPropertiesImpl,
         suffix: String,
         publication: PublishedConfigType
     ) {
@@ -287,13 +291,18 @@ class ApplicationTaskManager(
         project.components.add(component)
     }
 
-    override fun createInstallTask(componentProperties: ComponentPropertiesImpl) {
+    override fun createInstallTask(creationConfig: ApkCreationConfig) {
         if (extension is BaseAppModuleExtension && extension.dynamicFeatures.isEmpty()) {
             // no dynamic features means we can just use the standard install task
-            super.createInstallTask(componentProperties)
+            super.createInstallTask(creationConfig)
         } else {
             // need to install via bundle
-            taskFactory.register(InstallVariantViaBundleTask.CreationAction(componentProperties))
+            taskFactory.register(InstallVariantViaBundleTask.CreationAction(creationConfig))
         }
+    }
+
+    private fun addDependenciesTask(variantProperties: ApplicationVariantPropertiesImpl): kotlin.Boolean {
+        return !variantProperties.debuggable
+                && (extension as BaseAppModuleExtension).dependenciesInfo.include
     }
 }

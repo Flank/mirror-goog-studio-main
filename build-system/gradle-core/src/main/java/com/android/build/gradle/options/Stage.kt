@@ -176,6 +176,7 @@ enum class Version(
     VERSION_3_5("version 3.5"),
     VERSION_3_6("version 3.6"),
     VERSION_4_0("version 4.0"),
+    VERSION_4_1("version 4.1"),
     VERSION_5_0("version 5.0"),
 
     ;

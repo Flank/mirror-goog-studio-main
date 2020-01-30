@@ -173,6 +173,14 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "com.google.flatbuffers_flatbuffers-java",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/flatbuffers/flatbuffers-java/1.11.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "com.google.guava_failureaccess",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/failureaccess/1.0.1:jar",
     visibility = ["//visibility:public"],
@@ -1735,6 +1743,14 @@ maven_java_library(
         ":com.google.code.findbugs_jsr305",
         ":com.google.guava_guava",
     ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.tensorflow_tensorflow-lite-support",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.

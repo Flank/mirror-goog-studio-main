@@ -18,6 +18,7 @@ package com.android.build.api.variant
 
 import org.gradle.api.Incubating
 import org.gradle.api.tasks.Input
+import java.io.Serializable
 
 /**
  * Immutable filter configuration.
@@ -36,7 +37,8 @@ data class FilterConfiguration(
      * dependent on the [FilterConfiguration.filterType].
      */
     @get:Input
-    val identifier: String) {
+    val identifier: String
+) : Serializable {
 
     /** Split dimension type  */
     @Incubating

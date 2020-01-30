@@ -839,7 +839,9 @@ public final class SdkConstants {
     public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_CHAIN =
             AndroidxName.of("android.support.constraint.", "Chain");
     public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_LAYER =
-            AndroidxName.of("android.support.constraint.", "Layer");
+            AndroidxName.of("android.support.constraint.helper.", "Layer");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_FLOW =
+      AndroidxName.of("android.support.constraint.helper.", "Flow");
     public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_CONSTRAINTS =
             AndroidxName.of("android.support.constraint.", "Constraints");
     public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_REFERENCE =
@@ -1418,6 +1420,26 @@ public final class SdkConstants {
     public static final String ATTR_HEIGHT = "height"; //$NON-NLS-1$
     public static final String ATTR_NAV_GRAPH = "navGraph";
     public static final String ATTR_USE_TAG = "useTag";
+
+    // ConstraintLayout Flow
+    public static final String ATTR_FLOW_WRAP_MODE = "flow_wrapMode";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_MAX_ELEMENTS_WRAP = "flow_maxElementsWrap";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_FIRST_HORIZONTAL_BIAS = "flow_firstHorizontalBias";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_FIRST_HORIZONTAL_STYLE = "flow_firstHorizontalStyle";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_HORIZONTAL_BIAS = "flow_horizontalBias";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_HORIZONTAL_STYLE = "flow_horizontalStyle";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_HORIZONTAL_ALIGN = "flow_horizontalAlign";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_HORIZONTAL_GAP = "flow_horizontalGap";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_LAST_HORIZONTAL_BIAS = "flow_lastHorizontalBias";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_LAST_HORIZONTAL_STYLE = "flow_lastHorizontalStyle";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_FIRST_VERTICAL_BIAS = "flow_firstVerticalBias";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_FIRST_VERTICAL_STYLE = "flow_firstVerticalStyle";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_VERTICAL_BIAS = "flow_verticalBias";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_VERTICAL_STYLE = "flow_verticalStyle";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_VERTICAL_ALIGN = "flow_verticalAlign";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_VERTICAL_GAP = "flow_verticalGap";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_LAST_VERTICAL_BIAS = "flow_lastVerticalBias";  //$NON-NLS-1$
+    public static final String ATTR_FLOW_LAST_VERTICAL_STYLE = "flow_lastVerticalStyle";  //$NON-NLS-1$
 
     // Attributes: Drawable
     public static final String ATTR_VIEWPORT_HEIGHT = "viewportHeight";

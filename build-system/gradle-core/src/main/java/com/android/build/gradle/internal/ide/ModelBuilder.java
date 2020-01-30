@@ -54,7 +54,6 @@ import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
@@ -94,6 +93,7 @@ import com.android.builder.model.SourceProvider;
 import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
+import com.android.builder.model.VariantBuildInformation;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.builder.model.ViewBindingOptions;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -134,6 +134,7 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.file.RegularFile;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom Android model. */
@@ -144,7 +145,6 @@ public class ModelBuilder<Extension extends BaseExtension>
     @NonNull protected final Extension extension;
     @NonNull private final ExtraModelInfo extraModelInfo;
     @NonNull private final VariantModel variantModel;
-    @NonNull private final TaskManager taskManager;
     @NonNull private final SyncIssueReporter syncIssueReporter;
     private final int projectType;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
@@ -159,7 +159,6 @@ public class ModelBuilder<Extension extends BaseExtension>
     public ModelBuilder(
             @NonNull GlobalScope globalScope,
             @NonNull VariantModel variantModel,
-            @NonNull TaskManager taskManager,
             @NonNull Extension extension,
             @NonNull ExtraModelInfo extraModelInfo,
             @NonNull SyncIssueReporter syncIssueReporter,
@@ -168,7 +167,6 @@ public class ModelBuilder<Extension extends BaseExtension>
         this.extension = extension;
         this.extraModelInfo = extraModelInfo;
         this.variantModel = variantModel;
-        this.taskManager = taskManager;
         this.syncIssueReporter = syncIssueReporter;
         this.projectType = projectType;
     }
@@ -254,36 +252,27 @@ public class ModelBuilder<Extension extends BaseExtension>
         ImmutableList.Builder<VariantBuildOutput> variantsOutput = ImmutableList.builder();
 
         // Loop on the tested variants
-        for (ComponentPropertiesImpl component : variantModel.getComponents()) {
-            // only process tested variants.
-            if (!component.getVariantType().isTestComponent()) {
-                VariantPropertiesImpl variantProperties = (VariantPropertiesImpl) component;
-                // get the output of their tests
-                Collection<TestVariantBuildOutput> testVariantBuildOutputs =
-                        variantProperties
-                                .getTestComponents()
-                                .values()
-                                .stream()
-                                .map(
-                                        testComponent ->
-                                                new DefaultTestVariantBuildOutput(
-                                                        testComponent.getName(),
-                                                        getBuildOutputSupplier(testComponent).get(),
-                                                        component.getName(),
-                                                        testComponent.getVariantType()
-                                                                        == VariantTypeImpl
-                                                                                .ANDROID_TEST
-                                                                ? TestVariantBuildOutput.TestType
-                                                                        .ANDROID_TEST
-                                                                : TestVariantBuildOutput.TestType
-                                                                        .UNIT))
-                                .collect(Collectors.toList());
-                variantsOutput.add(
-                        new DefaultVariantBuildOutput(
-                                component.getName(),
-                                getBuildOutputSupplier(component).get(),
-                                testVariantBuildOutputs));
-            }
+        for (VariantPropertiesImpl variantProperties : variantModel.getVariants()) {
+            // get the output of their tests
+            Collection<TestVariantBuildOutput> testVariantBuildOutputs =
+                    variantProperties.getTestComponents().values().stream()
+                            .map(
+                                    testComponent ->
+                                            new DefaultTestVariantBuildOutput(
+                                                    testComponent.getName(),
+                                                    getBuildOutputSupplier(testComponent).get(),
+                                                    variantProperties.getName(),
+                                                    testComponent.getVariantType()
+                                                                    == VariantTypeImpl.ANDROID_TEST
+                                                            ? TestVariantBuildOutput.TestType
+                                                                    .ANDROID_TEST
+                                                            : TestVariantBuildOutput.TestType.UNIT))
+                            .collect(Collectors.toList());
+            variantsOutput.add(
+                    new DefaultVariantBuildOutput(
+                            variantProperties.getName(),
+                            getBuildOutputSupplier(variantProperties).get(),
+                            testVariantBuildOutputs));
         }
 
         return new DefaultProjectBuildOutput(variantsOutput.build());
@@ -383,12 +372,10 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
 
         String defaultVariant = variantModel.getDefaultVariant();
-        for (ComponentPropertiesImpl component : variantModel.getComponents()) {
-            if (!component.getVariantType().isTestComponent()) {
-                variantNames.add(component.getName());
-                if (shouldBuildVariant) {
-                    variants.add(createVariant(component));
-                }
+        for (VariantPropertiesImpl variantProperties : variantModel.getVariants()) {
+            variantNames.add(variantProperties.getName());
+            if (shouldBuildVariant) {
+                variants.add(createVariant(variantProperties));
             }
         }
 
@@ -396,6 +383,12 @@ public class ModelBuilder<Extension extends BaseExtension>
         String groupId = project.getGroup().toString();
 
         AndroidGradlePluginProjectFlagsImpl flags = getFlags();
+
+        // Collect all non test variants minimum information.
+        Collection<VariantBuildInformation> variantBuildOutputs =
+                variantModel.getVariants().stream()
+                        .map(this::createBuildInformation)
+                        .collect(Collectors.toList());
 
         return new DefaultAndroidProject(
                 project.getName(),
@@ -425,7 +418,37 @@ public class ModelBuilder<Extension extends BaseExtension>
                 isBaseSplit(),
                 getDynamicFeatures(),
                 viewBindingOptions,
-                flags);
+                flags,
+                variantBuildOutputs);
+    }
+
+    private VariantBuildInformation createBuildInformation(
+            ComponentPropertiesImpl componentProperties) {
+        return new VariantBuildInformationImp(
+                componentProperties.getName(),
+                componentProperties.getTaskContainer().assembleTask.getName(),
+                toAbsolutePath(
+                        componentProperties
+                                .getArtifacts()
+                                .getOperations()
+                                .get(InternalArtifactType.APK_IDE_MODEL.INSTANCE)
+                                .getOrNull()),
+                componentProperties.getTaskContainer().getBundleTask() == null
+                        ? componentProperties.computeTaskName("bundle")
+                        : componentProperties.getTaskContainer().getBundleTask().getName(),
+                toAbsolutePath(
+                        componentProperties
+                                .getArtifacts()
+                                .getOperations()
+                                .get(InternalArtifactType.BUNDLE_IDE_MODEL.INSTANCE)
+                                .getOrNull()),
+                ExtractApksTask.Companion.getTaskName(componentProperties),
+                toAbsolutePath(
+                        componentProperties
+                                .getArtifacts()
+                                .getOperations()
+                                .get(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL.INSTANCE)
+                                .getOrNull()));
     }
 
     private AndroidGradlePluginProjectFlagsImpl getFlags() {
@@ -452,6 +475,11 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     protected boolean isBaseSplit() {
         return false;
+    }
+
+    @Nullable
+    private static String toAbsolutePath(@Nullable RegularFile regularFile) {
+        return regularFile != null ? regularFile.getAsFile().getAbsolutePath() : null;
     }
 
     protected boolean inspectManifestForInstantTag(
@@ -525,10 +553,9 @@ public class ModelBuilder<Extension extends BaseExtension>
         if (variantName == null) {
             throw new IllegalArgumentException("Variant name cannot be null.");
         }
-        for (ComponentPropertiesImpl component : variantModel.getComponents()) {
-            if (!component.getVariantType().isTestComponent()
-                    && component.getName().equals(variantName)) {
-                VariantImpl variant = createVariant(component);
+        for (VariantPropertiesImpl variantProperties : variantModel.getVariants()) {
+            if (variantProperties.getName().equals(variantName)) {
+                VariantImpl variant = createVariant(variantProperties);
                 if (shouldScheduleSourceGeneration) {
                     scheduleSourceGeneration(project, variant);
                 }
@@ -755,7 +782,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 variantType.getArtifactName(),
                 componentProperties.getTaskContainer().getAssembleTask().getName(),
                 componentProperties.getTaskContainer().getCompileTask().getName(),
-                Sets.newHashSet(taskManager.createMockableJar.getName()),
+                Sets.newHashSet(TaskManager.CREATE_MOCKABLE_JAR_TASK_NAME),
                 getGeneratedSourceFoldersForUnitTests(componentProperties),
                 artifacts.getFinalProduct(JAVAC.INSTANCE).get().getAsFile(),
                 additionalTestClasses,
@@ -818,12 +845,6 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
 
         SourceProviders sourceProviders = determineSourceProviders(componentProperties);
-
-        // get the outputs
-        BuildOutputSupplier<Collection<EarlySyncBuildOutput>> splitOutputsProxy =
-                getBuildOutputSupplier(componentProperties);
-        BuildOutputSupplier<Collection<EarlySyncBuildOutput>> manifestsProxy =
-                getManifestsSupplier(componentProperties);
 
         InstantRunImpl instantRun =
                 new InstantRunImpl(
@@ -912,8 +933,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                 variantDslInfo.getMergedBuildConfigFields(),
                 variantDslInfo.getMergedResValues(),
                 instantRun,
-                splitOutputsProxy,
-                manifestsProxy,
                 testOptions,
                 taskContainer.getConnectedTask() == null
                         ? null
@@ -1026,41 +1045,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                                                     .iterator()
                                                     .next()));
                         };
-            default:
-                throw new RuntimeException(
-                        "Unhandled build type " + componentProperties.getVariantType());
-        }
-    }
-
-    // is it still used by IDE ? at this point, it becomes impossible to set this up accurately.
-    private BuildOutputSupplier<Collection<EarlySyncBuildOutput>> getManifestsSupplier(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-
-        VariantTypeImpl variantType = (VariantTypeImpl) componentProperties.getVariantType();
-
-        switch (variantType) {
-            case BASE_APK:
-            case OPTIONAL_APK:
-            case ANDROID_TEST:
-            case TEST_APK:
-                return new BuildOutputsSupplier(
-                        BuildElements.METADATA_FILE_VERSION,
-                        ImmutableList.of(InternalArtifactType.MERGED_MANIFESTS.INSTANCE),
-                        ImmutableList.of(
-                                componentProperties.getPaths().getManifestOutputDirectory()));
-            case LIBRARY:
-                return BuildOutputSupplier.of(
-                        ImmutableList.of(
-                                new EarlySyncBuildOutput(
-                                        InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-                                        VariantOutput.OutputType.MAIN,
-                                        ImmutableList.of(),
-                                        0,
-                                        new File(
-                                                componentProperties
-                                                        .getPaths()
-                                                        .getManifestOutputDirectory(),
-                                                SdkConstants.ANDROID_MANIFEST_XML))));
             default:
                 throw new RuntimeException(
                         "Unhandled build type " + componentProperties.getVariantType());

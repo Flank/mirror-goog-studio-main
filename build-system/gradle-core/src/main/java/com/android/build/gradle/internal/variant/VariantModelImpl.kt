@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.VariantManager
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.builder.errors.IssueReporter
 import com.google.common.base.Joiner
 import com.google.common.collect.ArrayListMultimap
@@ -29,11 +29,15 @@ import java.util.Comparator
 class VariantModelImpl(
     override val inputs: VariantInputModel,
     private val testBuilderTypeProvider: () -> String?,
-    private val variantManager: VariantManager<*>,
+    private val variantProvider: () -> List<VariantPropertiesImpl>,
+    private val testComponentProvider: () -> List<TestComponentPropertiesImpl>,
     private val issueHandler: IssueReporter) : VariantModel {
 
-    override val components: List<ComponentPropertiesImpl>
-        get() = variantManager.allComponents
+    override val variants: List<VariantPropertiesImpl>
+        get() = variantProvider()
+
+    override val testComponents: List<TestComponentPropertiesImpl>
+        get() = testComponentProvider()
 
     override val defaultVariant: String?
         get() = computeDefaultVariant()
@@ -65,7 +69,7 @@ class VariantModelImpl(
         // Finalize the DSL we are about to read.
         finalizeDefaultVariantDsl()
         // Exit early if all variants were filtered out, this is not a valid project
-        if (components.isEmpty()) {
+        if (variants.isEmpty()) {
             return null
         }
         // Otherwise get the 'best' build type, respecting the user's preferences first.
@@ -81,10 +85,7 @@ class VariantModelImpl(
         // Ignore test, base feature and feature variants.
         // * Test variants have corresponding production variants
         // * Hybrid feature variants have corresponding library variants.
-        val defaultComponent: ComponentPropertiesImpl? = components
-            .asSequence()
-            .filter { !it.variantType.isTestComponent }
-            .minWith(preferredDefaultVariantScopeComparator)
+        val defaultComponent: VariantPropertiesImpl? = variants.minWith(preferredDefaultVariantScopeComparator)
 
         return defaultComponent?.name
     }

@@ -214,7 +214,6 @@ class CacheabilityTestHelper private constructor(
         projectCopy1
             .executor()
             .withArgument("--build-cache")
-            .with(StringOption.BUILD_CACHE_DIR, buildCacheDir.toString())
             .run(chainExtraExecutorOperations)
             .run(tasks.asList())
 
@@ -226,7 +225,6 @@ class CacheabilityTestHelper private constructor(
             projectCopy2
                 .executor()
                 .withArgument("--build-cache")
-                .with(StringOption.BUILD_CACHE_DIR, buildCacheDir.toString())
                 .run(chainExtraExecutorOperations)
                 .run(tasks.asList())
 

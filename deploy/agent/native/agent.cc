@@ -20,6 +20,8 @@
 #include <unistd.h>
 
 #include "tools/base/deploy/agent/native/capabilities.h"
+#include "tools/base/deploy/agent/native/instrumenter.h"
+#include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_util.h"
 #include "tools/base/deploy/agent/native/swapper.h"
 #include "tools/base/deploy/common/event.h"
@@ -53,9 +55,43 @@ void SendFailure(const deploy::Socket& socket,
   SendResponse(socket, response);
 }
 
-// Event that fires when the agent hooks onto a running VM.
-extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
-                                                 void* reserved) {
+jint HandleStartupAgent(JavaVM* vm, const std::string& app_data_dir) {
+  jvmtiEnv* jvmti;
+  JNIEnv* jni;
+
+  Log::V("Startup agent attached to VM");
+
+  // Set up the JVMTI and JNI environments.
+
+  if (vm->GetEnv((void**)&jni, JNI_VERSION_1_2) != JNI_OK) {
+    ErrEvent("Error retrieving JNI function table.");
+    return JNI_OK;
+  }
+
+  if (vm->GetEnv((void**)&jvmti, JVMTI_VERSION_1_2) != JNI_OK) {
+    ErrEvent("Error retrieving JVMTI function table.");
+    return JNI_OK;
+  }
+
+  if (jvmti->AddCapabilities(&REQUIRED_CAPABILITIES) != JVMTI_ERROR_NONE) {
+    ErrEvent("Error setting capabilities.");
+    jvmti->DisposeEnvironment();
+    return JNI_OK;
+  }
+
+  const std::string package_name =
+      app_data_dir.substr(app_data_dir.find_last_of('/') + 1);
+  if (!InstrumentApplication(jvmti, jni, package_name)) {
+    ErrEvent("Could not instrument application");
+    jvmti->DisposeEnvironment();
+    return JNI_OK;
+  }
+
+  jvmti->DisposeEnvironment();
+  return JNI_OK;
+}
+
+jint HandleSwapAgent(JavaVM* vm, char* socket_name) {
   jvmtiEnv* jvmti;
   JNIEnv* jni;
 
@@ -71,7 +107,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
     return JNI_OK;
   }
 
-  if (!socket.Connect(input)) {
+  if (!socket.Connect(socket_name)) {
     ErrEvent("Could not connect to socket");
     return JNI_OK;
   }
@@ -121,6 +157,18 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
   // causes ART to attempt to re-attach the agent with a null classloader.
   jvmti->DisposeEnvironment();
   return JNI_OK;
+}
+
+// Event that fires when the agent hooks onto a running VM.
+extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
+                                                 void* reserved) {
+  // Startup agents are passed the path to the app data directory.
+  // TODO(b/148544245): See if there's a nicer way to do this.
+  if (input[0] == '/') {
+    return HandleStartupAgent(vm, input);
+  } else {
+    return HandleSwapAgent(vm, input);
+  }
 }
 
 }  // namespace deploy

@@ -20,9 +20,9 @@ import org.gradle.api.Action
 
 open class DelayedActionExecutor<T> {
 
-    private val actions = mutableListOf<Action<T>>()
+    private val actions = mutableListOf<Action<in T>>()
 
-    fun registerAction(action: Action<T>) {
+    fun registerAction(action: Action<in T>) {
         actions.add(action)
     }
 

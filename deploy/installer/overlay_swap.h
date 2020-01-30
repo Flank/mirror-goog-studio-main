@@ -46,11 +46,7 @@ class OverlaySwapCommand : public BaseSwapCommand {
  private:
   proto::OverlaySwapRequest request_;
 
-  // Helper method to convert a repeated field of OverlayFile into DexClass
-  // protos and thus create a SwapRequest from an OverlayUpdateRequest.
-  void PopulateClasses(
-      google::protobuf::RepeatedPtrField<proto::OverlayFile> overlay_files,
-      proto::SwapRequest* swap_request);
+  void BuildOverlayUpdateRequest(proto::OverlayUpdateRequest* request);
 };
 
 }  // namespace deploy

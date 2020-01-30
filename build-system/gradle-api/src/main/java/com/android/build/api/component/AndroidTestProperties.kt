@@ -17,10 +17,17 @@
 package com.android.build.api.component
 
 import org.gradle.api.Incubating
+import org.gradle.api.provider.Property
 
 /**
  * Properties for the android test Variant of a module
  */
 @Incubating
 interface AndroidTestProperties : TestComponentProperties {
+
+    /**
+     * Variant's application ID as present in the final manifest file of the APK.
+     */
+    val applicationId: Property<String>
+
 }

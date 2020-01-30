@@ -27,10 +27,12 @@ java_proto_library(
 
 kotlin_library(
     name = "gradle-core",
-    srcs = [
-        "src/fromGradle/java",
-        "src/main/java",
-    ],
+    srcs = glob([
+        "src/fromGradle/java/**/*.kt",
+        "src/fromGradle/java/**/*.java",
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     bundled_deps = [
         ":proto",
     ],
@@ -122,7 +124,10 @@ kotlin_test(
     name = "tests",
     size = "large",
     timeout = "long",
-    srcs = ["src/test/java"],
+    srcs = glob([
+        "src/test/java/**/*.kt",
+        "src/test/java/**/*.java",
+    ]),
     coverage = True,
     data = [
         "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",

@@ -17,11 +17,13 @@
 package com.android.ide.common.resources;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceFolderType;
+import com.android.utils.SdkUtils;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,6 +33,9 @@ import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class FileResourceNameValidatorTest {
+
+    public static final String NAME_MUST_START_WITH_A_LETTER =
+            "The resource name must start with a letter";
 
     @Parameterized.Parameters(name = "file={0}, resourceType={1} gives error {2}")
     public static Collection<Object[]> expected() {
@@ -43,51 +48,81 @@ public class FileResourceNameValidatorTest {
                 "The file name must end with .xml, .ttf, .ttc or .otf";
         return Arrays.asList(
                 new Object[][] {
-                    //{ resourceName, resourceType, sourceFile, expectedException }
-                    {"", ResourceFolderType.ANIMATOR, "Resource must have a name"},
-                    {"foo.xml", ResourceFolderType.DRAWABLE, null},
-                    {"foo.XML", ResourceFolderType.DRAWABLE, null},
-                    {"foo.xML", ResourceFolderType.DRAWABLE, null},
-                    {"foo.png", ResourceFolderType.DRAWABLE, null},
-                    {"foo.9.png", ResourceFolderType.DRAWABLE, null},
-                    {"foo.gif", ResourceFolderType.DRAWABLE, null},
-                    {"foo.jpg", ResourceFolderType.DRAWABLE, null},
-                    {"foo.jpeg", ResourceFolderType.DRAWABLE, null},
-                    {"foo.bmp", ResourceFolderType.DRAWABLE, null},
-                    {"foo.webp", ResourceFolderType.DRAWABLE, null},
-                    {"foo.other.png", ResourceFolderType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC},
-                    {"foo.xml", ResourceFolderType.XML, null},
-                    {"foo.xsd", ResourceFolderType.XML, null},
-                    {"foo.xml", ResourceFolderType.FONT, null},
-                    {"foo.ttf", ResourceFolderType.FONT, null},
-                    {"foo.ttc", ResourceFolderType.FONT, null},
-                    {"foo.otf", ResourceFolderType.FONT, null},
-                    {"foo.png", ResourceFolderType.FONT, THE_FILE_NAME_MUST_END_WITH_XML_OR_TTF},
-                    {"_foo.png", ResourceFolderType.DRAWABLE, null},
-                    {"foo.png", ResourceFolderType.XML, "The file name must end with .xml"},
-                    {"foo.8.xml", ResourceFolderType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC},
-                    {"foo", ResourceFolderType.DRAWABLE, THE_FILE_NAME_MUST_END_WITH_XML_OR_PNG},
-                    {"foo.txt", ResourceFolderType.RAW, null},
-                    {"foo", ResourceFolderType.RAW, null},
-                    {"foo", ResourceFolderType.RAW, null},
+                    // { resourceName, resourceType, sourceFile, expectedException, validName }
+                    {"", ResourceFolderType.ANIMATOR, "Resource must have a name", "resource"},
+                    {"foo.xml", ResourceFolderType.DRAWABLE, null, "foo"},
+                    {"foo.XML", ResourceFolderType.DRAWABLE, null, "foo"},
+                    {"foo.xML", ResourceFolderType.DRAWABLE, null, "foo"},
+                    {"foo.png", ResourceFolderType.DRAWABLE, null, "foo"},
+                    {"foo.9.png", ResourceFolderType.DRAWABLE, null, "foo"},
+                    {"foo.gif", ResourceFolderType.DRAWABLE, null, "foo"},
+                    {"foo.jpg", ResourceFolderType.DRAWABLE, null, "foo"},
+                    {"foo.jpeg", ResourceFolderType.DRAWABLE, null, "foo"},
+                    {"foo.bmp", ResourceFolderType.DRAWABLE, null, "foo"},
+                    {"foo.webp", ResourceFolderType.DRAWABLE, null, "foo"},
+                    {
+                        "foo.other.png",
+                        ResourceFolderType.DRAWABLE,
+                        "'.'" + IS_NOT_A_VALID_ETC,
+                        "foo_other"
+                    },
+                    {"foo.xml", ResourceFolderType.XML, null, "foo"},
+                    {"foo.xsd", ResourceFolderType.XML, null, "foo"},
+                    {"foo.xml", ResourceFolderType.FONT, null, "foo"},
+                    {"foo.ttf", ResourceFolderType.FONT, null, "foo"},
+                    {"foo.ttc", ResourceFolderType.FONT, null, "foo"},
+                    {"foo.otf", ResourceFolderType.FONT, null, "foo"},
+                    {
+                        "foo.png",
+                        ResourceFolderType.FONT,
+                        THE_FILE_NAME_MUST_END_WITH_XML_OR_TTF,
+                        "foo"
+                    },
+                    {"_foo.png", ResourceFolderType.DRAWABLE, null, "_foo"},
+                    {"foo.png", ResourceFolderType.XML, "The file name must end with .xml", "foo"},
+                    {"foo.8.xml", ResourceFolderType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC, "foo_8"},
+                    {
+                        "foo",
+                        ResourceFolderType.DRAWABLE,
+                        THE_FILE_NAME_MUST_END_WITH_XML_OR_PNG,
+                        "foo"
+                    },
+                    {"foo.txt", ResourceFolderType.RAW, null, "foo"},
+                    {"foo", ResourceFolderType.RAW, null, "foo"},
+                    {"foo", ResourceFolderType.RAW, null, "foo"},
                     {
                         "foo.txt",
                         ResourceFolderType.DRAWABLE,
-                        THE_FILE_NAME_MUST_END_WITH_XML_OR_PNG
+                        THE_FILE_NAME_MUST_END_WITH_XML_OR_PNG,
+                        "foo"
                     },
                     {
                         "1foo.png",
                         ResourceFolderType.DRAWABLE,
-                        "The resource name must start with a letter"
+                        NAME_MUST_START_WITH_A_LETTER,
+                        "_foo"
                     },
-                    {"Foo.png", ResourceFolderType.DRAWABLE, "'F'" + IS_NOT_A_VALID_ETC},
-                    {"foo$.png", ResourceFolderType.DRAWABLE, "'$'" + IS_NOT_A_VALID_ETC},
-                    {"bAr.png", ResourceFolderType.DRAWABLE, "'A'" + IS_NOT_A_VALID_ETC},
+                    {"Foo.png", ResourceFolderType.DRAWABLE, "'F'" + IS_NOT_A_VALID_ETC, "foo"},
+                    {"foo$.png", ResourceFolderType.DRAWABLE, "'$'" + IS_NOT_A_VALID_ETC, "foo_"},
+                    {"bAr.png", ResourceFolderType.DRAWABLE, "'A'" + IS_NOT_A_VALID_ETC, "bar"},
                     {
                         "enum.png",
                         ResourceFolderType.DRAWABLE,
-                        "enum is not a valid resource name (reserved Java keyword)"
+                        "enum is not a valid resource name (reserved Java keyword)",
+                        "resource_enum"
                     },
+                    {
+                        "icon_\uD83E\uDD16.png",
+                        ResourceFolderType.DRAWABLE,
+                        "'\uD83E\uDD16'" + IS_NOT_A_VALID_ETC,
+                        "icon__"
+                    }, // Robot face emoji.
+                    {
+                        "\uD83E\uDD16_icon.png",
+                        ResourceFolderType.DRAWABLE,
+                        NAME_MUST_START_WITH_A_LETTER,
+                        "__icon"
+                    }, // Robot face emoji.
                 });
     }
 
@@ -100,6 +135,8 @@ public class FileResourceNameValidatorTest {
     @Parameterized.Parameter(value = 2)
     public String mExpectedErrorMessage;
 
+    @Parameterized.Parameter(value = 3)
+    public String mExpectedValidName;
 
     @Test
     public void validate() {
@@ -113,6 +150,25 @@ public class FileResourceNameValidatorTest {
         assertErrorMessageCorrect(mExpectedErrorMessage, errorMessage, file);
     }
 
+    @Test
+    public void getValidResourceName() {
+        String nameWithoutExtension = SdkUtils.fileNameToResourceName(mSourceFileName);
+
+        if (FileResourceNameValidator.getErrorTextForNameWithoutExtension(
+                        nameWithoutExtension, mResourceFolderType)
+                == null) {
+            assertEquals(nameWithoutExtension, mExpectedValidName);
+        } else {
+            assertEquals(
+                    mExpectedValidName,
+                    FileResourceNameValidator.getValidResourceFileName(nameWithoutExtension));
+            assertNotEquals(nameWithoutExtension, mExpectedValidName);
+            assertNull(
+                    FileResourceNameValidator.getErrorTextForNameWithoutExtension(
+                            mExpectedValidName, mResourceFolderType));
+        }
+    }
+
     static void assertErrorMessageCorrect(
             @Nullable String expected, @Nullable String actual, @Nullable File file) {
         if (expected == null) {
@@ -124,15 +180,6 @@ public class FileResourceNameValidatorTest {
             } else {
                 assertEquals(file.getAbsolutePath() + ": Error: " + expected, actual);
             }
-        }
-    }
-
-    static void assertErrorMessageCorrect(@Nullable String expected, @Nullable String actual) {
-        if (expected == null) {
-            assertNull("Was not expecting error ", actual);
-        } else {
-            assertNotNull("Was expecting error " + expected + " but passed", actual);
-            assertEquals(expected, actual);
         }
     }
 }

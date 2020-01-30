@@ -40,7 +40,7 @@ interface Operations {
      * The [ArtifactType] must be of the [FILE_TYPE] and [ArtifactType.Single]
      */
     fun <FILE_TYPE: FileSystemLocation, ARTIFACT_TYPE> get(type: ARTIFACT_TYPE): Provider<FILE_TYPE>
-            where ARTIFACT_TYPE: ArtifactType<FILE_TYPE>, ARTIFACT_TYPE: ArtifactType.Single
+            where ARTIFACT_TYPE: ArtifactType<out FILE_TYPE>, ARTIFACT_TYPE: ArtifactType.Single
 
     /**
      * Get all the [Provider] of [FILE_TYPE] for the passed [ArtifactType].
@@ -197,6 +197,17 @@ interface Operations {
         from: (TASK)-> ListProperty<FILE_TYPE>,
         into: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
     ): MultipleTransformRequest<FILE_TYPE>
+
+    /**
+     * Access [Task] based operations.
+     *
+     * @param taskProvider the [TaskProvider] for the [TASK] that will be producing and or
+     * consuming artifact types.
+     * @return a [TaskBasedOperations] using the passed [TaskProvider] for all its operations/
+     */
+    fun <TASK: Task> use(
+        taskProvider: TaskProvider<TASK>
+    ): TaskBasedOperations<TASK>
 
     /**
      * Initiates a replacement request

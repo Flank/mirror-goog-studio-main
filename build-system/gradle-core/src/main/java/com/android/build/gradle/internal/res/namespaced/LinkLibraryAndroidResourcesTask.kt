@@ -180,7 +180,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
 
-            creationConfig.onTestedVariant {
+            creationConfig.onTestedConfig {
                 it.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RES_STATIC_LIBRARY,
                     task.tested

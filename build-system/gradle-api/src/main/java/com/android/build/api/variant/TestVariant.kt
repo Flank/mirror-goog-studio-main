@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 package com.android.build.api.variant
+
 import org.gradle.api.Incubating
 /**
  * [Variant] type for tests associated with a module.
  */
 @Incubating
-interface TestVariant: Variant<TestVariantProperties>
+interface TestVariant<PropertiesT: TestVariantProperties>: Variant<PropertiesT>

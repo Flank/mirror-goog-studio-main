@@ -59,6 +59,11 @@ public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask 
         return useAndroidX;
     }
 
+    @Input
+    public String getGeneratedClassFileName() {
+        return xmlProcessor.get().getInfoClassFullName();
+    }
+
     @OutputDirectory
     public File getEmptyClassOutDir() {
         return emptyClassOutDir;
@@ -106,7 +111,7 @@ public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask 
                     creationConfig
                             .getGlobalScope()
                             .getProject()
-                            .provider(creationConfig.getVariantData()::getLayoutXmlProcessor));
+                            .provider(creationConfig::getLayoutXmlProcessor));
             task.xmlProcessor.disallowChanges();
             task.useAndroidX =
                     creationConfig

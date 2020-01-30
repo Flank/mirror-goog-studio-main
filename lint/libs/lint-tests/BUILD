@@ -3,7 +3,10 @@ load("//tools/base/bazel:maven.bzl", "maven_pom")
 
 kotlin_library(
     name = "lint-tests",
-    srcs = ["src/main/java"],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     pom = ":pom",
     resource_strip_prefix = "tools/base/lint/libs/lint-tests",
     visibility = ["//visibility:public"],
@@ -36,7 +39,10 @@ kotlin_library(
 kotlin_test(
     name = "tests",
     timeout = "long",
-    srcs = ["src/test/java"],
+    srcs = glob([
+        "src/test/java/**/*.kt",
+        "src/test/java/**/*.java",
+    ]),
     coverage = True,
     data = [
         "//prebuilts/studio/sdk:platform-tools",

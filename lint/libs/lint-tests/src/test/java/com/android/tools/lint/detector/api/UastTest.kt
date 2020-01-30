@@ -20,16 +20,31 @@ import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.intellij.openapi.util.Disposer
+import com.intellij.pom.java.LanguageLevel
 import junit.framework.TestCase
+import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.visitor.AbstractUastVisitor
-import java.lang.IllegalStateException
 
 // Misc tests to verify type handling in the Kotlin UAST initialization.
 class UastTest : TestCase() {
     private fun check(source: TestFile, check: (UFile) -> Unit) {
-        val pair = LintUtilsTest.parse(source)
+        check(sources = *arrayOf(source), check = check)
+    }
+
+    private fun check(
+        vararg sources: TestFile,
+        android: Boolean = true,
+        library: Boolean = false,
+        javaLanguageLevel: LanguageLevel? = null,
+        kotlinLanguageLevel: LanguageVersionSettings? = null,
+        check: (UFile) -> Unit = {}
+    ) {
+        val pair = LintUtilsTest.parse(
+            testFiles = *sources, javaLanguageLevel = javaLanguageLevel,
+            kotlinLanguageLevel = kotlinLanguageLevel, android = android, library = library
+        )
         val uastFile = pair.first.uastFile
         assertNotNull(uastFile)
         check(uastFile!!)
@@ -64,7 +79,8 @@ class UastTest : TestCase() {
                     public static final fun foo2(@org.jetbrains.annotations.NotNull function: kotlin.jvm.functions.Function0<java.lang.Integer>) : void {
                     }
                 }
-                """.trimIndent().trim(), file.asSourceString().trim())
+                """.trimIndent().trim(), file.asSourceString().trim()
+            )
         })
     }
 
@@ -182,7 +198,8 @@ class UastTest : TestCase() {
                     public fun Derived(@org.jetbrains.annotations.NotNull b: Base) = UastEmptyExpression
                 }
 
-                """.trimIndent(), file.asSourceString())
+                """.trimIndent(), file.asSourceString()
+            )
 
             assertEquals(
                 """
@@ -451,7 +468,8 @@ class UastTest : TestCase() {
                     }
                 }
 
-                """.trimIndent(), file.asSourceString())
+                """.trimIndent(), file.asSourceString()
+            )
 
             assertEquals(
                 """
@@ -534,7 +552,8 @@ class UastTest : TestCase() {
                     }
                 }
 
-                """.trimIndent(), file.asSourceString())
+                """.trimIndent(), file.asSourceString()
+            )
         })
     }
 
@@ -579,7 +598,8 @@ class UastTest : TestCase() {
                     public fun GraphVariable(@org.jetbrains.annotations.NotNull name: java.lang.String, @org.jetbrains.annotations.NotNull graphType: java.lang.String, @org.jetbrains.annotations.Nullable value: T) = UastEmptyExpression
                 }
 
-                """.trimIndent(), file.asSourceString())
+                """.trimIndent(), file.asSourceString()
+            )
         })
     }
 
@@ -624,7 +644,8 @@ class UastTest : TestCase() {
                     }
                     public fun TryCatchKotlin() = UastEmptyExpression
                 }
-                """.trimIndent().trim(), file.asSourceString().trim().replace("\n        \n", "\n"))
+                """.trimIndent().trim(), file.asSourceString().trim().replace("\n        \n", "\n")
+            )
         })
 
         // Java is OK:
@@ -663,7 +684,8 @@ class UastTest : TestCase() {
                     public fun canThrow() : void {
                     }
                 }
-                """.trimIndent().trim(), file.asSourceString().trim().replace("\n        \n", "\n"))
+                """.trimIndent().trim(), file.asSourceString().trim().replace("\n        \n", "\n")
+            )
         })
     }
 
@@ -739,6 +761,96 @@ class UastTest : TestCase() {
                     failure.message
                 )
             }
+        })
+    }
+
+    fun testJava11() {
+        val source = java(
+            """
+            package test.pkg;
+            import java.util.function.IntFunction;
+            public class Java11Test {
+                // Private methods in interfaces
+                public interface MyInterface {
+                    private String getHello() {
+                        return "hello";
+                    }
+                    default String getMessage() {
+                        return getHello();
+                    }
+                }
+                // Var keyword
+                public void varStuff() {
+                    var name = "Name";
+                    var meaning = 42;
+                    for (var line : name.split("\n")) {
+                        System.out.println(line);
+                    }
+                }
+                // Lambda vars
+                IntFunction<Integer> doubler = (var x) -> x * 2;
+            }
+            """
+        ).indented()
+
+        check(source, javaLanguageLevel = LanguageLevel.JDK_11, android = false, check = { file ->
+            assertEquals(
+                """
+                    UFile (package = test.pkg) [package test.pkg...]
+                      UImportStatement (isOnDemand = false) [import java.util.function.IntFunction]
+                      UClass (name = Java11Test) [public class Java11Test {...}]
+                        UField (name = doubler) [var doubler: java.util.function.IntFunction<java.lang.Integer> = { var x: int ->...}]
+                          ULambdaExpression [{ var x: int ->...}] : PsiType:<lambda expression>
+                            UParameter (name = x) [var x: int]
+                            UBlockExpression [{...}]
+                              UReturnExpression [return x * 2]
+                                UBinaryExpression (operator = *) [x * 2] : PsiType:int
+                                  USimpleNameReferenceExpression (identifier = x) [x] : PsiType:int
+                                  ULiteralExpression (value = 2) [2] : PsiType:int
+                        UMethod (name = varStuff) [public fun varStuff() : void {...}]
+                          UBlockExpression [{...}]
+                            UDeclarationsExpression [var name: java.lang.String = "Name"]
+                              ULocalVariable (name = name) [var name: java.lang.String = "Name"]
+                                ULiteralExpression (value = "Name") ["Name"] : PsiType:String
+                            UDeclarationsExpression [var meaning: int = 42]
+                              ULocalVariable (name = meaning) [var meaning: int = 42]
+                                ULiteralExpression (value = 42) [42] : PsiType:int
+                            UForEachExpression [for (line : name.split("\n")) {...}]
+                              UQualifiedReferenceExpression [name.split("\n")] : PsiType:String[]
+                                USimpleNameReferenceExpression (identifier = name) [name] : PsiType:String
+                                UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [split("\n")] : PsiType:String[]
+                                  UIdentifier (Identifier (split)) [UIdentifier (Identifier (split))]
+                                  ULiteralExpression (value = "\n") ["\n"] : PsiType:String
+                              UBlockExpression [{...}]
+                                UQualifiedReferenceExpression [System.out.println(line)] : PsiType:void
+                                  UQualifiedReferenceExpression [System.out] : PsiType:PrintStream
+                                    USimpleNameReferenceExpression (identifier = System) [System]
+                                    USimpleNameReferenceExpression (identifier = out) [out]
+                                  UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(line)] : PsiType:void
+                                    UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
+                                    USimpleNameReferenceExpression (identifier = line) [line] : PsiType:String
+                        UClass (name = MyInterface) [public static abstract interface MyInterface {...}]
+                          UMethod (name = getHello) [private fun getHello() : java.lang.String {...}]
+                            UBlockExpression [{...}]
+                              UReturnExpression [return "hello"]
+                                ULiteralExpression (value = "hello") ["hello"] : PsiType:String
+                          UMethod (name = getMessage) [public default fun getMessage() : java.lang.String {...}]
+                            UBlockExpression [{...}]
+                              UReturnExpression [return getHello()]
+                                UCallExpression (kind = UastCallKind(name='method_call'), argCount = 0)) [getHello()] : PsiType:String
+                                  UIdentifier (Identifier (getHello)) [UIdentifier (Identifier (getHello))]
+                """.trimIndent(),
+                file.asLogTypes(indent = "  ").trim()
+            )
+
+            // Make sure that all calls correctly resolve
+            file.accept(object : AbstractUastVisitor() {
+                override fun visitCallExpression(node: UCallExpression): Boolean {
+                    val resolved = node.resolve()
+                    assertNotNull(resolved)
+                    return super.visitCallExpression(node)
+                }
+            })
         })
     }
 }

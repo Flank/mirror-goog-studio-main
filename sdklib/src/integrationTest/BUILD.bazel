@@ -2,7 +2,10 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 
 kotlin_test(
     name = "integration-test",
-    srcs = ["java"],
+    srcs = glob([
+        "java/**/*.kt",
+        "java/**/*.java",
+    ]),
     coverage = False,
     data = [
         "//tools/base/sdklib:commandlinetools",

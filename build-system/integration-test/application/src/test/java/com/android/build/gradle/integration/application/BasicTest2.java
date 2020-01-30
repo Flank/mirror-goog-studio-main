@@ -177,7 +177,7 @@ public class BasicTest2 {
         assertThat(debugVariantOutputFiles).named("debug outputs").hasSize(1);
 
         BuiltArtifact builtArtifact = Iterables.getOnlyElement(debugVariantOutputFiles);
-        File debugMainOutput = builtArtifact.getOutputFile().toFile();
+        File debugMainOutput = new File(builtArtifact.getOutputFile());
         assertThat(debugMainOutput)
                 .named("debug output")
                 .isNotNull();
@@ -243,7 +243,7 @@ public class BasicTest2 {
         BuiltArtifact androidTestVariantOutput =
                 Iterables.getOnlyElement(androidTestVariantOutputs.getElements());
 
-        File androidTestOutputFile = androidTestVariantOutput.getOutputFile().toFile();
+        File androidTestOutputFile = new File(androidTestVariantOutput.getOutputFile());
 
         assertThat(androidTestOutputFile).named("test output").isNotNull();
         assertThat(androidTestOutputFile).named("test output file").isNotNull();
@@ -309,7 +309,7 @@ public class BasicTest2 {
         BuiltArtifact releaseVariantOutput =
                 Iterables.getOnlyElement(outputModels.get(BuilderConstants.RELEASE).getElements());
 
-        File releaseVariantOutputFile = releaseVariantOutput.getOutputFile().toFile();
+        File releaseVariantOutputFile = new File(releaseVariantOutput.getOutputFile());
 
         assertThat(releaseVariantOutputFile).named("debug outputs").isNotNull();
         assertThat(releaseVariantOutputFile).named("debug outputs").exists();

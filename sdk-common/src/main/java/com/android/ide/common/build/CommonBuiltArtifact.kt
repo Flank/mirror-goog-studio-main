@@ -51,11 +51,11 @@ interface CommonBuiltArtifact {
     val isEnabled: Boolean
 
     /**
-     * [Path] to the built file
+     * Absolute path to the built file
      *
-     * @return the output file [Path]
+     * @return the output file path
      */
-    val outputFile: Path
+    val outputFile: String
 
     /**
      * [Map] of [String] for properties that are associated with the output. Such properties

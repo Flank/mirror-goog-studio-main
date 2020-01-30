@@ -64,10 +64,15 @@ interface ApplicationExtension<
             SplitsT,
             TestOptionsT,
             UnitTestOptionsT,
-            ApplicationVariant,
+            ApplicationVariant<ApplicationVariantProperties>,
             ApplicationVariantProperties>,
     ApkExtension,
     TestedExtension {
     // TODO(b/140406102)
 
+  /** Specify whether to include SDK dependency information in APKs and Bundles. */
+  val dependenciesInfo: DependenciesInfo
+
+  /** Specify whether to include SDK dependency information in APKs and Bundles. */
+  fun dependenciesInfo(action: DependenciesInfo.() -> Unit)
 }

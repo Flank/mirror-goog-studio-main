@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
-import com.android.testutils.AssumeUtil.assumeNotWindows
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestInputsGenerator.jarWithClasses
@@ -69,7 +68,10 @@ class CoreLibraryDesugarTest {
     )
 
     @get:Rule
-    val project = GradleTestProject.builder().withAdditionalMavenRepo(mavenRepo).fromTestApp(setUpTestProject()).create()
+    val project = GradleTestProject.builder()
+        .withAdditionalMavenRepo(mavenRepo)
+        .withGradleBuildCacheDirectory(File("local-build-cache"))
+        .fromTestApp(setUpTestProject()).create()
 
     @get:Rule
     var adb = Adb()
@@ -84,6 +86,7 @@ class CoreLibraryDesugarTest {
     private val unusedDesugarClass = "Lj$/time/Year;"
     private val unObfuscatedClass = "Lj$/util/stream/StreamSupport;"
     private val obfuscatedClass = "Lj$/util/stream/e;"
+    private val desugarConfigClass = "Lj$/time/TimeConversions;"
 
     private fun setUpTestProject(): TestProject {
         return MultiModuleTestProject.builder()
@@ -213,32 +216,30 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testKeepRulesGenerationFromAppProject() {
-        assumeNotWindows() //b/145232747
         project.executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES.getOutputDir(app.buildDir)
-        val expectedKeepRules = "-keep class j\$.util.Optional {\n" +
-                "    java.lang.Object get();\n" +
-                "}\n" +
-                "-keep class j\$.util.Collection\$-EL {\n" +
-                "    j\$.util.stream.Stream stream(java.util.Collection);\n" +
-                "}\n" +
-                "-keep class j\$.util.stream.Stream {\n" +
-                "    j\$.util.Optional findFirst();\n" +
-                "}\n"
+        val expectedKeepRules = "-keep class j\$.util.Optional {$lineSeparator" +
+                "    java.lang.Object get();$lineSeparator" +
+                "}$lineSeparator" +
+                "-keep class j\$.util.Collection\$-EL {$lineSeparator" +
+                "    j\$.util.stream.Stream stream(java.util.Collection);$lineSeparator" +
+                "}$lineSeparator" +
+                "-keep class j\$.util.stream.Stream {$lineSeparator" +
+                "    j\$.util.Optional findFirst();$lineSeparator" +
+                "}$lineSeparator"
         assertTrue { collectKeepRulesUnderDirectory(out) == expectedKeepRules }
     }
 
     @Test
     fun testKeepRulesGenerationFromFileDependencies() {
-        assumeNotWindows() //b/145232747
         addFileDependency(app)
 
         project.executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES
             .getOutputDir(app.buildDir)
-        val expectedKeepRules = "-keep class j\$.time.LocalTime {\n" +
-                "    j\$.time.LocalTime MIDNIGHT;\n" +
-                "}\n"
+        val expectedKeepRules = "-keep class j\$.time.LocalTime {$lineSeparator" +
+                "    j\$.time.LocalTime MIDNIGHT;$lineSeparator" +
+                "}$lineSeparator"
         assertTrue { collectKeepRulesUnderDirectory(out) == expectedKeepRules }
     }
 
@@ -304,30 +305,37 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testExternalLibsKeepRulesGenerationWithoutArtifactTransform() {
-        assumeNotWindows() //b/145232747
         addExternalDependency(app)
 
         project.executor()
             .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
-            .with(StringOption.BUILD_CACHE_DIR, CACHE_DIR)
+            .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS, false)
             .run("clean", "app:assembleRelease")
 
         val out =
             InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES.getOutputDir(app.buildDir)
-        val expectedKeepRules = "-keep class j\$.time.LocalTime {\n" +
-                "    j\$.time.LocalTime MIDNIGHT;\n" +
-                "}\n"
-        assertTrue { collectKeepRulesUnderDirectory(out) == expectedKeepRules }
-        val cacheFile = getKeepRulesCacheDir().listFiles()!!.first { it.isFile }
-        val cacheTimeStamp = cacheFile.lastModified()
+        val expectedKeepRules = "-keep class j\$.time.LocalTime {$lineSeparator" +
+                "    j\$.time.LocalTime MIDNIGHT;$lineSeparator" +
+                "}$lineSeparator"
+        assertThat(collectKeepRulesUnderDirectory(out)).isEqualTo(expectedKeepRules)
+    }
+
+    @Test
+    fun testExternalLibsKeepRulesGenerationWithTransformsForExtLibsOnly() {
+        addExternalDependency(app)
 
         project.executor()
+            .withArgument("--build-cache")
             .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
-            .with(StringOption.BUILD_CACHE_DIR, CACHE_DIR)
             .run("clean", "app:assembleRelease")
 
-        val outputFile = out.resolve("release/out/" + cacheFile.name)
-        assertTrue { outputFile.lastModified() == cacheTimeStamp }
+        val out =
+            InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES.getOutputDir(app.buildDir).resolve("release/out")
+        val expectedKeepRules = "-keep class j\$.time.LocalTime {$lineSeparator" +
+                "    j\$.time.LocalTime MIDNIGHT;$lineSeparator" +
+                "}$lineSeparator"
+        assertThat(collectKeepRulesUnderDirectory(out)).isEqualTo(expectedKeepRules)
+        Truth.assertThat(out.list()).asList().containsExactly("core_lib_keep_rules_0.txt", "core_lib_keep_rules_1.txt")
     }
 
     @Test
@@ -471,6 +479,17 @@ class CoreLibraryDesugarTest {
             .isNotEqualTo(null)
     }
 
+    // There are some classes in desugar lib configuration jar which need to be processed by L8
+    // and packaged as a separated dex
+    @Test
+    fun testConfigJarPackagedAsSeparateDex() {
+        project.executor().run(":app:assembleDebug")
+        var apk = app.getApk(GradleTestProject.ApkType.DEBUG)
+        var desugarConfigLibDex = getDexWithSpecificClass(desugarConfigClass, apk.allDexes)
+            ?: fail("Failed to find the dex with class name $desugarConfigClass")
+        DexSubject.assertThat(desugarConfigLibDex).doesNotContainClasses(programClass)
+    }
+
     private fun addFileDependency(project: GradleTestProject) {
         val fileDependencyName = "withDesugarApi.jar"
         project.buildFile.appendText("""
@@ -526,18 +545,10 @@ class CoreLibraryDesugarTest {
         file.writeText(source)
     }
 
-    private fun getKeepRulesCacheDir(): File {
-        val cacheFolder = project.file(CACHE_DIR).listFiles().find { it.isDirectory }
-        val keepRulesCacheFolder
-                = cacheFolder!!.listFiles().find { File(it, "output").isDirectory }
-        return File(keepRulesCacheFolder, "output")
-    }
-
     companion object {
         private const val APP_MODULE = ":app"
         private const val LIBRARY_MODULE = ":library"
         private const val LIBRARY_PACKAGE = "com.example.lib"
-        private const val CACHE_DIR = "agp_cache_dir"
         private const val DESUGAR_DEPENDENCY
                 = "com.android.tools:desugar_jdk_libs:$DESUGAR_DEPENDENCY_VERSION"
     }

@@ -10,11 +10,13 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="fakeandroid" scope="TEST" />
     <orderEntry type="module" module-name="transport-test-framework" scope="TEST" />
+    <orderEntry type="module" module-name="app-inspection.test-inspector.api" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="library" scope="TEST" name="Guava" level="project" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="library" scope="TEST" name="transport-proto" level="project" />
     <orderEntry type="library" scope="TEST" name="studio-grpc" level="project" />
     <orderEntry type="library" scope="TEST" name="studio-proto" level="project" />
+    <orderEntry type="library" name="androidx-annotations" level="project" />
   </component>
 </module>

@@ -16,40 +16,44 @@
 
 package com.android.build.gradle.internal.tasks
 
-import android.databinding.tool.DataBindingBuilder
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.component.impl.TestComponentImpl
+import com.android.build.api.component.impl.TestComponentPropertiesImpl
+import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.TaskManager
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTask
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask
+import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.builder.profile.Recorder
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 internal class DynamicFeatureTaskManager(
+    variants: List<ComponentInfo<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl>>,
+    testComponents: List<ComponentInfo<TestComponentImpl<out TestComponentPropertiesImpl>, TestComponentPropertiesImpl>>,
+    hasFlavors: Boolean,
     globalScope: GlobalScope,
-    databindingBuilder: DataBindingBuilder,
     extension: BaseExtension,
-    toolingRegistry: ToolingModelBuilderRegistry,
     recorder: Recorder
-) : AbstractAppTaskManager<DynamicFeatureVariantPropertiesImpl>(
+) : AbstractAppTaskManager<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl>(
+    variants,
+    testComponents,
+    hasFlavors,
     globalScope,
-    databindingBuilder,
     extension,
-    toolingRegistry,
     recorder
 ) {
 
-    override fun createTasksForVariant(
-        variantProperties: DynamicFeatureVariantPropertiesImpl,
-        allComponentsWithLint: MutableList<DynamicFeatureVariantPropertiesImpl>
+    override fun doCreateTasksForVariant(
+        variant: ComponentInfo<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl>,
+        allVariants: MutableList<ComponentInfo<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl>>
     ) {
-        createCommonTasks(variantProperties, allComponentsWithLint)
+        createCommonTasks(variant, allVariants)
+
+        val variantProperties = variant.properties
 
         createDynamicBundleTask(variantProperties)
 
@@ -66,7 +70,7 @@ internal class DynamicFeatureTaskManager(
 
     }
 
-    private fun createDynamicBundleTask(variantProperties: VariantPropertiesImpl) {
+    private fun createDynamicBundleTask(variantProperties: DynamicFeatureVariantPropertiesImpl) {
 
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
         // and the bundle can't be created. For now, just don't add the bundle task.
@@ -87,7 +91,7 @@ internal class DynamicFeatureTaskManager(
         }
     }
 
-    override fun createInstallTask(componentProperties: ComponentPropertiesImpl) {
+    override fun createInstallTask(creationConfig: ApkCreationConfig) {
         // no install task for Dynamic Features
     }
 }

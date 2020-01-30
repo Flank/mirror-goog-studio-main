@@ -52,6 +52,8 @@ import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
+import com.intellij.openapi.util.Ref;
+import com.intellij.pom.java.LanguageLevel;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -73,6 +75,10 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
+import org.jetbrains.kotlin.config.ApiVersion;
+import org.jetbrains.kotlin.config.LanguageVersion;
+import org.jetbrains.kotlin.config.LanguageVersionSettings;
+import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -107,6 +113,7 @@ public class Main {
     private static final String ARG_VERSION = "--version";
     private static final String ARG_EXIT_CODE = "--exitcode";
     private static final String ARG_SDK_HOME = "--sdk-home";
+    private static final String ARG_JDK_HOME = "--jdk-home";
     private static final String ARG_FATAL = "--fatalOnly";
     private static final String ARG_PROJECT = "--project";
     private static final String ARG_CLASSES = "--classpath";
@@ -114,6 +121,8 @@ public class Main {
     private static final String ARG_RESOURCES = "--resources";
     private static final String ARG_LIBRARIES = "--libraries";
     private static final String ARG_BUILD_API = "--compile-sdk-version";
+    private static final String ARG_JAVA_LANGUAGE_LEVEL = "--java-language-level";
+    private static final String ARG_KOTLIN_LANGUAGE_LEVEL = "--kotlin-language-level";
     private static final String ARG_BASELINE = "--baseline";
     private static final String ARG_REMOVE_FIXED = "--remove-fixed";
     private static final String ARG_UPDATE_BASELINE = "--update-baseline";
@@ -130,6 +139,7 @@ public class Main {
     private final LintCliFlags flags = new LintCliFlags();
     private IssueRegistry globalIssueRegistry;
     @Nullable private File sdkHome;
+    @Nullable private File jdkHome;
 
     /** Creates a CLI driver */
     public Main() {}
@@ -161,6 +171,9 @@ public class Main {
             printUsage(System.err);
             exit(ERRNO_USAGE);
         }
+
+        Ref<LanguageLevel> javaLanguageLevel = new Ref<>(null);
+        Ref<LanguageVersionSettings> kotlinLanguageLevel = new Ref<>(null);
 
         // When running lint from the command line, warn if the project is a Gradle project
         // since those projects may have custom project configuration that the command line
@@ -217,6 +230,27 @@ public class Main {
 
                     @NonNull
                     @Override
+                    public LanguageLevel getJavaLanguageLevel(@NonNull Project project) {
+                        LanguageLevel level = javaLanguageLevel.get();
+                        if (level != null) {
+                            return level;
+                        }
+                        return super.getJavaLanguageLevel(project);
+                    }
+
+                    @NonNull
+                    @Override
+                    public LanguageVersionSettings getKotlinLanguageLevel(
+                            @NonNull Project project) {
+                        LanguageVersionSettings settings = kotlinLanguageLevel.get();
+                        if (settings != null) {
+                            return settings;
+                        }
+                        return super.getKotlinLanguageLevel(project);
+                    }
+
+                    @NonNull
+                    @Override
                     public Configuration getConfiguration(
                             @NonNull final Project project, @Nullable LintDriver driver) {
                         DefaultConfiguration overrideConfiguration = getOverrideConfiguration();
@@ -226,8 +260,8 @@ public class Main {
 
                         if (project.isGradleProject()) {
                             // Don't report any issues when analyzing a Gradle project from the
-                            // non-Gradle runner; they are likely to be false, and will hide the real
-                            // problem reported above
+                            // non-Gradle runner; they are likely to be false, and will hide the
+                            // real problem reported above
                             //noinspection ReturnOfInnerClass
                             return new CliConfiguration(getConfiguration(), project, true) {
                                 @NonNull
@@ -342,6 +376,10 @@ public class Main {
                                     sdkHome = metadata.getSdk();
                                 }
 
+                                if (metadata.getJdk() != null) {
+                                    jdkHome = metadata.getJdk();
+                                }
+
                                 if (metadata.getBaseline() != null) {
                                     flags.setBaselineFile(metadata.getBaseline());
                                 }
@@ -438,10 +476,19 @@ public class Main {
                         return super.getSdkHome();
                     }
 
+                    @Nullable
+                    @Override
+                    public File getJdkHome(@Nullable Project project) {
+                        if (Main.this.jdkHome != null) {
+                            return Main.this.jdkHome;
+                        }
+                        return super.getJdkHome(project);
+                    }
+
                     @Override
                     protected boolean addBootClassPath(
                             @NonNull Collection<? extends Project> knownProjects,
-                            List<File> files) {
+                            @NonNull List<File> files) {
                         if (metadata != null && !metadata.getJdkBootClasspath().isEmpty()) {
                             boolean isAndroid = false;
                             for (Project project : knownProjects) {
@@ -884,6 +931,34 @@ public class Main {
                 }
                 String version = args[++index];
                 flags.setCompileSdkVersionOverride(version);
+            } else if (arg.equals(ARG_JAVA_LANGUAGE_LEVEL)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing Java language level");
+                    exit(ERRNO_INVALID_ARGS);
+                }
+                String version = args[++index];
+                LanguageLevel level = LanguageLevel.parse(version);
+                if (level == null) {
+                    System.err.println("Invalid Java language level \"" + version + "\"");
+                    exit(ERRNO_INVALID_ARGS);
+                }
+                javaLanguageLevel.set(level);
+            } else if (arg.equals(ARG_KOTLIN_LANGUAGE_LEVEL)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing Kotlin language level");
+                    exit(ERRNO_INVALID_ARGS);
+                }
+                String version = args[++index];
+                LanguageLevel level = LanguageLevel.parse(version);
+                LanguageVersion languageLevel = LanguageVersion.fromVersionString(version);
+                if (level == null) {
+                    System.err.println("Invalid Kotlin language level \"" + version + "\"");
+                    exit(ERRNO_INVALID_ARGS);
+                }
+                ApiVersion apiVersion = ApiVersion.createByLanguageVersion(languageLevel);
+                LanguageVersionSettingsImpl settings =
+                        new LanguageVersionSettingsImpl(languageLevel, apiVersion);
+                kotlinLanguageLevel.set(settings);
             } else if (arg.equals(ARG_PROJECT)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing project description file");
@@ -912,6 +987,20 @@ public class Main {
                 sdkHome = new File(args[++index]);
                 if (!sdkHome.isDirectory()) {
                     System.err.println(sdkHome + " is not a directory");
+                    exit(ERRNO_INVALID_ARGS);
+                }
+            } else if (arg.equals(ARG_JDK_HOME)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing JDK home directory");
+                    exit(ERRNO_INVALID_ARGS);
+                }
+                jdkHome = new File(args[++index]);
+                if (!jdkHome.isDirectory()) {
+                    System.err.println(jdkHome + " is not a directory");
+                    exit(ERRNO_INVALID_ARGS);
+                }
+                if (!Lint.isJreFolder(jdkHome)) {
+                    System.err.println(jdkHome + " is not a JRE/JDK");
                     exit(ERRNO_INVALID_ARGS);
                 }
             } else if (arg.equals(ARG_BASELINE)) {
@@ -990,26 +1079,23 @@ public class Main {
             reporters.add(
                     new TextReporter(client, flags, new PrintWriter(System.out, true), false));
         } else {
-            //noinspection VariableNotUsedInsideIf
-            if (urlMap != null) {
-                if (!urlMap.equals(VALUE_NONE)) {
-                    Map<String, String> map = new HashMap<>();
-                    String[] replace = urlMap.split(",");
-                    for (String s : replace) {
-                        // Allow ='s in the suffix part
-                        int index = s.indexOf('=');
-                        if (index == -1) {
-                            System.err.println(
-                                    "The URL map argument must be of the form 'path_prefix=url_prefix'");
-                            exit(ERRNO_INVALID_ARGS);
-                        }
-                        String key = s.substring(0, index);
-                        String value = s.substring(index + 1);
-                        map.put(key, value);
+            if (urlMap != null && !urlMap.equals(VALUE_NONE)) {
+                Map<String, String> map = new HashMap<>();
+                String[] replace = urlMap.split(",");
+                for (String s : replace) {
+                    // Allow ='s in the suffix part
+                    int index = s.indexOf('=');
+                    if (index == -1) {
+                        System.err.println(
+                                "The URL map argument must be of the form 'path_prefix=url_prefix'");
+                        exit(ERRNO_INVALID_ARGS);
                     }
-                    for (Reporter reporter : reporters) {
-                        reporter.setUrlMap(map);
-                    }
+                    String key = s.substring(0, index);
+                    String value = s.substring(index + 1);
+                    map.put(key, value);
+                }
+                for (Reporter reporter : reporters) {
+                    reporter.setUrlMap(map);
                 }
             }
         }
@@ -1430,6 +1516,12 @@ public class Main {
                     ARG_SDK_HOME + " <dir>",
                     "Use the given SDK instead of attempting to find it "
                             + "relative to the lint installation or via $ANDROID_SDK_ROOT",
+                    ARG_SDK_HOME + " <dir>",
+                    "Use the given JDK instead of attempting to find it via $JAVA_HOME or java.home",
+                    ARG_JAVA_LANGUAGE_LEVEL + " <level>",
+                    "Use the given version of the Java programming language",
+                    ARG_KOTLIN_LANGUAGE_LEVEL + " <level>",
+                    "Use the given version of the Kotlin programming language",
                     "",
                     "\nExit Status:",
                     "0",

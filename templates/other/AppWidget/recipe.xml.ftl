@@ -20,8 +20,6 @@
                    to="${escapeXmlAttribute(resOut)}/xml/${class_name}_info.xml" />
     <merge from="root/res/values/strings.xml.ftl"
            to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
-    <merge from="root/res/values-v14/dimens.xml"
-           to="${escapeXmlAttribute(resOut)}/values-v14/dimens.xml" />
     <merge from="root/res/values/dimens.xml"
            to="${escapeXmlAttribute(resOut)}/values/dimens.xml" />
 

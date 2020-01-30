@@ -56,9 +56,7 @@ import java.util.function.Supplier
  *          val builtArtifacts= BuiltArtifacts.Loader.loadFromFolder(
  *               objectFactory, input.get())
  *
- *          val newBuiltArtifacts = builtArtifacts.transform(PublicArtifactType.APK) {
- *              ... transform input into a new file...
- *          }
+ *          TODO : TBD what will be surfaced here
  *
  *          newBuiltArtifacts.save(output.get()))
  *     }
@@ -118,63 +116,6 @@ interface BuiltArtifacts {
      * Returns the [Collection] of [BuiltArtifact].
      */
     val elements: Collection<BuiltArtifact>
-
-    /**
-     * Transforms this [Collection] of [BuiltArtifact] into a new instance of newly produced
-     * [BuiltArtifact] with a new [ArtifactType].
-     *
-     * This convenience method can be used by [org.gradle.api.Task] implementation to easily
-     * transforms input [BuiltArtifacts] into a new [Collection] of [BuiltArtifact]. The new
-     * [BuiltArtifacts] instance can be used to save the metadata associated with the new produced
-     * files.
-     *
-     * @param newArtifactType the new [ArtifactType] that identifies the new produced files.
-     * @param transformer the lambda that transforms each element of [BuiltArtifacts.elements] into
-     * a new file. All the metadata associated with the input like filters, versions will be
-     * automatically transferred to create a new instance of [BuiltArtifact] that will be added
-     * to the returned [BuiltArtifacts] instance.
-     * @return a new instance of [BuiltArtifacts] with updated artifact type and elements as
-     * provided by the [transformer] lambda.
-     */
-    fun transform(newArtifactType: ArtifactType<Directory>,
-        transformer: (input: BuiltArtifact) -> File): BuiltArtifacts
-
-    /**
-     * Transforms this [Collection] of [BuiltArtifact] into a new instance of newly produced
-     * [BuiltArtifact] with a new [ArtifactType].
-     *
-     * This convenience method can be used by [org.gradle.api.Task] implementation to easily
-     * transforms input [BuiltArtifacts] into a new [Collection] of [BuiltArtifact] using a
-     * [WorkQueue]. Each transformation will be [WorkQueue.submit]ed with the instances of
-     * [transformRunnableClass], with parameters of type [ParamT] injected and available through the
-     * [WorkAction.getParameters] method.
-     *
-     * Instances of [ParamT] are created by Gradle and configured by the method
-     * [parameterConfigurator]. This method will be provided with one of the element in [elements]
-     * must configure that passed instance of [ParamT] to contains all the necessary inputs for
-     * the [transformRunnableClass] action.
-     *
-     * Once the work item is completed, the result is expected to be stored into the
-     * [TransformParams.output] field.
-     *
-     * A [Supplier] of [BuiltArtifacts] is returned and callers can block on all work items
-     * completion by doing [Supplier.get] if needed.
-     *
-     * The new [BuiltArtifacts] instance can be used to save the metadata associated with the
-     * new produced files.
-     *
-     * @param newArtifactType the new [ArtifactType] that identifies the new produced files.
-     * @param workers a Gradle [WorkQueue] that can be used to submit work items.
-     * @param transformRunnableClass [WorkAction] subclass that implements the work item.
-     * @param parameterConfigurator a factory lambda to create instances of [ParamT] provided with an
-     * input [BuiltArtifact].
-     */
-    fun <ParamT : TransformParams> transform(
-        newArtifactType: ArtifactType<Directory>,
-        workers: WorkQueue,
-        transformRunnableClass: Class<out WorkAction<ParamT>>,
-        parameterConfigurator: (builtArtifact: BuiltArtifact, parameters: ParamT) -> Unit
-        ) : Supplier<BuiltArtifacts>
 
     /**
      * Saves the metadata associated with this instance into a folder.

@@ -988,7 +988,7 @@ class LintDriver
                 } else {
                     findUastSources(project, main, checks)
                 }
-                prepareUast(uastSourceList)
+                prepareUast(project, uastSourceList)
             }
         }
 
@@ -1001,7 +1001,7 @@ class LintDriver
             } else {
                 findUastSources(project, main, emptyList())
             }
-            prepareUast(uastRequest)
+            prepareUast(project, uastRequest)
         }
 
         if (isCanceled) {
@@ -1189,7 +1189,8 @@ class LintDriver
                         val uastParser = client.getUastParser(currentProject)
                         context.uastParser = uastParser
 
-                        uastParser.prepare(listOf(context), emptyList())
+                        uastParser.prepare(listOf(context), emptyList(),
+                            project.javaLanguageLevel, project.kotlinLanguageLevel)
                         val uFile = uastParser.parse(context)
                         if (uFile != null) {
                             context.setJavaFile(uFile.psi) // needed for getLocation
@@ -1680,6 +1681,7 @@ class LintDriver
     }
 
     private fun prepareUast(
+        project: Project,
         sourceList: UastSourceList
     ) {
         val parser = sourceList.parser

@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.tasks.databinding
 import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.FeaturePackageInfo
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -29,6 +31,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -79,8 +82,8 @@ abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl
-    ) : VariantTaskCreationAction<DataBindingExportFeatureInfoTask, ComponentPropertiesImpl>(
+        componentProperties: ApkCreationConfig
+    ) : VariantTaskCreationAction<DataBindingExportFeatureInfoTask, ApkCreationConfig>(
         componentProperties
     ) {
 
@@ -109,7 +112,11 @@ abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT)
-            task.resOffset.set(creationConfig.variantScope.resOffset)
+            if (creationConfig is DynamicFeatureCreationConfig) {
+                task.resOffset.set(creationConfig.resOffset)
+            } else {
+                task.resOffset.set(0)
+            }
             task.resOffset.disallowChanges()
         }
     }

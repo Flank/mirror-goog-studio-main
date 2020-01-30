@@ -19,14 +19,17 @@ package com.android.build.gradle.internal;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -42,6 +45,7 @@ import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.featuresplit.PackagedDependenciesWriterTask;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
@@ -59,29 +63,35 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResourceFactory;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** TaskManager for creating tasks in an Android application project. */
-public abstract class AbstractAppTaskManager<VariantPropertiesT extends VariantPropertiesImpl>
-        extends TaskManager<VariantPropertiesT> {
+public abstract class AbstractAppTaskManager<
+                VariantT extends VariantImpl<VariantPropertiesT>,
+                VariantPropertiesT extends VariantPropertiesImpl>
+        extends TaskManager<VariantT, VariantPropertiesT> {
 
     protected AbstractAppTaskManager(
+            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants,
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentPropertiesImpl>>
+                            testComponents,
+            boolean hasFlavors,
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
-        super(
-                globalScope,
-                dataBindingBuilder,
-                extension,
-                toolingRegistry,
-                recorder);
+        super(variants, testComponents, hasFlavors, globalScope, extension, recorder);
     }
 
     protected void createCommonTasks(
-            @NonNull VariantPropertiesT appVariantProperties,
-            @NonNull List<VariantPropertiesT> allComponentsWithLint) {
+            @NonNull ComponentInfo<VariantT, VariantPropertiesT> variant,
+            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> allComponentsWithLint) {
+        VariantPropertiesT appVariantProperties = variant.getProperties();
+        ApkCreationConfig apkCreationConfig = (ApkCreationConfig) appVariantProperties;
+
         createAnchorTasks(appVariantProperties);
 
         taskFactory.register(new ExtractDeepLinksTask.CreationAction(appVariantProperties));
@@ -90,7 +100,8 @@ public abstract class AbstractAppTaskManager<VariantPropertiesT extends VariantP
         createDependencyStreams(appVariantProperties);
 
         // Add a task to publish the applicationId.
-        createApplicationIdWriterTask(appVariantProperties);
+        // TODO remove case once TaskManager's type param is based on BaseCreationConfig
+        createApplicationIdWriterTask(apkCreationConfig);
 
         createBuildArtifactReportTask(appVariantProperties);
 
@@ -138,12 +149,16 @@ public abstract class AbstractAppTaskManager<VariantPropertiesT extends VariantP
         // Add data binding tasks if enabled
         createDataBindingTasksIfNecessary(appVariantProperties);
 
+        // Add a task to auto-generate classes for helping run inference on ML model files under
+        // assets folder.
+        createMlkitTask(appVariantProperties);
+
         // Add a compile task
         createCompileTask(appVariantProperties);
 
         taskFactory.register(new StripDebugSymbolsTask.CreationAction(appVariantProperties));
 
-        createPackagingTask(appVariantProperties);
+        createPackagingTask(apkCreationConfig);
 
         maybeCreateLintVitalTask(appVariantProperties, allComponentsWithLint);
 
@@ -156,11 +171,13 @@ public abstract class AbstractAppTaskManager<VariantPropertiesT extends VariantP
         taskFactory.register(new ApkZipPackagingTask.CreationAction(appVariantProperties));
     }
 
-    protected void createCompileTask(@NonNull VariantPropertiesImpl variantProperties) {
+    private void createCompileTask(@NonNull VariantPropertiesImpl variantProperties) {
+        ApkCreationConfig apkCreationConfig = (ApkCreationConfig) variantProperties;
+
         TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variantProperties);
         addJavacClassesStream(variantProperties);
         setJavaCompilerTask(javacTask, variantProperties);
-        createPostCompilationTasks(variantProperties);
+        createPostCompilationTasks(apkCreationConfig);
     }
 
     @Override
@@ -241,18 +258,22 @@ public abstract class AbstractAppTaskManager<VariantPropertiesT extends VariantP
         return TransformManager.SCOPE_FULL_PROJECT;
     }
 
-    private void createApplicationIdWriterTask(@NonNull VariantPropertiesImpl variantProperties) {
-        if (variantProperties.getVariantType().isBaseModule()) {
-            taskFactory.register(new ModuleMetadataWriterTask.CreationAction(variantProperties));
+    private void createApplicationIdWriterTask(@NonNull ApkCreationConfig creationConfig) {
+        if (creationConfig.getVariantType().isBaseModule()) {
+            taskFactory.register(
+                    new ModuleMetadataWriterTask.CreationAction(
+                            (ApplicationCreationConfig) creationConfig));
         }
 
-        // TODO b/141650037 - Only the base App should create this task.
+        // TODO b/141650037 - Only the base App should create this task once we get rid of
+        // getApplicationIdTextResource()
+        // Once this is removed, this whole methods can be moved to AppTaskManager
         TaskProvider<? extends Task> applicationIdWriterTask =
-                taskFactory.register(new ApplicationIdWriterTask.CreationAction(variantProperties));
+                taskFactory.register(new ApplicationIdWriterTask.CreationAction(creationConfig));
 
         TextResourceFactory resources = project.getResources().getText();
         // this builds the dependencies from the task, and its output is the textResource.
-        variantProperties.getVariantData().applicationIdTextResource =
+        ((ComponentPropertiesImpl) creationConfig).getVariantData().applicationIdTextResource =
                 resources.fromFile(applicationIdWriterTask);
     }
 

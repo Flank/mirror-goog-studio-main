@@ -30,6 +30,7 @@ import org.junit.Test
 import org.mockito.Mockito
 import java.io.File
 import java.io.IOException
+import java.nio.file.Paths
 import kotlin.test.assertNotNull
 
 /**
@@ -108,7 +109,8 @@ class SplitHandlingTest {
 
         val apkOutputFolder = File(project.outputDir, "apk/debug")
         loadBuiltArtifacts(apkOutputFolder).elements.forEach { output ->
-                    val manifestContent = ApkSubject.getConfigurations(output.outputFile)
+                    val manifestContent = ApkSubject.getConfigurations(
+                        Paths.get(output.outputFile))
                     assertThat(manifestContent).contains("fr")
                     assertThat(manifestContent).contains("de")
                     assertThat(manifestContent).doesNotContain("en")
@@ -149,7 +151,7 @@ class SplitHandlingTest {
         val apkOutputFolder = File(project.outputDir, "apk/debug")
         loadBuiltArtifacts(apkOutputFolder).elements
                 .forEach { output ->
-                    val manifestContent = ApkSubject.getConfigurations(output.outputFile)
+                    val manifestContent = ApkSubject.getConfigurations(Paths.get(output.outputFile))
                     assertThat(manifestContent).contains("es")
                     assertThat(manifestContent).doesNotContain("fr")
                     assertThat(manifestContent).doesNotContain("de")
@@ -187,7 +189,8 @@ class SplitHandlingTest {
                 .forEach { output ->
                     when(output.outputType) {
                         VariantOutputConfiguration.OutputType.SINGLE -> {
-                            val manifestContent = ApkSubject.getConfigurations(output.outputFile)
+                            val manifestContent = ApkSubject.getConfigurations(
+                                Paths.get(output.outputFile))
                             // all remaining languages are packaged in the main APK.
                             assertThat(manifestContent).contains("de")
                             assertThat(manifestContent).doesNotContain("fr")
@@ -196,7 +199,8 @@ class SplitHandlingTest {
                         }
                         VariantOutputConfiguration.OutputType.ONE_OF_MANY -> {
                             // we don't do language based multi-apk so all languages should be packaged.
-                            val manifestContent = ApkSubject.getConfigurations(output.outputFile)
+                            val manifestContent = ApkSubject.getConfigurations(
+                                Paths.get(output.outputFile))
                             assertThat(manifestContent).contains("es")
                             assertThat(manifestContent).contains("fr")
                             assertThat(manifestContent).contains("de")

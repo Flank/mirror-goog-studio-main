@@ -32,7 +32,6 @@ import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,11 +105,9 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
         @Nullable
         BuiltArtifacts builtArtifacts = new BuiltArtifactsLoaderImpl().load(testedApksDir);
         return builtArtifacts != null
-                ? builtArtifacts
-                        .getElements()
-                        .stream()
+                ? builtArtifacts.getElements().stream()
                         .map(BuiltArtifact::getOutputFile)
-                        .map(Path::toFile)
+                        .map(File::new)
                         .collect(Collectors.toList())
                 : ImmutableList.of();
     }

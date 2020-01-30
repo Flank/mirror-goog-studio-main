@@ -139,6 +139,8 @@ public class AndroidArtifacts {
             "android-desugar-lib-mixed-scope-keep-rules";
     private static final String TYPE_DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES =
             "android-desugar-lib-external-file-keep-rules";
+    private static final String TYPE_DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES =
+            "android-desugar-lib-external-artifact-transform-file-keep-rules";
 
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
@@ -274,10 +276,10 @@ public class AndroidArtifacts {
         PROCESSED_JAR(TYPE_PROCESSED_JAR),
         // published dex folder for bundle
         DEX(TYPE_DEX),
-        // dex and keep rules(shrinking desugar_jdk_libs), a folder with a subfolder named dex
+        // dex and keep rules(shrinking desugar lib), a folder with a subfolder named dex
         // which contains dex files, and with a file named keep_rules
         DEX_AND_KEEP_RULES(TYPE_DEX_AND_KEEP_RULES),
-        // a file named keep_rules for shrinking desugar_jdk_libs
+        // a file named keep_rules for shrinking desugar lib
         KEEP_RULES(TYPE_KEEP_RULES),
 
         // manifest is published to both to compare and detect provided-only library dependencies.
@@ -396,7 +398,9 @@ public class AndroidArtifacts {
         DESUGAR_LIB_SUBPROJECT_KEEP_RULES(TYPE_DESUGAR_LIB_SUBPROJECT_KEEP_RULES),
         DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES(TYPE_DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES),
         DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES(TYPE_DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES),
-        DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES(TYPE_DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES);
+        DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES(TYPE_DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES),
+        DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES(
+                TYPE_DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES);
 
         @NonNull private final String type;
 

@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deploy.proto.Deploy.SwapRequest;
 import com.android.tools.deploy.proto.Deploy.SwapResponse;
 import java.io.IOException;
@@ -30,6 +31,16 @@ public class InstallerBasedClassRedefiner implements ClassRedefiner {
     public SwapResponse redefine(SwapRequest request) throws DeployerException {
         try {
             return installer.swap(request);
+        } catch (IOException e) {
+            throw DeployerException.installerIoException(e);
+        }
+    }
+
+    @Override
+    public Deploy.SwapResponse redefine(Deploy.OverlaySwapRequest request)
+            throws DeployerException {
+        try {
+            return installer.overlaySwap(request);
         } catch (IOException e) {
             throw DeployerException.installerIoException(e);
         }

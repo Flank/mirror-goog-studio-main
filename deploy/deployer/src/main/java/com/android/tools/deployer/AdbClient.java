@@ -18,6 +18,7 @@ package com.android.tools.deployer;
 
 import com.android.ddmlib.*;
 import com.android.sdklib.AndroidVersion;
+import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import java.io.ByteArrayOutputStream;
@@ -25,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -157,6 +159,63 @@ public class AdbClient {
         return device.getAbis();
     }
 
+    /**
+     * Gets the PIDs of the given package name. R+ only.
+     *
+     * @return a {@link List} of PIDs, or null if this isn't supported on the device.
+     */
+    public List<Integer> getPids(String packageName) {
+        if (!device.supportsFeature(IDevice.Feature.REAL_PKG_NAME)) {
+            throw new IllegalStateException(
+                    String.format(
+                            "Device %s, do not support REAL_PKG_NAME", device.getSerialNumber()));
+        }
+        List<Integer> results = new ArrayList<>();
+        for (Client client : device.getClients()) {
+            if (packageName.equals(client.getClientData().getPackageName())) {
+                results.add(client.getClientData().getPid());
+            }
+        }
+        return results;
+    }
+
+    public Deploy.Arch getArch(List<Integer> pids) throws DeployerException {
+        Deploy.Arch result = Deploy.Arch.ARCH_UNKNOWN;
+        for (int pid : pids) {
+            Deploy.Arch curProc = getArch(pid);
+            if (result == Deploy.Arch.ARCH_UNKNOWN) {
+                result = curProc;
+            } else {
+                if (curProc != Deploy.Arch.ARCH_UNKNOWN && result != curProc) {
+                    // TODO: Different message than normal dump?
+                    throw DeployerException.dumpMixedArch(
+                            String.format("Application running as %s an %s", result, curProc));
+                }
+            }
+        }
+        return result;
+    }
+
+    private Deploy.Arch getArch(int pid) {
+        for (Client client : device.getClients()) {
+            if (client.getClientData().getPid() != pid) {
+                continue;
+            }
+
+            String abi = client.getClientData().getAbi();
+            if (abi == null) {
+                return Deploy.Arch.ARCH_UNKNOWN;
+            } else if (abi.startsWith("32-bit")) {
+                return Deploy.Arch.ARCH_32_BIT;
+            } else if (abi.startsWith("64-bit")) {
+                return Deploy.Arch.ARCH_64_BIT;
+            } else {
+                return Deploy.Arch.ARCH_UNKNOWN;
+            }
+        }
+        return Deploy.Arch.ARCH_UNKNOWN;
+    }
+
     public void push(String from, String to) throws IOException {
         try (Trace ignored = Trace.begin("adb push")) {
             device.pushFile(from, to);
@@ -167,6 +226,10 @@ public class AdbClient {
 
     public AndroidVersion getVersion() {
         return device.getVersion();
+    }
+
+    public String getSerial() {
+        return device.getSerialNumber();
     }
 
     // TODO: Replace this to void copying the full byte[] incurred when calling stream.toByteArray()

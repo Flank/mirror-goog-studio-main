@@ -16,9 +16,9 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceConnector;
@@ -38,11 +38,11 @@ import org.gradle.api.tasks.TaskProvider;
 
 public abstract class UninstallTask extends NonIncrementalTask {
 
-    // FIXME this should not be in the task
-    private ComponentPropertiesImpl componentProperties;
+    private String variantName;
+    // these are not inputs so we don't need the task to have its own Property
+    private Provider<String> applicationId;
 
     private int mTimeOutInMs = 0;
-
     private Provider<File> adbExecutableProvider;
 
     public UninstallTask() {
@@ -55,7 +55,6 @@ public abstract class UninstallTask extends NonIncrementalTask {
     @Override
     protected void doTaskAction() throws DeviceException, ExecutionException {
         final Logger logger = getLogger();
-        final String applicationId = componentProperties.getVariantDslInfo().getApplicationId();
 
         logger.info("Uninstalling app: {}", applicationId);
 
@@ -68,12 +67,12 @@ public abstract class UninstallTask extends NonIncrementalTask {
                     final List<? extends DeviceConnector> devices = deviceProvider.getDevices();
 
                     for (DeviceConnector device : devices) {
-                        device.uninstallPackage(applicationId, getTimeOutInMs(), iLogger);
+                        device.uninstallPackage(applicationId.get(), getTimeOutInMs(), iLogger);
                         logger.lifecycle(
                                 "Uninstalling {} (from {}:{}) from device '{}' ({}).",
                                 applicationId,
                                 getProject().getName(),
-                                componentProperties.getName(),
+                                variantName,
                                 device.getName(),
                                 device.getSerialNumber());
                     }
@@ -105,10 +104,10 @@ public abstract class UninstallTask extends NonIncrementalTask {
     }
 
     public static class CreationAction
-            extends VariantTaskCreationAction<UninstallTask, ComponentPropertiesImpl> {
+            extends VariantTaskCreationAction<UninstallTask, ApkCreationConfig> {
 
-        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
-            super(componentProperties);
+        public CreationAction(@NonNull ApkCreationConfig creationConfig) {
+            super(creationConfig);
         }
 
         @NonNull
@@ -127,9 +126,9 @@ public abstract class UninstallTask extends NonIncrementalTask {
         public void configure(@NonNull UninstallTask task) {
             super.configure(task);
 
-            task.componentProperties = creationConfig;
-            task.setDescription(
-                    "Uninstalls the " + creationConfig.getVariantData().getDescription() + ".");
+            task.variantName = creationConfig.getName();
+            task.applicationId = creationConfig.getApplicationId();
+            task.setDescription("Uninstalls the " + creationConfig.getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             task.setTimeOutInMs(
                     creationConfig

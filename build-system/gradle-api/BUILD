@@ -12,9 +12,10 @@ fileset(
 
 kotlin_library(
     name = "gradle-api",
-    srcs = [
-        "src/main/java",
-    ],
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-api",
     resources = [":resources"],
@@ -39,7 +40,10 @@ maven_pom(
 kotlin_test(
     name = "tests",
     size = "medium",
-    srcs = ["src/test/java"],
+    srcs = glob([
+        "src/test/java/**/*.kt",
+        "src/test/java/**/*.java",
+    ]),
     coverage = True,
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),

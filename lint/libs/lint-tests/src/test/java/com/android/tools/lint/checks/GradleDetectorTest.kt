@@ -2702,7 +2702,6 @@ class GradleDetectorTest : AbstractCheckTest() {
             .issues(DATA_BINDING_WITHOUT_KAPT)
             .run()
             .expectClean()
-
     }
 
     fun testDataBindingWithoutKaptUsingApplyPluginSyntax() {

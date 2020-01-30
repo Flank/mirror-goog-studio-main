@@ -136,7 +136,6 @@ bool SwapCommand::Setup() noexcept {
 bool SwapCommand::CopyBinaries(const std::string& src_path,
                                const std::string& dst_path) const noexcept {
   Phase p("CopyBinaries");
-  // TODO: Cleanup previous version of the binaries?
   std::string agent_src_path = src_path + kAgentFilename;
   std::string agent_alt_src_path = src_path + kAgentAltFilename;
   std::string server_src_path = src_path + kServerFilename;

@@ -1,0 +1,6 @@
+<root>
+  <item
+      name='com.intellij.find.findUsages.FindUsagesHandler boolean processElementUsages(com.intellij.psi.PsiElement, com.intellij.util.Processor&lt;com.intellij.usageView.UsageInfo&gt;, com.intellij.find.findUsages.FindUsagesOptions)'>
+    <annotation name='com.android.annotations.concurrency.WorkerThread'/>
+  </item>
+</root>

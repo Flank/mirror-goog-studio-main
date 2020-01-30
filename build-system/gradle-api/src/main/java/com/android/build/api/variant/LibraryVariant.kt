@@ -21,6 +21,6 @@ import org.gradle.api.Incubating
  * [Variant] type for library projects
  */
 @Incubating
-interface LibraryVariant : Variant<LibraryVariantProperties> {
+interface LibraryVariant<PropertiesT: LibraryVariantProperties> : Variant<PropertiesT> {
 
 }

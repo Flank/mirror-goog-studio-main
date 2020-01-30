@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,15 +49,21 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class D8DesugaringTest {
 
-    @Parameterized.Parameters(name = "withIncrementalDexingV2_{0}")
-    public static Iterable<Boolean> parameters() {
-        return ImmutableList.of(true, false);
+    @Parameterized.Parameters(name = "withIncrementalDexingV2_{0}, withDexingArtifactTransform_{1}")
+    public static List<Object[]> parameters() {
+        return ImmutableList.of(
+                new Object[] {true, true},
+                new Object[] {true, false},
+                new Object[] {false, true},
+                new Object[] {false, false});
     }
 
     private boolean withIncrementalDexingV2;
+    private boolean withDexingArtifactTransform;
 
-    public D8DesugaringTest(boolean withIncrementalDexingV2) {
+    public D8DesugaringTest(boolean withIncrementalDexingV2, boolean withDexingArtifactTransform) {
         this.withIncrementalDexingV2 = withIncrementalDexingV2;
+        this.withDexingArtifactTransform = withDexingArtifactTransform;
     }
 
     @Rule
@@ -73,6 +80,10 @@ public class D8DesugaringTest {
                             BooleanOption.ENABLE_INCREMENTAL_DEXING_V2.getPropertyName()
                                     + "="
                                     + withIncrementalDexingV2)
+                    .addGradleProperties(
+                            BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM.getPropertyName()
+                                    + "="
+                                    + withDexingArtifactTransform)
                     .create();
 
     @Before

@@ -173,6 +173,6 @@ public abstract class AbstractTestDataImpl implements TestData {
                             + ":"
                             + Joiner.on(",").join(testApkOutputs.getElements()));
         }
-        return testApkOutputs.getElements().iterator().next().getOutputFile().toFile();
+        return new File(testApkOutputs.getElements().iterator().next().getOutputFile());
     }
 }

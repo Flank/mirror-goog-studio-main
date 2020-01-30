@@ -156,16 +156,6 @@ public class DesugarAppWithDesugarToolTest {
     }
 
     @Test
-    public void testWithBuildCacheDisabled() throws IOException, InterruptedException {
-        enableJava8();
-        GradleBuildResult result =
-                getProjectExecutor()
-                        .with(BooleanOption.ENABLE_BUILD_CACHE, false)
-                        .run("assembleDebug");
-        assertThat(result.getTask(":desugarDebug")).didWork();
-    }
-
-    @Test
     public void testWithLegacyJacoco() throws IOException, InterruptedException {
         // java command is not logged when using workers
         Assume.assumeFalse(enableGradleWorkers);

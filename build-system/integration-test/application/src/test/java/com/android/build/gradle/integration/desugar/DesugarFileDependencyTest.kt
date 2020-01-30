@@ -101,6 +101,20 @@ class DesugarFileDependencyTest(var tool: Tool) {
         }
     }
 
+    /** Regression test for http://b/146869072. */
+    @Test
+    fun checkIncrementalBuild() {
+        Assume.assumeTrue(tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS)
+        executor().run("assembleDebug")
+
+        val updatedBuildFile = project.buildFile.readText().replace(
+            "implementation files('libs/interface.jar', 'libs/impl.jar')",
+            "implementation files('libs/impl.jar', 'libs/interface.jar')"
+        )
+        project.buildFile.writeText(updatedBuildFile)
+        executor().run("assembleDebug")
+    }
+
     private fun addJars() {
         val libs = project.file("libs").toPath()
         Files.createDirectory(libs)

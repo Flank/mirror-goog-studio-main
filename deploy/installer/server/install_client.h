@@ -49,7 +49,7 @@ class InstallClient {
   }
 
   // Sends a server exit request and waits indefinitely for the server to exit.
-  bool KillServerAndWait();
+  bool KillServerAndWait(proto::InstallServerResponse* response);
 
  private:
   ProtoPipe input_;

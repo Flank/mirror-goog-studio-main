@@ -25,13 +25,15 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
+import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -43,7 +45,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.tasks.BundleLibraryClasses;
+import com.android.build.gradle.internal.tasks.BundleLibraryClassesDir;
+import com.android.build.gradle.internal.tasks.BundleLibraryClassesJar;
 import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
@@ -56,6 +59,7 @@ import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
@@ -86,29 +90,35 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** TaskManager for creating tasks in an Android library project. */
-public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl> {
+public class LibraryTaskManager
+        extends TaskManager<LibraryVariantImpl, LibraryVariantPropertiesImpl> {
 
     public LibraryTaskManager(
+            @NonNull List<ComponentInfo<LibraryVariantImpl, LibraryVariantPropertiesImpl>> variants,
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentPropertiesImpl>>
+                            testComponents,
+            boolean hasFlavors,
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
-        super(
-                globalScope,
-                dataBindingBuilder,
-                extension,
-                toolingRegistry,
-                recorder);
+        super(variants, testComponents, hasFlavors, globalScope, extension, recorder);
     }
 
     @Override
-    public void createTasksForVariant(
-            @NonNull LibraryVariantPropertiesImpl libVariantProperties,
-            @NonNull List<LibraryVariantPropertiesImpl> allComponentsWithLint) {
+    protected void doCreateTasksForVariant(
+            @NonNull ComponentInfo<LibraryVariantImpl, LibraryVariantPropertiesImpl> variant,
+            @NonNull
+                    List<ComponentInfo<LibraryVariantImpl, LibraryVariantPropertiesImpl>>
+                            allVariants) {
+
+        LibraryVariantPropertiesImpl libVariantProperties = variant.getProperties();
 
         createAnchorTasks(libVariantProperties);
 
@@ -276,18 +286,15 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
 
         // Create jar with library classes used for publishing to runtime elements.
         taskFactory.register(
-                new BundleLibraryClasses.CreationAction(
+                new BundleLibraryClassesJar.CreationAction(
                         libVariantProperties,
                         AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS,
-                        AndroidArtifacts.ArtifactType.CLASSES_JAR,
                         excludeDataBindingClassesIfNecessary(libVariantProperties)));
 
         // Also create a directory containing the same classes for incremental dexing
         taskFactory.register(
-                new BundleLibraryClasses.CreationAction(
+                new BundleLibraryClassesDir.CreationAction(
                         libVariantProperties,
-                        AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS,
-                        AndroidArtifacts.ArtifactType.CLASSES_DIR,
                         excludeDataBindingClassesIfNecessary(libVariantProperties)));
 
         taskFactory.register(new BundleLibraryJavaRes.CreationAction(libVariantProperties));
@@ -333,7 +340,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
                         libVariantProperties,
                         InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI.INSTANCE));
 
-        createLintTasks(libVariantProperties, allComponentsWithLint);
+        createLintTasks(libVariantProperties, allVariants);
         createBundleTask(libVariantProperties);
     }
 
@@ -344,6 +351,9 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
             rClassJar = InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR.INSTANCE;
         } else {
+            if (!globalScope.getBuildFeatures().getAndroidResources()) {
+                return;
+            }
             rClassJar = InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE;
         }
         QualifiedContent.ScopeType scopeType;
@@ -513,10 +523,9 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
 
         // Create jar used for publishing to API elements (for other projects to compile against).
         taskFactory.register(
-                new BundleLibraryClasses.CreationAction(
+                new BundleLibraryClassesJar.CreationAction(
                         componentProperties,
                         AndroidArtifacts.PublishedConfigType.API_ELEMENTS,
-                        AndroidArtifacts.ArtifactType.CLASSES_JAR,
                         excludeDataBindingClassesIfNecessary(componentProperties)));
     }
 
@@ -541,10 +550,12 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantPropertiesImpl
                                     InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS.INSTANCE)
                             .get()
                             .getAsFile();
-            return dataBindingBuilder.getJarExcludeList(
-                    componentProperties.getVariantData().getLayoutXmlProcessor(),
-                    excludeFile,
-                    dependencyArtifactsDir);
+            return globalScope
+                    .getDataBindingBuilder()
+                    .getJarExcludeList(
+                            componentProperties.getLayoutXmlProcessor(),
+                            excludeFile,
+                            dependencyArtifactsDir);
         };
     }
 

@@ -19,7 +19,9 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FD_DEX
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter
@@ -185,10 +187,10 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     private fun hasFeatureDexFiles() = featureDexFiles.files.isNotEmpty()
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl,
+        creationConfig: ApkCreationConfig,
         private val packageCustomClassDependencies: Boolean
-    ) : VariantTaskCreationAction<PerModuleBundleTask, ComponentPropertiesImpl>(
-        componentProperties
+    ) : VariantTaskCreationAction<PerModuleBundleTask, ApkCreationConfig>(
+        creationConfig
     ) {
 
         override val name: String
@@ -213,10 +215,10 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             super.configure(task)
             val artifacts = creationConfig.artifacts
 
-            if (creationConfig.variantType.isBaseModule) {
-                task.fileName.set("base.zip")
+            if (creationConfig is DynamicFeatureCreationConfig) {
+                task.fileName.set(creationConfig.featureName.map { "$it.zip" })
             } else {
-                task.fileName.set(creationConfig.variantScope.featureName.map { "$it.zip" })
+                task.fileName.set("base.zip")
             }
             task.fileName.disallowChanges()
 
@@ -346,17 +348,17 @@ private class ResRelocator : JarCreator.Relocator {
  * Returns a file collection containing all of the native libraries to be packaged.
  */
 fun getNativeLibsFiles(
-    componentProperties: ComponentPropertiesImpl,
+    creationConfig: BaseCreationConfig,
     packageCustomClassDependencies: Boolean
 ): FileCollection {
-    val nativeLibs = componentProperties.globalScope.project.files()
-    if (componentProperties.variantType.isForTesting) {
-        return nativeLibs.from(componentProperties.artifacts.getFinalProduct(MERGED_NATIVE_LIBS))
+    val nativeLibs = creationConfig.globalScope.project.files()
+    if (creationConfig.variantType.isForTesting) {
+        return nativeLibs.from(creationConfig.artifacts.getFinalProduct(MERGED_NATIVE_LIBS))
     }
-    nativeLibs.from(componentProperties.artifacts.getFinalProduct(STRIPPED_NATIVE_LIBS))
+    nativeLibs.from(creationConfig.artifacts.getFinalProduct(STRIPPED_NATIVE_LIBS))
     if (packageCustomClassDependencies) {
         nativeLibs.from(
-            componentProperties.transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS)
+            creationConfig.transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS)
         )
     }
     return nativeLibs

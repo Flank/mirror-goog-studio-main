@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.tools.lint.detector.api.Detector.UastScanner
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
@@ -82,7 +83,7 @@ open class UElementHandler {
 
     internal open fun error(parameterType: Class<out UElement>) {
         val name = parameterType.simpleName
-        assert(name.startsWith("U")) { name }
+        require(name.startsWith("U")) { name }
         throw RuntimeException(
             "You must override visit${name.substring(1)} " +
                     "(and don't call super.visit${name.substring(1)}!)"

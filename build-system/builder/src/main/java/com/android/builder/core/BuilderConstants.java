@@ -31,6 +31,8 @@ public class BuilderConstants {
      */
     public static final String MAIN = "main";
 
+    public static final String ANDROID_TEST = "androidTest";
+
     public static final String DEBUG = "debug";
     public static final String RELEASE = "release";
 

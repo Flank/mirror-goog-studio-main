@@ -24,7 +24,6 @@ import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.ProjectSyncIssues;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
@@ -44,6 +43,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
+import org.jetbrains.annotations.NotNull;
 
 /** Creates a deep copy of an {@link AndroidProject}. */
 public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializable {
@@ -87,7 +87,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @NonNull AndroidProject project,
             @NonNull IdeDependenciesFactory dependenciesFactory,
             @Nullable Collection<Variant> variants,
-            @Nullable ProjectSyncIssues syncIssues) {
+            @NotNull Collection<SyncIssue> syncIssues) {
         return create(project, new ModelCache(), dependenciesFactory, variants, syncIssues);
     }
 
@@ -97,7 +97,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @NonNull ModelCache modelCache,
             @NonNull IdeDependenciesFactory dependenciesFactory,
             @Nullable Collection<Variant> variants,
-            @Nullable ProjectSyncIssues syncIssues) {
+            @NotNull Collection<SyncIssue> syncIssues) {
         // Old plugin versions do not return model version.
         GradleVersion parsedModelVersion = GradleVersion.tryParse(project.getModelVersion());
 
@@ -118,18 +118,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                         modelCache,
                         container -> new IdeProductFlavorContainer(container, modelCache));
 
-        // If we have a ProjectSyncIssues model then use the sync issues contained in that, otherwise fallback to the
-        // SyncIssues that are stored within the AndroidProject. This is needed to support plugins < 3.6 which do not produce a
-        // ProjectSyncIssues model.
-        //noinspection deprecation
         Collection<SyncIssue> syncIssuesCopy =
-                new ArrayList<>(
-                        IdeModel.copy(
-                                (syncIssues == null)
-                                        ? project.getSyncIssues()
-                                        : syncIssues.getSyncIssues(),
-                                modelCache,
-                                issue -> new IdeSyncIssue(issue)));
+                new ArrayList<>(IdeModel.copy(syncIssues, modelCache, IdeSyncIssue::new));
 
         Collection<Variant> variantsCopy =
                 new ArrayList<>(

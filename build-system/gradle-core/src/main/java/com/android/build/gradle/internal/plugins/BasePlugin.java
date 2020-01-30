@@ -18,21 +18,22 @@ package com.android.build.gradle.internal.plugins;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.variant.impl.GradleProperty;
+import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApiObjectFactory;
 import com.android.build.gradle.internal.BadPluginException;
-import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.ClasspathVerifier;
 import com.android.build.gradle.internal.DependencyConfigurator;
 import com.android.build.gradle.internal.DependencyResolutionChecks;
@@ -74,6 +75,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.Aapt2Daemon;
 import com.android.build.gradle.internal.services.Aapt2Workers;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.build.gradle.internal.variant.VariantInputModelImpl;
@@ -84,7 +86,6 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
-import com.android.build.gradle.options.SyncOptions.ErrorFormatMode;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.core.BuilderConstants;
@@ -93,7 +94,6 @@ import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
-import com.android.builder.utils.FileCache;
 import com.android.dx.command.dexer.Main;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.SdkVersionInfo;
@@ -101,6 +101,7 @@ import com.android.tools.lint.gradle.api.ToolingRegistryProvider;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
+import com.google.common.collect.Streams;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.io.File;
@@ -111,6 +112,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.gradle.BuildAdapter;
 import org.gradle.BuildResult;
 import org.gradle.api.Action;
@@ -128,15 +130,15 @@ import org.gradle.api.tasks.StopExecutionException;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Base class for all Android plugins */
-public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImpl>
+public abstract class BasePlugin<
+                VariantT extends VariantImpl<VariantPropertiesT>,
+                VariantPropertiesT extends VariantPropertiesImpl>
         implements Plugin<Project>, ToolingRegistryProvider {
 
     private BaseExtension extension;
 
-    private VariantManager<VariantPropertiesT> variantManager;
+    private VariantManager<VariantT, VariantPropertiesT> variantManager;
     private VariantInputModelImpl variantInputModel;
-
-    protected TaskManager<VariantPropertiesT> taskManager;
 
     protected Project project;
 
@@ -145,9 +147,7 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
     GlobalScope globalScope;
     protected SyncIssueReporterImpl syncIssueHandler;
 
-    private DataBindingBuilder dataBindingBuilder;
-
-    private VariantFactory<VariantPropertiesT> variantFactory;
+    private VariantFactory<VariantT, VariantPropertiesT> variantFactory;
 
     private SourceSetManager sourceSetManager;
 
@@ -190,21 +190,28 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
     protected abstract GradleBuildProject.PluginType getAnalyticsPluginType();
 
     @NonNull
-    protected abstract VariantFactory<VariantPropertiesT> createVariantFactory(
+    protected abstract VariantFactory<VariantT, VariantPropertiesT> createVariantFactory(
             @NonNull GlobalScope globalScope);
 
     @NonNull
-    protected abstract TaskManager<VariantPropertiesT> createTaskManager(
+    protected abstract TaskManager<VariantT, VariantPropertiesT> createTaskManager(
+            @NonNull List<ComponentInfo<VariantT, VariantPropertiesT>> variants,
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentPropertiesImpl>>
+                            testComponents,
+            boolean hasFlavors,
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder);
 
     protected abstract int getProjectType();
 
     @VisibleForTesting
-    public VariantManager<VariantPropertiesT> getVariantManager() {
+    public VariantManager<VariantT, VariantPropertiesT> getVariantManager() {
         return variantManager;
     }
 
@@ -308,9 +315,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                         getLogger(),
                         syncIssueHandler);
 
-        dataBindingBuilder = new DataBindingBuilder();
-        dataBindingBuilder.setPrintMachineReadableOutput(
-                SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
 
         projectOptions.getAllOptions().forEach(deprecationReporter::reportOptionIssuesIfAny);
 
@@ -333,9 +337,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                         projectOptions,
                         project::file);
 
-        @Nullable
-        FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
-
         MessageReceiverImpl messageReceiver =
                 new MessageReceiverImpl(SyncOptions.getErrorFormatMode(projectOptions), logger);
 
@@ -346,7 +347,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                         dslScope,
                         sdkComponents,
                         registry,
-                        buildCache,
                         messageReceiver,
                         componentFactory);
 
@@ -444,14 +444,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
 
         variantFactory = createVariantFactory(globalScope);
 
-        taskManager =
-                createTaskManager(
-                        globalScope,
-                        dataBindingBuilder,
-                        extension,
-                        registry,
-                        threadRecorder);
-
         variantInputModel =
                 new VariantInputModelImpl(globalScope, extension, variantFactory, sourceSetManager);
         variantManager =
@@ -462,7 +454,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                         extension,
                         variantFactory,
                         variantInputModel,
-                        taskManager,
                         sourceSetManager,
                         threadRecorder);
 
@@ -470,7 +461,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                 registry,
                 globalScope,
                 variantInputModel,
-                variantManager,
                 extension,
                 extraModelInfo);
 
@@ -511,7 +501,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
             @NonNull VariantInputModel variantInputModel,
-            @NonNull VariantManager variantManager,
             @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
         // Register a builder for the custom tooling model
@@ -519,7 +508,14 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                 new VariantModelImpl(
                         variantInputModel,
                         extension::getTestBuildType,
-                        variantManager,
+                        () ->
+                                variantManager.getMainComponents().stream()
+                                        .map(ComponentInfo::getProperties)
+                                        .collect(Collectors.toList()),
+                        () ->
+                                variantManager.getTestComponents().stream()
+                                        .map(ComponentInfo::getProperties)
+                                        .collect(Collectors.toList()),
                         globalScope.getDslScope().getIssueReporter());
 
         registerModelBuilder(registry, globalScope, variantModel, extension, extraModelInfo);
@@ -540,7 +536,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                 new ModelBuilder<>(
                         globalScope,
                         variantModel,
-                        taskManager,
                         extension,
                         extraModelInfo,
                         syncIssueHandler,
@@ -566,7 +561,11 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
                 ExecutionType.TASK_MANAGER_CREATE_TASKS,
                 project.getPath(),
                 null,
-                () -> taskManager.createTasksBeforeEvaluate());
+                () ->
+                        TaskManager.createTasksBeforeEvaluate(
+                                globalScope,
+                                variantFactory.getVariantType(),
+                                extension.getSourceSets()));
 
         project.afterEvaluate(
                 CrashReporting.afterEvaluate(
@@ -648,8 +647,6 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
         extension.disableWrite();
         globalScope.getDslScope().getVariableFactory().disableWrite();
 
-        taskManager.configureCustomLintChecks();
-
         ProcessProfileWriter.getProject(project.getPath())
                 .setCompileSdk(extension.getCompileSdkVersion())
                 .setBuildToolsVersion(extension.getBuildToolsRevision().toString())
@@ -662,49 +659,49 @@ public abstract class BasePlugin<VariantPropertiesT extends VariantPropertiesImp
         }
         AnalyticsUtil.recordFirebasePerformancePluginVersion(project);
 
-        variantManager.createVariantsAndTasks();
-        List<ComponentPropertiesImpl> allComponents = variantManager.getAllComponents();
-        List<VariantPropertiesT> mainComponents = variantManager.getMainComponents();
+        variantManager.createVariants();
+
+        List<ComponentInfo<VariantT, VariantPropertiesT>> variants =
+                variantManager.getMainComponents();
+
+        TaskManager<VariantT, VariantPropertiesT> taskManager =
+                createTaskManager(
+                        variants,
+                        variantManager.getTestComponents(),
+                        !variantInputModel.getProductFlavors().isEmpty(),
+                        globalScope,
+                        extension,
+                        threadRecorder);
+
+        taskManager.createTasks();
 
         new DependencyConfigurator(project, project.getName(), globalScope, variantInputModel)
-                .configureDependencies();
+                .configureGeneralTransforms()
+                .configureVariantTransforms(variants, variantManager.getTestComponents());
 
         // Run the old Variant API, after the variants and tasks have been created.
         ApiObjectFactory apiObjectFactory =
                 new ApiObjectFactory(extension, variantFactory, globalScope);
-        for (ComponentPropertiesImpl component : allComponents) {
-            apiObjectFactory.create(component);
+
+        List<? extends ComponentPropertiesImpl> allProperties =
+                Streams.concat(variants.stream(), variantManager.getTestComponents().stream())
+                        .map(ComponentInfo::getProperties)
+                        .collect(Collectors.toList());
+
+        for (ComponentPropertiesImpl componentProperties : allProperties) {
+            apiObjectFactory.create(componentProperties);
         }
 
         // Make sure no SourceSets were added through the DSL without being properly configured
         sourceSetManager.checkForUnconfiguredSourceSets();
 
-        // must run this after scopes are created so that we can configure kotlin
-        // kapt tasks
-        taskManager.addBindingDependenciesIfNecessary(
-                globalScope.getBuildFeatures().getViewBinding(),
-                globalScope.getBuildFeatures().getDataBinding(),
-                extension.getDataBinding(),
-                allComponents);
-
         // configure compose related tasks.
-        taskManager.configureKotlinPluginTasksForComposeIfNecessary(globalScope, allComponents);
-
-        // create the global lint task that depends on all the variants
-        taskManager.configureGlobalLintTask(mainComponents);
-
-        int flavorDimensionCount = 0;
-        if (extension.getFlavorDimensionList() != null) {
-            flavorDimensionCount = extension.getFlavorDimensionList().size();
-        }
-
-        taskManager.createAnchorAssembleTasks(
-                allComponents, extension.getProductFlavors().size(), flavorDimensionCount);
+        taskManager.createPostApiTasks();
 
         // now publish all variant artifacts for non test variants since
         // tests don't publish anything.
-        for (ComponentPropertiesImpl component : mainComponents) {
-            variantManager.publishBuildArtifacts(component);
+        for (ComponentInfo<VariantT, VariantPropertiesT> component : variants) {
+            component.getProperties().publishBuildArtifacts();
         }
 
         checkSplitConfiguration();

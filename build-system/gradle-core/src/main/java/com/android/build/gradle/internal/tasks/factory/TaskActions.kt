@@ -65,8 +65,8 @@ abstract class VariantTaskCreationAction<TaskT, CreationConfigT: BaseCreationCon
 ) : TaskCreationAction<TaskT>() where TaskT: Task, TaskT: VariantAwareTask {
 
     constructor(
-        component: CreationConfigT
-    ): this(component, true)
+        creationConfig: CreationConfigT
+    ): this(creationConfig, true)
 
     @JvmOverloads
     protected fun computeTaskName(prefix: String, suffix: String = ""): String =
@@ -85,7 +85,7 @@ abstract class VariantTaskCreationAction<TaskT, CreationConfigT: BaseCreationCon
             task.dependsOn(taskContainer.preBuildTask)
         }
 
-        task.variantName = creationConfig.getName()
+        task.variantName = creationConfig.name
         task.enableGradleWorkers.set(
             creationConfig.dslScope.projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS)
         )

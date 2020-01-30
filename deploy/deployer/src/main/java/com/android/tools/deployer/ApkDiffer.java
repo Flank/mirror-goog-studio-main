@@ -25,6 +25,16 @@ import java.util.List;
 import java.util.Map;
 
 public class ApkDiffer {
+
+    public List<FileDiff> specDiff(DeploymentCacheDatabase.Entry cacheEntry, List<Apk> newApks)
+            throws DeployerException {
+        if (cacheEntry == null) {
+            // TODO: We could just fall back to non-optimistic swap.
+            throw DeployerException.remoteApkNotFound();
+        }
+        return diff(cacheEntry.getApks(), newApks);
+    }
+
     public List<FileDiff> diff(List<Apk> oldApks, List<Apk> newApks) throws DeployerException {
         List<ApkEntry> oldFiles = new ArrayList<>();
         Map<String, Map<String, ApkEntry>> oldMap = new HashMap<>();

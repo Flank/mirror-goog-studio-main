@@ -20,6 +20,7 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTestProperties
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -27,8 +28,12 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.utils.init
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.google.common.collect.ImmutableSet
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class UnitTestPropertiesImpl @Inject constructor(
@@ -68,4 +73,6 @@ open class UnitTestPropertiesImpl @Inject constructor(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
+    override val applicationId: Property<String> = dslScope.objectFactory.property(String::class.java)
+        .init(dslScope.providerFactory.provider { variantDslInfo.testApplicationId })
 }

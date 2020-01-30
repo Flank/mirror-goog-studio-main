@@ -20,7 +20,9 @@ import static com.android.tools.app.inspection.AppInspection.AppInspectionRespon
 import static com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status.SUCCESS;
 import static com.android.tools.app.inspection.ServiceLayer.TIMEOUT_SECONDS;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.TruthJUnit.assume;
 
+import androidx.annotation.NonNull;
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
 import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
 import com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status;
@@ -30,25 +32,28 @@ import com.android.tools.app.inspection.AppInspection.RawCommand;
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.idea.protobuf.ByteString;
-import java.io.File;
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
-
 import com.android.tools.profiler.proto.Common;
 import com.android.tools.transport.TransportRule;
 import com.android.tools.transport.device.SdkLevel;
+import java.io.File;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
+import test.inspector.api.TestInspectorApi;
+import test.inspector.api.TodoInspectorApi;
 
 public final class AppInspectionTest {
-    private static final String ACTIVITY_CLASS = "com.activity.SimpleActivity";
+    private static final String TODO_ACTIVITY = "com.activity.todo.TodoActivity";
     private static final String EXPECTED_INSPECTOR_PREFIX = "TEST INSPECTOR ";
     private static final String EXPECTED_INSPECTOR_CREATED = EXPECTED_INSPECTOR_PREFIX + "CREATED";
     private static final String EXPECTED_INSPECTOR_DISPOSED =
             EXPECTED_INSPECTOR_PREFIX + "DISPOSED";
+    private static final String EXPECTED_INSPECTOR_COMMAND_PREFIX =
+            EXPECTED_INSPECTOR_PREFIX + "COMMAND: ";
 
     @Rule public final TransportRule transportRule;
     @Rule public final Timeout timeout = new Timeout(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -57,13 +62,15 @@ public final class AppInspectionTest {
     private FakeAndroidDriver androidDriver;
 
     public AppInspectionTest() {
-        TransportRule.Config ruleConfig = new TransportRule.Config() {
-            @Override
-            public void initDaemonConfig(Common.CommonConfig.Builder daemonConfig) {
-                daemonConfig.setProfilerUnifiedPipeline(true);
-            }
-        };
-        transportRule = new TransportRule(ACTIVITY_CLASS, SdkLevel.O, ruleConfig);
+        TransportRule.Config ruleConfig =
+                new TransportRule.Config() {
+                    @Override
+                    public void initDaemonConfig(
+                            @NonNull Common.CommonConfig.Builder daemonConfig) {
+                        daemonConfig.setProfilerUnifiedPipeline(true);
+                    }
+                };
+        transportRule = new TransportRule(TODO_ACTIVITY, SdkLevel.O, ruleConfig);
     }
 
     @Before
@@ -136,19 +143,20 @@ public final class AppInspectionTest {
         String onDevicePath = injectInspectorDex();
         assertResponseStatus(
                 serviceLayer.sendCommandAndGetResponse(
-                        createInspector("test.inspector", onDevicePath)),
+                        createInspector("reverse.echo.inspector", onDevicePath)),
                 SUCCESS);
         assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
         byte[] commandBytes = new byte[] {1, 2, 127};
         assertRawResponse(
                 serviceLayer.sendCommandAndGetResponse(
-                        rawCommandInspector("test.inspector", commandBytes)),
-                commandBytes);
-        assertInput(androidDriver, EXPECTED_INSPECTOR_PREFIX + Arrays.toString(commandBytes));
+                        rawCommandInspector("reverse.echo.inspector", commandBytes)),
+                TestInspectorApi.Reply.SUCCESS.toByteArray());
+        assertInput(
+                androidDriver, EXPECTED_INSPECTOR_COMMAND_PREFIX + Arrays.toString(commandBytes));
         AppInspection.AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
         assertThat(serviceLayer.hasEventToCollect()).isFalse();
         assertThat(event.getRawEvent().getContent().toByteArray())
-                .isEqualTo(new byte[] {8, 92, 43});
+                .isEqualTo(new byte[] {127, 2, 1});
     }
 
     @Test
@@ -173,8 +181,17 @@ public final class AppInspectionTest {
         assertInput(androidDriver, EXPECTED_INSPECTOR_DISPOSED);
     }
 
+    private static void assumeExperimentalFlag(boolean value) {
+        assume().that(
+                        Boolean.parseBoolean(
+                                System.getProperty("app.inspection.experimental", "false")))
+                .isEqualTo(value);
+    }
+
+    // TODO(b/145807005): Remove flag and delete this test
     @Test
-    public void inspectorEnvironmentNoOp() throws Exception {
+    public void inspectorEnvironmentNoOps_WhenExperimentalFlagDisabled() throws Exception {
+        assumeExperimentalFlag(false);
         String onDevicePath = injectInspectorDex();
         assertResponseStatus(
                 serviceLayer.sendCommandAndGetResponse(
@@ -185,8 +202,76 @@ public final class AppInspectionTest {
         assertInput(androidDriver, "REGISTER EXIT HOOK NOT IMPLEMENTED");
     }
 
+    /**
+     * The inspector framework includes features for finding object instances on the heap. This test
+     * indirectly verifies it works.
+     *
+     * <p>See the {@code TodoInspector} in the test-inspector project for the relevant code.
+     */
+    @Test
+    public void findInstancesWorks_WhenExperimentalFlagEnabled() throws Exception {
+        assumeExperimentalFlag(true);
+
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+
+        String inspectorId = "todo.inspector";
+        assertResponseStatus(
+                serviceLayer.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+        assertInput(androidDriver, EXPECTED_INSPECTOR_CREATED);
+
+        // Ensure you can find object instances that were created before the inspector was attached.
+        assertRawResponse(
+                serviceLayer.sendCommandAndGetResponse(
+                        rawCommandInspector(
+                                inspectorId,
+                                TodoInspectorApi.Command.COUNT_TODO_GROUPS.toByteArray())),
+                new byte[] {(byte) 2});
+
+        assertRawResponse(
+                serviceLayer.sendCommandAndGetResponse(
+                        rawCommandInspector(
+                                inspectorId,
+                                TodoInspectorApi.Command.COUNT_TODO_ITEMS.toByteArray())),
+                new byte[] {(byte) 3});
+
+        // Add more objects and ensure those instances get picked up as well
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
+
+        assertRawResponse(
+                serviceLayer.sendCommandAndGetResponse(
+                        rawCommandInspector(
+                                inspectorId,
+                                TodoInspectorApi.Command.COUNT_TODO_GROUPS.toByteArray())),
+                new byte[] {(byte) 4});
+
+        assertRawResponse(
+                serviceLayer.sendCommandAndGetResponse(
+                        rawCommandInspector(
+                                inspectorId,
+                                TodoInspectorApi.Command.COUNT_TODO_ITEMS.toByteArray())),
+                new byte[] {(byte) 7});
+    }
+
+    @Test
+    public void enterAndExitHooksWork_WhenExperimentalFlagEnabled() throws Exception {
+        assumeExperimentalFlag(true);
+        // TODO(b/145807282): Implement transformation test
+    }
+
+    @NonNull
     private static AppInspectionCommand rawCommandInspector(
-            String inspectorId, byte[] commandData) {
+            @NonNull String inspectorId, @NonNull byte[] commandData) {
         return AppInspectionCommand.newBuilder()
                 .setInspectorId(inspectorId)
                 .setRawInspectorCommand(
@@ -196,6 +281,7 @@ public final class AppInspectionTest {
                 .build();
     }
 
+    @NonNull
     private static AppInspectionCommand createInspector(String inspectorId, String dexPath) {
         return AppInspectionCommand.newBuilder()
                 .setInspectorId(inspectorId)
@@ -204,7 +290,8 @@ public final class AppInspectionTest {
                 .build();
     }
 
-    private static AppInspectionCommand disposeInspector(String inspectorId) {
+    @NonNull
+    private static AppInspectionCommand disposeInspector(@NonNull String inspectorId) {
         return AppInspectionCommand.newBuilder()
                 .setInspectorId(inspectorId)
                 .setDisposeInspectorCommand(DisposeInspectorCommand.newBuilder().build())
@@ -212,24 +299,27 @@ public final class AppInspectionTest {
     }
 
     private static void assertResponseStatus(
-            AppInspection.AppInspectionResponse response, Status expected) {
+            @NonNull AppInspection.AppInspectionResponse response, @NonNull Status expected) {
         assertThat(response.hasServiceResponse()).isTrue();
         assertThat(response.getStatus()).isEqualTo(expected);
     }
 
     private static void assertCrashEvent(
-            AppInspectionEvent event, String inspectorId, String message) {
+            @NonNull AppInspectionEvent event,
+            @NonNull String inspectorId,
+            @NonNull String message) {
         assertThat(event.hasCrashEvent()).isTrue();
         assertThat(event.getInspectorId()).isEqualTo(inspectorId);
         assertThat(event.getCrashEvent().getErrorMessage()).isEqualTo(message);
     }
 
     private static void assertRawResponse(
-            AppInspection.AppInspectionResponse response, byte[] responseContent) {
+            @NonNull AppInspection.AppInspectionResponse response, byte[] responseContent) {
         assertThat(response.hasRawResponse()).isTrue();
         assertThat(response.getRawResponse().getContent().toByteArray()).isEqualTo(responseContent);
     }
 
+    @NonNull
     private static String injectInspectorDex() {
         File onHostinspector = new File(ProcessRunner.getProcessPath("test.inspector.dex.location"));
         assertThat(onHostinspector.exists()).isTrue();
@@ -239,7 +329,8 @@ public final class AppInspectionTest {
         return onDeviceInspector.getAbsolutePath();
     }
 
-    private static void assertInput(FakeAndroidDriver androidDriver, String expected) {
+    private static void assertInput(
+            @NonNull FakeAndroidDriver androidDriver, @NonNull String expected) {
         assertThat(androidDriver.waitForInput(expected)).isTrue();
     }
 }

@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.VariantOutput
-import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
@@ -136,9 +136,9 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
         return density
     }
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl, private val screenSizes: Set<String>) :
-        VariantTaskCreationAction<CompatibleScreensManifest, ComponentPropertiesImpl>(
-            componentProperties
+    class CreationAction(creationConfig: ApkCreationConfig, private val screenSizes: Set<String>) :
+        VariantTaskCreationAction<CompatibleScreensManifest, ApkCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String

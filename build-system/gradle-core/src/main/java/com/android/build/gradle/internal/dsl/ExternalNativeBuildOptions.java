@@ -83,7 +83,7 @@ public class ExternalNativeBuildOptions implements CoreExternalNativeBuildOption
 
     @Nullable
     @Override
-    public CoreExternalNativeNdkBuildOptions getExternalNativeNdkBuildOptions() {
+    public ExternalNativeNdkBuildOptions getExternalNativeNdkBuildOptions() {
         return getNdkBuild();
     }
 
@@ -95,17 +95,18 @@ public class ExternalNativeBuildOptions implements CoreExternalNativeBuildOption
      * use {@link com.android.build.gradle.internal.dsl.NdkBuildOptions:path
      * android.externalNativeBuild.ndkBuild.path}.
      */
+    @NonNull
     public ExternalNativeNdkBuildOptions getNdkBuild() {
         return ndkBuildOptions;
     }
 
-    public void ndkBuild(Action<CoreExternalNativeNdkBuildOptions> action) {
+    public void ndkBuild(Action<ExternalNativeNdkBuildOptions> action) {
         action.execute(ndkBuildOptions);
     }
 
     @Nullable
     @Override
-    public CoreExternalNativeCmakeOptions getExternalNativeCmakeOptions() {
+    public ExternalNativeCmakeOptions getExternalNativeCmakeOptions() {
         return getCmake();
     }
 
@@ -121,7 +122,7 @@ public class ExternalNativeBuildOptions implements CoreExternalNativeBuildOption
         return cmakeOptions;
     }
 
-    public void cmake(Action<CoreExternalNativeCmakeOptions> action) {
+    public void cmake(Action<ExternalNativeCmakeOptions> action) {
         action.execute(cmakeOptions);
     }
 }

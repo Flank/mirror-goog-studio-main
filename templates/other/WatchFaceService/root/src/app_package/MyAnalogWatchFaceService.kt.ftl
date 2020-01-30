@@ -137,7 +137,7 @@ class ${serviceClass} : CanvasWatchFaceService() {
             mBackgroundPaint = Paint().apply {
                 color = Color.BLACK
             }
-            mBackgroundBitmap = BitmapFactory.decodeResource(resources, R.drawable.bg)
+            mBackgroundBitmap = BitmapFactory.decodeResource(resources, R.drawable.watchface_service_bg)
 
             /* Extracts colors from background image to improve watchface style. */
             Palette.from(mBackgroundBitmap).generate {

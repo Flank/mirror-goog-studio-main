@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.errors
 
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth
@@ -70,7 +71,7 @@ class DeprecationReporterImplTest {
         Truth.assertThat(issueReporter.warnings).containsExactly(
             "The option setting 'android.enableD8=false' is deprecated.\n" +
                     "The current default is 'true'.\n" +
-                    "It will be removed in a future version of the Android Gradle plugin.\n" +
+                    "It will be removed in version 5.0 of the Android Gradle plugin.\n" +
                     "For more details, see https://d.android.com/r/studio-ui/d8-overview.html"
         )
     }
@@ -129,12 +130,23 @@ class DeprecationReporterImplTest {
                     "The current default is 'true'.",
             "The option setting 'android.enableD8=false' is deprecated.\n" +
                     "The current default is 'true'.\n" +
-                    "It will be removed in a future version of the Android Gradle plugin.\n" +
+                    "It will be removed in version 5.0 of the Android Gradle plugin.\n" +
                     "For more details, see https://d.android.com/r/studio-ui/d8-overview.html",
             "The option 'android.enableAapt2jni' is deprecated.\n" +
                     "The current default is 'false'.\n" +
                     "It has been removed from the current version of the Android Gradle plugin.\n" +
                     "AAPT2 JNI has been removed."
         )
+    }
+
+    @Test
+    fun `test deprecated optional option`() {
+        reporter.reportOptionIssuesIfAny(OptionalBooleanOption.ENABLE_R8, true)
+
+        Truth.assertThat(issueReporter.errors).isEmpty()
+        Truth.assertThat(issueReporter.warnings).containsExactly(
+            "The option setting 'android.enableR8=true' is deprecated.\n" +
+                    "It will be removed in version 5.0 of the Android Gradle plugin.\n" +
+                    "You will no longer be able to disable R8")
     }
 }

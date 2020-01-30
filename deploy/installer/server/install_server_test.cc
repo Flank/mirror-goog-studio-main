@@ -121,8 +121,9 @@ TEST_F(InstallServerTest, TestServerStartNoOverlay) {
   ASSERT_FALSE(nullptr == client);
 
   proto::InstallServerRequest request;
+  proto::InstallServerResponse response;
   ASSERT_TRUE(client->Write(request));
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   fake_exec.JoinServerThread();
 };
@@ -148,7 +149,7 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
   ASSERT_EQ(proto::OverlayUpdateResponse::OK,
             response.overlay_response().status());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   fake_exec.JoinServerThread();
 
@@ -164,7 +165,7 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
   ASSERT_EQ(proto::OverlayUpdateResponse::ID_MISMATCH,
             response.overlay_response().status());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   fake_exec.JoinServerThread();
 
@@ -181,7 +182,7 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   EXPECT_EQ(proto::OverlayUpdateResponse::OK,
             response.overlay_response().status());
   EXPECT_EQ("", response.overlay_response().error_message());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   fake_exec.JoinServerThread();
 };
@@ -207,7 +208,7 @@ TEST_F(InstallServerTest, TestOverlayEmptyIdCheck) {
   ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
   ASSERT_EQ(proto::OverlayUpdateResponse::OK,
             response.overlay_response().status());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   fake_exec.JoinServerThread();
 
@@ -222,7 +223,7 @@ TEST_F(InstallServerTest, TestOverlayEmptyIdCheck) {
   ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
   ASSERT_EQ(proto::OverlayUpdateResponse::ID_MISMATCH,
             response.overlay_response().status());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   fake_exec.JoinServerThread();
 }
@@ -243,7 +244,7 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
   request.mutable_overlay_request()->set_overlay_id("id");
   request.mutable_overlay_request()->set_overlay_path(".");
   proto::OverlayFile* added =
-      request.mutable_overlay_request()->add_added_files();
+      request.mutable_overlay_request()->add_files_to_write();
   added->set_path("apk/hello.txt");
   added->set_content("hello world");
 
@@ -253,7 +254,7 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
   ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
   ASSERT_EQ(proto::OverlayUpdateResponse::OK,
             response.overlay_response().status());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   std::string content;
   ASSERT_TRUE(deploy::ReadFile(".overlay/apk/hello.txt", &content));
@@ -267,18 +268,18 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
 
   request.mutable_overlay_request()->set_expected_overlay_id("id");
   request.mutable_overlay_request()->set_overlay_id("next-id");
-  request.mutable_overlay_request()->clear_added_files();
-  added = request.mutable_overlay_request()->add_added_files();
+  request.mutable_overlay_request()->clear_files_to_write();
+  added = request.mutable_overlay_request()->add_files_to_write();
   added->set_path("apk/hello_2.txt");
   added->set_content("hello again world");
-  request.mutable_overlay_request()->add_deleted_files("apk/hello.txt");
+  request.mutable_overlay_request()->add_files_to_delete("apk/hello.txt");
   ASSERT_TRUE(client->Write(request));
 
   ASSERT_TRUE(client->Read(&response));
   ASSERT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
   ASSERT_EQ(proto::OverlayUpdateResponse::OK,
             response.overlay_response().status());
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   content.clear();
   ASSERT_FALSE(deploy::ReadFile(".overlay/apk/hello.txt", &content));
@@ -301,9 +302,10 @@ TEST_F(InstallServerTest, TestNeedCopy) {
   ASSERT_FALSE(nullptr == client);
 
   proto::InstallServerRequest request;
+  proto::InstallServerResponse response;
   ASSERT_TRUE(client->Write(request));
 
-  ASSERT_TRUE(client->KillServerAndWait());
+  ASSERT_TRUE(client->KillServerAndWait(&response));
 
   // Make sure we consumed all the exec results.
   ASSERT_TRUE(success.empty());

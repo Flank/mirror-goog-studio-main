@@ -48,12 +48,19 @@ class BuiltArtifactsLoaderImplTest {
 
         assertThat(builtArtifacts).isNotNull()
 
-        val newBuiltArtifacts = builtArtifacts!!.transform(PublicArtifactType.APK) {
-            assertThat(it.outputFile.toFile().readText(Charsets.UTF_8)).isEqualTo("some manifest")
-            outFolder.newFile("${it.outputFile.fileName}.new").also { file ->
-                file.writeText("updated APK")
+        val newBuiltArtifacts = BuiltArtifactsImpl(
+            artifactType = PublicArtifactType.APK,
+            applicationId = builtArtifacts!!.applicationId,
+            variantName = builtArtifacts.variantName,
+            elements = builtArtifacts.elements.map {
+                assertThat(File(it.outputFile).readText(Charsets.UTF_8)).isEqualTo(
+                    "some manifest")
+                (it as BuiltArtifactImpl).newOutput(
+                    outFolder.newFile("${File(it.outputFile).name}.new").also { file ->
+                        file.writeText("updated APK")
+                    }.toPath())
             }
-        }
+        )
 
         newBuiltArtifacts.save(FakeGradleDirectory(outFolder.root))
 
@@ -68,7 +75,7 @@ class BuiltArtifactsLoaderImplTest {
         assertThat(updatedBuiltArtifacts.artifactType).isEqualTo(PublicArtifactType.APK)
         assertThat(updatedBuiltArtifacts.elements).hasSize(1)
         val updatedBuiltArtifact = updatedBuiltArtifacts.elements.first()
-        assertThat(updatedBuiltArtifact.outputFile.toFile().name).isEqualTo("file1.xml.new")
+        assertThat(File(updatedBuiltArtifact.outputFile).name).isEqualTo("file1.xml.new")
         assertThat(updatedBuiltArtifact.versionCode).isEqualTo(123)
         assertThat(updatedBuiltArtifact.versionName).isEqualTo("version_name")
         assertThat(updatedBuiltArtifact.outputType).isEqualTo(VariantOutputConfiguration.OutputType.SINGLE)
@@ -122,12 +129,19 @@ class BuiltArtifactsLoaderImplTest {
             FakeGradleDirectory(tmpFolder.root))
 
         assertThat(builtArtifacts).isNotNull()
-        val newBuiltArtifacts = builtArtifacts!!.transform(PublicArtifactType.APK) {
-            val manifestContent = it.outputFile.toFile().readText(Charsets.UTF_8)
-            outFolder.newFile("${it.outputFile.fileName}.new").also { file ->
-                file.writeText("updated APK : $manifestContent")
+        val newBuiltArtifacts = BuiltArtifactsImpl(
+            artifactType = PublicArtifactType.APK,
+            applicationId = builtArtifacts!!.applicationId,
+            variantName = builtArtifacts.variantName,
+            elements = builtArtifacts.elements.map {
+                assertThat(File(it.outputFile).readText(Charsets.UTF_8)).isEqualTo(
+                    it.filters.joinToString { filter -> filter.identifier })
+                (it as BuiltArtifactImpl).newOutput(
+                    outFolder.newFile("${File(it.outputFile).name}.new").also { file ->
+                        file.writeText("updated APK : ${it.filters.joinToString { filter -> filter.identifier }}")
+                    }.toPath())
             }
-        }
+        )
 
         newBuiltArtifacts.save(FakeGradleDirectory(outFolder.root))
 
@@ -145,7 +159,7 @@ class BuiltArtifactsLoaderImplTest {
             assertThat(builtArtifact.filters.first().filterType).isEqualTo(
                 FilterConfiguration.FilterType.DENSITY)
             val filterValue = builtArtifact.filters.first().identifier
-            assertThat(builtArtifact.outputFile.toFile().readText(Charsets.UTF_8)).isEqualTo(
+            assertThat(File(builtArtifact.outputFile).readText(Charsets.UTF_8)).isEqualTo(
                 "updated APK : $filterValue"
             )
         }
@@ -164,7 +178,7 @@ class BuiltArtifactsLoaderImplTest {
         assertThat(builtArtifacts.variantName).isEqualTo("debug")
         assertThat(builtArtifacts.elements).hasSize(1)
         val builtArtifact = builtArtifacts.elements.first()
-        assertThat(builtArtifact.outputFile).isEqualTo(File(tmpFolder.root, "file1.xml").toPath())
+        assertThat(builtArtifact.outputFile).isEqualTo(File(tmpFolder.root, "file1.xml").absolutePath)
         assertThat(builtArtifact.isEnabled).isTrue()
         assertThat(builtArtifact.versionCode).isEqualTo(123)
         assertThat(builtArtifact.versionName).isEqualTo("version_name")

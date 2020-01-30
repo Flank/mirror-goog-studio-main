@@ -2,16 +2,21 @@ load("//tools/base/bazel:android.bzl", "dex_library")
 
 java_library(
     name = "test-inspector_undexed",
-    srcs = glob(["**/*.java"]),
+    srcs = glob(["src/**/*.java"]),
     resource_strip_prefix = "tools/base/app-inspection/tests/test-inspector",
     resources = glob(["META-INF/**"]),
     deps = [
+        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
+        "//tools/base/app-inspection/tests/test-inspector/api:test-inspector-api",
     ],
 )
 
 dex_library(
     name = "test-inspector",
-    jars = [":test-inspector_undexed"],
+    jars = [
+        ":test-inspector_undexed",
+        "//tools/base/app-inspection/tests/test-inspector/api:test-inspector-api",
+    ],
     visibility = ["//visibility:public"],
 )

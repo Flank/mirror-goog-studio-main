@@ -46,7 +46,6 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
-            @NonNull TaskManager taskManager,
             @NonNull MutableTaskContainer taskContainer) {
         super(
                 componentIdentity,
@@ -56,7 +55,6 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
                 paths,
                 artifacts,
                 globalScope,
-                taskManager,
                 taskContainer);
 
         testVariants = Maps.newHashMap();

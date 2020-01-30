@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.internal.plugins;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.component.impl.TestComponentPropertiesImpl;
+import com.android.build.api.variant.impl.ApplicationVariantImpl;
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
@@ -36,8 +38,10 @@ import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.tasks.ApplicationTaskManager;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
+import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.builder.profile.Recorder;
+import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -47,7 +51,8 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on the base application module */
-public class AppPlugin extends AbstractAppPlugin<ApplicationVariantPropertiesImpl> {
+public class AppPlugin
+        extends AbstractAppPlugin<ApplicationVariantImpl, ApplicationVariantPropertiesImpl> {
     @Inject
     public AppPlugin(
             ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
@@ -69,7 +74,6 @@ public class AppPlugin extends AbstractAppPlugin<ApplicationVariantPropertiesImp
                 new AppModelBuilder(
                         globalScope,
                         variantModel,
-                        taskManager,
                         (BaseAppModuleExtension) extension,
                         extraModelInfo,
                         syncIssueHandler,
@@ -116,13 +120,22 @@ public class AppPlugin extends AbstractAppPlugin<ApplicationVariantPropertiesImp
     @NonNull
     @Override
     protected ApplicationTaskManager createTaskManager(
+            @NonNull
+                    List<ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>>
+                            variants,
+            @NonNull
+                    List<
+                                    ComponentInfo<
+                                            TestComponentImpl<
+                                                    ? extends TestComponentPropertiesImpl>,
+                                            TestComponentPropertiesImpl>>
+                            testComponents,
+            boolean hasFlavors,
             @NonNull GlobalScope globalScope,
-            @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull BaseExtension extension,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder) {
         return new ApplicationTaskManager(
-                globalScope, dataBindingBuilder, extension, toolingRegistry, threadRecorder);
+                variants, testComponents, hasFlavors, globalScope, extension, threadRecorder);
     }
 
     private static class DeprecatedConfigurationAction implements Action<Dependency> {

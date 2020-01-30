@@ -32,7 +32,8 @@ import java.util.concurrent.Executors;
 public class DeployerRunner {
 
     private static final String DB_PATH = "/tmp/studio.db";
-    private final ApkFileDatabase db;
+    private final DeploymentCacheDatabase cacheDb;
+    private final ApkFileDatabase dexDb;
     private final ArrayList<DeployMetric> metrics;
     private final UIService service;
 
@@ -51,13 +52,16 @@ public class DeployerRunner {
 
     public static int tracedMain(String[] args, ILogger logger) {
         final File file = new File(DB_PATH);
-        ApkFileDatabase db = new SqlApkFileDatabase(file, null);
-        DeployerRunner runner = new DeployerRunner(db, new CommandLineService());
+        ApkFileDatabase dexDb = new SqlApkFileDatabase(file, null);
+        DeploymentCacheDatabase cacheDb = new DeploymentCacheDatabase();
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDb, new CommandLineService());
         return runner.run(args, logger);
     }
 
-    public DeployerRunner(ApkFileDatabase db, UIService service) {
-        this.db = db;
+    public DeployerRunner(
+            DeploymentCacheDatabase cacheDb, ApkFileDatabase dexDb, UIService service) {
+        this.cacheDb = cacheDb;
+        this.dexDb = dexDb;
         this.service = service;
         this.metrics = new ArrayList<>();
     }
@@ -101,7 +105,17 @@ public class DeployerRunner {
                 new AdbInstaller(parameters.getInstallersPath(), adb, metrics, logger);
         ExecutorService service = Executors.newFixedThreadPool(5);
         TaskRunner runner = new TaskRunner(service);
-        Deployer deployer = new Deployer(adb, db, runner, installer, this.service, metrics, logger);
+        Deployer deployer =
+                new Deployer(
+                        adb,
+                        cacheDb,
+                        dexDb,
+                        runner,
+                        installer,
+                        this.service,
+                        metrics,
+                        logger,
+                        true);
         try {
             if (parameters.getCommand() == DeployRunnerParameters.Command.INSTALL) {
                 InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();

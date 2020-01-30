@@ -25,5 +25,5 @@ import javax.inject.Inject
 open class LibraryVariantImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity
-): VariantImpl<LibraryVariantProperties>(variantDslInfo, variantConfiguration), LibraryVariant {
+): VariantImpl<LibraryVariantPropertiesImpl>(variantDslInfo, variantConfiguration), LibraryVariant<LibraryVariantPropertiesImpl> {
 }

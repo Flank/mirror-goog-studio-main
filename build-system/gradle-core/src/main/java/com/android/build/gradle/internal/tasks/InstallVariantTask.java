@@ -17,12 +17,11 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.test.BuiltArtifactsSplitOutputMatcher;
@@ -70,10 +69,11 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
 
     private Collection<String> installOptions;
 
-    // FIXME this should not be in the task
-    private ComponentPropertiesImpl componentProperties;
-
     @NonNull private final ExecOperations execOperations;
+
+    private String variantName;
+    private Set<String> supportedAbis;
+    private AndroidVersion minSdkVersion;
 
     @Inject
     public InstallVariantTask(@NonNull ExecOperations execOperations) {
@@ -91,18 +91,16 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
                 new ConnectedDeviceProvider(adbExecutableProvider.get(), getTimeOutInMs(), iLogger);
         deviceProvider.use(
                 () -> {
-                    VariantDslInfo variantDslInfo = componentProperties.getVariantDslInfo();
-
                     BuiltArtifacts builtArtifacts =
                             new BuiltArtifactsLoaderImpl().load(getApkDirectory().get());
 
                     install(
                             getProjectName(),
-                            componentProperties.getName(),
+                            variantName,
                             deviceProvider,
-                            componentProperties.getMinSdkVersion(),
+                            minSdkVersion,
                             builtArtifacts,
-                            variantDslInfo.getSupportedAbis(),
+                            supportedAbis,
                             getInstallOptions(),
                             getTimeOutInMs(),
                             getLogger());
@@ -206,10 +204,10 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
     public abstract DirectoryProperty getApkDirectory();
 
     public static class CreationAction
-            extends VariantTaskCreationAction<InstallVariantTask, ComponentPropertiesImpl> {
+            extends VariantTaskCreationAction<InstallVariantTask, ApkCreationConfig> {
 
-        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
-            super(componentProperties);
+        public CreationAction(@NonNull ApkCreationConfig creationConfig) {
+            super(creationConfig);
         }
 
         @NonNull
@@ -227,10 +225,12 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         @Override
         public void configure(@NonNull InstallVariantTask task) {
             super.configure(task);
-            task.componentProperties = creationConfig;
 
-            task.setDescription(
-                    "Installs the " + creationConfig.getVariantData().getDescription() + ".");
+            task.variantName = creationConfig.getBaseName();
+            task.supportedAbis = creationConfig.getVariantDslInfo().getSupportedAbis();
+            task.minSdkVersion = creationConfig.getMinSdkVersion();
+
+            task.setDescription("Installs the " + creationConfig.getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             creationConfig
                     .getArtifacts()

@@ -172,7 +172,7 @@ void InstallServer::HandleOverlayUpdate(
     return;
   }
 
-  for (const std::string& file : request.deleted_files()) {
+  for (const std::string& file : request.files_to_delete()) {
     if (!overlay.DeleteFile(file)) {
       response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
       response->set_error_message("Could not delete file: '" + file + "'");
@@ -180,7 +180,7 @@ void InstallServer::HandleOverlayUpdate(
     }
   }
 
-  for (const proto::OverlayFile& file : request.added_files()) {
+  for (const proto::OverlayFile& file : request.files_to_write()) {
     if (!overlay.WriteFile(file.path(), file.content())) {
       response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
       response->set_error_message("Could not write file: '" + file.path() +

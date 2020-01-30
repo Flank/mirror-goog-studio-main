@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.internal.InstallUtils
@@ -182,9 +183,9 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
         }
      }
 
-    internal class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<InstallVariantViaBundleTask, ComponentPropertiesImpl>(
-            componentProperties
+    internal class CreationAction(creationConfig: ApkCreationConfig) :
+        VariantTaskCreationAction<InstallVariantViaBundleTask, ApkCreationConfig>(
+            creationConfig
         ) {
 
         override val name: String
@@ -197,7 +198,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.description = "Installs the " + creationConfig.variantData.description + ""
+            task.description = "Installs the " + creationConfig.description + ""
             task.group = TaskManager.INSTALL_GROUP
 
             creationConfig.minSdkVersion.let {

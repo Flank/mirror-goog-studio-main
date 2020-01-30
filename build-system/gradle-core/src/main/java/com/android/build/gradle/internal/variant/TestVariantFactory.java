@@ -52,7 +52,8 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 
 /** Customization of {@link AbstractAppVariantFactory} for test-only projects. */
-public class TestVariantFactory extends AbstractAppVariantFactory<TestVariantPropertiesImpl> {
+public class TestVariantFactory
+        extends AbstractAppVariantFactory<TestVariantImpl, TestVariantPropertiesImpl> {
 
     public TestVariantFactory(@NonNull GlobalScope globalScope) {
         super(globalScope);

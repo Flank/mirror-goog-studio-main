@@ -46,6 +46,8 @@ import com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.mo
 import com.android.tools.idea.wizard.template.impl.fragments.scrollFragment.scrollFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.settingsFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.viewModelFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.other.appWidget.appWidgetTemplate
+import com.android.tools.idea.wizard.template.impl.other.automotiveMessagingService.automotiveMessagingServiceTemplate
 import com.android.tools.idea.wizard.template.impl.other.broadcastReceiver.broadcastReceiverTemplate
 import com.android.tools.idea.wizard.template.impl.other.contentProvider.contentProviderTemplate
 import com.android.tools.idea.wizard.template.impl.other.customView.customViewTemplate
@@ -53,6 +55,7 @@ import com.android.tools.idea.wizard.template.impl.other.folders.folderTemplates
 import com.android.tools.idea.wizard.template.impl.other.intentService.intentServiceTemplate
 import com.android.tools.idea.wizard.template.impl.other.service.serviceTemplate
 import com.android.tools.idea.wizard.template.impl.other.sliceProvider.sliceProviderTemplate
+import com.android.tools.idea.wizard.template.impl.other.watchFaceService.watchFaceServiceTemplate
 
 /**
  * Implementation of the Android Wizard Template plugin extension point.
@@ -89,11 +92,14 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     scrollFragmentTemplate,
     viewModelFragmentTemplate,
 
+    appWidgetTemplate,
+    automotiveMessagingServiceTemplate,
     broadcastReceiverTemplate,
     contentProviderTemplate,
     customViewTemplate,
     intentServiceTemplate,
     serviceTemplate,
-    sliceProviderTemplate
+    sliceProviderTemplate,
+    watchFaceServiceTemplate
   ) + folderTemplates
 }

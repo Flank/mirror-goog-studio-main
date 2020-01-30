@@ -64,7 +64,7 @@ interface DynamicFeatureExtension<
             SplitsT,
             TestOptionsT,
             UnitTestOptionsT,
-            DynamicFeatureVariant,
+            DynamicFeatureVariant<DynamicFeatureVariantProperties>,
             DynamicFeatureVariantProperties>,
     ApkExtension,
     TestedExtension {

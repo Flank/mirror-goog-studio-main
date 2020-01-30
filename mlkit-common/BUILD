@@ -1,0 +1,14 @@
+load("//tools/base/bazel:bazel.bzl", "iml_module")
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.mlkit-common",
+    srcs = ["src/main/java"],
+    iml_files = ["android.sdktools.mlkit-common.iml"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//prebuilts/tools/common/m2/repository/com/google/flatbuffers/flatbuffers-java/1.11.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata:jar",
+    ],
+)

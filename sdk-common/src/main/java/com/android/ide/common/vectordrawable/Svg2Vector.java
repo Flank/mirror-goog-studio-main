@@ -69,9 +69,10 @@ public class Svg2Vector {
     public static final String SVG_GROUP = "g";
     public static final String SVG_STYLE = "style";
     public static final String SVG_DISPLAY = "display";
+    public static final String SVG_CLIP_PATH_ELEMENT = "clipPath";
 
     public static final String SVG_D = "d";
-    public static final String SVG_STROKE_COLOR = "stroke";
+    public static final String SVG_STROKE = "stroke";
     public static final String SVG_STROKE_OPACITY = "stroke-opacity";
     public static final String SVG_STROKE_LINEJOIN = "stroke-linejoin";
     public static final String SVG_STROKE_LINECAP = "stroke-linecap";
@@ -88,17 +89,17 @@ public class Svg2Vector {
 
     public static final ImmutableMap<String, String> presentationMap =
             ImmutableMap.<String, String>builder()
-                    .put(SVG_STROKE_COLOR, "android:strokeColor")
+                    .put(SVG_CLIP, "android:clip")
+                    .put(SVG_CLIP_RULE, "") // Treated individually.
+                    .put(SVG_FILL, "android:fillColor")
+                    .put(SVG_FILL_RULE, "android:fillType")
+                    .put(SVG_FILL_OPACITY, "android:fillAlpha")
+                    .put(SVG_OPACITY, "") // Treated individually.
+                    .put(SVG_STROKE, "android:strokeColor")
                     .put(SVG_STROKE_OPACITY, "android:strokeAlpha")
                     .put(SVG_STROKE_LINEJOIN, "android:strokeLineJoin")
                     .put(SVG_STROKE_LINECAP, "android:strokeLineCap")
                     .put(SVG_STROKE_WIDTH, "android:strokeWidth")
-                    .put(SVG_FILL, "android:fillColor")
-                    .put(SVG_FILL_OPACITY, "android:fillAlpha")
-                    .put(SVG_CLIP, "android:clip")
-                    .put(SVG_OPACITY, "android:fillAlpha")
-                    .put(SVG_FILL_RULE, "android:fillType")
-                    .put(SVG_CLIP_RULE, "android:fillType")
                     .build();
 
     public static final ImmutableMap<String, String> gradientMap =
@@ -376,7 +377,7 @@ public class Svg2Vector {
                     break;
                 }
 
-                case "clipPath":
+                case SVG_CLIP_PATH_ELEMENT:
                 case SVG_MASK: {
                     SvgClipPathNode clipPath =
                             new SvgClipPathNode(svgTree, childElement, tagName + i);

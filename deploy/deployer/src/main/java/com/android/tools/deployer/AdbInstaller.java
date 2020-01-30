@@ -22,6 +22,8 @@ import com.android.tools.idea.protobuf.MessageLite;
 import com.android.tools.idea.protobuf.Parser;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ObjectArrays;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -227,6 +229,10 @@ public class AdbInstaller implements Installer {
 
         // Parse response.
         if (response.getStatus() == Deploy.InstallerResponse.Status.ERROR_WRONG_VERSION) {
+            if (onFail == OnFail.DO_NO_RETRY) {
+                // This is the second time this error happens. Aborting.
+                throw new IOException("Unrecoverable installer WRONG_VERSION error. Aborting");
+            }
             prepare();
             if (inputStream != null) {
                 inputStream.reset();
@@ -267,11 +273,32 @@ public class AdbInstaller implements Installer {
             throw new IOException("Unsupported abis: " + Arrays.toString(abis.toArray()));
         }
 
-        adb.shell(new String[] {"mkdir", "-p", Deployer.INSTALLER_DIRECTORY});
-        adb.push(installerFile.getAbsolutePath(), INSTALLER_PATH);
-        adb.shell(new String[] {"chmod", "+x", INSTALLER_PATH});
-
+        cleanAndPushInstaller(installerFile);
         installerFile.delete();
+    }
+
+    private void cleanAndPushInstaller(File installerFile) throws IOException {
+        runShell(new String[] {"rm", "-fr", Deployer.BASE_DIRECTORY});
+        runShell(new String[] {"mkdir", "-p", Deployer.INSTALLER_DIRECTORY});
+
+        // No need to check result here. If something wrong happens, an IOException is thrown.
+        adb.push(installerFile.getAbsolutePath(), INSTALLER_PATH);
+
+        runShell(new String[] {"chmod", "+x", INSTALLER_PATH});
+    }
+
+    private void runShell(String[] cmd) throws IOException {
+        byte[] response = adb.shell(cmd);
+
+        if (response.length <= 0) {
+            return;
+        }
+
+        // An error has occurred.
+        String extraMsg = new String(response, Charsets.UTF_8).trim();
+        String error = String.format("Cannot '%s' : '%s'", String.join(" ", cmd), extraMsg);
+        logger.error(null, error);
+        throw new IOException(error);
     }
 
     private InputStream getResource(String path) throws FileNotFoundException {
@@ -285,7 +312,7 @@ public class AdbInstaller implements Installer {
     }
 
     private String[] buildCmd(String[] parameters) {
-        String[] base = {INSTALLER_PATH, "-version=" + Version.hash()};
+        String[] base = {INSTALLER_PATH, "-version=" + getVersion()};
         return ObjectArrays.concat(base, parameters, String.class);
     }
 
@@ -328,5 +355,10 @@ public class AdbInstaller implements Installer {
             throw new IllegalStateException(e);
         }
         return new ByteArrayInputStream(buffer);
+    }
+
+    @VisibleForTesting
+    public String getVersion() {
+        return Version.hash();
     }
 }
