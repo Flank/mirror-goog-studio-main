@@ -25,11 +25,19 @@ import test.inspector.api.TodoInspectorApi;
 
 /** An inspector that can provide hooks into the TodoActivity. */
 public final class TodoInspector extends TestInspector {
-    private static final String CLASS_TODO_GROUP = "com.activity.todo.TodoGroup";
-    private static final String CLASS_TODO_ITEM = "com.activity.todo.TodoItem";
+
+    private final Class<?> classItem;
+    private final Class<?> classGroup;
 
     TodoInspector(@NonNull Connection connection, @NonNull InspectorEnvironment environment) {
         super(connection, environment);
+
+        try {
+            classItem = forName("com.activity.todo.TodoItem");
+            classGroup = forName("com.activity.todo.TodoGroup");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @NonNull
@@ -39,9 +47,9 @@ public final class TodoInspector extends TestInspector {
             if (Arrays.equals(command.toByteArray(), bytes)) {
                 switch (command) {
                     case COUNT_TODO_GROUPS:
-                        return new byte[] {(byte) findInstances(CLASS_TODO_GROUP).size()};
+                        return new byte[] {(byte) environment.findInstances(classGroup).size()};
                     case COUNT_TODO_ITEMS:
-                        return new byte[] {(byte) findInstances(CLASS_TODO_ITEM).size()};
+                        return new byte[] {(byte) environment.findInstances(classItem).size()};
                 }
                 break;
             }

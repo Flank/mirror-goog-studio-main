@@ -21,9 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.inspection.Connection;
 import androidx.inspection.Inspector;
 import androidx.inspection.InspectorEnvironment;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import test.inspector.api.TestInspectorApi;
 
 /**
@@ -72,40 +70,34 @@ public class TestInspector extends Inspector {
     }
 
     /**
-     * A helper method which wraps {@link InspectorEnvironment#findInstances(Class)} and lets you
-     * search by class name instead.
+     * A helper method which replaces {@link Class#forName(String)} as a workaround for that method
+     * not working in tests.
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    protected List<?> findInstances(@NonNull String className) {
-        // NOTE: This method is quite a hack in its current state, although at least it's isolated
-        // to test code only. On Android, Class.forName(className) works,  but for some reason,
-        // in our fake environment, it does not. We work around this (until we can think of a
-        // better way) by searching for ALL instances of Class, and then narrowing it down to the
-        // instances which match the passed in className. It works for now, especially for test
-        // code, but it would be nice if we can find a more correct way using ClassLoaders later.
-        // If we could get Class.forName working, then we should just delete this function and
-        // call environment.findInstances(Class.forName(...)) directly.
-
+    @SuppressWarnings("rawtypes")
+    protected Class<?> forName(@NonNull String className) throws ClassNotFoundException {
+        // NOTE: Normally, a user would call Class.forName, which works on Android, but isn't
+        // currently working in our test environment. If we can fix it, we can delete this method
+        // and replace calls to it with Class.forName directly.
         if (environment == null) {
             throw new IllegalStateException(
-                    "To use findInstances, construct TestInspector with an InspectorEnvironment");
+                    "To use forName, construct TestInspector with an InspectorEnvironment");
         }
-        List<Class> allClasses = environment.findInstances(Class.class);
 
-        List<Class<?>> matchingClasses = new ArrayList<>();
-        for (Class aClass : allClasses) {
-            if (aClass != null && aClass.getName().equals(className)) {
-                matchingClasses.add(aClass);
+        Class<?> foundInstance = null;
+        for (Class instance : environment.findInstances(Class.class)) {
+            if (instance != null && instance.getName().equals(className)) {
+                if (foundInstance == null) {
+                    foundInstance = instance;
+                } else {
+                    throw new IllegalStateException("Found multiple instances of " + className);
+                }
             }
         }
 
-        List instances = new ArrayList<>();
-        for (Class<?> matchingClass : matchingClasses) {
-            // For some reason we don't yet understand, we find two instances of many Class
-            // entries, where one of them is not the real one. For now, we just iterate through all
-            // of them, as only one actually finds anything.
-            instances.addAll(environment.findInstances(matchingClass));
+        if (foundInstance != null) {
+            return foundInstance;
+        } else {
+            throw new ClassNotFoundException();
         }
-        return instances;
     }
 }
