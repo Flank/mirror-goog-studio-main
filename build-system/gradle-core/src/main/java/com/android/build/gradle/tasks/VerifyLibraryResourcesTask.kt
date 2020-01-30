@@ -52,7 +52,6 @@ import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Property
@@ -83,13 +82,6 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputDirectory: DirectoryProperty
-
-    lateinit var taskInputType: InternalArtifactType<Directory> private set
-
-    @Input
-    fun getTaskInputType(): String {
-        return taskInputType.javaClass.name
-    }
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -130,7 +122,10 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     override fun doTaskAction(inputChanges: InputChanges) {
-        val manifestsOutputs = ExistingBuildElements.from(taskInputType, manifestFiles.get().asFile)
+        val manifestsOutputs = ExistingBuildElements.from(
+            InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+            manifestFiles.get().asFile
+        )
         val manifestFile = Iterables.getOnlyElement(manifestsOutputs).outputFile
 
         val aapt2ServiceKey =
@@ -236,16 +231,10 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             )
 
             task.compiledDirectory = creationConfig.paths.compiledResourcesOutputDir
-
-            val aaptFriendlyManifestsFilePresent = creationConfig.artifacts
-                .hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
-            task.taskInputType = when {
-                aaptFriendlyManifestsFilePresent ->
-                    InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
-                else ->
-                    InternalArtifactType.MERGED_MANIFESTS
-            }
-            creationConfig.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                task.manifestFiles
+            )
 
             task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
 
