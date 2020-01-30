@@ -488,6 +488,19 @@ class CoreLibraryDesugarTest {
         var desugarConfigLibDex = getDexWithSpecificClass(desugarConfigClass, apk.allDexes)
             ?: fail("Failed to find the dex with class name $desugarConfigClass")
         DexSubject.assertThat(desugarConfigLibDex).doesNotContainClasses(programClass)
+
+        TestFileUtils.addMethod(
+            FileUtils.join(app.mainSrcDir,"com/example/helloworld/HelloWorld.java"),
+            """
+                public static java.util.TimeZone getTimeZone() {
+                    return java.util.TimeZone.getTimeZone(java.time.ZoneId.of("GMT"));
+                }
+            """.trimIndent())
+        project.executor().run(":app:assembleRelease")
+        apk = app.getApk(GradleTestProject.ApkType.RELEASE)
+        desugarConfigLibDex = getDexWithSpecificClass(desugarConfigClass, apk.allDexes)
+            ?: fail("Failed to find the dex with class name $desugarConfigClass")
+        DexSubject.assertThat(desugarConfigLibDex).doesNotContainClasses(programClass)
     }
 
     private fun addFileDependency(project: GradleTestProject) {
