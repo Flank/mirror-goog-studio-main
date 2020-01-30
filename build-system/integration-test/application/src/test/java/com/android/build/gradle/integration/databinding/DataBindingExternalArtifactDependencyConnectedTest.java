@@ -34,7 +34,7 @@ import org.junit.runners.Parameterized;
 
 @RunWith(FilterableParameterized.class)
 public class DataBindingExternalArtifactDependencyConnectedTest {
-    private static final String MAVEN_REPO_ARG_PREFIX = "-Ptest_maven_repo=";
+    private static final String MAVEN_REPO_ARG_PREFIX = "-Pmaven_repo=";
 
     @Rule public GradleTestProject library;
 

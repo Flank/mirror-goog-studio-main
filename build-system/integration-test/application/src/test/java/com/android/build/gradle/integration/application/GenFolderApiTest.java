@@ -38,9 +38,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -55,35 +53,16 @@ import org.junit.Test;
  * </ul>
  */
 public class GenFolderApiTest {
-    @ClassRule
-    public static GradleTestProject project =
+
+    @Rule
+    public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("genFolderApi").create();
-
-    private static AndroidProject model;
-
-    private static List<String> ideSetupTasks;
-
-    @BeforeClass
-    public static void setUp() throws Exception {
-        project.executor()
-                .withArgument("-P" + "inject_enable_generate_values_res=true")
-                .run("assembleDebug");
-        ModelContainer<AndroidProject> modelContainer =
-                project.model()
-                        .withArgument("-P" + "inject_enable_generate_values_res=true")
-                        .fetchAndroidProjects();
-        ideSetupTasks = ModelContainerUtils.getDebugGenerateSourcesCommands(modelContainer);
-        model = modelContainer.getOnlyModel();
-    }
-
-    @AfterClass
-    public static void cleanUp() {
-        project = null;
-        model = null;
-    }
 
     @Test
     public void checkTheCustomJavaGenerationTaskRan() throws Exception {
+        project.executor()
+                .withArgument("-P" + "inject_enable_generate_values_res=true")
+                .run("assembleDebug");
         try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
             assertThat(apk).containsClass("Lcom/custom/Foo;");
         }
@@ -91,6 +70,9 @@ public class GenFolderApiTest {
 
     @Test
     public void checkTheCustomResGenerationTaskRan() throws Exception {
+        project.executor()
+                .withArgument("-P" + "inject_enable_generate_values_res=true")
+                .run("assembleDebug");
         try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
             assertThat(apk).contains("res/xml/generated.xml");
             assertThat(apk)
@@ -103,12 +85,18 @@ public class GenFolderApiTest {
     /** Regression test for b/120750247 */
     @Test
     public void checkCustomGenerationRunAtSync() throws Exception {
+        ModelContainer<AndroidProject> modelContainer =
+                project.model()
+                        .withArgument("-P" + "inject_enable_generate_values_res=true")
+                        .fetchAndroidProjects();
+        AndroidProject model = modelContainer.getOnlyModel();
+
         project.executor()
                 .withArgument("-P" + "inject_enable_generate_values_res=true")
                 .run("clean");
         project.executor()
                 .withArgument("-P" + "inject_enable_generate_values_res=true")
-                .run(ideSetupTasks);
+                .run(ModelContainerUtils.getDebugGenerateSourcesCommands(modelContainer));
 
         AndroidArtifact debugArtifact =
                 AndroidProjectUtils.getDebugVariant(model).getMainArtifact();
@@ -165,6 +153,11 @@ public class GenFolderApiTest {
 
     @Test
     public void checkJavaFolderInModel() throws Exception {
+        ModelContainer<AndroidProject> modelContainer =
+                project.model()
+                        .withArgument("-P" + "inject_enable_generate_values_res=true")
+                        .fetchAndroidProjects();
+         AndroidProject model = modelContainer.getOnlyModel();
 
         for (Variant variant : model.getVariants()) {
 
@@ -197,6 +190,11 @@ public class GenFolderApiTest {
 
     @Test
     public void checkResFolderInModel() throws Exception {
+        ModelContainer<AndroidProject> modelContainer =
+                project.model()
+                        .withArgument("-P" + "inject_enable_generate_values_res=true")
+                        .fetchAndroidProjects();
+        AndroidProject model = modelContainer.getOnlyModel();
 
         for (Variant variant : model.getVariants()) {
 

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-255d17b8ff417d8dafd43b327d27053a547291d5791d819bb33d6f0c0406f432
+acc1e8cbee9497a71649310a5d76f699a084cf64798a199956e8cb6177013455
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (com.android.build.gradle.internal.api.dsl.DslScope, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -924,12 +924,14 @@ com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions implements com.
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.<init>: com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.<init>: com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions (org.gradle.api.model.ObjectFactory)
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions._initWith: void (com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions)
-com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.cmake: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions>)
+com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.cmake: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions>)
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getCmake: com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getExternalNativeCmakeOptions: com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions ()
+com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getExternalNativeCmakeOptions: com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getExternalNativeNdkBuildOptions: com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions ()
+com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getExternalNativeNdkBuildOptions: com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.getNdkBuild: com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions ()
-com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.ndkBuild: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions>)
+com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions.ndkBuild: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions>)
 com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions implements com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions
 com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.<init>: com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions._initWith: void (com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions)

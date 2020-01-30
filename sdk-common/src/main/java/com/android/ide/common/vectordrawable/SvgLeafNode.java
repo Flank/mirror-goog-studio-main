@@ -67,6 +67,9 @@ class SvgLeafNode extends SvgNode {
         for (Map.Entry<String, String> entry : mVdAttributesMap.entrySet()) {
             String key = entry.getKey();
             String attribute = presentationMap.get(key);
+            if (attribute.isEmpty()) {
+                continue;
+            }
             String svgValue = entry.getValue().trim();
             String vdValue;
             vdValue = colorSvg2Vd(svgValue, "#000000");

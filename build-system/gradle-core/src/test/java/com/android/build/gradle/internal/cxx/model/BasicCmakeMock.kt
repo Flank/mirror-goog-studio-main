@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions
+import com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions
 import com.android.utils.FileUtils.join
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
@@ -32,18 +32,18 @@ open class BasicCmakeMock : BasicModuleModelMock() {
     val variant by lazy { createCxxVariantModel(module, variantScope) }
     val abi by lazy { createCxxAbiModel(variant, Abi.X86, global, baseVariantData) }
 
-    val coreExternalNativeCmakeOptions = mock(
-        CoreExternalNativeCmakeOptions::class.java,
+    private val externalNativeCmakeOptions: ExternalNativeCmakeOptions = mock(
+        ExternalNativeCmakeOptions::class.java,
         throwUnmocked
     )
 
     init {
-        doReturn(coreExternalNativeCmakeOptions).`when`(coreExternalNativeBuildOptions).externalNativeCmakeOptions
-        doReturn(setOf<String>()).`when`(coreExternalNativeCmakeOptions).abiFilters
-        doReturn(listOf("-DCMAKE_ARG=1")).`when`(coreExternalNativeCmakeOptions).arguments
-        doReturn(listOf("-DC_FLAG_DEFINED")).`when`(coreExternalNativeCmakeOptions).getcFlags()
-        doReturn(listOf("-DCPP_FLAG_DEFINED")).`when`(coreExternalNativeCmakeOptions).cppFlags
-        doReturn(setOf<String>()).`when`(coreExternalNativeCmakeOptions).targets
+        doReturn(externalNativeCmakeOptions).`when`(coreExternalNativeBuildOptions).externalNativeCmakeOptions
+        doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).abiFilters
+        doReturn(listOf("-DCMAKE_ARG=1")).`when`(externalNativeCmakeOptions).arguments
+        doReturn(listOf("-DC_FLAG_DEFINED")).`when`(externalNativeCmakeOptions).getcFlags()
+        doReturn(listOf("-DCPP_FLAG_DEFINED")).`when`(externalNativeCmakeOptions).cppFlags
+        doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).targets
         val makefile = join(allPlatformsProjectRootDir, "CMakeLists.txt")
         doReturn(makefile).`when`(cmake).path
         projectRootDir.mkdirs()
