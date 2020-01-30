@@ -52,7 +52,7 @@ def _kotlin_jar_impl(ctx):
         args += ["--module_name", ctx.attr.module_name]
 
     ctx.actions.run(
-        inputs = ctx.files.inputs + all_deps.to_list() + option_files + ctx.files.friends,
+        inputs = ctx.files.srcs + all_deps.to_list() + option_files + ctx.files.friends,
         outputs = [class_jar],
         mnemonic = "kotlinc",
         arguments = args,
@@ -63,9 +63,6 @@ _kotlin_jar = rule(
     attrs = {
         "srcs": attr.label_list(
             allow_empty = False,
-            allow_files = True,
-        ),
-        "inputs": attr.label_list(
             allow_files = True,
         ),
         "friends": attr.label_list(
@@ -97,10 +94,11 @@ _kotlin_jar = rule(
 def kotlin_library(
         name,
         srcs,
-        java_srcs = [],
         javacopts = None,
         resources = [],
+        resource_strip_prefix = None,
         deps = [],
+        runtime_deps = [],
         bundled_deps = [],
         friends = [],
         pom = None,
@@ -110,10 +108,9 @@ def kotlin_library(
         testonly = None,
         lint_baseline = None,
         lint_classpath = [],
-        module_name = None,
-        **kwargs):
+        module_name = None):
     kotlins = [src for src in srcs if src.endswith(".kt")]
-    javas = [src for src in srcs if src.endswith(".java")] + java_srcs
+    javas = [src for src in srcs if src.endswith(".java")]
 
     if not kotlins and not javas:
         print("No sources found for kotlin_library " + name)
@@ -127,7 +124,6 @@ def kotlin_library(
         _kotlin_jar(
             name = kotlin_name,
             srcs = srcs,
-            inputs = kotlins + javas,
             deps = deps + bundled_deps,
             friends = friends,
             visibility = visibility,
@@ -144,11 +140,12 @@ def kotlin_library(
             srcs = javas,
             javacopts = javacopts if javas else None,
             resources = resources_with_notice,
+            resource_strip_prefix = resource_strip_prefix,
             deps = (kdeps + deps + bundled_deps) if javas else None,
+            runtime_deps = runtime_deps,
             resource_jars = bundled_deps,
             visibility = visibility,
             testonly = testonly,
-            **kwargs
         )
 
     singlejar(
