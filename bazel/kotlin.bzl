@@ -120,7 +120,7 @@ def kotlin_library(
     javas = [src for src in srcs if src.endswith(".java")]
 
     if not kotlins and not javas:
-        print("No sources found for kotlin_library " + name)
+        fail("No sources found for kotlin_library " + name)
 
     targets = []
     kdeps = []
