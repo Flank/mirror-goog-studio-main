@@ -3,9 +3,6 @@ Incubating Android Gradle Plugin API.
 ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
-Sha256 of below classes:
-61ba6b284cc7eb029649e868b09410854e8464f8a57ca569540810e54f6edcc7
--------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
 com.android.build.api.artifact.ArtifactKind implements java.io.Serializable
