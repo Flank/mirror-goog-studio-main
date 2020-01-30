@@ -14,23 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.connected.application;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
+import com.android.tools.bazel.avd.Emulator;
 import java.io.IOException;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 public class DensitySplitConnectedTest {
+
+    @ClassRule public static final Emulator emulator = EmulatorUtils.getEmulator();
+
     @ClassRule
     public static GradleTestProject project =
             GradleTestProject.builder().fromTestProject("densitySplit").create();
 
     @Test
-    @Category(DeviceTests.class)
     public void connectedCheck() throws IOException, InterruptedException {
-        project.executeConnectedCheck();
+        project.executor().run("connectedAndroidTest");
     }
 }

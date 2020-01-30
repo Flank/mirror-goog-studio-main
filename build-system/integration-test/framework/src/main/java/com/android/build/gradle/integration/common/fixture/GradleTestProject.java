@@ -1220,10 +1220,20 @@ public final class GradleTestProject implements TestRule {
         return lastBuildResult.getException();
     }
 
+    /**
+     * @Deprecated do not use. Use {@link GradleTaskExecutor#run(String...)} or {@link
+     * GradleTaskExecutor#run(List)} instead.
+     */
+    @Deprecated
     public void executeConnectedCheck() throws IOException, InterruptedException {
         lastBuildResult = executor().executeConnectedCheck();
     }
 
+    /**
+     * @Deprecated do not use. Use {@link GradleTaskExecutor#run(String...)} or {@link
+     * GradleTaskExecutor#run(List)} instead.
+     */
+    @Deprecated
     public void executeConnectedCheck(@NonNull List<String> arguments)
             throws IOException, InterruptedException {
         lastBuildResult = executor().withArguments(arguments).executeConnectedCheck();
