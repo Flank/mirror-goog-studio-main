@@ -18,8 +18,9 @@ package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
-import com.android.build.gradle.internal.ProductFlavorData;
+import com.android.build.gradle.internal.VariantDimensionData;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
+import com.android.build.gradle.internal.dsl.BaseFlavor;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
@@ -46,22 +47,22 @@ final class ProductFlavorContainerImpl implements ProductFlavorContainer, Serial
     /**
      * Create a ProductFlavorContainer from a ProductFlavorData
      *
-     * @param productFlavorData the product flavor data
+     * @param variantDimensionData the data containing the source set
+     * @param productFlavor the product flavor object
      * @param sourceProviderContainers collection of extra source providers
-     *
      * @return a non-null ProductFlavorContainer
      */
     @NonNull
     static ProductFlavorContainer createProductFlavorContainer(
-            @NonNull ProductFlavorData productFlavorData,
+            @NonNull VariantDimensionData variantDimensionData,
+            @NonNull BaseFlavor productFlavor,
             @NonNull Collection<SourceProviderContainer> sourceProviderContainers) {
 
         List<SourceProviderContainer> clonedContainers =
                 SourceProviderContainerImpl.cloneCollection(sourceProviderContainers);
 
         for (VariantType variantType : VariantType.Companion.getTestComponents()) {
-            DefaultAndroidSourceSet sourceSet
-                    = productFlavorData.getTestSourceSet(variantType);
+            DefaultAndroidSourceSet sourceSet = variantDimensionData.getTestSourceSet(variantType);
             if (sourceSet != null) {
                 clonedContainers.add(SourceProviderContainerImpl.create(
                         variantType.getArtifactName(),
@@ -70,8 +71,8 @@ final class ProductFlavorContainerImpl implements ProductFlavorContainer, Serial
         }
 
         return new ProductFlavorContainerImpl(
-                new ProductFlavorImpl(productFlavorData.getProductFlavor()),
-                new SourceProviderImpl(productFlavorData.getSourceSet()),
+                new ProductFlavorImpl(productFlavor),
+                new SourceProviderImpl(variantDimensionData.getSourceSet()),
                 clonedContainers);
     }
 

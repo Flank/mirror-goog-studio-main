@@ -34,11 +34,9 @@ import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
-import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.plugins.DslContainerProvider;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
@@ -56,7 +54,6 @@ import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import org.gradle.api.GradleException;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
@@ -68,11 +65,6 @@ public class TestVariantFactory
     public TestVariantFactory(
             @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
         super(projectServices, globalScope);
-    }
-
-    @Override
-    public boolean hasTestScope() {
-        return false;
     }
 
     @NonNull
@@ -242,15 +234,12 @@ public class TestVariantFactory
     }
 
     @Override
-    public void createDefaultComponents(
-            @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
-            @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
-            @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs) {
+    public void createDefaultComponents(@NonNull DslContainerProvider dslContainers) {
         // don't call super as we don't want the default app version.
         // must create signing config first so that build type 'debug' can be initialized
         // with the debug signing config.
-        signingConfigs.create(BuilderConstants.DEBUG);
-        buildTypes.create(BuilderConstants.DEBUG);
+        dslContainers.getSigningConfigContainer().create(BuilderConstants.DEBUG);
+        dslContainers.getBuildTypeContainer().create(BuilderConstants.DEBUG);
     }
 
     @NonNull

@@ -24,4 +24,6 @@ import org.gradle.api.Named
 interface BuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions> : Named,
     BaseConfig<AnnotationProcessorOptionsT> {
     var isDefault: Boolean
+
+    var matchingFallbacks: List<String>
 }

@@ -25,12 +25,12 @@ abstract class VariantDimensionData(
     private val androidTestSourceSet: DefaultAndroidSourceSet?,
     private val unitTestSourceSet: DefaultAndroidSourceSet?
 ) {
-
     fun getTestSourceSet(type: VariantType): DefaultAndroidSourceSet? {
         Preconditions.checkState(
             type.isTestComponent,
             "Unknown test variant type $type"
         )
+
         return if (type.isApk) {
             androidTestSourceSet
         } else {

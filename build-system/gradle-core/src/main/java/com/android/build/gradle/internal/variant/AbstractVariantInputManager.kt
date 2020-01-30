@@ -15,61 +15,50 @@
  */
 package com.android.build.gradle.internal.variant
 
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.core.VariantBuilder.Companion.computeSourceSetName
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.BuildType
-import com.android.build.gradle.internal.dsl.DefaultConfig
-import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
-import com.google.common.collect.Maps
 
 /**
- * Implementation of [VariantInputModel].
+ * Abstract Class responsible for handling the DSL containers of flavors/build types and processing
+ * them so that they can be consumed by [com.android.build.gradle.internal.VariantManager]
  *
+ * This is has type parameters to handle different implementations of flavors and build types,
+ * whether this is legacy or new per-plugin-type versions.
  *
- * This gets filled by the DSL/API execution.
+ * This instantiate the containers and makes them available to the extension classes via
+ * implementing [DslContainerProvider].
+ *
+ * This setups container call back to process new values and validates them.
+ *
+ * Then, this exposes the results by implementing [VariantInputModel].
+ *
+ * This class does everything, except actually instantiating the containers as this needs
+ * to be done per flavor/build-type type. This is handled by children classes for each use case.
  */
-class AbstractVariantInputManager(
-    private val globalScope: GlobalScope,
-    private val extension: BaseExtension,
-    private val variantFactory: VariantFactory<*, *>,
-    private val sourceSetManager: SourceSetManager
-) : VariantInputModel {
+abstract class AbstractVariantInputManager<
+        DefaultConfigT : com.android.build.api.dsl.DefaultConfig<*>,
+        BuildTypeT : com.android.build.api.dsl.BuildType<*>,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<*>,
+        SigningConfigT : com.android.build.api.dsl.SigningConfig>(
+    private val variantType: VariantType,
+    override val sourceSetManager: SourceSetManager
+) : VariantInputModel<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfigT>,
+    DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfigT> {
 
-    override val defaultConfig: ProductFlavorData<DefaultConfig>
-    override val buildTypes = mutableMapOf<String, BuildTypeData>()
-    override val productFlavors = mutableMapOf<String, ProductFlavorData<ProductFlavor>>()
-    override val signingConfigs = mutableMapOf<String, SigningConfig>()
+    override val buildTypes = mutableMapOf<String, BuildTypeData<BuildTypeT>>()
+    override val productFlavors = mutableMapOf<String, ProductFlavorData<ProductFlavorT>>()
+    override val signingConfigs = mutableMapOf<String, SigningConfigT>()
 
-    init {
-        val mainSourceSet =
-            extension.sourceSets.getByName(BuilderConstants.MAIN) as DefaultAndroidSourceSet
-        var androidTestSourceSet: DefaultAndroidSourceSet? = null
-        var unitTestSourceSet: DefaultAndroidSourceSet? = null
-        if (variantFactory.hasTestScope()) {
-            androidTestSourceSet =
-                extension.sourceSets.getByName(VariantType.ANDROID_TEST_PREFIX) as DefaultAndroidSourceSet
-            unitTestSourceSet =
-                extension.sourceSets.getByName(VariantType.UNIT_TEST_PREFIX) as DefaultAndroidSourceSet
-        }
-        defaultConfig =
-            ProductFlavorData(
-                extension.defaultConfig,
-                mainSourceSet,
-                androidTestSourceSet,
-                unitTestSourceSet
-            )
-    }
-
-    fun addSigningConfig(signingConfig: SigningConfig) {
+    protected fun addSigningConfig(signingConfig: SigningConfigT) {
         signingConfigs[signingConfig.name] = signingConfig
     }
 
@@ -79,34 +68,51 @@ class AbstractVariantInputManager(
      *
      * @param buildType the build type.
      */
-    fun addBuildType(buildType: BuildType) {
+    protected fun addBuildType(buildType: BuildTypeT) {
         val name = buildType.name
         checkName(name, "BuildType")
         if (productFlavors.containsKey(name)) {
             throw RuntimeException("BuildType names cannot collide with ProductFlavor names")
         }
-        val mainSourceSet =
-            sourceSetManager.setUpSourceSet(name) as DefaultAndroidSourceSet
-        var androidTestSourceSet: DefaultAndroidSourceSet? = null
-        var unitTestSourceSet: DefaultAndroidSourceSet? = null
-        if (variantFactory.hasTestScope()) {
-            if (buildType.name == extension.testBuildType) {
-                androidTestSourceSet = sourceSetManager.setUpTestSourceSet(
-                    computeSourceSetName(
-                        buildType.name, VariantTypeImpl.ANDROID_TEST
-                    )
-                ) as DefaultAndroidSourceSet
+
+        // FIXME update when we have the newer interfaces for BuildTypes.
+        if (buildType is BuildType) {
+            if (variantType.isDynamicFeature) {
+                // initialize it without the signingConfig for dynamic-features.
+                buildType.init()
+            } else {
+                buildType.init(signingConfigContainer.findByName(BuilderConstants.DEBUG) as SigningConfig)
             }
-            unitTestSourceSet = sourceSetManager.setUpTestSourceSet(
+        } else {
+            throw RuntimeException("Unexpected instance of BuildTypeT")
+        }
+
+        // always create the android Test source set even if this is not the buildType that is
+        // tested. this is because we cannot delay creation without breaking compatibility.
+        // So for now we create more than we need and we'll migrate to a better way later.
+        // FIXME b/149489432
+        val androidTestSourceSet = if (variantType.hasTestComponents) {
+            sourceSetManager.setUpTestSourceSet(
+                computeSourceSetName(
+                    buildType.name, VariantTypeImpl.ANDROID_TEST
+                )
+            ) as DefaultAndroidSourceSet
+        } else null
+
+        val unitTestSourceSet = if (variantType.hasTestComponents) {
+            sourceSetManager.setUpTestSourceSet(
                 computeSourceSetName(
                     buildType.name, VariantTypeImpl.UNIT_TEST
                 )
             ) as DefaultAndroidSourceSet
-        }
-        val buildTypeData = BuildTypeData(
-            buildType, mainSourceSet, androidTestSourceSet, unitTestSourceSet
+        } else null
+
+        buildTypes[name] = BuildTypeData<BuildTypeT>(
+            buildType,
+            sourceSetManager.setUpSourceSet(buildType.name) as DefaultAndroidSourceSet,
+            androidTestSourceSet,
+            unitTestSourceSet
         )
-        buildTypes[name] = buildTypeData
     }
 
     /**
@@ -115,7 +121,7 @@ class AbstractVariantInputManager(
      *
      * @param productFlavor the product flavor
      */
-    fun addProductFlavor(productFlavor: ProductFlavor) {
+    protected fun addProductFlavor(productFlavor: ProductFlavorT) {
         val name = productFlavor.name
         checkName(name, "ProductFlavor")
         if (buildTypes.containsKey(name)) {
@@ -125,7 +131,7 @@ class AbstractVariantInputManager(
             sourceSetManager.setUpSourceSet(productFlavor.name) as DefaultAndroidSourceSet
         var androidTestSourceSet: DefaultAndroidSourceSet? = null
         var unitTestSourceSet: DefaultAndroidSourceSet? = null
-        if (variantFactory.hasTestScope()) {
+        if (variantType.hasTestComponents) {
             androidTestSourceSet = sourceSetManager.setUpTestSourceSet(
                 computeSourceSetName(
                     productFlavor.name, VariantTypeImpl.ANDROID_TEST
@@ -183,5 +189,4 @@ class AbstractVariantInputManager(
             }
         }
     }
-
 }

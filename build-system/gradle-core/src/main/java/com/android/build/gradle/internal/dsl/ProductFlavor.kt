@@ -127,7 +127,7 @@ open class ProductFlavor @Inject constructor(name: String, dslServices: DslServi
      * If instead you are trying to resolve an issue in which **a library dependency includes a
      * flavor dimension that your app does not**, use [missingDimensionStrategy].
      */
-    var matchingFallbacks: List<String>
+    override var matchingFallbacks: List<String>
         get() = _matchingFallbacks
         set(value) {
             _matchingFallbacks = ImmutableList.copyOf(value)

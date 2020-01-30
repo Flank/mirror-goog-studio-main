@@ -46,7 +46,9 @@ import com.android.build.gradle.internal.dependency.getDexingArtifactConfigurati
 import com.android.build.gradle.internal.dependency.registerDexingOutputSplitTransform
 import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.res.namespaced.AutoNamespacePreProcessTransform
@@ -82,7 +84,7 @@ class DependencyConfigurator(
     private val project: Project,
     private val projectName: String,
     private val globalScope: GlobalScope,
-    private val variantInputModel: VariantInputModel
+    private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) {
 
     fun configureGeneralTransforms(): DependencyConfigurator {
@@ -530,9 +532,7 @@ class DependencyConfigurator(
 
     private fun setBuildTypeStrategy(schema: AttributesSchema) {
         // this is ugly but because the getter returns a very base class we have no choices.
-        val dslBuildTypes = variantInputModel.buildTypes.values.convertTo(BuildType::class.java) {
-                it.buildType
-            }
+        val dslBuildTypes = variantInputModel.buildTypes.values.map { it.buildType }
 
         if (dslBuildTypes.isEmpty()) {
             return
@@ -573,9 +573,7 @@ class DependencyConfigurator(
 
     private fun setupFlavorStrategy(schema: AttributesSchema) {
         // this is ugly but because the getter returns a very base class we have no choices.
-        val flavors = variantInputModel.productFlavors.values.convertTo(ProductFlavor::class.java) {
-                it.productFlavor
-            }
+        val flavors = variantInputModel.productFlavors.values.map { it.productFlavor }
 
         // first loop through all the flavors and collect for each dimension, and each value, its
         // fallbacks
@@ -595,7 +593,7 @@ class DependencyConfigurator(
             handleMissingDimensions(alternateMap, flavor)
         }
         // also handle missing dimensions on the default config.
-        handleMissingDimensions(alternateMap, variantInputModel.defaultConfig.productFlavor)
+        handleMissingDimensions(alternateMap, variantInputModel.defaultConfigData.defaultConfig)
         // now that we know we have all the fallbacks for each dimensions, we can create the
         // rule instances.
         for ((key, value) in alternateMap) {
@@ -611,8 +609,7 @@ class DependencyConfigurator(
         alternateMap: MutableMap<String, MutableMap<String, List<String>>>,
         flavor: BaseFlavor
     ) {
-        val missingStrategies =
-            flavor.missingDimensionStrategies
+        val missingStrategies = flavor.missingDimensionStrategies
         if (missingStrategies.isNotEmpty()) {
             for ((dimension, value) in missingStrategies) {
                 val dimensionMap = alternateMap.computeIfAbsent(dimension) { Maps.newHashMap() }
@@ -709,14 +706,4 @@ class DependencyConfigurator(
                 }
         }
     }
-}
-
-private fun <F, T> Collection<F>.convertTo(
-    convertedType: Class<T>,
-    function: (F) -> T
-): List<T> {
-    return asSequence()
-        .map(function)
-        .filterIsInstance(convertedType)
-        .toList()
 }

@@ -35,14 +35,14 @@ import org.gradle.api.NamedDomainObjectContainer
 
 internal open class DynamicFeatureExtension(
     dslServices: DslServices,
-    projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
     private val publicExtensionImpl: DynamicFeatureExtensionImpl
 ) : AppExtension(
-    dslServices, projectOptions, globalScope,
+    dslServices,
+     globalScope,
     buildOutputs, sourceSetManager, extraModelInfo, false
 ), DynamicFeatureExtension<
         AaptOptions,
@@ -71,7 +71,6 @@ internal open class DynamicFeatureExtension(
         dslServices.newInstance(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
-            projectOptions,
             dslServices
         )
 

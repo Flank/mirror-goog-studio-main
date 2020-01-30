@@ -64,7 +64,6 @@ import java.util.Collections
  */
 open class LibraryExtension(
     dslServices: DslServices,
-    projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
@@ -72,7 +71,6 @@ open class LibraryExtension(
     private val publicExtensionImpl: LibraryExtensionImpl
 ) : TestedExtension(
     dslServices,
-    projectOptions,
     globalScope,
     buildOutputs,
     sourceSetManager,
@@ -113,7 +111,6 @@ open class LibraryExtension(
         dslServices.newInstance(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
-            projectOptions,
             dslServices
         )
 

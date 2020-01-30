@@ -69,7 +69,7 @@ public class ApiObjectFactory {
             return null;
         }
 
-        if (variantFactory.hasTestScope()) {
+        if (variantFactory.getVariantType().getHasTestComponents()) {
             BaseServices services = variantFactory.getServicesForOldVariantObjectsOnly();
 
             ComponentPropertiesImpl androidTestVariantProperties =

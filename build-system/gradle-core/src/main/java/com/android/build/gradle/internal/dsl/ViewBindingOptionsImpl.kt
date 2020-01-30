@@ -27,7 +27,6 @@ import javax.inject.Inject
 /** DSL object for configuring view binding options.  */
 open class ViewBindingOptionsImpl @Inject constructor(
     private val features: BuildFeatures,
-    private val projectOptions: ProjectOptions,
     private val dslServices: DslServices
 ) : ViewBindingOptions {
 
@@ -44,7 +43,7 @@ open class ViewBindingOptionsImpl @Inject constructor(
             if (bool != null) {
                 return bool
             }
-            return projectOptions[BooleanOption.BUILD_FEATURE_VIEWBINDING]
+            return dslServices.projectOptions[BooleanOption.BUILD_FEATURE_VIEWBINDING]
         }
         set(value) {
             dslServices.deprecationReporter

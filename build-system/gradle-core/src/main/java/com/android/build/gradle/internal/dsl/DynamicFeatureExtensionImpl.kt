@@ -25,14 +25,11 @@ import com.android.build.api.variant.DynamicFeatureVariantProperties
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
-import org.gradle.api.NamedDomainObjectContainer
+import com.android.build.gradle.internal.plugins.DslContainerProvider
 
 class DynamicFeatureExtensionImpl(
     dslServices: DslServices,
-    buildTypes: NamedDomainObjectContainer<BuildType>,
-    defaultConfig: DefaultConfig,
-    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
-    signingConfigs: NamedDomainObjectContainer<SigningConfig>
+    dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 )  :
     CommonExtensionImpl<
             AnnotationProcessorOptions,
@@ -44,10 +41,7 @@ class DynamicFeatureExtensionImpl(
             DynamicFeatureVariant<DynamicFeatureVariantProperties>,
             DynamicFeatureVariantProperties>(
         dslServices,
-        buildTypes,
-        defaultConfig,
-        productFlavors,
-        signingConfigs
+        dslContainers
     ),
 
     DynamicFeatureExtension<

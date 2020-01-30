@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableSetMultimap
 import com.google.common.collect.Multimap
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
-import java.util.Locale
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.junit.Before

@@ -25,15 +25,12 @@ import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
-import org.gradle.api.NamedDomainObjectContainer
+import com.android.build.gradle.internal.plugins.DslContainerProvider
 
 /** Internal implementation of the 'new' DSL interface */
 class LibraryExtensionImpl(
     dslServices: DslServices,
-    buildTypes: NamedDomainObjectContainer<BuildType>,
-    defaultConfig: DefaultConfig,
-    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
-    signingConfigs: NamedDomainObjectContainer<SigningConfig>
+    dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) :
     CommonExtensionImpl<
             AnnotationProcessorOptions,
@@ -45,10 +42,7 @@ class LibraryExtensionImpl(
             LibraryVariant<LibraryVariantProperties>,
             LibraryVariantProperties>(
         dslServices,
-        buildTypes,
-        defaultConfig,
-        productFlavors,
-        signingConfigs
+        dslContainers
     ),
     LibraryExtension<
             AaptOptions,

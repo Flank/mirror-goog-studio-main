@@ -71,6 +71,10 @@ interface VariantType {
      */
     val isForTesting: Boolean
     /**
+     * Returns true if the variant has test components
+     */
+    val hasTestComponents: Boolean
+    /**
      * Returns prefix used for naming source directories. This is an empty string in
      * case of non-testing variants and a camel case string otherwise, e.g. "androidTest".
      */
@@ -212,6 +216,9 @@ enum class VariantTypeImpl(
 
     override val isTestComponent: Boolean
         get() = isForTesting && this != TEST_APK
+
+    override val hasTestComponents: Boolean
+        get() = !isForTesting
 
     override val requiresManifest: Boolean
         get() = !isForTesting

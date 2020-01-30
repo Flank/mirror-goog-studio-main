@@ -422,6 +422,7 @@ public class AppPluginInternalTest {
                         + "}\n");
 
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
+        plugin.createAndroidTasks();
 
         // check that the debug buildType has the updated debug signing config.
         BuildType buildType =

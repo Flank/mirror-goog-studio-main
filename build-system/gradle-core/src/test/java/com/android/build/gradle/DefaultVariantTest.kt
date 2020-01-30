@@ -118,13 +118,13 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             android {
                 productFlavors {
                     create("f1") {
-                        setDimension("dim")
+                        dimension = "dim"
                     }
                     create("f2") {
-                        setDimension("dim")
+                        dimension = "dim"
                     }
                     create("f3") {
-                        setDimension("dim")
+                        dimension = "dim"
                     }
                 }
             }
@@ -148,14 +148,14 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
 
                 productFlavors {
                     create("f1") {
-                        setDimension("dim")
+                        dimension = "dim"
                     }
                     create("f2") {
-                        setDimension("dim")
+                        dimension = "dim"
                         isDefault = true
                     }
                     create("f3") {
-                        setDimension("dim")
+                        dimension = "dim"
                     }
                 }
             }
@@ -172,16 +172,16 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             android {
                 productFlavors {
                     create("f1") {
-                        setDimension("1")
+                        dimension = "1"
                     }
                     create("f2") {
-                        setDimension("1")
+                        dimension = "1"
                     }
                     create("f3") {
-                        setDimension("2")
+                        dimension = "2"
                     }
                     create("f4") {
-                        setDimension("2")
+                        dimension = "2"
                     }
                 }
             }
@@ -198,17 +198,17 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             android {
                 productFlavors {
                     create("f1") {
-                        setDimension("1")
+                        dimension = "1"
                     }
                     create("f2") {
-                        setDimension("1")
+                        dimension = "1"
                         isDefault = true
                     }
                     create("f3") {
-                        setDimension("2")
+                        dimension = "2"
                     }
                     create("f4") {
-                        setDimension("2")
+                        dimension = "2"
                     }
                 }
             }
@@ -225,16 +225,16 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             android {
                 productFlavors {
                     create("f1") {
-                        setDimension("number")
+                        dimension = "number"
                     }
                     create("f2") {
-                        setDimension("number")
+                        dimension = "number"
                     }
                     create("fa") {
-                        setDimension("letter")
+                        dimension = "letter"
                     }
                     create("fb") {
-                        setDimension("letter")
+                        dimension = "letter"
                     }
                 }
             }
@@ -257,17 +257,17 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             android {
                 productFlavors {
                     create("f1") {
-                        setDimension("number")
+                        dimension = "number"
                     }
                     create("f2") {
-                        setDimension("number")
+                        dimension = "number"
                         isDefault = true
                     }
                     create("fa") {
-                        setDimension("letter")
+                        dimension = "letter"
                     }
                     create("fb") {
-                        setDimension("letter")
+                        dimension = "letter"
                     }
                 }
             }
@@ -290,24 +290,24 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             android {
                 productFlavors {
                     create("f1") {
-                        setDimension("number")
+                        dimension = "number"
                     }
                     create("f2") {
-                        setDimension("number")
+                        dimension = "number"
                         isDefault = true
                     }
                     create("fa") {
-                        setDimension("letter")
+                        dimension = "letter"
                     }
                     create("fb") {
-                        setDimension("letter")
+                        dimension = "letter"
                         isDefault = true
                     }
                     create("fx") {
-                        setDimension("something")
+                        dimension = "something"
                     }
                     create("fy") {
-                        setDimension("something")
+                        dimension = "something"
                         isDefault = true
                     }
                 }
@@ -366,15 +366,15 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             android {
                 productFlavors {
                     create("f1") {
-                        setDimension("1")
+                        dimension = "1"
                         isDefault = true
                     }
                     create("f2") {
-                        setDimension("1")
+                        dimension = "1"
                         isDefault = true
                     }
                     create("f3") {
-                        setDimension("1")
+                        dimension = "1"
                     }
                 }
             }
@@ -401,22 +401,22 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             android {
                 productFlavors {
                     create("f1") {
-                        setDimension("1")
+                        dimension = "1"
                         isDefault = true
                     }
                     create("f2") {
-                        setDimension("1")
+                        dimension = "1"
                         isDefault = true
                     }
                     create("f3") {
-                        setDimension("1")
+                        dimension = "1"
                     }
                     create("f4") {
-                        setDimension("2")
+                        dimension = "2"
                         isDefault = true
                     }
                     create("f5") {
-                        setDimension("2")
+                        dimension = "2"
                         isDefault = true
                     }
                 }
@@ -482,7 +482,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
 
         // gather the variant lists from the input model.
         val variantComputer = DimensionCombinator(
-            given, dslServices.issueReporter, variantType, given.implicitFlavorDimensions
+            given, dslServices.issueReporter, given.implicitFlavorDimensions
         )
 
         // convert to mock VariantScope
@@ -500,7 +500,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             if (variantFilter != null) {
                 val variantInfo = VariantFilterImpl(
                     name,
-                    given.defaultConfig.productFlavor,
+                    given.defaultConfigData.defaultConfig,
                     given.buildTypes[variant.buildType]!!.buildType,
                     flavors
                 )

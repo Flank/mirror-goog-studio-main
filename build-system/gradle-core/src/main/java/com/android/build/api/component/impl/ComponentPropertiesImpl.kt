@@ -28,7 +28,7 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.DependencyConfigurator.Companion.addFlavorStrategy
+import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec.Companion.get
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec.Companion.has
@@ -538,11 +538,10 @@ abstract class ComponentPropertiesImpl(
             .attribute(attributeKey, attributeValue)
 
         // then add the fallbacks which contain the actual requested value
-        addFlavorStrategy(
+        DependencyConfigurator.addFlavorStrategy(
             globalScope.project.dependencies.attributesSchema,
             dimension,
             ImmutableMap.of(requestedValue, alternatedValues)
         )
     }
-
 }

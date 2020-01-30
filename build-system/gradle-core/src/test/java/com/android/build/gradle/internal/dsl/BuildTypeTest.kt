@@ -95,9 +95,9 @@ class BuildTypeTest {
             .compileSdkVersion(SdkVersionInfo.HIGHEST_KNOWN_STABLE_API)
         val buildTypeData =
             project.plugins
-            .getPlugin(AppPlugin::class.java)
-            .variantInputModel
-            .buildTypes[name] ?: error("Build type not found")
+                .getPlugin(AppPlugin::class.java)
+                .variantInputModel
+                .buildTypes[name] ?: error("Build type not found")
         return buildTypeData.buildType
     }
 }

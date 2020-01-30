@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
 import org.gradle.api.file.ProjectLayout
@@ -37,7 +38,7 @@ import java.io.File
  * of the context.
  */
 class ProjectServices(
-    val issueReporter: IssueReporter,
+    val issueReporter: SyncIssueReporter,
     val deprecationReporter: DeprecationReporter,
     val objectFactory: ObjectFactory,
     val logger: Logger,

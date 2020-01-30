@@ -212,7 +212,7 @@ open class BuildType @Inject constructor(
      *
      * @return the names of product flavors to use, in descending priority order
      */
-    var matchingFallbacks: List<String>
+    override var matchingFallbacks: List<String>
         get() = _matchingFallbacks ?: ImmutableList.of()
         set(value) { _matchingFallbacks = ImmutableList.copyOf(value) }
 

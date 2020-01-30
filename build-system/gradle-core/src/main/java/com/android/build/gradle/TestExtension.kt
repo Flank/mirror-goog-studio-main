@@ -42,7 +42,6 @@ import org.gradle.api.internal.DefaultDomainObjectSet
 /** {@code android} extension for {@code com.android.test} projects. */
 open class TestExtension(
     dslServices: DslServices,
-    projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
@@ -50,7 +49,6 @@ open class TestExtension(
     private val publicExtensionImpl: TestExtensionImpl
 ) : BaseExtension(
     dslServices,
-    projectOptions,
     globalScope,
     buildOutputs,
     sourceSetManager,
@@ -89,7 +87,6 @@ open class TestExtension(
         dslServices.newInstance(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
-            projectOptions,
             dslServices
         )
 

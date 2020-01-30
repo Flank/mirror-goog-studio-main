@@ -24,4 +24,8 @@ import org.gradle.api.Named
 interface ProductFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions> : Named,
     BaseFlavor<AnnotationProcessorOptionsT> {
     var isDefault: Boolean
+
+    var dimension: String?
+
+    var matchingFallbacks: List<String>
 }

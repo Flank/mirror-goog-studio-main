@@ -23,17 +23,14 @@ import com.android.build.api.dsl.TestExtension
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.TestVariantProperties
 import com.android.build.gradle.internal.CompileOptions
-import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
-import org.gradle.api.NamedDomainObjectContainer
+import com.android.build.gradle.internal.plugins.DslContainerProvider
+import com.android.build.gradle.internal.services.DslServices
 
 /** Internal implementation of the 'new' DSL interface */
 class TestExtensionImpl(
     dslServices: DslServices,
-    buildTypes: NamedDomainObjectContainer<BuildType>,
-    defaultConfig: DefaultConfig,
-    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
-    signingConfigs: NamedDomainObjectContainer<SigningConfig>
+    dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) :
     CommonExtensionImpl<
             AnnotationProcessorOptions,
@@ -45,10 +42,7 @@ class TestExtensionImpl(
             TestVariant<TestVariantProperties>,
             TestVariantProperties>(
         dslServices,
-        buildTypes,
-        defaultConfig,
-        productFlavors,
-        signingConfigs
+        dslContainers
     ),
     TestExtension<
             AaptOptions,

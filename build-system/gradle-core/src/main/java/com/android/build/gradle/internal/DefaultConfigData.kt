@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.build.gradle.internal
 
-import com.android.build.api.dsl.ProductFlavor
+import com.android.build.api.dsl.DefaultConfig
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 
 /**
- * Class containing a ProductFlavor and associated data (sourcesets)
+ * Class containing the DefaultConfig and associated data (sourcesets)
  *
  * This generated during DSL execution and is used for variant creation
  */
-class ProductFlavorData<ProductFlavorT : ProductFlavor<*>>(
-    val productFlavor: ProductFlavorT,
+class DefaultConfigData<DefaultConfigT: DefaultConfig<*>>(
+    val defaultConfig: DefaultConfigT,
     sourceSet: DefaultAndroidSourceSet,
     androidTestSourceSet: DefaultAndroidSourceSet?,
     unitTestSourceSet: DefaultAndroidSourceSet?

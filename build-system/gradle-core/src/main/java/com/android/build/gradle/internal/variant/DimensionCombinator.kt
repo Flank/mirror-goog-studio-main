@@ -28,9 +28,8 @@ import com.google.common.collect.ImmutableList
  * This returns a list of [DimensionCombination]
  */
 class DimensionCombinator(
-    private val variantInputModel : VariantInputModel,
+    private val variantInputModel : VariantInputModel<*,*,*,*>,
     private val errorReporter: IssueReporter,
-    private val variantType: VariantType,
     private val flavorDimensionList: List<String>
 ) {
     companion object {

@@ -18,10 +18,9 @@ package com.android.build.gradle
 
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.NamedDomainObjectContainer
 
 /**
@@ -30,7 +29,6 @@ import org.gradle.api.NamedDomainObjectContainer
  */
 abstract class AppExtension(
         dslServices: DslServices,
-        projectOptions: ProjectOptions,
         globalScope: GlobalScope,
         buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
         sourceSetManager: SourceSetManager,
@@ -38,7 +36,6 @@ abstract class AppExtension(
         isBaseModule: Boolean
 ) : AbstractAppExtension(
         dslServices,
-        projectOptions,
         globalScope,
         buildOutputs,
         sourceSetManager,

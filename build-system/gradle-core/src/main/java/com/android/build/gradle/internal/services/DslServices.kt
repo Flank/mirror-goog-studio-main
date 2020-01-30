@@ -17,10 +17,10 @@
 package com.android.build.gradle.internal.services
 
 import org.gradle.api.DomainObjectSet
-import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import java.io.File
 import kotlin.properties.ReadWriteProperty
@@ -39,6 +39,10 @@ interface DslServices: BaseServices {
     val buildDirectory: DirectoryProperty
 
     fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T>
+    fun <T> domainObjectContainer(
+        type: Class<T>,
+        factory: NamedDomainObjectFactory<T>
+    ): NamedDomainObjectContainer<T>
 
     @Deprecated("do not use. DSL elements should not use Property<T> objects")
     fun <T> property(type: Class<T>): Property<T>

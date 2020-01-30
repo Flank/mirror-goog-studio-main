@@ -259,7 +259,6 @@ interface VariantDslInfo {
 
     val isWearAppUnbundled: Boolean?
 
-    @Suppress("DEPRECATION")
     val missingDimensionStrategies: ImmutableMap<String, AbstractProductFlavor.DimensionRequest>
 
     val resourceConfigurations: ImmutableSet<String>

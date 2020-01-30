@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.dsl.DslVariableFactory
 import org.gradle.api.DomainObjectSet
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
@@ -34,6 +36,12 @@ class DslServicesImpl(
 
     override fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T> =
         projectServices.objectFactory.domainObjectSet(type)
+
+    override fun <T> domainObjectContainer(
+        type: Class<T>,
+        factory: NamedDomainObjectFactory<T>
+    ): NamedDomainObjectContainer<T> =
+        projectServices.objectFactory.domainObjectContainer(type, factory)
 
     override fun <T> property(type: Class<T>): Property<T> = projectServices.objectFactory.property(type)
 

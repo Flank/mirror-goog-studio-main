@@ -36,6 +36,10 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.DefaultConfig;
+import com.android.build.gradle.internal.dsl.ProductFlavor;
+import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
@@ -220,12 +224,18 @@ public abstract class BaseVariantFactory<
     }
 
     @Override
-    public void validateModel(@NonNull VariantInputModel model) {
+    public void validateModel(
+            @NonNull
+                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+                            model) {
         validateBuildConfig(model);
         validateResValues(model);
     }
 
-    void validateBuildConfig(@NonNull VariantInputModel model) {
+    void validateBuildConfig(
+            @NonNull
+                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+                            model) {
         Boolean buildConfig = globalScope.getExtension().getBuildFeatures().getBuildConfig();
         if (buildConfig == null) {
             buildConfig =
@@ -237,13 +247,13 @@ public abstract class BaseVariantFactory<
         if (!buildConfig) {
             IssueReporter issueReporter = projectServices.getIssueReporter();
 
-            if (!model.getDefaultConfig().getProductFlavor().getBuildConfigFields().isEmpty()) {
+            if (!model.getDefaultConfigData().getDefaultConfig().getBuildConfigFields().isEmpty()) {
                 issueReporter.reportError(
                         Type.GENERIC,
                         "defaultConfig contains custom BuildConfig fields, but the feature is disabled.");
             }
 
-            for (BuildTypeData buildType : model.getBuildTypes().values()) {
+            for (BuildTypeData<BuildType> buildType : model.getBuildTypes().values()) {
                 if (!buildType.getBuildType().getBuildConfigFields().isEmpty()) {
                     issueReporter.reportError(
                             Type.GENERIC,
@@ -253,7 +263,8 @@ public abstract class BaseVariantFactory<
                 }
             }
 
-            for (ProductFlavorData productFlavor : model.getProductFlavors().values()) {
+            for (ProductFlavorData<ProductFlavor> productFlavor :
+                    model.getProductFlavors().values()) {
                 if (!productFlavor.getProductFlavor().getBuildConfigFields().isEmpty()) {
                     issueReporter.reportError(
                             Type.GENERIC,
@@ -265,7 +276,10 @@ public abstract class BaseVariantFactory<
         }
     }
 
-    void validateResValues(@NonNull VariantInputModel model) {
+    void validateResValues(
+            @NonNull
+                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+                            model) {
         Boolean resValues = globalScope.getExtension().getBuildFeatures().getResValues();
         if (resValues == null) {
             resValues =
@@ -275,13 +289,13 @@ public abstract class BaseVariantFactory<
         if (!resValues) {
             IssueReporter issueReporter = projectServices.getIssueReporter();
 
-            if (!model.getDefaultConfig().getProductFlavor().getResValues().isEmpty()) {
+            if (!model.getDefaultConfigData().getDefaultConfig().getResValues().isEmpty()) {
                 issueReporter.reportError(
                         Type.GENERIC,
                         "defaultConfig contains custom resource values, but the feature is disabled.");
             }
 
-            for (BuildTypeData buildType : model.getBuildTypes().values()) {
+            for (BuildTypeData<BuildType> buildType : model.getBuildTypes().values()) {
                 if (!buildType.getBuildType().getResValues().isEmpty()) {
                     issueReporter.reportError(
                             Type.GENERIC,
@@ -291,7 +305,8 @@ public abstract class BaseVariantFactory<
                 }
             }
 
-            for (ProductFlavorData productFlavor : model.getProductFlavors().values()) {
+            for (ProductFlavorData<ProductFlavor> productFlavor :
+                    model.getProductFlavors().values()) {
                 if (!productFlavor.getProductFlavor().getResValues().isEmpty()) {
                     issueReporter.reportError(
                             Type.GENERIC,

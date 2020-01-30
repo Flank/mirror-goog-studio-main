@@ -199,8 +199,10 @@ com.android.build.api.dsl.BuildFeatures.setResValues: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setShaders: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android.build.api.dsl.BaseConfig
+com.android.build.api.dsl.BuildType.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.BuildType.isDefault: boolean ()
 com.android.build.api.dsl.BuildType.setDefault: void (boolean)
+com.android.build.api.dsl.BuildType.setMatchingFallbacks: void (java.util.List<java.lang.String>)
 com.android.build.api.dsl.Bundle
 com.android.build.api.dsl.Bundle.abi: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleAbi, kotlin.Unit>)
 com.android.build.api.dsl.Bundle.density: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleDensity, kotlin.Unit>)
@@ -467,8 +469,12 @@ com.android.build.api.dsl.PackagingOptions.setExcludes: void (java.util.Set<java
 com.android.build.api.dsl.PackagingOptions.setMerges: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.PackagingOptions.setPickFirsts: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor
+com.android.build.api.dsl.ProductFlavor.getDimension: java.lang.String ()
+com.android.build.api.dsl.ProductFlavor.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.ProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ProductFlavor.setDefault: void (boolean)
+com.android.build.api.dsl.ProductFlavor.setDimension: void (java.lang.String)
+com.android.build.api.dsl.ProductFlavor.setMatchingFallbacks: void (java.util.List<java.lang.String>)
 com.android.build.api.dsl.Shaders
 com.android.build.api.dsl.Shaders.getGlslcArgs: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.Shaders.getScopedGlslcArgs: com.google.common.collect.ListMultimap<java.lang.String, java.lang.String> ()

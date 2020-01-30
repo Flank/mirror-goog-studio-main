@@ -26,7 +26,6 @@ import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LibraryTaskManager;
-import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.LibraryExtensionImpl;
@@ -60,29 +59,21 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
     protected BaseExtension createExtension(
             @NonNull DslServices dslServices,
             @NonNull GlobalScope globalScope,
-            @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
-            @NonNull DefaultConfig defaultConfig,
-            @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
-            @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
+            @NonNull
+                    DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+                            dslContainers,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
-            @NonNull SourceSetManager sourceSetManager,
             @NonNull ExtraModelInfo extraModelInfo) {
         return project.getExtensions()
                 .create(
                         "android",
                         getExtensionClass(),
                         dslServices,
-                        projectOptions,
                         globalScope,
                         buildOutputs,
-                        sourceSetManager,
+                        dslContainers.getSourceSetManager(),
                         extraModelInfo,
-                        new LibraryExtensionImpl(
-                                dslServices,
-                                buildTypeContainer,
-                                defaultConfig,
-                                productFlavorContainer,
-                                signingConfigContainer));
+                        new LibraryExtensionImpl(dslServices, dslContainers));
     }
 
     @NonNull

@@ -26,18 +26,16 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
 /** The `android` extension for base feature module (application plugin).  */
 open class BaseAppModuleExtension(
     dslServices: DslServices,
-    projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
@@ -45,7 +43,6 @@ open class BaseAppModuleExtension(
     private val publicExtensionImpl: ApplicationExtensionImpl
 ) : AppExtension(
     dslServices,
-    projectOptions,
     globalScope,
     buildOutputs,
     sourceSetManager,
@@ -78,7 +75,6 @@ open class BaseAppModuleExtension(
         dslServices.newInstance(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
-            projectOptions,
             dslServices
         )
 

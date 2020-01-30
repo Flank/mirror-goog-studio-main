@@ -4,10 +4,9 @@ import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
 
@@ -22,7 +21,6 @@ import org.gradle.api.NamedDomainObjectContainer
  */
 abstract class AbstractAppExtension(
     dslServices: DslServices,
-    projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
@@ -30,7 +28,6 @@ abstract class AbstractAppExtension(
     isBaseModule: Boolean
 ) : TestedExtension(
     dslServices,
-    projectOptions,
     globalScope,
     buildOutputs,
     sourceSetManager,

@@ -23,8 +23,9 @@ import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantOperations
 import com.android.build.gradle.internal.CompileOptions
-import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
+import com.android.build.gradle.internal.plugins.DslContainerProvider
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
@@ -41,10 +42,7 @@ abstract class CommonExtensionImpl<
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties>(
     protected val dslServices: DslServices,
-    override val buildTypes: NamedDomainObjectContainer<BuildTypeT>,
-    override val defaultConfig: DefaultConfigT,
-    override val productFlavors: NamedDomainObjectContainer<ProductFlavorT>,
-    override val signingConfigs: NamedDomainObjectContainer<SigningConfigT>
+    dslContainers: DslContainerProvider<DefaultConfigT, BuildTypeT, ProductFlavorT, SigningConfigT>
 ) : CommonExtension<
         AaptOptions,
         AbiSplitOptions,
@@ -69,6 +67,14 @@ abstract class CommonExtensionImpl<
         TestOptions.UnitTestOptions,
         VariantT,
         VariantPropertiesT>, ActionableVariantObjectOperationsExecutor<VariantT, VariantPropertiesT> {
+
+    override val buildTypes: NamedDomainObjectContainer<BuildTypeT> = dslContainers.buildTypeContainer
+
+    override val defaultConfig: DefaultConfigT = dslContainers.defaultConfig
+
+    override val productFlavors: NamedDomainObjectContainer<ProductFlavorT> = dslContainers.productFlavorContainer
+
+    override val signingConfigs: NamedDomainObjectContainer<SigningConfigT> = dslContainers.signingConfigContainer
 
     override val aaptOptions: AaptOptions =
         dslServices.newInstance(

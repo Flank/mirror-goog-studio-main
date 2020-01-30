@@ -4,11 +4,9 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.api.UnitTestVariant
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.core.VariantType
+import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.FileCollection
@@ -22,7 +20,6 @@ import org.gradle.api.file.FileCollection
  */
 abstract class TestedExtension(
     dslServices: DslServices,
-    projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
@@ -30,7 +27,6 @@ abstract class TestedExtension(
     isBaseModule: Boolean
 ) : BaseExtension(
     dslServices,
-    projectOptions,
     globalScope,
     buildOutputs,
     sourceSetManager,
@@ -43,11 +39,6 @@ abstract class TestedExtension(
 
     private val unitTestVariantList: DomainObjectSet<UnitTestVariant> =
         dslServices.domainObjectSet(UnitTestVariant::class.java)
-
-    init {
-        sourceSetManager.setUpTestSourceSet(VariantType.ANDROID_TEST_PREFIX)
-        sourceSetManager.setUpTestSourceSet(VariantType.UNIT_TEST_PREFIX)
-    }
 
     /**
      * A collection of Android test

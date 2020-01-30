@@ -36,12 +36,16 @@ import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
+import com.android.build.gradle.internal.DefaultConfigData;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
 import com.android.build.gradle.internal.core.VariantSources;
+import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.DefaultConfig;
+import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.errors.SyncIssueReporter;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
@@ -66,6 +70,7 @@ import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
+import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
@@ -359,28 +364,37 @@ public class ModelBuilder<Extension extends BaseExtension>
                         ? extension.getFlavorDimensionList()
                         : Lists.newArrayList();
 
-        final VariantInputModel variantInputs = variantModel.getInputs();
+        final VariantInputModel<
+                        DefaultConfig,
+                        BuildType,
+                        ProductFlavor,
+                        com.android.build.gradle.internal.dsl.SigningConfig>
+                variantInputs = variantModel.getInputs();
 
+        DefaultConfigData<DefaultConfig> defaultConfigData = variantInputs.getDefaultConfigData();
         ProductFlavorContainer defaultConfig =
                 ProductFlavorContainerImpl.createProductFlavorContainer(
-                        variantInputs.getDefaultConfig(),
-                        extraModelInfo.getExtraFlavorSourceProviders(
-                                variantInputs.getDefaultConfig().getProductFlavor().getName()));
+                        defaultConfigData,
+                        defaultConfigData.getDefaultConfig(),
+                        extraModelInfo.getExtraFlavorSourceProviders(BuilderConstants.MAIN));
 
         Collection<BuildTypeContainer> buildTypes = Lists.newArrayList();
         Collection<ProductFlavorContainer> productFlavors = Lists.newArrayList();
         Collection<Variant> variants = Lists.newArrayList();
         Collection<String> variantNames = Lists.newArrayList();
 
-        for (BuildTypeData btData : variantInputs.getBuildTypes().values()) {
+        for (BuildTypeData<BuildType> btData : variantInputs.getBuildTypes().values()) {
             buildTypes.add(BuildTypeContainerImpl.create(
                     btData,
                     extraModelInfo.getExtraBuildTypeSourceProviders(btData.getBuildType().getName())));
         }
-        for (ProductFlavorData pfData : variantInputs.getProductFlavors().values()) {
-            productFlavors.add(ProductFlavorContainerImpl.createProductFlavorContainer(
-                    pfData,
-                    extraModelInfo.getExtraFlavorSourceProviders(pfData.getProductFlavor().getName())));
+        for (ProductFlavorData<ProductFlavor> pfData : variantInputs.getProductFlavors().values()) {
+            productFlavors.add(
+                    ProductFlavorContainerImpl.createProductFlavorContainer(
+                            pfData,
+                            pfData.getProductFlavor(),
+                            extraModelInfo.getExtraFlavorSourceProviders(
+                                    pfData.getProductFlavor().getName())));
         }
 
         String defaultVariant = variantModel.getDefaultVariant();

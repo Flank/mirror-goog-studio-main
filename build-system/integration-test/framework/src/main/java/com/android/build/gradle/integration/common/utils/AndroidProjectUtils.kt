@@ -102,8 +102,6 @@ fun AndroidProject.testDefaultSourceSets(projectDir: File) {
     val buildTypes = buildTypes
     TruthHelper.assertThat(buildTypes).named("build types").hasSize(2)
 
-    val testedBuildType = findTestedBuildType()
-
     for (btContainer in buildTypes) {
         SourceProviderHelper(
                 name,
@@ -119,12 +117,8 @@ fun AndroidProject.testDefaultSourceSets(projectDir: File) {
                 .map { it.artifactName }
                 .toSet()
 
-        if (btContainer.buildType.getName() == testedBuildType) {
-            TruthHelper.assertThat(extraSourceProviderNames)
-                    .containsExactly(AndroidProject.ARTIFACT_ANDROID_TEST,
-                            AndroidProject.ARTIFACT_UNIT_TEST)
-        } else {
-            TruthHelper.assertThat(extraSourceProviderNames).containsExactly(AndroidProject.ARTIFACT_UNIT_TEST)
-        }
+        TruthHelper.assertThat(extraSourceProviderNames)
+            .containsExactly(AndroidProject.ARTIFACT_ANDROID_TEST,
+                AndroidProject.ARTIFACT_UNIT_TEST)
     }
 }

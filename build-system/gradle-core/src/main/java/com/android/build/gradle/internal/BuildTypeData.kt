@@ -15,14 +15,16 @@
  */
 package com.android.build.gradle.internal
 
+import com.android.build.api.dsl.BuildType;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.build.gradle.internal.dsl.BuildType
 
 /**
  * Class containing a BuildType and associated data (Sourceset for instance).
+ *
+ * This generated during DSL execution and is used for variant creation
  */
-class BuildTypeData(
-    val buildType: BuildType,
+class BuildTypeData<BuildTypeT: BuildType<*>>(
+    val buildType: BuildTypeT,
     sourceSet: DefaultAndroidSourceSet,
     androidTestSourceSet: DefaultAndroidSourceSet?,
     unitTestSourceSet: DefaultAndroidSourceSet?

@@ -18,6 +18,10 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DefaultConfig
+import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.dsl.SigningConfig
 
 /**
  * Model for the variants and their inputs.
@@ -26,7 +30,7 @@ import com.android.build.api.variant.impl.VariantPropertiesImpl
  */
 interface VariantModel {
 
-    val inputs: VariantInputModel
+    val inputs: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 
     /**
      * the main variants. This is the output of the plugin (apk, aar, etc...) and does not

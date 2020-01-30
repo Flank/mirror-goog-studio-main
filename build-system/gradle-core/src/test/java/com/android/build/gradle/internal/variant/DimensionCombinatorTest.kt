@@ -58,11 +58,9 @@ class DimensionCombinatorTest : AbstractVariantInputModelTest<List<DimensionComb
                 }
                 productFlavors {
                     create("flavor1") {
-                        // FIXME once we clear up the ProductFlavor inheritance
                         dimension = "one"
                     }
                     create("flavor2") {
-                        // FIXME once we clear up the ProductFlavor inheritance
                         dimension = "one"
                     }
                 }
@@ -101,19 +99,15 @@ class DimensionCombinatorTest : AbstractVariantInputModelTest<List<DimensionComb
                 }
                 productFlavors {
                     create("flavor1") {
-                        // FIXME once we clear up the ProductFlavor inheritance
                         dimension = "one"
                     }
                     create("flavor2") {
-                        // FIXME once we clear up the ProductFlavor inheritance
                         dimension = "one"
                     }
                     create("flavorA") {
-                        // FIXME once we clear up the ProductFlavor inheritance
                         dimension = "two"
                     }
                     create("flavorB") {
-                        // FIXME once we clear up the ProductFlavor inheritance
                         dimension = "two"
                     }
                 }
@@ -185,11 +179,9 @@ class DimensionCombinatorTest : AbstractVariantInputModelTest<List<DimensionComb
             android {
                 productFlavors {
                     create("flavor1") {
-                        // FIXME once we clear up the ProductFlavor inheritance
                         dimension = "one"
                     }
                     create("flavor2") {
-                        // FIXME once we clear up the ProductFlavor inheritance
                         dimension = "one"
                     }
                 }
@@ -312,11 +304,9 @@ class DimensionCombinatorTest : AbstractVariantInputModelTest<List<DimensionComb
                 }
                 productFlavors {
                     create("flavor1") {
-                        // FIXME once we clear up the ProductFlavor inheritance
                         dimension = "one"
                     }
                     create("flavor2") {
-                        // FIXME once we clear up the ProductFlavor inheritance
                         dimension = "one"
                     }
                 }
@@ -355,9 +345,7 @@ class DimensionCombinatorTest : AbstractVariantInputModelTest<List<DimensionComb
         // compute the flavor list if needed
         val expectedFlavorList = flavorList ?: given.productFlavors.values.asSequence().mapNotNull { it.productFlavor.dimension }.toSet().toList()
 
-        val variantComputer = DimensionCombinator(
-            given, dslServices.issueReporter, VariantTypeImpl.BASE_APK, expectedFlavorList
-        )
+        val variantComputer = DimensionCombinator(given, dslServices.issueReporter, expectedFlavorList)
 
         return variantComputer.computeVariants()
     }

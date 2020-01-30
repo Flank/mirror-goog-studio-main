@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle
 
-import com.android.SdkConstants
 import com.android.annotations.NonNull
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.BuildFeatures
@@ -31,7 +30,6 @@ import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper
-import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.AaptOptions
@@ -50,8 +48,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.GlobalScope
-
-import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.LibraryRequest
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.errors.IssueReporter
@@ -100,7 +97,6 @@ import java.io.File
 // (yet), because the DSL reference generator doesn't understand them.
 abstract class BaseExtension protected constructor(
     protected val dslServices: DslServices,
-    projectOptions: ProjectOptions,
     protected val globalScope: GlobalScope,
     /** All build outputs for all variants, can be used by users to customize a build output. */
     override val buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
@@ -150,11 +146,6 @@ abstract class BaseExtension protected constructor(
     private var isWritable = true
 
     override var ndkVersion: String? = null
-
-    init {
-        sourceSetManager.setUpSourceSet(SdkConstants.FD_MAIN)
-    }
-
 
     /**
      * Disallow further modification on the extension.

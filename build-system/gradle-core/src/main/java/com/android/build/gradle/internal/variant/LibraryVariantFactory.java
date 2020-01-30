@@ -33,9 +33,11 @@ import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
+import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.plugins.DslContainerProvider;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
@@ -53,7 +55,6 @@ import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
-import org.gradle.api.NamedDomainObjectContainer;
 
 public class LibraryVariantFactory
         extends BaseVariantFactory<LibraryVariantImpl, LibraryVariantPropertiesImpl> {
@@ -202,20 +203,19 @@ public class LibraryVariantFactory
         return VariantTypeImpl.LIBRARY;
     }
 
-    @Override
-    public boolean hasTestScope() {
-        return true;
-    }
-
     /** * Prevent customization of applicationId or applicationIdSuffix. */
     @Override
-    public void validateModel(@NonNull VariantInputModel model) {
+    public void validateModel(
+            @NonNull
+                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+                            model) {
         super.validateModel(model);
 
         IssueReporter issueReporter = projectServices.getIssueReporter();
+        DefaultConfig defaultConfig = model.getDefaultConfigData().getDefaultConfig();
 
-        if (model.getDefaultConfig().getProductFlavor().getApplicationId() != null) {
-            String applicationId = model.getDefaultConfig().getProductFlavor().getApplicationId();
+        if (defaultConfig.getApplicationId() != null) {
+            String applicationId = defaultConfig.getApplicationId();
             issueReporter.reportError(
                     Type.GENERIC,
                     "Library projects cannot set applicationId. "
@@ -225,9 +225,8 @@ public class LibraryVariantFactory
                     applicationId);
         }
 
-        if (model.getDefaultConfig().getProductFlavor().getApplicationIdSuffix() != null) {
-            String applicationIdSuffix =
-                    model.getDefaultConfig().getProductFlavor().getApplicationIdSuffix();
+        if (defaultConfig.getApplicationIdSuffix() != null) {
+            String applicationIdSuffix = defaultConfig.getApplicationIdSuffix();
             issueReporter.reportError(
                     Type.GENERIC,
                     "Library projects cannot set applicationIdSuffix. "
@@ -237,7 +236,7 @@ public class LibraryVariantFactory
                     applicationIdSuffix);
         }
 
-        for (BuildTypeData buildType : model.getBuildTypes().values()) {
+        for (BuildTypeData<BuildType> buildType : model.getBuildTypes().values()) {
             if (buildType.getBuildType().getApplicationIdSuffix() != null) {
                 String applicationIdSuffix = buildType.getBuildType().getApplicationIdSuffix();
                 issueReporter.reportError(
@@ -251,7 +250,7 @@ public class LibraryVariantFactory
                         applicationIdSuffix);
             }
         }
-        for (ProductFlavorData productFlavor : model.getProductFlavors().values()) {
+        for (ProductFlavorData<ProductFlavor> productFlavor : model.getProductFlavors().values()) {
             if (productFlavor.getProductFlavor().getApplicationId() != null) {
                 String applicationId = productFlavor.getProductFlavor().getApplicationId();
                 issueReporter.reportError(
@@ -283,13 +282,13 @@ public class LibraryVariantFactory
 
     @Override
     public void createDefaultComponents(
-            @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
-            @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
-            @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs) {
+            @NonNull
+                    DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+                            dslContainers) {
         // must create signing config first so that build type 'debug' can be initialized
         // with the debug signing config.
-        signingConfigs.create(DEBUG);
-        buildTypes.create(DEBUG);
-        buildTypes.create(RELEASE);
+        dslContainers.getSigningConfigContainer().create(DEBUG);
+        dslContainers.getBuildTypeContainer().create(DEBUG);
+        dslContainers.getBuildTypeContainer().create(RELEASE);
     }
 }
