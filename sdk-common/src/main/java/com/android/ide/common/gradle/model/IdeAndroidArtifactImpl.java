@@ -93,9 +93,9 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
             @NonNull AndroidArtifact artifact,
             @NonNull ModelCache modelCache,
             @NonNull IdeDependenciesFactory dependenciesFactory,
-            @Nullable GradleVersion gradleVersion) {
-        super(artifact, modelCache, dependenciesFactory, gradleVersion);
-        myOutputs = copyOutputs(artifact, modelCache);
+            @Nullable GradleVersion agpVersion) {
+        super(artifact, modelCache, dependenciesFactory, agpVersion);
+        myOutputs = copyOutputs(artifact, modelCache, agpVersion);
         myApplicationId = artifact.getApplicationId();
         mySourceGenTaskName = artifact.getSourceGenTaskName();
         myGeneratedResourceFolders = ImmutableList.copyOf(artifact.getGeneratedResourceFolders());
@@ -147,7 +147,13 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
 
     @NonNull
     private static Collection<AndroidArtifactOutput> copyOutputs(
-            @NonNull AndroidArtifact artifact, @NonNull ModelCache modelCache) {
+            @NonNull AndroidArtifact artifact,
+            @NonNull ModelCache modelCache,
+            @Nullable GradleVersion agpVersion) {
+        // getOutputs is deprecated in AGP 4.0.0.
+        if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.0.0") >= 0) {
+            return Collections.emptyList();
+        }
         Collection<AndroidArtifactOutput> outputs;
         try {
             outputs = artifact.getOutputs();
