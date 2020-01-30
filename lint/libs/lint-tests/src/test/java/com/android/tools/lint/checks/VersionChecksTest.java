@@ -2171,6 +2171,12 @@ public class VersionChecksTest extends AbstractCheckTest {
         assertEquals(
                 17, VersionChecks.getMinSdkVersionFromMethodName("isRunningJellyBeanMR1OrLater"));
         assertEquals(20, VersionChecks.getMinSdkVersionFromMethodName("isAtLeastKitKatWatch"));
+
+        assertEquals(29, VersionChecks.getMinSdkVersionFromMethodName("hasQ"));
+        assertEquals(28, VersionChecks.getMinSdkVersionFromMethodName("hasApi28"));
+        assertEquals(28, VersionChecks.getMinSdkVersionFromMethodName("isAtLeastApi28"));
+        assertEquals(28, VersionChecks.getMinSdkVersionFromMethodName("isAtLeastAPI_28"));
+        assertEquals(28, VersionChecks.getMinSdkVersionFromMethodName("isApi28OrLater"));
     }
 
     public void testVersionNameFromMethodName() {
