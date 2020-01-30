@@ -87,6 +87,9 @@ public class Deployer {
         // New DDMLib
         GET_PIDS,
         GET_ARCH,
+        COMPUTE_FRESHINSTALL_OID,
+        COMPUTE_ODS,
+        COMPUTE_EXPECTED_IDS
     }
 
     public enum InstallMode {
@@ -133,12 +136,17 @@ public class Deployer {
                 Task<String> appIds =
                         runner.create(
                                 Tasks.PARSE_APP_IDS, ApplicationDumper::getPackageName, apkList);
+
+                // TODO: Push overlayIds and cache the real one here.
+                Task<OverlayId> overlayIds =
+                        runner.create(Tasks.COMPUTE_FRESHINSTALL_OID, OverlayId::new, apkList);
                 runner.create(
                         Tasks.DEPLOY_CACHE_STORE,
                         deployCache::store,
                         deviceSerial,
                         appIds,
-                        apkList);
+                        apkList,
+                        overlayIds);
             }
 
             runner.runAsync();
@@ -278,7 +286,22 @@ public class Deployer {
 
         // Do the swap
         ApkSwapper swapper = new ApkSwapper(installer, redefiners, argRestart, adb, logger);
-        runner.create(Tasks.SPEC_SWAP, swapper::optimisticSwap, packageName, pids, arch, toSwap);
+
+        Task<OverlayId> oldOverlayIds =
+                runner.create(Tasks.COMPUTE_EXPECTED_IDS, e -> e.getOverlayId(), speculativeDump);
+        Task<OverlayId> newOverlayIds =
+                runner.create(
+                        Tasks.COMPUTE_ODS, OverlayId::computeNewOverlayId, speculativeDump, toSwap);
+
+        runner.create(
+                Tasks.SPEC_SWAP,
+                swapper::optimisticSwap,
+                packageName,
+                pids,
+                arch,
+                toSwap,
+                oldOverlayIds,
+                newOverlayIds);
 
         TaskResult result = runner.run();
         result.getMetrics().forEach(metrics::add);
@@ -297,7 +320,12 @@ public class Deployer {
         }
 
         runner.create(
-                Tasks.DEPLOY_CACHE_STORE, deployCache::store, deviceSerial, packageName, newFiles);
+                Tasks.DEPLOY_CACHE_STORE,
+                deployCache::store,
+                deviceSerial,
+                packageName,
+                newFiles,
+                newOverlayIds);
 
         Result deployResult = new Result();
         // TODO: May be notify user we IWI'ed.
