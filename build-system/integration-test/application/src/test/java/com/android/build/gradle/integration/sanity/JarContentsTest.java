@@ -454,6 +454,8 @@ public class JarContentsTest {
                 "com/android/build/gradle/proguard-optimizations.txt",
                 "com/android/build/gradle/tasks/",
                 "com/android/build/gradle/tasks/factory/",
+                "com/android/builder/",
+                "com/android/builder/core/",
                 "com/android/tools/",
                 "com/android/tools/build/",
                 "com/android/tools/build/libraries/",
