@@ -1,5 +1,5 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "kotlin_jar")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
 #keep sorted
@@ -55,10 +55,9 @@ java_library(
     deps = TEST_DEPS,
 )
 
-kotlin_jar(
+kotlin_library(
     name = "kotlin_tests",
-    srcs = ["src/test/java"],
-    inputs = glob(["src/test/java/**/*.kt"]),
+    srcs = glob(["src/test/java/**/*.kt"]),
     deps = TEST_DEPS,
 )
 
@@ -87,7 +86,7 @@ coverage_java_test(
         # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
         "//tools/base/third_party:junit_junit",
         ":java_tests",
-        ":libkotlin_tests.jar",
+        ":kotlin_tests",
     ],
 )
 

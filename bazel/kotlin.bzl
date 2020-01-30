@@ -59,7 +59,7 @@ def _kotlin_jar_impl(ctx):
         executable = ctx.executable._kotlinc,
     )
 
-kotlin_jar = rule(
+_kotlin_jar = rule(
     attrs = {
         "srcs": attr.label_list(
             allow_empty = False,
@@ -124,7 +124,7 @@ def kotlin_library(
         kotlin_name = name + ".kotlin"
         targets += [kotlin_name]
         kdeps += [":lib" + kotlin_name + ".jar"]
-        kotlin_jar(
+        _kotlin_jar(
             name = kotlin_name,
             srcs = srcs,
             inputs = kotlins + javas,
