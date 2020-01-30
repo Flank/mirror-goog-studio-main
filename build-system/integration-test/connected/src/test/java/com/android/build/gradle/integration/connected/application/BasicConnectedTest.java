@@ -43,6 +43,6 @@ public class BasicConnectedTest {
 
     @Test
     public void connectedCheck() throws Exception {
-        project.executeConnectedCheck();
+        project.executor().run("connectedAndroidTest");
     }
 }
