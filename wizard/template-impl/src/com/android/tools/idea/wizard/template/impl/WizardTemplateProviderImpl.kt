@@ -46,6 +46,8 @@ import com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.mo
 import com.android.tools.idea.wizard.template.impl.fragments.scrollFragment.scrollFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.settingsFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.viewModelFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.other.files.aidlFile.aidlFileTemplate
+import com.android.tools.idea.wizard.template.impl.other.files.appActionsResourceFile.appActionsResourceFileTemplate
 import com.android.tools.idea.wizard.template.impl.other.appWidget.appWidgetTemplate
 import com.android.tools.idea.wizard.template.impl.other.automotiveMessagingService.automotiveMessagingServiceTemplate
 import com.android.tools.idea.wizard.template.impl.other.broadcastReceiver.broadcastReceiverTemplate
@@ -53,8 +55,10 @@ import com.android.tools.idea.wizard.template.impl.other.contentProvider.content
 import com.android.tools.idea.wizard.template.impl.other.customView.customViewTemplate
 import com.android.tools.idea.wizard.template.impl.other.folders.folderTemplates
 import com.android.tools.idea.wizard.template.impl.other.intentService.intentServiceTemplate
+import com.android.tools.idea.wizard.template.impl.other.files.layoutResourceFile.layoutResourceFileTemplate
 import com.android.tools.idea.wizard.template.impl.other.service.serviceTemplate
 import com.android.tools.idea.wizard.template.impl.other.sliceProvider.sliceProviderTemplate
+import com.android.tools.idea.wizard.template.impl.other.files.valueResourceFile.valueResourceFileTemplate
 import com.android.tools.idea.wizard.template.impl.other.watchFaceService.watchFaceServiceTemplate
 
 /**
@@ -101,5 +105,12 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
     serviceTemplate,
     sliceProviderTemplate,
     watchFaceServiceTemplate
-  ) + folderTemplates
+  ) + folderTemplates + fileTemplates
+
+  private val fileTemplates = listOf(
+    aidlFileTemplate,
+    appActionsResourceFileTemplate,
+    layoutResourceFileTemplate,
+    valueResourceFileTemplate
+  )
 }
