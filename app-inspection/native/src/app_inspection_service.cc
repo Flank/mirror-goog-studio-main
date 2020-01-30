@@ -76,20 +76,33 @@ static jvmtiIterationControl JNICALL HeapObjectCallback(jlong class_tag,
   return JVMTI_ITERATION_CONTINUE;
 }
 
-jobjectArray AppInspectionService::FindInstances(JNIEnv* jni, jclass jclass) {
+jobjectArray AppInspectionService::FindInstances(JNIEnv* jni, jclass clazz) {
+  if (jni->IsSameObject(clazz, jni->FindClass("java/lang/Class"))) {
+    // Special-case handling for the Class object. Internally, ART creates many
+    // dummy Class objects that we don't care about. Calling GetLoadedClasses
+    // returns us the list of the real Class instances.
+    jint count;
+    jclass* classes;
+    jvmti_->GetLoadedClasses(&count, &classes);
+    auto result = jni->NewObjectArray(count, clazz, NULL);
+    for (int i = 0; i < count; ++i) {
+      jni->SetObjectArrayElement(result, i, (jobject)classes[i]);
+    }
+    jvmti_->Deallocate((unsigned char*)classes);
+    return result;
+  }
+
   jvmtiPhase phase_ptr;
   jvmti_->GetPhase(&phase_ptr);
   jlong tag = nextTag;
   nextTag++;
   jvmtiError err = jvmti_->IterateOverInstancesOfClass(
-      jclass, JVMTI_HEAP_OBJECT_EITHER, HeapObjectCallback, &tag);
+      clazz, JVMTI_HEAP_OBJECT_EITHER, HeapObjectCallback, &tag);
 
   jint count;
   jobject* instances;
   jvmti_->GetObjectsWithTags(1, &tag, &count, &instances, NULL);
-  Log::V(Log::Tag::APPINSPECT,
-         "App Inspection: found %ld  %d objects with tag\n", tag, count);
-  auto result = jni->NewObjectArray(count, jclass, NULL);
+  auto result = jni->NewObjectArray(count, clazz, NULL);
   for (int i = 0; i < count; ++i) {
     jni->SetObjectArrayElement(result, i, instances[i]);
   }
