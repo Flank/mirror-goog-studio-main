@@ -133,31 +133,6 @@ public class LibraryTaskManager
 
         if (globalScope.getBuildFeatures().getAndroidResources()) {
             createGenerateResValuesTask(libVariantProperties);
-
-            createMergeResourcesTasks(libVariantProperties);
-
-            createCompileLibraryResourcesTask(libVariantProperties);
-
-            // Add a task to generate resource source files, directing the location
-            // of the r.txt file to be directly in the bundle.
-            createProcessResTask(
-                    libVariantProperties,
-                    null,
-                    // Switch to package where possible so we stop merging resources in
-                    // libraries
-                    MergeType.PACKAGE,
-                    globalScope.getProjectBaseName());
-
-            // Only verify resources if in Release and not namespaced.
-            if (!libVariantProperties.getVariantDslInfo().isDebuggable()
-                    && !globalScope.getExtension().getAaptOptions().getNamespaced()) {
-                createVerifyLibraryResTask(libVariantProperties);
-            }
-
-            registerLibraryRClassTransformStream(libVariantProperties);
-
-            // Maybe minify resources.
-            maybeCreateResourcesShrinkerTasks(libVariantProperties);
         } else { // Resource processing is disabled.
             // TODO(b/147579629): add a warning for manifests containing resource references.
             if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
@@ -179,6 +154,12 @@ public class LibraryTaskManager
 
         createRenderscriptTask(libVariantProperties);
 
+        if (globalScope.getBuildFeatures().getAndroidResources()) {
+            createMergeResourcesTasks(libVariantProperties);
+
+            createCompileLibraryResourcesTask(libVariantProperties);
+        }
+
         createShaderTask(libVariantProperties);
 
         // Add tasks to merge the assets folders
@@ -187,6 +168,26 @@ public class LibraryTaskManager
 
         // Add a task to create the BuildConfig class
         createBuildConfigTask(libVariantProperties);
+
+        if (globalScope.getBuildFeatures().getAndroidResources()) {
+            // Add a task to generate resource source files, directing the location
+            // of the r.txt file to be directly in the bundle.
+            createProcessResTask(
+                    libVariantProperties,
+                    null,
+                    // Switch to package where possible so we stop merging resources in
+                    // libraries
+                    MergeType.PACKAGE,
+                    globalScope.getProjectBaseName());
+
+            // Only verify resources if in Release and not namespaced.
+            if (!libVariantProperties.getVariantDslInfo().isDebuggable()
+                    && !globalScope.getExtension().getAaptOptions().getNamespaced()) {
+                createVerifyLibraryResTask(libVariantProperties);
+            }
+
+            registerLibraryRClassTransformStream(libVariantProperties);
+        }
 
         // process java resources only, the merge is setup after
         // the task to generate intermediate jars for project to project publishing.
@@ -322,6 +323,9 @@ public class LibraryTaskManager
 
         // ----- Minify next -----
         maybeCreateJavaCodeShrinkerTask(libVariantProperties);
+        if (globalScope.getBuildFeatures().getAndroidResources()) {
+            maybeCreateResourcesShrinkerTasks(libVariantProperties);
+        }
 
         // now add a task that will take all the classes and java resources and package them
         // into the main and secondary jar files that goes in the AAR.
