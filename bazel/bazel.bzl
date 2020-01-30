@@ -1,7 +1,7 @@
 load(":coverage.bzl", "coverage_java_test")
 load(":functions.bzl", "create_java_compiler_args_srcs", "create_option_file", "explicit_target", "label_workspace_path", "workspace_path")
 load(":groovy.bzl", "groovy_impl")
-load(":kotlin.bzl", "kotlin_impl")
+load(":kotlin.bzl", "kotlin_compile")
 load(":lint.bzl", "lint_test")
 load(":utils.bzl", "fileset", "java_jarjar", "singlejar")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_runtime_toolchain", "find_java_toolchain")
@@ -98,18 +98,19 @@ def _iml_module_jar_impl(
     # Kotlin
     kotlin_providers = []
     if kotlin_srcs:
-        kotlin_providers += [kotlin_impl(
-            ctx,
-            name,
-            roots,
-            java_srcs,
-            kotlin_srcs,
-            transitive_compile_time_jars,
-            ctx.attr.package_prefixes,
-            kotlin_jar,
-            friends,
+        kotlin_compile(
+            ctx = ctx,
+            name = name,
+            srcs = java_srcs + kotlin_srcs,
+            deps = transitive_compile_time_jars,
+            friends = friends,
+            out = kotlin_jar,
+            jre = ctx.files._bootclasspath,
+        )
+        kotlin_providers += [JavaInfo(
+            output_jar = kotlin_jar,
+            compile_jar = kotlin_jar,
         )]
-
         jars += [kotlin_jar]
 
     # Resources.
