@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.tools.appinspection.livestore.library
+package com.android.tools.appinspection.livestore.inspector
 
-/**
- * A simple hashmap based key-value store created to demonstrate how an inspector agent can intercept state changes.
- *
- * Currently, it only works with string key and value pairs.
- */
-class LiveStore private constructor(store: MutableMap<String, String>) : MutableMap<String, String> by store {
-    constructor() : this(mutableMapOf())
+import androidx.inspection.Connection
+import androidx.inspection.InspectorEnvironment
+import androidx.inspection.InspectorFactory
+
+class LiveStoreInspectorFactory: InspectorFactory<LiveStoreInspector>("appinspection.demo.livestore") {
+    override fun createInspector(connection: Connection, environment: InspectorEnvironment): LiveStoreInspector {
+        return LiveStoreInspector(connection, environment)
+    }
 }

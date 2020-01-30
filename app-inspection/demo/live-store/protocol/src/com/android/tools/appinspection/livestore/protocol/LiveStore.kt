@@ -18,33 +18,37 @@ package com.android.tools.appinspection.livestore.protocol
 
 import com.google.gson.annotations.SerializedName
 
-class Command {
+class Command private constructor(
+    @field:SerializedName("commandType") val commandType: CommandType,
+    // set only if commandType == UPDATE_VALUE_COMMAND
+    @field:SerializedName("updateValue") val updateValue: UpdateValue? = null
+) {
+    constructor(updateValue: UpdateValue) : this(
+        commandType = CommandType.UPDATE_VALUE,
+        updateValue = updateValue
+    )
+
     enum class CommandType {
-        UPDATE_VALUE_COMMAND
+        UPDATE_VALUE
     }
 
-    data class UpdateValueCommand(val key: String, val value: String)
+    data class UpdateValue(val key: String, val value: String)
     class UpdateValueResponse
-
-    @field:SerializedName("commandType")
-    val commandType: CommandType? = null
-
-    // set only if commandType == UPDATE_VALUE_COMMAND
-    @field:SerializedName("updateValueCommand")
-    val updateValueCommand: UpdateValueCommand? = null
 }
 
-class Event {
+class Event private constructor(
+    @field:SerializedName("eventType") val eventType: EventType,
+    // set only if commandType == UPDATE_VALUE_COMMAND
+    @field:SerializedName("valueUpdated") val valueUpdated: ValueUpdated? = null
+) {
+    constructor(valueUpdated: ValueUpdated) : this(
+        eventType = EventType.VALUE_UPDATED,
+        valueUpdated = valueUpdated
+    )
+
     enum class EventType {
-        VALUE_UPDATED_EVENT
+        VALUE_UPDATED
     }
 
-    data class ValueUpdatedEvent(val key: String, val value: String)
-
-    @field:SerializedName("eventType")
-    val eventType: EventType? = null
-
-    // set only if commandType == UPDATE_VALUE_COMMAND
-    @field:SerializedName("valueUpdatedEvent")
-    val valueUpdatedEvent: ValueUpdatedEvent? = null
+    data class ValueUpdated(val key: String, val value: String)
 }
