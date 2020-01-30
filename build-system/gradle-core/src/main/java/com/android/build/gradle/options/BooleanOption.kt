@@ -161,8 +161,7 @@ enum class BooleanOption(
     ENABLE_D8("android.enableD8", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.LEGACY_DEXER)),
 
     /** Whether Jetifier will skip libraries that already support AndroidX. */
-    JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.FUTURE_VERSION)),
-
+    JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_5_0)),
     /* -----------------
      * ENFORCED FEATURES
      */

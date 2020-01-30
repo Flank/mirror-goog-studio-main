@@ -50,14 +50,11 @@ interface DeprecationReporter {
          */
         private val additionalMessage: String? = null
     ) {
-
-        FUTURE_VERSION(Version.FUTURE_VERSION),
-
         VERSION_5_0(Version.VERSION_5_0),
 
         // deprecation of compile in favor of api/implementation
         CONFIG_NAME(
-            Version.FUTURE_VERSION,
+            Version.VERSION_5_0,
             "For more information, see http://d.android.com/r/tools/update-dependency-configurations.html."
         ),
 
@@ -74,7 +71,7 @@ interface DeprecationReporter {
         TASK_ACCESS_VIA_VARIANT(Version.VERSION_5_0),
 
         DSL_USE_PROGUARD(
-            Version.FUTURE_VERSION,
+            Version.VERSION_5_0,
             "Use 'android.enableR8' in gradle.properties to switch between R8 and Proguard."
         ),
 
@@ -84,7 +81,7 @@ interface DeprecationReporter {
         DESUGAR_TOOL(ENABLE_R8.removalTarget),
 
         USE_PROPERTIES(
-            Version.FUTURE_VERSION,
+            Version.VERSION_5_0,
             "Gradle Properties must be used to change Variant information."
         ),
 
