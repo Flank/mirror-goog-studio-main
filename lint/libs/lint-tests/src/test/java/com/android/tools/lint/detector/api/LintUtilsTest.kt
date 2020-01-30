@@ -1042,7 +1042,7 @@ class LintUtilsTest : TestCase() {
             context.setJavaFile(uFile!!.psi)
             val disposable = Disposable {
                 client.disposeProjects(listOf(project))
-                dir.deleteRecursively()
+                temp.deleteRecursively()
             }
             return Pair.of<JavaContext, Disposable>(context, disposable)
         }
@@ -1088,7 +1088,7 @@ class LintUtilsTest : TestCase() {
 
             val disposable = Disposable {
                 client.disposeProjects(listOf(project))
-                dir.deleteRecursively()
+                temp.deleteRecursively()
             }
             return Pair.of<List<JavaContext>, Disposable>(contexts, disposable)
         }

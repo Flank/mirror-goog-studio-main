@@ -949,9 +949,8 @@ public class Main {
                     exit(ERRNO_INVALID_ARGS);
                 }
                 String version = args[++index];
-                LanguageLevel level = LanguageLevel.parse(version);
                 LanguageVersion languageLevel = LanguageVersion.fromVersionString(version);
-                if (level == null) {
+                if (languageLevel == null) {
                     System.err.println("Invalid Kotlin language level \"" + version + "\"");
                     exit(ERRNO_INVALID_ARGS);
                 }
