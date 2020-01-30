@@ -13,107 +13,64 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.variant
 
-package com.android.build.gradle.internal.variant;
-
-import static com.android.builder.core.BuilderConstants.LINT;
-
-import com.android.annotations.NonNull;
-import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.internal.BuildTypeData;
-import com.android.build.gradle.internal.ProductFlavorData;
-import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
-import com.android.build.gradle.internal.core.VariantBuilder;
-import com.android.build.gradle.internal.dependency.SourceSetManager;
-import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.dsl.DefaultConfig;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
-import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.VariantType;
-import com.android.builder.core.VariantTypeImpl;
-import com.google.common.collect.Maps;
-import java.util.Map;
+import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.internal.BuildTypeData
+import com.android.build.gradle.internal.ProductFlavorData
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
+import com.android.build.gradle.internal.core.VariantBuilder.Companion.computeSourceSetName
+import com.android.build.gradle.internal.dependency.SourceSetManager
+import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DefaultConfig
+import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.builder.core.BuilderConstants
+import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
+import com.google.common.collect.Maps
 
 /**
- * Implementation of {@link VariantInputModel}.
+ * Implementation of [VariantInputModel].
  *
- * <p>This gets filled by the DSL/API execution.
+ *
+ * This gets filled by the DSL/API execution.
  */
-public class VariantInputModelImpl implements VariantInputModel {
+class VariantInputModelImpl(
+    private val globalScope: GlobalScope,
+    private val extension: BaseExtension,
+    private val variantFactory: VariantFactory<*, *>,
+    private val sourceSetManager: SourceSetManager
+) : VariantInputModel {
 
-    @NonNull private final BaseExtension extension;
-    @NonNull private final VariantFactory variantFactory;
-    @NonNull private final SourceSetManager sourceSetManager;
-    @NonNull private final ProductFlavorData<DefaultConfig> defaultConfigData;
-    @NonNull private final Map<String, BuildTypeData> buildTypes;
-    @NonNull private final Map<String, ProductFlavorData<ProductFlavor>> productFlavors;
-    @NonNull private final Map<String, SigningConfig> signingConfigs;
-    @NonNull protected final GlobalScope globalScope;
+    override val defaultConfig: ProductFlavorData<DefaultConfig>
+    override val buildTypes = mutableMapOf<String, BuildTypeData>()
+    override val productFlavors = mutableMapOf<String, ProductFlavorData<ProductFlavor>>()
+    override val signingConfigs = mutableMapOf<String, SigningConfig>()
 
-    public VariantInputModelImpl(
-            @NonNull GlobalScope globalScope,
-            @NonNull BaseExtension extension,
-            @NonNull VariantFactory variantFactory,
-            @NonNull SourceSetManager sourceSetManager) {
-        this.globalScope = globalScope;
-        this.extension = extension;
-        this.variantFactory = variantFactory;
-        this.sourceSetManager = sourceSetManager;
-        this.buildTypes = Maps.newHashMap();
-        this.productFlavors = Maps.newHashMap();
-        this.signingConfigs = Maps.newHashMap();
-
-        DefaultAndroidSourceSet mainSourceSet =
-                (DefaultAndroidSourceSet)
-                        extension.getSourceSets().getByName(BuilderConstants.MAIN);
-
-        DefaultAndroidSourceSet androidTestSourceSet = null;
-        DefaultAndroidSourceSet unitTestSourceSet = null;
+    init {
+        val mainSourceSet =
+            extension.sourceSets.getByName(BuilderConstants.MAIN) as DefaultAndroidSourceSet
+        var androidTestSourceSet: DefaultAndroidSourceSet? = null
+        var unitTestSourceSet: DefaultAndroidSourceSet? = null
         if (variantFactory.hasTestScope()) {
             androidTestSourceSet =
-                    (DefaultAndroidSourceSet)
-                            extension.getSourceSets().getByName(VariantType.ANDROID_TEST_PREFIX);
+                extension.sourceSets.getByName(VariantType.ANDROID_TEST_PREFIX) as DefaultAndroidSourceSet
             unitTestSourceSet =
-                    (DefaultAndroidSourceSet)
-                            extension.getSourceSets().getByName(VariantType.UNIT_TEST_PREFIX);
+                extension.sourceSets.getByName(VariantType.UNIT_TEST_PREFIX) as DefaultAndroidSourceSet
         }
-
-        this.defaultConfigData =
-                new ProductFlavorData<>(
-                        extension.getDefaultConfig(),
-                        mainSourceSet,
-                        androidTestSourceSet,
-                        unitTestSourceSet);
+        defaultConfig =
+            ProductFlavorData(
+                extension.defaultConfig,
+                mainSourceSet,
+                androidTestSourceSet,
+                unitTestSourceSet
+            )
     }
 
-    @NonNull
-    @Override
-    public ProductFlavorData<DefaultConfig> getDefaultConfig() {
-        return defaultConfigData;
-    }
-
-    @Override
-    @NonNull
-    public Map<String, BuildTypeData> getBuildTypes() {
-        return buildTypes;
-    }
-
-    @Override
-    @NonNull
-    public Map<String, ProductFlavorData<ProductFlavor>> getProductFlavors() {
-        return productFlavors;
-    }
-
-    @Override
-    @NonNull
-    public Map<String, SigningConfig> getSigningConfigs() {
-        return signingConfigs;
-    }
-
-    public void addSigningConfig(@NonNull SigningConfig signingConfig) {
-        signingConfigs.put(signingConfig.getName(), signingConfig);
+    fun addSigningConfig(signingConfig: SigningConfig) {
+        signingConfigs[signingConfig.name] = signingConfig
     }
 
     /**
@@ -122,40 +79,34 @@ public class VariantInputModelImpl implements VariantInputModel {
      *
      * @param buildType the build type.
      */
-    public void addBuildType(@NonNull BuildType buildType) {
-        String name = buildType.getName();
-        checkName(name, "BuildType");
-
+    fun addBuildType(buildType: BuildType) {
+        val name = buildType.name
+        checkName(name, "BuildType")
         if (productFlavors.containsKey(name)) {
-            throw new RuntimeException("BuildType names cannot collide with ProductFlavor names");
+            throw RuntimeException("BuildType names cannot collide with ProductFlavor names")
         }
-
-        DefaultAndroidSourceSet mainSourceSet =
-                (DefaultAndroidSourceSet) sourceSetManager.setUpSourceSet(name);
-
-        DefaultAndroidSourceSet androidTestSourceSet = null;
-        DefaultAndroidSourceSet unitTestSourceSet = null;
+        val mainSourceSet =
+            sourceSetManager.setUpSourceSet(name) as DefaultAndroidSourceSet
+        var androidTestSourceSet: DefaultAndroidSourceSet? = null
+        var unitTestSourceSet: DefaultAndroidSourceSet? = null
         if (variantFactory.hasTestScope()) {
-            if (buildType.getName().equals(extension.getTestBuildType())) {
-                androidTestSourceSet =
-                        (DefaultAndroidSourceSet)
-                                sourceSetManager.setUpTestSourceSet(
-                                        VariantBuilder.computeSourceSetName(
-                                                buildType.getName(), VariantTypeImpl.ANDROID_TEST));
+            if (buildType.name == extension.testBuildType) {
+                androidTestSourceSet = sourceSetManager.setUpTestSourceSet(
+                    computeSourceSetName(
+                        buildType.name, VariantTypeImpl.ANDROID_TEST
+                    )
+                ) as DefaultAndroidSourceSet
             }
-
-            unitTestSourceSet =
-                    (DefaultAndroidSourceSet)
-                            sourceSetManager.setUpTestSourceSet(
-                                    VariantBuilder.computeSourceSetName(
-                                            buildType.getName(), VariantTypeImpl.UNIT_TEST));
+            unitTestSourceSet = sourceSetManager.setUpTestSourceSet(
+                computeSourceSetName(
+                    buildType.name, VariantTypeImpl.UNIT_TEST
+                )
+            ) as DefaultAndroidSourceSet
         }
-
-        BuildTypeData buildTypeData =
-                new BuildTypeData(
-                        buildType, mainSourceSet, androidTestSourceSet, unitTestSourceSet);
-
-        buildTypes.put(name, buildTypeData);
+        val buildTypeData = BuildTypeData(
+            buildType, mainSourceSet, androidTestSourceSet, unitTestSourceSet
+        )
+        buildTypes[name] = buildTypeData
     }
 
     /**
@@ -164,53 +115,73 @@ public class VariantInputModelImpl implements VariantInputModel {
      *
      * @param productFlavor the product flavor
      */
-    public void addProductFlavor(@NonNull ProductFlavor productFlavor) {
-        String name = productFlavor.getName();
-        checkName(name, "ProductFlavor");
-
+    fun addProductFlavor(productFlavor: ProductFlavor) {
+        val name = productFlavor.name
+        checkName(name, "ProductFlavor")
         if (buildTypes.containsKey(name)) {
-            throw new RuntimeException("ProductFlavor names cannot collide with BuildType names");
+            throw RuntimeException("ProductFlavor names cannot collide with BuildType names")
         }
-
-        DefaultAndroidSourceSet mainSourceSet =
-                (DefaultAndroidSourceSet) sourceSetManager.setUpSourceSet(productFlavor.getName());
-
-        DefaultAndroidSourceSet androidTestSourceSet = null;
-        DefaultAndroidSourceSet unitTestSourceSet = null;
+        val mainSourceSet =
+            sourceSetManager.setUpSourceSet(productFlavor.name) as DefaultAndroidSourceSet
+        var androidTestSourceSet: DefaultAndroidSourceSet? = null
+        var unitTestSourceSet: DefaultAndroidSourceSet? = null
         if (variantFactory.hasTestScope()) {
-            androidTestSourceSet =
-                    (DefaultAndroidSourceSet)
-                            sourceSetManager.setUpTestSourceSet(
-                                    VariantBuilder.computeSourceSetName(
-                                            productFlavor.getName(), VariantTypeImpl.ANDROID_TEST));
-            unitTestSourceSet =
-                    (DefaultAndroidSourceSet)
-                            sourceSetManager.setUpTestSourceSet(
-                                    VariantBuilder.computeSourceSetName(
-                                            productFlavor.getName(), VariantTypeImpl.UNIT_TEST));
+            androidTestSourceSet = sourceSetManager.setUpTestSourceSet(
+                computeSourceSetName(
+                    productFlavor.name, VariantTypeImpl.ANDROID_TEST
+                )
+            ) as DefaultAndroidSourceSet
+            unitTestSourceSet = sourceSetManager.setUpTestSourceSet(
+                computeSourceSetName(
+                    productFlavor.name, VariantTypeImpl.UNIT_TEST
+                )
+            ) as DefaultAndroidSourceSet
         }
-
-        ProductFlavorData<ProductFlavor> productFlavorData =
-                new ProductFlavorData<>(
-                        productFlavor, mainSourceSet, androidTestSourceSet, unitTestSourceSet);
-
-        productFlavors.put(productFlavor.getName(), productFlavorData);
+        val productFlavorData =
+            ProductFlavorData(
+                productFlavor, mainSourceSet, androidTestSourceSet, unitTestSourceSet
+            )
+        productFlavors[productFlavor.name] = productFlavorData
     }
 
-    private static void checkName(@NonNull String name, @NonNull String displayName) {
-        checkPrefix(name, displayName, VariantType.ANDROID_TEST_PREFIX);
-        checkPrefix(name, displayName, VariantType.UNIT_TEST_PREFIX);
+    companion object {
+        private fun checkName(name: String, displayName: String) {
+            checkPrefix(
+                name,
+                displayName,
+                VariantType.ANDROID_TEST_PREFIX
+            )
+            checkPrefix(
+                name,
+                displayName,
+                VariantType.UNIT_TEST_PREFIX
+            )
+            if (BuilderConstants.LINT == name) {
+                throw RuntimeException(
+                    String.format(
+                        "%1\$s names cannot be %2\$s",
+                        displayName,
+                        BuilderConstants.LINT
+                    )
+                )
+            }
+        }
 
-        if (LINT.equals(name)) {
-            throw new RuntimeException(
-                    String.format("%1$s names cannot be %2$s", displayName, LINT));
+        private fun checkPrefix(
+            name: String,
+            displayName: String,
+            prefix: String
+        ) {
+            if (name.startsWith(prefix)) {
+                throw RuntimeException(
+                    String.format(
+                        "%1\$s names cannot start with '%2\$s'",
+                        displayName,
+                        prefix
+                    )
+                )
+            }
         }
     }
 
-    private static void checkPrefix(String name, String displayName, String prefix) {
-        if (name.startsWith(prefix)) {
-            throw new RuntimeException(
-                    String.format("%1$s names cannot start with '%2$s'", displayName, prefix));
-        }
-    }
 }
