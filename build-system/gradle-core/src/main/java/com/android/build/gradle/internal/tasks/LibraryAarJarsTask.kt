@@ -320,12 +320,10 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
 
             val artifacts = creationConfig.artifacts
 
-            if (artifacts.hasFinalProduct(InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE)) {
-                artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE,
-                    task.typedefRecipe
-                )
-            }
+            artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE,
+                task.typedefRecipe
+            )
 
             task.packageName.set(
                 creationConfig.globalScope.project.provider {

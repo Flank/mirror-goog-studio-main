@@ -117,12 +117,10 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.APK, task.apkFolder
             )
-            if (creationConfig.artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING)) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.APK_MAPPING,
-                    task.mappingFile
-                )
-            }
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.APK_MAPPING,
+                task.mappingFile
+            )
         }
     }
 }

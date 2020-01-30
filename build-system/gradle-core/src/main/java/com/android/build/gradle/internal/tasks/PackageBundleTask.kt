@@ -366,12 +366,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 // not reprocess the dex files.
             }
 
-            if (creationConfig.artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING)) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.APK_MAPPING,
-                    task.obsfuscationMappingFile
-                )
-            }
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.APK_MAPPING,
+                task.obsfuscationMappingFile
+            )
 
             task.debuggable
                 .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)

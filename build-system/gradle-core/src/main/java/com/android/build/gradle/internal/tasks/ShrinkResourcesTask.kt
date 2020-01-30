@@ -204,10 +204,8 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 task.resourceDir
             )
 
-            if (artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING)) {
-                artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_MAPPING,
-                    task.mappingFileSrc)
-            }
+            artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_MAPPING,
+                task.mappingFileSrc)
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS,

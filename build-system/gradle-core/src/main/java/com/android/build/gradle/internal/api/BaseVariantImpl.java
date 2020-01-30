@@ -61,6 +61,7 @@ import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResource;
@@ -533,15 +534,11 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
-        if (artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE)) {
-            //     bypass the configuration time resolution check as some calls this API during
-            // configuration.
-            return artifacts
-                    .getFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE)
-                    .get()
-                    .getAsFile();
-        }
-        return null;
+        //     bypass the configuration time resolution check as some calls this API during
+        // configuration.
+        RegularFile mappingFile =
+                artifacts.getFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE).getOrNull();
+        return mappingFile != null ? mappingFile.getAsFile() : null;
     }
 
     @NonNull
