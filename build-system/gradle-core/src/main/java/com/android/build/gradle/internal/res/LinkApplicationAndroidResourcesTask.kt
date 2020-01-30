@@ -249,7 +249,11 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val outputDirectory = resPackageOutputFolder.get().asFile
         FileUtils.deleteDirectoryContents(outputDirectory)
 
-        val manifestBuildElements = ExistingBuildElements.from(taskInputType, manifestFiles)
+        val manifestBuildElements =
+            if (aaptFriendlyManifestFiles.isPresent)
+                ExistingBuildElements.from(
+                    InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS, aaptFriendlyManifestFiles)
+            else ExistingBuildElements.from(taskInputType, manifestFiles)
 
         val featureResourcePackages = if (featureResourcePackages != null)
             featureResourcePackages!!.files
@@ -431,13 +435,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.mainSplit = creationConfig.outputs.getMainSplitOrNull()?.apkData
             task.originalApplicationId.setDisallowChanges(project.provider { creationConfig.originalApplicationId })
 
-            val aaptFriendlyManifestsFilePresent = creationConfig
-                .artifacts
-                .hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
-            task.taskInputType = if (aaptFriendlyManifestsFilePresent)
-                InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
-            else
-                creationConfig.manifestArtifactType
+            task.taskInputType = creationConfig.manifestArtifactType
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS, task.aaptFriendlyManifestFiles
+            )
             creationConfig.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
             task.setType(creationConfig.variantType)

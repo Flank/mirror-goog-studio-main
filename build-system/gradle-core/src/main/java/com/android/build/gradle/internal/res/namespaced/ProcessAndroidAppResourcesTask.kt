@@ -66,6 +66,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
+    @get:InputFiles @get:Optional @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var aaptFriendlyManifestFileDirectory: Provider<Directory> private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: Provider<Directory> private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val thisSubProjectStaticLibrary: RegularFileProperty
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
@@ -108,9 +109,13 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
             }
         }
         staticLibraries.add(thisSubProjectStaticLibrary.get().asFile)
+        val manifestFile = if (aaptFriendlyManifestFileDirectory.isPresent())
+            (File(aaptFriendlyManifestFileDirectory.get().asFile, SdkConstants.ANDROID_MANIFEST_XML))
+        else (File(manifestFileDirectory.get().asFile, SdkConstants.ANDROID_MANIFEST_XML))
+
         val config = AaptPackageConfig(
                 androidJarPath = androidJar.get().absolutePath,
-                manifestFile = (File(manifestFileDirectory.get().asFile, SdkConstants.ANDROID_MANIFEST_XML)),
+                manifestFile = manifestFile,
                 options = AaptOptions(noCompress, false, null),
                 staticLibraryDependencies = staticLibraries.build(),
                 imports = ImmutableList.copyOf(sharedLibraryDependencies.asIterable()),
@@ -163,14 +168,12 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
             super.configure(task)
 
             val artifacts = creationConfig.artifacts
+            task.aaptFriendlyManifestFileDirectory =
+                artifacts.getFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+
             task.manifestFileDirectory =
-                    when {
-                        artifacts.hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
-                            -> artifacts.getFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
-                        creationConfig.globalScope.projectOptions.get(BooleanOption.IDE_DEPLOY_AS_INSTANT_APP)
-                            -> artifacts.getFinalProduct(InternalArtifactType.INSTANT_APP_MANIFEST)
-                        else -> artifacts.getFinalProduct(InternalArtifactType.MERGED_MANIFESTS)
-                    }
+                artifacts.getFinalProduct(creationConfig.manifestArtifactType)
+
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.RES_STATIC_LIBRARY,
                 task.thisSubProjectStaticLibrary

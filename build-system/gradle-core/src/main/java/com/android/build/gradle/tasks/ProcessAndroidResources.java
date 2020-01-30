@@ -27,6 +27,7 @@ import java.io.File;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
@@ -34,6 +35,11 @@ import org.gradle.api.tasks.PathSensitivity;
 public abstract class ProcessAndroidResources extends IncrementalTask {
 
     protected ApkData mainSplit;
+
+    @InputFiles
+    @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public abstract DirectoryProperty getAaptFriendlyManifestFiles();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -47,7 +53,12 @@ public abstract class ProcessAndroidResources extends IncrementalTask {
 
     @Internal // getManifestFiles() is already marked as @InputFiles
     public File getManifestFile() {
-        File manifestDirectory = getManifestFiles().get().getAsFile();
+        File manifestDirectory;
+        if (getAaptFriendlyManifestFiles().isPresent()) {
+            manifestDirectory = getAaptFriendlyManifestFiles().get().getAsFile();
+        } else {
+            manifestDirectory = getManifestFiles().get().getAsFile();
+        }
         Preconditions.checkNotNull(manifestDirectory);
 
         Preconditions.checkNotNull(mainSplit);
