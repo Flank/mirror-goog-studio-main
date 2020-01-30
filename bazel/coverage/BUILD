@@ -190,6 +190,16 @@ coverage_report(
 )
 
 coverage_report(
+    name = "navigationsafeargs",
+    srcpath_include = [
+        "tools/adt/idea/nav/safeargs",
+    ],
+    tests = [
+        "//tools/adt/idea/nav/safeargs:intellij.android.nav.safeargs.tests_tests",
+    ],
+)
+
+coverage_report(
     name = "motioneditor",
     srcpath_include = [
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion",
