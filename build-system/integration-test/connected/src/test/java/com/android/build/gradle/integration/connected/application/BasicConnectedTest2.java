@@ -42,6 +42,6 @@ public class BasicConnectedTest2 {
 
     @Test
     public void connectedCheck() throws Exception {
-        project.executor().run("connectedAndroidTest");
+        project.executeConnectedCheck();
     }
 }

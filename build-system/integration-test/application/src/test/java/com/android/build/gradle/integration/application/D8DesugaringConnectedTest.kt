@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.connected.application
+package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
+
+import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
@@ -23,25 +26,16 @@ import com.android.build.gradle.integration.common.fixture.TEST_SUPPORT_LIB_VERS
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableMap
 import org.junit.Before
-import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 class D8DesugaringConnectedTest {
-
-    companion object {
-        @ClassRule
-        @JvmField
-        val emulator = getEmulator()
-    }
-
     @get:Rule
     var project = GradleTestProject.builder()
         .fromTestApp(
@@ -177,6 +171,7 @@ class D8DesugaringConnectedTest {
         )
     }
 
+    @Category(DeviceTests::class)
     @Test
     fun runAndroidTest() {
         val result = project.executor()

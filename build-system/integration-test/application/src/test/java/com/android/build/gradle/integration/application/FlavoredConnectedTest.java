@@ -14,26 +14,23 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.connected.application;
+package com.android.build.gradle.integration.application;
 
+import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
-import com.android.tools.bazel.avd.Emulator;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/** Connected tests for flavored. */
+/** Assemble tests for flavored. */
 public class FlavoredConnectedTest {
-
-    @ClassRule public static final Emulator emulator = EmulatorUtils.getEmulator();
-
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("flavored").create();
 
     @Test
+    @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
-        project.executor().run("connectedAndroidTest");
+        project.executeConnectedCheck();
     }
 }
