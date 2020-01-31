@@ -39,13 +39,17 @@ public final class Emulator extends ExternalResource {
 
     @Override
     protected void before() throws Throwable {
+        System.out.println("Starting emulator");
         System.out.println(exec(devicePath + " " + port));
+        System.out.println("Emulator started");
     }
 
     @Override
     protected void after() {
         try {
+            System.out.println("Killing emulator");
             System.out.println(exec(devicePath + " kill " + port));
+            System.out.println("Emulator killed");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
