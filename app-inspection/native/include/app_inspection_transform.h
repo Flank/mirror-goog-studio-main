@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifdef APP_INSPECTION_EXPERIMENT
 #ifndef APP_INSPECTION_TRANSFORM_H
 #define APP_INSPECTION_TRANSFORM_H
 
@@ -39,15 +38,15 @@ class AppInspectionTransform {
       slicer::MethodInstrumenter mi(dex_ir);
       if (transform.isEntry()) {
         mi.AddTransformation<slicer::EntryHook>(
-            ir::MethodId("Lcom/android/tools/agent/app/inspection/"
-                         "AppInspectionService$ExperimentalCapabilities;",
-                         "onEntry"),
+            ir::MethodId(
+                "Lcom/android/tools/agent/app/inspection/AppInspectionService;",
+                "onEntry"),
             slicer::EntryHook::Tweak::ThisAsObject);
       } else {
         mi.AddTransformation<slicer::ExitHook>(
-            ir::MethodId("Lcom/android/tools/agent/app/inspection/"
-                         "AppInspectionService$ExperimentalCapabilities;",
-                         "onExit"),
+            ir::MethodId(
+                "Lcom/android/tools/agent/app/inspection/AppInspectionService;",
+                "onExit"),
             slicer::ExitHook::Tweak::ReturnAsObject);
       }
 
@@ -94,4 +93,3 @@ class AppInspectionTransform {
 }  // namespace app_inspection
 
 #endif  // APP_INSPECTION_TRANSFORM_H
-#endif  // APP_INSPECTION_EXPERIMENT

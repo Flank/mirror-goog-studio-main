@@ -15,19 +15,14 @@
  */
 #include "app_inspection_service.h"
 
-#ifdef APP_INSPECTION_EXPERIMENT
 #include <functional>
 #include <unordered_map>
-#endif
 
 #include "agent/jvmti_helper.h"
-#ifdef APP_INSPECTION_EXPERIMENT
 #include "app_inspection_transform.h"
 #include "slicer/reader.h"
 #include "slicer/writer.h"
 #include "utils/device_info.h"
-#endif
-
 #include "utils/log.h"
 
 using namespace profiler;
@@ -57,15 +52,11 @@ AppInspectionService* AppInspectionService::create(JNIEnv* env) {
   }
   auto service = new AppInspectionService(jvmti);
 
-#ifdef APP_INSPECTION_EXPERIMENT
   service->Initialize();
-#endif
   return service;
 }
 
 AppInspectionService::AppInspectionService(jvmtiEnv* jvmti) : jvmti_(jvmti) {}
-
-#ifdef APP_INSPECTION_EXPERIMENT
 
 static jvmtiIterationControl JNICALL HeapObjectCallback(jlong class_tag,
                                                         jlong size,
@@ -203,8 +194,6 @@ void AppInspectionService::OnClassFileLoaded(
 
 void AppInspectionService::Initialize() {
   SetAllCapabilities(jvmti_);
-  jvmtiError error;
-  CheckJvmtiError(jvmti_, error);
 
   jvmtiEventCallbacks callbacks;
   memset(&callbacks, 0, sizeof(callbacks));
@@ -290,7 +279,5 @@ void AppInspectionService::AddTransform(JNIEnv* jni,
   }
   jvmti_->Deallocate(reinterpret_cast<unsigned char*>(loaded_classes));
 }
-
-#endif
 
 }  // namespace app_inspection

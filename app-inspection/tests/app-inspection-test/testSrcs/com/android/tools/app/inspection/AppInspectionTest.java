@@ -20,7 +20,6 @@ import static com.android.tools.app.inspection.AppInspection.AppInspectionRespon
 import static com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status.SUCCESS;
 import static com.android.tools.app.inspection.ServiceLayer.TIMEOUT_SECONDS;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.TruthJUnit.assume;
 
 import androidx.annotation.NonNull;
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
@@ -192,27 +191,6 @@ public final class AppInspectionTest {
         assertInput(androidDriver, EXPECTED_INSPECTOR_DISPOSED);
     }
 
-    private static void assumeExperimentalFlag(boolean value) {
-        assume().that(
-                        Boolean.parseBoolean(
-                                System.getProperty("app.inspection.experimental", "false")))
-                .isEqualTo(value);
-    }
-
-    // TODO(b/145807005): Remove flag and delete this test
-    @Test
-    public void inspectorEnvironmentNoOps_WhenExperimentalFlagDisabled() throws Exception {
-        assumeExperimentalFlag(false);
-        String onDevicePath = injectInspectorDex();
-        assertResponseStatus(
-                serviceLayer.sendCommandAndGetResponse(
-                        createInspector("test.environment.inspector", onDevicePath)),
-                SUCCESS);
-        assertInput(androidDriver, "FIND INSTANCES NOT IMPLEMENTED");
-        assertInput(androidDriver, "REGISTER ENTRY HOOK NOT IMPLEMENTED");
-        assertInput(androidDriver, "REGISTER EXIT HOOK NOT IMPLEMENTED");
-    }
-
     /**
      * The inspector framework includes features for finding object instances on the heap. This test
      * indirectly verifies it works.
@@ -220,9 +198,7 @@ public final class AppInspectionTest {
      * <p>See the {@code TodoInspector} in the test-inspector project for the relevant code.
      */
     @Test
-    public void findInstancesWorks_WhenExperimentalFlagEnabled() throws Exception {
-        assumeExperimentalFlag(true);
-
+    public void findInstancesWorks() throws Exception {
         transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup");
         transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem");
         transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup");
@@ -281,9 +257,7 @@ public final class AppInspectionTest {
     }
 
     @Test
-    public void enterAndExitHooksWork_WhenExperimentalFlagEnabled() throws Exception {
-        assumeExperimentalFlag(true);
-
+    public void enterAndExitHooksWork() throws Exception {
         String inspectorId = "todo.inspector";
         assertResponseStatus(
                 serviceLayer.sendCommandAndGetResponse(
