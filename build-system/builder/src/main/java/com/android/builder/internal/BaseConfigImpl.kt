@@ -205,6 +205,17 @@ abstract class BaseConfigImpl : Serializable,
         mManifestPlaceholders.putAll(manifestPlaceholders)
     }
 
+    fun setManifestPlaceholders(manifestPlaceholders: Map<String, Any>): Void? {
+        mManifestPlaceholders.clear()
+        mManifestPlaceholders.putAll(manifestPlaceholders)
+        return null
+    }
+
+    // Here to stop the gradle decorator breaking on the duplicate set methods.
+    open fun manifestPlaceholders(manifestPlaceholders: Map<String, Any>) {
+        setManifestPlaceholders(manifestPlaceholders)
+    }
+
     open fun _initWith(that: BaseConfig) {
         buildConfigFields = that.buildConfigFields
         resValues = that.resValues as MutableMap<String, ClassField>

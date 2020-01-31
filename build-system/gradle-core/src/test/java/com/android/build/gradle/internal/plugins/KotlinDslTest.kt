@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.builder.errors.EvalIssueException
+import com.google.common.collect.ImmutableMap
 import com.google.common.truth.StringSubject
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
@@ -141,6 +142,27 @@ class KotlinDslTest {
                 .containsExactly("a", "b").inOrder()
             assertThat(externalNativeBuild.cmake.arguments)
                 .containsExactly("x", "y").inOrder()
+        }
+    }
+
+    @Test
+    fun `manifest placeholders source compatibility`() {
+        (android as BaseAppModuleExtension).defaultConfig.apply {
+            // Check can accept mapOf with string to string
+            setManifestPlaceholders(mapOf("a" to "A"))
+            assertThat(manifestPlaceholders).containsExactly("a", "A")
+            // Check can add items when setter called with an immutable collection
+            // (i.e. setter copies)
+            setManifestPlaceholders(ImmutableMap.of())
+            manifestPlaceholders["c"] = 3
+            assertThat(manifestPlaceholders).containsExactly("c", 3)
+            // Prior to this change
+            //     New DSL: Re-add setManifestPlaceholders to preserve source compatibility
+            // the set method manifestPlaceholders(Map) was implemented by the Gradle decorator.
+            // Verify that the explicitly implemented method does actually set, not append.
+            manifestPlaceholders = mutableMapOf("a" to "b")
+            manifestPlaceholders(mapOf("d" to "D"))
+            assertThat(manifestPlaceholders).containsExactly("d", "D")
         }
     }
 
