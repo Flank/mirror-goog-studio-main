@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
+import com.android.builder.model.CodeShrinker
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
 import org.gradle.api.file.ConfigurableFileCollection
@@ -228,7 +229,8 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             // When R8 produces dex files, this task analyzes them. If R8 or Proguard produce
             // class files, this task will analyze those. That is why both types are specified.
             when {
-                artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_CLASSES) -> task.classes.from(
+                creationConfig.variantScope.codeShrinker == CodeShrinker.R8
+                        && creationConfig.variantType.isAar -> task.classes.from(
                     artifacts.getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES))
                 artifacts.hasFinalProducts(MultipleArtifactType.DEX) -> task.classes.from(
                     creationConfig.globalScope.project.files(
