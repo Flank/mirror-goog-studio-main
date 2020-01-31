@@ -83,30 +83,44 @@ jobjectArray AppInspectionService::FindInstances(JNIEnv* jni, jclass clazz) {
     // returns us the list of the real Class instances.
     jint count;
     jclass* classes;
-    jvmti_->GetLoadedClasses(&count, &classes);
+
+    if (CheckJvmtiError(jvmti_, jvmti_->GetLoadedClasses(&count, &classes))) {
+      return jni->NewObjectArray(0, clazz, NULL);
+    }
+
     auto result = jni->NewObjectArray(count, clazz, NULL);
     for (int i = 0; i < count; ++i) {
       jni->SetObjectArrayElement(result, i, (jobject)classes[i]);
     }
     jvmti_->Deallocate((unsigned char*)classes);
+
     return result;
   }
 
   jvmtiPhase phase_ptr;
   jvmti_->GetPhase(&phase_ptr);
+
   jlong tag = nextTag;
+  if (CheckJvmtiError(jvmti_, jvmti_->IterateOverInstancesOfClass(
+                                  clazz, JVMTI_HEAP_OBJECT_EITHER,
+                                  HeapObjectCallback, &tag))) {
+    return jni->NewObjectArray(0, clazz, NULL);
+  }
   nextTag++;
-  jvmtiError err = jvmti_->IterateOverInstancesOfClass(
-      clazz, JVMTI_HEAP_OBJECT_EITHER, HeapObjectCallback, &tag);
 
   jint count;
   jobject* instances;
-  jvmti_->GetObjectsWithTags(1, &tag, &count, &instances, NULL);
+  if (CheckJvmtiError(jvmti_, jvmti_->GetObjectsWithTags(1, &tag, &count,
+                                                         &instances, NULL))) {
+    return jni->NewObjectArray(0, clazz, NULL);
+  }
+
   auto result = jni->NewObjectArray(count, clazz, NULL);
   for (int i = 0; i < count; ++i) {
     jni->SetObjectArrayElement(result, i, instances[i]);
   }
   jvmti_->Deallocate((unsigned char*)instances);
+
   return result;
 }
 
