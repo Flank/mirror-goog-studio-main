@@ -41,6 +41,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
@@ -154,13 +155,15 @@ public class JarTestSuiteRunner extends Suite {
         String name = System.getProperty("test.suite.jar");
         String excludedPackages = System.getProperty("test.excluded.packages");
         if (name != null) {
+            String nameLowerCase = name.toLowerCase(Locale.US);
             final ClassLoader loader = JarTestSuite.class.getClassLoader();
             if (loader instanceof URLClassLoader) {
                 Queue<URL> urls = new ArrayDeque<>();
                 urls.addAll(Arrays.asList(((URLClassLoader)loader).getURLs()));
                 while (!urls.isEmpty()) {
                     URL url = urls.remove();
-                    if (url.getPath().endsWith(name)) {
+                    String urlLowerCase = url.getPath().toLowerCase(Locale.US); // Lower case in order to avoid issues on Windows/Mac.
+                    if (urlLowerCase.endsWith(nameLowerCase)) {
                         testClasses.addAll(getTestClasses(url, loader));
                     }
                     addManifestClassPath(url, urls);
