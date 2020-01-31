@@ -84,4 +84,6 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     override val testOnlyApk: Boolean
         get() = variantScope.isTestOnly
 
+    override val needAssetPackTasks: Property<Boolean> =
+        variantApiScope.propertyOf(Boolean::class.java, false)
 }

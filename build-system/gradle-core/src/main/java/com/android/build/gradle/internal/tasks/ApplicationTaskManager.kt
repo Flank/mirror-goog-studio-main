@@ -180,7 +180,6 @@ class ApplicationTaskManager(
             project.configurations.maybeCreate("assetPackFiles")
         val assetPackManifestConfiguration =
             project.configurations.maybeCreate("assetPackManifest")
-        var needToRegisterAssetPackTasks = false
         val assetPacks: Set<String> =
             (extension as BaseAppModuleExtension).assetPacks
         for (assetPack in assetPacks) {
@@ -201,12 +200,12 @@ class ApplicationTaskManager(
                         "manifestElements"
                     )
                 depHandler.add("assetPackManifest", depHandler.project(manifestDependency))
-                needToRegisterAssetPackTasks = true
+                variantProperties.needAssetPackTasks.set(true)
             } else {
                 notFound.add(assetPack)
             }
         }
-        if (needToRegisterAssetPackTasks) {
+        if (variantProperties.needAssetPackTasks.get()) {
             val assetPackManifest =
                 assetPackManifestConfiguration.incoming.files
             val assetFiles = assetPackFilesConfiguration.incoming.files

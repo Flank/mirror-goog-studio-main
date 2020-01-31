@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -289,8 +290,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     /**
      * CreateAction for a Task that will pack the bundle artifact.
      */
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<PackageBundleTask, ComponentPropertiesImpl>(
+    class CreationAction(componentProperties: ApplicationVariantPropertiesImpl) :
+        VariantTaskCreationAction<PackageBundleTask, ApplicationVariantPropertiesImpl>(
             componentProperties
         ) {
         override val name: String
@@ -327,7 +328,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 AndroidArtifacts.ArtifactType.MODULE_BUNDLE
             )
 
-            if (creationConfig.artifacts.hasFinalProduct(InternalArtifactType.ASSET_PACK_BUNDLE)) {
+            if (creationConfig.needAssetPackTasks.get()) {
                 creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.ASSET_PACK_BUNDLE, task.assetPackZips
                 )
