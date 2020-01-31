@@ -17,6 +17,7 @@
 package test.inspector;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.inspection.Connection;
 import androidx.inspection.InspectorEnvironment;
 import java.util.*;
@@ -25,19 +26,83 @@ import test.inspector.api.TodoInspectorApi;
 
 /** An inspector that can provide hooks into the TodoActivity. */
 public final class TodoInspector extends TestInspector {
+    private static final String CLASS_TODO_GROUP = "com.activity.todo.TodoGroup";
+    private static final String CLASS_TODO_ITEM = "com.activity.todo.TodoItem";
+    private static final String CLASS_TODO_ACTIVITY = "com.activity.todo.TodoActivity";
+    private static final String SIGNATURE_TODO_GROUP = toSignature(CLASS_TODO_GROUP);
+    private static final String SIGNATURE_TODO_ITEM = toSignature(CLASS_TODO_ITEM);
+
+    /**
+     * Convert a fully qualified class name to the Java Byte Code syntax
+     *
+     * <p>For example, "com.example.pkg.SomeClass" -> "Lcom/example/pkg/SomeClass;"
+     */
+    @NonNull
+    private static String toSignature(@NonNull String fqcn) {
+        return "L" + fqcn.replace(".", "/") + ";";
+    }
 
     private final Class<?> classItem;
     private final Class<?> classGroup;
+    private final Class<?> classActivity;
 
     TodoInspector(@NonNull Connection connection, @NonNull InspectorEnvironment environment) {
         super(connection, environment);
 
         try {
-            classItem = forName("com.activity.todo.TodoItem");
-            classGroup = forName("com.activity.todo.TodoGroup");
+            classItem = forName(CLASS_TODO_ITEM);
+            classGroup = forName(CLASS_TODO_GROUP);
+            classActivity = forName(CLASS_TODO_ACTIVITY);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+
+        environment.registerEntryHook(
+                classActivity,
+                "newGroup()" + SIGNATURE_TODO_GROUP,
+                new InspectorEnvironment.EntryHook() {
+                    @Override
+                    public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_GROUP_CREATING.toByteArray());
+                    }
+                });
+
+        environment.registerExitHook(
+                classActivity,
+                "newGroup()" + SIGNATURE_TODO_GROUP,
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        getConnection()
+                                .sendEvent(TodoInspectorApi.Event.TODO_GROUP_CREATED.toByteArray());
+                        return returnValue;
+                    }
+                });
+
+        environment.registerEntryHook(
+                classActivity,
+                "newItem()" + SIGNATURE_TODO_ITEM,
+                new InspectorEnvironment.EntryHook() {
+                    @Override
+                    public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
+                        getConnection()
+                                .sendEvent(TodoInspectorApi.Event.TODO_ITEM_CREATING.toByteArray());
+                    }
+                });
+
+        environment.registerExitHook(
+                classActivity,
+                "newItem()" + SIGNATURE_TODO_ITEM,
+                new InspectorEnvironment.ExitHook<Object>() {
+                    @Override
+                    public Object onExit(Object returnValue) {
+                        getConnection()
+                                .sendEvent(TodoInspectorApi.Event.TODO_ITEM_CREATED.toByteArray());
+                        return returnValue;
+                    }
+                });
     }
 
     @NonNull

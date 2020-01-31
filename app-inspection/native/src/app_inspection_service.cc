@@ -231,8 +231,6 @@ void AppInspectionService::AddTransform(JNIEnv* jni,
   app_transform->AddTransform(class_name.c_str(), method_name.c_str(),
                               signature.c_str(), is_entry);
 
-  bool filter_class_load_hook = DeviceInfo::feature_level() < DeviceInfo::P;
-
   jclass found_class = nullptr;
   jint class_count;
   jclass* loaded_classes;
@@ -251,17 +249,23 @@ void AppInspectionService::AddTransform(JNIEnv* jni,
   if (found_class != nullptr) {
     jthread thread = nullptr;
     jvmti_->GetCurrentThread(&thread);
-    if (filter_class_load_hook) {
+
+    // Class file load hooks are automatically managed on P (and newer) devices
+    bool manually_toggle_load_hook =
+        DeviceInfo::feature_level() < DeviceInfo::P;
+
+    if (manually_toggle_load_hook) {
       CheckJvmtiError(
           jvmti_, jvmti_->SetEventNotificationMode(
                       JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
     }
     CheckJvmtiError(jvmti_, jvmti_->RetransformClasses(1, &found_class));
-    if (filter_class_load_hook) {
+    if (manually_toggle_load_hook) {
       CheckJvmtiError(
           jvmti_, jvmti_->SetEventNotificationMode(
                       JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
     }
+
     if (thread != nullptr) {
       jni->DeleteLocalRef(thread);
     }

@@ -35,18 +35,29 @@ import com.android.tools.idea.protobuf.ByteString;
 import com.android.tools.profiler.proto.Common;
 import com.android.tools.transport.TransportRule;
 import com.android.tools.transport.device.SdkLevel;
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import test.inspector.api.TestInspectorApi;
 import test.inspector.api.TodoInspectorApi;
 
+@RunWith(Parameterized.class)
 public final class AppInspectionTest {
+    @Parameterized.Parameters
+    public static Collection<SdkLevel> parameters() {
+        // Enter/exit hook implementation slightly changes between O and P
+        return Lists.newArrayList(SdkLevel.O, SdkLevel.P);
+    }
+
     private static final String TODO_ACTIVITY = "com.activity.todo.TodoActivity";
     private static final String EXPECTED_INSPECTOR_PREFIX = "TEST INSPECTOR ";
     private static final String EXPECTED_INSPECTOR_CREATED = EXPECTED_INSPECTOR_PREFIX + "CREATED";
@@ -61,7 +72,7 @@ public final class AppInspectionTest {
     private ServiceLayer serviceLayer;
     private FakeAndroidDriver androidDriver;
 
-    public AppInspectionTest() {
+    public AppInspectionTest(@NonNull SdkLevel level) {
         TransportRule.Config ruleConfig =
                 new TransportRule.Config() {
                     @Override
@@ -70,7 +81,7 @@ public final class AppInspectionTest {
                         daemonConfig.setProfilerUnifiedPipeline(true);
                     }
                 };
-        transportRule = new TransportRule(TODO_ACTIVITY, SdkLevel.O, ruleConfig);
+        transportRule = new TransportRule(TODO_ACTIVITY, level, ruleConfig);
     }
 
     @Before
@@ -261,12 +272,99 @@ public final class AppInspectionTest {
                                 inspectorId,
                                 TodoInspectorApi.Command.COUNT_TODO_ITEMS.toByteArray())),
                 new byte[] {(byte) 7});
+
+        // This test generates a bunch of events, but we don't care about checking those here;
+        // we'll look into those more in the following test.
+        while (serviceLayer.hasEventToCollect()) {
+            serviceLayer.consumeCollectedEvent();
+        }
     }
 
     @Test
     public void enterAndExitHooksWork_WhenExperimentalFlagEnabled() throws Exception {
         assumeExperimentalFlag(true);
-        // TODO(b/145807282): Implement transformation test
+
+        String inspectorId = "todo.inspector";
+        assertResponseStatus(
+                serviceLayer.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+
+        // In order to generate a bunch of events, create a bunch of to-do items and groups.
+        //
+        // First, create a new item, which creates a default group as a side effect. This means we
+        // will enter "newItem" first, then enter "newGroup", then exit "newGroup", then exit
+        // "newItem"
+        transportRule
+                .getAndroidDriver()
+                .triggerMethod(TODO_ACTIVITY, "newItem"); // Item #1 (and Group #1, indirectly)
+
+        // Next, create misc groups and items
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup"); // Group #2
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem"); // Item #1
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newItem"); // Item #2
+
+        { // Item #1 enter
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATING.toByteArray());
+        }
+
+        { // Group #1 enter
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATING.toByteArray());
+        }
+
+        { // Group #1 exit
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATED.toByteArray());
+        }
+
+        { // Item #1 exit
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATED.toByteArray());
+        }
+
+        { // Group #2 enter
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATING.toByteArray());
+        }
+
+        { // Group #2 exit
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATED.toByteArray());
+        }
+
+        { // Item #2 enter
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATING.toByteArray());
+        }
+
+        { // Item #2 exit
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATED.toByteArray());
+        }
+
+        { // Item #3 enter
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATING.toByteArray());
+        }
+
+        { // Item #3 exit
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATED.toByteArray());
+        }
+
+        assertThat(serviceLayer.hasEventToCollect()).isFalse();
     }
 
     @NonNull

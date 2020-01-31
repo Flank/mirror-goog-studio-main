@@ -196,7 +196,8 @@ public class AppInspectionService {
     /// ==================================== EVERYTHING below should be called only when app_inspection_experimental=true
     private ExperimentalCapabilities mExperimental = new ExperimentalCapabilities();
 
-    static class ExperimentalCapabilities {
+    // TODO(b/145807005): Move these methods into AppInspectionService after removing the flag
+    public static class ExperimentalCapabilities {
         // TODO: save inspector and clean up transformation when inspectors are gone
         Map<String, InspectorEnvironment.ExitHook> mExitTransforms =
                 new HashMap<String, InspectorEnvironment.ExitHook>();
@@ -210,11 +211,12 @@ public class AppInspectionService {
             return origin.getCanonicalName() + method.substring(0, method.indexOf('('));
         }
 
-        static void addEntryHook(Class origin, String method, InspectorEnvironment.EntryHook hook) {
+        public static void addEntryHook(
+                Class origin, String method, InspectorEnvironment.EntryHook hook) {
             sInstance.mExperimental.mEntryTransforms.put(createLabel(origin, method), hook);
         }
 
-        static void addExitHook(
+        public static void addExitHook(
                 Class origin, String method, InspectorEnvironment.ExitHook<?> hook) {
             sInstance.mExperimental.mExitTransforms.put(createLabel(origin, method), hook);
         }
@@ -233,8 +235,6 @@ public class AppInspectionService {
             InspectorEnvironment.ExitHook hook = instance.mExperimental.mExitTransforms.get(label);
             if (hook != null) {
                 hook.onExit(returnObject);
-            } else {
-                System.out.println("!!! Dropped on the floor");
             }
             return returnObject;
         }
@@ -250,11 +250,8 @@ public class AppInspectionService {
             String label = element.getClassName() + element.getMethodName();
             InspectorEnvironment.EntryHook hook =
                     AppInspectionService.instance().mExperimental.mEntryTransforms.get(label);
-            System.out.println("!!!!! entry worked yo yo you! " + label + " " + hook);
             if (hook != null) {
                 hook.onEntry(thisObject, Collections.emptyList());
-            } else {
-                System.out.println("!!! Dropped on the floor exit");
             }
         }
     }
