@@ -160,6 +160,9 @@ Attribute        | Description
 > specified via the `test_data` attribute. This is essential to determining
 > which test targets need to be run when an arbitrary file has changed.
 
+More details on the implementation of the `iml_module` rule can be found in
+[docs/iml-module.md](docs/iml-module.md).
+
 ## Circular Dependencies
 
 _Just don't_. IntelliJ has support for circular dependencies of modules, but we

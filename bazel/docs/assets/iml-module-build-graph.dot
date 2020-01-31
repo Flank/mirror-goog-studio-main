@@ -1,0 +1,58 @@
+strict digraph {
+    "*.java"      [style=filled, fillcolor=azure1]
+    "*.java"      [style=filled, fillcolor=azure1]
+    "*.kt"        [style=filled, fillcolor=azure1]
+    "*.groovy"    [style=filled, fillcolor=azure1]
+    "*.form"      [style=filled, fillcolor=azure1]
+    "resources/*" [style=filled, fillcolor=azure1]
+
+    javac      [style=filled, fillcolor=darkseagreen3]
+    kotlinc    [style=filled, fillcolor=darkseagreen3]
+    formc      [style=filled, fillcolor=darkseagreen3]
+    groovyc    [style=filled, fillcolor=darkseagreen3]
+    groovystub [style=filled, fillcolor=darkseagreen3]
+
+    "kotlin.jar"           [style=filled, fillcolor=cornsilk2]
+    "javap.jar"            [style=filled, fillcolor=cornsilk2]
+    "java.jar"             [style=filled, fillcolor=cornsilk2]
+    "groovy.stubs.src.jar" [style=filled, fillcolor=cornsilk2]
+    "groovy.jar"           [style=filled, fillcolor=cornsilk2]
+    "res.jar"              [style=filled, fillcolor=cornsilk2]
+
+    "out.jar" [style=filled, fillcolor=darkkhaki]
+
+    # Kotlin.
+    "*.java" -> kotlinc [style=dashed]
+    "*.kt"   -> kotlinc
+    kotlinc  -> "kotlin.jar"
+
+    # Java.
+    "kotlin.jar"           -> javac [style=dashed]
+    "*.java"               -> javac
+    "groovy.stubs.src.jar" -> javac [style=dashed]
+    javac                  -> "javap.jar"
+
+    # Forms.
+    "javap.jar" -> formc
+    "*.form"    -> formc
+    formc       -> "java.jar"
+
+    # Groovy stubs.
+    "*.groovy" -> groovystub
+    groovystub -> "groovy.stubs.src.jar"
+
+    # Groovy.
+    "*.groovy"   -> groovyc
+    "kotlin.jar" -> groovyc [style=dashed]
+    "javap.jar"  -> groovyc [style=dashed]
+    groovyc      -> "groovy.jar"
+
+    # Resources.
+    "resources/*" -> "res.jar"
+
+    # Output.
+    "res.jar"    -> "out.jar"
+    "kotlin.jar" -> "out.jar"
+    "java.jar"   -> "out.jar"
+    "groovy.jar" -> "out.jar"
+}
