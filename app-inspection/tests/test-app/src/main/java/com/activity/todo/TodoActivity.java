@@ -49,4 +49,23 @@ public final class TodoActivity extends TransportTestActivity {
         activeGroup.addItem(item);
         return item;
     }
+
+    public void removeOldestGroup() {
+        removeGroup(0);
+    }
+
+    public void removeNewestGroup() {
+        removeGroup(groups.size() - 1);
+    }
+
+    public void removeGroup(int index) {
+        if (index < 0 || index >= groups.size()) {
+            throw new IllegalArgumentException("Invalid group index to remove");
+        }
+
+        TodoGroup removed = groups.remove(index);
+        if (activeGroup == removed) {
+            activeGroup = null;
+        }
+    }
 }

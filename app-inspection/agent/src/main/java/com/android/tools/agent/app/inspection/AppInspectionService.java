@@ -25,11 +25,7 @@ import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorFactory;
 import dalvik.system.DexClassLoader;
 import java.io.File;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.*;
 
 /** This service controls all app inspectors */
 @SuppressWarnings("unused") // invoked via jni
@@ -232,7 +228,15 @@ public class AppInspectionService {
         return returnObject;
     }
 
-    public static void onEntry(Object thisObject) {
+    /**
+     * Receives an array where the first parameter is the "this" reference and all remaining
+     * arguments are the function's parameters.
+     *
+     * <p>For example, the function {@code Client#sendMessage(Receiver r, String message)} will
+     * receive the array: [this, r, message]
+     */
+    public static void onEntry(Object[] thisAndParams) {
+        assert (thisAndParams.length >= 1); // Should always at least contain "this"
         Error error = new Error();
         error.fillInStackTrace();
         StackTraceElement[] stackTrace = error.getStackTrace();
@@ -244,7 +248,12 @@ public class AppInspectionService {
         InspectorEnvironment.EntryHook hook =
                 AppInspectionService.instance().mEntryTransforms.get(label);
         if (hook != null) {
-            hook.onEntry(thisObject, Collections.emptyList());
+            Object thisObject = thisAndParams[0];
+            List<Object> params = Collections.emptyList();
+            if (thisAndParams.length > 1) {
+                params = Arrays.asList(Arrays.copyOfRange(thisAndParams, 1, thisAndParams.length));
+            }
+            hook.onEntry(thisObject, params);
         }
     }
 

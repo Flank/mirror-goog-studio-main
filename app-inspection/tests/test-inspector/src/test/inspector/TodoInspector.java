@@ -103,6 +103,20 @@ public final class TodoInspector extends TestInspector {
                         return returnValue;
                     }
                 });
+
+        environment.registerEntryHook(
+                classActivity,
+                "removeGroup(I)V",
+                new InspectorEnvironment.EntryHook() {
+                    @Override
+                    public void onEntry(@Nullable Object self, @NonNull List<Object> params) {
+                        Integer index = (Integer) params.get(0);
+                        getConnection()
+                                .sendEvent(
+                                        TodoInspectorApi.Event.TODO_GROUP_REMOVING
+                                                .toByteArrayWithArg(index.byteValue()));
+                    }
+                });
     }
 
     @NonNull

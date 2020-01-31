@@ -341,6 +341,54 @@ public final class AppInspectionTest {
         assertThat(serviceLayer.hasEventToCollect()).isFalse();
     }
 
+    @Test
+    public void enterHookCanAlsoCaptureParameters() throws Exception {
+        // Create a bunch of groups up front that we'll remove from in a little bit
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[0]
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[1]
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[2]
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[3]
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[4]
+
+        String inspectorId = "todo.inspector";
+        assertResponseStatus(
+                serviceLayer.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+
+        // Remove groups - each method we call below calls "removeGroup(idx)"
+        // indirectly, which triggers an event that includes the index.
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "removeNewestGroup");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "removeOldestGroup");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "removeNewestGroup");
+
+        { // removeNewestGroup: Group[4] removed. Group[3] is now the last group
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_GROUP_REMOVING.toByteArrayWithArg(
+                                    (byte) 4));
+        }
+
+        { // removeOldestGroup: Group[0] removed. Group[2] is now the last group.
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_GROUP_REMOVING.toByteArrayWithArg(
+                                    (byte) 0));
+        }
+
+        { // removeNewestGroup: Group[2] removed.
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_GROUP_REMOVING.toByteArrayWithArg(
+                                    (byte) 2));
+        }
+
+        assertThat(serviceLayer.hasEventToCollect()).isFalse();
+    }
+
     @NonNull
     private static AppInspectionCommand rawCommandInspector(
             @NonNull String inspectorId, @NonNull byte[] commandData) {
