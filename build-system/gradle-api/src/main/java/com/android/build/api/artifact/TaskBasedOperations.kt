@@ -23,8 +23,10 @@ import org.gradle.api.Task
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocationProperty
 import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkQueue
 import java.io.File
+import java.io.Serializable
 import java.util.function.Supplier
 
 /**
@@ -77,16 +79,20 @@ interface ArtifactTransformationRequest {
      * Submit a [org.gradle.workers] style of [WorkAction] to process each input [BuiltArtifact]
      *
      * @param workQueue the Gradle [WorkQueue] instance to use to spawn worker items with.
-     * @param parameters the type of parameters expected by the [WorkAction]
-     * @param action the type of the [WorkAction] subclass that process that input [BuiltArtifact]
-     * @param parametersConfigurator the lambad to configure instances of [parameters] for each
+     * @param actionType the type of the [WorkAction] subclass that process that input [BuiltArtifact]
+     * @param parameterType the type of parameters expected by the [WorkAction]
+     * @param parameterConfigurator the lambda to configure instances of [parameterType] for each
      * [BuiltArtifact]
      */
-    fun <ParamT: WorkItemParameters> submit(
+    fun <ParamT> submit(
         workQueue: WorkQueue,
-        parameters: Class<out ParamT>,
-        action: Class<out WorkAction<ParamT>>,
-        parametersConfigurator: (parameters: ParamT) -> Unit): Supplier<BuiltArtifacts>
+        actionType: Class<out WorkAction<ParamT>>,
+        parameterType: Class<out ParamT>,
+        parameterConfigurator: (
+            builtArtifact: BuiltArtifact,
+            outputLocation: Directory,
+            parameters: ParamT) -> File): Supplier<BuiltArtifacts>
+    where ParamT : WorkParameters, ParamT: Serializable
 
     /**
      * Submit a lambda to process synchronously each input [BuiltArtifact]

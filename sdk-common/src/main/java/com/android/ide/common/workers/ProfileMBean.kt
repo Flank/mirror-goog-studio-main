@@ -25,6 +25,14 @@ import java.time.Instant
  *
  */
 interface ProfileMBean {
+
+    /**
+     * Notification of a new worker execution request.
+     * @param taskPath spawning task identification
+     * @param workerKey worker identification.
+     */
+    fun workerAdded(taskPath: String, workerKey: String)
+
     /**
      * Notification of the start of execution of a worker.
      * @param taskPath spawning task identification

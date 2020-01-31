@@ -17,29 +17,34 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.ArtifactTransformationRequest
-import com.android.build.api.artifact.WorkItemParameters
 import com.android.build.api.artifact.impl.ArtifactTransformationRequestImpl
 import com.android.build.api.artifact.impl.OperationsImpl
+import com.android.build.api.artifact.impl.ProfilerEnabledWorkQueue
 import com.android.build.api.variant.BuiltArtifact
-import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
+import com.android.build.gradle.internal.profile.ProfileAgent
+import com.android.build.gradle.internal.profile.RecordingBuildListener
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.workeractions.WorkActionAdapter
+import com.android.builder.profile.ProfileRecordWriter
+import com.android.ide.common.workers.GradlePluginMBeans
 import com.google.common.truth.Truth
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.TaskState
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -52,88 +57,17 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
+import java.io.Serializable
 import java.nio.charset.Charset
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.function.Supplier
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 
 /**
  * Tests for TaskBasedOperationsImpl
  */
 class TaskBasedOperationsImplTest {
-
-    abstract class AsynchronousTask @Inject constructor(var workers: WorkerExecutor): VariantAwareTask, DefaultTask() {
-
-        @get:InputFiles
-        abstract val inputDir: DirectoryProperty
-        @get:OutputDirectory
-        abstract val outputDir: DirectoryProperty
-
-        @get:Internal
-        lateinit var replacementRequest: ArtifactTransformationRequest
-
-        abstract class Parameters: WorkItemParameters() {
-            abstract val builtArtifact: Property<BuiltArtifact>
-            abstract val outputFile: RegularFileProperty
-            abstract val someInputToWorkerItem: Property<Int>
-
-            override fun initProperties(builtArtifact: BuiltArtifact, outputLocation: Directory): File {
-                this.builtArtifact.set(builtArtifact)
-                outputFile.set(outputLocation.file(File(builtArtifact.outputFile).name))
-                return outputFile.get().asFile
-            }
-        }
-
-        abstract class WorkItem @Inject constructor(private val workItemParameters: Parameters): WorkAction<Parameters> {
-            override fun getParameters(): Parameters {
-                return workItemParameters
-            }
-
-            override fun execute() {
-                Truth.assertThat(parameters.someInputToWorkerItem.get()).isAnyOf(1,2,3)
-                parameters.outputFile.get().asFile.writeText(
-                    parameters.builtArtifact.get().filters.joinToString { it.identifier })
-            }
-        }
-
-        @TaskAction
-        open fun taskAction() {
-            taskAction(workers.noIsolation())
-        }
-
-        protected fun taskAction(workerQueue: WorkQueue): Supplier<BuiltArtifacts> {
-            val counter = AtomicInteger()
-            return replacementRequest.submit(
-                workerQueue,
-                Parameters::class.java,
-                WorkItem::class.java
-            ) {
-                it.someInputToWorkerItem.set(counter.incrementAndGet())
-            }
-        }
-
-        class CreationAction(val component: VariantPropertiesImpl): VariantTaskCreationAction<AsynchronousTask, VariantPropertiesImpl>(component) {
-            override val name: String
-                get() = component.computeTaskName("foo", "bar")
-            override val type: Class<AsynchronousTask>
-                get() = AsynchronousTask::class.java
-
-            private lateinit var replacementRequest: ArtifactTransformationRequest
-
-            override fun handleProvider(taskProvider: TaskProvider<out AsynchronousTask>) {
-                super.handleProvider(taskProvider)
-                replacementRequest = component.operations
-                    .use(taskProvider)
-                    .toRead(type = InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, at = AsynchronousTask::inputDir)
-                    .andWrite(type = InternalArtifactType.MERGED_MANIFESTS, at = AsynchronousTask::outputDir)
-            }
-
-            override fun configure(task: AsynchronousTask) {
-                task.replacementRequest = replacementRequest
-            }
-        }
-    }
 
     @Rule
     @JvmField val tmpDir: TemporaryFolder = TemporaryFolder()
@@ -151,87 +85,14 @@ class TaskBasedOperationsImplTest {
         val inputFolder = tmpDir.newFolder("input")
         val inputFolderProperty = project.objects.directoryProperty().also { it.set(inputFolder) }
         createBuiltArtifacts(
-            createBuiltArtifact(inputFolder, "file1", 12, "xhdpi"),
-            createBuiltArtifact(inputFolder, "file2", 12, "xxhdpi"),
-            createBuiltArtifact(inputFolder, "file3", 12, "xxxhdpi")
+            createBuiltArtifact(inputFolder, "file1", "xhdpi"),
+            createBuiltArtifact(inputFolder, "file2", "xxhdpi"),
+            createBuiltArtifact(inputFolder, "file3", "xxxhdpi")
         ).save(inputFolderProperty.get())
 
         operations.getArtifactContainer(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST)
             .setInitialProvider(inputFolderProperty)
         Mockito.`when`(component.operations).thenReturn(operations)
-    }
-
-    @Test
-    fun asynchronousApiTest() {
-        asynchronousTest(false, AsynchronousTask::class.java)
-    }
-
-    private fun asynchronousTest(waiting: Boolean, taskType: Class<out AsynchronousTask>) {
-
-        val taskACreationAction = AsynchronousTask.CreationAction(component)
-        val taskProvider= project.tasks.register("replace", taskType)
-        taskACreationAction.handleProvider(taskProvider)
-
-        val outputFolder = tmpDir.newFolder("output")
-
-        taskProvider.configure {
-            taskInitialized.set(true)
-            taskACreationAction.apply {
-                configure(it)
-                it.outputDir.set(outputFolder)
-            }
-        }
-
-        // force lookup of the produced artifact, this should force task initialization.
-        val mergedManifests = operations.get(InternalArtifactType.MERGED_MANIFESTS)
-        mergedManifests.get()
-        Truth.assertThat(taskInitialized.get()).isTrue()
-
-        // create a fake WorkQueue, that will instantiate the parameters and work action and invoke
-        // it synchronously.
-        val workQueue = object: WorkQueue {
-
-            override fun <T : WorkParameters?> submit(
-                p0: Class<out WorkAction<T>>?,
-                p1: Action<in T>?
-            ) {
-                val parameters =
-                    project.objects.newInstance(AsynchronousTask.Parameters::class.java)
-                p1?.execute(parameters as T)
-                val workItemAction = project.objects.newInstance(p0, parameters)
-                workItemAction.execute()
-            }
-
-            override fun await() {
-                Assert.assertTrue("Task was not supposed to wait for results", waiting)
-            }
-        }
-
-        // replace injected WorkerExecutor with dummy version.
-        val workerExecutor = Mockito.mock(WorkerExecutor::class.java)
-        Mockito.`when`(workerExecutor.noIsolation()).thenReturn(workQueue)
-        val task = taskProvider.get()
-        task.workers = workerExecutor
-        task.taskAction()
-
-        // force wrap up
-        @Suppress("UNCHECKED_CAST")
-        (task.replacementRequest as ArtifactTransformationRequestImpl<*, AsynchronousTask>).wrapUp(task)
-
-        checkOutputFolderCorrectness(outputFolder)
-    }
-
-    abstract class WaitingAsynchronousClass @Inject constructor(workers: WorkerExecutor): AsynchronousTask(workers) {
-
-        @TaskAction
-        override fun taskAction() {
-            super.taskAction(workers.noIsolation()).get()
-        }
-    }
-
-    @Test
-    fun asynchronousWaitingTest() {
-        asynchronousTest(true, WaitingAsynchronousClass::class.java)
     }
 
     abstract class SynchronousTask @Inject constructor(val workers: WorkerExecutor): VariantAwareTask, DefaultTask() {
@@ -302,6 +163,230 @@ class TaskBasedOperationsImplTest {
         checkOutputFolderCorrectness(outputFolder)
     }
 
+    abstract class InternalApiTask @Inject constructor(var workers: WorkerExecutor): VariantAwareTask, DefaultTask() {
+
+        @get:InputFiles
+        abstract val inputDir: DirectoryProperty
+        @get:OutputDirectory
+        abstract val outputDir: DirectoryProperty
+
+        private val waiting = AtomicBoolean(false)
+        val useProfiler = AtomicBoolean(false)
+
+        @get:Internal
+        lateinit var replacementRequest: ArtifactTransformationRequest
+
+        interface WorkItemParameters: WorkParameters, Serializable {
+            val builtArtifact: Property<BuiltArtifact>
+            val outputFile: Property<File>
+            val someInputToWorkerItem: Property<Int>
+        }
+
+        abstract class WorkItem @Inject constructor(private val workItemParameters: WorkItemParameters): WorkAction<WorkItemParameters> {
+            override fun execute() {
+                Truth.assertThat(workItemParameters.someInputToWorkerItem.get()).isAnyOf(1,2,3)
+                workItemParameters.outputFile.get().writeText(
+                    workItemParameters.builtArtifact.get().filters.joinToString { it.identifier })
+            }
+        }
+
+        @TaskAction
+        fun execute() {
+            val counter = AtomicInteger(0)
+            // depending if profiler information is requested, invoke the right submit API.
+            val updatedBuiltArtifacts = if (useProfiler.get()) {
+                (replacementRequest as ArtifactTransformationRequestImpl<*, *>).submitWithProfiler(
+                    workers.noIsolation(),
+                    WorkItem::class.java,
+                    WorkItemParameters::class.java
+                ) { builtArtifact: BuiltArtifact, outputLocation: Directory, workItemParameters: WorkItemParameters ->
+                    workItemParameters.someInputToWorkerItem.set(counter.incrementAndGet())
+                    workItemParameters.builtArtifact.set(builtArtifact)
+                    workItemParameters.outputFile.set(outputLocation.file(File(builtArtifact.outputFile).name).asFile)
+                    workItemParameters.outputFile.get()
+                }
+            } else {
+                replacementRequest.submit(
+                    workers.noIsolation(),
+                    WorkItem::class.java,
+                    WorkItemParameters::class.java
+                ) {builtArtifact: BuiltArtifact, outputLocation: Directory, workItemParameters: WorkItemParameters ->
+                    workItemParameters.someInputToWorkerItem.set(counter.incrementAndGet())
+                    workItemParameters.builtArtifact.set(builtArtifact)
+                    workItemParameters.outputFile.set(outputLocation.file(File(builtArtifact.outputFile).name).asFile)
+                    workItemParameters.outputFile.get()
+                }
+            }
+            if (waiting.get()) {
+                updatedBuiltArtifacts.get()
+            }
+        }
+
+        class CreationAction(val component: VariantPropertiesImpl): VariantTaskCreationAction<InternalApiTask, VariantPropertiesImpl>(component) {
+            override val name: String
+                get() = component.computeTaskName("foo", "bar")
+            override val type: Class<InternalApiTask>
+                get() = InternalApiTask::class.java
+
+            private lateinit var replacementRequest: ArtifactTransformationRequest
+
+            override fun handleProvider(taskProvider: TaskProvider<out InternalApiTask>) {
+                super.handleProvider(taskProvider)
+                replacementRequest = component.operations
+                    .use(taskProvider)
+                    .toRead(type = InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, at = InternalApiTask::inputDir)
+                    .andWrite(type = InternalArtifactType.MERGED_MANIFESTS, at = InternalApiTask::outputDir)
+            }
+
+            override fun configure(task: InternalApiTask) {
+                task.variantName = "debug"
+                task.replacementRequest = replacementRequest
+            }
+        }
+    }
+
+    @Test
+    fun asynchronousApiTest() {
+        asynchronousTest(
+            workers =  getFakeWorkerExecutor(false, ":replace", InternalApiTask.WorkItemParameters::class.java),
+            withProfiler = false)
+    }
+
+    @Test
+    fun asynchronousWaitingTest() {
+        asynchronousTest(
+            workers = getFakeWorkerExecutor(true, ":replace", InternalApiTask.WorkItemParameters::class.java),
+            withProfiler = false)
+    }
+
+    private fun asynchronousTest(
+        workers: WorkerExecutor,
+        withProfiler: Boolean,
+        recordingBuildListener: RecordingBuildListener? = null) {
+
+        val taskACreationAction = InternalApiTask.CreationAction(component)
+        val taskProvider= project.tasks.register("replace", InternalApiTask::class.java)
+        taskACreationAction.handleProvider(taskProvider)
+
+        val outputFolder = tmpDir.newFolder("output")
+
+        taskProvider.configure {
+            taskInitialized.set(true)
+            taskACreationAction.apply {
+                configure(it)
+                it.outputDir.set(outputFolder)
+            }
+        }
+
+        // force lookup of the produced artifact, this should force task initialization.
+        val mergedManifests = operations.get(InternalArtifactType.MERGED_MANIFESTS)
+        mergedManifests.get()
+        Truth.assertThat(taskInitialized.get()).isTrue()
+
+        val task = taskProvider.get()
+        task.workers = workers
+        task.useProfiler.set(withProfiler)
+        recordingBuildListener?.beforeExecute(task)
+        task.execute()
+        recordingBuildListener?.afterExecute(task, Mockito.mock(TaskState::class.java))
+
+        // force wrap up
+        @Suppress("UNCHECKED_CAST")
+        (task.replacementRequest as ArtifactTransformationRequestImpl<*, InternalApiTask>).wrapUp(task)
+
+        checkOutputFolderCorrectness(outputFolder)
+    }
+
+    @Test
+    fun internalAgpApiTest_Waiting() {
+        internalAgpApiTestWithProfiler(true)
+    }
+
+    @Test
+    fun internalAgpApiTest_Not_Waiting() {
+        internalAgpApiTestWithProfiler(false)
+    }
+
+    private fun internalAgpApiTestWithProfiler(waiting: Boolean) {
+
+        val recordWriter= object: ProfileRecordWriter {
+            val counter = AtomicLong(0)
+            val records = mutableListOf<GradleBuildProfileSpan>()
+            override fun allocateRecordId(): Long = counter.incrementAndGet()
+            override fun writeRecord(
+                project: String,
+                variant: String?,
+                executionRecord: GradleBuildProfileSpan.Builder,
+                taskExecutionPhases: MutableList<GradleBuildProfileSpan>
+            ) {
+                records.add(executionRecord.build())
+            }
+        }
+
+        val projectName = "project_name_${tmpDir.root.path.hashCode()}"
+        val recordingBuildListener =
+            RecordingBuildListener(projectName, recordWriter)
+        try {
+            ProfileAgent.register(projectName, recordingBuildListener)
+            asynchronousTest(
+                workers = getFakeWorkerExecutor(waiting = waiting,
+                    taskPath = ":replace",
+                    parameterType = WorkActionAdapter.AdaptedWorkParameters::class.java,
+                    includeProfiler = true),
+                withProfiler = true,
+                recordingBuildListener = recordingBuildListener)
+            val profileMBean =
+                GradlePluginMBeans.getProfileMBean(projectName)
+            Truth.assertThat(profileMBean).isNotNull()
+            // assert that the task span was written.
+            Truth.assertThat(recordWriter.records).hasSize(1)
+        } finally {
+            ProfileAgent.unregister()
+        }
+    }
+
+    /**
+     * Create fake [WorkerExecutor] that can only return a WorkQueue processing its job
+     * synchronously.
+     *
+     * @param waiting true if [WorkQueue.await] is supposed to be called.
+     * @param taskPath Task path used for profiling information.
+     * @param parameterType Class for the parameters used when executing [WorkQueue] submissions.
+     * @param includeProfiler true if the profiler information should be included.
+     */
+    private fun getFakeWorkerExecutor(
+        waiting: Boolean,
+        taskPath: String,
+        parameterType: Class<*>,
+        includeProfiler: Boolean = false): WorkerExecutor {
+
+        var workQueue: WorkQueue = object: WorkQueue {
+
+            override fun <T : WorkParameters?> submit(
+                workActionType: Class<out WorkAction<T>>,
+                workParametersCustomizer: Action<in T>
+            ) {
+                val parameters = project.objects.newInstance(parameterType)
+                @Suppress("UNCHECKED_CAST")
+                workParametersCustomizer.execute(parameters as T)
+                val workItemAction = project.objects.newInstance(workActionType, parameters)
+                workItemAction.execute()
+            }
+
+            override fun await() {
+                Assert.assertTrue("Task was not supposed to wait for results", waiting)
+            }
+        }
+        if (includeProfiler) {
+            workQueue = ProfilerEnabledWorkQueue("project_name_" + tmpDir.root.path.hashCode(), taskPath, workQueue)
+        }
+
+        // replace injected WorkerExecutor with dummy version.
+        val workerExecutor = Mockito.mock(WorkerExecutor::class.java)
+        Mockito.`when`(workerExecutor.noIsolation()).thenReturn(workQueue)
+        return workerExecutor
+    }
+
     private fun checkOutputFolderCorrectness(outputFolder: File) {
         Truth.assertThat(outputFolder.listFiles()).hasLength(4)
         val updatedBuiltArtifacts = BuiltArtifactsLoaderImpl().load(
@@ -323,14 +408,13 @@ class TaskBasedOperationsImplTest {
     private fun createBuiltArtifact(
         outputFolder: File,
         fileName: String,
-        versionCode: Int,
         densityValue: String
     ) =
         BuiltArtifactImpl(
             outputFile = File(outputFolder, "$fileName.xml").absolutePath,
             properties = mapOf("key1" to "value1", "key2" to "value2"),
-            versionCode = versionCode,
-            versionName = versionCode.toString(),
+            versionCode = 12,
+            versionName = "12",
             isEnabled = true,
             outputType = VariantOutputConfiguration.OutputType.ONE_OF_MANY,
             filters = listOf(

@@ -13,7 +13,7 @@ com.android.build.api.artifact.ArtifactKind$FILE.dataType: kotlin.reflect.KClass
 com.android.build.api.artifact.ArtifactKind.<init>: com.android.build.api.artifact.ArtifactKind<T> (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactKind.dataType: kotlin.reflect.KClass<T> ()
 com.android.build.api.artifact.ArtifactTransformationRequest
-com.android.build.api.artifact.ArtifactTransformationRequest.submit: java.util.function.Supplier<com.android.build.api.variant.BuiltArtifacts> (org.gradle.workers.WorkQueue, java.lang.Class<? extends ParamT>, java.lang.Class<? extends org.gradle.workers.WorkAction<ParamT>>, kotlin.jvm.functions.Function1<? super ParamT, kotlin.Unit>)
+com.android.build.api.artifact.ArtifactTransformationRequest.submit: java.util.function.Supplier<com.android.build.api.variant.BuiltArtifacts> (org.gradle.workers.WorkQueue, java.lang.Class<? extends org.gradle.workers.WorkAction<ParamT>>, java.lang.Class<? extends ParamT>, kotlin.jvm.functions.Function3<? super com.android.build.api.variant.BuiltArtifact, ? super org.gradle.api.file.Directory, ? super ParamT, ? extends java.io.File>)
 com.android.build.api.artifact.ArtifactTransformationRequest.submit: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.BuiltArtifact, ? extends java.io.File>)
 com.android.build.api.artifact.ArtifactType implements java.io.Serializable
 com.android.build.api.artifact.ArtifactType$Appendable implements com.android.build.api.artifact.ArtifactType$Multiple
@@ -57,9 +57,6 @@ com.android.build.api.artifact.TaskBasedOperations.andWrite: com.android.build.a
 com.android.build.api.artifact.TaskBasedOperations.toRead: com.android.build.api.artifact.TaskBasedOperations<TaskT> (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<org.gradle.api.file.Directory>>)
 com.android.build.api.artifact.TransformRequest
 com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
-com.android.build.api.artifact.WorkItemParameters implements org.gradle.workers.WorkParameters
-com.android.build.api.artifact.WorkItemParameters.<init>: com.android.build.api.artifact.WorkItemParameters ()
-com.android.build.api.artifact.WorkItemParameters.initProperties: java.io.File (com.android.build.api.variant.BuiltArtifact, org.gradle.api.file.Directory)
 com.android.build.api.component.ActionableComponentObject
 com.android.build.api.component.AndroidTestProperties implements com.android.build.api.component.TestComponentProperties
 com.android.build.api.component.AndroidTestProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()

@@ -45,7 +45,7 @@ import java.io.File
  * specific services like setting initial AGP providers.
  */
 class OperationsImpl(
-    private val objects: ObjectFactory,
+    internal val objects: ObjectFactory,
     private val identifier: String,
     private val buildDirectory: DirectoryProperty): Operations {
 

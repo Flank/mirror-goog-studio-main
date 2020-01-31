@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.build.api.artifact
+package com.android.build.api.artifact.impl
 
-import com.android.build.api.variant.BuiltArtifact
-import org.gradle.api.Incubating
-import org.gradle.api.file.Directory
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.workers.WorkParameters
-import java.io.File
+import org.gradle.workers.WorkQueue
 
-@Incubating
-abstract class WorkItemParameters: WorkParameters {
-    abstract fun initProperties(builtArtifact: BuiltArtifact, outputLocation: Directory): File
+/**
+ * Facade object for a [WorkQueue] that remembers the task and project it was created in.
+ *
+ * The information will be used to provide task and work items profiling information.
+ */
+class ProfilerEnabledWorkQueue(
+    val projectName: String,
+    val taskName: String,
+    private val workQueue: WorkQueue): WorkQueue by workQueue {
 }
