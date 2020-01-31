@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.getDesugarLibDexFromTransform
 import com.android.builder.files.NativeLibraryAbiPredicate
+import com.android.builder.model.CodeShrinker
 import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarMerger
 import com.android.utils.FileUtils
@@ -266,7 +267,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                 )
             )
             task.javaResFiles.from(
-                if (artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)) {
+                if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
                     creationConfig.globalScope.project.layout.files(
                         artifacts.getFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)
                     )
