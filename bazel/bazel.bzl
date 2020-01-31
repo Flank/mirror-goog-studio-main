@@ -3,7 +3,7 @@ load(":functions.bzl", "create_java_compiler_args_srcs", "create_option_file", "
 load(":groovy.bzl", "groovy_impl")
 load(":kotlin.bzl", "kotlin_compile")
 load(":lint.bzl", "lint_test")
-load(":utils.bzl", "fileset", "java_jarjar", "singlejar")
+load(":merge_archives.bzl", "run_singlejar")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_runtime_toolchain", "find_java_toolchain")
 
 # This is a custom implementation of label "tags".
@@ -163,12 +163,11 @@ def _iml_module_jar_impl(
     if form_srcs and not java_srcs:
         fail("Forms only supported with java sources")
 
-    ctx.actions.run(
-        inputs = jars,
-        outputs = [output_jar],
-        mnemonic = "module",
-        arguments = [output_jar.path] + [jar.path for jar in jars],
-        executable = ctx.executable._singlejar,
+    run_singlejar(
+        ctx = ctx,
+        jars = jars,
+        out = output_jar,
+        allow_duplicates = True,  # TODO: Ideally we could be more strict here.
     )
 
     providers = []
@@ -328,7 +327,7 @@ _iml_module_ = rule(
             executable = True,
         ),
         "_singlejar": attr.label(
-            default = Label("//tools/base/bazel:singlejar"),
+            default = Label("@bazel_tools//tools/jdk:singlejar"),
             cfg = "host",
             executable = True,
         ),
@@ -947,13 +946,12 @@ def _iml_artifact_impl(ctx):
         if JavaInfo in module:
             jars += module[JavaInfo].compile_jars.to_list()
 
-    ctx.actions.run(
-        inputs = jars,
-        outputs = [ctx.outputs.artifact],
-        mnemonic = "artifact",
-        arguments = [ctx.outputs.artifact.path] + [jar.path for jar in jars],
-        executable = ctx.executable._singlejar,
+    run_singlejar(
+        ctx = ctx,
+        jars = jars,
+        out = ctx.outputs.artifact,
     )
+
     return struct(artifact = ctx.outputs.artifact)
 
 _iml_artifact = rule(
@@ -967,7 +965,7 @@ _iml_artifact = rule(
             executable = True,
         ),
         "_singlejar": attr.label(
-            default = Label("//tools/base/bazel:singlejar"),
+            default = Label("@bazel_tools//tools/jdk:singlejar"),
             cfg = "host",
             executable = True,
         ),

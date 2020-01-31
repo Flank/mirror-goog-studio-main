@@ -1,7 +1,7 @@
 load(":coverage.bzl", "coverage_java_test")
 load(":functions.bzl", "create_java_compiler_args_srcs", "explicit_target")
 load(":maven.bzl", "maven_pom")
-load(":utils.bzl", "singlejar")
+load(":merge_archives.bzl", "merge_jars")
 load(":lint.bzl", "lint_test")
 
 def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
@@ -163,11 +163,18 @@ def kotlin_library(
             testonly = testonly,
         )
 
-    singlejar(
-        name = name,
-        jar_name = jar_name,
-        runtime_deps = deps + ["//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"],
+    jar_name = jar_name if jar_name else "lib" + name + ".jar"
+    merge_jars(
+        name = name + ".singlejar",
         jars = [":lib" + target + ".jar" for target in targets],
+        out = jar_name,
+        allow_duplicates = True,  # TODO: Ideally we could be more strict here.
+    )
+
+    native.java_import(
+        name = name,
+        jars = [jar_name],
+        runtime_deps = deps + ["//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"],
         visibility = visibility,
         testonly = testonly,
     )
