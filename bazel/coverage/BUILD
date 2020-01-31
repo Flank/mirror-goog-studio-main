@@ -66,18 +66,126 @@ coverage_report(
 )
 
 coverage_report(
+    name = "build-attribution",
+    srcpath_include = [
+        "tools/adt/idea/build-attribution/src",
+    ],
+    tests = [
+        "//tools/adt/idea/build-attribution:intellij.android.build-attribution.tests_tests",
+    ],
+)
+
+coverage_report(
+    name = "custom-views-preview",
+    srcpath_include = [
+        "tools/adt/idea/designer/customview/src/",
+    ],
+    tests = [
+        "//tools/adt/idea/designer/customview:intellij.android.designer.customview.tests_tests",
+    ],
+)
+
+coverage_report(
     name = "databinding",
     srcpath_include = [
         "tools/adt/idea/android-lang-databinding",
-        "tools/adt/idea/databinding/",
         "tools/adt/idea/android/src/com/android/tools/idea/databinding",
         "tools/adt/idea/android/src/com/android/tools/idea/lang/databinding",
+        "tools/adt/idea/databinding/",
     ],
     tests = [
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
         "//tools/adt/idea/android-lang-databinding:intellij.android.lang-databinding.tests_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/databinding:intellij.android.databinding.tests_tests",
+    ],
+)
+
+coverage_report(
+    name = "designtools",
+    srcpath_exclude = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/flexbox",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/layout3d",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/mockup",
+    ],
+    srcpath_include = [
+        "tools/adt/idea/android/src/com/android/tools/idea/rendering",
+        "tools/adt/idea/android/src/com/android/tools/idea/sampledata",
+        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager",
+        "tools/adt/idea/compose-designer/src",
+        "tools/adt/idea/designer/src/",
+        "tools/adt/idea/layout-inspector/src/",
+        "tools/adt/idea/nav/editor/src/",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+        "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
+        "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
+        "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
+        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+        "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
+        "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
+        "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
+        "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
+        "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api_tests",
+        "//tools/base/layoutlib-api:tools.tests",
+    ],
+)
+
+coverage_report(
+    name = "dsl",
+    srcpath_include = [
+        "tools/adt/idea/android/src/com/android/tools/idea/gradle/dsl",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+    ],
+)
+
+coverage_report(
+    name = "dynamic-layout-inspector",
+    srcpath_include = [
+        "tools/adt/idea/layout-inspector/src",
+        "tools/base/dynamic-layout-inspector/src/main",
+    ],
+    tests = [
+        "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
+        "//tools/base/dynamic-layout-inspector:agent_tests.test",
+    ],
+)
+
+coverage_report(
+    name = "layouteditor",
+    srcpath_exclude = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/flexbox",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/layout3d",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/mockup",
+    ],
+    srcpath_include = [
+        "tools/adt/idea/android/src/com/android/tools/idea/rendering",
+        "tools/adt/idea/android/src/com/android/tools/idea/sampledata",
+        "tools/adt/idea/compose-designer/src",
+        "tools/adt/idea/designer/src/",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+        "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
+        "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
+        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+        "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
+        "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
+        "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api_tests",
+        "//tools/base/layoutlib-api:tools.tests",
+    ],
+)
+
+coverage_report(
+    name = "motioneditor",
+    srcpath_include = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion",
+    ],
+    tests = [
+        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
     ],
 )
 
@@ -102,43 +210,59 @@ coverage_report(
 )
 
 coverage_report(
-    name = "motioneditor",
+    name = "profilers",
     srcpath_include = [
-        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion",
+        "tools/adt/idea/android-transport/src/com/android/tools/idea/transport",
+        "tools/adt/idea/profilers-android/src/com/android/tools/idea/profilers",
+        "tools/adt/idea/profilers/src/com/android/tools/profilers",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers",
+        "tools/adt/idea/transport-database/src/main/java/com/android/tools/datastore",
     ],
     tests = [
-        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+        "//tools/adt/idea/android-transport:intellij.android.transport_tests",
+        "//tools/adt/idea/profilers:intellij.android.profilers_tests",
+        "//tools/adt/idea/profilers-android:intellij.android.profilersAndroid_tests",
+        "//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests",
+        "//tools/adt/idea/transport-database:intellij.android.transportDatabase_tests",
     ],
 )
 
 coverage_report(
-    name = "validation",
+    name = "projectsystem",
+    srcpath_include = [
+        "tools/adt/idea/android/src/com/android/tools/idea/gradle",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+    ],
+)
+
+# Coverage report for R8 rule files editor.
+coverage_report(
+    name = "r8-editing",
+    srcpath_include = [
+        "tools/adt/idea/android-lang/src/com/android/tools/idea/lang/proguardR8",
+    ],
+    tests = [
+        "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
+    ],
+)
+
+# Coverage report for the Resource Manager and Resource Picker
+coverage_report(
+    name = "resourcemanager",
     srcpath_exclude = [
-        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/analytics",
+        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/model/DesignAssetListModel.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/plugin/SketchImporter.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/README.md",
+        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/sketchImporter",
     ],
     srcpath_include = [
-        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual",
+        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager",
     ],
     tests = [
-        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
-    ],
-)
-
-coverage_report(
-    name = "build-attribution",
-    srcpath_include = ["tools/adt/idea/build-attribution/src"],
-    tests = ["//tools/adt/idea/build-attribution:intellij.android.build-attribution.tests_tests"],
-)
-
-coverage_report(
-    name = "dynamic-layout-inspector",
-    srcpath_include = [
-        "tools/adt/idea/layout-inspector/src",
-        "tools/base/dynamic-layout-inspector/src/main",
-    ],
-    tests = [
-        "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
-        "//tools/base/dynamic-layout-inspector:agent_tests.test",
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+        "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
     ],
 )
 
@@ -173,147 +297,13 @@ coverage_report(
     ],
 )
 
-# Coverage report for the Resource Manager and Resource Picker
-coverage_report(
-    name = "resourcemanager",
-    srcpath_exclude = [
-        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/README.md",
-        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/model/DesignAssetListModel.kt",
-        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/sketchImporter",
-        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/plugin/SketchImporter.kt",
-    ],
-    srcpath_include = [
-        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager",
-    ],
-    tests = [
-        "//tools/adt/idea/android:intellij.android.core.tests_tests",
-        "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
-    ],
-)
-
-# Coverage report for Layout Editor
-layouteditor_excludes = [
-    # Layout3D is not used
-    "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/layout3d",
-
-    # Mockup Editor is not used
-    "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/mockup",
-
-    # Flexbox is not enabled
-    "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/flexbox",
-]
-
-layouteditor_includes = [
-    "tools/adt/idea/compose-designer/src",
-    "tools/adt/idea/designer/src/",
-    "tools/adt/idea/android/src/com/android/tools/idea/rendering",
-    "tools/adt/idea/android/src/com/android/tools/idea/sampledata",
-]
-
-layouteditor_tests = [
-    "//tools/adt/idea/android:intellij.android.core.tests_tests",
-    "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
-    "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
-    "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
-    "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
-    "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
-    "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api_tests",
-    "//tools/base/layoutlib-api:tools.tests",
-]
-
-coverage_report(
-    name = "layouteditor",
-    srcpath_exclude = layouteditor_excludes,
-    srcpath_include = layouteditor_includes,
-    tests = layouteditor_tests,
-)
-
-# Coverage report for Design Tools
-coverage_report(
-    name = "designtools",
-    srcpath_exclude = layouteditor_excludes,
-    srcpath_include = layouteditor_includes + [
-        "tools/adt/idea/nav/editor/src/",
-        "tools/adt/idea/layout-inspector/src/",
-        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager",
-    ],
-    tests = layouteditor_tests + [
-        "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
-        "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
-        "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
-    ],
-)
-
-# Coverage report for Profilers
-coverage_report(
-    name = "profilers",
-    srcpath_include = [
-        "tools/adt/idea/android-transport/src/com/android/tools/idea/transport",
-        "tools/adt/idea/profilers-android/src/com/android/tools/idea/profilers",
-        "tools/adt/idea/profilers/src/com/android/tools/profilers",
-        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers",
-        "tools/adt/idea/transport-database/src/main/java/com/android/tools/datastore",
-    ],
-    tests = [
-        "//tools/adt/idea/android-transport:intellij.android.transport_tests",
-        "//tools/adt/idea/profilers:intellij.android.profilers_tests",
-        "//tools/adt/idea/profilers-android:intellij.android.profilersAndroid_tests",
-        "//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests",
-        "//tools/adt/idea/transport-database:intellij.android.transportDatabase_tests",
-    ],
-)
-
-coverage_report(
-    name = "projectsystem",
-    srcpath_include = [
-        "tools/adt/idea/android/src/com/android/tools/idea/gradle",
-    ],
-    tests = [
-        "//tools/adt/idea/android:intellij.android.core.tests_tests",
-    ],
-)
-
-coverage_report(
-    name = "dsl",
-    srcpath_include = [
-        "tools/adt/idea/android/src/com/android/tools/idea/gradle/dsl",
-    ],
-    tests = [
-        "//tools/adt/idea/android:intellij.android.core.tests_tests",
-    ],
-)
-
-coverage_report(
-    name = "templates",
-    srcpath_include = [
-        "tools/base/wizard/template-impl/src/com/android/tools/idea/wizard/template",
-        "tools/base/wizard/template-plugin/src/com/android/tools/idea/wizard/template",
-        "tools/adt/idea/android/src/com/android/tools/idea/npw/module/recipes",
-        "tools/adt/idea/android/src/com/android/tools/idea/templates/recipe/DefaultRecipeExecutor2.kt",
-        "tools/adt/idea/android/src/com/android/tools/idea/templates/recipe/FindReferencesExecutor2.kt",
-        "tools/adt/idea/android/src/com/android/tools/idea/templates/recipe/RenderingContext2.kt",
-        "tools/adt/idea/android/src/com/android/tools/idea/templates/KeystoreUtils.kt",
-        "tools/adt/idea/android/src/com/android/tools/idea/templates/ModuleTemplateDataBuilder.kt",
-        "tools/adt/idea/android/src/com/android/tools/idea/templates/Parameter.kt",
-        "tools/adt/idea/android/src/com/android/tools/idea/templates/RecipeMergeUtils.kt",
-        "tools/adt/idea/android/src/com/android/tools/idea/templates/RepositoryUrlManager.kt",
-        "tools/adt/idea/android/src/com/android/tools/idea/templates/SourceProviderUtil.kt",
-        "tools/adt/idea/android/src/com/android/tools/idea/templates/StringParameterValidator.kt",
-        "tools/adt/idea/android/src/com/android/tools/idea/templates/TemplateUtils.kt",
-    ],
-    tests = [
-        "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
-    ],
-)
-
-# Coverage report for System Trace V2
 coverage_report(
     name = "systracev2",
     srcpath_include = [
         "tools/adt/idea/adt-ui-model/src/main/java/com/android/tools/adtui/model/trackgroup",
         "tools/adt/idea/adt-ui/src/main/java/com/android/tools/adtui/trackgroup",
-        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu",
         "tools/adt/idea/profilers/src/com/android/tools/profilers/cpu",
+        "tools/adt/idea/profilers-ui/src/com/android/tools/profilers/cpu",
     ],
     tests = [
         "//tools/adt/idea/adt-ui:intellij.android.adt.ui_tests",
@@ -323,10 +313,46 @@ coverage_report(
     ],
 )
 
+coverage_report(
+    name = "templates",
+    srcpath_include = [
+        "tools/adt/idea/android/src/com/android/tools/idea/npw/module/recipes",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/KeystoreUtils.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/ModuleTemplateDataBuilder.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/Parameter.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/recipe/DefaultRecipeExecutor2.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/recipe/FindReferencesExecutor2.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/RecipeMergeUtils.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/recipe/RenderingContext2.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/RepositoryUrlManager.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/SourceProviderUtil.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/StringParameterValidator.kt",
+        "tools/adt/idea/android/src/com/android/tools/idea/templates/TemplateUtils.kt",
+        "tools/base/wizard/template-impl/src/com/android/tools/idea/wizard/template",
+        "tools/base/wizard/template-plugin/src/com/android/tools/idea/wizard/template",
+    ],
+    tests = [
+        "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
+    ],
+)
+
+coverage_report(
+    name = "validation",
+    srcpath_exclude = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/analytics",
+    ],
+    srcpath_include = [
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual",
+    ],
+    tests = [
+        "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     reports = [
-        "all",
+        "all",  # keep this one at the top
         "android-apk",
         "build-attribution",
         "custom-views-preview",
@@ -355,38 +381,40 @@ coverage_report(
     tests = [
         "//tools/adt/idea/adt-ui:intellij.android.adt.ui_tests",
         "//tools/adt/idea/adt-ui-model:intellij.android.adt.ui.model_tests",
-        "//tools/adt/idea/android:intellij.android.core.tests_tests",
         "//tools/adt/idea/android-adb:intellij.android.adb.tests_tests",
         "//tools/adt/idea/android-common:intellij.android.common_tests",
         "//tools/adt/idea/android-debuggers:intellij.android.debuggers.tests_tests",
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
         "//tools/adt/idea/android-kotlin:intellij.android.kotlin.tests_tests",
-        "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
         "//tools/adt/idea/android-lang-databinding:intellij.android.lang-databinding.tests_tests",
+        "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
         "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/android-test-framework:intellij.android.testFramework_tests",
         "//tools/adt/idea/android-transport:intellij.android.transport_tests",
         "//tools/adt/idea/apkanalyzer:intellij.android.apkanalyzer_tests",
         "//tools/adt/idea/assistant:assistant-test_tests",
+        "//tools/adt/idea/build-attribution:intellij.android.build-attribution.tests_tests",
         "//tools/adt/idea/build-common:intellij.android.buildCommon_tests",
         "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
         "//tools/adt/idea/connection-assistant:connection-assistant-test_tests",
         "//tools/adt/idea/databinding:intellij.android.databinding.tests_tests",
         "//tools/adt/idea/deploy:intellij.android.deploy_tests",
+        "//tools/adt/idea/designer/customview:intellij.android.designer.customview.tests_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/kotlin-integration:kotlin-integration-tests_tests",
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
-        "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
+        "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/native-symbolizer:native-symbolizer_tests",
         "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
         "//tools/adt/idea/observable:intellij.android.observable_tests",
         "//tools/adt/idea/observable-ui:intellij.android.observable.ui_tests",
-        "//tools/adt/idea/profilers:intellij.android.profilers_tests",
         "//tools/adt/idea/profilers-android:intellij.android.profilersAndroid_tests",
+        "//tools/adt/idea/profilers:intellij.android.profilers_tests",
         "//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests",
-        "//tools/adt/idea/project-system:intellij.android.projectSystem.tests_tests",
         "//tools/adt/idea/project-system-gradle:intellij.android.projectSystem.gradle.tests_tests",
+        "//tools/adt/idea/project-system:intellij.android.projectSystem.tests_tests",
         "//tools/adt/idea/resources-base:intellij.android.resources-base.tests_tests",
         "//tools/adt/idea/sdk-updates:intellij.android.sdkUpdates.tests_tests",
         "//tools/adt/idea/smali:intellij.android.smali_tests",
@@ -405,30 +433,28 @@ coverage_report(
         "//tools/analytics-library/tracker:tools.analytics-tracker_tests.test",
         "//tools/apksig:all",
         "//tools/apkzlib:apkzlib_tests",
-        "//tools/base/apkparser:studio.android.sdktools.binary-resources_tests",
-        "//tools/base/apkparser:tools.tests",
         "//tools/base/apkparser/analyzer:studio.android.sdktools.analyzer_tests",
         "//tools/base/apkparser/analyzer:tools.tests",
         "//tools/base/apkparser/cli:tools.tests",
+        "//tools/base/apkparser:studio.android.sdktools.binary-resources_tests",
+        "//tools/base/apkparser:tools.tests",
         "//tools/base/aspects_agent:agent_tests",
         "//tools/base/aspects_agent:studio.android.sdktools.aspects-agent_tests",
         "//tools/base/bazel:bin2c_tests",
         "//tools/base/bazel:iml_to_build_tests",
         "//tools/base/bazel:third_party_up_to_date",
-        "//tools/base/build-system:studio.android.sdktools.manifest-merger_tests",
-        "//tools/base/build-system:tools.manifest-merger_tests.test",
-        "//tools/base/build-system/builder:tests.test",
         "//tools/base/build-system/builder-model:tests.test",
         "//tools/base/build-system/builder-test-api:studio.android.sdktools.builder-test-api_tests",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api_tests",
+        "//tools/base/build-system/builder:tests.test",
         "//tools/base/build-system/gradle-api:tests.test",
         "//tools/base/build-system/gradle-core:tests.test",
         "//tools/base/build-system/integration-test/application:automatic-tests",
-        "//tools/base/build-system/integration-test/application:tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/gradlecompat:GradleVersionCheckTest",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sanity:tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sdk:sdk_tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:tests",
+        "//tools/base/build-system/integration-test/application:tests",
         "//tools/base/build-system/integration-test/databinding:tests",
         "//tools/base/build-system/integration-test/framework:framework_tests.test",
         "//tools/base/build-system/integration-test/native:CmakeBasicProjectTest",
@@ -460,6 +486,8 @@ coverage_report(
         "//tools/base/build-system/integration-test/native:RsEnabledAnnotationTest",
         "//tools/base/build-system/integration-test/native:RsSupportModeTest",
         "//tools/base/build-system/integration-test/native:VulkanTest",
+        "//tools/base/build-system:studio.android.sdktools.manifest-merger_tests",
+        "//tools/base/build-system:tools.manifest-merger_tests.test",
         "//tools/base/common:studio.android.sdktools.common.tests_tests",
         "//tools/base/common:tools.tests.test",
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib_tests",
@@ -473,9 +501,9 @@ coverage_report(
         "//tools/base/flags:studio.android.sdktools.flags_tests",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api_tests",
         "//tools/base/layoutlib-api:tools.tests",
+        "//tools/base/lint/libs/lint-tests:tests.test",
         "//tools/base/lint:studio-checks-tests.test",
         "//tools/base/lint:tests.test",
-        "//tools/base/lint/libs/lint-tests:tests.test",
         "//tools/base/ninepatch:studio.android.sdktools.ninepatch_tests",
         "//tools/base/perflib:studio.android.sdktools.perflib_tests",
         "//tools/base/pixelprobe:studio.android.sdktools.pixelprobe_tests",
@@ -496,27 +524,5 @@ coverage_report(
         "//tools/vendor/google/android-apk:android-apk_tests",
         # TODO(b/140178289): too flaky for use in the coverage suite
         #"//tools/vendor/google/android-ndk:android-ndk_tests",
-    ],
-)
-
-# Coverage report for R8 rule files editor.
-coverage_report(
-    name = "r8-editing",
-    srcpath_include = [
-        "tools/adt/idea/android-lang/src/com/android/tools/idea/lang/proguardR8",
-    ],
-    tests = [
-        "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
-    ],
-)
-
-# Coverage report for custom views preview.
-coverage_report(
-    name = "custom-views-preview",
-    srcpath_include = [
-        "tools/adt/idea/designer/customview/src/",
-    ],
-    tests = [
-        "//tools/adt/idea/designer/customview:intellij.android.designer.customview.tests_tests",
     ],
 )
