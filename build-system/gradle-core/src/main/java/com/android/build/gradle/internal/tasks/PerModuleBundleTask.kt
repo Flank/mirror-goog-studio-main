@@ -248,7 +248,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     creationConfig.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
                 }
             val desugarLibDexFile =
-                if (artifacts.hasFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX)) {
+                if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
                     artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.DESUGAR_LIB_DEX)
                         .get()

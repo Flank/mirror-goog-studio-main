@@ -334,19 +334,15 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 )
             }
 
-            if(creationConfig.artifacts.hasFinalProduct(InternalArtifactType.BUNDLE_DEPENDENCY_REPORT)) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
-                    task.bundleDeps
-                )
-            }
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
+                task.bundleDeps
+            )
 
-            if (creationConfig.artifacts.hasFinalProduct(InternalArtifactType.APP_INTEGRITY_CONFIG)) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.APP_INTEGRITY_CONFIG,
-                    task.integrityConfigFile
-                )
-            }
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.APP_INTEGRITY_CONFIG,
+                task.integrityConfigFile
+            )
 
             task.aaptOptionsNoCompress =
             creationConfig.globalScope.extension.aaptOptions.noCompress

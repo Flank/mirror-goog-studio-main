@@ -1207,7 +1207,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 return creationConfig.getGlobalScope().getProject().files();
             }
             BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
-            if (artifacts.hasFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE)) {
+            if (creationConfig.getVariantScope().getNeedsShrinkDesugarLibrary()) {
                 return project.files(
                         artifacts.getFinalProduct(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
             } else {

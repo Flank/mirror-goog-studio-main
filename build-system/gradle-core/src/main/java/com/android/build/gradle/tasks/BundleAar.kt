@@ -175,7 +175,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             if (buildFeatures.androidResources) {
                 task.from(artifacts.getFinalProduct(InternalArtifactType.PUBLIC_RES))
             }
-            if (artifacts.hasFinalProduct(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
+            if (creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 task.from(artifacts.getFinalProduct(
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR))
             }

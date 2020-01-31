@@ -759,7 +759,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                 componentProperties.getVariantData().getAllPreJavacGeneratedBytecode().getFiles());
         additionalTestClasses.addAll(
                 componentProperties.getVariantData().getAllPostJavacGeneratedBytecode().getFiles());
-        if (artifacts.hasFinalProduct(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE)) {
+        if (componentProperties.getGlobalScope().getExtension().getTestOptions()
+                .getUnitTests().isIncludeAndroidResources()) {
             additionalTestClasses.add(
                     artifacts
                             .getFinalProduct(
