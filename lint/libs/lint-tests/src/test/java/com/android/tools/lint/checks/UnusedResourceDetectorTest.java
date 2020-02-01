@@ -1434,6 +1434,100 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testReferenceFromViewBinding() {
+        //noinspection all // Sample code
+        lint().files(
+                        gradle(
+                                ""
+                                        + "buildscript {\n"
+                                        + "  dependencies {\n"
+                                        + "    classpath \"com.android.tools.build:gradle:3.6.0\"\n"
+                                        + "  }\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "android {\n"
+                                        + "    buildFeatures {\n"
+                                        + "        viewBinding true\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        xml(
+                                "res/layout/activity_demo.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\" />\n"),
+                        xml(
+                                "res/layout/activity_ignored.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
+                                        + "    android:layout_height=\"match_parent\"\n"
+                                        + "    tools:viewBindingIgnore=\"true\" />\n"),
+
+                        // View Binding usage here will reference activity_demo
+                        java(
+                                ""
+                                        + "package my.pkg;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "import my.pkg.databinding.ActivityDemoBinding;\n"
+                                        + "\n"
+                                        + "public class DemoActivity {\n"
+                                        + "    public void test(LayoutInflater inflater){\n"
+                                        + "        final ActivityDemoBinding binding = ActivityDemoBinding.inflate(inflater);\n"
+                                        + "    }\n"
+                                        + "}\n"),
+
+                        // Here, we create a fake view binding class in an attempt to trick lint,
+                        // but it won't work because activity_ignored.xml is skipped due to the
+                        // viewBindingIgnore attribute.
+                        java(
+                                ""
+                                        + "package my.pkg;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "\n"
+                                        + "public class IgnoredActivity {\n"
+                                        + "    private class ActivityIgnoredBinding implements androidx.viewbinding.ViewBinding {\n"
+                                        + "        public static ActivityIgnoredBinding inflate(LayoutInflater inflater) {\n"
+                                        + "             return this;\n"
+                                        + "        }\n"
+                                        + "   }\n"
+                                        + "\n"
+                                        + "    public void test(LayoutInflater inflater){\n"
+                                        + "        final ActivityIgnoredBinding binding = ActivityIgnoredBinding.inflate(inflater);\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package my.pkg.databinding;\n"
+                                        + "\n"
+                                        + "import android.view.LayoutInflater;\n"
+                                        + "\n"
+                                        + "public final class ActivityDemoBinding implements androidx.viewbinding.ViewBinding {\n"
+                                        + "  public static ActivityDemoBinding inflate(LayoutInflater inflater) {\n"
+                                        + "    return this;\n"
+                                        + "  }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package androidx.viewbinding;\n"
+                                        + "public interface ViewBinding {\n"
+                                        + "}"))
+                .client(
+                        new com.android.tools.lint.checks.infrastructure.TestLintClient(
+                                CLIENT_GRADLE))
+                .run()
+                .expect(
+                        "res/layout/activity_ignored.xml:2: Warning: The resource R.layout.activity_ignored appears to be unused [UnusedResources]\n"
+                                + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "^\n"
+                                + "0 errors, 1 warnings");
+    }
+
     @SuppressWarnings("SpellCheckingInspection")
     public void testButterknife() {
         // Regression test for https://issuetracker.google.com/62640956
