@@ -9,7 +9,6 @@ iml_module(
     name = "studio.android.sdktools.repository",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.repository.iml"],
-    test_coverage = True,
     test_resources = ["src/test/resources"],
     test_srcs = [
         "src/test/java",

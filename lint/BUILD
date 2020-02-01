@@ -318,7 +318,6 @@ kotlin_test(
         "libs/lint-gradle/src/test/java/**/*.kt",
         "libs/lint-gradle/src/test/java/**/*.java",
     ]),
-    coverage = True,
     data = [
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/latest",
@@ -392,7 +391,6 @@ kotlin_test(
         "studio-checks/src/test/java/**/*.kt",
         "studio-checks/src/test/java/**/*.java",
     ]),
-    coverage = True,
     jvm_flags = [
         "-Dtest.suite.jar=studio-checks-tests.jar",
     ],
