@@ -293,9 +293,16 @@ abstract class ComponentPropertiesImpl(
     ): ArtifactCollection {
         val mainCollection =
             variantDependencies.getArtifactCollection(configType, ArtifactScope.ALL, classesType)
+        val extraArtifact = globalScope.project.provider {
+            variantData.getGeneratedBytecode(generatedBytecodeKey);
+        }
+        val combinedCollection = globalScope.project.files(
+            mainCollection.artifactFiles, extraArtifact
+        )
         return ArtifactCollectionWithExtraArtifact.makeExtraCollection(
             mainCollection,
-            variantData.getGeneratedBytecode(generatedBytecodeKey),
+            combinedCollection,
+            extraArtifact,
             globalScope.project.path
         )
     }
@@ -320,10 +327,11 @@ abstract class ComponentPropertiesImpl(
                     "Appendable ArtifactType '${buildArtifactType.name()}' cannot be published."
                 )
             }
-            if (artifacts.hasFinalProduct(buildArtifactType)) {
+            val artifactProvider = artifacts.getFinalProduct(buildArtifactType)
+            if (artifactProvider.isPresent) {
                 variantScope
                     .publishIntermediateArtifact(
-                        artifacts.getFinalProduct(buildArtifactType),
+                        artifactProvider,
                         outputSpec.artifactType,
                         outputSpec.publishedConfigTypes
                     )

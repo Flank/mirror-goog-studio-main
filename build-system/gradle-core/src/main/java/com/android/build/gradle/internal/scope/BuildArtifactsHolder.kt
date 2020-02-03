@@ -253,22 +253,6 @@ abstract class BuildArtifactsHolder(
             = producesDir(artifactType, taskProvider, propertyProvider, null, fileName)
 
     /**
-     * Returns true if there is at least one producer for the passed [ArtifactType]
-     *
-     * @param artifactType the identifier for the built artifact.
-     */
-    fun <T: FileSystemLocation, ARTIFACT_TYPE> hasFinalProduct(artifactType: ARTIFACT_TYPE)
-        where ARTIFACT_TYPE: ArtifactType<out T>,
-              ARTIFACT_TYPE: ArtifactType.Single
-            = !operations.getArtifactContainer(artifactType).needInitialProducer().get()
-
-    fun <T: FileSystemLocation, ARTIFACT_TYPE> hasFinalProducts(artifactType: ARTIFACT_TYPE)
-            where ARTIFACT_TYPE: ArtifactType<T>,
-                  ARTIFACT_TYPE: ArtifactType.Multiple
-            = !operations.getArtifactContainer(artifactType).needInitialProducer().get()
-
-
-    /**
      * Returns a [Provider] of either a [Directory] or a [RegularFile] depending on the passed
      * [ArtifactKind]. The [Provider] will represent the final value of the built artifact
      * irrespective of when this call is made.
@@ -299,21 +283,19 @@ abstract class BuildArtifactsHolder(
      * The [FileCollection] will represent the final value of the built artifact irrespective of
      * when this call is made as long as the [Provider] is resolved at execution time.
      *
-     * @param  artifactType the identifier for thje built artifact.
+     * @param  artifactType the identifier for the built artifact.
      */
     fun <T: FileSystemLocation, ARTIFACT_TYPE> getFinalProductAsFileCollection(artifactType: ARTIFACT_TYPE): Provider<FileCollection>
         where ARTIFACT_TYPE:  ArtifactType<T>,
               ARTIFACT_TYPE: ArtifactType.Single {
 
-        return project.provider {
-            if (artifactType == AnchorOutputType.ALL_CLASSES) {
-                getAllClasses()
-            } else {
-                if (hasFinalProduct(artifactType)) {
-                    project.files(getFinalProduct(artifactType))
-                } else project.files()
-            }
+        if (artifactType == AnchorOutputType.ALL_CLASSES) {
+            return project.provider { getAllClasses() }
         }
+
+        return getFinalProduct(artifactType).map {
+            project.files(it) as FileCollection
+        }.orElse(project.files())
     }
 
     /**

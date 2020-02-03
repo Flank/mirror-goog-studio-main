@@ -506,8 +506,6 @@ public class VariantScopeImpl implements VariantScope {
 
     // Precomputed file paths.
 
-
-
     /**
      * Returns the packaged local Jars
      *

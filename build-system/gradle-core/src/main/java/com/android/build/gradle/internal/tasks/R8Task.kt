@@ -265,8 +265,7 @@ abstract class R8Task: ProguardConfigurableTask() {
 
             task.duplicateClassesCheck.from(
                 artifacts
-                    .getFinalProductAsFileCollection(DUPLICATE_CLASSES_CHECK)
-                    .get())
+                    .getFinalProductAsFileCollection(DUPLICATE_CLASSES_CHECK))
 
             creationConfig.variantDslInfo.multiDexKeepProguard?.let { multiDexKeepProguard ->
                 task.mainDexRulesFiles.from(multiDexKeepProguard)

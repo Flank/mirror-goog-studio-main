@@ -207,15 +207,12 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             )
             task.mainSplit = creationConfig.outputs.getMainSplit().apkData
 
-            task.dex = if (creationConfig.variantScope.consumesFeatureJars()) {
-                artifacts
-                    .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX).get()
-            } else if (artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {
-                creationConfig.globalScope.project.files(
-                    artifacts.getOperations().getAll(MultipleArtifactType.DEX))
-            } else {
-                creationConfig.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
-            }
+            task.dex = creationConfig.globalScope.project.files(
+                if (creationConfig.variantScope.consumesFeatureJars()) {
+                    artifacts.getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX)
+                } else {
+                    artifacts.getOperations().getAll(MultipleArtifactType.DEX)
+                })
 
             if (creationConfig
                     .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]) {

@@ -35,6 +35,7 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.artifacts.result.ResolvedVariantResult;
 import org.gradle.api.component.Artifact;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 
 /**
  * Implementation of a {@link ArtifactCollection} on top of another ArtifactCollection and a {@link
@@ -50,7 +51,7 @@ public class ArtifactCollectionWithExtraArtifact implements ArtifactCollection {
     @NonNull private final ArtifactCollection parentArtifacts;
 
     /** extra artifact */
-    @NonNull private final FileCollection extraArtifact;
+    @NonNull private final Provider<FileCollection> extraArtifact;
 
     @NonNull private final String projectPath;
     @Nullable private final String variantName;
@@ -61,24 +62,25 @@ public class ArtifactCollectionWithExtraArtifact implements ArtifactCollection {
 
     public static ArtifactCollectionWithExtraArtifact makeExtraCollection(
             @NonNull ArtifactCollection parentArtifacts,
-            @NonNull FileCollection extraArtifact,
+            @NonNull FileCollection combinedCollection,
+            @NonNull Provider<FileCollection> extraArtifact,
             @NonNull String projectPath) {
 
         return new ArtifactCollectionWithExtraArtifact(
-                parentArtifacts, extraArtifact, projectPath, null);
+                parentArtifacts, combinedCollection, extraArtifact, projectPath, null);
     }
 
     private ArtifactCollectionWithExtraArtifact(
             @NonNull ArtifactCollection parentArtifacts,
-            @NonNull FileCollection extraArtifact,
+            @NonNull FileCollection combinedCollection,
+            @NonNull Provider<FileCollection> extraArtifact,
             @NonNull String projectPath,
             @Nullable String variantName) {
         this.parentArtifacts = parentArtifacts;
         this.extraArtifact = extraArtifact;
         this.projectPath = projectPath;
         this.variantName = variantName;
-
-        combinedCollection = parentArtifacts.getArtifactFiles().plus(extraArtifact);
+        this.combinedCollection = combinedCollection;
     }
 
     @Override
@@ -127,7 +129,7 @@ public class ArtifactCollectionWithExtraArtifact implements ArtifactCollection {
 
     @NonNull
     private List<ResolvedArtifactResult> computeExtraArtifactResults() {
-        Set<File> testedFiles = extraArtifact.getFiles();
+        Set<File> testedFiles = extraArtifact.get().getFiles();
         List<ResolvedArtifactResult> list = Lists.newArrayListWithCapacity(testedFiles.size());
 
         ExtraComponentArtifactIdentifier artifactId =

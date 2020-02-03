@@ -1325,11 +1325,10 @@ public abstract class TaskManager<
                 componentProperties
                         .getArtifacts()
                         .appendToAllClasses(
-                                artifacts
-                                        .getFinalProductAsFileCollection(
+                                project.files(
+                                        artifacts.getFinalProductAsFileCollection(
                                                 COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-                                                        .INSTANCE)
-                                        .get());
+                                                        .INSTANCE)));
             }
         }
     }
@@ -1727,7 +1726,7 @@ public abstract class TaskManager<
                         OriginalStream.builder(project, "compile-and-runtime-light-r-classes")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
                                 .addScope(QualifiedContent.Scope.PROJECT)
-                                .setFileCollection(rClassJar.get())
+                                .setFileCollection(project.files(rClassJar))
                                 .build());
     }
 

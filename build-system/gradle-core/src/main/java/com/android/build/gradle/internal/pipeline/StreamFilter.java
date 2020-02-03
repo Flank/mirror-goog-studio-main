@@ -29,10 +29,6 @@ public interface StreamFilter {
             @NonNull Set<QualifiedContent.ContentType> types,
             @NonNull Set<? super QualifiedContent.Scope> scopes);
 
-    StreamFilter DEX = (types, scopes) -> types.contains(ExtendedContentType.DEX);
-
-    StreamFilter DEX_ARCHIVE = (types, scopes) -> types.contains(ExtendedContentType.DEX_ARCHIVE);
-
     StreamFilter RESOURCES =
             (types, scopes) ->
                     types.contains(QualifiedContent.DefaultContentType.RESOURCES)
