@@ -8,10 +8,10 @@ building a single iml module. Note that dashed lines represent inputs that are
 used as compile-time dependencies, but are not themselves transformed at the
 given build step.
 
-![](assets/iml-module-build-graph.svg)
+![](assets/iml-module-build-graph.png)
 
 To modify this image, edit [assets/iml-module-build-graph.dot](assets/iml-module-build-graph.dot).
 Then run the following Graphviz command from within `//tools/base/bazel/docs`.
 ```bash
-dot -Tsvg assets/iml-module-build-graph.dot -o assets/iml-module-build-graph.svg
+dot -Tpng:cairo:gd assets/iml-module-build-graph.dot -o assets/iml-module-build-graph.png
 ```
