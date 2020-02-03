@@ -69,6 +69,8 @@ class BuildTypeTest {
                 val copy =
                     BuildType(original.name, dslServices)
                 copy.initWith(original)
+                // Ndk and ndkConfig refer to the same object
+                original.ndk
                 // Manually call getters that don't need to be copied.
                 original.postProcessingConfiguration
                 // Covered by original.isDefault

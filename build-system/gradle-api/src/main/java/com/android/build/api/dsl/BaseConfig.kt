@@ -74,6 +74,12 @@ interface BaseConfig {
      */
     var multiDexKeepFile: File?
 
+    /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
+    val ndk: Ndk
+
+    /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
+    fun ndk(action: Ndk.() -> Unit)
+
     /**
      * Specifies the ProGuard configuration files that the plugin should use.
      *

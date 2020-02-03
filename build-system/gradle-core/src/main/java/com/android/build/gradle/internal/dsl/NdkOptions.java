@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.dsl.Ndk;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
@@ -30,8 +31,10 @@ import org.gradle.api.tasks.Optional;
 
 /**
  * DSL object for per-variant NDK settings, such as the ABI filter.
+ *
+ * @see Ndk for the public interface.
  */
-public class NdkOptions implements CoreNdkOptions, Serializable {
+public class NdkOptions implements CoreNdkOptions, Serializable, Ndk {
     private static final long serialVersionUID = 1L;
 
     private String moduleName;
@@ -57,6 +60,7 @@ public class NdkOptions implements CoreNdkOptions, Serializable {
         return moduleName;
     }
 
+    @Override
     public void setModuleName(String moduleName) {
         this.moduleName = moduleName;
     }
@@ -69,6 +73,17 @@ public class NdkOptions implements CoreNdkOptions, Serializable {
 
     public void setcFlags(String cFlags) {
         this.cFlags = cFlags;
+    }
+
+    @Override
+    public void setCFlags(@Nullable String cFlags) {
+        this.cFlags = cFlags;
+    }
+
+    @Nullable
+    @Override
+    public String getCFlags() {
+        return cFlags;
     }
 
     @Override
@@ -110,7 +125,6 @@ public class NdkOptions implements CoreNdkOptions, Serializable {
         return this;
     }
 
-    /** {@inheritDoc} */
     @Override
     @Input
     @Optional
@@ -145,6 +159,7 @@ public class NdkOptions implements CoreNdkOptions, Serializable {
             } else {
                 abiFilters.clear();
             }
+
             abiFilters.addAll(filters);
         } else {
             abiFilters = null;
@@ -153,11 +168,17 @@ public class NdkOptions implements CoreNdkOptions, Serializable {
     }
 
     @Override
+    public void setAbiFilters(@Nullable Set<String> abiFilters) {
+        setAbiFilters((Collection<String>) abiFilters);
+    }
+
+    @Override
     @Nullable
     public String getStl() {
         return stl;
     }
 
+    @Override
     public void setStl(String stl) {
         this.stl = stl;
     }
@@ -168,6 +189,7 @@ public class NdkOptions implements CoreNdkOptions, Serializable {
         return jobs;
     }
 
+    @Override
     public void setJobs(Integer jobs) {
         this.jobs = jobs;
     }

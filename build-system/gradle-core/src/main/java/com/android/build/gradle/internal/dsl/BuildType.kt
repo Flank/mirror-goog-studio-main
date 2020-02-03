@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.Ndk
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractBuildType
@@ -518,6 +519,13 @@ open class BuildType @Inject constructor(private val name: String, private val d
 
     fun ndk(action: Action<NdkOptions>) {
         action.execute(ndkConfig)
+    }
+
+    override val ndk: Ndk
+        get() = ndkConfig
+
+    override fun ndk(action: Ndk.() -> Unit) {
+        action.invoke(ndk)
     }
 
     /**

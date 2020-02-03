@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.Ndk
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.BuilderConstants
@@ -35,7 +36,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
     com.android.build.api.dsl.BaseFlavor {
 
     /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
-    val ndk: NdkOptions = dslServices.objectFactory.newInstance(NdkOptions::class.java)
+    override val ndk: NdkOptions = dslServices.objectFactory.newInstance(NdkOptions::class.java)
 
     override val ndkConfig: CoreNdkOptions
         get() {
@@ -328,9 +329,12 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
         }
     }
 
-    /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
     fun ndk(action: Action<NdkOptions>) {
         action.execute(ndk)
+    }
+
+    override fun ndk(action: Ndk.() -> Unit) {
+        action.invoke(ndk)
     }
 
     /**
