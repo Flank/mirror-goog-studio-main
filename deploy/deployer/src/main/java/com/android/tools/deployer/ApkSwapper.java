@@ -189,8 +189,8 @@ public class ApkSwapper {
                         .setOverlayId("")
                         .setExpectedOverlayId("");
 
-        request.setExpectedOverlayId(oldIds.getRepresentation());
-        request.setOverlayId(newIds.getRepresentation());
+        request.setExpectedOverlayId(oldIds.getSha());
+        request.setOverlayId(newIds.getSha());
 
         for (DexClass clazz : changedClasses.newClasses) {
             request.addNewClasses(
