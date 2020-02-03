@@ -117,6 +117,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.BuildAdapter;
 import org.gradle.BuildResult;
@@ -129,6 +130,7 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.StopExecutionException;
@@ -786,20 +788,29 @@ public abstract class BasePlugin<
      * So far, checks that 2 modules do not have the same identification (group+name).
      */
     private void checkModulesForErrors() {
-        Project rootProject = project.getRootProject();
-        Map<String, Project> subProjectsById = new HashMap<>();
-        for (Project subProject : rootProject.getAllprojects()) {
+        String CHECKED_MODULES_FLAG = "checked_modules_for_errors";
+        ExtraPropertiesExtension extraProperties =
+                project.getRootProject().getExtensions().getExtraProperties();
+        boolean alreadyChecked = extraProperties.has(CHECKED_MODULES_FLAG);
+
+        if (alreadyChecked) {
+            return;
+        }
+        extraProperties.set(CHECKED_MODULES_FLAG, true);
+
+        Set<Project> allProjects = project.getRootProject().getAllprojects();
+        Map<String, Project> subProjectsById = new HashMap<>(allProjects.size());
+        for (Project subProject : allProjects) {
             String id = subProject.getGroup().toString() + ":" + subProject.getName();
             if (subProjectsById.containsKey(id)) {
-                String message = String.format(
-                        "Your project contains 2 or more modules with the same " +
-                                "identification %1$s\n" +
-                                "at \"%2$s\" and \"%3$s\".\n" +
-                                "You must use different identification (either name or group) for " +
-                                "each modules.",
-                        id,
-                        subProjectsById.get(id).getPath(),
-                        subProject.getPath() );
+                String message =
+                        String.format(
+                                "Your project contains 2 or more modules with the same "
+                                        + "identification %1$s\n"
+                                        + "at \"%2$s\" and \"%3$s\".\n"
+                                        + "You must use different identification (either name or group) for "
+                                        + "each modules.",
+                                id, subProjectsById.get(id).getPath(), subProject.getPath());
                 throw new StopExecutionException(message);
             } else {
                 subProjectsById.put(id, subProject);
