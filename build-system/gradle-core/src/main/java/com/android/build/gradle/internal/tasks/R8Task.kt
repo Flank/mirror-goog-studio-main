@@ -272,8 +272,8 @@ abstract class R8Task: ProguardConfigurableTask() {
                 task.mainDexRulesFiles.from(multiDexKeepProguard)
             }
 
-            if (artifacts.hasFinalProduct(
-                    InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES)) {
+            if (creationConfig.needsMainDexList
+                && !creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 task.mainDexRulesFiles.from(
                     artifacts.getFinalProduct(
                         InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES

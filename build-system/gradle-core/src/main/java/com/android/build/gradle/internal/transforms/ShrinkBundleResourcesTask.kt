@@ -207,7 +207,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             )
             task.mainSplit = creationConfig.outputs.getMainSplit().apkData
 
-            task.dex = if (artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
+            task.dex = if (creationConfig.variantScope.consumesFeatureJars()) {
                 artifacts
                     .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX).get()
             } else if (artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {

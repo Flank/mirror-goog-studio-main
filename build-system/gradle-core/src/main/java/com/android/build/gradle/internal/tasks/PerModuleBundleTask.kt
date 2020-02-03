@@ -236,7 +236,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             task.resFiles.disallowChanges()
 
             val programDexFiles =
-                if (artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
+                if (creationConfig.variantScope.consumesFeatureJars()) {
                     artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX).get()
                 } else if (artifacts.hasFinalProducts(MultipleArtifactType.DEX)) {

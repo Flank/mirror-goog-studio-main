@@ -1142,7 +1142,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @NonNull
         public FileCollection getDexFolders(@NonNull ApkCreationConfig creationConfig) {
             BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
-            if (artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX.INSTANCE)) {
+            if (creationConfig.getVariantScope().consumesFeatureJars()) {
                 return artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX.INSTANCE)
                         .get()
