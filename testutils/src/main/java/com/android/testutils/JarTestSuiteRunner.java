@@ -151,29 +151,42 @@ public class JarTestSuiteRunner extends Suite {
 
     private static Class<?>[] getTestClasses(Class<?> suiteClass) throws ClassNotFoundException, IOException {
         List<Class<?>> testClasses = new ArrayList<>();
-        final Set<String> excludeClassNames = new HashSet<>();
         String name = System.getProperty("test.suite.jar");
-        String excludedPackages = System.getProperty("test.excluded.packages");
-        if (name != null) {
-            String nameLowerCase = name.toLowerCase(Locale.US);
-            final ClassLoader loader = JarTestSuite.class.getClassLoader();
-            if (loader instanceof URLClassLoader) {
-                Queue<URL> urls = new ArrayDeque<>();
-                urls.addAll(Arrays.asList(((URLClassLoader)loader).getURLs()));
-                while (!urls.isEmpty()) {
-                    URL url = urls.remove();
-                    String urlLowerCase = url.getPath().toLowerCase(Locale.US); // Lower case in order to avoid issues on Windows/Mac.
-                    if (urlLowerCase.endsWith(nameLowerCase)) {
-                        testClasses.addAll(getTestClasses(url, loader));
-                    }
-                    addManifestClassPath(url, urls);
-                }
-            }
-            excludeClassNames.addAll(
-                    classNamesToExcludeFromExcludedPackagess(excludedPackages, testClasses));
-            excludeClassNames.addAll(classNamesToExclude(suiteClass, testClasses));
+        if (name == null) {
+            throw new RuntimeException(
+                    "Must set test.suite.jar to the name of the jar containing JUnit tests");
         }
-        return testClasses.stream().filter(c -> !excludeClassNames.contains(c.getCanonicalName())).toArray(Class<?>[]::new);
+        String nameLowerCase = name.toLowerCase(Locale.US);
+        final ClassLoader loader = JarTestSuite.class.getClassLoader();
+        if (loader instanceof URLClassLoader) {
+            Queue<URL> urls = new ArrayDeque<>();
+            urls.addAll(Arrays.asList(((URLClassLoader) loader).getURLs()));
+            while (!urls.isEmpty()) {
+                URL url = urls.remove();
+                // Lower case in order to avoid issues on Windows/Mac.
+                String urlLowerCase = url.getPath().toLowerCase(Locale.US);
+                if (urlLowerCase.endsWith(nameLowerCase)) {
+                    testClasses.addAll(getTestClasses(url, loader));
+                }
+                addManifestClassPath(url, urls);
+            }
+        }
+        if (testClasses.isEmpty()) {
+            throw new RuntimeException("No JUnit tests found in test suite. Searched in: " + name);
+        }
+
+        String excludedPackages = System.getProperty("test.excluded.packages");
+        final Set<String> excludeClassNames = new HashSet<>();
+        excludeClassNames.addAll(
+                classNamesToExcludeFromExcludedPackagess(excludedPackages, testClasses));
+        excludeClassNames.addAll(classNamesToExclude(suiteClass, testClasses));
+        testClasses.removeIf(c -> excludeClassNames.contains(c.getCanonicalName()));
+        if (testClasses.isEmpty()) {
+            throw new RuntimeException("No JUnit tests remain after applying filters");
+        }
+
+        System.out.println("JarTestSuiteRunner found " + testClasses.size() + " test classes");
+        return testClasses.toArray(new Class<?>[0]);
     }
 
     private static void addManifestClassPath(URL jarUrl, Queue<URL> urls) throws IOException {
