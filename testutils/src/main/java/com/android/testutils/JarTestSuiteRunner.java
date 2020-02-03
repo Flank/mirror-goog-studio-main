@@ -175,10 +175,7 @@ public class JarTestSuiteRunner extends Suite {
             throw new RuntimeException("No JUnit tests found in test suite. Searched in: " + name);
         }
 
-        String excludedPackages = System.getProperty("test.excluded.packages");
         final Set<String> excludeClassNames = new HashSet<>();
-        excludeClassNames.addAll(
-                classNamesToExcludeFromExcludedPackagess(excludedPackages, testClasses));
         excludeClassNames.addAll(classNamesToExclude(suiteClass, testClasses));
         testClasses.removeIf(c -> excludeClassNames.contains(c.getCanonicalName()));
         if (testClasses.isEmpty()) {
@@ -222,71 +219,6 @@ public class JarTestSuiteRunner extends Suite {
                     }
                 }
             }
-        }
-    }
-
-    /**
-     * Returns the set of class names to exclude from the list of package prefixes stored in the
-     * {@code excludedPackages} comma delimited string
-     */
-    private static Set<String> classNamesToExcludeFromExcludedPackagess(
-            String excludedPackages, List<Class<?>> testClasses) {
-        if (excludedPackages == null || excludedPackages.isEmpty()) {
-            return Collections.emptySet();
-        }
-
-        // Compute list of package prefixes as specified in the "excludedPackages" argument
-        Set<String> packagesToExclude =
-                Arrays.stream(excludedPackages.split(",")).collect(Collectors.toSet());
-
-        // Compute list of classes included in the above list
-        Set<String> allClassNames =
-                testClasses.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
-        Set<String> classesToExclude = new HashSet<>();
-        Set<String> usedPackages = new HashSet<>();
-        for (String className : allClassNames) {
-            if (isBlackListed(packagesToExclude, usedPackages, className)) {
-                classesToExclude.add(className);
-            }
-        }
-
-        // Sanity check: usedPackages and packagesToExclude must be equal, otherwise, we have
-        // a typo in the black-list, or maybe the package has been renamed or moved to another JAR.
-        // We check this just to make sure this code does not get outdated.
-        Set<String> unusedPackages = new HashSet<>(packagesToExclude);
-        unusedPackages.removeAll(usedPackages);
-        if (!unusedPackages.isEmpty()) {
-            throw new RuntimeException(
-                    "At least one package in the list of black listed packages does not "
-                            + "contain any test class. The package(s) may have been renamed or moved to "
-                            + "another module. Please update the 'test_excluded_packages' attribute in the BUILD file "
-                            + "to match the change. The list of orphaned package(s) is: ["
-                            + unusedPackages.stream().sorted().collect(Collectors.joining(", "))
-                            + "].");
-        }
-
-        return classesToExclude;
-    }
-
-    /**
-     * Returns {@code true} if the package of className is prefixed by at least one of the package
-     * prefix from the packagePrefixes set.
-     */
-    private static boolean isBlackListed(
-            Set<String> packagePrefixes, Set<String> usedPackagePrefixes, String className) {
-        String dottedName = className;
-        while (true) {
-            int index = dottedName.lastIndexOf(".");
-            if (index < 0) {
-                return false;
-            }
-            String packageName = dottedName.substring(0, index);
-            if (packagePrefixes.contains(packageName)) {
-                // Mark package as used
-                usedPackagePrefixes.add(packageName);
-                return true;
-            }
-            dottedName = packageName;
         }
     }
 
