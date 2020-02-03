@@ -564,14 +564,14 @@ open class BuildType @Inject constructor(private val name: String, private val d
         return this
     }
 
-    fun ndk(action: Action<NdkOptions?>) {
+    fun ndk(action: Action<NdkOptions>) {
         action.execute(ndkConfig)
     }
 
     /**
      * Configure native build options.
      */
-    fun externalNativeBuild(action: Action<ExternalNativeBuildOptions?>): ExternalNativeBuildOptions {
+    fun externalNativeBuild(action: Action<ExternalNativeBuildOptions>): ExternalNativeBuildOptions {
         action.execute(externalNativeBuildOptions)
         return externalNativeBuildOptions
     }
@@ -579,7 +579,7 @@ open class BuildType @Inject constructor(private val name: String, private val d
     /**
      * Configure shader compiler options for this build type.
      */
-    fun shaders(action: Action<ShaderOptions?>) {
+    fun shaders(action: Action<ShaderOptions>) {
         action.execute(shaders)
     }
 
@@ -682,7 +682,7 @@ open class BuildType @Inject constructor(private val name: String, private val d
     /** This DSL is incubating and subject to change.  */
     @Incubating
     @Internal
-    fun postprocessing(action: Action<PostProcessingBlock?>) {
+    fun postprocessing(action: Action<PostProcessingBlock>) {
         checkPostProcessingConfiguration(
             PostProcessingConfiguration.POSTPROCESSING_BLOCK, "postProcessing"
         )
