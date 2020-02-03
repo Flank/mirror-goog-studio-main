@@ -445,6 +445,22 @@ _iml_test_module_ = rule(
 #     test_srcs = ["src/test/java"],
 #     # The directories with the production resources
 #     resources = ["src/main/resources"]
+#     # A dict indicating test targets to create, each one running a subset of tests
+#     # designated by `test_filter` which matches a package name or FQCN. If a test
+#     # target does not define a `test_filter`, it will run the set of tests that
+#     # excludes all the other filters. If a test target defines a `test_filter` which
+#     # is a subset of another test filter, the test target will exclude those tests.
+#     # For example:
+#     #  `{"A": {"test_filter": "x.y"}, "B": {"test_filter": "x.y.z"}}`
+#     # Split test target A will automatically exclude "x.y.z".
+#     # Targets may specify the following common attributes: `data`, `shard_count`, and
+#     # `tags`. For definitions of these attributes, see
+#     # https://docs.bazel.build/versions/master/be/common-definitions.html
+#     split_test_targets = {},
+#     # Specifies the number of parallel shards to run the test.
+#     # See https://docs.bazel.build/versions/master/be/common-definitions.html#test.shard_count.
+#     # Mutually exclusive with test_target_shards.
+#     test_shard_count = 1,
 #     # The directories with the test resources
 #     test_resources = ["src/test/resources"],
 #     # A tag enhanced list of dependency tags. These dependencies can contain a
@@ -464,7 +480,10 @@ _iml_test_module_ = rule(
 #
 # "module_name": A Java library compiled from the production sources
 # "module_name_testlib": A Java library compiled from the test sources
-# "module_name_tests": A java test rule that runs the tests found in "libmodule_name_testlib.jar"
+# "module_name_tests": A java test rule that runs the tests found in "libmodule_name_testlib.jar",
+#   or a test_suite containing all split_test_targets.
+# "module_name_tests__split-name": A java test rule running a split subset of tests if using
+#   split_test_targets.
 def iml_module(
         name,
         srcs = [],
@@ -486,6 +505,7 @@ def iml_module(
         test_timeout = "moderate",
         test_class = "com.android.testutils.JarTestSuite",
         test_shard_count = None,
+        split_test_targets = None,
         tags = None,
         test_tags = None,
         test_excluded_packages = {},
@@ -579,8 +599,27 @@ def iml_module(
     elif lint_timeout:
         fail("lint_timeout set for iml_module that doesn't use lint (set lint_baseline to enable lint)")
 
+    if not test_srcs:
+        return
+    if split_test_targets and test_shard_count:
+        fail("test_shard_count and split_test_targets should not both be specified")
     test_tags = tags + test_tags if tags and test_tags else (tags if tags else test_tags)
-    if test_srcs:
+    if split_test_targets:
+        _gen_split_tests(
+            name = name,
+            split_test_targets = split_test_targets,
+            test_tags = test_tags,
+            test_data = test_data,
+            runtime_deps = manual_test_runtime_deps + [":" + name + "_testlib"],
+            timeout = test_timeout,
+            jvm_flags = ["-Dtest.suite.jar=" + name + "_test.jar"],
+            test_excluded_packages = test_excluded_packages,
+            test_class = test_class,
+            visibility = visibility,
+            main_class = test_main_class,
+            exec_properties = exec_properties,
+        )
+    else:
         coverage_java_test(
             name = name + "_tests",
             tags = test_tags,
@@ -595,6 +634,122 @@ def iml_module(
             main_class = test_main_class,
             exec_properties = exec_properties,
         )
+
+def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = None, **kwargs):
+    """Generates split test targets.
+
+    A new test target is generated for each split_test_target.
+
+    Args:
+        name: The base name of the test.
+        split_test_targets: A dict of names to split_test_target definitions.
+        test_tags: optional list of tags to include for test targets.
+        test_data: optional list of data to include for test targets.
+    """
+    split_tests = []
+    for split_name in split_test_targets:
+        test_name = name + "_tests__" + split_name
+        split_tests.append(test_name)
+        split_target = split_test_targets[split_name]
+        shard_count = split_target.get("shard_count")
+        tags = split_target.get("tags", default = [])
+        data = split_target.get("data", default = [])
+        if test_data:
+            data += test_data
+        if test_tags:
+            tags += test_tags
+
+        args = _gen_split_test_args(split_name, split_test_targets)
+
+        coverage_java_test(
+            name = test_name,
+            shard_count = shard_count,
+            data = data,
+            tags = tags,
+            args = args,
+            **kwargs
+        )
+    native.test_suite(
+        name = name + "_tests",
+        tests = split_tests,
+    )
+
+def _gen_split_test_args(split_name, split_test_targets):
+    """Generates the args for a split test target.
+
+    Args:
+        split_name: The name of the split_test_target to generate args for.
+        split_test_targets: All the defined split_test_targets.
+    Returns:
+        The test args with --test_filter and --test_exclude_filter defined
+        based on the test_filter given to each split_test_target.
+    """
+    args = []
+    split_target = split_test_targets[split_name]
+    test_filter = split_target.get("test_filter")
+    _validate_split_test_filter(test_filter)
+    if test_filter:
+        args.append("--test_filter='(" + test_filter + ")'")
+
+    excludes = _gen_split_test_excludes(split_name, split_test_targets)
+    if excludes:
+        args.append("--test_exclude_filter='(" + "|".join(excludes) + ")'")
+    return args
+
+def _validate_split_test_filter(test_filter):
+    """Validates the test_filter matches a package or FQCN format."""
+    if not test_filter:
+        return
+    for split in test_filter.split("."):
+        if not split.isalnum():
+            fail("invalid test_filter '%s'. Must be package name or FQCN" % test_filter)
+
+def _gen_split_test_excludes(split_name, split_test_targets):
+    """Generates a list of test exclude filters.
+
+    These are used to exclude tests from running when other split_test_targets define
+    a 'test_filter' that is a subset of another test_filter. e.g.,
+    {
+      "A": {"test_filter": "com.bar"},
+      "B": {"test_filter": "com.bar.MyTest"},
+    }
+    The split_target A will generate an excludes ["com.bar.MyTest"], and
+    split_target B will generate no excludes.
+
+    If a split_test_target has no 'test_filter', it will generate a
+    list of excludes based on all the other test filters.
+
+    Args:
+        split_name: The name of the split_test_target to generate excludes for.
+        split_test_targets: All the defined split_test_targets.
+    Returns:
+        A list of exclude filters based on the 'test_filter' of other
+        split_test_targets.
+    """
+    split_target = split_test_targets[split_name]
+    test_filter = split_target.get("test_filter")
+    excludes = []
+    for other_split_name in split_test_targets:
+        # pass over the split_test_target we're generating excludes for
+        if split_name == other_split_name:
+            continue
+
+        other = split_test_targets[other_split_name]
+        other_test_filter = other.get("test_filter")
+        if not other_test_filter:
+            if not test_filter:
+                fail("Cannot have more than one split_test_targets without a 'test_filter'.")
+            continue
+
+        # empty test filter, always exclude other test filters
+        if not test_filter:
+            excludes.append(other_test_filter)
+            continue
+
+        if other_test_filter.startswith(test_filter):
+            excludes.append(other_test_filter)
+
+    return excludes
 
 def split_srcs(src_dirs, res_dirs, exclude):
     roots = src_dirs + res_dirs
