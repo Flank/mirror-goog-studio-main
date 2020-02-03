@@ -271,7 +271,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.protobuf_protobuf-java",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.10.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -279,10 +279,11 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.protobuf_protobuf-java-util",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.4.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.10.0:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.gson_gson",
+        ":com.google.errorprone_error_prone_annotations",
         ":com.google.guava_guava",
         ":com.google.protobuf_protobuf-java",
     ],
