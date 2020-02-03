@@ -99,10 +99,13 @@ public final class InstrumentationHooks {
             // Need to ensure that a background thread isn't retrieving resources while a
             // --dont-kill installation is occurring.
             synchronized (oldPackagePaths) {
-                // First check if this Element points to the current package path. If so, we don't need
-                // to do anything. We check this first because currentPackagePath can end up in the
-                // old paths set without the package actually having been moved.
-                if (currentPackagePath.equals(dir)) {
+                // First check if this Element points to the current package path. If so, we don't
+                // need to do anything. We check this first because currentPackagePath can end up in
+                // the old paths set without the package actually having been moved.
+                //
+                // If currentPackagePath is null, no --dont-kill install has been triggered by Apply
+                // Changes, so we don't need to do anything.
+                if (currentPackagePath == null || currentPackagePath.equals(dir)) {
                     return;
                 }
 
