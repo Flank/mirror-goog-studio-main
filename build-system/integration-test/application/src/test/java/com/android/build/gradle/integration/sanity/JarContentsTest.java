@@ -320,7 +320,6 @@ public class JarContentsTest {
                 "libthrowable_extension.jar:META-INF/MANIFEST.MF",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
-                "META-INF/services/",
                 "META-INF/services/com.android.tools.r8",
                 "NOTICE",
                 "r8-version.properties");
