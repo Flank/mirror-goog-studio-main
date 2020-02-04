@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.Directory
 import org.junit.Assert.fail
@@ -109,12 +110,14 @@ class SplitHandlingTest {
 
         val apkOutputFolder = File(project.outputDir, "apk/debug")
         loadBuiltArtifacts(apkOutputFolder).elements.forEach { output ->
-                    val manifestContent = ApkSubject.getConfigurations(
-                        Paths.get(output.outputFile))
-                    assertThat(manifestContent).contains("fr")
-                    assertThat(manifestContent).contains("de")
-                    assertThat(manifestContent).doesNotContain("en")
-                }
+            assertThat(output.versionCode).isEqualTo(12)
+            assertThat(output.versionName).isEqualTo("unique_string")
+            val manifestContent = ApkSubject.getConfigurations(
+                Paths.get(output.outputFile))
+            assertThat(manifestContent).contains("fr")
+            assertThat(manifestContent).contains("de")
+            assertThat(manifestContent).doesNotContain("en")
+        }
     }
 
 
