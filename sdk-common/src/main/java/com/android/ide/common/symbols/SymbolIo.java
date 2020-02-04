@@ -21,6 +21,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.xml.AndroidManifestParser;
+import com.android.io.NonClosingStreams;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceVisibility;
 import com.android.utils.FileUtils;
@@ -33,6 +34,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -42,6 +46,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
@@ -161,8 +167,13 @@ public final class SymbolIo {
 
     @NonNull
     public static SymbolTable readFromPublicTxtFile(
-            @NonNull File file, @Nullable String tablePackage) throws IOException {
-        return read(file, tablePackage, ReadConfiguration.PUBLIC_FILE);
+            @NonNull InputStream inputStream,
+            @NonNull String fileName,
+            @Nullable String tablePackage)
+            throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            return read(reader.lines(), fileName, tablePackage, ReadConfiguration.PUBLIC_FILE);
+        }
     }
 
     @NonNull
@@ -206,7 +217,10 @@ public final class SymbolIo {
      */
     @NonNull
     public static SymbolTable readSymbolListWithPackageName(@NonNull Path file) throws IOException {
-        return readWithPackage(file, ReadConfiguration.SYMBOL_LIST_WITH_PACKAGE);
+        try (Stream<String> lines = Files.lines(file, UTF_8)) {
+            return readWithPackage(
+                    lines, file.toString(), ReadConfiguration.SYMBOL_LIST_WITH_PACKAGE);
+        }
     }
 
     /**
@@ -218,29 +232,76 @@ public final class SymbolIo {
      */
     @NonNull
     public static SymbolTable readRDef(@NonNull Path file) throws IOException {
-        return readWithPackage(file, ReadConfiguration.R_DEF);
+        try (Stream<String> lines = Files.lines(file, UTF_8)) {
+            return readWithPackage(lines, file.toString(), ReadConfiguration.R_DEF);
+        }
+    }
+
+    /**
+     * Loads a symbol table from a pre-processed AAR that contains an R-def.txt
+     *
+     * @param zipFile a zip containing R-def.txt
+     * @return the table read
+     * @throws IOException failed to read the table
+     */
+    @NonNull
+    public static SymbolTable readRDefFromZip(@NonNull Path zipFile) throws IOException {
+        try (ZipInputStream zip =
+                new ZipInputStream(new BufferedInputStream(Files.newInputStream(zipFile)))) {
+            while (true) {
+                ZipEntry entry = zip.getNextEntry();
+                if (entry == null) {
+                    throw new IOException("Expected zip " + zipFile + " to contain R-def.txt");
+                }
+                if (!entry.getName().equals(SdkConstants.FN_R_DEF_TXT)) {
+                    continue;
+                }
+                return readRDefFromInputStream(zipFile.toString() + "/!R-def.txt", zip);
+            }
+        }
+    }
+
+    /**
+     * Loads a symbol table from the given input stream that contains an R-def.txt
+     *
+     * @param filePath the display name for the file
+     * @param fileInputStream an input stream for the contents of the file. Will not be closed.
+     * @return the table read
+     * @throws IOException failed to read the table
+     */
+    @NonNull
+    public static SymbolTable readRDefFromInputStream(
+            @NonNull String filePath, @NonNull InputStream fileInputStream) throws IOException {
+        try (BufferedReader reader =
+                new BufferedReader(
+                        new InputStreamReader(
+                                NonClosingStreams.nonClosing(fileInputStream), UTF_8))) {
+            return readWithPackage(reader.lines(), filePath, ReadConfiguration.R_DEF);
+        }
     }
 
     @NonNull
     private static SymbolTable readWithPackage(
-            @NonNull Path file, @NonNull ReadConfiguration readConfiguration) throws IOException {
-        try (Stream<String> lines = Files.lines(file, UTF_8)) {
-            Iterator<String> linesIterator = lines.iterator();
-            String filePath = file.toString();
-            int startLine = checkFileTypeHeader(linesIterator, readConfiguration, filePath);
-            if (!linesIterator.hasNext()) {
-                throw new IOException(
-                        "Internal error: Symbol file with package cannot be empty. File located at: "
-                                + file);
-            }
-            String tablePackage = linesIterator.next().trim();
-            SymbolTable.FastBuilder table =
-                    new SymbolLineReader(readConfiguration, linesIterator, filePath, startLine + 1)
-                            .readLines();
+            @NonNull Stream<String> lines,
+            @NonNull String filePath,
+            @NonNull ReadConfiguration readConfiguration)
+            throws IOException {
 
-            table.tablePackage(tablePackage);
-            return table.build();
+        Iterator<String> linesIterator = lines.iterator();
+
+        int startLine = checkFileTypeHeader(linesIterator, readConfiguration, filePath);
+        if (!linesIterator.hasNext()) {
+            throw new IOException(
+                    "Internal error: Symbol file with package cannot be empty. File located at: "
+                            + filePath);
         }
+        String tablePackage = linesIterator.next().trim();
+        SymbolTable.FastBuilder table =
+                new SymbolLineReader(readConfiguration, linesIterator, filePath, startLine + 1)
+                        .readLines();
+
+        table.tablePackage(tablePackage);
+        return table.build();
     }
 
     private static int checkFileTypeHeader(
@@ -756,51 +817,65 @@ public final class SymbolIo {
     public static void writeForAar(@NonNull SymbolTable table, @NonNull Path file)
             throws IOException {
         try (Writer writer = Files.newBufferedWriter(file)) {
-            // loop on the resource types so that the order is always the same
-            for (ResourceType resType : ResourceType.values()) {
-                List<Symbol> symbols = table.getSymbolByResourceType(resType);
-                if (symbols.isEmpty()) {
-                    continue;
-                }
+            writeForAar(table, writer);
+        } catch (Exception e) {
+            throw new IOException("Failed to write symbol file " + file.toString(), e);
+        }
+    }
 
-                for (Symbol s : symbols) {
-                    writer.write(s.getJavaType().getTypeName());
-                    writer.write(' ');
-                    writer.write(s.getResourceType().getName());
-                    writer.write(' ');
-                    writer.write(s.getCanonicalName());
-                    writer.write(' ');
-                    if (s.getResourceType() != ResourceType.STYLEABLE) {
-                        writer.write("0x");
-                        writer.write(Integer.toHexString(s.getIntValue()));
-                        writer.write('\n');
-                    } else {
+    /**
+     * Writes a symbol table to a symbol file.
+     *
+     * @param table the table
+     * @param writer for the file where the table should be written
+     * @throws IOException I/O error
+     */
+    public static void writeForAar(@NonNull SymbolTable table, @NonNull Writer writer)
+            throws IOException {
+        // loop on the resource types so that the order is always the same
+        for (ResourceType resType : ResourceType.values()) {
+            List<Symbol> symbols = table.getSymbolByResourceType(resType);
+            if (symbols.isEmpty()) {
+                continue;
+            }
 
-                        Symbol.StyleableSymbol styleable = (Symbol.StyleableSymbol) s;
-                        writeStyleableValue(styleable, writer);
+            for (Symbol s : symbols) {
+                writer.write(s.getJavaType().getTypeName());
+                writer.write(' ');
+                writer.write(s.getResourceType().getName());
+                writer.write(' ');
+                writer.write(s.getCanonicalName());
+                writer.write(' ');
+                if (s.getResourceType() != ResourceType.STYLEABLE) {
+                    writer.write("0x");
+                    writer.write(Integer.toHexString(s.getIntValue()));
+                    writer.write('\n');
+                } else {
+
+                    Symbol.StyleableSymbol styleable = (Symbol.StyleableSymbol) s;
+                    writeStyleableValue(styleable, writer);
+                    writer.write('\n');
+                    // Declare styleables have the attributes that were defined under their node
+                    // listed in
+                    // the children list.
+                    List<String> children = styleable.getChildren();
+                    for (int i = 0; i < children.size(); ++i) {
+                        writer.write(SymbolJavaType.INT.getTypeName());
+                        writer.write(' ');
+                        writer.write(ResourceType.STYLEABLE.getName());
+                        writer.write(' ');
+                        writer.write(s.getCanonicalName());
+                        writer.write('_');
+                        writer.write(SymbolUtils.canonicalizeValueResourceName(children.get(i)));
+                        writer.write(' ');
+                        writer.write(Integer.toString(i));
                         writer.write('\n');
-                        // Declare styleables have the attributes that were defined under their node
-                        // listed in
-                        // the children list.
-                        List<String> children = styleable.getChildren();
-                        for (int i = 0; i < children.size(); ++i) {
-                            writer.write(SymbolJavaType.INT.getTypeName());
-                            writer.write(' ');
-                            writer.write(ResourceType.STYLEABLE.getName());
-                            writer.write(' ');
-                            writer.write(s.getCanonicalName());
-                            writer.write('_');
-                            writer.write(
-                                    SymbolUtils.canonicalizeValueResourceName(children.get(i)));
-                            writer.write(' ');
-                            writer.write(Integer.toString(i));
-                            writer.write('\n');
-                        }
                     }
                 }
             }
         }
     }
+
 
     private static void writeStyleableValue(Symbol.StyleableSymbol s, Writer writer)
             throws IOException {
@@ -824,39 +899,60 @@ public final class SymbolIo {
      */
     public static void writeRDef(@NonNull SymbolTable table, @NonNull Path file)
             throws IOException {
+        try (BufferedWriter writer = Files.newBufferedWriter(file)) {
+            writeRDef(table, writer);
+        } catch (Exception e) {
+            throw new IOException("Failed to write R def  file " + file.toString(), e);
+        }
+    }
+
+    /**
+     * Writes a file listing the resources provided by the library.
+     *
+     * <p>This uses the symbol list with package name format of {@code "<type> <name>[ <child>[
+     * <child>[ ...]]]" }.
+     */
+    public static void writeRDef(@NonNull SymbolTable table, @NonNull OutputStream outputStream)
+            throws IOException {
+        try (BufferedWriter writer =
+                new BufferedWriter(
+                        new OutputStreamWriter(NonClosingStreams.nonClosing(outputStream)))) {
+            writeRDef(table, writer);
+        }
+    }
+
+    private static void writeRDef(@NonNull SymbolTable table, @NonNull BufferedWriter writer)
+            throws IOException {
         Preconditions.checkNotNull(
-                ReadConfiguration.R_DEF.fileTypeHeader,
-                "Missing package for R-def file " + file.toAbsolutePath());
+                ReadConfiguration.R_DEF.fileTypeHeader, "Missing package for R-def file");
 
-        try (Writer writer = Files.newBufferedWriter(file)) {
-            writer.write(ReadConfiguration.R_DEF.fileTypeHeader);
-            writer.write('\n');
-            writer.write(table.getTablePackage());
-            writer.write('\n');
-            // loop on the resource types so that the order is always the same
-            for (ResourceType resType : ResourceType.values()) {
-                List<Symbol> symbols = table.getSymbolByResourceType(resType);
-                if (symbols.isEmpty()) {
-                    continue;
-                }
+        writer.write(ReadConfiguration.R_DEF.fileTypeHeader);
+        writer.write('\n');
+        writer.write(table.getTablePackage());
+        writer.write('\n');
+        // loop on the resource types so that the order is always the same
+        for (ResourceType resType : ResourceType.values()) {
+            List<Symbol> symbols = table.getSymbolByResourceType(resType);
+            if (symbols.isEmpty()) {
+                continue;
+            }
 
-                for (Symbol s : symbols) {
-                    writer.write(s.getResourceType().getName());
-                    if (s.getResourceType() == ResourceType.ATTR
-                            && ((Symbol.AttributeSymbol) s).isMaybeDefinition()) {
-                        writer.write('?');
-                    }
-                    writer.write(' ');
-                    writer.write(s.getName());
-                    if (s.getResourceType() == ResourceType.STYLEABLE) {
-                        List<String> children = s.getChildren();
-                        for (String child : children) {
-                            writer.write(' ');
-                            writer.write(child);
-                        }
-                    }
-                    writer.write('\n');
+            for (Symbol s : symbols) {
+                writer.write(s.getResourceType().getName());
+                if (s.getResourceType() == ResourceType.ATTR
+                        && ((Symbol.AttributeSymbol) s).isMaybeDefinition()) {
+                    writer.write('?');
                 }
+                writer.write(' ');
+                writer.write(s.getName());
+                if (s.getResourceType() == ResourceType.STYLEABLE) {
+                    List<String> children = s.getChildren();
+                    for (String child : children) {
+                        writer.write(' ');
+                        writer.write(child);
+                    }
+                }
+                writer.write('\n');
             }
         }
     }

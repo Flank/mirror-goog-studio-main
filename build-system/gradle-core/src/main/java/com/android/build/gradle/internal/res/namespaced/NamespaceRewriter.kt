@@ -49,6 +49,7 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
 import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Path
@@ -831,11 +832,15 @@ class NamespaceRewriter(
     /**
      * Generates a public.xml file containing public definitions for the resources from the current
      * package.
+     *
+     * @param publicTxt an input stream of the `public.txt` file from the AAR, or null if none present
+     * @param outputDirectory the directory to output the generated file in to.
+     * @return The generated file, inside the output directory
      */
     fun generatePublicFile(
-        publicTxt: File?,
+        publicTxt: InputStream?,
         outputDirectory: Path
-    ) {
+    ): Path {
         val symbols = symbolTables[0]
         val values = outputDirectory.resolve("values")
         Files.createDirectories(values)
@@ -849,44 +854,44 @@ class NamespaceRewriter(
         // the resources specified in the public.txt will be accessible to namespaced dependencies).
         // But if the public.txt does not exist, all of the Symbols in this package will be public.
         val publicSymbols: SymbolTable =
-            if (publicTxt != null && Files.exists(publicTxt.toPath()))
-                SymbolIo.readFromPublicTxtFile(publicTxt, symbols.tablePackage)
+            if (publicTxt != null)
+                SymbolIo.readFromPublicTxtFile(publicTxt, "", symbols.tablePackage)
             else
                 symbols
-
-        // If there are no public symbols (empty public.txt or no symbols present in this lib), don't
-        // waste time going through all symbols
-        if (publicSymbols.symbols.isEmpty) {
-            return
-        }
 
         Files.newBufferedWriter(publicXml).use {
             // If there was no public.txt file, 'symbols' and 'publicSymbols' will be the same.
             writePublicFile(it, symbols, publicSymbols)
         }
+        return publicXml
     }
+
 
     @VisibleForTesting
     internal fun writePublicFile(writer: Writer, symbols: SymbolTable, publicSymbols: SymbolTable) {
         writer.write("""<?xml version="1.0" encoding="utf-8"?>""")
         writer.write("\n<resources>\n\n")
 
-        // If everything is public, then there's no need to call the 'isPublic' method.
-        val allPublic = symbols == publicSymbols
+        // If there are no public symbols (empty public.txt or no symbols present in this lib), don't
+        // waste time going through all symbols
+        if (!publicSymbols.symbols.isEmpty) {
+            // If everything is public, then there's no need to call the 'isPublic' method.
+            val allPublic = symbols == publicSymbols
 
-        // Sadly we cannot simply iterate through the public symbols table since the public.txt had
-        // the resource names already canonicalized.
-        symbols.resourceTypes.forEach { resourceType ->
-            symbols.getSymbolByResourceType(resourceType).forEach { symbol ->
-                if (allPublic || isPublic(symbol, publicSymbols)) {
-                    if (symbol.resourceType == ResourceType.ATTR) {
-                        maybeWriteAttribute(symbol, writer)
-                    } else {
-                        writer.write("    <public name=\"")
-                        writer.write(symbol.name)
-                        writer.write("\" type=\"")
-                        writer.write(resourceType.getName())
-                        writer.write("\" />\n")
+            // Sadly we cannot simply iterate through the public symbols table since the public.txt had
+            // the resource names already canonicalized.
+            symbols.resourceTypes.forEach { resourceType ->
+                symbols.getSymbolByResourceType(resourceType).forEach { symbol ->
+                    if (allPublic || isPublic(symbol, publicSymbols)) {
+                        if (symbol.resourceType == ResourceType.ATTR) {
+                            maybeWriteAttribute(symbol, writer)
+                        } else {
+                            writer.write("    <public name=\"")
+                            writer.write(symbol.name)
+                            writer.write("\" type=\"")
+                            writer.write(resourceType.getName())
+                            writer.write("\" />\n")
+                        }
                     }
                 }
             }

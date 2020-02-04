@@ -352,7 +352,11 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
                     outputResourcesDirectory!!.toPath()
                 )
 
-                rewriter.generatePublicFile(publicTxt, outputResourcesDirectory.toPath())
+                publicTxt?.let { file ->
+                    file.inputStream().buffered().use { inputStream ->
+                        rewriter.generatePublicFile(inputStream, outputResourcesDirectory.toPath())
+                    }
+                }
             }
 
             logger.info("Finished rewriting $dependency")
