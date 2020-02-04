@@ -31,6 +31,7 @@ import com.android.testutils.apk.Apk
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -185,6 +186,27 @@ class PrecompileRemoteResourcesTest {
         "transforms-2",
         "files-2.1"
     )
+
+    // ensure that the cache output of any previous run of this test has been cleared
+    private fun clearPreviousTransformOutput() {
+        if (!transformCacheDir.exists() || !transformCacheDir.isDirectory) {
+            return
+        }
+        for (subdirectory in transformCacheDir.listFiles()!!) {
+            if (subdirectory.isDirectory) {
+                val outputDirCandidate =
+                    File(subdirectory, "com.precompileRemoteResourcesTest.publishedLib")
+                if (outputDirCandidate.exists() && outputDirCandidate.isDirectory) {
+                    FileUtils.deleteRecursivelyIfExists(outputDirCandidate)
+                }
+            }
+        }
+    }
+
+    @Before
+    fun setUp() {
+        clearPreviousTransformOutput()
+    }
 
     @Test
     fun checkAppBuild() {
