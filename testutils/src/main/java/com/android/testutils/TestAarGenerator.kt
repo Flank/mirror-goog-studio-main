@@ -33,10 +33,12 @@ import java.util.zip.ZipOutputStream
  * @param secondaryJars a map of name (without extension) to contents of jars
  *                      to be stored as `libs/{name}.jar`. Defaults to empty.
  */
+@JvmOverloads
 fun generateAarWithContent(
     packageName: String,
     mainJar: ByteArray = jarWithEmptyEntries(listOf()),
-    secondaryJars: Map<String, ByteArray> = mapOf()
+    secondaryJars: Map<String, ByteArray> = mapOf(),
+    resources: Map<String, ByteArray> = mapOf()
 ): ByteArray {
     ByteArrayOutputStream().use { baos ->
         ZipOutputStream(baos).use { zos ->
@@ -46,6 +48,10 @@ fun generateAarWithContent(
             zos.write(mainJar)
             secondaryJars.forEach { (name, content) ->
                 zos.putNextEntry(ZipEntry("libs/$name.jar"))
+                zos.write(content)
+            }
+            resources.forEach { (name, content) ->
+                zos.putNextEntry(ZipEntry("res/$name"))
                 zos.write(content)
             }
         }

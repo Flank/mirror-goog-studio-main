@@ -40,6 +40,7 @@ import com.android.tools.build.apkzlib.zip.StoredEntryType
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.tools.build.apkzlib.zip.ZFileOptions
 import com.android.utils.FileUtils
+import com.android.utils.PathUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
@@ -70,6 +71,7 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
+import java.nio.file.Path
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.ForkJoinTask
 
@@ -338,19 +340,22 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
                         outputClassesDirectory,
                         "namespaced-${dependency.sanitizedName}-${it.name}"
                     )
-                    rewriter.rewriteJar(it, out)
+                    it.inputStream().buffered().use {inputStream ->
+                        out.outputStream().buffered().use { outputStream ->
+                            rewriter.rewriteJar(inputStream, outputStream)
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 throw IOException("Failed to transform jar + ${dependency.getTransitiveFiles(ArtifactType.DEFINED_ONLY_SYMBOL_LIST)}", e)
             }
-            rewriter.rewriteManifest(
-                manifest!!.toPath(),
-                outputManifests.toPath().resolve("${dependency.sanitizedName}_AndroidManifest.xml"))
+            manifest!!.inputStream().buffered().use {inputStream ->
+                outputManifests.resolve("${dependency.sanitizedName}_AndroidManifest.xml").outputStream().use { outputStream ->
+                    rewriter.rewriteManifest(inputStream, outputStream, manifest)
+                }
+            }
             if (resources != null) {
-                rewriter.rewriteAarResources(
-                    resources.toPath(),
-                    outputResourcesDirectory!!.toPath()
-                )
+                rewriteAarResources(rewriter, resources, outputResourcesDirectory!!)
 
                 publicTxt?.let { file ->
                     file.inputStream().buffered().use { inputStream ->
@@ -370,6 +375,68 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
             )
         }
     }
+
+    // Temporarily moved here prior to removal in subsequent change.
+    private fun rewriteAarResources(
+        rewriter: NamespaceRewriter,
+        resources: File,
+        outputResourcesDirectory: File
+    ) {
+        val input = resources.toPath()
+        val output = outputResourcesDirectory.toPath()
+        if (!Files.isDirectory(input)) {
+            throw IOException("expected ${input} to be a directory")
+        }
+        PathUtils.deleteRecursivelyIfExists(output)
+        Files.createDirectories(output)
+        Files.list(input).use {
+            it.forEach { resSubdirectory ->
+                val name = resSubdirectory.fileName.toString()
+                val outputDir = output.resolve(name)
+                Files.createDirectory(outputDir)
+                if (name == "values" || name.startsWith("values-")) {
+                    resSubdirectory.forEachFile(outputDir) { from, to ->
+                        Files.newInputStream(from).buffered().use { fromStream ->
+                            Files.newOutputStream(to).buffered().use { toStream ->
+                                rewriter.rewriteValuesFile(
+                                    fromStream, toStream
+                                )
+                            }
+                        }
+                    }
+                } else if (name == "raw" || name.startsWith("raw-")) {
+                    resSubdirectory.forEachFile(outputDir) { from, to ->
+                        Files.copy(from, to)
+                    }
+                } else {
+                    resSubdirectory.forEachFile(outputDir) { from, to ->
+                        if (from.fileName.toString().endsWith(".xml")) {
+                            Files.newInputStream(from).buffered().use { fromStream ->
+                                Files.newOutputStream(to).buffered().use { toStream ->
+                                    rewriter.rewriteXmlFile(fromStream, toStream)
+                                }
+                            }
+                        } else {
+                            Files.copy(from, to)
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    private inline fun Path.forEachFile(outdir: Path, crossinline action: (Path, Path) -> Unit) {
+        Files.list(this).use {
+            it.forEach { file ->
+                if (Files.isRegularFile(file)) {
+                    action.invoke(file, outdir.resolve(file.fileName))
+                }
+            }
+        }
+    }
+
+
 
     private fun compile(
         rewrittenResourcesMap: Map<DependenciesGraph.Node, File>,

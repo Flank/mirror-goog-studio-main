@@ -28,6 +28,7 @@ import com.android.testutils.truth.PathSubject
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
+import com.android.utils.PathUtils
 import com.android.utils.PositionXmlParser
 import com.google.common.collect.ImmutableList
 import com.google.common.jimfs.Configuration
@@ -36,12 +37,18 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.IOException
 import java.io.StringWriter
 import java.lang.reflect.InvocationTargetException
 import java.net.URLClassLoader
+import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
 import java.util.stream.Collectors
 import kotlin.test.assertFailsWith
 
@@ -348,10 +355,14 @@ class NamespaceRewriterTest {
             .add(symbol("string", "s3"))
             .build()
 
-        NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable)).rewriteJar(
-            inputJar,
-            outputJar
-        )
+        inputJar.inputStream().buffered().use { input ->
+            outputJar.outputStream().buffered().use { output ->
+                NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable)).rewriteJar(
+                    input,
+                    output
+                )
+            }
+        }
         assertThat(outputJar).exists()
         ZFile.openReadWrite(outputJar).use {
             it.add("com/example/mymodule/R.class", moduleRClass.inputStream())
@@ -413,8 +424,11 @@ class NamespaceRewriterTest {
             .add(symbol("string", "activity_name")) // overridden by the one in the module
             .build()
 
-        NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
-            .rewriteManifest(originalManifest.toPath(), outputManifest.toPath())
+        rewriteManifest(
+            NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable)),
+            originalManifest,
+            outputManifest
+        )
 
         assertThat(FileUtils.loadFileWithUnixLineSeparators(outputManifest)).contains(
             """<?xml version="1.0" encoding="utf-8"?>
@@ -506,8 +520,10 @@ class NamespaceRewriterTest {
             .add(symbol("styleable", "StyleableParent"))
             .build()
 
-        NamespaceRewriter(ImmutableList.of(localTable, moduleTable, dependencyTable))
-            .rewriteValuesFile(original.toPath(), namespaced.toPath())
+        rewriteFile(NamespaceRewriter(ImmutableList.of(localTable, moduleTable, dependencyTable)),
+            "res/values/values.xml",
+            original,
+            namespaced)
 
         assertThat(FileUtils.loadFileWithUnixLineSeparators(namespaced)).isEqualTo(
             """<?xml version="1.0" encoding="utf-8"?>
@@ -604,12 +620,11 @@ class NamespaceRewriterTest {
             .add(symbol("attr", "layout_constraintTop_toTopOf"))
             .build()
 
-        NamespaceRewriter(
+        rewriteFile(NamespaceRewriter(
             ImmutableList.of(
                 moduleTable, dependencyTable, coordinatorlayoutTable, constraintTable
             )
-        )
-            .rewriteXmlFile(original.toPath(), namespaced.toPath())
+        ), "res/layout/layout.xml", original, namespaced)
 
         assertThat(FileUtils.loadFileWithUnixLineSeparators(namespaced)).contains(
             """<?xml version="1.0" encoding="utf-8"?>
@@ -649,7 +664,7 @@ class NamespaceRewriterTest {
         val emptyRes = fileSystem.getPath("/tmp/aar/emptyRes")
         Files.createDirectories(emptyRes)
         val outputDir = fileSystem.getPath("/tmp/rewrittenAar")
-        namespaceRewriter.rewriteAarResources(emptyRes, outputDir)
+        rewriteAarResources(namespaceRewriter, emptyRes, outputDir)
         PathSubject.assertThat(outputDir).isDirectory()
         val rewrittenEmpty = Files.list(outputDir).use { it.collect(Collectors.toList()) }
         assertThat(rewrittenEmpty).isEmpty()
@@ -719,16 +734,15 @@ class NamespaceRewriterTest {
 
     @Test
     fun checkAarRawCopy() {
-        val moduleTable = SymbolTable.builder()
-            .tablePackage("com.example.module")
-            .add(symbol("string", "text"))
-            .build()
-
-        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable))
-
-        val raw = """<?notxml"""
-        checkAarRewrite(namespaceRewriter, "raw/strings.xml", raw, raw)
-        checkAarRewrite(namespaceRewriter, "raw-en/strings.xml", raw, raw)
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of())
+        val failure = assertFailsWith(IllegalArgumentException::class) {
+            namespaceRewriter.rewriteAarResource(
+                "res/raw/strings.xml",
+                ByteArrayInputStream(byteArrayOf()),
+                ByteArrayOutputStream()
+            )
+        }
+        assertThat(failure).hasMessageThat().isEqualTo("Raw resources do not need rewriting")
     }
 
     @Test
@@ -830,11 +844,40 @@ class NamespaceRewriterTest {
     fun checkAarNonXmlFileResourceCopy() {
         val namespaceRewriter = NamespaceRewriter(ImmutableList.of())
 
-        val raw = """<?notxml"""
-        checkAarRewrite(namespaceRewriter, "drawable/my.foo", raw, raw)
-        checkAarRewrite(namespaceRewriter, "drawable/my.foo2", raw, raw)
+        val failure = assertFailsWith(IllegalArgumentException::class) {
+            namespaceRewriter.rewriteAarResource(
+                "drawable/my.foo",
+                ByteArrayInputStream(byteArrayOf()),
+                ByteArrayOutputStream()
+            )
+        }
+        assertThat(failure)
+            .hasMessageThat()
+            .isEqualTo("Non-xml resources do not need rewriting")
     }
 
+    @Test
+    fun checkPublicFileGenerationWithNoResources() {
+        val moduleTable = SymbolTable.builder()
+            .tablePackage("com.example.module")
+            .build()
+
+        val dependencyTable = SymbolTable.builder()
+            .tablePackage("com.example.dependency")
+            .add(symbol("attr", "remote_attr"))
+            .build()
+
+        val namespaceRewriter = NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
+
+        val result = StringWriter().apply {
+            namespaceRewriter.writePublicFile(this, moduleTable, moduleTable)
+        }.toString().trim()
+
+        assertThat(result).isEqualTo("""
+            <resources>
+            </resources>
+        """.xmlFormat())
+    }
 
     @Test
     fun checkPublicFileGenerationWithPublicTxt() {
@@ -1226,7 +1269,7 @@ class NamespaceRewriterTest {
         val inputFile = aarRes.resolve(path)
         Files.createDirectories(inputFile.parent)
         Files.write(inputFile, from.toByteArray())
-        namespaceRewriter.rewriteAarResources(aarRes, outputDir)
+        rewriteAarResources(namespaceRewriter, aarRes, outputDir)
         val outputFile = outputDir.resolve(path)
         assertThat(outputFile).exists()
         assertThat(outputFile.parent.list()).hasSize(1)
@@ -1247,4 +1290,50 @@ class NamespaceRewriterTest {
                 false
             )
         }
+
+    private fun rewriteManifest(namespaceRewriter: NamespaceRewriter, input: File, output: File) {
+        input.inputStream().buffered().use { inputStream ->
+            output.outputStream().buffered().use { outputStream ->
+                namespaceRewriter.rewriteManifest(inputStream, outputStream, "Fake")
+            }
+        }
+    }
+
+    private fun rewriteFile(namespaceRewriter: NamespaceRewriter, path: String, input: File, output: File) {
+        input.inputStream().buffered().use { inputStream ->
+            output.outputStream().buffered().use { outputStream ->
+                namespaceRewriter.rewriteAarResource(path, inputStream, outputStream)
+            }
+        }
+    }
+
+    /**
+     * Rewrites all the resources from an exploded-aar input directory as passed in input to the
+     * output directory.
+     */
+    private fun rewriteAarResources(namespaceRewriter: NamespaceRewriter, input: Path, output: Path) {
+        if (!Files.isDirectory(input)) {
+            throw IOException("expected $input to be a directory")
+        }
+        PathUtils.deleteRecursivelyIfExists(output)
+        Files.createDirectories(output)
+        Files.walkFileTree(input, object: SimpleFileVisitor<Path>() {
+            override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult {
+                val outputDir = output.resolve(input.relativize(dir))
+                Files.createDirectories(outputDir)
+                return FileVisitResult.CONTINUE
+            }
+
+            override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+                val relative = PathUtils.toSystemIndependentPath(input.relativize(file))
+                val outputFile = output.resolve(relative)
+                Files.newInputStream(file).buffered().use { input ->
+                    Files.newOutputStream(outputFile).buffered().use { output ->
+                        namespaceRewriter.rewriteAarResource("res/$relative", input, output)
+                    }
+                }
+                return FileVisitResult.CONTINUE
+            }
+        })
+    }
 }

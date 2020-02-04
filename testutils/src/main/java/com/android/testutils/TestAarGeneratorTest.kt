@@ -29,7 +29,8 @@ class TestAarGeneratorTest {
         val aar = generateAarWithContent(
             packageName = "com.example.lib",
             mainJar = "classes jar content".toByteArray(Charsets.UTF_8),
-            secondaryJars = mapOf("other" to "otherJarContent".toByteArray(Charsets.UTF_8))
+            secondaryJars = mapOf("other" to "otherJarContent".toByteArray(Charsets.UTF_8)),
+            resources = mapOf("values/strings.xml" to "stringsXml".toByteArray(Charsets.UTF_8))
         )
 
         assertThat(readZipEntries(aar))
@@ -37,7 +38,8 @@ class TestAarGeneratorTest {
                 mapOf(
                     "AndroidManifest.xml" to """<manifest package="com.example.lib"></manifest>""",
                     "classes.jar" to "classes jar content",
-                    "libs/other.jar" to "otherJarContent"
+                    "libs/other.jar" to "otherJarContent",
+                    "res/values/strings.xml" to "stringsXml"
                 )
             )
     }
