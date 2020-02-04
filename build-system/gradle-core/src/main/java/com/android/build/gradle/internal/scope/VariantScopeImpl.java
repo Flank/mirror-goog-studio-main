@@ -335,18 +335,24 @@ public class VariantScopeImpl implements VariantScope {
         }
 
         CodeShrinker codeShrinker = postProcessingOptions.getCodeShrinker();
-        if (codeShrinker != null) {
-            Boolean enableR8 = globalScope.getProjectOptions().get(ENABLE_R8);
-            if (enableR8 == null) {
-                return codeShrinker;
-            } else if (enableR8) {
-                return R8;
-            } else {
-                return PROGUARD;
-            }
+        if (codeShrinker == null) {
+            return null;
         }
 
-        return codeShrinker;
+        Boolean enableR8 = globalScope.getProjectOptions().get(ENABLE_R8);
+        if (variantDslInfo.getVariantType().isAar()
+                && !globalScope.getProjectOptions().get(BooleanOption.ENABLE_R8_LIBRARIES)) {
+            // R8 is disabled for libraries
+            enableR8 = false;
+        }
+
+        if (enableR8 == null) {
+            return codeShrinker;
+        } else if (enableR8) {
+            return R8;
+        } else {
+            return PROGUARD;
+        }
     }
 
     @NonNull

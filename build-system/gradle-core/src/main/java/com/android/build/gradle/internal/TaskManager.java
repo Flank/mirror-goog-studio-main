@@ -2204,8 +2204,8 @@ public abstract class TaskManager<
 
         // ----- Minify next -----
         maybeCreateCheckDuplicateClassesTask(componentProperties);
-        CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTask(componentProperties);
-        if (shrinker == CodeShrinker.R8) {
+        maybeCreateJavaCodeShrinkerTask(componentProperties);
+        if (componentProperties.getVariantScope().getCodeShrinker() == CodeShrinker.R8) {
             maybeCreateResourcesShrinkerTasks(componentProperties);
             maybeCreateDexDesugarLibTask(componentProperties, false);
             return;
@@ -2881,53 +2881,39 @@ public abstract class TaskManager<
                 taskProvider -> componentProperties.getTaskContainer().setBundleTask(taskProvider));
     }
 
-    /** Returns created shrinker type, or null if none was created. */
-    @Nullable
-    protected CodeShrinker maybeCreateJavaCodeShrinkerTask(
+    protected void maybeCreateJavaCodeShrinkerTask(
             @NonNull ComponentPropertiesImpl componentProperties) {
         CodeShrinker codeShrinker = componentProperties.getVariantScope().getCodeShrinker();
 
         if (codeShrinker != null) {
-            return doCreateJavaCodeShrinkerTask(
+            doCreateJavaCodeShrinkerTask(
                     componentProperties,
                     // No mapping in non-test modules.
                     codeShrinker);
-        } else {
-            return null;
         }
     }
 
     /**
      * Actually creates the minify transform, using the given mapping configuration. The mapping is
-     * only used by test-only modules. Returns a type of the {@link CodeShrinker} shrinker that was
-     * created, or {@code null} if none was created.
+     * only used by test-only modules.
      */
-    @NonNull
-    protected final CodeShrinker doCreateJavaCodeShrinkerTask(
+    protected final void doCreateJavaCodeShrinkerTask(
             @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull CodeShrinker codeShrinker) {
-        return doCreateJavaCodeShrinkerTask(componentProperties, codeShrinker, false);
+        doCreateJavaCodeShrinkerTask(componentProperties, codeShrinker, false);
     }
 
-    @NonNull
-    protected final CodeShrinker doCreateJavaCodeShrinkerTask(
+    protected final void doCreateJavaCodeShrinkerTask(
             @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull CodeShrinker codeShrinker,
             Boolean isTestApplication) {
         @NonNull TaskProvider<? extends Task> task;
-        CodeShrinker createdShrinker = codeShrinker;
         switch (codeShrinker) {
             case PROGUARD:
                 task = createProguardTask(componentProperties, isTestApplication);
                 break;
             case R8:
-                if (componentProperties.getVariantType().isAar()
-                        && !projectOptions.get(BooleanOption.ENABLE_R8_LIBRARIES)) {
-                    task = createProguardTask(componentProperties, isTestApplication);
-                    createdShrinker = CodeShrinker.PROGUARD;
-                } else {
-                    task = createR8Task(componentProperties, isTestApplication);
-                }
+                task = createR8Task(componentProperties, isTestApplication);
                 break;
             default:
                 throw new AssertionError("Unknown value " + codeShrinker);
@@ -2939,8 +2925,6 @@ public abstract class TaskManager<
 
             TaskFactoryUtils.dependsOn(task, checkFilesTask);
         }
-
-        return createdShrinker;
     }
 
     @NonNull

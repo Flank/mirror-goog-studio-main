@@ -22,7 +22,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.variant.TestVariantFactory.getTestedApksConfigurationName;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
@@ -176,13 +175,12 @@ public class TestApplicationTaskManager
         // do nothing
     }
 
-    @Nullable
     @Override
-    protected CodeShrinker maybeCreateJavaCodeShrinkerTask(
+    protected void maybeCreateJavaCodeShrinkerTask(
             @NonNull ComponentPropertiesImpl componentProperties) {
         final CodeShrinker codeShrinker = componentProperties.getVariantScope().getCodeShrinker();
         if (codeShrinker != null) {
-            return doCreateJavaCodeShrinkerTask(
+            doCreateJavaCodeShrinkerTask(
                     componentProperties, Objects.requireNonNull(codeShrinker), true);
         } else {
             TaskProvider<CheckTestedAppObfuscation> checkObfuscation =
@@ -191,7 +189,6 @@ public class TestApplicationTaskManager
             Preconditions.checkNotNull(componentProperties.getTaskContainer().getJavacTask());
             TaskFactoryUtils.dependsOn(
                     componentProperties.getTaskContainer().getJavacTask(), checkObfuscation);
-            return null;
         }
     }
 
