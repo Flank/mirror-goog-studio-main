@@ -87,6 +87,6 @@ public class TestWithCompileLibTest {
 
         DependencyGraphs graph = testArtifact.getDependencyGraphs();
         assertThat(helper.on(graph).withType(MODULE).mapTo(GRADLE_PATH))
-                .containsExactly(":library");
+                .containsExactly(":app", ":library");
     }
 }

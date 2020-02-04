@@ -32,7 +32,5 @@ class FakeResolvedDependencyResult(
     override fun isConstraint() = constraint ?: error("value not set")
     override fun getSelected() = selected ?: error("value not set")
     override fun getRequested() = requested ?: error("value not set")
-    override fun getResolvedVariant(): ResolvedVariantResult {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun getResolvedVariant(): ResolvedVariantResult? = null
 }

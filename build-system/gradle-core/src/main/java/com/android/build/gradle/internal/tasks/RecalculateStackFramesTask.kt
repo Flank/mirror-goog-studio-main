@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
@@ -125,12 +126,6 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
             }
 
             creationConfig.onTestedConfig {
-                referencedClasses.from(
-                    creationConfig.artifacts.getFinalProduct(
-                        InternalArtifactType.TESTED_CODE_CLASSES
-                    )
-                )
-
                 referencedClasses.from(
                     it.variantDependencies.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

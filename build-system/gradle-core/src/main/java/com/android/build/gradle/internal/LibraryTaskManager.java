@@ -52,7 +52,6 @@ import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.LibraryAarJarsTask;
-import com.android.build.gradle.internal.tasks.LibraryDexingTask;
 import com.android.build.gradle.internal.tasks.LibraryJniLibsTask;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction;
@@ -301,8 +300,6 @@ public class LibraryTaskManager
                         excludeDataBindingClassesIfNecessary(libVariantProperties)));
 
         taskFactory.register(new BundleLibraryJavaRes.CreationAction(libVariantProperties));
-
-        taskFactory.register(new LibraryDexingTask.CreationAction(libVariantProperties));
 
         // Create a jar with both classes and java resources.  This artifact is not
         // used by the Android application plugin and the task usually don't need to

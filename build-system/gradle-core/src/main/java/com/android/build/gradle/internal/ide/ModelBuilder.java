@@ -30,7 +30,6 @@ import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.PublicArtifactType;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
-import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -52,12 +51,10 @@ import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesUtils;
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
@@ -134,7 +131,6 @@ import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
@@ -1020,49 +1016,23 @@ public class ModelBuilder<Extension extends BaseExtension>
                                                 .get()
                                                 .getAsFile())));
             case UNIT_TEST:
-                return (BuildOutputSupplier<Collection<EarlySyncBuildOutput>>)
-                        () -> {
-                            VariantPropertiesImpl testedVariant =
-                                    ((UnitTestPropertiesImpl) componentProperties)
-                                            .getTestedVariant();
-
-                            PublishingSpecs.VariantSpec testedSpec =
-                                    testedVariant
-                                            .getVariantScope()
-                                            .getPublishingSpec()
-                                            .getTestingSpec(componentProperties.getVariantType());
-
-                            // get the OutputPublishingSpec from the ArtifactType for this
-                            // particular variant spec
-                            PublishingSpecs.OutputSpec taskOutputSpec =
-                                    testedSpec.getSpec(
-                                            AndroidArtifacts.ArtifactType.CLASSES_JAR,
-                                            AndroidArtifacts.PublishedConfigType.API_ELEMENTS);
-                            // now get the output type
-                            SingleArtifactType<? extends FileSystemLocation> testedOutputType =
-                                    taskOutputSpec.getOutputType();
-
-                            return ImmutableList.of(
-                                    new EarlySyncBuildOutput(
-                                            JAVAC.INSTANCE,
-                                            VariantOutput.OutputType.MAIN,
-                                            ImmutableList.of(),
-                                            componentProperties
-                                                    .getVariantDslInfo()
-                                                    .getVersionCode(),
-                                            componentProperties
-                                                    .getArtifacts()
-                                                    .getFinalProductAsFileCollection(
-                                                            testedOutputType)
-                                                    // We used to call .getSingleFile() but Kotlin
-                                                    // projects currently have 2 output dirs
-                                                    // specified for test classes. This supplier is
-                                                    // going away in beta3, so this is obsolete in
-                                                    // any case.
-                                                    .get()
-                                                    .iterator()
-                                                    .next()));
-                        };
+                return BuildOutputSupplier.of(
+                        ImmutableList.of(
+                                new EarlySyncBuildOutput(
+                                        JAVAC.INSTANCE,
+                                        VariantOutput.OutputType.MAIN,
+                                        ImmutableList.of(),
+                                        componentProperties.getVariantDslInfo().getVersionCode(),
+                                        componentProperties
+                                                .getArtifacts()
+                                                .getAllClasses()
+                                                // We used to call .getSingleFile() but Kotlin
+                                                // projects currently have 2 output dirs
+                                                // specified for test classes. This supplier is
+                                                // going away in beta3, so this is obsolete in
+                                                // any case.
+                                                .iterator()
+                                                .next())));
             default:
                 throw new RuntimeException(
                         "Unhandled build type " + componentProperties.getVariantType());

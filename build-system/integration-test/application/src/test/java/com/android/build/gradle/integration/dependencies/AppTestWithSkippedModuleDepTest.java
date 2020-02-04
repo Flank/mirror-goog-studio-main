@@ -163,7 +163,7 @@ public class AppTestWithSkippedModuleDepTest {
         // check direct dependencies
         assertThat(compileItems.withType(MODULE).mapTo(Property.GRADLE_PATH))
                 .named("app direct compile module dependencies")
-                .containsExactly(":jar");
+                .containsExactly(":app", ":jar");
 
         assertThat(compileItems.withType(JAVA).asList())
                 .named("app direct compile java deps")

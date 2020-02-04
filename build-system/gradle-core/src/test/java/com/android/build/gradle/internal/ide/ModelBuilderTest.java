@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.ide;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.android.AndroidProjectTypes;
@@ -438,8 +437,7 @@ public class ModelBuilderTest {
                         libProperties);
 
         FileCollection testBuildableArtifact = Mockito.mock(FileCollection.class);
-        when(artifacts.getFinalProductAsFileCollection(any()))
-                .thenReturn(new FakeGradleProvider(testBuildableArtifact));
+        when(artifacts.getAllClasses()).thenReturn(testBuildableArtifact);
         when(testBuildableArtifact.iterator())
                 .thenReturn(ImmutableSet.of(temporaryFolder.getRoot()).iterator());
 

@@ -161,42 +161,10 @@ class ConfigurationExtensionTest(private val pluginType: TestProjects.Plugin) {
      * Modelled after
      * [https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_configurations_graph]
      * Note that `*testCompileClasspath` extends `implementation` directly, rather than via
-     * `*testImplementation`, see
-     * [com.android.build.gradle.internal.dependency.AndroidTestResourceArtifactCollection] for how
-     * that is used.
+     * `*testImplementation`.
      */
     private val testRuntimeToRaw = multimapWithSingleKeyOf(
             "lollipopDemoDebugUnitTestRuntimeClasspath",
-            publish.toLowerCase(Locale.US),
-            "api",
-            "compile",
-            "debug$publish",
-            "debugApi",
-            "debugCompile",
-            "debugImplementation",
-            "debugRuntimeOnly",
-            "demo$publish",
-            "demoApi",
-            "demoCompile",
-            "demoImplementation",
-            "demoRuntimeOnly",
-            "implementation",
-            "lollipop$publish",
-            "lollipopApi",
-            "lollipopCompile",
-            "lollipopDemo$publish",
-            "lollipopDemoApi",
-            "lollipopDemoCompile",
-            "lollipopDemoDebug$publish",
-            "lollipopDemoDebugApi",
-            "lollipopDemoDebugCompile",
-            "lollipopDemoDebugImplementation",
-            "lollipopDemoDebugRuntimeOnly",
-            "lollipopDemoImplementation",
-            "lollipopDemoRuntimeOnly",
-            "lollipopImplementation",
-            "lollipopRuntimeOnly",
-            "runtimeOnly",
             "test$publish",
             "testApi",
             "testCompile",

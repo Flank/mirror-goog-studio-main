@@ -208,6 +208,8 @@ public class VariantDependenciesBuilder {
                             .getSourceSetImplementationConfigurations()) {
                 compileClasspath.extendsFrom(configuration);
             }
+
+            compileClasspath.getDependencies().add(project.getDependencies().create(project));
         }
         compileClasspath.setCanBeConsumed(false);
         compileClasspath
@@ -237,9 +239,9 @@ public class VariantDependenciesBuilder {
                 "Resolved configuration for runtime for variant: " + variantName);
         runtimeClasspath.setExtendsFrom(runtimeClasspaths);
         if (testedVariant != null) {
-            for (Configuration configuration :
-                    testedVariant.getVariantDependencies().getSourceSetRuntimeConfigurations()) {
-                runtimeClasspath.extendsFrom(configuration);
+            if (testedVariant.getVariantDslInfo().getVariantType().isAar()
+                    || !variantDslInfo.getVariantType().isApk()) {
+                runtimeClasspath.getDependencies().add(project.getDependencies().create(project));
             }
         }
         runtimeClasspath.setCanBeConsumed(false);

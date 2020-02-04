@@ -95,7 +95,7 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
                 // Visit all children of the node and collect them. If a child has already been
                 // visited, it will be stored in the 'foundNodes' map.
                 val dependencies = ArrayList<DependenciesGraph.Node>()
-                for (dependency in dependencyResult.selected.dependencies) {
+                for (dependency in dependencyResult.selected.getDependenciesForVariant(dependencyResult.resolvedVariant)) {
                     dependency as ResolvedDependencyResult
                     collect(dependency, foundNodes, usedSanitizedNames, artifacts)
                     dependencies.add(foundNodes[dependency.selected.id.displayName]!!)

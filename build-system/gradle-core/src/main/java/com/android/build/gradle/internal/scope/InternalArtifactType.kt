@@ -53,8 +53,6 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object JAVAC: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // Rewritten classes from non-namespaced dependencies put together into one JAR.
     object NAMESPACED_CLASSES_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
-    // Tested code classes
-    object TESTED_CODE_CLASSES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // Classes with recalculated stack frames information (RecalculateStackFrames task)
     object FIXED_STACK_FRAMES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 

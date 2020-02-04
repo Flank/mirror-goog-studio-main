@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedCo
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.REVERSE_METADATA_ELEMENTS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION
-import com.android.build.gradle.internal.scope.AnchorOutputType.ALL_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.AAPT_PROGUARD_FILE
 import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_PARCELABLE
@@ -77,11 +76,9 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBR
 import com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONFIG
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
 import com.android.build.gradle.internal.scope.SingleArtifactType
-import com.android.build.gradle.internal.utils.toImmutableMap
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
-import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.file.FileSystemLocation
@@ -97,14 +94,6 @@ import org.gradle.api.file.FileSystemLocation
  *
  * This mapping is per [VariantType] to allow for different task outputs to be published
  * under the same [ArtifactType].
- *
- *
- * This mapping also offers reverse mapping override for tests (per [VariantType] as well),
- * allowing a test variant to not use exactly the published artifact of the tested variant but a
- * different version. This allows for instance the unit tests of libraries to use the full Java
- * classes, including the R class for unit testing, while the published artifact does not contain
- * the R class. Similarly, the override can extend the published scope (api vs runtime), which is
- * needed to run the unit tests.
  */
 class PublishingSpecs {
 
@@ -114,9 +103,6 @@ class PublishingSpecs {
     interface VariantSpec {
         val variantType: VariantType
         val outputs: Set<OutputSpec>
-        val testingSpecs: Map<VariantType, VariantSpec>
-
-        fun getTestingSpec(variantType: VariantType): VariantSpec
 
         fun getSpec(artifactType: ArtifactType, publishConfigType: PublishedConfigType?): OutputSpec?
     }
@@ -142,7 +128,8 @@ class PublishingSpecs {
                 // the JarTransform will convert it back to CLASSES
                 // FIXME: stop using TYPE_JAR for APK_CLASSES
                 api(APP_CLASSES, ArtifactType.JAR)
-                api(APP_CLASSES, ArtifactType.CLASSES_JAR)
+                output(APP_CLASSES, ArtifactType.CLASSES_JAR)
+                output(JAVA_RES, ArtifactType.JAVA_RES)
                 api(APK_MAPPING, ArtifactType.APK_MAPPING)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
@@ -164,23 +151,6 @@ class PublishingSpecs {
                 api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
                 api(BASE_MODULE_METADATA, ArtifactType.BASE_MODULE_METADATA)
                 api(SIGNING_CONFIG, ArtifactType.FEATURE_SIGNING_CONFIG)
-
-                // ----
-
-                testSpec(VariantTypeImpl.ANDROID_TEST) {
-                    // java output query is done via CLASSES instead of JAR, so provide
-                    // the right backward mapping
-                    api(APP_CLASSES, ArtifactType.CLASSES_JAR)
-                }
-
-                testSpec(VariantTypeImpl.UNIT_TEST) {
-                    // java output query is done via CLASSES instead of JAR, so provide
-                    // the right backward mapping. Also add it to the runtime as it's
-                    // needed to run the tests!
-                    output(ALL_CLASSES, ArtifactType.CLASSES_JAR)
-                    // JAVA_RES isn't published by the app, but we need it for the unit tests
-                    output(JAVA_RES, ArtifactType.JAVA_RES)
-                }
             }
 
             variantSpec(VariantTypeImpl.OPTIONAL_APK) {
@@ -190,7 +160,8 @@ class PublishingSpecs {
                 // the JarTransform will convert it back to CLASSES
                 // FIXME: stop using TYPE_JAR for APK_CLASSES
                 api(APP_CLASSES, ArtifactType.JAR)
-                api(APP_CLASSES, ArtifactType.CLASSES_JAR)
+                output(APP_CLASSES, ArtifactType.CLASSES_JAR)
+                output(JAVA_RES, ArtifactType.JAVA_RES)
                 api(APK_MAPPING, ArtifactType.APK_MAPPING)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
@@ -222,23 +193,6 @@ class PublishingSpecs {
 
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
                 runtime(FEATURE_NAME, ArtifactType.FEATURE_NAME)
-
-                // ----
-
-                testSpec(VariantTypeImpl.ANDROID_TEST) {
-                    // java output query is done via CLASSES instead of JAR, so provide
-                    // the right backward mapping
-                    api(APP_CLASSES, ArtifactType.CLASSES_JAR)
-                }
-
-                testSpec(VariantTypeImpl.UNIT_TEST) {
-                    // java output query is done via CLASSES instead of JAR, so provide
-                    // the right backward mapping. Also add it to the runtime as it's
-                    // needed to run the tests!
-                    output(ALL_CLASSES, ArtifactType.CLASSES_JAR)
-                    // JAVA_RES isn't published by the app, but we need it for the unit tests
-                    output(JAVA_RES, ArtifactType.JAVA_RES)
-                }
             }
 
 
@@ -276,12 +230,6 @@ class PublishingSpecs {
                 runtime(LINT_PUBLISH_JAR, ArtifactType.LINT)
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
                 runtime(COMPILED_LOCAL_RESOURCES, ArtifactType.COMPILED_DEPENDENCIES_RESOURCES)
-
-                testSpec(VariantTypeImpl.UNIT_TEST) {
-                    // unit test need ALL_CLASSES instead of RUNTIME_LIBRARY_CLASSES to get
-                    // access to the R class. Also scope should be API+Runtime.
-                    output(ALL_CLASSES, ArtifactType.CLASSES_JAR)
-                }
             }
 
             // empty specs
@@ -336,8 +284,6 @@ class PublishingSpecs {
         fun runtime(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType)
         fun reverseMetadata(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType)
         fun publish(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType)
-
-        fun testSpec(variantType: VariantType, action: VariantSpecBuilder.() -> Unit)
     }
 }
 
@@ -358,11 +304,9 @@ private val AAB_PUBLICATION: ImmutableList<PublishedConfigType> = ImmutableList.
 private class VariantPublishingSpecImpl(
         override val variantType: VariantType,
         private val parentSpec: PublishingSpecs.VariantSpec?,
-        override val outputs: Set<PublishingSpecs.OutputSpec>,
-        testingSpecBuilders: Map<VariantType, VariantSpecBuilderImpl>
+        override val outputs: Set<PublishingSpecs.OutputSpec>
 ) : PublishingSpecs.VariantSpec {
 
-    override val testingSpecs: Map<VariantType, PublishingSpecs.VariantSpec>
     private var _artifactMap: Map<ArtifactType, List<PublishingSpecs.OutputSpec>>? = null
 
     private val artifactMap: Map<ArtifactType, List<PublishingSpecs.OutputSpec>>
@@ -376,17 +320,6 @@ private class VariantPublishingSpecImpl(
                 map
             }
         }
-
-    init {
-        testingSpecs = testingSpecBuilders.toImmutableMap { it.toSpec(this) }
-    }
-
-    override fun getTestingSpec(variantType: VariantType): PublishingSpecs.VariantSpec {
-        Preconditions.checkState(variantType.isTestComponent)
-
-        val testingSpec = testingSpecs[variantType]
-        return testingSpec ?: this
-    }
 
     override fun getSpec(
         artifactType: ArtifactType,
@@ -422,7 +355,6 @@ private open class VariantSpecBuilderImpl (
         override val variantType: VariantType): PublishingSpecs.VariantSpecBuilder {
 
     protected val outputs = mutableSetOf<PublishingSpecs.OutputSpec>()
-    private val testingSpecs = mutableMapOf<VariantType, VariantSpecBuilderImpl>()
 
     override fun output(taskOutputType: SingleArtifactType<*>, artifactType: ArtifactType) {
         outputs.add(OutputSpecImpl(taskOutputType, artifactType))
@@ -447,26 +379,11 @@ private open class VariantSpecBuilderImpl (
         throw RuntimeException("This VariantSpecBuilder does not support publish. VariantType is $variantType")
     }
 
-    override fun testSpec(
-            variantType: VariantType,
-            action: PublishingSpecs.VariantSpecBuilder.() -> Unit) {
-        Preconditions.checkState(!this.variantType.isForTesting)
-        Preconditions.checkState(variantType.isTestComponent)
-        Preconditions.checkState(!testingSpecs.containsKey(variantType))
-
-        val specBuilder = VariantSpecBuilderImpl(
-                variantType)
-        action(specBuilder)
-
-        testingSpecs[variantType] = specBuilder
-    }
-
     fun toSpec(parentSpec: PublishingSpecs.VariantSpec? = null): PublishingSpecs.VariantSpec {
         return VariantPublishingSpecImpl(
                 variantType,
                 parentSpec,
-                outputs.toImmutableSet(),
-                testingSpecs)
+                outputs.toImmutableSet())
     }
 }
 

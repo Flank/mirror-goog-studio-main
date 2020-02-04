@@ -347,6 +347,22 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     ).artifactFiles
                 } ?: componentProperties.globalScope.project.files()
 
+                // Before b/115334911 was fixed, provided classpath did not contain the tested project.
+                // Because we do not want tested variant classes in the desugaring classpath for
+                // external libraries, we explicitly remove it.
+                val testedProject = creationConfig.onTestedConfig {
+                    val artifactType =
+                        it.variantScope.publishingSpec.getSpec(
+                            AndroidArtifacts.ArtifactType.CLASSES_JAR,
+                            AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
+                        )!!.outputType
+                    componentProperties.globalScope.project.files(
+                        it.artifacts.getFinalProduct(
+                            artifactType
+                        )
+                    )
+                } ?: componentProperties.globalScope.project.files()
+
                 componentProperties.globalScope.project.files(
                     componentProperties.transformManager.getPipelineOutputAsFileCollection(
                         StreamFilter { _, scopes ->
@@ -354,7 +370,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                         },
                         classesFilter
                     ), testedExternalLibs, externalLibraryClasses
-                )
+                ).minus(testedProject)
             } else {
                 componentProperties.globalScope.project.files()
             }

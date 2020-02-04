@@ -88,7 +88,6 @@ import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask;
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
@@ -891,43 +890,6 @@ public abstract class TaskManager<
 
         componentProperties.onTestedConfig(
                 testedConfig -> {
-                    PublishingSpecs.VariantSpec testedSpec =
-                            testedConfig
-                                    .getVariantScope()
-                                    .getPublishingSpec()
-                                    .getTestingSpec(componentProperties.getVariantType());
-
-                    // get the OutputPublishingSpec from the ArtifactType for this particular
-                    // variant spec
-                    PublishingSpecs.OutputSpec taskOutputSpec =
-                            testedSpec.getSpec(
-                                    AndroidArtifacts.ArtifactType.CLASSES_JAR,
-                                    AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS);
-                    // now get the output type
-                    SingleArtifactType<Directory> testedOutputType =
-                            (SingleArtifactType<Directory>)
-                                    Objects.requireNonNull(taskOutputSpec).getOutputType();
-
-                    componentProperties
-                            .getArtifacts()
-                            .copy(
-                                    InternalArtifactType.TESTED_CODE_CLASSES.INSTANCE,
-                                    testedConfig.getArtifacts(),
-                                    testedOutputType);
-
-                    // create two streams of different types.
-                    transformManager.addStream(
-                            OriginalStream.builder(project, "tested-code-classes")
-                                    .addContentTypes(DefaultContentType.CLASSES)
-                                    .addScope(Scope.TESTED_CODE)
-                                    .setFileCollection(
-                                            testedConfig
-                                                    .getArtifacts()
-                                                    .getFinalProductAsFileCollection(
-                                                            testedOutputType)
-                                                    .get())
-                                    .build());
-
                     transformManager.addStream(
                             OriginalStream.builder(project, "tested-code-deps")
                                     .addContentTypes(DefaultContentType.CLASSES)

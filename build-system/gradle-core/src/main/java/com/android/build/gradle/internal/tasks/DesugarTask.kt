@@ -220,12 +220,6 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
 
             creationConfig.onTestedConfig {
                 task.desugaringClasspath.from(
-                    creationConfig.artifacts.getFinalProduct(
-                        InternalArtifactType.TESTED_CODE_CLASSES
-                    )
-                )
-
-                task.desugaringClasspath.from(
                     it.variantDependencies.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
