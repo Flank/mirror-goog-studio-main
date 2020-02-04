@@ -14,7 +14,6 @@ test --jvmopt='-Dsun.jnu.encoding=UTF-8'
 test --jvmopt='-Dfile.encoding=UTF-8'
 test --jvmopt='-Xmx4G'
 test --jvmopt='-XX:+UseConcMarkSweepGC'
-test --test_output=errors
 test --verbose_failures
 
 # Local runs require longer timeouts.
