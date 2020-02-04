@@ -33,7 +33,6 @@ import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getPrefa
 import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.shouldGeneratePrefabPackages;
 import static com.android.build.gradle.internal.cxx.model.GetCxxBuildModelKt.getCxxBuildModel;
 import static com.android.build.gradle.internal.cxx.services.CxxBuildModelListenerServiceKt.executeListenersOnceBeforeJsonGeneration;
-import static com.android.build.gradle.internal.cxx.services.CxxCompleteModelServiceKt.registerAbi;
 import static com.android.build.gradle.internal.cxx.services.CxxEvalIssueReporterServiceKt.issueReporter;
 import static com.android.build.gradle.internal.cxx.services.CxxModelDependencyServiceKt.jsonGenerationInputDependencyFileCollection;
 import static com.android.build.gradle.internal.cxx.services.CxxSyncListenerServiceKt.executeListenersOnceAfterJsonGeneration;
@@ -553,9 +552,6 @@ public abstract class ExternalNativeJsonGenerator {
                                     componentProperties.getGlobalScope(),
                                     componentProperties));
             abis.add(model);
-
-            // Register this ABI with the complete build model.
-            registerAbi(cxxBuildModel, model);
 
             // Register callback to write Json after generation finishes.
             // We don't write it now because sync configuration is executing. We want to defer
