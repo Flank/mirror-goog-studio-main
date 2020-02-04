@@ -667,7 +667,7 @@ class JavaEvaluator {
 
     open fun erasure(type: PsiType?): PsiType? {
         return type?.accept(object : PsiTypeVisitor<PsiType>() {
-            override fun visitType(type: PsiType?): PsiType? {
+            override fun visitType(type: PsiType): PsiType? {
                 return type
             }
 
