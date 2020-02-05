@@ -16,6 +16,7 @@ py_library(
 py_library(
     name = "merge_lcov",
     srcs = ["merge_lcov.py"],
+    visibility = ["//visibility:public"],
 )
 
 # This should be a py_binary, but due to a Bazel bug

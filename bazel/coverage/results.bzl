@@ -17,16 +17,32 @@ construct_result_processing_graph()
 
 jacoco_cli = "@//prebuilts/tools/common/jacoco:cli"
 
-# Returns a dictonary mapping tests to their shard counts
-# Unsharded tests are mapped to None
-def test_shard_dict():
+# Reconstruct test, split, and shard information from filepaths
+# Unsharded, unsplit tests look like /<test> and reported as ret[test] = None
+# Sharded, unsplit tests look like <test>/shard_X_of_Y and reported as ret[test] = Y
+# Unsharded test splits look like <test>__<split> and reported as ret[test][split] = None
+# Sharded test splits look like <test>__<split>/shard_X_of_Y and reported as ret[test][split] = Y
+def test_shard_split_dict():
     ret = {}
     for path in native.glob(["**/test.outputs/outputs.zip"]):
         segs = path.split("/")[:-2]  # strip /test.outputs/outputs.zip
         if "shard" in segs[-1]:  # last segment has form 'shard_X_of_Y'
             shard_count = int(segs[-1].split("_")[3])  # extract Y
-            k = "/".join(segs[:-1])  # key is the test name (i.e. sans shard info)
-            ret[k] = shard_count
+            if "__" in segs[-2]:  # this is a split test
+                test_name, split_name = segs[-2].split("__")
+                k = "/".join(segs[:-2]) + "/" + test_name
+                if k not in ret:
+                    ret[k] = {}
+                ret[k][split_name] = shard_count
+            else:
+                k = "/".join(segs[:-1])  # key is the test name (i.e. sans shard info)
+                ret[k] = shard_count
+        elif "__" in segs[-1]:  # this is a split test
+            test_name, split_name = segs[-1].split("__")
+            k = "/".join(segs[:-1]) + "/" + test_name
+            if k not in ret:
+                ret[k] = {}
+            ret[k][split_name] = None
         else:
             k = "/".join(segs)  # key is the test name
             ret[k] = None
@@ -82,7 +98,7 @@ def jacoco_exec_file(test, shards):
             outs = ["{}/jacoco.exec".format(test)],
             cmd = "$(location {cli}) merge --quiet $(SRCS) --destfile $@".format(cli = jacoco_cli),
         )
-    else:
+    else:  # unsharded test
         extract_exec_files(test)
 
 def jacoco_xml_report(test):
@@ -112,10 +128,25 @@ def lcov_tracefile(test):
         cmd = "python $(location @cov//:jacoco_xml_to_lcov) <$< >$@",
     )
 
+def test_target_pipeline(test, shards):
+    coverage_class_jar(test)
+    jacoco_exec_file(test, shards)
+    jacoco_xml_report(test)
+    lcov_tracefile(test)
+
 def construct_result_processing_graph():
-    ts = test_shard_dict()
+    ts = test_shard_split_dict()
     for k in ts:
-        coverage_class_jar(k)
-        jacoco_exec_file(k, ts[k])
-        jacoco_xml_report(k)
-        lcov_tracefile(k)
+        if type(ts[k]) == "dict":
+            for s in ts[k]:
+                test_target_pipeline("{}__{}".format(k, s), ts[k][s])
+            native.genrule(
+                name = "{}.LCOVTracefile".format(k),
+                tools = ["@cov//:merge_lcov"],
+                srcs = ["{}__{}.LCOVTracefile".format(k, s) for s in ts[k]],
+                outs = ["{}/lcov".format(k)],
+                visibility = ["@cov//:__pkg__"],
+                cmd = "python $(location @cov//:merge_lcov) $(SRCS) >$@",
+            )
+        else:
+            test_target_pipeline(k, ts[k])
