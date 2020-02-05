@@ -371,17 +371,10 @@ public final class ApiClass extends ApiClassBase {
 
         for (Pair<String, Integer> superClass : Iterables.concat(mSuperClasses, mInterfaces)) {
             ApiClass cls = info.getClass(superClass.getFirst());
-            assert cls != null : superClass.getSecond();
-            cls.addAllFields(info, set);
-        }
-    }
-
-    private void addRemovedFields(Api<ApiClass> info, Set<String> set) {
-        set.addAll(mFields.keySet());
-
-        for (Pair<String, Integer> superClass : Iterables.concat(mSuperClasses, mInterfaces)) {
-            ApiClass cls = info.getClass(superClass.getFirst());
-            assert cls != null : superClass.getSecond();
+            if (cls == null) {
+                throw new RuntimeException(
+                        "could not find " + superClass.getFirst() + " for " + getName());
+            }
             cls.addAllFields(info, set);
         }
     }
