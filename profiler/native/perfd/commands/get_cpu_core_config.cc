@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 #include "perfd/commands/get_cpu_core_config.h"
+
 #include "perfd/cpu/cpu_config.h"
 #include "proto/common.pb.h"
+#include "utils/log.h"
 
 using grpc::Status;
 using profiler::proto::Event;
@@ -31,8 +33,11 @@ Status GetCpuCoreConfig::ExecuteOn(Daemon* daemon) {
   Status status = CpuConfig::GetCpuCoreConfig(event.mutable_cpu_core_config());
   if (status.ok()) {
     daemon->buffer()->Add(event);
+  } else {
+    Log::W(Log::Tag::PROFILER, "Failed to get CPU core config: %s",
+           status.error_message().c_str());
   }
-  return status;
+  return Status::OK;
 }
 
 }  // namespace profiler
