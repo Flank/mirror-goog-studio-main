@@ -18,6 +18,7 @@
     <orderEntry type="library" scope="TEST" name="mockito" level="project" />
     <orderEntry type="library" scope="TEST" name="Objenesis" level="project" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
+    <orderEntry type="library" name="jaxb-api" level="project" />
     <orderEntry type="library" name="jaxb-runtime" level="project" />
   </component>
 </module>
