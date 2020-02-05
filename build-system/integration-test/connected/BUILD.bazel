@@ -2,7 +2,6 @@ load("//tools/base/bazel:maven.bzl", "maven_repo")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test")
 load("//tools/base/bazel/avd:avd.bzl", "avd")
-load("@exec_properties//:constants.bzl", "EMULATOR_MACHINE")
 
 kotlin_library(
     name = "connected",
@@ -91,7 +90,6 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test:test-projects/basic",
         "//tools/base/build-system/integration-test:test-projects/parentLibsTest",
     ],
-    exec_properties = EMULATOR_MACHINE,
     maven_repos = TEST_MAVEN_REPOS,
     tags = [
         "no_mac",
@@ -115,7 +113,6 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test:test-projects/densitySplit",
         "//tools/base/build-system/integration-test:test-projects/flavored",
     ],
-    exec_properties = EMULATOR_MACHINE,
     maven_repos = TEST_MAVEN_REPOS,
     tags = [
         "no_mac",
