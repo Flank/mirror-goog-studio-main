@@ -32,7 +32,7 @@ package com.android.tools.idea.wizard.template
  *
  * If we will render a template containing `text` it will contain only two lines without an empty line between them.
  */
-const val SKIP_LINE = "[THIS LINE SHOULDN'T BE RENDERED!]"
+const val SKIP_LINE = "[THIS LINE SHOULD NOT BE RENDERED!]"
 
 /**
  * Returns [str] result if [predicate] is true.
