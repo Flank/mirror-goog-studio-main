@@ -37,11 +37,18 @@ bool Overlay::Exists(const std::string& overlay_folder, const std::string& id) {
   const std::string id_file = overlay_folder + "/" + kIdFile;
   std::string content;
   if (!deploy::ReadFile(id_file.c_str(), &content)) {
-    ErrEvent("Overlay has no readable id file");
+    ErrEvent("Checking for overlay id '" + id +
+             "' but overlay has no readable id file");
     return false;
   }
 
-  return id == content;
+  if (id != content) {
+    ErrEvent("Checking for overlay id '" + id +
+             "' but existing overlay id is '" + content + "'");
+    return false;
+  }
+
+  return true;
 }
 
 bool Overlay::Open() {

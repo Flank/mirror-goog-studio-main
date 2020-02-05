@@ -136,6 +136,8 @@ message SwapResponse {
     PROCESS_NOT_RESPONDING = 13;  // One of the processes is not responding
     PROCESS_TERMINATED = 14;      // One of the processes terminated during swap
     READ_FROM_SERVER_FAILED = 15; // The install server failed to response
+    OVERLAY_ID_MISMATCH = 16;     // The expected overlay was not present
+    OVERLAY_UPDATE_FAILED = 17;   // The overlay update failed to complete
   }
 
   Status status = 1;

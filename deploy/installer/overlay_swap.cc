@@ -155,10 +155,9 @@ void OverlaySwapCommand::ProcessResponse(proto::SwapResponse* response) {
     return;
   }
 
-  if (install_response.overlay_response().status() !=
-      proto::OverlayUpdateResponse::OK) {
-    response->set_status(proto::SwapResponse::INSTALLATION_FAILED);
-  }
+  response->set_status(
+      OverlayStatusToSwapStatus(install_response.overlay_response().status()));
+  response->set_extra(install_response.overlay_response().error_message());
 
   if (!client_->KillServerAndWait(&install_response)) {
     response->set_status(proto::SwapResponse::READ_FROM_SERVER_FAILED);
@@ -169,6 +168,18 @@ void OverlaySwapCommand::ProcessResponse(proto::SwapResponse* response) {
   for (int i = 0; i < install_response.events_size(); i++) {
     const proto::Event& event = install_response.events(i);
     AddRawEvent(ConvertProtoEventToEvent(event));
+  }
+}
+
+proto::SwapResponse::Status OverlaySwapCommand::OverlayStatusToSwapStatus(
+    proto::OverlayUpdateResponse::Status status) {
+  switch (status) {
+    case proto::OverlayUpdateResponse::OK:
+      return proto::SwapResponse::OK;
+    case proto::OverlayUpdateResponse::ID_MISMATCH:
+      return proto::SwapResponse::OVERLAY_ID_MISMATCH;
+    default:
+      return proto::SwapResponse::OVERLAY_UPDATE_FAILED;
   }
 }
 
