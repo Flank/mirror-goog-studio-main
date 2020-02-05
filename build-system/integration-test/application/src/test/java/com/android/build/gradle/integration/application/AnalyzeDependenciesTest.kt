@@ -1,12 +1,13 @@
 package com.android.build.gradle.integration.application
 
+import android.databinding.tool.ext.toCamelCase
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.tasks.DependenciesUsageReport
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.generateAarWithContent
-import com.android.utils.FileUtils
+import com.google.common.io.Resources
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.Gson
 import org.junit.Rule
@@ -17,22 +18,45 @@ import org.junit.Test
  */
 class AnalyzeDependenciesTest {
 
+    private val emptyAar = generateAarWithContent("com.analyzedependenciesTest.emptyaar")
+    private val usedAar = generateAarWithContent("com.analyzedependenciesTest.usedaar",
+            Resources.toByteArray(
+                    Resources.getResource(
+                            AnalyzeDependenciesTest::class.java,
+                            "AnalyzeDependenciesTest/used-jar.jar")
+            )
+    )
+
     private val app = MinimalSubProject.app("com.example.app")
             .appendToBuild(
                     """
                 dependencies {
-                implementation 'com.analyzedependenciesTest:aar:1'
+                implementation 'com.analyzedependenciesTest:emptyaar:1'
+                implementation 'com.analyzedependenciesTest:usedaar:1'
                  }
             """.trimIndent()
             )
-
-    private val emptyAar = generateAarWithContent("com.analyzedependenciesTest.aar")
+            .withFile("src/main/java/com/example/app/MyClass.java",
+                    """
+                package com.example.app;
+                
+                import com.android.build.gradle.integration.application.AnalyzeDependenciesTest.UsedClass;
+                
+                public class MyClass {
+                    void test() {
+                        UsedClass usedClass = new UsedClass();
+                        usedClass.getTrue();
+                    }
+                }
+            """.trimIndent())
 
 
     private val mavenRepo = MavenRepoGenerator(
             listOf(
                     MavenRepoGenerator.Library(
-                            "com.analyzedependenciesTest:aar:1", "aar", emptyAar)
+                            "com.analyzedependenciesTest:emptyaar:1", "aar", emptyAar),
+                    MavenRepoGenerator.Library(
+                            "com.analyzedependenciesTest:usedaar:1", "aar", usedAar)
             )
     )
 
@@ -49,12 +73,13 @@ class AnalyzeDependenciesTest {
 
     @Test
     fun `Verify correct dependencies report is produced, only considering class references`() {
-        project.execute(":app:assembleRelease")
-        project.execute(":app:analyzeReleaseDependencies")
+        val buildType = "debug"
+        project.execute(":app:assemble${buildType.toCamelCase()}")
+        project.execute(":app:analyze${buildType.toCamelCase()}Dependencies")
 
         val dependencyAnalysisReport = project.getSubproject(":app").getIntermediateFile(
                 "analyze_dependencies_report",
-                "release",
+                buildType,
                 "analyzeDependencies",
                 "dependenciesReport.json"
         )
@@ -66,6 +91,6 @@ class AnalyzeDependenciesTest {
 
         assertThat(parsedJson.add.size).isEqualTo(0)
         assertThat(parsedJson.remove.size).isEqualTo(1)
-        assertThat(parsedJson.remove).contains("com.analyzedependenciesTest:aar:1")
+        assertThat(parsedJson.remove).contains("com.analyzedependenciesTest:emptyaar:1")
     }
 }
