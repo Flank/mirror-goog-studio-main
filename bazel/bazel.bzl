@@ -639,7 +639,10 @@ def iml_module(
 def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = None, **kwargs):
     """Generates split test targets.
 
-    A new test target is generated for each split_test_target.
+    A new test target is generated for each split_test_target, a test_suite containing all
+    split targets, and a test target which does not perform any splitting. The non-split target is
+    only to be used for local development with the bazel `--test_filter` flag, since this flag
+    does not work on split test targets.
 
     Args:
         name: The base name of the test.
@@ -647,6 +650,15 @@ def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = Non
         test_tags: optional list of tags to include for test targets.
         test_data: optional list of data to include for test targets.
     """
+
+    # create a _tests__all target for local development with all test sources
+    # primarily useful if users want to specify a --test_filter themselves
+    coverage_java_test(
+        name = name + "_tests__all",
+        data = test_data + _get_unique_split_data(split_test_targets),
+        tags = ["manual"],
+        **kwargs
+    )
     split_tests = []
     for split_name in split_test_targets:
         test_name = name + "_tests__" + split_name
@@ -674,6 +686,14 @@ def _gen_split_tests(name, split_test_targets, test_tags = None, test_data = Non
         name = name + "_tests",
         tests = split_tests,
     )
+
+def _get_unique_split_data(split_test_targets):
+    """Returns all split_test_target 'data' dependencies without duplicates."""
+    data = []
+    for split_name in split_test_targets:
+        split_data = split_test_targets[split_name].get("data", default = [])
+        [data.append(d) for d in split_data if d not in data]
+    return data
 
 def _gen_split_test_args(split_name, split_test_targets):
     """Generates the args for a split test target.
