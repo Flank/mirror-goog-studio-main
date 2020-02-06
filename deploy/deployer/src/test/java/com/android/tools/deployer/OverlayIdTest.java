@@ -25,15 +25,15 @@ import org.junit.Test;
 
 public class OverlayIdTest {
     @Test
-    public void testRealInstall() {
+    public void testRealInstall() throws DeployerException {
         OverlayId realInstall = new OverlayId(makeApks(1));
         String stringRep = realInstall.getRepresentation();
         Assert.assertEquals("Real APK ApkName0 has checksum of ApkChecksum0\n", stringRep);
 
         realInstall = new OverlayId(makeApks(1));
         String sha = realInstall.getSha();
-        // TODO This should be a SHA but the native installer expects this be empty for now.
-        Assert.assertEquals("", sha);
+        Assert.assertEquals(
+                "6a94b1483bd168a5a81097891ca3afa3e2ebbb499af3064950a87d93e39ab913", sha);
     }
 
     @Test
@@ -49,8 +49,8 @@ public class OverlayIdTest {
                         + "Real APK ApkName1 has checksum of ApkChecksum1\n",
                 stringRep);
         String sha = realInstall.getSha();
-        // TODO This should be a SHA but the native installer expects this be empty for now.
-        Assert.assertEquals("", sha);
+        Assert.assertEquals(
+                "6d19902d86f5115131af14f9c35340916fd34cd5910c68c9afe7be2c02a7f07f", sha);
 
         // *****************************************************
         // First IWI Swap

@@ -184,7 +184,7 @@ public class DeploymentCacheDatabaseTest {
         return Apk.builder().setName("base.apk").setChecksum(checksum).build();
     }
 
-    private static OverlayId mockOverLayId() {
+    private static OverlayId mockOverLayId() throws DeployerException {
         return new OverlayId(new ArrayList<>());
     }
 }

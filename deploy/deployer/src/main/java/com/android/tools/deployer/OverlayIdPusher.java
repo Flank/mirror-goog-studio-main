@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,22 @@ package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
 import java.io.IOException;
-import java.util.List;
 
-public interface Installer {
+public class OverlayIdPusher {
+    private final Installer installer;
 
-    Deploy.DumpResponse dump(List<String> packageNames) throws IOException;
+    public OverlayIdPusher(Installer installer) {
+        this.installer = installer;
+    }
 
-    Deploy.SwapResponse swap(Deploy.SwapRequest request) throws IOException;
-
-    Deploy.SwapResponse overlaySwap(Deploy.OverlaySwapRequest request) throws IOException;
-
-    Deploy.DeltaPreinstallResponse deltaPreinstall(Deploy.InstallInfo info) throws IOException;
-
-    Deploy.DeltaInstallResponse deltaInstall(Deploy.InstallInfo info) throws IOException;
-
-    Deploy.OverlayIdPushResponse pushOverlayId(String packageName, String oid) throws IOException;
+    public boolean pushOverlayId(String packageName, OverlayId oid) {
+        try {
+            Deploy.OverlayIdPushResponse resp = installer.pushOverlayId(packageName, oid.getSha());
+            // TODO Needs new DeployerExceptions
+            return resp.getStatus() != Deploy.OverlayIdPushResponse.Status.OK;
+        } catch (IOException e) {
+            // TODO Need new DeployerException.
+            return false;
+        }
+    }
 }
