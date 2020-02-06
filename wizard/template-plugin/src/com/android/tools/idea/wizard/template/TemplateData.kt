@@ -90,7 +90,6 @@ data class ModuleTemplateData(
   val unitTestDir: File,
   val aidlDir: File,
   val rootDir: File,
-  val themeExists: Boolean,
   val isNew: Boolean,
   val hasApplicationTheme: Boolean,
   val name: String,
