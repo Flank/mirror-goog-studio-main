@@ -100,11 +100,11 @@ public class Movie implements Serializable {
     public String toString() {
         return "Movie{" +
                 "id=" + id +
-                ", title="" + title + "\"" +
-                ", videoUrl="" + videoUrl + "\"" +
-                ", backgroundImageUrl="" + bgImageUrl + "\"" +
-                ", cardImageUrl="" + cardImageUrl + "\"" +
-                "}";
+                ", title='" + title + '\'' +
+                ", videoUrl='" + videoUrl + '\'' +
+                ", backgroundImageUrl='" + bgImageUrl + '\'' +
+                ", cardImageUrl='" + cardImageUrl + '\'' +
+                '}';
     }
 }
 """
