@@ -1101,7 +1101,7 @@ com.android.build.gradle.internal.dsl.LanguageSplitOptions.isEnable: boolean ()
 com.android.build.gradle.internal.dsl.LanguageSplitOptions.setAuto: void (boolean)
 com.android.build.gradle.internal.dsl.LanguageSplitOptions.setEnable: void (boolean)
 com.android.build.gradle.internal.dsl.LanguageSplitOptions.setInclude: void (java.util.List<java.lang.String>)
-com.android.build.gradle.internal.dsl.LintOptions implements com.android.builder.model.LintOptions, java.io.Serializable
+com.android.build.gradle.internal.dsl.LintOptions implements com.android.builder.model.LintOptions, com.android.build.api.dsl.LintOptions, java.io.Serializable
 com.android.build.gradle.internal.dsl.LintOptions.<init>: com.android.build.gradle.internal.dsl.LintOptions ()
 com.android.build.gradle.internal.dsl.LintOptions.<init>: com.android.build.gradle.internal.dsl.LintOptions (java.util.Set<java.lang.String>, java.util.Set<java.lang.String>, java.util.Set<java.lang.String>, java.io.File, boolean, java.io.File, boolean, java.io.File, boolean, java.io.File, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, java.io.File, java.util.Map<java.lang.String, java.lang.Integer>)
 com.android.build.gradle.internal.dsl.LintOptions.baseline: void (java.io.File)
@@ -1167,6 +1167,7 @@ com.android.build.gradle.internal.dsl.LintOptions.setLintConfig: void (java.io.F
 com.android.build.gradle.internal.dsl.LintOptions.setNoLines: void (boolean)
 com.android.build.gradle.internal.dsl.LintOptions.setQuiet: void (boolean)
 com.android.build.gradle.internal.dsl.LintOptions.setShowAll: void (boolean)
+com.android.build.gradle.internal.dsl.LintOptions.setTextOutput: void (java.io.File)
 com.android.build.gradle.internal.dsl.LintOptions.setTextReport: void (boolean)
 com.android.build.gradle.internal.dsl.LintOptions.setWarningsAsErrors: void (boolean)
 com.android.build.gradle.internal.dsl.LintOptions.setXmlOutput: void (java.io.File)
