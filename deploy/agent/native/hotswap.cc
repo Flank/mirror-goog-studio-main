@@ -171,6 +171,12 @@ void HotSwap::SaveStateAndDispose(jobject reloader) const {
   loader_args[0].l = context;
   reloader_jnio.CallMethod<void>(
       {"saveStateAndDispose", "(Landroid/content/Context;)V"}, loader_args);
+
+  // TODO Although unlikely, we should fail hard on this.
+  if (jni_->ExceptionCheck()) {
+    jni_->ExceptionDescribe();
+    jni_->ExceptionClear();
+  }
 }
 
 void HotSwap::LoadStateAndCompose(jobject reloader) const {
@@ -182,6 +188,12 @@ void HotSwap::LoadStateAndCompose(jobject reloader) const {
   loader_args[0].l = context;
   reloader_jnio.CallMethod<void>(
       {"loadStateAndCompose", "(Landroid/content/Context;)V"}, loader_args);
+
+  // TODO Although unlikely, we should fail hard on this.
+  if (jni_->ExceptionCheck()) {
+    jni_->ExceptionDescribe();
+    jni_->ExceptionClear();
+  }
 }
 
 jvmtiExtensionFunction const* GetExtensionFunctionVoid(
