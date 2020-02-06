@@ -13,5 +13,6 @@ public class FeatureActivity extends Activity {
 
         Button b = findViewById(R.id.feature_button);
         b.setText(com.example.app.R.string.button_name);
+        android.util.Log.d("lint", "Resource used: " + com.example.app.R.string.used_from_feature2);
     }
 }

@@ -1071,6 +1071,25 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "        tools:keep=\"@raw/used\" />\n")));
     }
 
+    public void testKeepAndDiscardWithDifferentPrefix() throws Exception {
+        mEnableIds = false;
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        // By name
+                        xml("res/raw/keep.xml", "<foo/>"),
+
+                        // By content
+                        xml(
+                                "res/raw/used.xml",
+                                ""
+                                        + "<resources\n"
+                                        + "        xmlns:t=\"http://schemas.android.com/tools\"\n"
+                                        + "        t:shrinkMode=\"strict\"\n"
+                                        + "        t:discard=\"@raw/unused\"\n"
+                                        + "        t:keep=\"@raw/used\" />\n")));
+    }
+
     public void testStringsWithDots() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=214189
 
