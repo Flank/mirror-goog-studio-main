@@ -17,6 +17,7 @@ package com.android.zipflinger;
 
 import com.android.annotations.NonNull;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 class CentralDirectoryRecord {
 
@@ -31,6 +32,16 @@ class CentralDirectoryRecord {
     public static final short DEFAULT_TIME = 1 | 1 << 5 | 1 << 11;
     public static final short DEFAULT_DATE = 1 | 1 << 5 | 1 << 9;
 
+    // Zip64 extra format:
+    // uint16_t id (0x0001)
+    // uint16_t size payload (0x18)
+    // Payload:
+    //    - uint64_t Uncompressed size.
+    //    - uint64_t Compressed size.
+    //    - uint64_t offset to LFH in archive.
+    private static final int ZIP64_PAYLOAD_SIZE = Long.BYTES * 3;
+    private static final int ZIP64_EXTRA_SIZE = Short.BYTES * 2 + ZIP64_PAYLOAD_SIZE;
+
     private final byte[] nameBytes;
     private final int crc;
     private final long compressedSize;
@@ -39,6 +50,7 @@ class CentralDirectoryRecord {
     private final Location location;
     private final short compressionFlag;
     private final Location payloadLocation;
+    private final boolean isZip64;
 
     CentralDirectoryRecord(
             @NonNull byte[] nameBytes,
@@ -55,28 +67,39 @@ class CentralDirectoryRecord {
         this.location = location;
         this.compressionFlag = compressionFlag;
         this.payloadLocation = payloadLocation;
+        this.isZip64 =
+                compressedSize > Zip64.LONG_MAGIC
+                        || uncompressedSize > Zip64.LONG_MAGIC
+                        || location.first > Zip64.LONG_MAGIC;
     }
 
     void write(@NonNull ByteBuffer buf) {
+        short versionNeeded = isZip64 ? Zip64.VERSION_NEEDED : 0;
+        int size = isZip64 ? Zip64.INT_MAGIC : Ints.longToUint(uncompressedSize);
+        int csize = isZip64 ? Zip64.INT_MAGIC : Ints.longToUint(compressedSize);
+        int offset = isZip64 ? Zip64.INT_MAGIC : Ints.longToUint(location.first);
+
+        ByteBuffer extra = buildExtraField();
+
         buf.putInt(SIGNATURE);
         buf.putShort((short) 0); // version made by
-        buf.putShort((short) 0); // version needed
+        buf.putShort(versionNeeded);
         buf.putShort((short) 0); // flag
         buf.putShort(compressionFlag);
         buf.putShort(DEFAULT_TIME);
         buf.putShort(DEFAULT_DATE);
         buf.putInt(crc);
-        buf.putInt(Ints.longToUint(compressedSize));
-        buf.putInt(Ints.longToUint(uncompressedSize));
+        buf.putInt(csize); // compressed size
+        buf.putInt(size); // size
         buf.putShort(Ints.intToUshort(nameBytes.length));
-        //TODO Zip64 -> Write extra zip64 field
-        buf.putShort((short) 0); // Extra size
+        buf.putShort(Ints.intToUshort(extra.capacity()));
         buf.putShort((short) 0); // comment size
         buf.putShort((short) 0); // disk # start
         buf.putShort((short) 0); // internal att
         buf.putInt(0); // external att
-        buf.putInt(Ints.longToUint(location.first));
+        buf.putInt(offset);
         buf.put(nameBytes);
+        buf.put(extra);
     }
 
     short getCompressionFlag() {
@@ -84,8 +107,8 @@ class CentralDirectoryRecord {
     }
 
     long getSize() {
-        //TODO Zip64 -> Factor in if a zip64 extra field is needed.
-        return SIZE + nameBytes.length;
+        long extraSize = isZip64 ? ZIP64_EXTRA_SIZE : 0;
+        return SIZE + nameBytes.length + extraSize;
     }
 
     @NonNull
@@ -96,5 +119,20 @@ class CentralDirectoryRecord {
     @NonNull
     Location getLocation() {
         return location;
+    }
+
+    @NonNull
+    private ByteBuffer buildExtraField() {
+        if (!isZip64) {
+            return ByteBuffer.allocate(0);
+        }
+        ByteBuffer buf = ByteBuffer.allocate(ZIP64_EXTRA_SIZE).order(ByteOrder.LITTLE_ENDIAN);
+        buf.putShort(Zip64.EXTRA_ID);
+        buf.putShort(Ints.intToUshort(ZIP64_PAYLOAD_SIZE));
+        buf.putLong(uncompressedSize);
+        buf.putLong(compressedSize);
+        buf.putLong(location.first);
+        buf.rewind();
+        return buf;
     }
 }

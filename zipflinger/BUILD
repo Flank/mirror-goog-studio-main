@@ -108,6 +108,25 @@ java_test(
 )
 
 java_test(
+    name = "testZip64",
+    size = "medium",
+    srcs = [
+        "test/src/java/com/android/zipflinger/TestZip64.java",
+    ],
+    data = [
+        "test/resource/5GiBFile.zip",
+    ],
+    jvm_flags = ["-Dtest.suite.jar=testZip64.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [
+        ":test_utils",
+        ":zipflinger",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:junit_junit",
+    ],
+)
+
+java_test(
     name = "testsCompressor",
     size = "small",
     srcs = [

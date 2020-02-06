@@ -26,10 +26,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ZipMap {
-
-    private static final int EOCD_MIN_SIZE = 22;
-    private static final long EOCD_MAX_SIZE = Ints.USHRT_MAX + EOCD_MIN_SIZE;
-
     private final Map<String, Entry> entries = new HashMap<>();
     private CentralDirectory cd = null;
 
@@ -49,33 +45,58 @@ public class ZipMap {
     @NonNull
     public static ZipMap from(@NonNull File zipFile, boolean accountDataDescriptors)
             throws IOException {
+        return from(zipFile, accountDataDescriptors, Zip64.Policy.ALLOW);
+    }
+
+    @NonNull
+    public static ZipMap from(
+            @NonNull File zipFile, boolean accountDataDescriptors, Zip64.Policy policy)
+            throws IOException {
         ZipMap map = new ZipMap(zipFile, accountDataDescriptors);
-        map.parse();
+        map.parse(policy);
         return map;
     }
 
-    private void parse() throws IOException {
+    private void parse(Zip64.Policy policy) throws IOException {
         try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
 
             fileSize = channel.size();
 
-            // TODO: Zip64 -> Retrieve more to get the "zip64 end of central directory locator"
-            int sizeToRead = Math.toIntExact(Math.min(fileSize, EOCD_MAX_SIZE));
-
-            // Bring metadata to memory and parseRecord it.
-            ByteBuffer buffer = ByteBuffer.allocate(sizeToRead).order(ByteOrder.LITTLE_ENDIAN);
-            channel.read(buffer, fileSize - sizeToRead);
-            Location cdLocation = getCDLocation(buffer);
-            if (cdLocation == Location.INVALID) {
-                throw new IllegalStateException(
-                        String.format("Could not find CD in '%s'", file.toString()));
+            EndOfCentralDirectory eocd = EndOfCentralDirectory.find(channel);
+            if (eocd.getLocation() == Location.INVALID) {
+                throw new IllegalStateException(String.format("Could not find EOCD in '%s'", file));
             }
-            parseCentralDirectory(channel, cdLocation);
+            Location cdLocation = eocd.getCdLocation();
+
+            // Check if this is a zip64 archive
+            Zip64Locator locator = Zip64Locator.find(channel, eocd);
+            if (locator.getLocation() != Location.INVALID) {
+                if (policy == Zip64.Policy.FORBID) {
+                    String message = String.format("Cannot parse forbidden zip64 archive %s", file);
+                    throw new IllegalStateException(message);
+                }
+                Zip64Eocd zip64EOCD = Zip64Eocd.parse(channel, locator.getOffsetToEOCD64());
+                cdLocation = zip64EOCD.getCdLocation();
+                if (cdLocation == Location.INVALID) {
+                    String message = String.format("Zip64Locator led to bad EOCD64 in %s", file);
+                    throw new IllegalStateException(message);
+                }
+            }
+
+            if (cdLocation == Location.INVALID) {
+                throw new IllegalStateException(String.format("Could not find CD in '%s'", file));
+            }
+
+            parseCentralDirectory(channel, cdLocation, policy);
         }
     }
 
-    private void parseCentralDirectory(@NonNull FileChannel channel, @NonNull Location location)
+    private void parseCentralDirectory(
+            @NonNull FileChannel channel, @NonNull Location location, Zip64.Policy policy)
             throws IOException {
+        if (location.size() > Integer.MAX_VALUE) {
+            throw new IllegalStateException("CD larger than 2GiB not supported");
+        }
         int size = Math.toIntExact(location.size());
         ByteBuffer buf = ByteBuffer.allocate(size).order(ByteOrder.LITTLE_ENDIAN);
         channel.read(buf, location.first);
@@ -87,11 +108,31 @@ public class ZipMap {
             if (!entry.getName().isEmpty()) {
                 entries.put(entry.getName(), entry);
             }
+            checkPolicy(entry, policy);
         }
 
         cd = new CentralDirectory(buf, entries);
 
         sanityCheck(location);
+    }
+
+    private static void checkPolicy(@NonNull Entry entry, Zip64.Policy policy) {
+        if (policy == Zip64.Policy.ALLOW) {
+            return;
+        }
+
+        if (entry.getUncompressedSize() > Zip64.LONG_MAGIC
+                || entry.getCompressedSize() > Zip64.LONG_MAGIC
+                || entry.getLocation().first > Zip64.LONG_MAGIC) {
+            String message =
+                    String.format(
+                            "Entry %s infringes forbidden zip64 policy (size=%d, csize=%d, loc=%s)",
+                            entry.getName(),
+                            entry.getUncompressedSize(),
+                            entry.getCompressedSize(),
+                            entry.getLocation());
+            throw new IllegalStateException(message);
+        }
     }
 
     private void sanityCheck(Location cdLocation) {
@@ -117,32 +158,6 @@ public class ZipMap {
                         cdSize + "Invalid last loc '" + e.getName() + "' " + cdLoc);
             }
         }
-    }
-
-    @NonNull
-    private static Location getCDLocation(@NonNull ByteBuffer buffer) {
-        // The buffer contains the end of the file. First try the most likely location.
-        Location eocdLocation = null;
-
-        buffer.position(buffer.position() - EOCD_MIN_SIZE);
-        while (true) {
-            int signature = buffer.getInt(); // Read 4 bytes.
-            if (signature == EndOfCentralDirectory.SIGNATURE) {
-                eocdLocation = new Location(buffer.position() - 4, EOCD_MIN_SIZE);
-                break;
-            }
-            if (buffer.position() == 4) {
-                break;
-            }
-            buffer.position(buffer.position() - Integer.BYTES - 1); //Backtrack 5 bytes.
-        }
-
-        // This is not a zip!
-        if (eocdLocation == null) {
-            throw new IllegalStateException("Unable to find EOCD signature");
-        }
-
-        return EndOfCentralDirectory.parse(buffer, eocdLocation);
     }
 
     @NonNull
@@ -173,28 +188,40 @@ public class ZipMap {
         int crc = buf.getInt();
         entry.setCrc(crc);
 
-        long compressedSize = Ints.uintToLong(buf.getInt());
-        entry.setCompressedSize(compressedSize);
-
-        long uncompressedSize = Ints.uintToLong(buf.getInt());
-        entry.setUncompressedSize(uncompressedSize);
+        entry.setCompressedSize(Ints.uintToLong(buf.getInt()));
+        entry.setUncompressedSize(Ints.uintToLong(buf.getInt()));
 
         int pathLength = Ints.ushortToInt(buf.getShort());
         int extraLength = Ints.ushortToInt(buf.getShort());
         int commentLength = Ints.ushortToInt(buf.getShort());
         buf.position(buf.position() + 8);
-        //short diskNumber = buf.getShort();
-        //short intAttributes = buf.getShort();
-        //int extAttributes = bug.getInt();
-        long start = buf.getInt(); // offset to local file entry header
+        // short diskNumber = buf.getShort();
+        // short intAttributes = buf.getShort();
+        // int extAttributes = bug.getInt();
+
+        entry.setLocation(new Location(Ints.uintToLong(buf.getInt()), 0));
 
         parseName(buf, pathLength, entry);
+
+        // Process extra field. If the entry is zip64, this may change size, csize, and offset.
+        if (extraLength > 0) {
+            int position = buf.position();
+            int limit = buf.limit();
+            buf.limit(position + extraLength);
+            parseExtra(buf.slice(), entry);
+            buf.limit(limit);
+            buf.position(position + extraLength);
+        }
+
+        // Skip comment field
+        buf.position(buf.position() + commentLength);
 
         // Retrieve the local header extra size since there are no guarantee it is the same as the
         // central directory size.
         // Semi-paranoid mode: Also check that the local name size is the same as the cd name size.
         ByteBuffer localFieldBuffer =
-                readLocalFields(start + LocalFileHeader.OFFSET_TO_NAME, entry, channel);
+                readLocalFields(
+                        entry.getLocation().first + LocalFileHeader.OFFSET_TO_NAME, entry, channel);
         int localPathLength = Ints.ushortToInt(localFieldBuffer.getShort());
         int localExtraLength = Ints.ushortToInt(localFieldBuffer.getShort());
         if (pathLength != localPathLength) {
@@ -205,18 +232,10 @@ public class ZipMap {
             throw new IllegalStateException(message);
         }
 
-        // TODO Test the impact on performance to read the LFH. This is only useful to check if general status
-        // flag differs from the CDR which so far does not seem to happen.
-
-        // Skip extra field
-        buf.position(buf.position() + extraLength);
-
-        // Skip comment field
-        buf.position(buf.position() + commentLength);
-
         // At this point we have everything we need to calculate payload location.
         boolean isCompressed = compressionFlag != 0;
-        long payloadSize = isCompressed ? compressedSize : uncompressedSize;
+        long payloadSize = isCompressed ? entry.getCompressedSize() : entry.getUncompressedSize();
+        long start = entry.getLocation().first;
         long end =
                 start
                         + LocalFileHeader.LOCAL_FILE_HEADER_SIZE
@@ -250,6 +269,42 @@ public class ZipMap {
             } else {
                 entry.setLocation(Location.INVALID);
             }
+        }
+    }
+
+    private void parseExtra(@NonNull ByteBuffer buf, @NonNull Entry entry) {
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        while (buf.remaining() >= 4) {
+            short id = buf.getShort();
+            int size = Ints.ushortToInt(buf.getShort());
+            if (id == Zip64.EXTRA_ID) {
+                parseZip64Extra(buf, entry);
+            }
+            if (buf.remaining() >= size) {
+                buf.position(buf.position() + size);
+            }
+        }
+    }
+
+    private static void parseZip64Extra(@NonNull ByteBuffer buf, @NonNull Entry entry) {
+        if (entry.getUncompressedSize() == Zip64.LONG_MAGIC) {
+            if (buf.remaining() < 8) {
+                throw new IllegalStateException("Bad zip64 extra for entry " + entry.getName());
+            }
+            entry.setUncompressedSize(Ints.ulongToLong(buf.getLong()));
+        }
+        if (entry.getCompressedSize() == Zip64.LONG_MAGIC) {
+            if (buf.remaining() < 8) {
+                throw new IllegalStateException("Bad zip64 extra for entry " + entry.getName());
+            }
+            entry.setCompressedSize(Ints.ulongToLong(buf.getLong()));
+        }
+        if (entry.getLocation().first == Zip64.LONG_MAGIC) {
+            if (buf.remaining() < 8) {
+                throw new IllegalStateException("Bad zip64 extra for entry " + entry.getName());
+            }
+            long offset = Ints.ulongToLong(buf.getLong());
+            entry.setLocation(new Location(offset, 0));
         }
     }
 

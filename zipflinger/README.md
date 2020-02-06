@@ -3,11 +3,6 @@
 Zipflinger is a library dedicated to ZIP files manipulation. It can create an archive from scratch
 but also add/remove entries without decompressing/compressing the whole archive.
 
-Partial zip64 format is supported (with full-support coming in next CL):
-   - Archive with more than 65,536 entries can be read.
-   - Archive with entries bigger than 4 GiB are not supported.
-   - Archive with entries further than 4 GiB are not supported.
-
 The goal of the library is to work as fast as possible (its original purpose is to enable fast
 Android APK deployment). The two main features allowing high-speed are Zipflinger's ability to
 edit the CD of an archive and its usage of zero-copy transfer when moving entries across archives.
@@ -130,3 +125,8 @@ a source for a zip entry.
 
 All sources can be requested to be aligned via the Source.align() method. All sources except for the
 ZipSourceEntry can be requested to be compressed.
+
+## Zip64 Support
+Zipflinger has full support for zip64 archives. It is able to handle zip64EOCD (more than 65536
+entries) with zip64Locator and zip64 extra fields containing 64-bit compressed, uncompressed, and
+offset values (archives larger than 4GiB). There is no facility to handle files larger than 2GiB.

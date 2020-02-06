@@ -67,4 +67,28 @@ public class TestInts {
         }
         Assert.assertFalse(exceptionCaught);
     }
+
+    @Test
+    public void testULongToLongOverflow() {
+        boolean exceptionCaught = false;
+        long i = 0x80_00_00_00_00_00_00_00L;
+        try {
+            Ints.ulongToLong(i);
+        } catch (IllegalStateException e) {
+            exceptionCaught = true;
+        }
+        Assert.assertTrue(exceptionCaught);
+    }
+
+    @Test
+    public void testULongToLong() {
+        boolean exceptionCaught = false;
+        long i = 0x70_00_00_00_00_00_00_00L;
+        try {
+            Ints.ulongToLong(i);
+        } catch (IllegalStateException e) {
+            exceptionCaught = true;
+        }
+        Assert.assertFalse(exceptionCaught);
+    }
 }

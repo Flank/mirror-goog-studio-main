@@ -37,6 +37,11 @@ public class ZipArchive implements Archive {
     private final CentralDirectory cd;
     private final ZipWriter writer;
     private final ZipReader reader;
+    private final Zip64.Policy policy;
+
+    public ZipArchive(@NonNull File file) throws IOException {
+        this(file, Zip64.Policy.FORBID);
+    }
 
     /**
      * The object used to manipulate a zip archive.
@@ -44,10 +49,11 @@ public class ZipArchive implements Archive {
      * @param file the file object
      * @throws IOException
      */
-    public ZipArchive(@NonNull File file) throws IOException {
+    public ZipArchive(@NonNull File file, Zip64.Policy policy) throws IOException {
         this.file = file;
+        this.policy = policy;
         if (Files.exists(file.toPath())) {
-            ZipMap map = ZipMap.from(file, true);
+            ZipMap map = ZipMap.from(file, true, policy);
             cd = map.getCentralDirectory();
             freestore = new FreeStore(map.getEntries());
         } else {
@@ -178,8 +184,6 @@ public class ZipArchive implements Archive {
 
     @NonNull
     private ZipInfo writeArchive(@NonNull ZipWriter writer) throws IOException {
-        checkNumEntries();
-
         // Fill all empty space with virtual entry (not the last one since it represent all of
         // the unused file space.
         List<Location> freeLocations = freestore.getFreeLocations();
@@ -193,9 +197,12 @@ public class ZipArchive implements Archive {
         writer.position(cdStart);
         cd.write(writer);
         Location cdLocation = new Location(cdStart, writer.position() - cdStart);
+        long numEntries = cd.getNumEntries();
+
+        // Write zip64 EOCD and Locator (only if needed)
+        writeZip64Footers(writer, cdLocation, numEntries);
 
         // Write EOCD
-        long numEntries = cd.getNumEntries();
         Location eocdLocation = EndOfCentralDirectory.write(writer, cdLocation, numEntries);
         writer.truncate(writer.position());
 
@@ -204,13 +211,25 @@ public class ZipArchive implements Archive {
         return new ZipInfo(payLoadLocation, cdLocation, eocdLocation);
     }
 
-    // TODO: Zip64 -> Remove this check
-    private void checkNumEntries() {
-        // Check that num entries can be represented on an uint16_t.
-        long numEntries = cd.getNumEntries();
-        if (numEntries > Ints.USHRT_MAX) {
-            throw new IllegalStateException("Too many entries (" + numEntries + ")");
+    private void writeZip64Footers(
+            @NonNull ZipWriter writer, @NonNull Location cdLocation, long numEntries)
+            throws IOException {
+        if (!Zip64.needZip64Footer(numEntries, cdLocation)) {
+            return;
         }
+
+        if (policy == Zip64.Policy.FORBID) {
+            String message =
+                    String.format(
+                            "Zip64 required but forbidden (#entries=%d, cd=%s)",
+                            numEntries, cdLocation);
+            throw new IllegalStateException(message);
+        }
+
+        Zip64Eocd eocd = new Zip64Eocd(numEntries, cdLocation);
+        Location eocdLocation = eocd.write(writer);
+
+        Zip64Locator.write(writer, eocdLocation);
     }
 
     // Fill archive holes with virtual entries. Use extra field to fill as much as possible.
@@ -246,29 +265,18 @@ public class ZipArchive implements Archive {
         validateName(source);
 
         // Calculate the size we need (header + payload)
-        long headerSize = LocalFileHeader.sizeFor(source);
+        LocalFileHeader lfh = new LocalFileHeader(source);
+        long headerSize = lfh.getSize();
         long bytesNeeded = headerSize + source.getCompressedSize();
 
         // Allocate file space
         Location loc;
-        int paddingForAlignment;
         if (source.isAligned()) {
             loc = freestore.alloc(bytesNeeded, headerSize, source.getAlignment());
-            paddingForAlignment = Math.toIntExact(loc.size() - bytesNeeded);
+            lfh.setPadding(Math.toIntExact(loc.size() - bytesNeeded));
         } else {
             loc = freestore.ualloc(bytesNeeded);
-            paddingForAlignment = 0;
         }
-
-        // Write LFH
-        LocalFileHeader lfh =
-                new LocalFileHeader(
-                        source.getNameBytes(),
-                        source.getCompressionFlag(),
-                        source.getCrc(),
-                        source.getCompressedSize(),
-                        source.getUncompressedSize(),
-                        paddingForAlignment);
 
         writer.position(loc.first);
         lfh.write(writer);
@@ -276,6 +284,7 @@ public class ZipArchive implements Archive {
         // Write payload
         long payloadStart = writer.position();
         long payloadSize = source.writeTo(writer);
+        Location payloadLocation = new Location(payloadStart, payloadSize);
 
         // Update Central Directory record
         CentralDirectoryRecord cdRecord =
@@ -286,8 +295,32 @@ public class ZipArchive implements Archive {
                         source.getUncompressedSize(),
                         loc,
                         source.getCompressionFlag(),
-                        new Location(payloadStart, payloadSize));
+                        payloadLocation);
         cd.add(source.getName(), cdRecord);
+
+        checkPolicy(source, loc, payloadLocation);
+    }
+
+    private void checkPolicy(
+            @NonNull Source source, @NonNull Location cdloc, @NonNull Location payloadLoc) {
+        if (policy == Zip64.Policy.ALLOW) {
+            return;
+        }
+
+        if (source.getUncompressedSize() >= Zip64.LONG_MAGIC
+                || source.getCompressedSize() >= Zip64.LONG_MAGIC
+                || cdloc.first >= Zip64.LONG_MAGIC
+                || payloadLoc.first >= Zip64.LONG_MAGIC) {
+            String message =
+                    String.format(
+                            "Zip64 forbidden but required in entry %s size=%d, csize=%d, cdloc=%s, loc=%s",
+                            source.getName(),
+                            source.getUncompressedSize(),
+                            source.getCompressedSize(),
+                            cdloc,
+                            payloadLoc);
+            throw new IllegalStateException(message);
+        }
     }
 
     private void validateName(@NonNull Source source) {

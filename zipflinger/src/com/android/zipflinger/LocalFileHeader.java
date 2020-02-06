@@ -35,33 +35,28 @@ class LocalFileHeader {
     static final long VIRTUAL_ENTRY_MAX_SIZE = LOCAL_FILE_HEADER_SIZE + Ints.USHRT_MAX;
     static final long OFFSET_TO_NAME = 26;
 
+    // Zip64 extra payload must only include uncompressed size and compressed size. It differs
+    // from the Central Directory Record which also features an uint64_t offset to the LFH.
+    private static final int ZIP64_PAYLOAD_SIZE = Long.BYTES * 2;
+    private static final int ZIP64_EXTRA_SIZE = Short.BYTES * 2 + ZIP64_PAYLOAD_SIZE;
+
     private final byte[] nameBytes;
     private final short compressionFlag;
     private final int crc;
     private final long compressedSize;
     private final long uncompressedSize;
-    private final int extraPadding;
+    private final boolean isZip64;
+    private int padding;
 
-    LocalFileHeader(
-            byte[] nameBytes,
-            short compressionFlag,
-            int crc,
-            long compressedSize,
-            long uncompressedSize,
-            int extraPadding) {
-        this.nameBytes = nameBytes;
-        this.compressionFlag = compressionFlag;
-        this.crc = crc;
-        this.compressedSize = compressedSize;
-        this.uncompressedSize = uncompressedSize;
-        this.extraPadding = extraPadding;
-
-        if (extraPadding > Ints.USHRT_MAX) {
-            String err = String.format("Padding cannot be more than %s bytes", Ints.USHRT_MAX);
-            throw new IllegalStateException(err);
-        }
+    LocalFileHeader(Source source) {
+        this.nameBytes = source.getNameBytes();
+        this.compressionFlag = source.getCompressionFlag();
+        this.crc = source.getCrc();
+        this.compressedSize = source.getCompressedSize();
+        this.uncompressedSize = source.getUncompressedSize();
+        this.isZip64 = compressedSize > Zip64.LONG_MAGIC || uncompressedSize > Zip64.LONG_MAGIC;
+        this.padding = 0;
     }
-
 
     public static void fillVirtualEntry(@NonNull ByteBuffer virtualEntry) {
         int sizeToFill = virtualEntry.capacity();
@@ -85,20 +80,33 @@ class LocalFileHeader {
         virtualEntry.rewind();
     }
 
+    public void setPadding(int padding) {
+        if (padding > Ints.USHRT_MAX) {
+            String err = String.format("Padding cannot be more than %s bytes", Ints.USHRT_MAX);
+            throw new IllegalStateException(err);
+        }
+        this.padding = padding;
+    }
+
     public void write(@NonNull ZipWriter writer) throws IOException {
-        ByteBuffer extraField = ByteBuffer.allocate(extraPadding);
+        ByteBuffer extraField = buildExtraField();
         int bytesNeeded = LOCAL_FILE_HEADER_SIZE + nameBytes.length + extraField.capacity();
+
+        short versionNeeded = isZip64 ? Zip64.VERSION_NEEDED : 0;
+        int size = isZip64 ? Zip64.INT_MAGIC : Ints.longToUint(uncompressedSize);
+        int csize = isZip64 ? Zip64.INT_MAGIC : Ints.longToUint(compressedSize);
 
         ByteBuffer buffer = ByteBuffer.allocate(bytesNeeded).order(ByteOrder.LITTLE_ENDIAN);
         buffer.putInt(SIGNATURE);
-        buffer.putShort((short) 0); // Version needed
+        buffer.putShort(versionNeeded);
+
         buffer.putShort((short) 0); // general purpose flag
         buffer.putShort(compressionFlag);
         buffer.putShort(CentralDirectoryRecord.DEFAULT_TIME);
         buffer.putShort(CentralDirectoryRecord.DEFAULT_DATE);
         buffer.putInt(crc);
-        buffer.putInt(Ints.longToUint(compressedSize));
-        buffer.putInt(Ints.longToUint(uncompressedSize));
+        buffer.putInt(csize); // compressed size
+        buffer.putInt(size); // size
         buffer.putShort(Ints.intToUshort(nameBytes.length));
         buffer.putShort(Ints.intToUshort(extraField.capacity())); // Extra size
         buffer.put(nameBytes);
@@ -108,8 +116,24 @@ class LocalFileHeader {
         writer.write(buffer);
     }
 
-    public static long sizeFor(@NonNull Source source) {
-        // TODO: Zip64 -> Factor in zip64 extra field requirement
-        return LOCAL_FILE_HEADER_SIZE + source.getNameBytes().length;
+    public long getSize() {
+        long extraSize = isZip64 ? ZIP64_EXTRA_SIZE : 0;
+        return LOCAL_FILE_HEADER_SIZE + nameBytes.length + extraSize;
+    }
+
+    @NonNull
+    private ByteBuffer buildExtraField() {
+        if (!isZip64) {
+            return ByteBuffer.allocate(padding);
+        }
+
+        ByteBuffer zip64extra = ByteBuffer.allocate(ZIP64_EXTRA_SIZE + padding);
+        zip64extra.order(ByteOrder.LITTLE_ENDIAN);
+        zip64extra.putShort(Zip64.EXTRA_ID);
+        zip64extra.putShort(Ints.intToUshort(ZIP64_PAYLOAD_SIZE));
+        zip64extra.putLong(uncompressedSize);
+        zip64extra.putLong(compressedSize);
+        zip64extra.rewind();
+        return zip64extra;
     }
 }
