@@ -13,86 +13,70 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.internal.variant;
+package com.android.build.gradle.internal.variant
 
-import com.android.annotations.NonNull;
-import com.android.build.api.component.ComponentIdentity;
-import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.builder.core.VariantType;
-import com.android.utils.StringHelper;
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.utils.appendCapitalized
 
 /**
  * Data about a test component in a normal plugin
  *
- * <p>For the test plugin, ApplicationVariantData is used.
+ *
+ * For the test plugin, ApplicationVariantData is used.
  */
-public class TestVariantData extends ApkVariantData {
+class TestVariantData(
+    componentIdentity: ComponentIdentity,
+    variantDslInfo: VariantDslInfo,
+    variantDependencies: VariantDependencies,
+    variantSources: VariantSources,
+    paths: VariantPathHelper,
+    artifacts: BuildArtifactsHolder,
+    val testedVariantData: TestedVariantData,
+    globalScope: GlobalScope,
+    taskContainer: MutableTaskContainer
+) : ApkVariantData(
+    componentIdentity,
+    variantDslInfo,
+    variantDependencies,
+    variantSources,
+    paths,
+    artifacts,
+    globalScope,
+    taskContainer
+) {
 
-    @NonNull
-    private final TestedVariantData testedVariantData;
+    override val description: String
+        get() {
+            val variantType = variantDslInfo.variantType
 
-    public TestVariantData(
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantDependencies variantDependencies,
-            @NonNull VariantSources variantSources,
-            @NonNull VariantPathHelper paths,
-            @NonNull BuildArtifactsHolder artifacts,
-            @NonNull TestedVariantData testedVariantData,
-            @NonNull GlobalScope globalScope,
-            @NonNull MutableTaskContainer taskContainer) {
-        super(
-                componentIdentity,
-                variantDslInfo,
-                variantDependencies,
-                variantSources,
-                paths,
-                artifacts,
-                globalScope,
-                taskContainer);
-        this.testedVariantData = testedVariantData;
-    }
+            val prefix = if (variantType.isApk) {
+                "android (on device) tests"
+            } else {
+                "unit tests"
+            }
 
-    @NonNull
-    public TestedVariantData getTestedVariantData() {
-        return testedVariantData;
-    }
-
-    @Override
-    @NonNull
-    public String getDescription() {
-        String prefix;
-        VariantType variantType = variantDslInfo.getVariantType();
-        if (variantType.isApk()) {
-            prefix = "android (on device) tests";
-        } else {
-            prefix = "unit tests";
+            return if (variantDslInfo.hasFlavors()) {
+                val sb = StringBuilder(50)
+                sb.append(prefix)
+                sb.append(" for the ")
+                sb.appendCapitalized(variantDslInfo.componentIdentity.flavorName)
+                variantDslInfo.componentIdentity.buildType?.let { sb.appendCapitalized(it) }
+                sb.append(" build")
+                sb.toString()
+            } else {
+                val sb = StringBuilder(50)
+                sb.append(prefix)
+                sb.append(" for the ")
+                sb.appendCapitalized(variantDslInfo.componentIdentity.buildType!!)
+                sb.append(" build")
+                sb.toString()
+            }
         }
 
-        if (variantDslInfo.hasFlavors()) {
-            StringBuilder sb = new StringBuilder(50);
-            sb.append(prefix);
-            sb.append(" for the ");
-            StringHelper.appendCapitalized(
-                    sb, variantDslInfo.getComponentIdentity().getFlavorName());
-            StringHelper.appendCapitalized(
-                    sb, variantDslInfo.getComponentIdentity().getBuildType());
-            sb.append(" build");
-            return sb.toString();
-        } else {
-            StringBuilder sb = new StringBuilder(50);
-            sb.append(prefix);
-            sb.append(" for the ");
-            StringHelper.appendCapitalized(
-                    sb, variantDslInfo.getComponentIdentity().getBuildType());
-            sb.append(" build");
-            return sb.toString();
-        }
-    }
 }

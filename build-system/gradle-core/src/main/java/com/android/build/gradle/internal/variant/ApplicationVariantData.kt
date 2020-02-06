@@ -13,77 +13,64 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.internal.variant;
+package com.android.build.gradle.internal.variant
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.component.ComponentIdentity;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.builder.core.VariantType;
-import com.android.utils.StringHelper;
-import com.google.common.collect.Maps;
-import java.util.Map;
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.builder.core.VariantType
+import com.android.utils.appendCapitalized
+import com.android.utils.capitalizeAndAppend
+import com.google.common.collect.Maps
 
 /**
  * Data about a variant that produce an application APK.
  *
- * <p>This includes application, dynamic-feature and standalone Test plugins.
+ *
+ * This includes application, dynamic-feature and standalone Test plugins.
  */
-public class ApplicationVariantData extends ApkVariantData implements TestedVariantData {
-    private final Map<VariantType, TestVariantData> testVariants;
+class ApplicationVariantData(
+    componentIdentity: ComponentIdentity,
+    variantDslInfo: VariantDslInfo,
+    variantDependencies: VariantDependencies,
+    variantSources: VariantSources,
+    paths: VariantPathHelper,
+    artifacts: BuildArtifactsHolder,
+    globalScope: GlobalScope,
+    taskContainer: MutableTaskContainer
+) : ApkVariantData(
+    componentIdentity,
+    variantDslInfo,
+    variantDependencies,
+    variantSources,
+    paths,
+    artifacts,
+    globalScope,
+    taskContainer
+), TestedVariantData {
 
-    public ApplicationVariantData(
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantDependencies variantDependencies,
-            @NonNull VariantSources variantSources,
-            @NonNull VariantPathHelper paths,
-            @NonNull BuildArtifactsHolder artifacts,
-            @NonNull GlobalScope globalScope,
-            @NonNull MutableTaskContainer taskContainer) {
-        super(
-                componentIdentity,
-                variantDslInfo,
-                variantDependencies,
-                variantSources,
-                paths,
-                artifacts,
-                globalScope,
-                taskContainer);
-        testVariants = Maps.newHashMap();
+    private val testVariants: MutableMap<VariantType, TestVariantData> = mutableMapOf()
+
+    override fun setTestVariantData(testVariantData: TestVariantData, type: VariantType) {
+        testVariants[type] = testVariantData
     }
 
-    @Override
-    public void setTestVariantData(
-            @NonNull TestVariantData testVariantData,
-            @NonNull VariantType type) {
-        testVariants.put(type, testVariantData);
+    override fun getTestVariantData(type: VariantType): TestVariantData? {
+        return testVariants[type]
     }
 
-    @Nullable
-    @Override
-    public TestVariantData getTestVariantData(@NonNull VariantType type) {
-        return testVariants.get(type);
-    }
-
-    @Override
-    @NonNull
-    public String getDescription() {
-        if (variantDslInfo.hasFlavors()) {
-            StringBuilder sb = new StringBuilder(50);
-            StringHelper.appendCapitalized(
-                    sb, variantDslInfo.getComponentIdentity().getBuildType());
-            StringHelper.appendCapitalized(sb, variantDslInfo.getComponentIdentity().getName());
-            sb.append(" build");
-            return sb.toString();
+    override val description: String
+        get() = if (variantDslInfo.hasFlavors()) {
+            val sb = StringBuilder(50)
+            variantDslInfo.componentIdentity.buildType?.let { sb.appendCapitalized(it) }
+            sb.appendCapitalized(variantDslInfo.componentIdentity.name)
+            sb.append(" build")
+            sb.toString()
         } else {
-            return StringHelper.capitalizeAndAppend(
-                    variantDslInfo.getComponentIdentity().getBuildType(), " build");
+            variantDslInfo.componentIdentity.buildType!!.capitalizeAndAppend(" build")
         }
-    }
 }

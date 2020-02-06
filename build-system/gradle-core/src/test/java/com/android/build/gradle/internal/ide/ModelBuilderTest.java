@@ -519,7 +519,6 @@ public class ModelBuilderTest {
         when(variantScope.getPublishingSpec()).thenReturn(PublishingSpecs.getVariantSpec(type));
 
         BaseVariantData variantData = Mockito.mock(BaseVariantData.class);
-        when(variantData.getVariantDslInfo()).thenReturn(variantDslInfo);
         when(variantData.getTaskContainer()).thenReturn(new MutableTaskContainer());
 
         if (componentClass.equals(UnitTestPropertiesImpl.class)

@@ -132,10 +132,8 @@ class ApplicationVariantFactory(
             variant.getFilters(VariantOutput.FilterType.ABI)
         checkSplitsConflicts(variantProperties.variantDslInfo, variant, abis)
         if (!densities.isEmpty()) {
-            variant.setCompatibleScreens(
-                extension.splits.density
-                    .compatibleScreens
-            )
+            variant.compatibleScreens = extension.splits.density
+                .compatibleScreens
         }
         val outputFactory = variant.outputFactory
         populateMultiApkOutputs(abis, densities, outputFactory, includeMainApk)

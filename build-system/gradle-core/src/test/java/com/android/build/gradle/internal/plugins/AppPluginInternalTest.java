@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.builder.core.BuilderConstants;
@@ -86,9 +85,9 @@ public class AppPluginInternalTest {
 
         VariantCheckers.checkDefaultVariants(components);
 
-        VariantCheckers.findVariantData(components, "debug");
-        VariantCheckers.findVariantData(components, "release");
-        VariantCheckers.findVariantData(components, "debugAndroidTest");
+        VariantCheckers.findComponent(components, "debug");
+        VariantCheckers.findComponent(components, "release");
+        VariantCheckers.findComponent(components, "debugAndroidTest");
     }
 
     @Test
@@ -173,13 +172,12 @@ public class AppPluginInternalTest {
         String[] variantNames = new String[] {"debug", "release", "staging"};
 
         for (String variantName : variantNames) {
-            VariantCheckers.findVariantData(components, variantName);
+            VariantCheckers.findComponent(components, variantName);
         }
 
-        BaseVariantData testVariant =
-                VariantCheckers.findVariantData(components, "stagingAndroidTest");
-        TestCase.assertEquals(
-                "staging", testVariant.getVariantDslInfo().getComponentIdentity().getBuildType());
+        ComponentPropertiesImpl testVariant =
+                VariantCheckers.findComponent(components, "stagingAndroidTest");
+        TestCase.assertEquals("staging", testVariant.getBuildType());
     }
     @Test
     public void testFlavors() {
@@ -223,7 +221,7 @@ public class AppPluginInternalTest {
                 };
 
         for (String variantName : variantNames) {
-            VariantCheckers.findVariantData(components, variantName);
+            VariantCheckers.findComponent(components, variantName);
         }
     }
     @Test
@@ -291,7 +289,7 @@ public class AppPluginInternalTest {
                 };
 
         for (String variantName : variantNames) {
-            VariantCheckers.findVariantData(components, variantName);
+            VariantCheckers.findComponent(components, variantName);
         }
     }
     @Test
@@ -361,10 +359,10 @@ public class AppPluginInternalTest {
         map.put("androidTests", 2);
         TestCase.assertEquals(VariantCheckers.countVariants(map), components.size());
 
-        BaseVariantData variant;
+        ComponentPropertiesImpl variant;
         SigningConfig signingConfig;
 
-        variant = VariantCheckers.findVariantData(components, "flavor1Debug");
+        variant = VariantCheckers.findComponent(components, "flavor1Debug");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         final File file = signingConfig.getStoreFile();
@@ -373,17 +371,17 @@ public class AppPluginInternalTest {
                 .isEqualTo(
                         GradleKeystoreHelper.getDefaultDebugKeystoreLocation().getAbsolutePath());
 
-        variant = VariantCheckers.findVariantData(components, "flavor1Staging");
+        variant = VariantCheckers.findComponent(components, "flavor1Staging");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNull(signingConfig);
 
-        variant = VariantCheckers.findVariantData(components, "flavor1Release");
+        variant = VariantCheckers.findComponent(components, "flavor1Release");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
                 new File(project.getProjectDir(), "a3"), signingConfig.getStoreFile());
 
-        variant = VariantCheckers.findVariantData(components, "flavor2Debug");
+        variant = VariantCheckers.findComponent(components, "flavor2Debug");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         final File file1 = signingConfig.getStoreFile();
@@ -392,13 +390,13 @@ public class AppPluginInternalTest {
                 .isEqualTo(
                         GradleKeystoreHelper.getDefaultDebugKeystoreLocation().getAbsolutePath());
 
-        variant = VariantCheckers.findVariantData(components, "flavor2Staging");
+        variant = VariantCheckers.findComponent(components, "flavor2Staging");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(
                 new File(project.getProjectDir(), "a1"), signingConfig.getStoreFile());
 
-        variant = VariantCheckers.findVariantData(components, "flavor2Release");
+        variant = VariantCheckers.findComponent(components, "flavor2Release");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         TestCase.assertEquals(

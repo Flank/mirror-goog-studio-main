@@ -34,6 +34,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.testutils.truth.FileSubject
 import com.google.common.collect.ImmutableMap
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.testfixtures.ProjectBuilder
@@ -53,8 +54,8 @@ class BundleAllClassesTest {
     @Mock private lateinit var fileTree: FileTree
     @Mock private lateinit var globalScope: GlobalScope
     @Mock private lateinit var variantData: BaseVariantData
-    @Mock private lateinit var preJavacClasses: FileCollection
-    @Mock private lateinit var postJavacClasses: FileCollection
+    @Mock private lateinit var preJavacClasses: ConfigurableFileCollection
+    @Mock private lateinit var postJavacClasses: ConfigurableFileCollection
     @Mock private lateinit var extension: BaseExtension
     @Mock private lateinit var aaptOptions: AaptOptions
     @Mock private lateinit var taskContainer: MutableTaskContainer

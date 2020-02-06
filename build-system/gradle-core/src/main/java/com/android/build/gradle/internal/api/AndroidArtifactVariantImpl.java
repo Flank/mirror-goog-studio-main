@@ -49,23 +49,23 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl
     @Override
     public SigningConfig getSigningConfig() {
         return readOnlyObjectProvider.getSigningConfig(
-                getVariantData().getVariantDslInfo().getSigningConfig());
+                componentProperties.getVariantDslInfo().getSigningConfig());
     }
 
     @Override
     public boolean isSigningReady() {
-        return getVariantData().getVariantDslInfo().isSigningReady();
+        return componentProperties.getVariantDslInfo().isSigningReady();
     }
 
     @Nullable
     @Override
     public String getVersionName() {
-        return getVariantData().getVariantDslInfo().getVersionName();
+        return componentProperties.getVariantDslInfo().getVersionName();
     }
 
     @Override
     public int getVersionCode() {
-        return getVariantData().getVariantDslInfo().getVersionCode();
+        return componentProperties.getVariantDslInfo().getVersionCode();
     }
 
     @NonNull

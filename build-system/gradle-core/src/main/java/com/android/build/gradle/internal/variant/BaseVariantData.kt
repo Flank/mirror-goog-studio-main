@@ -13,281 +13,211 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.internal.variant;
+package com.android.build.gradle.internal.variant
 
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
+import com.android.build.VariantOutput
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.Splits
+import com.android.build.gradle.internal.dsl.VariantOutputFactory
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT
+import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
+import com.android.build.gradle.internal.scope.InternalArtifactType.MLKIT_SOURCE_OUT
+import com.android.build.gradle.internal.scope.InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES
+import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
+import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.scope.OutputFactory
+import com.android.build.gradle.internal.tasks.factory.dependsOn
+import com.android.build.gradle.options.BooleanOption
+import com.google.common.base.MoreObjects
+import com.google.common.collect.ImmutableList
+import org.gradle.api.Task
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.file.FileCollection
+import org.gradle.api.logging.Logging
+import org.gradle.api.resources.TextResource
+import java.io.File
+import java.util.Arrays
+import java.util.Collections
+import java.util.HashSet
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.OutputFile;
-import com.android.build.api.component.ComponentIdentity;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
-import com.android.build.gradle.api.AndroidSourceSet;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.dsl.Splits;
-import com.android.build.gradle.internal.dsl.VariantOutputFactory;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.BuildFeatureValues;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.InternalArtifactType.MLKIT_SOURCE_OUT;
-import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.OutputFactory;
-import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.builder.model.SourceProvider;
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.ConfigurableFileTree;
-import org.gradle.api.file.Directory;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.logging.Logging;
-import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.provider.Provider;
-import org.gradle.api.resources.TextResource;
-import org.gradle.api.tasks.Sync;
-
-/** Base data about a variant. */
-public abstract class BaseVariantData {
-
+/** Base data about a variant.  */
+abstract class BaseVariantData(
     // Variant specific Data
-    @NonNull protected final ComponentIdentity componentIdentity;
-    @NonNull protected final VariantDslInfo variantDslInfo;
-    @NonNull protected final VariantSources variantSources;
-    @NonNull protected final VariantPathHelper paths;
-    @NonNull protected final BuildArtifactsHolder artifacts;
-    @NonNull protected final VariantDependencies variantDependencies;
-
+    protected val componentIdentity: ComponentIdentity,
+    protected val variantDslInfo: VariantDslInfo,
+    val variantDependencies: VariantDependencies,
+    protected val variantSources: VariantSources,
+    protected val paths: VariantPathHelper,
+    protected val artifacts: BuildArtifactsHolder,
     // Global Data
-    @NonNull protected final GlobalScope globalScope;
-    @NonNull protected final MutableTaskContainer taskContainer;
+    @get:Deprecated("Use {@link ComponentPropertiesImpl#getGlobalScope()} ") val globalScope: GlobalScope,
+    val taskContainer: MutableTaskContainer
+) {
 
     // Storage for Old Public API
-    private List<File> extraGeneratedSourceFolders = Lists.newArrayList();
-    private List<ConfigurableFileTree> extraGeneratedSourceFileTrees;
-    private List<ConfigurableFileTree> externalAptJavaOutputFileTrees;
-    private final ConfigurableFileCollection extraGeneratedResFolders;
-    private Map<Object, FileCollection> preJavacGeneratedBytecodeMap;
-    private FileCollection preJavacGeneratedBytecodeLatest;
-    private final ConfigurableFileCollection allPreJavacGeneratedBytecode;
-    private final ConfigurableFileCollection allPostJavacGeneratedBytecode;
-    private FileCollection rawAndroidResources = null;
+    val extraGeneratedSourceFolders: MutableList<File> = mutableListOf()
+    private var extraGeneratedSourceFileTrees: MutableList<ConfigurableFileTree>? = null
+    private var externalAptJavaOutputFileTrees: MutableList<ConfigurableFileTree>? = null
+    val extraGeneratedResFolders: ConfigurableFileCollection = globalScope.dslScope.objectFactory.fileCollection()
+    private var preJavacGeneratedBytecodeMap: MutableMap<Any, FileCollection>? = null
+    private var preJavacGeneratedBytecodeLatest: FileCollection = globalScope.dslScope.objectFactory.fileCollection()
+    val allPreJavacGeneratedBytecode: ConfigurableFileCollection = globalScope.dslScope.objectFactory.fileCollection()
+    val allPostJavacGeneratedBytecode: ConfigurableFileCollection = globalScope.dslScope.objectFactory.fileCollection()
+    private var rawAndroidResources: FileCollection? = null
 
-    private Set<String> densityFilters;
-    private Set<String> languageFilters;
-    private Set<String> abiFilters;
-
-    // Cache for things computed on first access
-
-    private ImmutableList<ConfigurableFileTree> defaultJavaSources;
+    private lateinit var densityFilters: Set<String>
+    private lateinit var languageFilters: Set<String>
+    private lateinit var abiFilters: Set<String>
 
     /**
      * If true, variant outputs will be considered signed. Only set if you manually set the outputs
      * to point to signed files built by other tasks.
      */
-    public boolean outputsAreSigned = false;
+    @JvmField
+    var outputsAreSigned = false
+    val outputFactory: OutputFactory
+    @JvmField
+    var variantOutputFactory: VariantOutputFactory? = null
+    @JvmField
+    var applicationIdTextResource: TextResource = globalScope.project.resources.text.fromString("")
 
-    @NonNull private final OutputFactory outputFactory;
-    public VariantOutputFactory variantOutputFactory;
+    abstract val description: String
 
-    public TextResource applicationIdTextResource;
-
-    public BaseVariantData(
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantDependencies variantDependencies,
-            @NonNull VariantSources variantSources,
-            @NonNull VariantPathHelper paths,
-            @NonNull BuildArtifactsHolder artifacts,
-            @NonNull GlobalScope globalScope,
-            @NonNull MutableTaskContainer taskContainer) {
-        this.componentIdentity = componentIdentity;
-        this.variantDslInfo = variantDslInfo;
-        this.variantDependencies = variantDependencies;
-        this.variantSources = variantSources;
-        this.paths = paths;
-        this.artifacts = artifacts;
-        this.globalScope = globalScope;
-        this.taskContainer = taskContainer;
-
-        final Splits splits = globalScope.getExtension().getSplits();
-        boolean splitsEnabled =
-                splits.getDensity().isEnable()
-                        || splits.getAbi().isEnable()
-                        || splits.getLanguage().isEnable();
+    init {
+        val splits = globalScope.extension.splits
+        val splitsEnabled = (splits.density.isEnable
+                || splits.abi.isEnable
+                || splits.language.isEnable)
 
         // warn the user if we are forced to ignore the generatePureSplits flag.
-        if (splitsEnabled && globalScope.getExtension().getGeneratePureSplits()) {
-            Logging.getLogger(BaseVariantData.class)
-                    .warn(
-                            String.format(
-                                    "Variant %s requested removed pure splits support, reverted to full splits",
-                                    componentIdentity.getName()));
+        if (splitsEnabled && globalScope.extension.generatePureSplits) {
+            Logging.getLogger(BaseVariantData::class.java)
+                .warn(
+                    String.format(
+                        "Variant %s requested removed pure splits support, reverted to full splits",
+                        componentIdentity.name
+                    )
+                )
+        }
+        outputFactory = OutputFactory(globalScope.projectBaseName, variantDslInfo)
+    }
+
+
+    fun getGeneratedBytecode(generatorKey: Any?): FileCollection {
+        return if (generatorKey == null) {
+            allPreJavacGeneratedBytecode
+        } else preJavacGeneratedBytecodeMap?.get(generatorKey)
+            ?: throw RuntimeException("Bytecode generator key not found")
+    }
+
+    fun addJavaSourceFoldersToModel(generatedSourceFolder: File) {
+        extraGeneratedSourceFolders.add(generatedSourceFolder)
+    }
+
+    fun addJavaSourceFoldersToModel(vararg generatedSourceFolders: File) {
+        Collections
+            .addAll(extraGeneratedSourceFolders, *generatedSourceFolders)
+    }
+
+    fun addJavaSourceFoldersToModel(generatedSourceFolders: Collection<File>) {
+        extraGeneratedSourceFolders.addAll(generatedSourceFolders)
+    }
+
+    open fun registerJavaGeneratingTask(
+        task: Task,
+        vararg generatedSourceFolders: File
+    ) {
+        registerJavaGeneratingTask(
+            task,
+            Arrays.asList(*generatedSourceFolders)
+        )
+    }
+
+    open fun registerJavaGeneratingTask(
+        task: Task,
+        generatedSourceFolders: Collection<File>
+    ) {
+        taskContainer.sourceGenTask.dependsOn(task)
+        val fileTrees = extraGeneratedSourceFileTrees ?: mutableListOf<ConfigurableFileTree>().also {
+            extraGeneratedSourceFileTrees = it
         }
 
-        outputFactory = new OutputFactory(globalScope.getProjectBaseName(), variantDslInfo);
-
-        // this must be created immediately since the variant API happens after the task that
-        // depends on this are created.
-        final ObjectFactory objectFactory = globalScope.getDslScope().getObjectFactory();
-        extraGeneratedResFolders = objectFactory.fileCollection();
-        preJavacGeneratedBytecodeLatest = objectFactory.fileCollection();
-        allPreJavacGeneratedBytecode = objectFactory.fileCollection();
-        allPostJavacGeneratedBytecode = objectFactory.fileCollection();
-
-        applicationIdTextResource =
-                globalScope.getProject().getResources().getText().fromString("");
+        val project = globalScope.project
+        for (f in generatedSourceFolders) {
+            val fileTree = project.fileTree(f).builtBy(task)
+            fileTrees.add(fileTree)
+        }
+        addJavaSourceFoldersToModel(generatedSourceFolders)
     }
 
-    @NonNull
-    public OutputFactory getOutputFactory() {
-        return outputFactory;
-    }
-
-    @NonNull
-    public abstract String getDescription();
-
-    @NonNull
-    public List<File> getExtraGeneratedSourceFolders() {
-        return extraGeneratedSourceFolders;
-    }
-
-    @Nullable
-    public FileCollection getExtraGeneratedResFolders() {
-        return extraGeneratedResFolders;
-    }
-
-    @NonNull
-    public FileCollection getAllPreJavacGeneratedBytecode() {
-        return allPreJavacGeneratedBytecode;
-    }
-
-    @NonNull
-    public FileCollection getAllPostJavacGeneratedBytecode() {
-        return allPostJavacGeneratedBytecode;
-    }
-
-    @NonNull
-    public FileCollection getGeneratedBytecode(@Nullable Object generatorKey) {
-        if (generatorKey == null) {
-            return allPreJavacGeneratedBytecode;
+    fun registerExternalAptJavaOutput(folder: ConfigurableFileTree) {
+        val fileTrees = externalAptJavaOutputFileTrees ?: mutableListOf<ConfigurableFileTree>().also {
+            externalAptJavaOutputFileTrees = it
         }
 
-        FileCollection result = preJavacGeneratedBytecodeMap.get(generatorKey);
-        if (result == null) {
-            throw new RuntimeException("Bytecode generator key not found");
+        fileTrees.add(folder)
+        addJavaSourceFoldersToModel(folder.dir)
+    }
+
+    fun registerGeneratedResFolders(folders: FileCollection) {
+        extraGeneratedResFolders.from(folders)
+    }
+
+    fun registerResGeneratingTask(
+        task: Task,
+        vararg generatedResFolders: File
+    ) {
+        registerResGeneratingTask(
+            task,
+            listOf(*generatedResFolders)
+        )
+    }
+
+    fun registerResGeneratingTask(
+        task: Task,
+        generatedResFolders: Collection<File>
+    ) {
+        println(
+            "registerResGeneratingTask is deprecated, use registerGeneratedResFolders(FileCollection)"
+        )
+        registerGeneratedResFolders(globalScope.project.files(generatedResFolders).builtBy(task))
+    }
+
+    fun registerPreJavacGeneratedBytecode(fileCollection: FileCollection): Any {
+        val map = preJavacGeneratedBytecodeMap ?: mutableMapOf<Any, FileCollection>().also {
+            preJavacGeneratedBytecodeMap = it
         }
 
-        return result;
-    }
-
-    public void addJavaSourceFoldersToModel(@NonNull File generatedSourceFolder) {
-        extraGeneratedSourceFolders.add(generatedSourceFolder);
-    }
-
-    public void addJavaSourceFoldersToModel(@NonNull File... generatedSourceFolders) {
-        Collections.addAll(extraGeneratedSourceFolders, generatedSourceFolders);
-    }
-
-    public void addJavaSourceFoldersToModel(@NonNull Collection<File> generatedSourceFolders) {
-        extraGeneratedSourceFolders.addAll(generatedSourceFolders);
-    }
-
-    public void registerJavaGeneratingTask(@NonNull Task task, @NonNull File... generatedSourceFolders) {
-        registerJavaGeneratingTask(task, Arrays.asList(generatedSourceFolders));
-    }
-
-    public void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> generatedSourceFolders) {
-        TaskFactoryUtils.dependsOn(taskContainer.getSourceGenTask(), task);
-
-        if (extraGeneratedSourceFileTrees == null) {
-            extraGeneratedSourceFileTrees = new ArrayList<>();
-        }
-
-        final Project project = globalScope.getProject();
-        for (File f : generatedSourceFolders) {
-            ConfigurableFileTree fileTree = project.fileTree(f).builtBy(task);
-            extraGeneratedSourceFileTrees.add(fileTree);
-        }
-
-        addJavaSourceFoldersToModel(generatedSourceFolders);
-    }
-
-    public void registerExternalAptJavaOutput(@NonNull ConfigurableFileTree folder) {
-        if (externalAptJavaOutputFileTrees == null) {
-            externalAptJavaOutputFileTrees = new ArrayList<>();
-        }
-
-        externalAptJavaOutputFileTrees.add(folder);
-
-        addJavaSourceFoldersToModel(folder.getDir());
-    }
-
-    public void registerGeneratedResFolders(@NonNull FileCollection folders) {
-        extraGeneratedResFolders.from(folders);
-    }
-
-    @Deprecated
-    public void registerResGeneratingTask(@NonNull Task task, @NonNull File... generatedResFolders) {
-        registerResGeneratingTask(task, Arrays.asList(generatedResFolders));
-    }
-
-    @Deprecated
-    public void registerResGeneratingTask(@NonNull Task task, @NonNull Collection<File> generatedResFolders) {
-        System.out.println(
-                "registerResGeneratingTask is deprecated, use registerGeneratedResFolders(FileCollection)");
-
-        final Project project = globalScope.getProject();
-        registerGeneratedResFolders(project.files(generatedResFolders).builtBy(task));
-    }
-
-    public Object registerPreJavacGeneratedBytecode(@NonNull FileCollection fileCollection) {
-        if (preJavacGeneratedBytecodeMap == null) {
-            preJavacGeneratedBytecodeMap = Maps.newHashMap();
-        }
         // latest contains the generated bytecode up to now, so create a new key and put it in the
         // map.
-        Object key = new Object();
-        preJavacGeneratedBytecodeMap.put(key, preJavacGeneratedBytecodeLatest);
+        val key = Any()
+        map[key] = preJavacGeneratedBytecodeLatest
 
         // now create a new file collection that will contains the previous latest plus the new
         // one
 
         // and make this the latest
-        preJavacGeneratedBytecodeLatest = preJavacGeneratedBytecodeLatest.plus(fileCollection);
+        preJavacGeneratedBytecodeLatest = preJavacGeneratedBytecodeLatest.plus(fileCollection)
 
         // also add the stable all-bytecode file collection. We need a stable collection for
         // queries that request all the generated bytecode before the variant api is called.
-        allPreJavacGeneratedBytecode.from(fileCollection);
-
-        return key;
+        allPreJavacGeneratedBytecode.from(fileCollection)
+        return key
     }
 
-    public void registerPostJavacGeneratedBytecode(@NonNull FileCollection fileCollection) {
-        allPostJavacGeneratedBytecode.from(fileCollection);
+    fun registerPostJavacGeneratedBytecode(fileCollection: FileCollection) {
+        allPostJavacGeneratedBytecode.from(fileCollection)
     }
 
     /**
@@ -295,106 +225,90 @@ public abstract class BaseVariantData {
      * the user within the build.gradle or can be automatically discovered using the variant
      * specific folders.
      *
-     * This method must be called before {@link #getFilters(OutputFile.FilterType)}.
+     * This method must be called before [.getFilters].
      *
      * @param splits the splits configuration from the build.gradle.
      */
-    public void calculateFilters(Splits splits) {
-        densityFilters = getFilters(DiscoverableFilterType.DENSITY, splits);
-        languageFilters = getFilters(DiscoverableFilterType.LANGUAGE, splits);
-        abiFilters = getFilters(DiscoverableFilterType.ABI, splits);
+    fun calculateFilters(splits: Splits) {
+        densityFilters = getFilters(DiscoverableFilterType.DENSITY, splits)
+        languageFilters = getFilters(DiscoverableFilterType.LANGUAGE, splits)
+        abiFilters = getFilters(DiscoverableFilterType.ABI, splits)
     }
 
     /**
      * Returns the filters values (as manually specified or automatically discovered) for a
-     * particular {@link com.android.build.OutputFile.FilterType}
+     * particular [com.android.build.OutputFile.FilterType]
      * @param filterType the type of filter in question
      * @return a possibly empty set of filter values.
-     * @throws IllegalStateException if {@link #calculateFilters(Splits)} has not been called prior
+     * @throws IllegalStateException if [.calculateFilters] has not been called prior
      * to invoking this method.
      */
-    @NonNull
-    public Set<String> getFilters(OutputFile.FilterType filterType) {
-        if (densityFilters == null || languageFilters == null || abiFilters == null) {
-            throw new IllegalStateException("calculateFilters method not called");
+    fun getFilters(filterType: VariantOutput.FilterType): Set<String> {
+        check(::densityFilters.isInitialized && ::languageFilters.isInitialized && ::abiFilters.isInitialized) {
+            "calculateFilters method not called"
         }
-        switch(filterType) {
-            case DENSITY:
-                return densityFilters;
-            case LANGUAGE:
-                return languageFilters;
-            case ABI:
-                return abiFilters;
-            default:
-                throw new RuntimeException("Unhandled filter type");
+
+        return when (filterType) {
+            VariantOutput.FilterType.DENSITY -> densityFilters
+            VariantOutput.FilterType.LANGUAGE -> languageFilters
+            VariantOutput.FilterType.ABI -> abiFilters
+            else -> throw RuntimeException("Unhandled filter type")
         }
     }
 
-    @NonNull
-    public FileCollection getAllRawAndroidResources() {
-        if (rawAndroidResources == null) {
-            Project project = globalScope.getProject();
-            Iterator<Object> builtBy =
-                    Lists.newArrayList(
-                                    taskContainer.getRenderscriptCompileTask(),
-                                    taskContainer.getGenerateResValuesTask(),
-                                    taskContainer.getGenerateApkDataTask(),
-                                    extraGeneratedResFolders.getBuiltBy())
-                            .stream()
-                            .filter(Objects::nonNull)
-                            .iterator();
-            FileCollection allRes = project.files().builtBy(builtBy);
+    val allRawAndroidResources: FileCollection by lazy {
+        val project = globalScope.project
+        val builtBy =
+            listOfNotNull(
+                taskContainer.renderscriptCompileTask,
+                taskContainer.generateResValuesTask,
+                taskContainer.generateApkDataTask,
+                extraGeneratedResFolders.builtBy
+            )
 
-            FileCollection libraries =
-                    variantDependencies
-                            .getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
-                            .getArtifactFiles();
-            allRes = allRes.plus(libraries);
+        var allRes: FileCollection = project.files().builtBy(builtBy)
 
-            Iterator<FileCollection> sourceSets = getAndroidResources().values().iterator();
-            FileCollection mainSourceSet = sourceSets.next();
-            FileCollection generated =
-                    project.files(
-                            paths.getRenderscriptResOutputDir(),
-                            paths.getGeneratedResOutputDir(),
-                            paths.getMicroApkResDirectory(),
-                            extraGeneratedResFolders);
-            allRes = allRes.plus(mainSourceSet.plus(generated));
+        val libraries = variantDependencies
+            .getArtifactCollection(
+                ConsumedConfigType.RUNTIME_CLASSPATH,
+                ArtifactScope.ALL,
+                AndroidArtifacts.ArtifactType.ANDROID_RES
+            )
+            .artifactFiles
+        allRes = allRes.plus(libraries)
 
-            while (sourceSets.hasNext()) {
-                allRes = allRes.plus(sourceSets.next());
-            }
-
-            rawAndroidResources = allRes;
+        val sourceSets: Iterator<FileCollection> = androidResources.values.iterator()
+        val mainSourceSet = sourceSets.next()
+        val generated: FileCollection = project.files(
+            paths.renderscriptResOutputDir,
+            paths.generatedResOutputDir,
+            paths.microApkResDirectory,
+            extraGeneratedResFolders
+        )
+        allRes = allRes.plus(mainSourceSet.plus(generated))
+        while (sourceSets.hasNext()) {
+            allRes = allRes.plus(sourceSets.next())
         }
-
-        return rawAndroidResources;
+        allRes
     }
 
     /**
      * Defines the discoverability attributes of filters.
      */
-    private enum DiscoverableFilterType {
-
+    private enum class DiscoverableFilterType {
         DENSITY {
-            @NonNull
-            @Override
-            Collection<String> getConfiguredFilters(@NonNull Splits splits) {
-                return splits.getDensityFilters();
+            override fun getConfiguredFilters(splits: Splits): Collection<String> {
+                return splits.densityFilters
             }
         },
         LANGUAGE {
-            @NonNull
-            @Override
-            Collection<String> getConfiguredFilters(@NonNull Splits splits) {
-                return splits.getLanguageFilters();
+            override fun getConfiguredFilters(splits: Splits): Collection<String> {
+                return splits.languageFilters
             }
         },
         ABI {
-            @NonNull
-            @Override
-            Collection<String> getConfiguredFilters(@NonNull Splits splits) {
-                return splits.getAbiFilters();
+            override fun getConfiguredFilters(splits: Splits): Collection<String> {
+                return splits.abiFilters
             }
         };
 
@@ -403,231 +317,197 @@ public abstract class BaseVariantData {
          * @param splits the build.gradle splits configuration
          * @return a list of filters.
          */
-        @NonNull
-        abstract Collection<String> getConfiguredFilters(@NonNull Splits splits);
-    }
-
-    /**
-     * Gets the list of filter values for a filter type either from the user specified build.gradle
-     * settings or through a discovery mechanism using folders names.
-     * @param filterType the filter type
-     * @param splits the variant's configuration for splits.
-     * @return a possibly empty list of filter value for this filter type.
-     */
-    @NonNull
-    private static Set<String> getFilters(
-            @NonNull DiscoverableFilterType filterType,
-            @NonNull Splits splits) {
-
-        return new HashSet<>(filterType.getConfiguredFilters(splits));
+        abstract fun getConfiguredFilters(splits: Splits): Collection<String>
     }
 
     /**
      * Computes the Java sources to use for compilation.
      *
-     * <p>Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
+     *
+     * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
      */
-    @NonNull
-    public List<ConfigurableFileTree> getJavaSources() {
-        // Shortcut for the common cases, otherwise we build the full list below.
-        if (extraGeneratedSourceFileTrees == null && externalAptJavaOutputFileTrees == null) {
-            return getDefaultJavaSources();
+    val javaSources: List<ConfigurableFileTree>
+        get() {
+            // Shortcut for the common cases, otherwise we build the full list below.
+            if (extraGeneratedSourceFileTrees == null && externalAptJavaOutputFileTrees == null) {
+                return defaultJavaSources
+            }
+
+            // Build the list of source folders.
+            val sourceSets =
+                ImmutableList.builder<ConfigurableFileTree>()
+
+            // First the default source folders.
+            sourceSets.addAll(defaultJavaSources)
+
+            // then the third party ones
+            extraGeneratedSourceFileTrees?.let {
+                sourceSets.addAll(it)
+            }
+            externalAptJavaOutputFileTrees?.let {
+                sourceSets.addAll(it)
+            }
+            return sourceSets.build()
         }
 
-        // Build the list of source folders.
-        ImmutableList.Builder<ConfigurableFileTree> sourceSets = ImmutableList.builder();
-
-        // First the default source folders.
-        sourceSets.addAll(getDefaultJavaSources());
-
-        // then the third party ones
-        if (extraGeneratedSourceFileTrees != null) {
-            sourceSets.addAll(extraGeneratedSourceFileTrees);
-        }
-        if (externalAptJavaOutputFileTrees != null) {
-            sourceSets.addAll(externalAptJavaOutputFileTrees);
-        }
-
-        return sourceSets.build();
-    }
-
-    public LinkedHashMap<String, FileCollection> getAndroidResources() {
-        return variantSources
-                .getSortedSourceProviders()
-                .stream()
-                .collect(
-                        Collectors.toMap(
-                                SourceProvider::getName,
-                                (provider) ->
-                                        ((AndroidSourceSet) provider)
-                                                .getRes()
-                                                .getBuildableArtifact(),
-                                (u, v) -> {
-                                    throw new IllegalStateException(
-                                            String.format("Duplicate key %s", u));
-                                },
-                                LinkedHashMap::new));
-    }
+    val androidResources: Map<String, FileCollection>
+        get() = variantSources
+            .sortedSourceProviders
+            .associate { it.name to (it as AndroidSourceSet).res.buildableArtifact }
 
     /**
      * Computes the default java sources: source sets and generated sources.
      *
-     * <p>Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
+     * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
      */
-    @NonNull
-    private List<ConfigurableFileTree> getDefaultJavaSources() {
-        if (defaultJavaSources == null) {
-            Project project = globalScope.getProject();
-            // Build the list of source folders.
-            ImmutableList.Builder<ConfigurableFileTree> sourceSets = ImmutableList.builder();
+    // Cache for things computed on first access
+    val defaultJavaSources: ImmutableList<ConfigurableFileTree> by lazy {
+        val project = globalScope.project
+        // Build the list of source folders.
+        val sourceSets =
+            ImmutableList.builder<ConfigurableFileTree>()
 
-            // First the actual source folders.
-            List<SourceProvider> providers = variantSources.getSortedSourceProviders();
-            for (SourceProvider provider : providers) {
-                sourceSets.addAll(
-                        ((AndroidSourceSet) provider).getJava().getSourceDirectoryTrees());
-            }
-
-            // then all the generated src folders.
-            if (globalScope.getProjectOptions().get(BooleanOption.GENERATE_R_JAVA)) {
-                Provider<Directory> rClassSource =
-                        artifacts.getFinalProduct(
-                                InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES.INSTANCE);
-                if (rClassSource.isPresent()) {
-                    sourceSets.add(project.fileTree(rClassSource).builtBy(rClassSource));
-                }
-            }
-
-            // for the other, there's no duplicate so no issue.
-            if (taskContainer.getGenerateBuildConfigTask() != null) {
-                sourceSets.add(
-                        project.fileTree(paths.getBuildConfigSourceOutputDir())
-                                .builtBy(taskContainer.getGenerateBuildConfigTask().getName()));
-            }
-
-            if (taskContainer.getAidlCompileTask() != null) {
-                Provider<Directory> aidlFC =
-                        artifacts.getFinalProduct(
-                                InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE);
-                sourceSets.add(project.fileTree(aidlFC).builtBy(aidlFC));
-            }
-
-            final BuildFeatureValues features = globalScope.getBuildFeatures();
-            if (features.getDataBinding() || features.getViewBinding()) {
-                if (taskContainer.getDataBindingExportBuildInfoTask() != null) {
-                    sourceSets.add(
-                            project.fileTree(paths.getClassOutputForDataBinding())
-                                    .builtBy(taskContainer.getDataBindingExportBuildInfoTask()));
-                }
-                if (artifacts.hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE)) {
-                    Provider<Directory> baseClassSource =
-                            artifacts.getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE);
-                    sourceSets.add(project.fileTree(baseClassSource).builtBy(baseClassSource));
-                }
-            }
-
-            if (!variantDslInfo.getRenderscriptNdkModeEnabled()
-                    && taskContainer.getRenderscriptCompileTask() != null) {
-                Provider<Directory> rsFC =
-                        artifacts.getFinalProduct(
-                                InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE);
-                sourceSets.add(project.fileTree(rsFC).builtBy(rsFC));
-            }
-
-            if (getGlobalScope().getProjectOptions().get(BooleanOption.ENABLE_MLKIT)) {
-                Provider<Directory> mlkitModelClassSourceOut =
-                        getArtifacts().getFinalProduct(MLKIT_SOURCE_OUT.INSTANCE);
-                sourceSets.add(
-                        project.fileTree(mlkitModelClassSourceOut)
-                                .builtBy(mlkitModelClassSourceOut));
-            }
-
-            defaultJavaSources = sourceSets.build();
+        // First the actual source folders.
+        val providers =
+            variantSources.sortedSourceProviders
+        for (provider in providers) {
+            sourceSets.addAll(
+                (provider as AndroidSourceSet).java.sourceDirectoryTrees
+            )
         }
 
-        return defaultJavaSources;
+        // then all the generated src folders.
+        if (globalScope.projectOptions[BooleanOption.GENERATE_R_JAVA]
+        ) {
+            val rClassSource =
+                artifacts.getFinalProduct(
+                    NOT_NAMESPACED_R_CLASS_SOURCES
+                )
+            if (rClassSource.isPresent) {
+                sourceSets.add(project.fileTree(rClassSource).builtBy(rClassSource))
+            }
+        }
+
+        // for the other, there's no duplicate so no issue.
+        taskContainer.generateBuildConfigTask?.let {
+            sourceSets.add(
+                project.fileTree(paths.buildConfigSourceOutputDir)
+                    .builtBy(it.name)
+            )
+        }
+
+        if (taskContainer.aidlCompileTask != null) {
+            val aidlFC =
+                artifacts.getFinalProduct(
+                    AIDL_SOURCE_OUTPUT_DIR
+                )
+            sourceSets.add(project.fileTree(aidlFC).builtBy(aidlFC))
+        }
+        val features = globalScope.buildFeatures
+        if (features.dataBinding || features.viewBinding) {
+            if (taskContainer.dataBindingExportBuildInfoTask != null) {
+                sourceSets.add(
+                    project.fileTree(paths.classOutputForDataBinding)
+                        .builtBy(taskContainer.dataBindingExportBuildInfoTask)
+                )
+            }
+            if (artifacts.hasFinalProduct(
+                    DATA_BINDING_BASE_CLASS_SOURCE_OUT
+                )
+            ) {
+                val baseClassSource =
+                    artifacts.getFinalProduct(
+                        DATA_BINDING_BASE_CLASS_SOURCE_OUT
+                    )
+                sourceSets.add(project.fileTree(baseClassSource).builtBy(baseClassSource))
+            }
+        }
+        if (!variantDslInfo.renderscriptNdkModeEnabled
+            && taskContainer.renderscriptCompileTask != null
+        ) {
+            val rsFC =
+                artifacts.getFinalProduct(
+                    RENDERSCRIPT_SOURCE_OUTPUT_DIR
+                )
+            sourceSets.add(project.fileTree(rsFC).builtBy(rsFC))
+        }
+        if (globalScope.projectOptions[BooleanOption.ENABLE_MLKIT]
+        ) {
+            val mlkitModelClassSourceOut =
+                artifacts.getFinalProduct(
+                    MLKIT_SOURCE_OUT
+                )
+            sourceSets.add(
+                project.fileTree(mlkitModelClassSourceOut)
+                    .builtBy(mlkitModelClassSourceOut)
+            )
+        }
+        sourceSets.build()
     }
+
 
     /**
      * Returns the Java folders needed for code coverage report.
      *
-     * <p>This includes all the source folders except for the ones containing R and buildConfig.
+     *
+     * This includes all the source folders except for the ones containing R and buildConfig.
      */
-    @NonNull
-    public FileCollection getJavaSourceFoldersForCoverage() {
-        ConfigurableFileCollection fc = globalScope.getProject().files();
+    val javaSourceFoldersForCoverage: FileCollection
+        get() {
+            val fc = globalScope.project.files()
 
-        // First the actual source folders.
-        List<SourceProvider> providers = variantSources.getSortedSourceProviders();
-        for (SourceProvider provider : providers) {
-            for (File sourceFolder : provider.getJavaDirectories()) {
-                if (sourceFolder.isDirectory()) {
-                    fc.from(sourceFolder);
+            // First the actual source folders.
+            val providers = variantSources.sortedSourceProviders
+
+            for (provider in providers) {
+                for (sourceFolder in provider.javaDirectories) {
+                    if (sourceFolder.isDirectory) {
+                        fc.from(sourceFolder)
+                    }
                 }
+            }
+
+            // then all the generated src folders, except the ones for the R/Manifest and
+            // BuildConfig classes.
+            fc.from(artifacts.getFinalProduct(AIDL_SOURCE_OUTPUT_DIR))
+
+            if (!variantDslInfo.renderscriptNdkModeEnabled) {
+                fc.from(artifacts.getFinalProduct(RENDERSCRIPT_SOURCE_OUTPUT_DIR))
+            }
+
+            return fc
+        }
+
+    override fun toString(): String {
+        return MoreObjects.toStringHelper(this)
+            .addValue(componentIdentity.name).toString()
+    }
+
+    val javaResourcesForUnitTesting: File
+        get() {
+            // FIXME we need to revise this API as it force-configure the tasks
+            val processJavaResourcesTask = taskContainer.processJavaResourcesTask.get()
+            return if (processJavaResourcesTask != null) {
+                processJavaResourcesTask.outputs.files.singleFile
+            } else {
+                artifacts.getFinalProduct(JAVA_RES).get().asFile
             }
         }
 
-        // then all the generated src folders, except the ones for the R/Manifest and
-        // BuildConfig classes.
-        fc.from(artifacts.getFinalProduct(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR.INSTANCE));
-
-        if (!variantDslInfo.getRenderscriptNdkModeEnabled()) {
-            fc.from(
-                    artifacts.getFinalProduct(
-                            InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE));
+    companion object {
+        /**
+         * Gets the list of filter values for a filter type either from the user specified build.gradle
+         * settings or through a discovery mechanism using folders names.
+         * @param filterType the filter type
+         * @param splits the variant's configuration for splits.
+         * @return a possibly empty list of filter value for this filter type.
+         */
+        private fun getFilters(
+            filterType: DiscoverableFilterType,
+            splits: Splits
+        ): Set<String> {
+            return HashSet(filterType.getConfiguredFilters(splits))
         }
-
-        return fc;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this).addValue(componentIdentity.getName()).toString();
-    }
-
-    @NonNull
-    public File getJavaResourcesForUnitTesting() {
-        // FIXME we need to revise this API as it force-configure the tasks
-        Sync processJavaResourcesTask = taskContainer.getProcessJavaResourcesTask().get();
-        if (processJavaResourcesTask != null) {
-            return processJavaResourcesTask.getOutputs().getFiles().getSingleFile();
-        } else {
-            return artifacts
-                    .getFinalProduct(InternalArtifactType.JAVA_RES.INSTANCE)
-                    .get()
-                    .getAsFile();
-        }
-    }
-
-    @NonNull
-    public MutableTaskContainer getTaskContainer() {
-        return taskContainer;
-    }
-
-    @NonNull
-    public VariantDslInfo getVariantDslInfo() {
-        return variantDslInfo;
-    }
-
-    @NonNull
-    public VariantSources getVariantSources() {
-        return variantSources;
-    }
-
-    @NonNull
-    public BuildArtifactsHolder getArtifacts() {
-        return artifacts;
-    }
-
-    @NonNull
-    public VariantDependencies getVariantDependencies() {
-        return variantDependencies;
-    }
-
-    /** @deprecated Use {@link ComponentPropertiesImpl#getGlobalScope()} */
-    @Deprecated
-    @NonNull
-    public GlobalScope getGlobalScope() {
-        return globalScope;
     }
 }
+

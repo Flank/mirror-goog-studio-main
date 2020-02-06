@@ -13,55 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.variant
 
-package com.android.build.gradle.internal.variant;
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 
-import com.android.annotations.NonNull;
-import com.android.build.api.component.ComponentIdentity;
-import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import java.util.Collections;
-import java.util.Set;
+/** Data about a variant that produces a APK.  */
+abstract class ApkVariantData protected constructor(
+    componentIdentity: ComponentIdentity,
+    variantDslInfo: VariantDslInfo,
+    variantDependencies: VariantDependencies,
+    variantSources: VariantSources,
+    paths: VariantPathHelper,
+    artifacts: BuildArtifactsHolder,
+    globalScope: GlobalScope,
+    taskContainer: MutableTaskContainer
+) : BaseVariantData(
+    componentIdentity,
+    variantDslInfo,
+    variantDependencies,
+    variantSources,
+    paths,
+    artifacts,
+    globalScope,
+    taskContainer
+) {
 
-/** Data about a variant that produces a APK. */
-public abstract class ApkVariantData extends BaseVariantData {
-    private Set<String> compatibleScreens = null;
-
-    protected ApkVariantData(
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantDependencies variantDependencies,
-            @NonNull VariantSources variantSources,
-            @NonNull VariantPathHelper paths,
-            @NonNull BuildArtifactsHolder artifacts,
-            @NonNull GlobalScope globalScope,
-            @NonNull MutableTaskContainer taskContainer) {
-        super(
-                componentIdentity,
-                variantDslInfo,
-                variantDependencies,
-                variantSources,
-                paths,
-                artifacts,
-                globalScope,
-                taskContainer);
-    }
-
-    public void setCompatibleScreens(Set<String> compatibleScreens) {
-        this.compatibleScreens = compatibleScreens;
-    }
-
-    @NonNull
-    public Set<String> getCompatibleScreens() {
-        if (compatibleScreens == null) {
-            return Collections.emptySet();
-        }
-
-        return compatibleScreens;
-    }
+    var compatibleScreens: Set<String> = setOf()
 }

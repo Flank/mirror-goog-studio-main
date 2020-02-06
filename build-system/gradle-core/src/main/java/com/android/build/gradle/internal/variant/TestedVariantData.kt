@@ -13,25 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.internal.variant;
+package com.android.build.gradle.internal.variant
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.scope.TaskContainer;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantType
 
 /**
  * A tested variant
  */
-public interface TestedVariantData {
+interface TestedVariantData {
+    fun setTestVariantData(
+        testVariantData: TestVariantData,
+        type: VariantType
+    )
 
-    void setTestVariantData(
-            @NonNull TestVariantData testVariantData,
-            @NonNull VariantType type);
-
-    @Nullable
-    TestVariantData getTestVariantData(VariantType type);
+    fun getTestVariantData(type: VariantType): TestVariantData?
 }

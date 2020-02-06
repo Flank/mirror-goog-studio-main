@@ -13,104 +13,88 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.internal.variant;
+package com.android.build.gradle.internal.variant
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.component.ComponentIdentity;
-import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.builder.core.VariantType;
-import com.android.utils.StringHelper;
-import com.google.common.collect.Maps;
-import java.io.File;
-import java.util.Collection;
-import java.util.Map;
-import org.gradle.api.Task;
+import com.android.build.api.component.ComponentIdentity
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.builder.core.VariantType
+import com.android.utils.appendCapitalized
+import com.android.utils.capitalizeAndAppend
+import com.google.common.collect.Maps
+import org.gradle.api.Task
+import java.io.File
 
-/** Data about a variant that produce a Library bundle (.aar) */
-public class LibraryVariantData extends BaseVariantData implements TestedVariantData {
+/** Data about a variant that produce a Library bundle (.aar)  */
+class LibraryVariantData(
+    componentIdentity: ComponentIdentity,
+    variantDslInfo: VariantDslInfo,
+    variantDependencies: VariantDependencies,
+    variantSources: VariantSources,
+    paths: VariantPathHelper,
+    artifacts: BuildArtifactsHolder,
+    globalScope: GlobalScope,
+    taskContainer: MutableTaskContainer
+) : BaseVariantData(
+    componentIdentity,
+    variantDslInfo,
+    variantDependencies,
+    variantSources,
+    paths,
+    artifacts,
+    globalScope,
+    taskContainer
+), TestedVariantData {
+    private val testVariants: MutableMap<VariantType, TestVariantData> = mutableMapOf()
 
-    private final Map<VariantType, TestVariantData> testVariants;
-
-    public LibraryVariantData(
-            @NonNull ComponentIdentity componentIdentity,
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantDependencies variantDependencies,
-            @NonNull VariantSources variantSources,
-            @NonNull VariantPathHelper paths,
-            @NonNull BuildArtifactsHolder artifacts,
-            @NonNull GlobalScope globalScope,
-            @NonNull MutableTaskContainer taskContainer) {
-        super(
-                componentIdentity,
-                variantDslInfo,
-                variantDependencies,
-                variantSources,
-                paths,
-                artifacts,
-                globalScope,
-                taskContainer);
-
-        testVariants = Maps.newHashMap();
-    }
-
-    @Override
-    @NonNull
-    public String getDescription() {
-        if (variantDslInfo.hasFlavors()) {
-            StringBuilder sb = new StringBuilder(50);
-            StringHelper.appendCapitalized(
-                    sb, variantDslInfo.getComponentIdentity().getBuildType());
-            sb.append(" build for flavor ");
-            StringHelper.appendCapitalized(
-                    sb, variantDslInfo.getComponentIdentity().getFlavorName());
-            return sb.toString();
+    override val description: String
+        get() = if (variantDslInfo.hasFlavors()) {
+            val sb = StringBuilder(50)
+            variantDslInfo.componentIdentity.buildType?.let { sb.appendCapitalized(it) }
+            sb.append(" build for flavor ")
+            sb.appendCapitalized(variantDslInfo.componentIdentity.flavorName)
+            sb.toString()
         } else {
-            return StringHelper.capitalizeAndAppend(
-                    variantDslInfo.getComponentIdentity().getBuildType(), " build");
+            variantDslInfo.componentIdentity.buildType!!.capitalizeAndAppend(" build")
         }
+
+    override fun getTestVariantData(type: VariantType): TestVariantData? {
+        return testVariants[type]
     }
 
-    @Nullable
-    @Override
-    public TestVariantData getTestVariantData(@NonNull VariantType type) {
-        return testVariants.get(type);
-    }
-
-    @Override
-    public void setTestVariantData(
-            @NonNull TestVariantData testVariantData, @NonNull VariantType type) {
-        testVariants.put(type, testVariantData);
+    override fun setTestVariantData(testVariantData: TestVariantData, type: VariantType) {
+        testVariants[type] = testVariantData
     }
 
     // Overridden to add source folders to a generateAnnotationsTask, if it exists.
-    @Override
-    public void registerJavaGeneratingTask(
-            @NonNull Task task, @NonNull File... generatedSourceFolders) {
-        super.registerJavaGeneratingTask(task, generatedSourceFolders);
-        if (taskContainer.getGenerateAnnotationsTask() != null) {
-            for (File f : generatedSourceFolders) {
+    override fun registerJavaGeneratingTask(
+        task: Task, vararg generatedSourceFolders: File
+    ) {
+        super.registerJavaGeneratingTask(task, *generatedSourceFolders)
+
+        taskContainer.generateAnnotationsTask?.let {
+            for (f in generatedSourceFolders) {
                 // FIXME we need to revise this API as it force-configure the tasks
-                taskContainer.getGenerateAnnotationsTask().get().source(f);
+                it.get().source(f)
             }
         }
     }
 
     // Overridden to add source folders to a generateAnnotationsTask, if it exists.
-    @Override
-    public void registerJavaGeneratingTask(
-            @NonNull Task task, @NonNull Collection<File> generatedSourceFolders) {
-        super.registerJavaGeneratingTask(task, generatedSourceFolders);
-        if (taskContainer.getGenerateAnnotationsTask() != null) {
-            for (File f : generatedSourceFolders) {
+    override fun registerJavaGeneratingTask(
+        task: Task,
+        generatedSourceFolders: Collection<File>
+    ) {
+        super.registerJavaGeneratingTask(task, generatedSourceFolders)
+
+        taskContainer.generateAnnotationsTask?.let {
+            for (f in generatedSourceFolders) {
                 // FIXME we need to revise this API as it force-configure the tasks
-                taskContainer.getGenerateAnnotationsTask().get().source(f);
+                it.get().source(f)
             }
         }
     }
