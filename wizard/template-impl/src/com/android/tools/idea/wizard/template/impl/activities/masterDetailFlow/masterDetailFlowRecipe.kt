@@ -98,11 +98,9 @@ fun RecipeExecutor.masterDetailFlowRecipe(
 
   val contentDetailActivity = when (projectData.language) {
     Language.Java -> contentDetailActivityJava(collectionName, detailName, applicationPackage, detailNameLayout,
-                                               moduleData.apis.minApiLevel, objectKind, packageName,
-                                               useAndroidX, useMaterial2)
-    Language.Kotlin -> contentDetailActivityKt(collectionName, detailName, detailNameLayout, moduleData.apis.minApiLevel, objectKind,
-                                               packageName, useAndroidX,
-                                               useMaterial2)
+                                               objectKind, packageName, useAndroidX, useMaterial2)
+    Language.Kotlin -> contentDetailActivityKt(collectionName, detailName, detailNameLayout, objectKind,
+                                               packageName, useAndroidX, useMaterial2)
   }
   save(contentDetailActivity, srcOut.resolve("${detailName}Activity.${ktOrJavaExt}"))
 
