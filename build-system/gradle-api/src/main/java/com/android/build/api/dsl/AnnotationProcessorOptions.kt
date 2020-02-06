@@ -59,7 +59,7 @@ interface AnnotationProcessorOptions {
      *
      * @see [compilerArgumentProviders]
      */
-    var arguments: Map<String, String>
+    var arguments: MutableMap<String, String>
 
     /**
      * Adds an argument that represent primitive types for annotation processors.
