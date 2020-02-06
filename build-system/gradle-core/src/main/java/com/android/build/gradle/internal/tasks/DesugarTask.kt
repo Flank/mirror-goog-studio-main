@@ -86,22 +86,24 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
     val enableBugFixForJacoco: Property<Boolean> = objectFactory.property(Boolean::class.java)
 
     override fun doTaskAction() {
-        val libs = externaLibsClasses.asFile.get().listFiles()!!.toList().sortedBy { it.name }
-        DesugarTaskDelegate(
-            projectClasses = projectClasses.files,
-            subProjectClasses = subProjectClasses.files,
-            externaLibsClasses = libs,
-            desugaringClasspath = desugaringClasspath.files,
-            projectOutput = projectOutput.asFile.get(),
-            subProjectOutput = subProjectOutput.asFile.get(),
-            externalLibsOutput = externalLibsOutput.asFile.get(),
-            tmpDir = tmpDir.asFile.get(),
-            bootClasspath = bootClasspath.files,
-            minSdk = minSdk.get(),
-            enableBugFixForJacoco = enableBugFixForJacoco.get(),
-            verbose = project.logger.isDebugEnabled,
-            executorFacade = getWorkerFacadeWithWorkers()
-        ).doProcess()
+        getWorkerFacadeWithWorkers().use { executorFacade ->
+            val libs = externaLibsClasses.asFile.get().listFiles()!!.toList().sortedBy { it.name }
+            DesugarTaskDelegate(
+                projectClasses = projectClasses.files,
+                subProjectClasses = subProjectClasses.files,
+                externaLibsClasses = libs,
+                desugaringClasspath = desugaringClasspath.files,
+                projectOutput = projectOutput.asFile.get(),
+                subProjectOutput = subProjectOutput.asFile.get(),
+                externalLibsOutput = externalLibsOutput.asFile.get(),
+                tmpDir = tmpDir.asFile.get(),
+                bootClasspath = bootClasspath.files,
+                minSdk = minSdk.get(),
+                enableBugFixForJacoco = enableBugFixForJacoco.get(),
+                verbose = project.logger.isDebugEnabled,
+                executorFacade = executorFacade
+            ).doProcess()
+        }
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :

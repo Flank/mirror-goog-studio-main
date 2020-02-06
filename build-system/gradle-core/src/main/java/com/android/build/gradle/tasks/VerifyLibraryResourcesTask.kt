@@ -146,7 +146,9 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             compiledDirectory = compiledDirectory,
             mergeBlameFolder = mergeBlameFolder,
             useJvmResourceCompiler = useJvmResourceCompiler)
-        getWorkerFacadeWithWorkers().submit(Action::class.java, parameter)
+        getWorkerFacadeWithWorkers().use {
+            it.submit(Action::class.java, parameter)
+        }
     }
 
     private data class Params(

@@ -127,10 +127,12 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
     abstract override val classes: ConfigurableFileCollection
 
     override fun doTaskAction(inputChanges: InputChanges) {
-        getWorkerFacadeWithWorkers().submit(
-            BundleLibraryClassesRunnable::class.java,
-            getWorkerActionParams(inputChanges, output.asFile.get())
-        )
+        getWorkerFacadeWithWorkers().use {
+            it.submit(
+                BundleLibraryClassesRunnable::class.java,
+                getWorkerActionParams(inputChanges, output.asFile.get())
+            )
+        }
     }
 
     class CreationAction(
@@ -178,10 +180,12 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
     abstract val output: RegularFileProperty
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().submit(
-            BundleLibraryClassesRunnable::class.java,
-            getWorkerActionParams(null, output.asFile.get())
-        )
+        getWorkerFacadeWithWorkers().use {
+            it.submit(
+                BundleLibraryClassesRunnable::class.java,
+                getWorkerActionParams(null, output.asFile.get())
+            )
+        }
     }
 
     class CreationAction(

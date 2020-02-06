@@ -52,14 +52,16 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
     abstract val apkZipFile: RegularFileProperty
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().submit(
-            ApkZipPackagingRunnable::class.java,
-            Params(
-                apkFolder.asFile.get(),
-                mappingFile.orNull?.asFile,
-                apkZipFile.asFile.get()
+        getWorkerFacadeWithWorkers().use {
+            it.submit(
+                ApkZipPackagingRunnable::class.java,
+                Params(
+                    apkFolder.asFile.get(),
+                    mappingFile.orNull?.asFile,
+                    apkZipFile.asFile.get()
+                )
             )
-        )
+        }
     }
 
     private data class Params(

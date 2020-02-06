@@ -180,14 +180,16 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             ).isNotEmpty()
         ) {
             // If non-incremental run (with files), or any of the dex files changed, copy them again.
-            getWorkerFacadeWithWorkers().submit(
-                CopyDexOutput::class.java,
-                CopyDexOutput.Params(
-                    externalLibDexFiles.files,
-                    externalLibsFromAritfactTransformsDex.get().asFile,
-                    externalLibsFromAritfactTransformsKeepRules.asFile.orNull
+            getWorkerFacadeWithWorkers().use {
+                it.submit(
+                    CopyDexOutput::class.java,
+                    CopyDexOutput.Params(
+                        externalLibDexFiles.files,
+                        externalLibsFromAritfactTransformsDex.get().asFile,
+                        externalLibsFromAritfactTransformsKeepRules.asFile.orNull
+                    )
                 )
-            )
+            }
         }
 
         DexArchiveBuilderTaskDelegate(
