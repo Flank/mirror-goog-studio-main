@@ -17,7 +17,6 @@
 package com.android.zipflinger;
 
 import com.android.testutils.TestUtils;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -25,7 +24,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -70,12 +68,7 @@ public class TestBase {
             byte[] buffer = new byte[10_240];
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
-                ByteArrayOutputStream fos = new ByteArrayOutputStream();
-                int len;
-                while ((len = zis.read(buffer)) > 0) {
-                    fos.write(buffer, 0, len);
-                }
-                fos.close();
+                while (zis.read(buffer) > 0) ;
                 if (!zipEntry.getName().isEmpty()) {
                     topDownEntries.put(zipEntry.getName(), zipEntry);
                 }
@@ -107,12 +100,11 @@ public class TestBase {
             Entry e = bottomUpEntries.get(name);
             ZipEntry o = topDownEntries.get(name);
             long crc = e.getCrc() & 0xFFFFFFFFL;
-            Assert.assertTrue("Entry " + name + " match crc", crc == o.getCrc());
-            Assert.assertTrue(
-                    "Entry " + name + " match size",
-                    e.getCompressedSize() == o.getCompressedSize());
-            Assert.assertTrue(
-                    "Entry " + name + " match usize", e.getUncompressedSize() == o.getSize());
+            Assert.assertEquals("Entry " + name + " crcs don't match", crc, o.getCrc());
+            Assert.assertEquals(
+                    "Entry " + name + " match size", e.getCompressedSize(), o.getCompressedSize());
+            Assert.assertEquals(
+                    "Entry " + name + " match usize", e.getUncompressedSize(), o.getSize());
         }
 
         return bottomUpEntries;
