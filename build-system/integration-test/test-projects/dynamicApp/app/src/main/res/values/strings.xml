@@ -3,4 +3,9 @@
     <string name="button_name">String from base</string>
     <string name="feature1_title">Feature 1</string>
     <string name="feature2_title">Feature 2</string>
+    <string name="used_from_app">Dummy</string>
+    <string name="unused_from_app">Dummy</string>
+    <string name="used_from_feature1">Dummy</string>
+    <string name="used_from_feature2">Dummy</string>
+    <string name="overridden_in_feature1">Dummy</string>
 </resources>
