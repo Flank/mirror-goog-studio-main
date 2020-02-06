@@ -82,5 +82,6 @@
     <orderEntry type="library" scope="PROVIDED" name="kotlin-gradle-plugin" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="kotlin-gradle-plugin-api" level="project" />
     <orderEntry type="module" module-name="android.sdktools.mlkit-common" />
+    <orderEntry type="library" name="tink" level="project" />
   </component>
 </module>
