@@ -67,8 +67,8 @@ abstract class BaseVariantData(
 
     // Storage for Old Public API
     val extraGeneratedSourceFolders: MutableList<File> = mutableListOf()
-    private var extraGeneratedSourceFileTrees: MutableList<ConfigurableFileTree>? = null
-    private var externalAptJavaOutputFileTrees: MutableList<ConfigurableFileTree>? = null
+    internal var extraGeneratedSourceFileTrees: MutableList<ConfigurableFileTree>? = null
+    internal var externalAptJavaOutputFileTrees: MutableList<ConfigurableFileTree>? = null
     val extraGeneratedResFolders: ConfigurableFileCollection = globalScope.dslScope.objectFactory.fileCollection()
     private var preJavacGeneratedBytecodeMap: MutableMap<Any, FileCollection>? = null
     private var preJavacGeneratedBytecodeLatest: FileCollection = globalScope.dslScope.objectFactory.fileCollection()
@@ -320,131 +320,10 @@ abstract class BaseVariantData(
         abstract fun getConfiguredFilters(splits: Splits): Collection<String>
     }
 
-    /**
-     * Computes the Java sources to use for compilation.
-     *
-     *
-     * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
-     */
-    val javaSources: List<ConfigurableFileTree>
-        get() {
-            // Shortcut for the common cases, otherwise we build the full list below.
-            if (extraGeneratedSourceFileTrees == null && externalAptJavaOutputFileTrees == null) {
-                return defaultJavaSources
-            }
-
-            // Build the list of source folders.
-            val sourceSets =
-                ImmutableList.builder<ConfigurableFileTree>()
-
-            // First the default source folders.
-            sourceSets.addAll(defaultJavaSources)
-
-            // then the third party ones
-            extraGeneratedSourceFileTrees?.let {
-                sourceSets.addAll(it)
-            }
-            externalAptJavaOutputFileTrees?.let {
-                sourceSets.addAll(it)
-            }
-            return sourceSets.build()
-        }
-
     val androidResources: Map<String, FileCollection>
         get() = variantSources
             .sortedSourceProviders
             .associate { it.name to (it as AndroidSourceSet).res.buildableArtifact }
-
-    /**
-     * Computes the default java sources: source sets and generated sources.
-     *
-     * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
-     */
-    // Cache for things computed on first access
-    val defaultJavaSources: ImmutableList<ConfigurableFileTree> by lazy {
-        val project = globalScope.project
-        // Build the list of source folders.
-        val sourceSets =
-            ImmutableList.builder<ConfigurableFileTree>()
-
-        // First the actual source folders.
-        val providers =
-            variantSources.sortedSourceProviders
-        for (provider in providers) {
-            sourceSets.addAll(
-                (provider as AndroidSourceSet).java.sourceDirectoryTrees
-            )
-        }
-
-        // then all the generated src folders.
-        if (globalScope.projectOptions[BooleanOption.GENERATE_R_JAVA]
-        ) {
-            val rClassSource =
-                artifacts.getFinalProduct(
-                    NOT_NAMESPACED_R_CLASS_SOURCES
-                )
-            if (rClassSource.isPresent) {
-                sourceSets.add(project.fileTree(rClassSource).builtBy(rClassSource))
-            }
-        }
-
-        // for the other, there's no duplicate so no issue.
-        taskContainer.generateBuildConfigTask?.let {
-            sourceSets.add(
-                project.fileTree(paths.buildConfigSourceOutputDir)
-                    .builtBy(it.name)
-            )
-        }
-
-        if (taskContainer.aidlCompileTask != null) {
-            val aidlFC =
-                artifacts.getFinalProduct(
-                    AIDL_SOURCE_OUTPUT_DIR
-                )
-            sourceSets.add(project.fileTree(aidlFC).builtBy(aidlFC))
-        }
-        val features = globalScope.buildFeatures
-        if (features.dataBinding || features.viewBinding) {
-            if (taskContainer.dataBindingExportBuildInfoTask != null) {
-                sourceSets.add(
-                    project.fileTree(paths.classOutputForDataBinding)
-                        .builtBy(taskContainer.dataBindingExportBuildInfoTask)
-                )
-            }
-            if (artifacts.hasFinalProduct(
-                    DATA_BINDING_BASE_CLASS_SOURCE_OUT
-                )
-            ) {
-                val baseClassSource =
-                    artifacts.getFinalProduct(
-                        DATA_BINDING_BASE_CLASS_SOURCE_OUT
-                    )
-                sourceSets.add(project.fileTree(baseClassSource).builtBy(baseClassSource))
-            }
-        }
-        if (!variantDslInfo.renderscriptNdkModeEnabled
-            && taskContainer.renderscriptCompileTask != null
-        ) {
-            val rsFC =
-                artifacts.getFinalProduct(
-                    RENDERSCRIPT_SOURCE_OUTPUT_DIR
-                )
-            sourceSets.add(project.fileTree(rsFC).builtBy(rsFC))
-        }
-        if (globalScope.projectOptions[BooleanOption.ENABLE_MLKIT]
-        ) {
-            val mlkitModelClassSourceOut =
-                artifacts.getFinalProduct(
-                    MLKIT_SOURCE_OUT
-                )
-            sourceSets.add(
-                project.fileTree(mlkitModelClassSourceOut)
-                    .builtBy(mlkitModelClassSourceOut)
-            )
-        }
-        sourceSets.build()
-    }
-
 
     /**
      * Returns the Java folders needed for code coverage report.

@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
@@ -82,6 +83,7 @@ interface BaseCreationConfig : ComponentIdentity {
     // ---------------------------------------------------------------------------------------------
     // INTERNAL DELEGATES
     // ---------------------------------------------------------------------------------------------
+    val buildFeatures: BuildFeatureValues
     val variantScope: VariantScope
     val variantDslInfo: VariantDslInfo
     val variantSources: VariantSources

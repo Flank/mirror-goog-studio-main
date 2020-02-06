@@ -107,11 +107,6 @@ public class GlobalScope {
     }
 
     @NonNull
-    public BuildFeatureValues getBuildFeatures() {
-        return dslScope.getBuildFeatures();
-    }
-
-    @NonNull
     public Project getProject() {
         return project;
     }

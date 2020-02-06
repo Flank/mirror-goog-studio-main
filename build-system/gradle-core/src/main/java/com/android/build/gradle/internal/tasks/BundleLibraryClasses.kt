@@ -249,7 +249,7 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
                 creationConfig.globalScope.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] &&
                         publishedType == PublishedConfigType.API_ELEMENTS &&
                         !creationConfig.globalScope.extension.aaptOptions.namespaced &&
-                        creationConfig.globalScope.buildFeatures.androidResources
+                        creationConfig.buildFeatures.androidResources
             task.configure(creationConfig, inputs, packageRClass, toIgnoreRegExps)
         }
     }

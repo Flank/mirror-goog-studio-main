@@ -74,7 +74,6 @@ import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
 import com.android.build.gradle.internal.component.BaseCreationConfig;
-import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
@@ -97,7 +96,6 @@ import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.res.ParseLibraryResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MultipleArtifactType;
@@ -230,6 +228,7 @@ import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.UnknownTaskException;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.Dependency;
@@ -407,10 +406,7 @@ public abstract class TaskManager<
 
         // must run this after scopes are created so that we can configure kotlin
         // kapt tasks
-        addBindingDependenciesIfNecessary(
-                globalScope.getBuildFeatures().getViewBinding(),
-                globalScope.getBuildFeatures().getDataBinding(),
-                extension.getDataBinding());
+        addBindingDependenciesIfNecessary(extension.getDataBinding());
 
         // configure compose related tasks.
         configureKotlinPluginTasksForComposeIfNecessary();
@@ -663,7 +659,11 @@ public abstract class TaskManager<
 
     private void configureKotlinPluginTasksForComposeIfNecessary() {
 
-        boolean composeIsEnabled = globalScope.getBuildFeatures().getCompose();
+        boolean composeIsEnabled =
+                allPropertiesList.stream()
+                        .anyMatch(
+                                componentProperties ->
+                                        componentProperties.getBuildFeatures().getCompose());
         if (!composeIsEnabled) {
             return;
         }
@@ -705,20 +705,23 @@ public abstract class TaskManager<
 
         // register for all variant the prepareKotlinCompileTask if necessary.
         for (ComponentPropertiesImpl component : allPropertiesList) {
-            Set<Task> kotlinCompiles =
-                    globalScope
-                            .getProject()
-                            .getTasksByName(component.computeTaskName("compile", "Kotlin"), false);
-                    if (!kotlinCompiles.isEmpty()) {
+            try {
+                TaskProvider<Task> compileKotlin =
+                        globalScope
+                                .getProject()
+                                .getTasks()
+                                .named(component.computeTaskName("compile", "Kotlin"));
+
                 TaskProvider<PrepareKotlinCompileTask> prepareKotlinCompileTaskTaskProvider =
                         taskFactory.register(
                                 new PrepareKotlinCompileTask.CreationAction(
-                                        component, kotlinCompiles, kotlinExtension));
-                        // make the dependency !
-                        for (Task kotlinCompile : kotlinCompiles) {
-                            kotlinCompile.dependsOn(prepareKotlinCompileTaskTaskProvider);
-                        }
-                    }
+                                        component, compileKotlin, kotlinExtension));
+                // make the dependency !
+                compileKotlin.configure(
+                        task -> task.dependsOn(prepareKotlinCompileTaskTaskProvider));
+            } catch (UnknownTaskException e) {
+                // ignore
+            }
         }
     }
 
@@ -1012,7 +1015,7 @@ public abstract class TaskManager<
     }
 
     public void createRenderscriptTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getGlobalScope().getBuildFeatures().getRenderScript()) {
+        if (componentProperties.getBuildFeatures().getRenderScript()) {
             final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
 
             TaskProvider<RenderscriptCompile> rsTask =
@@ -1159,7 +1162,7 @@ public abstract class TaskManager<
     }
 
     public void createBuildConfigTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getGlobalScope().getBuildFeatures().getBuildConfig()) {
+        if (componentProperties.getBuildFeatures().getBuildConfig()) {
             TaskProvider<GenerateBuildConfig> generateBuildConfigTask =
                     taskFactory.register(
                             new GenerateBuildConfig.CreationAction(componentProperties));
@@ -1171,7 +1174,7 @@ public abstract class TaskManager<
     }
 
     public void createGenerateResValuesTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getGlobalScope().getBuildFeatures().getResValues()) {
+        if (componentProperties.getBuildFeatures().getResValues()) {
             TaskProvider<GenerateResValues> generateResValuesTask =
                     taskFactory.register(new GenerateResValues.CreationAction(componentProperties));
             TaskFactoryUtils.dependsOn(
@@ -1443,7 +1446,7 @@ public abstract class TaskManager<
     }
 
     public void createAidlTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getGlobalScope().getBuildFeatures().getAidl()) {
+        if (componentProperties.getBuildFeatures().getAidl()) {
             MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
 
             TaskProvider<AidlCompile> aidlCompileTask =
@@ -1454,7 +1457,7 @@ public abstract class TaskManager<
     }
 
     public void createShaderTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getGlobalScope().getBuildFeatures().getShaders()) {
+        if (componentProperties.getBuildFeatures().getShaders()) {
             // merge the shader folders together using the proper priority.
             taskFactory.register(
                     new MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction(
@@ -2518,35 +2521,10 @@ public abstract class TaskManager<
 
     protected void createDataBindingTasksIfNecessary(
             @NonNull ComponentPropertiesImpl componentProperties) {
-        final BuildFeatureValues features = componentProperties.getGlobalScope().getBuildFeatures();
-        boolean dataBindingEnabled = features.getDataBinding();
-        if (!dataBindingEnabled && !features.getViewBinding()) {
+        boolean dataBindingEnabled = componentProperties.getBuildFeatures().getDataBinding();
+        boolean viewBindingEnabled = componentProperties.getBuildFeatures().getViewBinding();
+        if (!dataBindingEnabled && !viewBindingEnabled) {
             return;
-        }
-
-        if (!features.getAndroidResources()) {
-            getLogger().info("Data binding is disabled when resource processing is turned off.");
-            return;
-        }
-
-        VariantType type = componentProperties.getVariantType();
-        if (type.isForTesting()) {
-            if (!type.isTestComponent()) {
-                // This is a com.android.test module.
-                if (dataBindingEnabled) {
-                    getLogger()
-                            .error("Data binding cannot be enabled in a com.android.test project");
-                    return;
-                }
-                // else viewBinding must be enabled which is fine.
-            } else {
-                VariantType testedVariantType =
-                        componentProperties.onTestedConfig(VariantCreationConfig::getVariantType);
-
-                if (!extension.getDataBinding().isEnabledForTests() && !testedVariantType.isAar()) {
-                    return;
-                }
-            }
         }
 
         taskFactory.register(
@@ -3196,10 +3174,18 @@ public abstract class TaskManager<
         return logger;
     }
 
-    private void addBindingDependenciesIfNecessary(
-            boolean viewBindingEnabled,
-            boolean dataBindingEnabled,
-            @NonNull DataBindingOptions dataBindingOptions) {
+    private void addBindingDependenciesIfNecessary(@NonNull DataBindingOptions dataBindingOptions) {
+        boolean viewBindingEnabled =
+                allPropertiesList.stream()
+                        .anyMatch(
+                                componentProperties ->
+                                        componentProperties.getBuildFeatures().getViewBinding());
+        boolean dataBindingEnabled =
+                allPropertiesList.stream()
+                        .anyMatch(
+                                componentProperties ->
+                                        componentProperties.getBuildFeatures().getDataBinding());
+
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         boolean useAndroidX = projectOptions.get(BooleanOption.USE_ANDROID_X);
 

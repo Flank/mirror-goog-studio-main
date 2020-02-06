@@ -99,10 +99,6 @@ public interface VariantScope {
 
     void addNdkDebuggableLibraryFolders(@NonNull Abi abi, @NonNull File searchPath);
 
-    /** Returns the path(s) to compiled R classes (R.jar). */
-    @NonNull
-    FileCollection getCompiledRClasses(@NonNull AndroidArtifacts.ConsumedConfigType configType);
-
     @NonNull
     FileCollection getLocalPackagedJars();
 

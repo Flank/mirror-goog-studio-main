@@ -340,8 +340,13 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         AaptOptions aaptOptions = AaptOptionsImpl.create(extension.getAaptOptions());
 
-        ViewBindingOptions viewBindingOptions =
-                new ViewBindingOptionsImpl(globalScope.getBuildFeatures().getViewBinding());
+        boolean viewBinding =
+                variantModel.getVariants().stream()
+                        .anyMatch(
+                                variantProperties ->
+                                        variantProperties.getBuildFeatures().getViewBinding());
+
+        ViewBindingOptions viewBindingOptions = new ViewBindingOptionsImpl(viewBinding);
 
         List<String> flavorDimensionList =
                 extension.getFlavorDimensionList() != null
@@ -465,7 +470,10 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         flags.put(
                 AndroidGradlePluginProjectFlags.BooleanFlag.JETPACK_COMPOSE,
-                globalScope.getBuildFeatures().getCompose());
+                variantModel.getVariants().stream()
+                        .anyMatch(
+                                variantProperties ->
+                                        variantProperties.getBuildFeatures().getCompose()));
 
         boolean transitiveRClass =
                 !globalScope.getProjectOptions().get(BooleanOption.NAMESPACED_R_CLASS);
@@ -871,7 +879,7 @@ public class ModelBuilder<Extension extends BaseExtension>
         additionalClasses.addAll(
                 componentProperties.getVariantData().getAllPostJavacGeneratedBytecode().getFiles());
         additionalClasses.addAll(
-                variantScope
+                componentProperties
                         .getCompiledRClasses(AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH)
                         .getFiles());
 
@@ -1114,9 +1122,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
         BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
 
-
-        boolean isDataBindingEnabled = globalScope.getBuildFeatures().getDataBinding();
-        boolean isViewBindingEnabled = globalScope.getBuildFeatures().getViewBinding();
+        boolean isDataBindingEnabled = componentProperties.getBuildFeatures().getDataBinding();
+        boolean isViewBindingEnabled = componentProperties.getBuildFeatures().getViewBinding();
         Directory dataBindingSources =
                 artifacts.getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT.INSTANCE).getOrNull();
         boolean addBindingSources =

@@ -54,6 +54,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.FakeVariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -528,6 +529,7 @@ public class ModelBuilderTest {
                     variantApiScope.newInstance(
                             componentClass,
                             componentIdentity,
+                            Mockito.mock(BuildFeatureValues.class),
                             variantDslInfo,
                             variantDependencies,
                             variantSources,
@@ -555,6 +557,7 @@ public class ModelBuilderTest {
             return variantApiScope.newInstance(
                     componentClass,
                     componentIdentity,
+                    Mockito.mock(BuildFeatureValues.class),
                     variantDslInfo,
                     variantDependencies,
                     variantSources,
@@ -571,6 +574,7 @@ public class ModelBuilderTest {
         return variantApiScope.newInstance(
                 componentClass,
                 componentIdentity,
+                Mockito.mock(BuildFeatureValues.class),
                 variantDslInfo,
                 variantDependencies,
                 variantSources,

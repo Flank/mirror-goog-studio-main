@@ -17,7 +17,10 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.dsl.ApplicationBuildFeatures;
 import com.android.build.api.dsl.BuildFeatures;
+import com.android.build.api.dsl.DynamicFeatureBuildFeatures;
+import com.android.build.api.dsl.LibraryBuildFeatures;
 import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.options.BooleanOption;
@@ -64,7 +67,16 @@ public class DataBindingOptions
                         "android.buildFeatures.dataBinding",
                         "android.dataBinding.enabled",
                         DeprecationReporter.DeprecationTarget.VERSION_5_0);
-        Boolean bool = featuresProvider.get().getDataBinding();
+        final BuildFeatures buildFeatures = featuresProvider.get();
+        Boolean bool = false;
+        if (buildFeatures instanceof ApplicationBuildFeatures) {
+            bool = ((ApplicationBuildFeatures) buildFeatures).getDataBinding();
+        } else if (buildFeatures instanceof LibraryBuildFeatures) {
+            bool = ((LibraryBuildFeatures) buildFeatures).getDataBinding();
+        } else if (buildFeatures instanceof DynamicFeatureBuildFeatures) {
+            bool = ((DynamicFeatureBuildFeatures) buildFeatures).getDataBinding();
+        }
+
         if (bool != null) {
             return bool;
         }
@@ -80,7 +92,17 @@ public class DataBindingOptions
                         "android.dataBinding.enabled",
                         DeprecationReporter.DeprecationTarget.VERSION_5_0);
 
-        featuresProvider.get().setDataBinding(enabled);
+        final BuildFeatures buildFeatures = featuresProvider.get();
+        if (buildFeatures instanceof ApplicationBuildFeatures) {
+            ((ApplicationBuildFeatures) buildFeatures).setDataBinding(enabled);
+        } else if (buildFeatures instanceof LibraryBuildFeatures) {
+            ((LibraryBuildFeatures) buildFeatures).setDataBinding(enabled);
+        } else if (buildFeatures instanceof DynamicFeatureBuildFeatures) {
+            ((DynamicFeatureBuildFeatures) buildFeatures).setDataBinding(enabled);
+        } else {
+            dslScope.getLogger()
+                    .warn("dataBinding.setEnabled has no impact on this sub-project type");
+        }
     }
 
     /** Whether to add the default data binding adapters. */

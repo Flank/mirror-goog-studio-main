@@ -25,6 +25,8 @@ import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
+import com.android.build.api.dsl.BuildFeatures;
+import com.android.build.api.dsl.TestBuildFeatures;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -33,14 +35,18 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
+import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantApiScope;
 import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
@@ -99,6 +105,7 @@ public class TestVariantFactory
     public TestVariantPropertiesImpl createVariantPropertiesObject(
             @NonNull TestVariantImpl variant,
             @NonNull ComponentIdentity componentIdentity,
+            @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
@@ -114,6 +121,7 @@ public class TestVariantFactory
                         .newInstance(
                                 TestVariantPropertiesImpl.class,
                                 componentIdentity,
+                                buildFeatures,
                                 variantDslInfo,
                                 variantDependencies,
                                 variantSources,
@@ -133,8 +141,33 @@ public class TestVariantFactory
 
     @NonNull
     @Override
+    public BuildFeatureValues createBuildFeatureValues(
+            @NonNull BuildFeatures buildFeatures, @NonNull ProjectOptions projectOptions) {
+        if (buildFeatures instanceof TestBuildFeatures) {
+            return new BuildFeatureValuesImpl(
+                    buildFeatures,
+                    true /*androidResources */,
+                    false /* dataBinding */,
+                    projectOptions);
+        } else {
+            throw new RuntimeException("buildFeatures not of type TestBuildFeatures");
+        }
+    }
+
+    @NonNull
+    @Override
+    public BuildFeatureValues createTestBuildFeatureValues(
+            @NonNull BuildFeatures buildFeatures,
+            @NonNull DataBindingOptions dataBindingOptions,
+            @NonNull ProjectOptions projectOptions) {
+        throw new RuntimeException("cannot instantiate test build features in test plugin");
+    }
+
+    @NonNull
+    @Override
     public UnitTestPropertiesImpl createUnitTestProperties(
             @NonNull ComponentIdentity componentIdentity,
+            @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
@@ -151,6 +184,7 @@ public class TestVariantFactory
     @Override
     public AndroidTestPropertiesImpl createAndroidTestProperties(
             @NonNull ComponentIdentity componentIdentity,
+            @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,

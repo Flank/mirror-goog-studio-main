@@ -41,6 +41,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 /*
@@ -52,7 +53,7 @@ abstract class PrepareKotlinCompileTask() : NonIncrementalTask() {
     // No outputs -- this task must always run in order to properly prepare the KotlinCompile Task
 
     @get:Internal
-    lateinit var tasksToConfigure: Iterable<Task>
+    lateinit var taskToConfigure: TaskProvider<Task>
         private set
 
     // Input: Configuration to the kotlin compiler extension.
@@ -61,22 +62,20 @@ abstract class PrepareKotlinCompileTask() : NonIncrementalTask() {
     abstract val kotlinCompilerExtension: Property<Configuration>
 
     override fun doTaskAction() {
-        tasksToConfigure.forEach { task ->
-            val taskToConfigure = task as KotlinCompile
-            taskToConfigure.kotlinOptions.useIR = true
-            taskToConfigure.kotlinOptions.freeCompilerArgs +=
-                listOf(
-                    "-Xplugin=${kotlinCompilerExtension.get().files.first().absolutePath}",
-                    "-XXLanguage:+NonParenthesizedAnnotationsOnFunctionalTypes",
-                    "-P",
-                    "plugin:androidx.compose.plugins.idea:enabled=true"
-                )
-        }
+        val task = taskToConfigure.get() as KotlinCompile
+        task.kotlinOptions.useIR = true
+        task.kotlinOptions.freeCompilerArgs +=
+            listOf(
+                "-Xplugin=${kotlinCompilerExtension.get().files.first().absolutePath}",
+                "-XXLanguage:+NonParenthesizedAnnotationsOnFunctionalTypes",
+                "-P",
+                "plugin:androidx.compose.plugins.idea:enabled=true"
+            )
     }
 
     class CreationAction(
         componentProperties: ComponentPropertiesImpl,
-        private val tasksToConfigure: Iterable<Task>,
+        private val taskToConfigure: TaskProvider<Task>,
         private val kotlinExtension: Configuration
     ) : VariantTaskCreationAction<PrepareKotlinCompileTask, ComponentPropertiesImpl>(
         componentProperties
@@ -90,7 +89,7 @@ abstract class PrepareKotlinCompileTask() : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.tasksToConfigure = tasksToConfigure
+            task.taskToConfigure = taskToConfigure
             task.kotlinCompilerExtension.set(kotlinExtension)
         }
     }

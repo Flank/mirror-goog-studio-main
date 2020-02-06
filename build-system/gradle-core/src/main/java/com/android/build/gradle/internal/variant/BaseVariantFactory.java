@@ -33,10 +33,12 @@ import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantApiScope;
 import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import org.gradle.api.Project;
@@ -98,6 +100,7 @@ public abstract class BaseVariantFactory<
     @Override
     public UnitTestPropertiesImpl createUnitTestProperties(
             @NonNull ComponentIdentity componentIdentity,
+            @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
@@ -114,6 +117,7 @@ public abstract class BaseVariantFactory<
                         .newInstance(
                                 UnitTestPropertiesImpl.class,
                                 componentIdentity,
+                                buildFeatures,
                                 variantDslInfo,
                                 variantDependencies,
                                 variantSources,
@@ -135,6 +139,7 @@ public abstract class BaseVariantFactory<
     @Override
     public AndroidTestPropertiesImpl createAndroidTestProperties(
             @NonNull ComponentIdentity componentIdentity,
+            @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
@@ -151,6 +156,7 @@ public abstract class BaseVariantFactory<
                         .newInstance(
                                 AndroidTestPropertiesImpl.class,
                                 componentIdentity,
+                                buildFeatures,
                                 variantDslInfo,
                                 variantDependencies,
                                 variantSources,
@@ -190,7 +196,13 @@ public abstract class BaseVariantFactory<
     }
 
     void validateBuildConfig(@NonNull VariantInputModel model) {
-        if (!globalScope.getBuildFeatures().getBuildConfig()) {
+        Boolean buildConfig = globalScope.getExtension().getBuildFeatures().getBuildConfig();
+        if (buildConfig == null) {
+            buildConfig =
+                    globalScope.getProjectOptions().get(BooleanOption.BUILD_FEATURE_BUILDCONFIG);
+        }
+
+        if (!buildConfig) {
             IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
 
             if (!model.getDefaultConfig().getProductFlavor().getBuildConfigFields().isEmpty()) {
@@ -222,7 +234,12 @@ public abstract class BaseVariantFactory<
     }
 
     void validateResValues(@NonNull VariantInputModel model) {
-        if (!globalScope.getBuildFeatures().getResValues()) {
+        Boolean resValues = globalScope.getExtension().getBuildFeatures().getResValues();
+        if (resValues == null) {
+            resValues = globalScope.getProjectOptions().get(BooleanOption.BUILD_FEATURE_RESVALUES);
+        }
+
+        if (!resValues) {
             IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
 
             if (!model.getDefaultConfig().getProductFlavor().getResValues().isEmpty()) {
@@ -252,5 +269,4 @@ public abstract class BaseVariantFactory<
             }
         }
     }
-
 }

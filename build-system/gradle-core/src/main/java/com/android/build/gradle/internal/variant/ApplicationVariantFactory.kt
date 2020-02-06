@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.VariantOutput
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.dsl.ApplicationBuildFeatures
+import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
@@ -27,15 +29,19 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.VariantApiScope
 import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
@@ -82,6 +88,7 @@ class ApplicationVariantFactory(
     override fun createVariantPropertiesObject(
         variant: ApplicationVariantImpl,
         componentIdentity: ComponentIdentity,
+        buildFeatures: BuildFeatureValues,
         variantDslInfo: VariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
@@ -97,6 +104,7 @@ class ApplicationVariantFactory(
             .newInstance(
                 ApplicationVariantPropertiesImpl::class.java,
                 componentIdentity,
+                buildFeatures,
                 variantDslInfo,
                 variantDependencies,
                 variantSources,
@@ -113,6 +121,35 @@ class ApplicationVariantFactory(
         computeOutputs(variantProperties, (variantData as ApplicationVariantData), true)
 
         return variantProperties
+    }
+
+    override fun createBuildFeatureValues(
+        buildFeatures: BuildFeatures,
+        projectOptions: ProjectOptions
+    ): BuildFeatureValues {
+        val features = buildFeatures as? ApplicationBuildFeatures
+            ?: throw RuntimeException("buildFeatures not of type ApplicationBuildFeatures")
+
+        return BuildFeatureValuesImpl(
+            buildFeatures,
+            dataBinding = features.dataBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING],
+            projectOptions = projectOptions)
+    }
+
+    override fun createTestBuildFeatureValues(
+        buildFeatures: BuildFeatures,
+        dataBindingOptions: DataBindingOptions,
+        projectOptions: ProjectOptions
+    ): BuildFeatureValues {
+        val features = buildFeatures as? ApplicationBuildFeatures
+            ?: throw RuntimeException("buildFeatures not of type ApplicationBuildFeatures")
+
+        val dataBinding =
+            features.dataBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING]
+        return BuildFeatureValuesImpl(
+            buildFeatures,
+            dataBinding = dataBinding && dataBindingOptions.isEnabledForTests,
+            projectOptions = projectOptions)
     }
 
     override fun getVariantType(): VariantType {

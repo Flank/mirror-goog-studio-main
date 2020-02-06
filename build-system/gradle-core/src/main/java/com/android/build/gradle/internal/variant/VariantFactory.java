@@ -25,6 +25,7 @@ import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
+import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
@@ -33,15 +34,18 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantApiScope;
 import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantType;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -79,6 +83,7 @@ public interface VariantFactory<
     VariantPropertiesT createVariantPropertiesObject(
             @NonNull VariantT variant,
             @NonNull ComponentIdentity componentIdentity,
+            @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
@@ -91,6 +96,7 @@ public interface VariantFactory<
     @NonNull
     UnitTestPropertiesImpl createUnitTestProperties(
             @NonNull ComponentIdentity componentIdentity,
+            @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
@@ -104,6 +110,7 @@ public interface VariantFactory<
     @NonNull
     AndroidTestPropertiesImpl createAndroidTestProperties(
             @NonNull ComponentIdentity componentIdentity,
+            @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
@@ -124,6 +131,16 @@ public interface VariantFactory<
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull GlobalScope globalScope,
             @NonNull MutableTaskContainer taskContainer);
+
+    @NonNull
+    BuildFeatureValues createBuildFeatureValues(
+            @NonNull BuildFeatures buildFeatures, @NonNull ProjectOptions projectOptions);
+
+    @NonNull
+    BuildFeatureValues createTestBuildFeatureValues(
+            @NonNull BuildFeatures buildFeatures,
+            @NonNull DataBindingOptions dataBindingOptions,
+            @NonNull ProjectOptions projectOptions);
 
     @NonNull
     Class<? extends BaseVariantImpl> getVariantImplementationClass(

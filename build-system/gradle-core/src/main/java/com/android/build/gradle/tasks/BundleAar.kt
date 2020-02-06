@@ -101,7 +101,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             super.configure(task)
 
             val artifacts = creationConfig.artifacts
-            val buildFeatures = creationConfig.globalScope.buildFeatures
+            val buildFeatures = creationConfig.buildFeatures
 
             // Sanity check, there should never be duplicates.
             task.duplicatesStrategy = DuplicatesStrategy.FAIL

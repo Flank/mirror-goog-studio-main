@@ -348,7 +348,6 @@ public abstract class BasePlugin<
         DslScopeImpl dslScope =
                 new DslScopeImpl(
                         projectScope,
-                        new BuildFeatureValuesImpl(projectOptions),
                         new DslVariableFactory(syncIssueHandler));
 
         MessageReceiverImpl messageReceiver =
@@ -449,10 +448,6 @@ public abstract class BasePlugin<
                         buildOutputs,
                         sourceSetManager,
                         extraModelInfo);
-
-        // link the extension buildFeature to the BuildFeatureValues in DslScope
-        ((BuildFeatureValuesImpl) dslScope.getBuildFeatures())
-                .setDslBuildFeatures(((CommonExtension) extension).getBuildFeatures());
 
         globalScope.setExtension(extension);
 

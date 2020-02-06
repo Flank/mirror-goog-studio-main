@@ -45,8 +45,6 @@ interface DslScope {
 
     val logger: Logger
 
-    val buildFeatures: BuildFeatureValues
-
     val providerFactory: ProviderFactory
 
     val variableFactory: DslVariableFactory

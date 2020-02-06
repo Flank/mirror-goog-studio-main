@@ -44,7 +44,6 @@ fun createFakeDslScope(
     deprecationReporter: DeprecationReporter = FakeDeprecationReporter(),
     objectFactory: ObjectFactory = FakeObjectFactory.factory,
     logger: Logger = FakeLogger(),
-    buildFeatures: BuildFeatureValues = FakeBuildFeatureValues(),
     providerFactory: ProviderFactory = FakeProviderFactory.factory,
     dslVariableFactory: DslVariableFactory = DslVariableFactory(issueReporter),
     projectLayout: ProjectLayout = ProjectFactory.project.layout,
@@ -61,5 +60,5 @@ fun createFakeDslScope(
         projectOptions,
         fileResolver)
 
-    return DslScopeImpl(projectScope, buildFeatures, dslVariableFactory)
+    return DslScopeImpl(projectScope, dslVariableFactory)
 }

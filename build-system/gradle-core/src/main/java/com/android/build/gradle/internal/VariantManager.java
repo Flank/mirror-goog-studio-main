@@ -53,6 +53,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder;
@@ -411,6 +412,8 @@ public class VariantManager<
                 variantFactory.createVariantPropertiesObject(
                         variant,
                         componentIdentity,
+                        variantFactory.createBuildFeatureValues(
+                                extension.getBuildFeatures(), projectOptions),
                         variantDslInfo,
                         variantDependencies,
                         variantSources,
@@ -647,11 +650,16 @@ public class VariantManager<
 
         TestComponentPropertiesImpl componentProperties;
 
+        BuildFeatureValues buildFeatureValues =
+                variantFactory.createTestBuildFeatureValues(
+                        extension.getBuildFeatures(), extension.getDataBinding(), projectOptions);
+
         // this is ANDROID_TEST
         if (variantType.isApk()) {
             AndroidTestPropertiesImpl androidTestProperties =
                     variantFactory.createAndroidTestProperties(
                             componentIdentity,
+                            buildFeatureValues,
                             variantDslInfo,
                             variantDependencies,
                             variantSources,
@@ -674,6 +682,7 @@ public class VariantManager<
             UnitTestPropertiesImpl unitTestProperties =
                     variantFactory.createUnitTestProperties(
                             componentIdentity,
+                            buildFeatureValues,
                             variantDslInfo,
                             variantDependencies,
                             variantSources,

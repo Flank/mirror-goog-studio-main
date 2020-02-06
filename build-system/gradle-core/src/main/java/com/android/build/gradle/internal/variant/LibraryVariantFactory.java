@@ -21,6 +21,8 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.ComponentIdentity;
+import com.android.build.api.dsl.BuildFeatures;
+import com.android.build.api.dsl.LibraryBuildFeatures;
 import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -30,15 +32,20 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
+import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantApiScope;
 import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
@@ -75,6 +82,7 @@ public class LibraryVariantFactory
     public LibraryVariantPropertiesImpl createVariantPropertiesObject(
             @NonNull LibraryVariantImpl variant,
             @NonNull ComponentIdentity componentIdentity,
+            @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
@@ -90,6 +98,7 @@ public class LibraryVariantFactory
                         .newInstance(
                                 LibraryVariantPropertiesImpl.class,
                                 componentIdentity,
+                                buildFeatures,
                                 variantDslInfo,
                                 variantDependencies,
                                 variantSources,
@@ -111,6 +120,42 @@ public class LibraryVariantFactory
         variantProperties.addVariantOutput(variantData.getOutputFactory().addMainOutput(name));
 
         return variantProperties;
+    }
+
+    @NonNull
+    @Override
+    public BuildFeatureValues createBuildFeatureValues(
+            @NonNull BuildFeatures buildFeatures, @NonNull ProjectOptions projectOptions) {
+
+        if (buildFeatures instanceof LibraryBuildFeatures) {
+            LibraryBuildFeatures features = (LibraryBuildFeatures) buildFeatures;
+
+            Boolean androidResources = features.getAndroidResources();
+            if (androidResources == null) {
+                androidResources =
+                        projectOptions.get(BooleanOption.BUILD_FEATURE_ANDROID_RESOURCES);
+            }
+
+            Boolean dataBinding = features.getDataBinding();
+            if (dataBinding == null) {
+                dataBinding = projectOptions.get(BooleanOption.BUILD_FEATURE_DATABINDING);
+            }
+
+            return new BuildFeatureValuesImpl(
+                    buildFeatures, androidResources, dataBinding, projectOptions);
+        } else {
+            throw new RuntimeException("buildFeatures not of type DynamicFeatureBuildFeatures");
+        }
+    }
+
+    @NonNull
+    @Override
+    public BuildFeatureValues createTestBuildFeatureValues(
+            @NonNull BuildFeatures buildFeatures,
+            @NonNull DataBindingOptions dataBindingOptions,
+            @NonNull ProjectOptions projectOptions) {
+        // no difference with the main component
+        return createBuildFeatureValues(buildFeatures, projectOptions);
     }
 
     @NonNull

@@ -24,12 +24,11 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantApiScope
 import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.scope.createFakeVariantApiScope
 import com.android.build.gradle.internal.scope.createFakeVariantPropertiesApiScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -76,11 +75,11 @@ class VariantPropertiesImplTest {
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(globalScope.projectOptions).thenReturn(Mockito.mock(ProjectOptions::class.java))
-
         Mockito.`when`(variantData.taskContainer).thenReturn(MutableTaskContainer())
 
         properties = FakeVariantProperties(
             componentIdentity,
+            Mockito.mock(BuildFeatureValues::class.java),
             variantDslInfo,
             Mockito.mock(VariantDependencies::class.java),
             Mockito.mock(VariantSources::class.java),
@@ -111,6 +110,7 @@ class VariantPropertiesImplTest {
     fun testDslProvidedVersion() {
         val properties = object: FakeVariantProperties(
             componentIdentity,
+            Mockito.mock(BuildFeatureValues::class.java),
             variantDslInfo,
             Mockito.mock(VariantDependencies::class.java),
             Mockito.mock(VariantSources::class.java),
@@ -153,6 +153,7 @@ class VariantPropertiesImplTest {
 
     open class FakeVariantProperties(
         componentIdentity: ComponentIdentity,
+        buildFeatureValues: BuildFeatureValues,
         variantDslInfo: VariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
@@ -165,6 +166,7 @@ class VariantPropertiesImplTest {
         globalScope: GlobalScope
     ) : VariantPropertiesImpl(
         componentIdentity,
+        buildFeatureValues,
         variantDslInfo,
         variantDependencies,
         variantSources,

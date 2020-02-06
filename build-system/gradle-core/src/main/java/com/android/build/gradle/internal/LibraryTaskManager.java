@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask;
+import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.BundleLibraryClassesDir;
@@ -119,6 +120,7 @@ public class LibraryTaskManager
                             allVariants) {
 
         LibraryVariantPropertiesImpl libVariantProperties = variant.getProperties();
+        BuildFeatureValues buildFeatures = libVariantProperties.getBuildFeatures();
 
         createAnchorTasks(libVariantProperties);
 
@@ -131,7 +133,7 @@ public class LibraryTaskManager
                 new BuildArtifactReportTask.BuildArtifactReportCreationAction(
                         libVariantProperties));
 
-        if (globalScope.getBuildFeatures().getAndroidResources()) {
+        if (buildFeatures.getAndroidResources()) {
             createGenerateResValuesTask(libVariantProperties);
         } else { // Resource processing is disabled.
             // TODO(b/147579629): add a warning for manifests containing resource references.
@@ -154,7 +156,7 @@ public class LibraryTaskManager
 
         createRenderscriptTask(libVariantProperties);
 
-        if (globalScope.getBuildFeatures().getAndroidResources()) {
+        if (buildFeatures.getAndroidResources()) {
             createMergeResourcesTasks(libVariantProperties);
 
             createCompileLibraryResourcesTask(libVariantProperties);
@@ -169,7 +171,7 @@ public class LibraryTaskManager
         // Add a task to create the BuildConfig class
         createBuildConfigTask(libVariantProperties);
 
-        if (globalScope.getBuildFeatures().getAndroidResources()) {
+        if (buildFeatures.getAndroidResources()) {
             // Add a task to generate resource source files, directing the location
             // of the r.txt file to be directly in the bundle.
             createProcessResTask(
@@ -323,7 +325,7 @@ public class LibraryTaskManager
 
         // ----- Minify next -----
         maybeCreateJavaCodeShrinkerTask(libVariantProperties);
-        if (globalScope.getBuildFeatures().getAndroidResources()) {
+        if (buildFeatures.getAndroidResources()) {
             maybeCreateResourcesShrinkerTasks(libVariantProperties);
         }
 
@@ -355,7 +357,7 @@ public class LibraryTaskManager
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
             rClassJar = InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR.INSTANCE;
         } else {
-            if (!globalScope.getBuildFeatures().getAndroidResources()) {
+            if (!variantProperties.getBuildFeatures().getAndroidResources()) {
                 return;
             }
             rClassJar = InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE;
@@ -536,7 +538,7 @@ public class LibraryTaskManager
     @NonNull
     private Supplier<List<String>> excludeDataBindingClassesIfNecessary(
             @NonNull ComponentPropertiesImpl componentProperties) {
-        if (!globalScope.getBuildFeatures().getDataBinding()) {
+        if (!componentProperties.getBuildFeatures().getDataBinding()) {
             return Collections::emptyList;
         }
 

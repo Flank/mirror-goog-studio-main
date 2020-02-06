@@ -346,7 +346,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
 
             task.setClassDir(creationConfig.getArtifacts().getAllClasses());
 
-            task.source(creationConfig.getVariantData().getJavaSources());
+            task.source(creationConfig.getJavaSources());
             task.setEncoding(
                     creationConfig
                             .getGlobalScope()

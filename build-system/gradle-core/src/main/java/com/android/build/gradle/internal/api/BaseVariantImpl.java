@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
@@ -192,7 +191,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public List<ConfigurableFileTree> getSourceFolders(@NonNull SourceKind folderType) {
         switch (folderType) {
             case JAVA:
-                return getVariantData().getJavaSources();
+                return componentProperties.getJavaSources();
             default:
                 componentProperties
                         .getVariantApiScope()
@@ -301,7 +300,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @Nullable
     public AidlCompile getAidlCompile() {
-        if (!componentProperties.getGlobalScope().getBuildFeatures().getAidl()) {
+        if (!componentProperties.getBuildFeatures().getAidl()) {
             componentProperties
                     .getVariantApiScope()
                     .getIssueReporter()
@@ -325,7 +324,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public TaskProvider<AidlCompile> getAidlCompileProvider() {
-        if (!componentProperties.getGlobalScope().getBuildFeatures().getAidl()) {
+        if (!componentProperties.getBuildFeatures().getAidl()) {
             componentProperties
                     .getVariantApiScope()
                     .getIssueReporter()
@@ -343,7 +342,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @Nullable
     public RenderscriptCompile getRenderscriptCompile() {
-        if (!componentProperties.getGlobalScope().getBuildFeatures().getRenderScript()) {
+        if (!componentProperties.getBuildFeatures().getRenderScript()) {
             componentProperties
                     .getVariantApiScope()
                     .getIssueReporter()
@@ -367,8 +366,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider() {
-        final GlobalScope globalScope = getVariantData().getGlobalScope();
-        if (!globalScope.getBuildFeatures().getRenderScript()) {
+        if (!componentProperties.getBuildFeatures().getRenderScript()) {
             componentProperties
                     .getVariantApiScope()
                     .getIssueReporter()

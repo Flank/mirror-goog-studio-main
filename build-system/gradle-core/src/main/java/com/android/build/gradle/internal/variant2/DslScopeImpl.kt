@@ -31,7 +31,6 @@ import java.io.File
 
 class DslScopeImpl(
         private val projectScope: ProjectScope,
-        override val buildFeatures: BuildFeatureValues,
         override val variableFactory: DslVariableFactory
 ) : DslScope {
 

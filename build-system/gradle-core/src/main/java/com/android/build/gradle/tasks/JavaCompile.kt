@@ -97,7 +97,7 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
 
         // Data binding artifact is one of the annotation processing outputs, only if kapt is not
         // configured.
-        if (globalScope.buildFeatures.dataBinding) {
+        if (componentProperties.buildFeatures.dataBinding) {
             bundleArtifactFolderForDataBinding.set(
                 artifacts.getOperations().getOutputDirectory(DATA_BINDING_ARTIFACT)
             )
@@ -120,7 +120,7 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
         )
 
         // Wrap sources in Callable to evaluate them just before execution, b/117161463.
-        val sourcesToCompile = Callable { listOf(componentProperties.variantData.javaSources) }
+        val sourcesToCompile = Callable { listOf(componentProperties.javaSources) }
         // Include only java sources, otherwise we hit b/144249620.
         val javaSourcesFilter = PatternSet().include("**/*.java")
         task.source = task.project.files(sourcesToCompile).asFileTree.matching(javaSourcesFilter)

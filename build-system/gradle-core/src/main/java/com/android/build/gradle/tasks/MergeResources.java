@@ -767,7 +767,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                 task.generatedPngsOutputDir = paths.getGeneratedPngsOutputDir();
             }
 
-            final BuildFeatureValues features = globalScope.getBuildFeatures();
+            final BuildFeatureValues features = creationConfig.getBuildFeatures();
             final boolean isDataBindingEnabled = features.getDataBinding();
             boolean isViewBindingEnabled = features.getViewBinding();
             if (isDataBindingEnabled || isViewBindingEnabled) {
