@@ -27,8 +27,11 @@ public class ModelData {
     /** stores necessary data for model output */
     private List<Param> outputs;
 
-    /** Model description used to generate javadoc */
+    private String modelName;
     private String modelDescription;
+    private String modelVersion;
+    private String modelAuthor;
+    private String modelLicense;
 
     private ModelData() {
         inputs = new ArrayList<>();
@@ -43,8 +46,24 @@ public class ModelData {
         return outputs;
     }
 
-    public String getDescription() {
+    public String getModelName() {
+        return modelName;
+    }
+
+    public String getModelDescription() {
         return modelDescription;
+    }
+
+    public String getModelVersion() {
+        return modelVersion;
+    }
+
+    public String getModelAuthor() {
+        return modelAuthor;
+    }
+
+    public String getModelLicense() {
+        return modelLicense;
     }
 
     public static ModelData buildFrom(MetadataExtractor extractor) {
@@ -61,7 +80,11 @@ public class ModelData {
         }
 
         ModelMetadata modelMetadata = extractor.getModelMetaData();
+        modelData.modelName = modelMetadata.name();
         modelData.modelDescription = modelMetadata.description();
+        modelData.modelVersion = modelMetadata.version();
+        modelData.modelAuthor = modelMetadata.author();
+        modelData.modelLicense = modelMetadata.license();
 
         return modelData;
     }
