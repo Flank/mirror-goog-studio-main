@@ -298,24 +298,19 @@ public class LayoutInspectorService {
         return null;
     }
 
-    /** Sends the properties via the agent. */
-    private native void sendProperties(long event, long viewId);
-
     /**
      * This method is called when a layout inspector command is received by the agent.
      *
      * @param viewId the uniqueDrawingId on the view which is the same id used in the skia image
-     * @param event a handle to an PropertyEvent protobuf to pass back in native calls
      */
     @SuppressWarnings("unused") // invoked via jni
-    public void onGetPropertiesInspectorCommand(long viewId, long event) {
+    public void onGetPropertiesInspectorCommand(long viewId) {
         try {
             List<View> roots = getRootViews();
             for (View root : roots) {
                 View view = findViewById(root, viewId);
                 if (view != null) {
-                    properties.writeProperties(view, event);
-                    sendProperties(event, viewId);
+                    properties.handleGetProperties(view);
                     return;
                 }
             }
@@ -366,9 +361,9 @@ public class LayoutInspectorService {
     }
 
     /** Sends an LayoutInspector Event with an error message back to Studio */
-    private native void sendErrorMessage(@NonNull String message);
+    private static native void sendErrorMessage(@NonNull String message);
 
-    private void sendErrorMessage(@NonNull Throwable e) {
+    public static void sendErrorMessage(@NonNull Throwable e) {
         //noinspection resource
         ByteArrayOutputStream error = new ByteArrayOutputStream();
         e.printStackTrace(new PrintStream(error));
