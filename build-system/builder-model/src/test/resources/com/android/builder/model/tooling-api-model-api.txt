@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-bc837c324807644d148720bb4ab9d4b1685e7c1e2157bea662a474c957b20961
+b8586697769944e57585b8cebebaa553825972fea5c61e4752e8b07610603e42
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -82,6 +82,7 @@ com.android.builder.model.AndroidProject.getBuildTypes: java.util.Collection<com
 com.android.builder.model.AndroidProject.getCompileTarget: java.lang.String ()
 com.android.builder.model.AndroidProject.getDefaultConfig: com.android.builder.model.ProductFlavorContainer ()
 com.android.builder.model.AndroidProject.getDefaultVariant: java.lang.String ()
+com.android.builder.model.AndroidProject.getDependenciesInfo: com.android.builder.model.DependenciesInfo ()
 com.android.builder.model.AndroidProject.getDynamicFeatures: java.util.Collection<java.lang.String> ()
 com.android.builder.model.AndroidProject.getExtraArtifacts: java.util.Collection<com.android.builder.model.ArtifactMetaData> ()
 com.android.builder.model.AndroidProject.getFlags: com.android.builder.model.AndroidGradlePluginProjectFlags ()
@@ -190,6 +191,8 @@ com.android.builder.model.Dependencies.getJavaModules: java.util.Collection<com.
 com.android.builder.model.Dependencies.getLibraries: java.util.Collection<com.android.builder.model.AndroidLibrary> ()
 com.android.builder.model.Dependencies.getProjects: java.util.Collection<java.lang.String> ()
 com.android.builder.model.Dependencies.getRuntimeOnlyClasses: java.util.Collection<java.io.File> ()
+com.android.builder.model.DependenciesInfo
+com.android.builder.model.DependenciesInfo.getIncludeInApk: boolean ()
 com.android.builder.model.DimensionAware
 com.android.builder.model.DimensionAware.getDimension: java.lang.String ()
 com.android.builder.model.InstantAppProjectBuildOutput

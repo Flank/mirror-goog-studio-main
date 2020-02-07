@@ -72,6 +72,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @NonNull private final File myBuildFolder;
     @NonNull private final Collection<String> myDynamicFeatures;
     @Nullable private final ViewBindingOptions myViewBindingOptions;
+    @Nullable private final IdeDependenciesInfo myDependenciesInfo;
     @Nullable private final GradleVersion myParsedModelVersion;
     @Nullable private final String myBuildToolsVersion;
     @Nullable private final String myResourcePrefix;
@@ -190,6 +191,11 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 IdeModel.copyNewProperty(
                         () -> new IdeViewBindingOptions(project.getViewBindingOptions()), null);
 
+        IdeDependenciesInfo dependenciesInfoCopy =
+                IdeModel.copyNewProperty(
+                        () -> IdeDependenciesInfo.createOrNull(project.getDependenciesInfo()),
+                        null);
+
         String buildToolsVersionCopy =
                 IdeModel.copyNewProperty(project::getBuildToolsVersion, null);
 
@@ -234,6 +240,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 project.getBuildFolder(),
                 dynamicFeaturesCopy,
                 viewBindingOptionsCopy,
+                dependenciesInfoCopy,
                 buildToolsVersionCopy,
                 project.getResourcePrefix(),
                 groupId,
@@ -270,6 +277,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myBuildFolder = null;
         myDynamicFeatures = Collections.emptyList();
         myViewBindingOptions = new IdeViewBindingOptions();
+        myDependenciesInfo = new IdeDependenciesInfo();
         myBuildToolsVersion = null;
         myResourcePrefix = null;
         myGroupId = null;
@@ -304,6 +312,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @NonNull File buildFolder,
             @NonNull Collection<String> dynamicFeatures,
             @Nullable ViewBindingOptions viewBindingOptions,
+            @Nullable IdeDependenciesInfo dependenciesInfo,
             @Nullable String buildToolsVersion,
             @Nullable String resourcePrefix,
             @Nullable String groupId,
@@ -334,6 +343,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myBuildFolder = buildFolder;
         myDynamicFeatures = dynamicFeatures;
         myViewBindingOptions = viewBindingOptions;
+        myDependenciesInfo = dependenciesInfo;
         myBuildToolsVersion = buildToolsVersion;
         myResourcePrefix = resourcePrefix;
         myGroupId = groupId;
@@ -544,6 +554,12 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
 
     @Nullable
     @Override
+    public IdeDependenciesInfo getDependenciesInfo() {
+        return myDependenciesInfo;
+    }
+
+    @Nullable
+    @Override
     public String getGroupId() {
         return myGroupId;
     }
@@ -618,6 +634,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 && Objects.equals(myResourcePrefix, project.myResourcePrefix)
                 && Objects.equals(myDynamicFeatures, project.myDynamicFeatures)
                 && Objects.equals(myViewBindingOptions, project.myViewBindingOptions)
+                && Objects.equals(myDependenciesInfo, project.myDependenciesInfo)
                 && Objects.equals(myGroupId, project.myGroupId)
                 && Objects.equals(myAgpFlags, project.myAgpFlags);
     }
@@ -657,6 +674,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 myBaseSplit,
                 myDynamicFeatures,
                 myViewBindingOptions,
+                myDependenciesInfo,
                 myGroupId,
                 myAgpFlags);
     }
@@ -723,6 +741,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 + myDynamicFeatures
                 + ", myViewBindingOptions="
                 + myViewBindingOptions
+                + ", myDependenciesInfo="
+                + myDependenciesInfo
                 + ", myGroupId="
                 + myGroupId
                 + ", myAgpFlags="

@@ -416,6 +416,9 @@ public interface AndroidProject {
     @NonNull
     ViewBindingOptions getViewBindingOptions();
 
+    @Nullable
+    DependenciesInfo getDependenciesInfo();
+
     /** Returns the AGP flags for this project. */
     @NonNull
     AndroidGradlePluginProjectFlags getFlags();

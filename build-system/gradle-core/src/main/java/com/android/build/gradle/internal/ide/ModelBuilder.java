@@ -30,6 +30,7 @@ import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.PublicArtifactType;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.dsl.ApplicationExtension;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
@@ -79,6 +80,7 @@ import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BaseArtifact;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Dependencies;
+import com.android.builder.model.DependenciesInfo;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.LintOptions;
@@ -344,6 +346,13 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         ViewBindingOptions viewBindingOptions = new ViewBindingOptionsImpl(viewBinding);
 
+        DependenciesInfo dependenciesInfo = null;
+        if (extension instanceof ApplicationExtension) {
+            ApplicationExtension applicationExtension = (ApplicationExtension) extension;
+            boolean includeInApk = applicationExtension.getDependenciesInfo().getIncludeInApk();
+            dependenciesInfo = new DependenciesInfoImpl(includeInApk);
+        }
+
         List<String> flavorDimensionList =
                 extension.getFlavorDimensionList() != null
                         ? extension.getFlavorDimensionList()
@@ -420,6 +429,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 isBaseSplit(),
                 getDynamicFeatures(),
                 viewBindingOptions,
+                dependenciesInfo,
                 flags,
                 variantBuildOutputs);
     }
