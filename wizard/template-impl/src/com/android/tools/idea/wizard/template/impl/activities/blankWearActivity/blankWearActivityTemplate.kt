@@ -50,7 +50,7 @@ val blankWearActivityTemplate
     constraints = listOf(TemplateConstraint.AndroidX)
     category = Category.Activity
     formFactor = FormFactor.Wear
-    screens = listOf(WizardUiContext.MenuEntry)
+    screens = listOf(WizardUiContext.MenuEntry, WizardUiContext.NewProject)
 
     lateinit var layoutName: StringParameter
     val activityClass = stringParameter {
