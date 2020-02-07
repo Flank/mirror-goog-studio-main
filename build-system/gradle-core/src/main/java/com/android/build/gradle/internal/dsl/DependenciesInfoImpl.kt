@@ -27,4 +27,5 @@ import com.android.build.api.dsl.DependenciesInfo
 open class DependenciesInfoImpl : DependenciesInfo, com.android.build.api.variant.DependenciesInfo {
 
   override var includeInApk: Boolean = true
+  override var includeInBundle: Boolean = true
 }

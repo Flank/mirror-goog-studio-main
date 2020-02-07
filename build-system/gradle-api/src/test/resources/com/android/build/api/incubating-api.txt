@@ -269,7 +269,9 @@ com.android.build.api.dsl.DensitySplit.setCompatibleScreens: void (java.util.Col
 com.android.build.api.dsl.DensitySplit.setStrict: void (boolean)
 com.android.build.api.dsl.DependenciesInfo
 com.android.build.api.dsl.DependenciesInfo.getIncludeInApk: boolean ()
+com.android.build.api.dsl.DependenciesInfo.getIncludeInBundle: boolean ()
 com.android.build.api.dsl.DependenciesInfo.setIncludeInApk: void (boolean)
+com.android.build.api.dsl.DependenciesInfo.setIncludeInBundle: void (boolean)
 com.android.build.api.dsl.DynamicDelivery
 com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
@@ -456,6 +458,7 @@ com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.v
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.FileCollection)
 com.android.build.api.variant.DependenciesInfo
 com.android.build.api.variant.DependenciesInfo.getIncludeInApk: boolean ()
+com.android.build.api.variant.DependenciesInfo.getIncludeInBundle: boolean ()
 com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.DynamicFeatureVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.DynamicFeatureVariantProperties.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()

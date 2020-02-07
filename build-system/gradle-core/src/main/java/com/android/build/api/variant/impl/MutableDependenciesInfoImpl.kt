@@ -30,8 +30,13 @@ open class MutableDependenciesInfoImpl @Inject constructor(
     com.android.build.api.variant.DependenciesInfo {
 
     private val includeInApkValue = variantApiServices.valueOf(dslDependencyInfo.includeInApk)
+    private val includeInBundleValue = variantApiServices.valueOf(dslDependencyInfo.includeInBundle)
 
     override var includeInApk: Boolean
         set(value) = includeInApkValue.set(value)
         get() = includeInApkValue.get()
+
+    override var includeInBundle: Boolean
+        set(value) = includeInBundleValue.set(value)
+        get() = includeInBundleValue.get()
 }

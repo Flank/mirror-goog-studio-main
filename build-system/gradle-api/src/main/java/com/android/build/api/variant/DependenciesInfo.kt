@@ -25,4 +25,5 @@ import org.gradle.api.Incubating
 interface DependenciesInfo {
 
     val includeInApk: Boolean
+    val includeInBundle: Boolean
 }
