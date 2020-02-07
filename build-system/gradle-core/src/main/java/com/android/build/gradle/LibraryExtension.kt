@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.DensitySplitOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.LibraryExtensionImpl
+import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -88,6 +89,7 @@ open class LibraryExtension(
             DensitySplitOptions,
             ExternalNativeBuild,
             JacocoOptions,
+            LintOptions,
             NdkBuildOptions,
             ProductFlavor,
             SigningConfig,

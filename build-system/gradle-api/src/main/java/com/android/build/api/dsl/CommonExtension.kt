@@ -31,24 +31,25 @@ import org.gradle.api.NamedDomainObjectContainer
  */
 @Incubating
 interface CommonExtension<
-        AaptOptionsT: AaptOptions,
+        AaptOptionsT : AaptOptions,
         AbiSplitT : AbiSplit,
         AdbOptionsT : AdbOptions,
-        BuildFeaturesT: BuildFeatures,
+        BuildFeaturesT : BuildFeatures,
         BuildTypeT : BuildType,
-        CMakeT: Cmake,
+        CMakeT : Cmake,
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,
         DefaultConfigT : DefaultConfig,
         DensitySplitT : DensitySplit,
-        ExternalNativeBuildT: ExternalNativeBuild<CMakeT, NdkBuildT>,
+        ExternalNativeBuildT : ExternalNativeBuild<CMakeT, NdkBuildT>,
         JacocoOptionsT : JacocoOptions,
-        NdkBuildT: NdkBuild,
+        LintOptionsT : LintOptions,
+        NdkBuildT : NdkBuild,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
         SplitsT : Splits<AbiSplitT, DensitySplitT>,
-        TestOptionsT: TestOptions<UnitTestOptionsT>,
-        UnitTestOptionsT: UnitTestOptions,
+        TestOptionsT : TestOptions<UnitTestOptionsT>,
+        UnitTestOptionsT : UnitTestOptions,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties> {
     // TODO(b/140406102)
@@ -205,6 +206,20 @@ interface CommonExtension<
      * ```
      */
     fun jacoco(action: JacocoOptionsT.() -> Unit)
+
+    /**
+     * Specifies options for the lint tool.
+     *
+     * For more information about the properties you can configure in this block, see [LintOptions].
+     */
+    val lintOptions: LintOptionsT
+
+    /**
+     * Specifies options for the lint tool.
+     *
+     * For more information about the properties you can configure in this block, see [LintOptions].
+     */
+    fun lintOptions(action: LintOptionsT.() -> Unit)
 
     /**
      * Encapsulates all product flavors configurations for this project.

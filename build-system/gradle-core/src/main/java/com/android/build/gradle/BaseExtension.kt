@@ -113,8 +113,6 @@ abstract class BaseExtension protected constructor(
     /** Secondary dependencies for the custom transform. */
     private val _transformDependencies: MutableList<List<Any>> = mutableListOf()
 
-    override val lintOptions: LintOptions =
-        dslServices.newInstance(LintOptions::class.java)
     override val dexOptions: DexOptions =
         dslServices.newInstance(DexOptions::class.java, dslServices.deprecationReporter)
     override val packagingOptions: PackagingOptions =
@@ -360,11 +358,6 @@ abstract class BaseExtension protected constructor(
         action.execute(dexOptions)
     }
 
-    /**
-     * Specifies options for the lint tool.
-     *
-     * For more information about the properties you can configure in this block, see [LintOptions].
-     */
     fun lintOptions(action: Action<LintOptions>) {
         checkWritability()
         action.execute(lintOptions)
@@ -645,6 +638,8 @@ abstract class BaseExtension protected constructor(
     abstract override val externalNativeBuild: ExternalNativeBuild
 
     abstract override val jacoco: JacocoOptions
+
+    abstract override val lintOptions: LintOptions
 
     abstract override val productFlavors: NamedDomainObjectContainer<ProductFlavor>
     abstract fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>)

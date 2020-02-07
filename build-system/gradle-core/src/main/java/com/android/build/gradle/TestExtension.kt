@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.DensitySplitOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
+import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -66,6 +67,7 @@ open class TestExtension(
             DensitySplitOptions,
             ExternalNativeBuild,
             JacocoOptions,
+            LintOptions,
             NdkBuildOptions,
             ProductFlavor,
             SigningConfig,

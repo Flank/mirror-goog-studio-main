@@ -63,6 +63,7 @@ class ApplicationExtensionImpl(
             DensitySplitOptions,
             ExternalNativeBuild,
             JacocoOptions,
+            LintOptions,
             NdkBuildOptions,
             ProductFlavor,
             SigningConfig,

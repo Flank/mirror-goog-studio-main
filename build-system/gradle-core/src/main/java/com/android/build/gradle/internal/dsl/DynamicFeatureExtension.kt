@@ -56,6 +56,7 @@ internal open class DynamicFeatureExtension(
         DensitySplitOptions,
         ExternalNativeBuild,
         JacocoOptions,
+        LintOptions,
         NdkBuildOptions,
         ProductFlavor,
         SigningConfig,

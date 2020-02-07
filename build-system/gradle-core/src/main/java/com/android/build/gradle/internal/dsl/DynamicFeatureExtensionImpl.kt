@@ -61,6 +61,7 @@ class DynamicFeatureExtensionImpl(
             DensitySplitOptions,
             ExternalNativeBuild,
             JacocoOptions,
+            LintOptions,
             NdkBuildOptions,
             ProductFlavor,
             SigningConfig,

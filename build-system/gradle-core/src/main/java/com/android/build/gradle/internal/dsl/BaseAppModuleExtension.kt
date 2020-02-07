@@ -63,6 +63,7 @@ open class BaseAppModuleExtension(
         DensitySplitOptions,
         ExternalNativeBuild,
         JacocoOptions,
+        LintOptions,
         NdkBuildOptions,
         ProductFlavor,
         SigningConfig,

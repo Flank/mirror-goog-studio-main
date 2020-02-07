@@ -61,6 +61,7 @@ class TestExtensionImpl(
             DensitySplitOptions,
             ExternalNativeBuild,
             JacocoOptions,
+            LintOptions,
             NdkBuildOptions,
             ProductFlavor,
             SigningConfig,

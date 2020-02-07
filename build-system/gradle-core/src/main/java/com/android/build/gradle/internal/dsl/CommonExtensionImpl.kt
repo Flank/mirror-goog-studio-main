@@ -57,6 +57,7 @@ abstract class CommonExtensionImpl<
         DensitySplitOptions,
         ExternalNativeBuild,
         JacocoOptions,
+        LintOptions,
         NdkBuildOptions,
         ProductFlavorT,
         SigningConfigT,
@@ -139,6 +140,12 @@ abstract class CommonExtensionImpl<
 
     override fun jacoco(action: JacocoOptions.() -> Unit) {
         action.invoke(jacoco)
+    }
+
+    override val lintOptions: LintOptions = dslServices.newInstance(LintOptions::class.java)
+
+    override fun lintOptions(action: LintOptions.() -> Unit) {
+        action.invoke(lintOptions)
     }
 
     override fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>) {
