@@ -133,11 +133,11 @@ com.android.build.api.dsl.AnnotationProcessorOptions.classNames: void (java.lang
 com.android.build.api.dsl.AnnotationProcessorOptions.compilerArgumentProvider: void (org.gradle.process.CommandLineArgumentProvider)
 com.android.build.api.dsl.AnnotationProcessorOptions.compilerArgumentProviders: void (org.gradle.process.CommandLineArgumentProvider[])
 com.android.build.api.dsl.AnnotationProcessorOptions.getArguments: java.util.Map<java.lang.String, java.lang.String> ()
-com.android.build.api.dsl.AnnotationProcessorOptions.getClassNames: java.util.Collection<java.lang.String> ()
-com.android.build.api.dsl.AnnotationProcessorOptions.getCompilerArgumentProviders: java.util.Collection<org.gradle.process.CommandLineArgumentProvider> ()
+com.android.build.api.dsl.AnnotationProcessorOptions.getClassNames: java.util.List<java.lang.String> ()
+com.android.build.api.dsl.AnnotationProcessorOptions.getCompilerArgumentProviders: java.util.List<org.gradle.process.CommandLineArgumentProvider> ()
 com.android.build.api.dsl.AnnotationProcessorOptions.setArguments: void (java.util.Map<java.lang.String, java.lang.String>)
-com.android.build.api.dsl.AnnotationProcessorOptions.setClassNames: void (java.util.Collection<java.lang.String>)
-com.android.build.api.dsl.AnnotationProcessorOptions.setCompilerArgumentProviders: void (java.util.Collection<? extends org.gradle.process.CommandLineArgumentProvider>)
+com.android.build.api.dsl.AnnotationProcessorOptions.setClassNames: void (java.util.List<java.lang.String>)
+com.android.build.api.dsl.AnnotationProcessorOptions.setCompilerArgumentProviders: void (java.util.List<org.gradle.process.CommandLineArgumentProvider>)
 com.android.build.api.dsl.ApkExtension
 com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.ApplicationBuildFeatures.getDataBinding: java.lang.Boolean ()
@@ -263,9 +263,9 @@ com.android.build.api.dsl.DataBinding.setVersion: void (java.lang.String)
 com.android.build.api.dsl.DefaultConfig implements com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.SplitOptions
 com.android.build.api.dsl.DensitySplit.compatibleScreens: void (java.lang.String[])
-com.android.build.api.dsl.DensitySplit.getCompatibleScreens: java.util.Collection<java.lang.String> ()
+com.android.build.api.dsl.DensitySplit.getCompatibleScreens: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.DensitySplit.isStrict: boolean ()
-com.android.build.api.dsl.DensitySplit.setCompatibleScreens: void (java.util.Collection<java.lang.String>)
+com.android.build.api.dsl.DensitySplit.setCompatibleScreens: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.DensitySplit.setStrict: void (boolean)
 com.android.build.api.dsl.DependenciesInfo
 com.android.build.api.dsl.DependenciesInfo.getIncludeInApk: boolean ()
