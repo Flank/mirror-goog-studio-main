@@ -28,19 +28,19 @@ import org.junit.Test
 import org.objectweb.asm.Opcodes
 
 /**
- * Sanity tests for the new namespaced resource pipeline.
+ * Smoke test for the new namespaced resource pipeline with libraries.
  *
  * Project structured as follows:
  *
- * <pre>
+ * ```
  *   notNamespacedLib -->
- *                         other feature  -->  base feature  -->
- *        -------------->
- *   app                                                           lib
- *        ----------------------------------------------------->
- * </pre>
+ *                         lib2
+ *        -------------->        ------------>
+ *   app                                        lib
+ *        ----------------------------------->
+ * ```
  */
-class ResourceNamespaceTest {
+class ResourceNamespaceLibrariesTest {
 
     private val buildScriptContent = """
 android.defaultConfig.minSdkVersion 21
@@ -78,39 +78,23 @@ android.defaultConfig.minSdkVersion 21
                             android:pathData="M12,12m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0"/>
                     </vector>""")
 
-    private val baseFeature = MinimalSubProject.lib("com.example.baseFeature")
+
+    private val lib2 = MinimalSubProject.lib("com.example.lib2")
         .appendToBuild(buildScriptContent)
         .withFile(
             "src/main/res/values/strings.xml",
             """<resources>
-                        <string name="baseFeatureString">baseFeature String</string>
                         <string name="libString_from_lib">@*com.example.lib:string/libString</string>
                     </resources>""")
         .withFile(
-            "src/main/java/com/example/baseFeature/Example.java",
-            """package com.example.baseFeature;
+            "src/main/java/com/example/lib2/Example.java",
+            """package com.example.lib2;
                     public class Example {
-                        public static int baseFeature() { return R.string.baseFeatureString; }
+                        public static int lib2() { return R.string.libString_from_lib; }
                         public static int lib() { return com.example.lib.R.string.libString; }
                     }
                     """)
 
-    private val feature2 = MinimalSubProject.lib("com.example.otherFeature")
-        .appendToBuild(buildScriptContent)
-        .withFile(
-            "src/main/res/values/strings.xml",
-            """<resources>
-                        <string name="otherFeatureString">Other Feature String</string>
-                        <string name="baseFeatureString_from_baseFeature">@*com.example.baseFeature:string/baseFeatureString</string>
-                    </resources>""")
-        .withFile(
-            "src/main/java/com/example/otherFeature/Example.java",
-            """package com.example.otherFeature;
-                    public class Example {
-                        public static int otherFeature() { return R.string.otherFeatureString; }
-                        public static int baseFeature() { return com.example.baseFeature.R.string.baseFeatureString; }
-                    }
-                    """)
 
     val app = MinimalSubProject.app("com.example.app")
         .appendToBuild(buildScriptContent)
@@ -119,8 +103,7 @@ android.defaultConfig.minSdkVersion 21
             """<resources>
                         <string name="appString">App string</string>
                         <string name="libString_from_lib">@*com.example.lib:string/libString</string>
-                        <string name="baseFeatureString_from_baseFeature_via_otherFeature">@*com.example.otherFeature:string/baseFeatureString_from_baseFeature</string>
-                        <string name="otherFeatureString_from_otherFeature">@*com.example.otherFeature:string/otherFeatureString</string>
+                        <string name="libString_via_lib2">@*com.example.lib2:string/libString_from_lib</string>
                     </resources>""")
         .withFile(
             "src/main/java/com/example/app/Example.java",
@@ -128,7 +111,6 @@ android.defaultConfig.minSdkVersion 21
                     public class Example {
                         public static final int APP_STRING = R.string.appString;
                         public static final int LIB1_STRING = com.example.lib.R.string.libString;
-                        public static final int LIB3_STRING = com.example.otherFeature.R.string.otherFeatureString;
                     }""")
         .withFile("src/androidTest/res/raw/text.txt", "test file")
         .withFile(
@@ -143,7 +125,6 @@ android.defaultConfig.minSdkVersion 21
                         public static final int TEST_STRING = R.string.appTestString;
                         public static final int APP_STRING = com.example.app.R.string.appString;
                         public static final int LIB1_STRING = com.example.lib.R.string.libString;
-                        public static final int LIB3_STRING = com.example.otherFeature.R.string.otherFeatureString;
                     }
                     """)
 
@@ -156,67 +137,21 @@ android.defaultConfig.minSdkVersion 21
                     </resources>
                     """)
 
-
     private val testApp =
         MultiModuleTestProject.builder()
             .subproject(":lib", lib)
-            .subproject(":baseFeature", baseFeature)
-            .subproject(":otherFeature", feature2)
+            .subproject(":lib2", lib2)
             .subproject(":app", app)
             .subproject(":notNamespacedLib", notNamespacedLib)
-            .dependency(notNamespacedLib, feature2)
-            .dependency(app, feature2)
-            .dependency(feature2, baseFeature)
-            .dependency(baseFeature, lib)
+            .dependency(lib2, lib)
+            .dependency(app, lib2)
             .dependency(app, lib)
+            .dependency(notNamespacedLib, lib2)
             // Remote dependency
             .dependency(lib, "com.android.support:design:$SUPPORT_LIB_VERSION")
             .build()
 
     @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
-
-    @Test
-    fun smokeTestWithWorkers() {
-        project.executor()
-            .with(BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT, true)
-            .with(BooleanOption.ENABLE_GRADLE_WORKERS, true)
-            .run(
-                ":lib:assembleDebug",
-                ":lib:assembleDebugAndroidTest",
-                ":baseFeature:assembleDebug",
-                ":baseFeature:assembleDebugAndroidTest",
-                ":otherFeature:bundleDebugAar",
-                ":otherFeature:assembleDebugAndroidTest",
-                ":notNamespacedLib:assembleDebug",
-                ":notNamespacedLib:assembleDebugAndroidTest",
-                ":notNamespacedLib:verifyReleaseResources",
-                ":otherFeature:assembleDebug",
-                ":otherFeature:assembleDebugAndroidTest",
-                ":app:assembleDebug",
-                ":app:assembleDebugAndroidTest")
-
-        val dotDrawablePath = "res/drawable/com.example.lib\$dot.xml"
-
-        val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(apk).exists()
-        assertThat(apk).contains(dotDrawablePath)
-        assertThat(apk).containsClass("Lcom/example/app/R;")
-        assertThat(apk).containsClass("Lcom/example/app/R\$string;")
-
-        assertThat(apk.getClass("Lcom/example/app/R\$string;")!!.printFields())
-            .containsExactly(
-                "public static final I appString",
-                "public static final I baseFeatureString_from_baseFeature_via_otherFeature",
-                "public static final I libString_from_lib",
-                "public static final I otherFeatureString_from_otherFeature")
-        assertThat(apk).containsClass("Lcom/example/lib/R\$string;")
-        assertThat(apk).containsClass("Lcom/example/baseFeature/R\$string;")
-        assertThat(apk).containsClass("Lcom/example/otherFeature/R\$string;")
-        val testApk = project.getSubproject(":app").testApk
-        assertThat(testApk).exists()
-        assertThat(testApk).doesNotContain(dotDrawablePath)
-        assertThat(testApk).contains("res/raw/text.txt")
-    }
 
     @Test
     fun smokeTest() {
@@ -225,15 +160,9 @@ android.defaultConfig.minSdkVersion 21
             .run(
                 ":lib:assembleDebug",
                 ":lib:assembleDebugAndroidTest",
-                ":baseFeature:assembleDebug",
-                ":baseFeature:assembleDebugAndroidTest",
-                ":otherFeature:bundleDebugAar",
-                ":otherFeature:assembleDebugAndroidTest",
                 ":notNamespacedLib:assembleDebug",
                 ":notNamespacedLib:assembleDebugAndroidTest",
                 ":notNamespacedLib:verifyReleaseResources",
-                ":otherFeature:assembleDebug",
-                ":otherFeature:assembleDebugAndroidTest",
                 ":app:assembleDebug",
                 ":app:assembleDebugAndroidTest")
 
@@ -248,12 +177,9 @@ android.defaultConfig.minSdkVersion 21
         assertThat(apk.getClass("Lcom/example/app/R\$string;")!!.printFields())
             .containsExactly(
                 "public static final I appString",
-                "public static final I baseFeatureString_from_baseFeature_via_otherFeature",
                 "public static final I libString_from_lib",
-                "public static final I otherFeatureString_from_otherFeature")
+                "public static final I libString_via_lib2")
         assertThat(apk).containsClass("Lcom/example/lib/R\$string;")
-        assertThat(apk).containsClass("Lcom/example/baseFeature/R\$string;")
-        assertThat(apk).containsClass("Lcom/example/otherFeature/R\$string;")
         val testApk = project.getSubproject(":app").testApk
         assertThat(testApk).exists()
         assertThat(testApk).doesNotContain(dotDrawablePath)

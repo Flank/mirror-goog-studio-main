@@ -25,13 +25,13 @@ import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test
 
+/**
+ * Integration test covering namespaced R class handling.
+ */
 class NamespacedApplicationLightRClassesTest {
     private val lib = MinimalSubProject.lib("com.example.lib")
         .appendToBuild(
             """
-                dependencies {
-                    implementation 'com.android.support:appcompat-v7:$SUPPORT_LIB_VERSION'
-                }
                 android.aaptOptions.namespaced = true
                 """
         )
@@ -78,6 +78,8 @@ class NamespacedApplicationLightRClassesTest {
             .subproject(":lib", lib)
             .subproject(":app", app)
             .dependency(app, lib)
+            .dependency(app, "com.android.support:appcompat-v7:$SUPPORT_LIB_VERSION")
+            .dependency(lib, "com.android.support:appcompat-v7:$SUPPORT_LIB_VERSION")
             .build()
 
     @get:Rule

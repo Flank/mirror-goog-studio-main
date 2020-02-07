@@ -29,6 +29,7 @@ import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
+import static com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 
 import com.android.annotations.NonNull;
@@ -55,7 +56,6 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
     private final String variant;
     @NonNull private final File bundle;
     @NonNull private final File folder;
-    @Nullable private final File resStaticLibrary;
     @NonNull
     private final List<AndroidLibrary> androidLibraries;
     @NonNull
@@ -72,7 +72,6 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
             @Nullable String projectPath,
             @NonNull File bundle,
             @NonNull File extractedFolder,
-            @Nullable File resStaticLibrary,
             @Nullable String variant,
             boolean isProvided,
             boolean isSkipped,
@@ -81,7 +80,6 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
             @NonNull Collection<File> localJavaLibraries,
             @Nullable File lintJar) {
         super(buildId, projectPath, null, coordinates, isSkipped, isProvided);
-        this.resStaticLibrary = resStaticLibrary;
         this.androidLibraries = ImmutableList.copyOf(androidLibraries);
         this.javaLibraries = ImmutableList.copyOf(javaLibraries);
         this.localJars = ImmutableList.copyOf(localJavaLibraries);
@@ -155,10 +153,10 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
         return new File(folder, FD_RES);
     }
 
-    @Nullable
+    @NonNull
     @Override
     public File getResStaticLibrary() {
-        return resStaticLibrary;
+        return new File(folder, FN_RESOURCE_STATIC_LIBRARY);
     }
 
     @NonNull
@@ -249,7 +247,6 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
         return Objects.equal(variant, that.variant)
                 && Objects.equal(bundle, that.bundle)
                 && Objects.equal(folder, that.folder)
-                && Objects.equal(resStaticLibrary, that.resStaticLibrary)
                 && Objects.equal(androidLibraries, that.androidLibraries)
                 && Objects.equal(javaLibraries, that.javaLibraries)
                 && Objects.equal(localJars, that.localJars)
@@ -267,7 +264,6 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
                 variant,
                 bundle,
                 folder,
-                resStaticLibrary,
                 androidLibraries,
                 javaLibraries,
                 localJars,
@@ -282,7 +278,6 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
                 .add("variant", variant)
                 .add("bundle", bundle)
                 .add("folder", folder)
-                .add("resStaticLibrary", resStaticLibrary)
                 .add("androidLibraries", androidLibraries)
                 .add("javaLibraries", javaLibraries)
                 .add("localJars", localJars)

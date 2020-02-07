@@ -147,15 +147,14 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 )
             }
 
+            task.from(
+                artifacts.getFinalProduct(
+                    InternalArtifactType.COMPILE_SYMBOL_LIST))
+            task.from(
+                artifacts.getFinalProduct(InternalArtifactType.PACKAGED_RES),
+                prependToCopyPath(SdkConstants.FD_RES)
+            )
             if (!creationConfig.globalScope.extension.aaptOptions.namespaced) {
-                // TODO: this should be unconditional b/69358522
-                task.from(
-                    artifacts.getFinalProduct(
-                        InternalArtifactType.COMPILE_SYMBOL_LIST))
-                task.from(
-                    artifacts.getFinalProduct(InternalArtifactType.PACKAGED_RES),
-                    prependToCopyPath(SdkConstants.FD_RES)
-                )
                 // In non-namespaced projects bundle the library manifest straight to the AAR.
                 task.from(artifacts.getFinalProduct(InternalArtifactType.LIBRARY_MANIFEST))
             } else {
@@ -174,10 +173,6 @@ abstract class BundleAar : Zip(), VariantAwareTask {
 
             if (buildFeatures.androidResources) {
                 task.from(artifacts.getFinalProduct(InternalArtifactType.PUBLIC_RES))
-            }
-            if (creationConfig.globalScope.extension.aaptOptions.namespaced) {
-                task.from(artifacts.getFinalProduct(
-                    InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR))
             }
             task.from(artifacts.getFinalProductAsFileCollection(InternalArtifactType.RES_STATIC_LIBRARY))
             task.from(

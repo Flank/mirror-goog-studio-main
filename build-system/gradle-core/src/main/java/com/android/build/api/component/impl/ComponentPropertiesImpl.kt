@@ -46,12 +46,10 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT
 import com.android.build.gradle.internal.scope.InternalArtifactType.MLKIT_SOURCE_OUT
-import com.android.build.gradle.internal.scope.InternalArtifactType.NAMESPACED_CLASSES_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.VariantScope
@@ -446,36 +444,9 @@ abstract class ComponentPropertiesImpl(
             mainCollection = mainCollection.plus(fileTree)
             mainCollection = mainCollection.plus(
                 variantDependencies.getArtifactFileCollection(
-                    configType,
-                    ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
-                )
-            )
-            mainCollection = mainCollection.plus(
-                variantDependencies.getArtifactFileCollection(
                     configType, ArtifactScope.ALL, AndroidArtifacts.ArtifactType.SHARED_CLASSES
                 )
             )
-            if (globalScope
-                    .projectOptions[BooleanOption
-                    .CONVERT_NON_NAMESPACED_DEPENDENCIES]
-            ) {
-                mainCollection = mainCollection.plus(
-                    artifacts
-                        .getFinalProductAsFileCollection(
-                            NAMESPACED_CLASSES_JAR
-                        )
-                        .get()
-                )
-                mainCollection = mainCollection.plus(
-                    project.files(
-                        artifacts.getFinalProduct(
-                            COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR
-                        )
-                    )
-                )
-            }
-
             testedConfig?.let {
                 mainCollection = project.files(
                     mainCollection,

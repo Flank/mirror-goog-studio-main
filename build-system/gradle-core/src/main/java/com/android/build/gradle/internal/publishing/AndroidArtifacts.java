@@ -47,12 +47,14 @@ public class AndroidArtifacts {
     // they can be used)
     private static final String TYPE_PROCESSED_JAR = "processed-jar";
 
+    private static final String TYPE_MAYBE_NOT_NAMESPACED_AAR = "non-namespaced-aar";
+    private static final String TYPE_PREPROCESSED_AAR_FOR_AUTO_NAMESPACE =
+            "preprocessed-aar-for-auto-namespace";
     private static final String TYPE_CLASSES = "android-classes";
 
     // types published by an Android library
     private static final String TYPE_CLASSES_JAR = "android-classes-jar"; // In AAR
     private static final String TYPE_CLASSES_DIR = "android-classes-directory"; // Not in AAR
-    private static final String TYPE_NON_NAMESPACED_CLASSES = "non-namespaced-android-classes";
     private static final String TYPE_SHARED_CLASSES = "android-shared-classes";
     private static final String TYPE_DEX = "android-dex";
     private static final String TYPE_DEX_AND_KEEP_RULES = "android-dex-and-keep-rules";
@@ -60,11 +62,8 @@ public class AndroidArtifacts {
     private static final String TYPE_JAVA_RES = "android-java-res";
     private static final String TYPE_SHARED_JAVA_RES = "android-shared-java-res";
     private static final String TYPE_MANIFEST = "android-manifest";
-    private static final String TYPE_NON_NAMESPACED_MANIFEST = "non-namespaced-android-manifest";
     private static final String TYPE_MANIFEST_METADATA = "android-manifest-metadata";
     private static final String TYPE_ANDROID_RES = "android-res";
-    private static final String TYPE_ANDROID_NAMESPACED_R_CLASS_JAR =
-            "android-res-namespaced-r-class-jar";
     private static final String TYPE_ANDROID_RES_STATIC_LIBRARY = "android-res-static-library";
     private static final String TYPE_ANDROID_RES_SHARED_STATIC_LIBRARY =
             "android-res-shared-static-library";
@@ -80,7 +79,6 @@ public class AndroidArtifacts {
     private static final String TYPE_PUBLIC_RES = "android-public-res";
     private static final String TYPE_SYMBOL = "android-symbol";
     private static final String TYPE_SYMBOL_WITH_PACKAGE_NAME = "android-symbol-with-package-name";
-    private static final String TYPE_DEFINED_ONLY_SYMBOL = "defined-only-android-symbol";
     private static final String TYPE_UNFILTERED_PROGUARD_RULES = "android-consumer-proguard-rules";
     private static final String TYPE_FILTERED_PROGUARD_RULES = "android-filtered-proguard-rules";
     private static final String TYPE_AAPT_PROGUARD_RULES = "android-aapt-proguard-rules";
@@ -262,10 +260,6 @@ public class AndroidArtifacts {
          * #CLASSES_DIR} to {@link #CLASSES} to normalize the format.)
          */
         CLASSES_DIR(TYPE_CLASSES_DIR),
-
-        // classes.jar files from libraries that are not namespaced yet, and need to be rewritten to
-        // be namespace aware.
-        NON_NAMESPACED_CLASSES(TYPE_NON_NAMESPACED_CLASSES),
         SHARED_CLASSES(TYPE_SHARED_CLASSES),
         // Jar or processed jar, used for purposes such as computing the annotation processor
         // classpath or building the model.
@@ -284,8 +278,7 @@ public class AndroidArtifacts {
 
         // manifest is published to both to compare and detect provided-only library dependencies.
         MANIFEST(TYPE_MANIFEST),
-        // manifests that need to be auto-namespaced.
-        NON_NAMESPACED_MANIFEST(TYPE_NON_NAMESPACED_MANIFEST),
+
         MANIFEST_METADATA(TYPE_MANIFEST_METADATA),
 
         // Resources static library are API (where only explicit dependencies are included) and
@@ -299,7 +292,6 @@ public class AndroidArtifacts {
         RENDERSCRIPT(TYPE_RENDERSCRIPT),
         DATA_BINDING_ARTIFACT(TYPE_DATA_BINDING_ARTIFACT),
         DATA_BINDING_BASE_CLASS_LOG_ARTIFACT(TYPE_DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
-        COMPILE_ONLY_NAMESPACED_R_CLASS_JAR(TYPE_ANDROID_NAMESPACED_R_CLASS_JAR),
 
         // runtime and/or bundle elements
         JAVA_RES(TYPE_JAVA_RES),
@@ -315,7 +307,9 @@ public class AndroidArtifacts {
          * AndroidManifest.xml to the existing r.txt file.
          */
         SYMBOL_LIST_WITH_PACKAGE_NAME(TYPE_SYMBOL_WITH_PACKAGE_NAME),
-        DEFINED_ONLY_SYMBOL_LIST(TYPE_DEFINED_ONLY_SYMBOL),
+        /** Intermediate format of the preprocessed AAR for auto-namespacing */
+        MAYBE_NON_NAMESPACED_PROCESSED_AAR(TYPE_MAYBE_NOT_NAMESPACED_AAR),
+        PREPROCESSED_AAR_FOR_AUTO_NAMESPACE(TYPE_PREPROCESSED_AAR_FOR_AUTO_NAMESPACE),
         JNI(TYPE_JNI),
         SHARED_JNI(TYPE_SHARED_JNI),
 

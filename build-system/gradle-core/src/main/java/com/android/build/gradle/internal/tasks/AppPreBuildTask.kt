@@ -20,7 +20,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NON_NAMESPACED_MANIFEST
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import org.gradle.api.artifacts.ArtifactCollection
@@ -39,9 +38,7 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
 
     // list of Android only compile and runtime classpath.
     private lateinit var compileManifests: ArtifactCollection
-    private lateinit var compileNonNamespacedManifests: ArtifactCollection
     private lateinit var runtimeManifests: ArtifactCollection
-    private lateinit var runtimeNonNamespacedManifests: ArtifactCollection
 
     @get:OutputDirectory
     lateinit var fakeOutputDirectory: File
@@ -49,12 +46,12 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
 
     @get:Input
     val compileDependencies: Set<String> by lazy {
-        getAndroidDependencies(compileManifests, compileNonNamespacedManifests)
+        getAndroidDependencies(compileManifests)
     }
 
     @get:Input
     val runtimeDependencies: Set<String> by lazy {
-        getAndroidDependencies(runtimeManifests, runtimeNonNamespacedManifests)
+        getAndroidDependencies(runtimeManifests)
     }
 
     override fun doTaskAction() {
@@ -94,14 +91,8 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
 
             task.compileManifests =
                 creationConfig.variantDependencies.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST)
-            task.compileNonNamespacedManifests = creationConfig.variantDependencies.getArtifactCollection(
-                COMPILE_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST
-            )
             task.runtimeManifests =
                 creationConfig.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST)
-            task.runtimeNonNamespacedManifests = creationConfig.variantDependencies.getArtifactCollection(
-                RUNTIME_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST
-            )
 
             task.fakeOutputDirectory = File(
                 creationConfig.globalScope.intermediatesDir,
@@ -123,15 +114,8 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
     }
 }
 
-private fun getAndroidDependencies(
-    artifactView1: ArtifactCollection,
-    artifactView2: ArtifactCollection
-): Set<String> {
-    val set = mutableSetOf<String>()
-    set.addAll(artifactView1.artifacts.mapNotNull { it.toIdString() })
-    set.addAll(artifactView2.artifacts.mapNotNull { it.toIdString() })
-
-    return set.toSortedSet()
+private fun getAndroidDependencies(artifactView: ArtifactCollection): Set<String> {
+    return artifactView.artifacts.asSequence().mapNotNull { it.toIdString() }.toSortedSet()
 }
 
 private fun ResolvedArtifactResult.toIdString(): String? {

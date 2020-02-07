@@ -61,9 +61,6 @@ abstract class AarToClassTransform : TransformAction<AarToClassTransform.Params>
         /** If set, return the compile classpath, otherwise return the runtime classpath. */
         @get:Input
         val forCompileUse: Property<Boolean>
-
-        @get:Input
-        val autoNamespaceDependencies: Property<Boolean>
     }
 
     @get:InputArtifact
@@ -73,13 +70,6 @@ abstract class AarToClassTransform : TransformAction<AarToClassTransform.Params>
     override fun transform(transformOutputs: TransformOutputs) {
 
         ZipFile(inputAarFile.get().asFile).use { inputAar ->
-            if (parameters.autoNamespaceDependencies.get() &&
-                inputAar.getEntry(SdkConstants.FN_RESOURCE_STATIC_LIBRARY) == null
-            ) {
-                // Due to kotlin inlining, the implementations of the namespaced jars on the compile
-                // classpath as well as the runtime classpath need to be auto-namespaced.
-                return
-            }
             val useSuffix = if (parameters.forCompileUse.get()) "api" else "runtime"
             val outputFileName =
                 "${inputAarFile.get().asFile.nameWithoutExtension}-$useSuffix$DOT_JAR"

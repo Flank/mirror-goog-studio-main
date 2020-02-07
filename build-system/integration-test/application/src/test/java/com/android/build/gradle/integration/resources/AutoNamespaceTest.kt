@@ -28,9 +28,15 @@ import com.android.builder.model.AndroidProject
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 
+/**
+ * Sanity test for automatic namespacing of dependencies.
+ *
+ * Verifies that the AARs in the model appear namespaced and that the project builds.
+ */
 class AutoNamespaceTest {
     @get:Rule
     val project = GradleTestProject.builder()
@@ -38,7 +44,7 @@ class AutoNamespaceTest {
         .create()
 
     @Test
-    fun rewriteJavaBytecodeRClassesAndResources() {
+    fun checkNamespacedApp() {
 
         // Check model level 3
         val modelContainer =
@@ -48,77 +54,16 @@ class AutoNamespaceTest {
         val model = modelContainer.onlyModel
 
         val libraries = model.getDebugVariant().mainArtifact.dependencies.libraries
-        libraries.forEach { lib ->
-            // Not auto namespaced yet
-            assertThat(lib.resStaticLibrary).doesNotExist()
-        }
-
-        project.executor()
-            .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
-            .run(modelContainer.getDebugGenerateSourcesCommands())
-
+        assertThat(libraries).isNotEmpty()
         libraries.forEach { lib ->
             assertThat(lib.resStaticLibrary).exists()
         }
 
-        project.executor()
-            .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
-            .run("assembleDebug")
+        project.executor().run("assembleDebug")
 
-        // TODO(b/110879504): level 4
-
-        assertThat(
-                FileUtils.join(
-                        project.intermediatesDir,
-                        "namespaced_classes_jar",
-                        "debug",
-                        "namespaced-classes.jar"))
-            .exists()
-
-        assertThat(
-                FileUtils.join(
-                        project.intermediatesDir,
-                        "compile_only_namespaced_dependencies_r_jar",
-                        "debug",
-                        "namespaced-R.jar"))
-            .exists()
-
-        TestFileUtils.searchAndReplace(
-                FileUtils.join(project.mainSrcDir, "com", "example", "namespacedApp", "Test.java"),
-                "layout_constraintBaseline_creator",
-                "layout_constraintBaseline_toBaselineOf"
-        )
-
-        val result = project.executor()
-                .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
-                .run("assembleDebug")
-
-        TruthHelper.assertThat(result.getTask(":autoNamespaceDebugDependencies")).wasUpToDate();
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
-        // TODO(b/138780160): Re-introduce assertion when auto namespacing is converted to an artifact transform.
-        // assertThat(apk).containsClass("Landroid/support/constraint/Guideline;")
+        // Sanity check the final APK.
+        assertThat(apk).containsClass("Landroid/support/constraint/Guideline;")
         assertThat(apk).containsClass("Landroid/support/constraint/R\$attr;")
-    }
-
-    @Test
-    fun incorrectReferencesAreStillInvalid() {
-        TestFileUtils.searchRegexAndReplace(
-                FileUtils.join(project.mainSrcDir, "com", "example", "namespacedApp", "Test.java"),
-                "int resRef = .*;",
-                "int resRef = android.support.constraint.R.attr.invalid_reference;"
-        )
-
-        val result = project.executor()
-            .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
-            .expectFailure()
-            .run("assembleDebug")
-
-        result.stderr.use {
-            ScannerSubject.assertThat(it).contains("error: cannot find symbol")
-        }
-        result.stderr.use {
-            ScannerSubject.assertThat(it)
-                .contains("int resRef = android.support.constraint.R.attr.invalid_reference;")
-        }
     }
 }

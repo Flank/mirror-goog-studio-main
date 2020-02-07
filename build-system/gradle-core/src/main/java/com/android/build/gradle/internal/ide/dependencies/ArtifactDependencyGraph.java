@@ -264,8 +264,6 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                                     projectPath,
                                     artifact.getArtifactFile(),
                                     extractedFolder,
-                                    LibraryUtils.findResStaticLibrary(
-                                            componentProperties, artifact),
                                     artifact.getVariantName(),
                                     isProvided,
                                     false, /* dependencyItem.isSkipped() */

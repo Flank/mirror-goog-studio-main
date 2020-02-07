@@ -393,22 +393,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
         }
 
-        if (getAutoNamespacedManifests().isPresent()) {
-            // We do not have resolved artifact results here, we need to find the artifact name
-            // based on the file name.
-            File directory = getAutoNamespacedManifests().get().getAsFile();
-            Preconditions.checkState(
-                    directory.isDirectory(),
-                    "Auto namespaced manifests should be a directory.",
-                    directory);
-            for (File autoNamespacedManifest : Preconditions.checkNotNull(directory.listFiles())) {
-                providers.add(
-                        new CreationAction.ManifestProviderImpl(
-                                autoNamespacedManifest,
-                                getNameFromAutoNamespacedManifest(autoNamespacedManifest)));
-            }
-        }
-
         if (featureManifests != null) {
             providers.addAll(computeProviders(featureManifests.getArtifacts()));
         }
@@ -565,11 +549,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @Optional
     public abstract Property<String> getFeatureName();
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @Optional
-    public abstract DirectoryProperty getAutoNamespacedManifests();
-
     @Nested
     public abstract ListProperty<ApkData> getApkDataList();
 
@@ -679,20 +658,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     creationConfig
                             .getVariantDependencies()
                             .getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
-
-            // Also include rewritten auto-namespaced manifests if there are any
-            if (variantType
-                            .isBaseModule() // TODO(b/112251836): Auto namespacing for dynamic features.
-                    && globalScope.getExtension().getAaptOptions().getNamespaced()
-                    && globalScope
-                            .getProjectOptions()
-                            .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-                creationConfig
-                        .getArtifacts()
-                        .setTaskInputToFinalProduct(
-                                InternalArtifactType.NAMESPACED_MANIFESTS.INSTANCE,
-                                task.getAutoNamespacedManifests());
-            }
 
             // optional manifest files too.
             if (creationConfig.getTaskContainer().getMicroApkTask() != null

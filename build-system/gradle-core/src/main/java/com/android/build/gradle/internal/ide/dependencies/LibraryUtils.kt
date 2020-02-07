@@ -163,35 +163,6 @@ private fun instantiateLibrary(artifact: ResolvedArtifact): Library {
     return library
 }
 
-fun findResStaticLibrary(
-    componentProperties: ComponentPropertiesImpl, explodedAar: ResolvedArtifact
-): File? {
-    val file = findResStaticLibrary(explodedAar)
-    if (file != null) {
-        return file
-    }
-
-    if (componentProperties.globalScope.extension.aaptOptions.namespaced && componentProperties
-            .globalScope
-            .projectOptions
-            .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)
-    ) {
-        val artifacts = componentProperties.artifacts
-        val convertedDirectory =
-            artifacts.getFinalProduct(InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES)
-        if (convertedDirectory.isPresent) {
-            return File(
-                convertedDirectory.get().asFile,
-                getAutoNamespacedLibraryFileName(
-                    explodedAar.componentIdentifier
-                )
-            )
-        }
-    }
-    // Not auto-namespaced, nor present in the original artifact
-    return null
-}
-
 private fun findResStaticLibrary(explodedAar: ResolvedArtifact): File? {
     if (explodedAar.extractedFolder == null) {
         return null

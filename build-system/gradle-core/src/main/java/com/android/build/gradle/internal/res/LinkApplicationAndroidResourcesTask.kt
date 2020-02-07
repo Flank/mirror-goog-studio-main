@@ -88,7 +88,6 @@ import org.gradle.tooling.BuildException
 import java.io.File
 import java.io.IOException
 import java.io.Serializable
-import java.nio.file.Files
 import java.util.ArrayList
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -210,11 +209,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
     @get:Input
     abstract val applicationId: Property<String>
-
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.NONE)
-    @get:Optional
-    abstract val convertedLibraryDependencies: DirectoryProperty
 
     @get:InputFiles
     @get:Optional
@@ -609,8 +603,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.configure(task)
 
-            val projectOptions = creationConfig.globalScope.projectOptions
-
             val dependencies = ArrayList<FileCollection>(2)
             dependencies.add(
                 creationConfig.globalScope.project.files(
@@ -624,14 +616,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY
                 )
             )
-            if (creationConfig.globalScope.extension.aaptOptions.namespaced && projectOptions.get(
-                    BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES
-                )
-            ) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
-                    task.convertedLibraryDependencies)
-            }
 
             task.dependenciesFileCollection =
                 creationConfig.globalScope.project.files(dependencies)
@@ -759,13 +743,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         .addResourceDirectories(params.compiledDependenciesResourcesDirs)
 
                     if (params.isNamespaced) {
-                        val packagedDependencies = ImmutableList.builder<File>()
-                        packagedDependencies.addAll(params.dependencies)
-                        if (params.convertedLibraryDependenciesFile != null) {
-                            Files.list(params.convertedLibraryDependenciesFile.toPath()).map { it.toFile() }
-                                .forEach { packagedDependencies.add(it) }
-                        }
-                        configBuilder.setStaticLibraryDependencies(packagedDependencies.build())
+                        configBuilder.setStaticLibraryDependencies(ImmutableList.copyOf(params.dependencies))
                     } else {
                         if (params.generateCode) {
                             configBuilder.setLibrarySymbolTableFiles(params.dependencies)
@@ -860,7 +838,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val incrementalFolder: File = task.incrementalFolder!!
         val androidJarPath: String =
             task.androidJar.get().absolutePath
-        val convertedLibraryDependenciesFile= task.convertedLibraryDependencies.orNull?.asFile
         val inputResourcesDir: File? = task.inputResourcesDir.orNull?.asFile
         val mergeBlameFolder: File = task.mergeBlameLogFolder
         val isLibrary: Boolean = task.isLibrary

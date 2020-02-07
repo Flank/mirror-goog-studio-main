@@ -18,18 +18,16 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
+import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.options.SyncOptions
-import org.gradle.api.Project
-import org.gradle.api.artifacts.transform.TransformParameters
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 
+/** Parameters common to auto-namespacing transforms */
 interface AutoNamespaceParameters: GenericTransformParameters {
     @get:Input
     val aapt2Version: Property<String>
@@ -39,4 +37,12 @@ interface AutoNamespaceParameters: GenericTransformParameters {
     val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
     @get:Internal
     val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
+}
+/** Initialize the auto namespacing parameters */
+fun AutoNamespaceParameters.init(globalScope: GlobalScope) {
+    val (file, version) = getAapt2FromMavenAndVersion(globalScope)
+    aapt2FromMaven.from(file)
+    aapt2Version.set(version)
+    errorFormatMode.set(SyncOptions.getErrorFormatMode(globalScope.projectOptions))
+    aapt2DaemonBuildService.set(getAapt2DaemonBuildService(globalScope.project))
 }

@@ -62,11 +62,6 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val inputResourcesDirectories: ListProperty<Directory>
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.NONE)
-    @get:Optional
-    abstract val convertedLibraryDependencies: DirectoryProperty
-
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional abstract val tested: RegularFileProperty
 
@@ -97,9 +92,6 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
         val imports = ImmutableList.builder<File>()
         // Link against library dependencies
         imports.addAll(libraryDependencies.files)
-        convertedLibraryDependencies.let {
-            it.get().asFile.listFiles().forEach { imports.add(it) }
-        }
         imports.addAll(sharedLibraryDependencies.files)
 
         val request = AaptPackageConfig(
@@ -168,9 +160,6 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
-            creationConfig.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
-                task.convertedLibraryDependencies)
             task.sharedLibraryDependencies =
                     creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,

@@ -48,8 +48,6 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // module: InternalArtifactType<RegularFile>(FILE), Replaceable use AnchorOutputType.ALL_CLASSES
     // Javac task output.
     object JAVAC: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    // Rewritten classes from non-namespaced dependencies put together into one JAR.
-    object NAMESPACED_CLASSES_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Classes with recalculated stack frames information (RecalculateStackFrames task)
     object FIXED_STACK_FRAMES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
@@ -168,8 +166,6 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object RUNTIME_SYMBOL_LIST: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Synthetic artifacts
     object SYMBOL_LIST_WITH_PACKAGE_NAME: InternalArtifactType<RegularFile>(FILE), Replaceable
-    // Resources defined within the AAR.
-    object DEFINED_ONLY_SYMBOL_LIST: InternalArtifactType<RegularFile>(FILE), Replaceable
     //Resources defined within the current module.
     object LOCAL_ONLY_SYMBOL_LIST: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Partial R.txt directory
@@ -198,14 +194,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // --- Namespaced android res ---
     // An AAPT2 static library: InternalArtifactType<RegularFile>(FILE), Replaceable containing only the current sub-project's resources.
     object RES_STATIC_LIBRARY: InternalArtifactType<RegularFile>(FILE), Replaceable
-    // A directory of AAPT2 static libraries generated from all non-namepaced remote dependencies.
-    object RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    // Compiled R class jar (for compilation only: InternalArtifactType<RegularFile>(FILE), Replaceable packaged in AAR)
+    // Compiled R class jar (for compilation only)
     object COMPILE_ONLY_NAMESPACED_R_CLASS_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
-    // JAR file containing all of the auto-namespaced classes from dependencies.
-    object COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
-    // Classes JAR files from dependencies that need to be auto-namespaced.
-    object NON_NAMESPACED_CLASSES: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Final R class sources (to package)
     object RUNTIME_R_CLASS_SOURCES: InternalArtifactType<Directory>(DIRECTORY, Category.GENERATED)
     // Final R class classes (for packaging)
@@ -253,8 +243,6 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Same as above: InternalArtifactType<RegularFile>(FILE), Replaceable but the resource references have stripped namespaces.
     object NON_NAMESPACED_LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
-    // A directory of AAR manifests that have been auto-namespaced and are fully resource namespace aware.
-    object NAMESPACED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object AAPT_FRIENDLY_MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object INSTANT_APP_MANIFEST: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object MANIFEST_METADATA: InternalArtifactType<Directory>(DIRECTORY), Replaceable

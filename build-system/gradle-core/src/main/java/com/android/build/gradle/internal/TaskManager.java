@@ -1502,22 +1502,6 @@ public abstract class TaskManager<
                         .addScope(Scope.PROJECT)
                         .setFileCollection(variantData.getAllPostJavacGeneratedBytecode())
                         .build());
-
-        if (componentProperties.getGlobalScope().getExtension().getAaptOptions().getNamespaced()
-                && projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-            // This might be consumed by RecalculateFixedStackFrames if that's created
-            transformManager.addStream(
-                    OriginalStream.builder(project, "auto-namespaced-dependencies-classes")
-                            .addContentTypes(DefaultContentType.CLASSES)
-                            .addScope(Scope.EXTERNAL_LIBRARIES)
-                            .setFileCollection(
-                                    artifacts
-                                            .getFinalProductAsFileCollection(
-                                                    InternalArtifactType.NAMESPACED_CLASSES_JAR
-                                                            .INSTANCE)
-                                            .get())
-                            .build());
-        }
     }
 
     /** Makes the given task the one used by top-level "compile" task. */

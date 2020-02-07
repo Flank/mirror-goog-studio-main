@@ -97,14 +97,6 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
                     AndroidArtifacts.ArtifactScope.EXTERNAL,
                     AndroidArtifacts.ArtifactType.CLASSES_JAR))
 
-            if (globalScope.extension.aaptOptions.namespaced
-                && globalScope.projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]) {
-                classesToFix.from(
-                    creationConfig
-                        .artifacts
-                        .getFinalProduct(InternalArtifactType.NAMESPACED_CLASSES_JAR))
-            }
-
             val referencedClasses =
                 globalScope.project.files(creationConfig.variantScope.providedOnlyClasspath)
 

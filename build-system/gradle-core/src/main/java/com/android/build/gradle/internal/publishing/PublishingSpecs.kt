@@ -41,7 +41,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_SYMB
 import com.android.build.gradle.internal.scope.InternalArtifactType.CONSUMER_PROGUARD_DIR
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
-import com.android.build.gradle.internal.scope.InternalArtifactType.DEFINED_ONLY_SYMBOL_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES
 import com.android.build.gradle.internal.scope.InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES
 import com.android.build.gradle.internal.scope.InternalArtifactType.DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES
@@ -132,6 +131,7 @@ class PublishingSpecs {
                 output(JAVA_RES, ArtifactType.JAVA_RES)
                 api(APK_MAPPING, ArtifactType.APK_MAPPING)
 
+                api(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
 
                 // FIXME: need data binding artifacts as well for Dynamic apps.
@@ -164,6 +164,7 @@ class PublishingSpecs {
                 output(JAVA_RES, ArtifactType.JAVA_RES)
                 api(APK_MAPPING, ArtifactType.APK_MAPPING)
 
+                api(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
 
                 // FIXME: need data binding artifacts as well for Dynamic apps.
@@ -199,8 +200,6 @@ class PublishingSpecs {
             variantSpec(VariantTypeImpl.LIBRARY) {
                 publish(InternalArtifactType.AAR, ArtifactType.AAR)
 
-                api(COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
-                        ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
                 api(AIDL_PARCELABLE, ArtifactType.AIDL)
                 api(RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT)
                 api(COMPILE_LIBRARY_CLASSES_JAR, ArtifactType.CLASSES_JAR)
@@ -223,7 +222,6 @@ class PublishingSpecs {
                 runtime(PACKAGED_RES, ArtifactType.ANDROID_RES)
                 runtime(PUBLIC_RES, ArtifactType.PUBLIC_RES)
                 runtime(COMPILE_SYMBOL_LIST, ArtifactType.COMPILE_SYMBOL_LIST)
-                runtime(DEFINED_ONLY_SYMBOL_LIST, ArtifactType.DEFINED_ONLY_SYMBOL_LIST)
                 runtime(LIBRARY_JAVA_RES, ArtifactType.JAVA_RES)
                 runtime(CONSUMER_PROGUARD_DIR, ArtifactType.UNFILTERED_PROGUARD_RULES)
                 runtime(LIBRARY_JNI, ArtifactType.JNI)

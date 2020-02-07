@@ -16,12 +16,8 @@
 
 package com.android.build.gradle.internal.feature
 
-import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.packaging.JarCreatorType
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -69,12 +65,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
 
     @get:Classpath
     @get:Optional
-    abstract val thisRClassClasses: RegularFileProperty
-
-    @get:Classpath
-    @get:Optional
-    var dependencyRClassClasses: FileCollection? = null
-        private set
+    abstract val rClassesJar: RegularFileProperty
 
     @get:Input
     lateinit var modulePath: String
@@ -102,12 +93,6 @@ abstract class BundleAllClasses : NonIncrementalTask() {
         javacClasses.get().asFileTree.visit(collector)
         preJavacClasses.asFileTree.visit(collector)
         postJavacClasses.asFileTree.visit(collector)
-        thisRClassClasses.orNull?.asFile?.let {
-            check(
-                it.isFile && it.extension == SdkConstants.EXT_JAR
-            ) { "thisRClassClasses must be a Jar file." }
-            collector.addFile(it.name, it)
-        }
 
         getWorkerFacadeWithWorkers().use {
             it.submit(
@@ -116,7 +101,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                 JarWorkerRunnable::class.java, JarRequest(
                     toFile = outputJar.get().asFile,
                     jarCreatorType = jarCreatorType,
-                    fromJars = dependencyRClassClasses?.files?.toList() ?: listOf(),
+                    fromJars = listOfNotNull(rClassesJar.orNull?.asFile),
                     fromFiles = files,
                     compressionLevel = Deflater.NO_COMPRESSION
                 )
@@ -158,27 +143,15 @@ abstract class BundleAllClasses : NonIncrementalTask() {
             if (globalScope.extension.aaptOptions.namespaced) {
                 creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
-                    task.thisRClassClasses
-                )
-                task.dependencyRClassClasses = creationConfig.variantDependencies.getArtifactFileCollection(
-                    AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                    ALL,
-                    COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
+                    task.rClassesJar
                 )
             } else if (!globalScope.projectOptions.get(BooleanOption.GENERATE_R_JAVA)) {
-                // This is actually thisRClassClasses and dependencyRClassClasses altogether. But
-                // thisRClassClasses expects *.class files as an input while this is *.jar. Thus,
-                // put it to dependencyRClassClasses and it will be processed properly.
-                task.dependencyRClassClasses =
-                    creationConfig
-                        .artifacts
-                        .getFinalProductAsFileCollection(
-                            InternalArtifactType
-                                .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-                        ).get()
-
-
+                creationConfig.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
+                    task.rClassesJar
+                )
             }
+            task.rClassesJar.disallowChanges()
         }
     }
 }

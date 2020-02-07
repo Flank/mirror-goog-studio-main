@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
 import com.android.build.gradle.internal.dependency.JetifyTransform
-import com.android.build.gradle.internal.dependency.LibraryDefinedSymbolTableTransform
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform
 import com.android.build.gradle.internal.dependency.MockableJarTransform
 import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule.Companion.setUp
@@ -50,6 +49,9 @@ import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
+import com.android.build.gradle.internal.res.namespaced.AutoNamespacePreProcessTransform
+import com.android.build.gradle.internal.res.namespaced.AutoNamespaceTransform
+import com.android.build.gradle.internal.res.namespaced.init
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
@@ -114,6 +116,14 @@ class DependencyConfigurator(
         val jetifierBlackList = Strings.nullToEmpty(
             globalScope.projectOptions[StringOption.JETIFIER_BLACKLIST]
         )
+        val autoNamespaceDependencies =
+            globalScope.extension.aaptOptions.namespaced &&
+                    globalScope.projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]
+        val jetifiedAarOutputType = if (autoNamespaceDependencies) {
+            AndroidArtifacts.ArtifactType.MAYBE_NON_NAMESPACED_PROCESSED_AAR
+        } else {
+            AndroidArtifacts.ArtifactType.PROCESSED_AAR
+        }
         if (globalScope.projectOptions[BooleanOption.ENABLE_JETIFIER]) {
             dependencies.registerTransform(
                 JetifyTransform::class.java
@@ -127,7 +137,7 @@ class DependencyConfigurator(
                 )
                 spec.to.attribute(
                     ArtifactAttributes.ARTIFACT_FORMAT,
-                    AndroidArtifacts.ArtifactType.PROCESSED_AAR.type
+                    jetifiedAarOutputType.type
                 )
             }
             dependencies.registerTransform(
@@ -156,7 +166,7 @@ class DependencyConfigurator(
                 )
                 spec.to.attribute(
                     ArtifactAttributes.ARTIFACT_FORMAT,
-                    AndroidArtifacts.ArtifactType.PROCESSED_AAR.type
+                    jetifiedAarOutputType.type
                 )
             }
             dependencies.registerTransform(
@@ -249,10 +259,7 @@ class DependencyConfigurator(
         }
         val sharedLibSupport = globalScope
             .projectOptions[BooleanOption.CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES]
-        val autoNamespaceDependencies =
-            (globalScope.extension.aaptOptions.namespaced
-                    && globalScope
-                .projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES])
+
         for (transformTarget in AarTransform.getTransformTargets()) {
             dependencies.registerTransform(
                 AarTransform::class.java
@@ -260,9 +267,6 @@ class DependencyConfigurator(
                 spec.parameters.projectName.set(projectName)
                 spec.parameters.targetType.set(transformTarget)
                 spec.parameters.sharedLibSupport.set(sharedLibSupport)
-                spec.parameters
-                    .autoNamespaceDependencies
-                    .set(autoNamespaceDependencies)
                 spec.from.attribute(
                     ArtifactAttributes.ARTIFACT_FORMAT,
                     AndroidArtifacts.ArtifactType.EXPLODED_AAR.type
@@ -329,8 +333,6 @@ class DependencyConfigurator(
             )
             reg.parameters { params: AarToClassTransform.Params ->
                 params.forCompileUse.set(true)
-                params.autoNamespaceDependencies
-                    .set(autoNamespaceDependencies)
                 params.generateRClassJar
                     .set(
                         globalScope.projectOptions.get(
@@ -363,8 +365,7 @@ class DependencyConfigurator(
             )
             reg.parameters { params: AarToClassTransform.Params ->
                 params.forCompileUse.set(false)
-                params.autoNamespaceDependencies
-                    .set(autoNamespaceDependencies)
+
                 params.generateRClassJar.set(false)
             }
         }
@@ -399,20 +400,41 @@ class DependencyConfigurator(
                 )
         }
         if (autoNamespaceDependencies) {
-            dependencies.registerTransform(
-                LibraryDefinedSymbolTableTransform::class.java
-            ) { spec: TransformSpec<GenericTransformParameters> ->
-                spec.parameters.projectName.set(projectName)
+            dependencies.registerTransform(AutoNamespacePreProcessTransform::class.java) { spec ->
                 spec.from.attribute(
                     ArtifactAttributes.ARTIFACT_FORMAT,
-                    AndroidArtifacts.ArtifactType.EXPLODED_AAR.type
+                    AndroidArtifacts.ArtifactType.MAYBE_NON_NAMESPACED_PROCESSED_AAR.type
                 )
-                spec.to
-                    .attribute(
+                spec.to.attribute(
                         ArtifactAttributes.ARTIFACT_FORMAT,
-                        AndroidArtifacts.ArtifactType.DEFINED_ONLY_SYMBOL_LIST.type
-                    )
+                        AndroidArtifacts.ArtifactType.PREPROCESSED_AAR_FOR_AUTO_NAMESPACE.type
+                )
+                spec.parameters.init(globalScope)
             }
+            dependencies.registerTransform(AutoNamespacePreProcessTransform::class.java) { spec ->
+                spec.from.attribute(
+                    ArtifactAttributes.ARTIFACT_FORMAT,
+                    AndroidArtifacts.ArtifactType.JAR.type
+                )
+                spec.to.attribute(
+                    ArtifactAttributes.ARTIFACT_FORMAT,
+                    AndroidArtifacts.ArtifactType.PREPROCESSED_AAR_FOR_AUTO_NAMESPACE.type
+                )
+                spec.parameters.init(globalScope)
+            }
+
+            dependencies.registerTransform(AutoNamespaceTransform::class.java) { spec ->
+                spec.from.attribute(
+                    ArtifactAttributes.ARTIFACT_FORMAT,
+                    AndroidArtifacts.ArtifactType.PREPROCESSED_AAR_FOR_AUTO_NAMESPACE.type
+                )
+                spec.to.attribute(
+                    ArtifactAttributes.ARTIFACT_FORMAT,
+                    AndroidArtifacts.ArtifactType.PROCESSED_AAR.type
+                )
+                spec.parameters.init(globalScope)
+            }
+
         }
         // Transform to go from external jars to CLASSES and JAVA_RES artifacts. This returns the
         // same exact file but with different types, since a jar file can contain both.

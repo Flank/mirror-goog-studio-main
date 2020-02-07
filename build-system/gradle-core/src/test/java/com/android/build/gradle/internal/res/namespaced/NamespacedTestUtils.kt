@@ -30,19 +30,6 @@ import java.io.File
 import javax.tools.ToolProvider
 
 /**
- * Creates a mock [ResolvedDependencyResult] with the given ID and immediate children.
- */
-fun createDependency(
-    id: String,
-    children: MutableSet<DependencyResult> = ImmutableSet.of()
-): ResolvedDependencyResult = FakeResolvedDependencyResult(
-    selected = FakeResolvedComponentResult(
-        id = FakeComponentIdentifier(id),
-        dependencies = children
-    )
-)
-
-/**
  * Compiles given Java sources and outputs them into the given java output directory.
  */
 fun compileSources(sources: ImmutableList<File>, javacOutput: File) {

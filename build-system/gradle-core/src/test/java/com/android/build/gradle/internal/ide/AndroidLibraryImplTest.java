@@ -41,7 +41,6 @@ public class AndroidLibraryImplTest {
                                 "",
                                 tmpFolder.newFolder("bundle"),
                                 tmpFolder.newFolder("folder"),
-                                tmpFolder.newFolder("resourceStaticLibrary"),
                                 null,
                                 false,
                                 false,

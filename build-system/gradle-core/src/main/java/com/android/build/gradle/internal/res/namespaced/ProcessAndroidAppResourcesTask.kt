@@ -71,11 +71,6 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val thisSubProjectStaticLibrary: RegularFileProperty
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.NONE)
-    @get:Optional
-    abstract val convertedLibraryDependencies: DirectoryProperty
-
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
 
     @get:Input
@@ -102,13 +97,8 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
 
     override fun doTaskAction() {
         val staticLibraries = ImmutableList.builder<File>()
-        staticLibraries.addAll(libraryDependencies.files)
-        if (convertedLibraryDependencies.isPresent) {
-            Files.list(convertedLibraryDependencies.get().asFile.toPath()).use { convertedLibraries ->
-                convertedLibraries.forEach { staticLibraries.add(it.toFile()) }
-            }
-        }
         staticLibraries.add(thisSubProjectStaticLibrary.get().asFile)
+        staticLibraries.addAll(libraryDependencies.files)
         val manifestFile = if (aaptFriendlyManifestFileDirectory.isPresent())
             (File(aaptFriendlyManifestFileDirectory.get().asFile, SdkConstants.ANDROID_MANIFEST_XML))
         else (File(manifestFileDirectory.get().asFile, SdkConstants.ANDROID_MANIFEST_XML))
@@ -183,12 +173,6 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
-            if (creationConfig.globalScope.extension.aaptOptions.namespaced &&
-                creationConfig.globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
-                    task.convertedLibraryDependencies)
-            }
             task.sharedLibraryDependencies =
                     creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
