@@ -128,6 +128,8 @@ public class Tokenizer {
                     token = new TokenizerToken(this, Kind.PERCENT);
                 } else if (c == ':') {
                     token = new TokenizerToken(this, Kind.COLON);
+                } else if (c == '.') {
+                    token = new TokenizerToken(this, Kind.DOT);
                 } else {
                     throw new RuntimeException("Unexpected token: " + c);
                 }

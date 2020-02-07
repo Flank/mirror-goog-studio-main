@@ -28,19 +28,21 @@ import java.util.stream.Collectors;
  * A function call expression.
  */
 public class CallExpression extends Expression {
+    private final Expression receiver;
     private final Token token;
     private final List<Argument> arguments;
     private boolean singleLine;
 
-    public CallExpression(Token ident, List<Argument> arguments, Token end) {
+    public CallExpression(Expression receiver, Token ident, List<Argument> arguments, Token end) {
         super(ident, end);
+        this.receiver = receiver;
         this.token = ident;
         this.arguments = arguments;
     }
 
     /** Returns an expression to load {@code symbol} from {@code label}. */
     public static CallExpression load(String label, String symbol) {
-        CallExpression callExpression = new CallExpression(Token.ident("load"),
+        CallExpression callExpression = new CallExpression(null, Token.ident("load"),
             ImmutableList.of(Argument.string(label), Argument.string(symbol)), Token.NONE);
         callExpression.setSingleLine(true);
         return callExpression;
@@ -53,6 +55,10 @@ public class CallExpression extends Expression {
         }
         if (!preComments.isEmpty()) {
             writer.append(indent);
+        }
+        if (receiver != null) {
+            receiver.write(indent, writer);
+            writer.append(".");
         }
         writer.append(token.value()).append("(");
         if (!singleLine) {
@@ -94,6 +100,9 @@ public class CallExpression extends Expression {
     @Override
     public void preOrder(List<Node> nodes) {
         nodes.add(this);
+        if (receiver != null) {
+            receiver.preOrder(nodes);
+        }
         for (Argument argument : arguments) {
             argument.preOrder(nodes);
         }
@@ -101,6 +110,9 @@ public class CallExpression extends Expression {
 
     @Override
     public void postOrder(List<Node> nodes) {
+        if (receiver != null) {
+            receiver.postOrder(nodes);
+        }
         for (Argument argument : arguments) {
             argument.postOrder(nodes);
         }
@@ -138,7 +150,7 @@ public class CallExpression extends Expression {
             }
             list.add(new Argument(Token.ident(entry.getKey()), expression));
         }
-        return new CallExpression(Token.ident(ident), list, Token.NONE);
+        return new CallExpression(null, Token.ident(ident), list, Token.NONE);
     }
 
     public final void setArgument(String name, Collection<?> values) {

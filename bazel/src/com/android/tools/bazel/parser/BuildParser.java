@@ -150,7 +150,7 @@ public class BuildParser {
                 int startLine = token.getLine();
                 boolean firstInLine = !peek(Kind.NEWLINE);
                 List<Argument> args = parseFunctionArgs();
-                CallExpression call = new CallExpression(ident, args, token);
+                CallExpression call = new CallExpression(null, ident, args, token);
                 int endLine = consume(Kind.RPAREN).getLine();
                 call.setSingleLine(startLine == endLine || (args.size() <= 1 && firstInLine));
                 statement = new CallStatement(call);
@@ -208,6 +208,7 @@ public class BuildParser {
      *      PRIMARY
      *      PRIMARY * EXPRESSION
      *      PRIMARY % EXPRESSION
+     *      PRIMARY . IDENT FUNCTION_ARGS
      */
     private Expression parseExpression() {
         while (token.kind == Kind.NEWLINE) consume();
@@ -220,6 +221,17 @@ public class BuildParser {
                 consume();
                 expression = new BinaryExpression(expression, op, parseExpression());
                 break;
+            case DOT:
+                consume();
+                TokenizerToken ident = consume(Kind.IDENT);
+                boolean firstInLine = !peek(Kind.NEWLINE);
+                int startLine = token.getLine();
+                List<Argument> arguments = parseFunctionArgs();
+                CallExpression call = new CallExpression(expression, ident, arguments, token);
+                int endLine = consume(Kind.RPAREN).getLine();
+                call.setSingleLine(startLine == endLine || (arguments.size() <= 1 && firstInLine));
+                expression = call;
+                break;
             default:
                 // Do nothing
         }
@@ -228,7 +240,7 @@ public class BuildParser {
     }
 
     /**
-     *  primary ::=
+     *  PRIMARY ::=
      *      NUMBER
      *      STRING
      *      IDENT
@@ -254,7 +266,7 @@ public class BuildParser {
                     boolean firstInLine = !peek(Kind.NEWLINE);
                     int startLine = token.getLine();
                     List<Argument> arguments = parseFunctionArgs();
-                    CallExpression call = new CallExpression(ident, arguments, token);
+                    CallExpression call = new CallExpression(null, ident, arguments, token);
                     int endLine = consume(Kind.RPAREN).getLine();
                     call.setSingleLine(startLine == endLine || (arguments.size() <= 1 && firstInLine));
                     expression = call;
