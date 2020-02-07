@@ -52,7 +52,6 @@ class DetectRootViewChange extends AsyncTask<Void, Void, Void> {
     protected Void doInBackground(Void... arg0) {
         while (!myQuit) {
             try {
-                Thread.sleep(ONE_SECOND);
                 List<View> newRoots = myService.getRootViews();
                 if (!newRoots.equals(myRoots)) {
                     List<View> newlyAdded = new ArrayList<>(newRoots);
@@ -66,6 +65,7 @@ class DetectRootViewChange extends AsyncTask<Void, Void, Void> {
                     }
                     myRoots = newRoots;
                 }
+                Thread.sleep(ONE_SECOND);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
