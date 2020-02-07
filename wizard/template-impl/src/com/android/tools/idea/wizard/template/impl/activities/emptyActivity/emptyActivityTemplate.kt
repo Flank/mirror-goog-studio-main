@@ -87,6 +87,11 @@ val emptyActivityTemplate get() = template {
     default = "com.mycompany.myapp"
     suggest = { packageName }
   }
+  val cppSupport: BooleanParameter = booleanParameter {
+    name = "C++ support"
+    visible = { false }
+    default = false
+  }
 
   widgets(
     TextFieldWidget(activityClass),
@@ -94,7 +99,8 @@ val emptyActivityTemplate get() = template {
     TextFieldWidget(layoutName),
     CheckBoxWidget(isLauncher),
     PackageNameWidget(packageName),
-    LanguageWidget()
+    LanguageWidget(),
+    CheckBoxWidget(cppSupport)
   )
 
   thumb {
@@ -103,7 +109,7 @@ val emptyActivityTemplate get() = template {
 
   recipe = { data ->
     generateEmptyActivity(
-      data as ModuleTemplateData, activityClass.value, generateLayout.value, layoutName.value, isLauncher.value, packageName.value
+      data as ModuleTemplateData, activityClass.value, generateLayout.value, layoutName.value, isLauncher.value, packageName.value, cppSupport.value
     )
   }
 }
