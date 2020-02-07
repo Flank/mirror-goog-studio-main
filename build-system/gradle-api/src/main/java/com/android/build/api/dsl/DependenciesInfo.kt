@@ -24,5 +24,8 @@ interface DependenciesInfo {
 
   /** If false, information about SDK dependencies of an APK will not be added to its signature
    * block. */
-  var include: Boolean
+  var includeInApk: Boolean
+
+  /** If false, information about SDK dependencies of an App Bundle will not be added to it. */
+  var includeInBundle: Boolean
 }
