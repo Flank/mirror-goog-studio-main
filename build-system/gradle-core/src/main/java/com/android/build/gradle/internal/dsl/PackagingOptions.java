@@ -139,7 +139,9 @@ import org.gradle.api.tasks.Input;
  * }
  * </pre>
  */
-public class PackagingOptions implements com.android.builder.model.PackagingOptions {
+public class PackagingOptions
+        implements com.android.builder.model.PackagingOptions,
+                com.android.build.api.dsl.PackagingOptions {
 
     @Inject
     public PackagingOptions() {
@@ -204,9 +206,6 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
     private Set<String> merges = Sets.newHashSet();
     private Set<String> doNotStrip = Sets.newHashSet();
 
-    /**
-     * Returns the list of excluded paths.
-     */
     @Override
     @NonNull
     @Input
@@ -214,23 +213,16 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
         return Sets.newHashSet(excludes);
     }
 
-    public void setExcludes(Set<String> excludes) {
+    @Override
+    public void setExcludes(@NonNull Set<String> excludes) {
         this.excludes = Sets.newHashSet(excludes);
     }
 
-    /**
-     * Adds an excluded pattern.
-     *
-     * @param pattern the pattern
-     */
-    public void exclude(String pattern) {
+    @Override
+    public void exclude(@NonNull String pattern) {
         excludes.add(pattern);
     }
 
-    /**
-     * Returns the list of patterns where the first occurrence is packaged in the APK. First pick
-     * patterns do get packaged in the APK, but only the first occurrence found gets packaged.
-     */
     @Override
     @NonNull
     @Input
@@ -238,22 +230,16 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
         return Sets.newHashSet(pickFirsts);
     }
 
-    /**
-     * Adds a first-pick pattern.
-     *
-     * @param pattern the path to add.
-     */
-    public void pickFirst(String pattern) {
+    @Override
+    public void pickFirst(@NonNull String pattern) {
         pickFirsts.add(pattern);
     }
 
-    public void setPickFirsts(Set<String> pickFirsts) {
+    @Override
+    public void setPickFirsts(@NonNull Set<String> pickFirsts) {
         this.pickFirsts = Sets.newHashSet(pickFirsts);
     }
 
-    /**
-     * Returns the list of patterns where all occurrences are concatenated and packaged in the APK.
-     */
     @Override
     @NonNull
     @Input
@@ -261,25 +247,16 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
         return Sets.newHashSet(merges);
     }
 
-    public void setMerges(Set<String> merges) {
+    @Override
+    public void setMerges(@NonNull Set<String> merges) {
         this.merges = Sets.newHashSet(merges);
     }
 
-    /**
-     * Adds a merge pattern.
-     *
-     * @param pattern the pattern, as packaged in the APK
-     */
-    public void merge(String pattern) {
+    @Override
+    public void merge(@NonNull String pattern) {
         merges.add(pattern);
     }
 
-
-    /**
-     * Returns the list of patterns for native library that should not be stripped of debug symbols.
-     *
-     * <p>Example: <code>packagingOptions.doNotStrip "&#42;/armeabi-v7a/libhello-jni.so"</code>
-     */
     @Override
     @NonNull
     @Input
@@ -287,18 +264,13 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
         return Sets.newHashSet(doNotStrip);
     }
 
-    @SuppressWarnings("unused") // Exposed in DSL.
-    public void setDoNotStrip(Set<String> doNotStrip) {
+    @Override
+    public void setDoNotStrip(@NonNull Set<String> doNotStrip) {
         this.doNotStrip = Sets.newHashSet(doNotStrip);
     }
 
-    /**
-     * Adds a doNotStrip pattern.
-     *
-     * @param pattern the pattern, as packaged in the APK
-     */
-    @SuppressWarnings("unused") // Exposed in DSL.
-    public void doNotStrip(String pattern) {
+    @Override
+    public void doNotStrip(@NonNull String pattern) {
         doNotStrip.add(pattern);
     }
 }
