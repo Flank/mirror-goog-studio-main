@@ -59,6 +59,7 @@ abstract class CommonExtensionImpl<
         JacocoOptions,
         LintOptions,
         NdkBuildOptions,
+        PackagingOptions,
         ProductFlavorT,
         SigningConfigT,
         Splits,
@@ -146,6 +147,13 @@ abstract class CommonExtensionImpl<
 
     override fun lintOptions(action: LintOptions.() -> Unit) {
         action.invoke(lintOptions)
+    }
+
+    override val packagingOptions: PackagingOptions =
+        dslServices.newInstance(PackagingOptions::class.java)
+
+    override fun packagingOptions(action: PackagingOptions.() -> Unit) {
+        action.invoke(packagingOptions)
     }
 
     override fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>) {

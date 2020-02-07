@@ -115,8 +115,6 @@ abstract class BaseExtension protected constructor(
 
     override val dexOptions: DexOptions =
         dslServices.newInstance(DexOptions::class.java, dslServices.deprecationReporter)
-    override val packagingOptions: PackagingOptions =
-        dslServices.newInstance(PackagingOptions::class.java)
 
     private val deviceProviderList: MutableList<DeviceProvider> = Lists.newArrayList()
     private val testServerList: MutableList<TestServer> = Lists.newArrayList()
@@ -383,12 +381,6 @@ abstract class BaseExtension protected constructor(
         action.execute(compileOptions)
     }
 
-    /**
-     * Specifies options and rules that determine which files the Android plugin packages into your
-     * APK.
-     *
-     * For more information about the properties you can configure in this block, see [PackagingOptions].
-     */
     fun packagingOptions(action: Action<PackagingOptions>) {
         checkWritability()
         action.execute(packagingOptions)
@@ -640,6 +632,8 @@ abstract class BaseExtension protected constructor(
     abstract override val jacoco: JacocoOptions
 
     abstract override val lintOptions: LintOptions
+
+    abstract override val packagingOptions: PackagingOptions
 
     abstract override val productFlavors: NamedDomainObjectContainer<ProductFlavor>
     abstract fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavor>>)

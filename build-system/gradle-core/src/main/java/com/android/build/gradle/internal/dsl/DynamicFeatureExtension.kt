@@ -58,6 +58,7 @@ internal open class DynamicFeatureExtension(
         JacocoOptions,
         LintOptions,
         NdkBuildOptions,
+        PackagingOptions,
         ProductFlavor,
         SigningConfig,
         Splits,

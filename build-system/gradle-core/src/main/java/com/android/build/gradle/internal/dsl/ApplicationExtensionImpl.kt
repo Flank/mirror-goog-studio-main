@@ -65,6 +65,7 @@ class ApplicationExtensionImpl(
             JacocoOptions,
             LintOptions,
             NdkBuildOptions,
+            PackagingOptions,
             ProductFlavor,
             SigningConfig,
             Splits,

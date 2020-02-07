@@ -63,6 +63,7 @@ class LibraryExtensionImpl(
             JacocoOptions,
             LintOptions,
             NdkBuildOptions,
+            PackagingOptions,
             ProductFlavor,
             SigningConfig,
             Splits,

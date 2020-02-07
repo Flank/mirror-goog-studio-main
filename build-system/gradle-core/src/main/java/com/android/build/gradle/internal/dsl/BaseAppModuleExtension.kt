@@ -65,6 +65,7 @@ open class BaseAppModuleExtension(
         JacocoOptions,
         LintOptions,
         NdkBuildOptions,
+        PackagingOptions,
         ProductFlavor,
         SigningConfig,
         Splits,

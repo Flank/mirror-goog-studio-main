@@ -45,6 +45,7 @@ interface CommonExtension<
         JacocoOptionsT : JacocoOptions,
         LintOptionsT : LintOptions,
         NdkBuildT : NdkBuild,
+        PackagingOptionsT : PackagingOptions,
         ProductFlavorT : ProductFlavor,
         SigningConfigT : SigningConfig,
         SplitsT : Splits<AbiSplitT, DensitySplitT>,
@@ -220,6 +221,22 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [LintOptions].
      */
     fun lintOptions(action: LintOptionsT.() -> Unit)
+
+    /**
+     * Specifies options and rules that determine which files the Android plugin packages into your
+     * APK.
+     *
+     * For more information about the properties you can configure in this block, see [PackagingOptions].
+     */
+    val packagingOptions: PackagingOptionsT
+
+    /**
+     * Specifies options and rules that determine which files the Android plugin packages into your
+     * APK.
+     *
+     * For more information about the properties you can configure in this block, see [PackagingOptions].
+     */
+    fun packagingOptions(action: PackagingOptionsT.() -> Unit)
 
     /**
      * Encapsulates all product flavors configurations for this project.
