@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories("../../../../../../../bazel-bin/tools/base/transport")
 include_directories("../../../../../transport/native")
+include_directories("../../../../../transport/test-framework/src/main/native/testing")
 include_directories("../../../../../../../prebuilts/studio/jdk/linux/include")
 include_directories("../../../../../../../prebuilts/studio/jdk/linux/include/linux")
 

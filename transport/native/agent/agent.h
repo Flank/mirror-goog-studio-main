@@ -72,14 +72,16 @@ class Agent {
   // Grab the singleton instance of the Agent. This will initialize the class if
   // necessary.
   static Agent& Instance() {
-    return Instance(proto::AgentConfig::default_instance());
+    return Instance(false, proto::AgentConfig::default_instance());
   }
 
   // Returns a singleton instance of the agent.
   // The first call, assumes |config| is a valid proto::Config object.
   // All following calls, simply return the singleton instance regardless of the
-  // value of |config|.
-  static Agent& Instance(const proto::AgentConfig& config);
+  // value of |config|, unless |replace| is true.
+  // |replace| should be used with caution, and probably only during the initial
+  // connection or during unit tests.
+  static Agent& Instance(bool replace, const proto::AgentConfig& config);
 
   const proto::AgentConfig& agent_config() const { return agent_config_; }
 
@@ -129,7 +131,9 @@ class Agent {
   // Use Agent::Instance() to initialize.
   // |config| is a valid profiler::Config object.
   explicit Agent(const proto::AgentConfig& config);
-  ~Agent() = delete;  // TODO: Support destroying the agent
+  ~Agent();
+
+  const proto::AgentConfig& config() const;
 
   // In O+, getting the service stubs below will block until the Agent is
   // connected to daemon for the very first time (e.g. when daemon sends the
@@ -234,6 +238,8 @@ class Agent {
   bool profiler_initialized_;
   std::mutex profiler_mutex_;
   std::condition_variable profiler_cv_;
+
+  bool running_;
 };
 
 }  // end of namespace profiler

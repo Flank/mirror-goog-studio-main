@@ -361,7 +361,7 @@ public class LayoutInspectorService {
     }
 
     /** Sends an LayoutInspector Event with an error message back to Studio */
-    private static native void sendErrorMessage(@NonNull String message);
+    public static native void sendErrorMessage(@NonNull String message);
 
     public static void sendErrorMessage(@NonNull Throwable e) {
         //noinspection resource

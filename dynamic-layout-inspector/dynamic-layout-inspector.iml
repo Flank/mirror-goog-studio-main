@@ -29,5 +29,8 @@
     <orderEntry type="library" scope="TEST" name="studio-proto" level="project" />
     <orderEntry type="library" name="transport_java_proto" level="project" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
+    <orderEntry type="library" scope="TEST" name="studio-grpc" level="project" />
+    <orderEntry type="library" scope="TEST" name="transport-proto" level="project" />
+    <orderEntry type="module" scope="TEST" module-name="transport-test-framework" />
   </component>
 </module>

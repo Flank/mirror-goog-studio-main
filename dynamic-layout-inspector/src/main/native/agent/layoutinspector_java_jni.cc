@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include <jni.h>
+#include <unistd.h>
 #include <sstream>
 #include "agent/agent.h"
 #include "agent/jni_wrappers.h"
@@ -43,6 +44,7 @@ Java_com_android_tools_agent_layoutinspector_LayoutInspectorService_sendErrorMes
         profiler::proto::SendEventRequest request;
         auto *event = request.mutable_event();
         event->set_kind(profiler::proto::Event::LAYOUT_INSPECTOR);
+        event->set_pid(getpid());
         event->set_group_id(profiler::proto::Event::LAYOUT_INSPECTOR_ERROR);
         auto *inspector_event = event->mutable_layout_inspector_event();
         inspector_event->set_error_message(message.get().c_str());
@@ -106,6 +108,7 @@ Java_com_android_tools_agent_layoutinspector_LayoutInspectorService_sendComponen
         tree->set_payload_id(id);
         tree->set_payload_type(fallbackToPng ? ComponentTreeEvent::PNG
                                              : ComponentTreeEvent::SKP);
+        event->set_pid(getpid());
         event->set_is_ended(true);
         event->set_kind(Event::LAYOUT_INSPECTOR);
         event->set_group_id(Event::COMPONENT_TREE);
