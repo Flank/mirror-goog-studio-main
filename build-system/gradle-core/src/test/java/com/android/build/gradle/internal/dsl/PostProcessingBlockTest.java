@@ -6,8 +6,8 @@ import static com.android.build.gradle.internal.ProguardFileType.TEST;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
 
-import com.android.build.gradle.internal.api.dsl.DslScope;
-import com.android.build.gradle.internal.variant2.FakeDslScope;
+import com.android.build.gradle.internal.services.DslServices;
+import com.android.build.gradle.internal.services.FakeServices;
 import com.android.builder.model.CodeShrinker;
 import com.android.testutils.internal.CopyOfTester;
 import com.google.common.collect.ImmutableList;
@@ -18,7 +18,7 @@ import org.junit.Test;
 
 public class PostProcessingBlockTest {
 
-    private DslScope dslScope = FakeDslScope.createFakeDslScope();
+    private DslServices dslServices = FakeServices.createDslServices();
 
     /**
      * This test ensures that initWith method (an object copy) is performed correctly via checking
@@ -36,10 +36,10 @@ public class PostProcessingBlockTest {
     public void testInitWith() {
         CopyOfTester.assertAllGettersCalled(
                 PostProcessingBlock.class,
-                new PostProcessingBlock(dslScope, Collections.emptyList()),
+                new PostProcessingBlock(dslServices, Collections.emptyList()),
                 original -> {
                     PostProcessingBlock copy =
-                            new PostProcessingBlock(dslScope, Collections.emptyList());
+                            new PostProcessingBlock(dslServices, Collections.emptyList());
                     copy.initWith(original);
 
                     // Explicitly copy the String getter.
@@ -49,7 +49,7 @@ public class PostProcessingBlockTest {
 
     @Test
     public void testDefaultObject() {
-        PostProcessingBlock options = new PostProcessingBlock(dslScope, Collections.emptyList());
+        PostProcessingBlock options = new PostProcessingBlock(dslServices, Collections.emptyList());
 
         assertThat(options.getCodeShrinkerEnum()).isNull();
         assertThat(options.isObfuscate()).isFalse();
@@ -67,7 +67,7 @@ public class PostProcessingBlockTest {
         File file2 = mock(File.class);
         List<File> files = ImmutableList.of(file1, file2);
 
-        PostProcessingBlock options = new PostProcessingBlock(dslScope, files);
+        PostProcessingBlock options = new PostProcessingBlock(dslServices, files);
 
         assertThat(options.getProguardFiles(EXPLICIT)).containsExactly(file1, file2);
     }
@@ -78,7 +78,7 @@ public class PostProcessingBlockTest {
         File testFile = new File("testFile");
         File consumerFile = new File("consumerFile");
 
-        PostProcessingBlock options = new PostProcessingBlock(dslScope, Collections.emptyList());
+        PostProcessingBlock options = new PostProcessingBlock(dslServices, Collections.emptyList());
         options.setCodeShrinker("PROGUARD");
         options.setObfuscate(true);
         options.setRemoveUnusedCode(true);
@@ -105,7 +105,7 @@ public class PostProcessingBlockTest {
         File consumerFile = new File("consumerFile");
 
         PostProcessingBlock options =
-                new PostProcessingBlock(dslScope, ImmutableList.of(explicitFile));
+                new PostProcessingBlock(dslServices, ImmutableList.of(explicitFile));
         options.setCodeShrinker("PROGUARD");
         options.setObfuscate(true);
         options.setRemoveUnusedCode(true);
@@ -114,7 +114,7 @@ public class PostProcessingBlockTest {
         options.setTestProguardFiles(ImmutableList.of(testFile));
         options.setConsumerProguardFiles(ImmutableList.of(consumerFile));
 
-        PostProcessingBlock copy = new PostProcessingBlock(dslScope, Collections.emptyList());
+        PostProcessingBlock copy = new PostProcessingBlock(dslServices, Collections.emptyList());
 
         copy.initWith(options);
 
@@ -136,7 +136,7 @@ public class PostProcessingBlockTest {
         File consumerFile = new File("consumerFile");
 
         PostProcessingBlock options =
-                new PostProcessingBlock(dslScope, ImmutableList.of(explicitFile));
+                new PostProcessingBlock(dslServices, ImmutableList.of(explicitFile));
         options.setCodeShrinker("PROGUARD");
         options.setObfuscate(true);
         options.setRemoveUnusedCode(true);
@@ -145,7 +145,7 @@ public class PostProcessingBlockTest {
         options.setTestProguardFiles(ImmutableList.of(testFile));
         options.setConsumerProguardFiles(ImmutableList.of(consumerFile));
 
-        PostProcessingBlock copy = new PostProcessingBlock(dslScope, Collections.emptyList());
+        PostProcessingBlock copy = new PostProcessingBlock(dslServices, Collections.emptyList());
 
         copy.initWith(options);
 

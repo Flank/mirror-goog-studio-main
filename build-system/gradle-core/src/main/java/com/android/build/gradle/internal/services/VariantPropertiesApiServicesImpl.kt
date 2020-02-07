@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope
+package com.android.build.gradle.internal.services
 
 import com.android.build.api.variant.impl.GradleProperty
 import com.android.build.gradle.options.BooleanOption
@@ -23,9 +23,10 @@ import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.concurrent.Callable
 
-class VariantPropertiesApiScopeImpl(
-    projectScope: ProjectScope
-): BaseScopeImpl(projectScope), VariantPropertiesApiScope {
+class VariantPropertiesApiServicesImpl(
+    projectServices: ProjectServices
+): BaseServicesImpl(projectServices),
+    VariantPropertiesApiServices {
     // list of properties to lock when [.lockProperties] is called.
     private val properties = mutableListOf<Property<*>>()
     // whether the properties have been locked already
@@ -33,7 +34,7 @@ class VariantPropertiesApiScopeImpl(
 
     // flag to know whether to disable memoization of properties that back old API returning the
     // direct value.
-    private val disableMemoization = projectScope.projectOptions[BooleanOption.DISABLE_MEMOIZATION]
+    private val disableMemoization = projectServices.projectOptions[BooleanOption.DISABLE_MEMOIZATION]
 
     override fun <T> propertyOf(type: Class<T>, value: T, id: String): Property<T> {
         return initializeProperty(type, id).also {
@@ -61,7 +62,7 @@ class VariantPropertiesApiScopeImpl(
 
     override fun <T> propertyOf(type: Class<T>, value: () -> T, id: String): Property<T> {
         return initializeProperty(type, id).also {
-            it.set(projectScope.providerFactory.provider(value))
+            it.set(projectServices.providerFactory.provider(value))
             it.finalizeValueOnRead()
 
             // FIXME when Gradle supports this
@@ -73,7 +74,7 @@ class VariantPropertiesApiScopeImpl(
 
     override fun <T> propertyOf(type: Class<T>, value: Callable<T>, id: String): Property<T> {
         return initializeProperty(type, id).also {
-            it.set(projectScope.providerFactory.provider(value))
+            it.set(projectServices.providerFactory.provider(value))
             it.finalizeValueOnRead()
 
             // FIXME when Gradle supports this
@@ -99,7 +100,7 @@ class VariantPropertiesApiScopeImpl(
 
     override fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Callable<T>, id: String): Property<T> {
         return initializeProperty(type, id).also {
-            it.set(projectScope.providerFactory.provider(value))
+            it.set(projectServices.providerFactory.provider(value))
             if (!disableMemoization) {
                 it.finalizeValueOnRead()
             }
@@ -123,7 +124,7 @@ class VariantPropertiesApiScopeImpl(
     }
 
     override fun <T> setProviderOf(type: Class<T>, value: Provider<out Iterable<T>?>): Provider<Set<T>?> {
-        return projectScope.objectFactory.setProperty(type).also {
+        return projectServices.objectFactory.setProperty(type).also {
             it.set(value)
             it.disallowChanges()
             it.finalizeValueOnRead()
@@ -134,7 +135,7 @@ class VariantPropertiesApiScopeImpl(
     }
 
     override fun <T> setProviderOf(type: Class<T>, value: Iterable<T>?): Provider<Set<T>?> {
-        return projectScope.objectFactory.setProperty(type).also {
+        return projectServices.objectFactory.setProperty(type).also {
             it.set(value)
             it.disallowChanges()
             it.finalizeValueOnRead()
@@ -144,7 +145,7 @@ class VariantPropertiesApiScopeImpl(
         }
     }
 
-    override fun file(file: Any): File = projectScope.fileResolver.invoke(file)
+    override fun file(file: Any): File = projectServices.fileResolver.invoke(file)
 
     override fun lockProperties() {
         for (property in properties) {
@@ -169,10 +170,10 @@ class VariantPropertiesApiScopeImpl(
         return if (projectOptions[BooleanOption.USE_SAFE_PROPERTIES]) {
             GradleProperty.safeReadingBeforeExecution(
                 id,
-                projectScope.objectFactory.property(type)
+                projectServices.objectFactory.property(type)
             )
         } else {
-            projectScope.objectFactory.property(type)
+            projectServices.objectFactory.property(type)
         }
     }
 }

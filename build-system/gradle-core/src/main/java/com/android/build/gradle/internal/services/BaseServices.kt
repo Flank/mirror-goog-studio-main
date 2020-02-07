@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope
+package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
 
 /**
- * Base Scope providing features useful everywhere.
+ * Interface providing services useful everywhere.
  */
-interface BaseScope {
+interface BaseServices {
 
     val issueReporter: IssueReporter
     val deprecationReporter: DeprecationReporter

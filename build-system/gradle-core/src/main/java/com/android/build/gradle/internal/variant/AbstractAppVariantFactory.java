@@ -35,8 +35,8 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.VariantApiScope;
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
+import com.android.build.gradle.internal.services.VariantApiServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -52,10 +52,10 @@ public abstract class AbstractAppVariantFactory<
         extends BaseVariantFactory<VariantT, VariantPropertiesT> {
 
     public AbstractAppVariantFactory(
-            @NonNull VariantApiScope variantApiScope,
-            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull VariantApiServices variantApiServices,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull GlobalScope globalScope) {
-        super(variantApiScope, variantPropertiesApiScope, globalScope);
+        super(variantApiServices, variantPropertiesApiServices, globalScope);
     }
 
     @Override
@@ -104,7 +104,7 @@ public abstract class AbstractAppVariantFactory<
 
         // below is for dynamic-features only.
 
-        IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
+        IssueReporter issueReporter = globalScope.getDslServices().getIssueReporter();
         for (BuildTypeData buildType : model.getBuildTypes().values()) {
             if (buildType.getBuildType().isMinifyEnabled()) {
                 issueReporter.reportError(
@@ -176,7 +176,7 @@ public abstract class AbstractAppVariantFactory<
     }
 
     private void validateVersionCodes(@NonNull VariantInputModel model) {
-        IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
+        IssueReporter issueReporter = globalScope.getDslServices().getIssueReporter();
 
         Integer versionCode = model.getDefaultConfig().getProductFlavor().getVersionCode();
         if (versionCode != null && versionCode < 1) {

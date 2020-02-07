@@ -16,21 +16,19 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.services.DslServices
 import com.google.common.base.MoreObjects
 import org.gradle.api.Action
-import org.gradle.api.model.ObjectFactory
 import javax.inject.Inject
 
 /** DSL object for javaCompileOptions. */
 open class JavaCompileOptions @Inject constructor(
-    objectFactory: ObjectFactory,
-    deprecationReporter: DeprecationReporter
+    dslServices: DslServices
 ) : com.android.build.gradle.api.JavaCompileOptions,
     com.android.build.api.dsl.JavaCompileOptions<AnnotationProcessorOptions> {
     /** Options for configuration the annotation processor. */
     final override val annotationProcessorOptions: AnnotationProcessorOptions =
-        objectFactory.newInstance(AnnotationProcessorOptions::class.java, deprecationReporter)
+        dslServices.newInstance(AnnotationProcessorOptions::class.java, dslServices)
 
     /** Configures annotation processor options. */
     fun annotationProcessorOptions(configAction: Action<AnnotationProcessorOptions>) {

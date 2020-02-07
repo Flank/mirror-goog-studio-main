@@ -42,9 +42,9 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.VariantApiScope;
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.VariantApiServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantType;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -62,10 +62,10 @@ public interface VariantFactory<
         VariantPropertiesT extends VariantPropertiesImpl> {
 
     @NonNull
-    VariantApiScope getVariantApiScope();
+    VariantApiServices getVariantApiScope();
 
     @NonNull
-    VariantPropertiesApiScope getVariantPropertiesApiScope();
+    VariantPropertiesApiServices getVariantPropertiesApiScope();
 
     @NonNull
     VariantT createVariantObject(
@@ -155,7 +155,7 @@ public interface VariantFactory<
         Class<? extends BaseVariantImpl> implementationClass =
                 getVariantImplementationClass(variantData);
 
-        ObjectFactory objectFactory = globalScope.getDslScope().getObjectFactory();
+        ObjectFactory objectFactory = globalScope.getDslServices().getObjectFactory();
 
         return objectFactory.newInstance(
                 implementationClass,

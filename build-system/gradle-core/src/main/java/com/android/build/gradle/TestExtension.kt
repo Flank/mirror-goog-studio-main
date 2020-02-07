@@ -9,7 +9,7 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.AaptOptions
@@ -38,7 +38,7 @@ import org.gradle.api.internal.DefaultDomainObjectSet
 
 /** {@code android} extension for {@code com.android.test} projects. */
 open class TestExtension(
-    dslScope: DslScope,
+    dslServices: DslServices,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
@@ -46,7 +46,7 @@ open class TestExtension(
     extraModelInfo: ExtraModelInfo,
     private val publicExtensionImpl: TestExtensionImpl
 ) : BaseExtension(
-    dslScope,
+    dslServices,
     projectOptions,
     globalScope,
     buildOutputs,
@@ -75,16 +75,16 @@ open class TestExtension(
     ActionableVariantObjectOperationsExecutor<TestVariant<TestVariantProperties>, TestVariantProperties> by publicExtensionImpl {
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =
-        dslScope.objectFactory.domainObjectSet(ApplicationVariant::class.java)
+        dslServices.objectFactory.domainObjectSet(ApplicationVariant::class.java)
 
     private var _targetProjectPath: String? = null
 
     override val viewBinding: ViewBindingOptions =
-        dslScope.objectFactory.newInstance(
+        dslServices.newInstance(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
             projectOptions,
-            globalScope.dslScope
+            globalScope.dslServices
         )
 
     // this is needed because the impl class needs this but the interface does not,

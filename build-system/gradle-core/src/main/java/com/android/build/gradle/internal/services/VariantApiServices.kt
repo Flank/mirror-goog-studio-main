@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope
+package com.android.build.gradle.internal.services
 
 /**
- * Scope of the Variant API objects.
+ * Services for the Variant API objects.
  *
  * This contains whatever is needed by all the variant objects.
  *
  * This is meant to be used only by the variant api objects. Other stages of the plugin
- * will use different scope objects.
+ * will use different services objects.
  */
-interface VariantApiScope: BaseScope {
+interface VariantApiServices:
+    BaseServices {
 
     /**
      * Instantiate a [Value] object that wraps a basic type. This offers read/write locking as

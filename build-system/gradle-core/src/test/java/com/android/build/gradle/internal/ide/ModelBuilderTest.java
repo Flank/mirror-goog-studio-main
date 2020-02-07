@@ -55,20 +55,20 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.FakeVariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.OutputFactory;
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.DslServices;
+import com.android.build.gradle.internal.services.FakeServices;
+import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantInputModelBuilder;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.internal.variant.VariantModelImpl;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
-import com.android.build.gradle.internal.variant2.DslScopeImpl;
-import com.android.build.gradle.internal.variant2.FakeDslScope;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
@@ -139,15 +139,16 @@ public class ModelBuilderTest {
         syncIssueReporter =
                 new SyncIssueReporterImpl(SyncOptions.EvaluationMode.IDE, new FakeLogger());
 
-        DslScopeImpl dslScope = FakeDslScope.createFakeDslScope(syncIssueReporter);
-        when(globalScope.getDslScope()).thenReturn(dslScope);
+        ProjectServices projectServices = FakeServices.createProjectServices(syncIssueReporter);
+        DslServices dslServices = FakeServices.createDslServices(projectServices);
+        when(globalScope.getDslServices()).thenReturn(dslServices);
 
         apkLocation = temporaryFolder.newFolder("apk");
 
         // Register a builder for the custom tooling model
         VariantModel variantModel =
                 new VariantModelImpl(
-                        new VariantInputModelBuilder(FakeDslScope.createFakeDslScope()).toModel(),
+                        new VariantInputModelBuilder(FakeServices.createDslServices()).toModel(),
                         extension::getTestBuildType,
                         () -> variantList,
                         () -> testComponentList,
@@ -500,8 +501,8 @@ public class ModelBuilderTest {
             @Nullable VariantPropertiesImpl testedVariant) {
         // prepare the objects required for the constructor
         final VariantType type = variantDslInfo.getVariantType();
-        VariantPropertiesApiScope variantApiScope =
-                FakeVariantPropertiesApiScope.createFakeVariantPropertiesApiScope();
+        VariantPropertiesApiServices variantApiServices =
+                FakeServices.createVariantPropertiesApiServices();
 
         ComponentIdentity componentIdentity =
                 new ComponentIdentityImpl(variantName, "flavorName", "debug", ImmutableList.of());
@@ -524,7 +525,7 @@ public class ModelBuilderTest {
                 || componentClass.equals(AndroidTestPropertiesImpl.class)) {
             assertThat(testedVariant).named("tested variant").isNotNull();
             ComponentT unitTestComponent =
-                    variantApiScope.newInstance(
+                    variantApiServices.newInstance(
                             componentClass,
                             componentIdentity,
                             Mockito.mock(BuildFeatureValues.class),
@@ -537,7 +538,7 @@ public class ModelBuilderTest {
                             variantData,
                             testedVariant,
                             Mockito.mock(TransformManager.class),
-                            variantApiScope,
+                            variantApiServices,
                             globalScope);
 
             testedVariant
@@ -552,7 +553,7 @@ public class ModelBuilderTest {
         if (componentClass.equals(ApplicationVariantPropertiesImpl.class)) {
             DependenciesInfo dependenciesInfo = Mockito.mock(DependenciesInfo.class);
 
-            return variantApiScope.newInstance(
+            return variantApiServices.newInstance(
                     componentClass,
                     componentIdentity,
                     Mockito.mock(BuildFeatureValues.class),
@@ -565,11 +566,11 @@ public class ModelBuilderTest {
                     variantData,
                     dependenciesInfo,
                     Mockito.mock(TransformManager.class),
-                    variantApiScope,
+                    variantApiServices,
                     globalScope);
         }
 
-        return variantApiScope.newInstance(
+        return variantApiServices.newInstance(
                 componentClass,
                 componentIdentity,
                 Mockito.mock(BuildFeatureValues.class),
@@ -581,7 +582,7 @@ public class ModelBuilderTest {
                 variantScope,
                 variantData,
                 Mockito.mock(TransformManager.class),
-                variantApiScope,
+                variantApiServices,
                 globalScope);
     }
 

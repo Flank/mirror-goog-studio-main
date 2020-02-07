@@ -482,7 +482,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
 
         // gather the variant lists from the input model.
         val variantComputer = DimensionCombinator(
-            given, dslScope.issueReporter, variantType, given.implicitFlavorDimensions
+            given, dslServices.issueReporter, variantType, given.implicitFlavorDimensions
         )
 
         // convert to mock VariantScope
@@ -533,7 +533,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             { testBuildType },
             { components },
             { listOf<TestComponentPropertiesImpl>() },
-            dslScope.issueReporter
+            dslServices.issueReporter
         ).defaultVariant
     }
 

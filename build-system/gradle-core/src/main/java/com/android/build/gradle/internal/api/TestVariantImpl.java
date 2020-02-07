@@ -77,7 +77,7 @@ public class TestVariantImpl extends ApkVariantImpl implements TestVariant {
     public DefaultTask getConnectedInstrumentTest() {
         variantData
                 .getGlobalScope()
-                .getDslScope()
+                .getDslServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getConnectedInstrumentTestProvider()",
@@ -101,7 +101,7 @@ public class TestVariantImpl extends ApkVariantImpl implements TestVariant {
     public List<? extends DefaultTask> getProviderInstrumentTests() {
         variantData
                 .getGlobalScope()
-                .getDslScope()
+                .getDslServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getProviderInstrumentTestProviders()",

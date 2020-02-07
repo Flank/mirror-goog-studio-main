@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -47,7 +47,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     variantData: BaseVariantData,
     testedVariant: VariantPropertiesImpl,
     transformManager: TransformManager,
-    variantApiScope: VariantPropertiesApiScope,
+    variantApiServices: VariantPropertiesApiServices,
     globalScope: GlobalScope
 ) : TestComponentPropertiesImpl(
     componentIdentity,
@@ -61,7 +61,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     variantData,
     testedVariant,
     transformManager,
-    variantApiScope,
+    variantApiServices,
     globalScope
 ), AndroidTestProperties, ApkCreationConfig {
 
@@ -72,7 +72,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> = variantApiScope.propertyOf(
+    override val applicationId: Property<String> = variantApiServices.propertyOf(
         String::class.java,
         Callable { variantDslInfo.testApplicationId })
 

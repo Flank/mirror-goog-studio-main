@@ -18,14 +18,14 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.model.CoreNdkBuildOptions;
+import com.android.build.gradle.internal.services.DslServices;
 import java.io.File;
 import javax.inject.Inject;
 
 /** See {@link com.android.build.api.dsl.NdkBuild} */
 public class NdkBuildOptions implements CoreNdkBuildOptions, com.android.build.api.dsl.NdkBuild {
-    @NonNull private final DslScope dslScope;
+    @NonNull private final DslServices dslServices;
 
     @Nullable
     private File path;
@@ -33,8 +33,8 @@ public class NdkBuildOptions implements CoreNdkBuildOptions, com.android.build.a
     @Nullable private File buildStagingDirectory;
 
     @Inject
-    public NdkBuildOptions(@NonNull DslScope dslScope) {
-        this.dslScope = dslScope;
+    public NdkBuildOptions(@NonNull DslServices dslServices) {
+        this.dslServices = dslServices;
     }
 
     @Nullable
@@ -44,7 +44,7 @@ public class NdkBuildOptions implements CoreNdkBuildOptions, com.android.build.a
     }
 
     public void setPath(@NonNull Object path) {
-        this.path = dslScope.file(path);
+        this.path = dslServices.file(path);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class NdkBuildOptions implements CoreNdkBuildOptions, com.android.build.a
 
     @Override
     public void path(@NonNull Object path) {
-        this.path = dslScope.file(path);
+        this.path = dslServices.file(path);
     }
 
     @Nullable
@@ -65,15 +65,15 @@ public class NdkBuildOptions implements CoreNdkBuildOptions, com.android.build.a
 
     @Override
     public void setBuildStagingDirectory(@Nullable File buildStagingDirectory) {
-        this.buildStagingDirectory = dslScope.file(buildStagingDirectory);
+        this.buildStagingDirectory = dslServices.file(buildStagingDirectory);
     }
 
     public void setBuildStagingDirectory(@Nullable Object buildStagingDirectory) {
-        this.buildStagingDirectory = dslScope.file(buildStagingDirectory);
+        this.buildStagingDirectory = dslServices.file(buildStagingDirectory);
     }
 
     @Override
     public void buildStagingDirectory(@Nullable Object buildStagingDirectory) {
-        this.buildStagingDirectory = dslScope.file(buildStagingDirectory);
+        this.buildStagingDirectory = dslServices.file(buildStagingDirectory);
     }
 }

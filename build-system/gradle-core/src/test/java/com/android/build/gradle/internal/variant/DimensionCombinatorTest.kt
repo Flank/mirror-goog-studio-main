@@ -356,7 +356,7 @@ class DimensionCombinatorTest : AbstractVariantInputModelTest<List<DimensionComb
         val expectedFlavorList = flavorList ?: given.productFlavors.values.asSequence().mapNotNull { it.productFlavor.dimension }.toSet().toList()
 
         val variantComputer = DimensionCombinator(
-            given, dslScope.issueReporter, VariantTypeImpl.BASE_APK, expectedFlavorList
+            given, dslServices.issueReporter, VariantTypeImpl.BASE_APK, expectedFlavorList
         )
 
         return variantComputer.computeVariants()

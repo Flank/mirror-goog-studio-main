@@ -26,7 +26,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.ProguardFilesProvider;
-import com.android.build.gradle.internal.api.dsl.DslScope;
+import com.android.build.gradle.internal.services.DslServices;
 import com.android.builder.model.CodeShrinker;
 import com.android.utils.HelpfulEnumConverter;
 import com.google.common.annotations.VisibleForTesting;
@@ -56,7 +56,7 @@ public class PostProcessingBlock implements ProguardFilesProvider {
     private static final HelpfulEnumConverter<CodeShrinker> SHRINKER_CONVERTER =
             new HelpfulEnumConverter<>(CodeShrinker.class);
 
-    @NonNull private final DslScope dslScope;
+    @NonNull private final DslServices dslServices;
 
     private boolean removeUnusedCode = true;
     private boolean removeUnusedResources;
@@ -70,18 +70,18 @@ public class PostProcessingBlock implements ProguardFilesProvider {
     @Nullable private CodeShrinker codeShrinker;
 
     @Inject
-    public PostProcessingBlock(@NonNull DslScope dslScope) {
+    public PostProcessingBlock(@NonNull DslServices dslServices) {
         this(
-                dslScope,
+                dslServices,
                 ImmutableList.of(
                         ProguardFiles.getDefaultProguardFile(
                                 ProguardFiles.ProguardFile.NO_ACTIONS.fileName,
-                                dslScope.getProjectLayout())));
+                                dslServices.getProjectLayout())));
     }
 
     @VisibleForTesting
-    PostProcessingBlock(@NonNull DslScope dslScope, List<File> proguardFiles) {
-        this.dslScope = dslScope;
+    PostProcessingBlock(@NonNull DslServices dslServices, List<File> proguardFiles) {
+        this.dslServices = dslServices;
         this.proguardFiles = Lists.newArrayList(proguardFiles);
         this.testProguardFiles = new ArrayList<>();
         this.consumerProguardFiles = new ArrayList<>();
@@ -133,12 +133,12 @@ public class PostProcessingBlock implements ProguardFilesProvider {
     public void setProguardFiles(List<Object> proguardFiles) {
         this.proguardFiles = new ArrayList<>();
         for (Object file : proguardFiles) {
-            this.proguardFiles.add(dslScope.file(file));
+            this.proguardFiles.add(dslServices.file(file));
         }
     }
 
     public void proguardFile(Object file) {
-        this.proguardFiles.add(dslScope.file(file));
+        this.proguardFiles.add(dslServices.file(file));
     }
 
     public void proguardFiles(Object... files) {
@@ -150,12 +150,12 @@ public class PostProcessingBlock implements ProguardFilesProvider {
     public void setTestProguardFiles(List<Object> testProguardFiles) {
         this.testProguardFiles = new ArrayList<>();
         for (Object file : testProguardFiles) {
-            this.testProguardFiles.add(dslScope.file(file));
+            this.testProguardFiles.add(dslServices.file(file));
         }
     }
 
     public void testProguardFile(Object file) {
-        this.testProguardFiles.add(dslScope.file(file));
+        this.testProguardFiles.add(dslServices.file(file));
     }
 
     public void testProguardFiles(Object... files) {
@@ -167,12 +167,12 @@ public class PostProcessingBlock implements ProguardFilesProvider {
     public void setConsumerProguardFiles(List<Object> consumerProguardFiles) {
         this.consumerProguardFiles = new ArrayList<>();
         for (Object file : consumerProguardFiles) {
-            this.consumerProguardFiles.add(dslScope.file(file));
+            this.consumerProguardFiles.add(dslServices.file(file));
         }
     }
 
     public void consumerProguardFile(Object file) {
-        this.consumerProguardFiles.add(dslScope.file(file));
+        this.consumerProguardFiles.add(dslServices.file(file));
     }
 
     public void consumerProguardFiles(Object... files) {

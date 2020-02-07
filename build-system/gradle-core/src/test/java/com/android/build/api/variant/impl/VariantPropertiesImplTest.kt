@@ -17,7 +17,6 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -27,12 +26,12 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.scope.createFakeVariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
+import com.android.build.gradle.internal.services.createDslServices
+import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.build.gradle.internal.variant2.createFakeDslScope
 import com.android.build.gradle.options.ProjectOptions
 import com.google.common.truth.Truth
 import org.gradle.api.Project
@@ -63,8 +62,8 @@ class VariantPropertiesImplTest {
     @Mock lateinit var variantData: BaseVariantData
     @Mock lateinit var componentIdentity: ComponentIdentity
     @Mock lateinit var artifacts: BuildArtifactsHolder
-    private val dslScope: DslScope = createFakeDslScope()
-    private val variantApiScope = createFakeVariantPropertiesApiScope()
+    private val dslServices = createDslServices()
+    private val variantApiServices = createVariantPropertiesApiServices()
 
     lateinit var properties: VariantPropertiesImpl
     lateinit var project: Project
@@ -83,12 +82,12 @@ class VariantPropertiesImplTest {
             variantDslInfo,
             Mockito.mock(VariantDependencies::class.java),
             Mockito.mock(VariantSources::class.java),
-            VariantPathHelper(project,variantDslInfo, dslScope),
+            VariantPathHelper(project,variantDslInfo, dslServices),
             artifacts,
             variantScope,
             variantData,
             Mockito.mock(TransformManager::class.java),
-            variantApiScope,
+            variantApiServices,
             globalScope)
     }
 
@@ -114,12 +113,12 @@ class VariantPropertiesImplTest {
             variantDslInfo,
             Mockito.mock(VariantDependencies::class.java),
             Mockito.mock(VariantSources::class.java),
-            VariantPathHelper(project,variantDslInfo, dslScope),
+            VariantPathHelper(project,variantDslInfo, dslServices),
             artifacts,
             variantScope,
             variantData,
             Mockito.mock(TransformManager::class.java),
-            variantApiScope,
+            variantApiServices,
             globalScope) {
             @Suppress("UNCHECKED_CAST")
             override val applicationId: Property<String> = Mockito.mock(Property::class.java) as Property<String>
@@ -162,7 +161,7 @@ class VariantPropertiesImplTest {
         variantScope: VariantScope,
         variantData: BaseVariantData,
         transformManager: TransformManager,
-        variantApiScope: VariantPropertiesApiScope,
+        variantApiServices: VariantPropertiesApiServices,
         globalScope: GlobalScope
     ) : VariantPropertiesImpl(
         componentIdentity,
@@ -175,7 +174,7 @@ class VariantPropertiesImplTest {
         variantScope,
         variantData,
         transformManager,
-        variantApiScope,
+        variantApiServices,
         globalScope
     ) {
         override val applicationId: Provider<String>

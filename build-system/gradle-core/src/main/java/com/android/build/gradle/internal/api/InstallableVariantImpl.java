@@ -56,7 +56,7 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     @Override
     public DefaultTask getInstall() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variantOutput.getInstallProvider()",
@@ -83,7 +83,7 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
     @Override
     public DefaultTask getUninstall() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variantOutput.getUninstallProvider()",

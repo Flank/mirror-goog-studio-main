@@ -24,14 +24,14 @@ import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.internal.CompileOptions
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
 /** Internal implementation of the 'new' DSL interface */
 class ApplicationExtensionImpl(
-    dslScope: DslScope,
+    dslServices: DslServices,
     buildTypes: NamedDomainObjectContainer<BuildType>,
     defaultConfig: DefaultConfig,
     productFlavors: NamedDomainObjectContainer<ProductFlavor>,
@@ -45,7 +45,7 @@ class ApplicationExtensionImpl(
             SigningConfig,
             ApplicationVariant<ApplicationVariantProperties>,
             ApplicationVariantProperties>(
-        dslScope,
+        dslServices,
         buildTypes,
         defaultConfig,
         productFlavors,
@@ -71,27 +71,27 @@ class ApplicationExtensionImpl(
             TestOptions.UnitTestOptions> {
 
     override val buildFeatures: ApplicationBuildFeatures =
-        dslScope.objectFactory.newInstance(ApplicationBuildFeaturesImpl::class.java)
+        dslServices.newInstance(ApplicationBuildFeaturesImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
     override val onVariants: GenericFilteredComponentActionRegistrar<ApplicationVariant<ApplicationVariantProperties>>
-        get() = dslScope.objectFactory.newInstance(
+        get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
-            dslScope,
+            dslServices,
             variantOperations,
             ApplicationVariant::class.java
         ) as GenericFilteredComponentActionRegistrar<ApplicationVariant<ApplicationVariantProperties>>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<ApplicationVariantProperties>
-        get() = dslScope.objectFactory.newInstance(
+        get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
-            dslScope,
+            dslServices,
             variantPropertiesOperations,
             ApplicationVariantProperties::class.java
         ) as GenericFilteredComponentActionRegistrar<ApplicationVariantProperties>
 
     override val dependenciesInfo: DependenciesInfo =
-      dslScope.objectFactory.newInstance(DependenciesInfoImpl::class.java)
+      dslServices.newInstance(DependenciesInfoImpl::class.java)
 
     override fun dependenciesInfo(action: DependenciesInfo.() -> Unit) {
         action.invoke(dependenciesInfo)

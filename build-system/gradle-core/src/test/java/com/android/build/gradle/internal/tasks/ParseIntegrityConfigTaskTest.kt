@@ -19,12 +19,12 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BundleOptions
-import com.android.build.gradle.internal.dsl.NoOpDeprecationReporter
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.scope.createFakeVariantPropertiesApiScope
-import com.android.build.gradle.internal.variant2.createFakeDslScope
+import com.android.build.gradle.internal.services.createDslServices
+import com.android.build.gradle.internal.services.createProjectServices
+import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantType
@@ -50,6 +50,16 @@ class ParseIntegrityConfigTaskTest {
 
     // Under test
     lateinit var task: ParseIntegrityConfigTask
+
+    private val projectServices = createProjectServices(
+        projectOptions = ProjectOptions(
+            ImmutableMap.of<String, Any>(
+                BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
+                false
+            )
+        )
+    )
+    private val dslServices = createDslServices(projectServices)
 
     @Before
     fun setup() {
@@ -79,7 +89,7 @@ class ParseIntegrityConfigTaskTest {
         val configXML = configDirectory.resolve(configFileName)
         FileUtils.writeToFile(configXML, "<integrity_config/>")
 
-        val bundleOptions = BundleOptions(project.objects, NoOpDeprecationReporter())
+        val bundleOptions = dslServices.newInstance(BundleOptions::class.java, dslServices)
         bundleOptions.integrityConfigDir.set(configDirectory)
         val componentProperties = createScopeFromBundleOptions(bundleOptions)
 
@@ -98,20 +108,7 @@ class ParseIntegrityConfigTaskTest {
     }
 
     private fun createScopeFromBundleOptions(bundleOptions: BundleOptions): ComponentPropertiesImpl {
-        val projectOptions = ProjectOptions(
-            ImmutableMap.of<String, Any>(
-                BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
-                false
-            )
-        )
-
-        val dslScope = createFakeDslScope(
-            projectOptions = projectOptions
-        )
-
-        val variantApiScope = createFakeVariantPropertiesApiScope(
-            projectOptions = projectOptions
-        )
+        val variantApiServices = createVariantPropertiesApiServices(projectServices)
 
         val componentProperties = Mockito.mock(ComponentPropertiesImpl::class.java)
         val variantType = Mockito.mock(VariantType::class.java)
@@ -121,7 +118,7 @@ class ParseIntegrityConfigTaskTest {
         val taskContainer = Mockito.mock(MutableTaskContainer::class.java)
         val preBuildTask = Mockito.mock(TaskProvider::class.java)
 
-        Mockito.`when`(componentProperties.variantApiScope).thenReturn(variantApiScope)
+        Mockito.`when`(componentProperties.variantPropertiesApiServices).thenReturn(variantApiServices)
         Mockito.`when`(componentProperties.variantType).thenReturn(variantType)
         Mockito.`when`(componentProperties.name).thenReturn("variant")
         Mockito.`when`(componentProperties.taskContainer).thenReturn(taskContainer)
@@ -129,8 +126,8 @@ class ParseIntegrityConfigTaskTest {
         Mockito.`when`(componentProperties.variantScope).thenReturn(variantScope)
         Mockito.`when`(extension.bundle).thenReturn(bundleOptions)
         Mockito.`when`(globalScope.extension).thenReturn(extension)
-        Mockito.`when`(globalScope.dslScope).thenReturn(dslScope)
-        Mockito.`when`(globalScope.projectOptions).thenReturn(dslScope.projectOptions)
+        Mockito.`when`(globalScope.dslServices).thenReturn(dslServices)
+        Mockito.`when`(globalScope.projectOptions).thenReturn(dslServices.projectOptions)
         Mockito.`when`(taskContainer.preBuildTask).thenReturn(preBuildTask)
 
         return componentProperties

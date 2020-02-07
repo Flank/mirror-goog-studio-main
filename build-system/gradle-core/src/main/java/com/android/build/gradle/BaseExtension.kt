@@ -31,7 +31,7 @@ import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.AaptOptions
@@ -50,7 +50,6 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.options.BooleanOption
 
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.LibraryRequest
@@ -100,7 +99,7 @@ import java.io.File
 // All the public methods are meant to be exposed in the DSL. We can't use lambdas in this class
 // (yet), because the DSL reference generator doesn't understand them.
 abstract class BaseExtension protected constructor(
-    protected val dslScope: DslScope,
+    protected val dslServices: DslServices,
     projectOptions: ProjectOptions,
     protected val globalScope: GlobalScope,
     /** All build outputs for all variants, can be used by users to customize a build output. */
@@ -115,11 +114,11 @@ abstract class BaseExtension protected constructor(
     private val _transformDependencies: MutableList<List<Any>> = mutableListOf()
 
     override val lintOptions: LintOptions =
-        dslScope.objectFactory.newInstance(LintOptions::class.java)
+        dslServices.newInstance(LintOptions::class.java)
     override val dexOptions: DexOptions =
-        dslScope.objectFactory.newInstance(DexOptions::class.java, dslScope.deprecationReporter)
+        dslServices.newInstance(DexOptions::class.java, dslServices.deprecationReporter)
     override val packagingOptions: PackagingOptions =
-        dslScope.objectFactory.newInstance(PackagingOptions::class.java)
+        dslServices.newInstance(PackagingOptions::class.java)
 
     private val deviceProviderList: MutableList<DeviceProvider> = Lists.newArrayList()
     private val testServerList: MutableList<TestServer> = Lists.newArrayList()
@@ -128,7 +127,7 @@ abstract class BaseExtension protected constructor(
     @Incubating
     @get:Incubating
     val composeOptions: ComposeOptions =
-        dslScope.objectFactory.newInstance(ComposeOptionsImpl::class.java)
+        dslServices.newInstance(ComposeOptionsImpl::class.java)
 
     abstract override val dataBinding: DataBindingOptions
     abstract val viewBinding: ViewBindingOptions
@@ -595,13 +594,13 @@ abstract class BaseExtension protected constructor(
 
     fun getDefaultProguardFile(name: String): File {
         if (!ProguardFiles.KNOWN_FILE_NAMES.contains(name)) {
-            dslScope
+            dslServices
                 .issueReporter
                 .reportError(
                     IssueReporter.Type.GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE
                 )
         }
-        return ProguardFiles.getDefaultProguardFile(name, dslScope.projectLayout)
+        return ProguardFiles.getDefaultProguardFile(name, dslServices.projectLayout)
     }
 
     // ---------------

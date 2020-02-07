@@ -36,7 +36,6 @@ import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
-import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.core.VariantBuilder;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
@@ -59,6 +58,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
+import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.DimensionCombination;
@@ -220,7 +220,7 @@ public class VariantManager<
         DimensionCombinator computer =
                 new DimensionCombinator(
                         variantInputModel,
-                        globalScope.getDslScope().getIssueReporter(),
+                        globalScope.getDslServices().getIssueReporter(),
                         variantFactory.getVariantType(),
                         flavorDimensionList);
 
@@ -267,7 +267,7 @@ public class VariantManager<
         // entry point for a given buildType/Flavors/VariantType combo.
         // Need to run the new variant API to selectively ignore variants.
         // in order to do this, we need access to the VariantDslInfo, to create a
-        DslScope dslScope = globalScope.getDslScope();
+        DslServices dslServices = globalScope.getDslServices();
 
         final ProductFlavorData<DefaultConfig> defaultConfig = variantInputModel.getDefaultConfig();
         DefaultAndroidSourceSet defaultConfigSourceProvider = defaultConfig.getSourceSet();
@@ -284,8 +284,7 @@ public class VariantManager<
                         getParser(
                                 defaultConfigSourceProvider.getManifestFile(),
                                 variantType.getRequiresManifest()),
-                        globalScope.getProjectOptions(),
-                        dslScope.getIssueReporter(),
+                        dslServices,
                         this::canParseManifest);
 
         // We must first add the flavors to the variant config, in order to get the proper
@@ -363,7 +362,7 @@ public class VariantManager<
                 VariantDependenciesBuilder.builder(
                                 project,
                                 projectOptions,
-                                globalScope.getDslScope().getIssueReporter(),
+                                globalScope.getDslServices().getIssueReporter(),
                                 variantDslInfo)
                         .setFlavorSelection(getFlavorSelection(variantDslInfo))
                         .addSourceSets(variantSourceSets);
@@ -376,13 +375,13 @@ public class VariantManager<
 
         // Done. Create the (too) many variant objects
 
-        VariantPathHelper pathHelper = new VariantPathHelper(project, variantDslInfo, dslScope);
+        VariantPathHelper pathHelper = new VariantPathHelper(project, variantDslInfo, dslServices);
         VariantBuildArtifactsHolder artifacts =
                 new VariantBuildArtifactsHolder(
                         project, componentIdentity.getName(), globalScope.getBuildDir());
         MutableTaskContainer taskContainer = new MutableTaskContainer();
         TransformManager transformManager =
-                new TransformManager(project, dslScope.getIssueReporter(), recorder);
+                new TransformManager(project, dslServices.getIssueReporter(), recorder);
 
         // create the obsolete VariantScope
         VariantScopeImpl variantScope =
@@ -479,7 +478,7 @@ public class VariantManager<
         // The constructor does a runtime check on the instances so we should be safe.
         final DefaultAndroidSourceSet testSourceSet =
                 variantInputModel.getDefaultConfig().getTestSourceSet(variantType);
-        DslScope dslScope = globalScope.getDslScope();
+        DslServices dslServices = globalScope.getDslServices();
         @SuppressWarnings("ConstantConditions")
         VariantBuilder variantBuilder =
                 VariantBuilder.getBuilder(
@@ -495,8 +494,7 @@ public class VariantManager<
                                         testSourceSet.getManifestFile(),
                                         variantType.getRequiresManifest())
                                 : null,
-                        globalScope.getProjectOptions(),
-                        dslScope.getIssueReporter(),
+                        dslServices,
                         this::canParseManifest);
 
         variantBuilder.setTestedVariant(
@@ -603,7 +601,7 @@ public class VariantManager<
                 VariantDependenciesBuilder.builder(
                                 project,
                                 projectOptions,
-                                globalScope.getDslScope().getIssueReporter(),
+                                globalScope.getDslServices().getIssueReporter(),
                                 variantDslInfo)
                         .addSourceSets(testVariantSourceSets)
                         .setFlavorSelection(getFlavorSelection(variantDslInfo))
@@ -611,14 +609,14 @@ public class VariantManager<
 
         final VariantDependencies variantDependencies = builder.build(globalScope);
 
-        VariantPathHelper pathHelper = new VariantPathHelper(project, variantDslInfo, dslScope);
+        VariantPathHelper pathHelper = new VariantPathHelper(project, variantDslInfo, dslServices);
         ComponentIdentity componentIdentity = variantDslInfo.getComponentIdentity();
         VariantBuildArtifactsHolder artifacts =
                 new VariantBuildArtifactsHolder(
                         project, componentIdentity.getName(), globalScope.getBuildDir());
         MutableTaskContainer taskContainer = new MutableTaskContainer();
         TransformManager transformManager =
-                new TransformManager(project, dslScope.getIssueReporter(), recorder);
+                new TransformManager(project, dslServices.getIssueReporter(), recorder);
 
         VariantScopeImpl variantScope =
                 new VariantScopeImpl(
@@ -780,7 +778,7 @@ public class VariantManager<
                 int targetSdkVersion = variantDslInfo.getTargetSdkVersion().getApiLevel();
                 if (minSdkVersion > 0 && targetSdkVersion > 0 && minSdkVersion > targetSdkVersion) {
                     globalScope
-                            .getDslScope()
+                            .getDslServices()
                             .getIssueReporter()
                             .reportWarning(
                                     IssueReporter.Type.GENERIC,
@@ -927,7 +925,7 @@ public class VariantManager<
                                 f,
                                 this::canParseManifest,
                                 isManifestFileRequired,
-                                globalScope.getDslScope().getIssueReporter()));
+                                globalScope.getDslServices().getIssueReporter()));
     }
 
     private boolean canParseManifest() {

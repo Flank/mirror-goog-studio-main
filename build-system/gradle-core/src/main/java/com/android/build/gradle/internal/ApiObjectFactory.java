@@ -74,7 +74,7 @@ public class ApiObjectFactory {
             return null;
         }
 
-        ObjectFactory objectFactory = globalScope.getDslScope().getObjectFactory();
+        ObjectFactory objectFactory = globalScope.getDslServices().getObjectFactory();
 
         if (variantFactory.hasTestScope()) {
             VariantPropertiesImpl variantProperties = (VariantPropertiesImpl) componentProperties;
@@ -133,7 +133,7 @@ public class ApiObjectFactory {
     private void createVariantOutput(
             @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull BaseVariantImpl variantApi) {
-        ObjectFactory objectFactory = globalScope.getDslScope().getObjectFactory();
+        ObjectFactory objectFactory = globalScope.getDslServices().getObjectFactory();
 
         componentProperties.getVariantData().variantOutputFactory =
                 new VariantOutputFactory(
@@ -144,7 +144,7 @@ public class ApiObjectFactory {
                         extension,
                         variantApi,
                         componentProperties.getTaskContainer(),
-                        globalScope.getDslScope().getDeprecationReporter());
+                        globalScope.getDslServices().getDeprecationReporter());
 
         componentProperties
                 .getOutputs()

@@ -23,12 +23,12 @@ import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.DynamicFeatureVariantProperties
 import com.android.build.gradle.internal.CompileOptions
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import org.gradle.api.NamedDomainObjectContainer
 
 class DynamicFeatureExtensionImpl(
-    dslScope: DslScope,
+    dslServices: DslServices,
     buildTypes: NamedDomainObjectContainer<BuildType>,
     defaultConfig: DefaultConfig,
     productFlavors: NamedDomainObjectContainer<ProductFlavor>,
@@ -42,7 +42,7 @@ class DynamicFeatureExtensionImpl(
             SigningConfig,
             DynamicFeatureVariant<DynamicFeatureVariantProperties>,
             DynamicFeatureVariantProperties>(
-        dslScope,
+        dslServices,
         buildTypes,
         defaultConfig,
         productFlavors,
@@ -69,21 +69,21 @@ class DynamicFeatureExtensionImpl(
             TestOptions.UnitTestOptions> {
 
     override val buildFeatures: DynamicFeatureBuildFeatures =
-        dslScope.objectFactory.newInstance(DynamicFeatureBuildFeaturesImpl::class.java)
+        dslServices.newInstance(DynamicFeatureBuildFeaturesImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
     override val onVariants: GenericFilteredComponentActionRegistrar<DynamicFeatureVariant<DynamicFeatureVariantProperties>>
-        get() = dslScope.objectFactory.newInstance(
+        get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
-            dslScope,
+            dslServices,
             variantOperations,
             DynamicFeatureVariant::class.java
         ) as GenericFilteredComponentActionRegistrar<DynamicFeatureVariant<DynamicFeatureVariantProperties>>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<DynamicFeatureVariantProperties>
-        get() = dslScope.objectFactory.newInstance(
+        get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
-            dslScope,
+            dslServices,
             variantPropertiesOperations,
             DynamicFeatureVariantProperties::class.java
         ) as GenericFilteredComponentActionRegistrar<DynamicFeatureVariantProperties>

@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -45,7 +45,7 @@ open class TestVariantPropertiesImpl @Inject constructor(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    variantApiScope: VariantPropertiesApiScope,
+    variantApiServices: VariantPropertiesApiServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
     componentIdentity,
@@ -58,7 +58,7 @@ open class TestVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    variantApiScope,
+    variantApiServices,
     globalScope
 ), TestVariantProperties, ApkCreationConfig {
 
@@ -70,7 +70,7 @@ open class TestVariantPropertiesImpl @Inject constructor(
         get() = variantDslInfo.isDebuggable
 
     override val applicationId: Property<String> =
-        variantApiScope.propertyOf(String::class.java, Callable { variantDslInfo.applicationId })
+        variantApiServices.propertyOf(String::class.java, Callable { variantDslInfo.applicationId })
 
     override val manifestPlaceholders: Map<String, Any>
         get() = variantDslInfo.manifestPlaceholders

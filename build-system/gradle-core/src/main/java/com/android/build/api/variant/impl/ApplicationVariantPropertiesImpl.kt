@@ -16,7 +16,6 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -26,7 +25,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -46,7 +45,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     variantData: BaseVariantData,
     variantDependencyInfo: com.android.build.api.variant.DependenciesInfo,
     transformManager: TransformManager,
-    variantApiScope: VariantPropertiesApiScope,
+    variantApiServices: VariantPropertiesApiServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
     componentIdentity,
@@ -59,7 +58,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    variantApiScope,
+    variantApiServices,
     globalScope
 ), ApplicationVariantProperties, ApplicationCreationConfig {
 
@@ -70,7 +69,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> = variantApiScope.propertyOf(String::class.java, Callable{variantDslInfo.applicationId})
+    override val applicationId: Property<String> = variantApiServices.propertyOf(String::class.java, Callable{variantDslInfo.applicationId})
 
     override val embedsMicroApp: Boolean
         get() = variantDslInfo.isEmbedMicroApp
@@ -88,5 +87,5 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
         get() = variantScope.isTestOnly
 
     override val needAssetPackTasks: Property<Boolean> =
-        variantApiScope.propertyOf(Boolean::class.java, false)
+        variantApiServices.propertyOf(Boolean::class.java, false)
 }

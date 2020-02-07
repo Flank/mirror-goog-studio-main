@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -49,7 +49,7 @@ open class UnitTestPropertiesImpl @Inject constructor(
     variantData: BaseVariantData,
     testedVariant: VariantPropertiesImpl,
     transformManager: TransformManager,
-    variantApiScope: VariantPropertiesApiScope,
+    variantApiServices: VariantPropertiesApiServices,
     globalScope: GlobalScope
 ) : TestComponentPropertiesImpl(
     componentIdentity,
@@ -63,7 +63,7 @@ open class UnitTestPropertiesImpl @Inject constructor(
     variantData,
     testedVariant,
     transformManager,
-    variantApiScope,
+    variantApiServices,
     globalScope
 ), UnitTestProperties {
 
@@ -76,7 +76,7 @@ open class UnitTestPropertiesImpl @Inject constructor(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    override val applicationId: Property<String> = variantApiScope.propertyOf(String::class.java, Callable{ variantDslInfo.testApplicationId })
+    override val applicationId: Property<String> = variantApiServices.propertyOf(String::class.java, Callable{ variantDslInfo.testApplicationId })
 
     override fun addDataBindingSources(
         project: Project,

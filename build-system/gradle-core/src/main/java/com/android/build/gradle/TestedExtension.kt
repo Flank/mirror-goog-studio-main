@@ -4,7 +4,7 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.api.UnitTestVariant
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.ProjectOptions
@@ -21,7 +21,7 @@ import org.gradle.api.file.FileCollection
  * [Test your app](https://developer.android.com/studio/test/index.html)
  */
 abstract class TestedExtension(
-    dslScope: DslScope,
+    dslServices: DslServices,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
@@ -29,7 +29,7 @@ abstract class TestedExtension(
     extraModelInfo: ExtraModelInfo,
     isBaseModule: Boolean
 ) : BaseExtension(
-    dslScope,
+    dslServices,
     projectOptions,
     globalScope,
     buildOutputs,
@@ -39,10 +39,10 @@ abstract class TestedExtension(
 ), TestedAndroidConfig, com.android.build.api.dsl.TestedExtension {
 
     private val testVariantList: DomainObjectSet<TestVariant> =
-        dslScope.objectFactory.domainObjectSet(TestVariant::class.java)
+        dslServices.objectFactory.domainObjectSet(TestVariant::class.java)
 
     private val unitTestVariantList: DomainObjectSet<UnitTestVariant> =
-        dslScope.objectFactory.domainObjectSet(UnitTestVariant::class.java)
+        dslServices.objectFactory.domainObjectSet(UnitTestVariant::class.java)
 
     init {
         sourceSetManager.setUpTestSourceSet(VariantType.ANDROID_TEST_PREFIX)

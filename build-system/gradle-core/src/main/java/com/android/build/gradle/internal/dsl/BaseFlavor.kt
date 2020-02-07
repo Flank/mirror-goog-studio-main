@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultApiVersion
@@ -27,18 +27,16 @@ import org.gradle.api.Action
 import java.io.File
 
 /** Base DSL object used to configure product flavors.  */
-abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
+abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
     AbstractProductFlavor(
         name,
-        dslScope.objectFactory.newInstance(
-            VectorDrawablesOptions::class.java
-        )
+        dslServices.newInstance(VectorDrawablesOptions::class.java)
     ),
     CoreProductFlavor,
     com.android.build.api.dsl.BaseFlavor {
 
     /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
-    val ndk: NdkOptions = dslScope.objectFactory.newInstance(NdkOptions::class.java)
+    val ndk: NdkOptions = dslServices.objectFactory.newInstance(NdkOptions::class.java)
 
     override val ndkConfig: CoreNdkOptions
         get() {
@@ -53,10 +51,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
      */
 
     val externalNativeBuild: ExternalNativeBuildOptions =
-        dslScope.objectFactory.newInstance(
-            ExternalNativeBuildOptions::class.java,
-            dslScope.objectFactory
-        )
+        dslServices.newInstance(ExternalNativeBuildOptions::class.java, dslServices)
 
     override val externalNativeBuildOptions: CoreExternalNativeBuildOptions
         get() {
@@ -187,7 +182,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         if (alreadyPresent != null) {
             val flavorName = getName()
             if (BuilderConstants.MAIN == flavorName) {
-                dslScope.logger
+                dslServices.logger
                     .info(
                         "DefaultConfig: buildConfigField '{}' value is being replaced: {} -> {}",
                         name,
@@ -195,7 +190,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
                         value
                     )
             } else {
-                dslScope.logger
+                dslServices.logger
                     .info(
                         "ProductFlavor({}): buildConfigField '{}' " +
                                 "value is being replaced: {} -> {}",
@@ -226,7 +221,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         if (alreadyPresent != null) {
             val flavorName = getName()
             if (BuilderConstants.MAIN == flavorName) {
-                dslScope.logger
+                dslServices.logger
                     .info(
                         "DefaultConfig: resValue '{}' value is being replaced: {} -> {}",
                         name,
@@ -234,7 +229,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
                         value
                     )
             } else {
-                dslScope.logger
+                dslServices.logger
                     .info(
                         "ProductFlavor({}): resValue '{}' value is being replaced: {} -> {}",
                         flavorName,
@@ -255,7 +250,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         }
 
     override fun proguardFile(proguardFile: Any) {
-        proguardFiles.add(dslScope.file(proguardFile))
+        proguardFiles.add(dslServices.file(proguardFile))
     }
 
     override fun proguardFiles(vararg files: Any) {
@@ -279,7 +274,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         }
 
     override fun testProguardFile(proguardFile: Any) {
-        testProguardFiles.add(dslScope.file(proguardFile))
+        testProguardFiles.add(dslServices.file(proguardFile))
     }
 
     override fun testProguardFiles(vararg proguardFiles: Any) {
@@ -308,7 +303,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         }
 
     override fun consumerProguardFile(proguardFile: Any) {
-        consumerProguardFiles.add(dslScope.file(proguardFile))
+        consumerProguardFiles.add(dslServices.file(proguardFile))
     }
 
     override fun consumerProguardFiles(vararg proguardFiles: Any) {
@@ -472,11 +467,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
 
     /** Options for configuration Java compilation.  */
     override val javaCompileOptions: JavaCompileOptions =
-        dslScope.objectFactory.newInstance(
-            JavaCompileOptions::class.java,
-            dslScope.objectFactory,
-            dslScope.deprecationReporter
-        )
+        dslServices.newInstance(JavaCompileOptions::class.java, dslServices)
 
     fun javaCompileOptions(action: Action<JavaCompileOptions>) {
         action.execute(javaCompileOptions)
@@ -484,7 +475,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
 
     /** Options for configuring the shader compiler.  */
     override val shaders: ShaderOptions =
-        dslScope.objectFactory.newInstance(ShaderOptions::class.java)
+        dslServices.objectFactory.newInstance(ShaderOptions::class.java)
 
     /** Configure the shader compiler options for this product flavor.  */
     fun shaders(action: Action<ShaderOptions>) {

@@ -25,7 +25,7 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -34,7 +34,7 @@ import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
 internal open class DynamicFeatureExtension(
-    dslScope: DslScope,
+    dslServices: DslServices,
     projectOptions: ProjectOptions,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
@@ -42,7 +42,7 @@ internal open class DynamicFeatureExtension(
     extraModelInfo: ExtraModelInfo,
     private val publicExtensionImpl: DynamicFeatureExtensionImpl
 ) : AppExtension(
-    dslScope, projectOptions, globalScope,
+    dslServices, projectOptions, globalScope,
     buildOutputs, sourceSetManager, extraModelInfo, false
 ), DynamicFeatureExtension<
         AaptOptions,
@@ -65,11 +65,11 @@ internal open class DynamicFeatureExtension(
     ActionableVariantObjectOperationsExecutor<DynamicFeatureVariant<DynamicFeatureVariantProperties>, DynamicFeatureVariantProperties> by publicExtensionImpl {
 
     override val viewBinding: ViewBindingOptions =
-        dslScope.objectFactory.newInstance(
+        dslServices.newInstance(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
             projectOptions,
-            dslScope
+            dslServices
         )
 
     // this is needed because the impl class needs this but the interface does not,

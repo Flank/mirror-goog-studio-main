@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -43,7 +43,7 @@ abstract class VariantPropertiesImpl(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    variantApiScope: VariantPropertiesApiScope,
+    variantApiServices: VariantPropertiesApiServices,
     globalScope: GlobalScope
 ) : ComponentPropertiesImpl(
     componentIdentity,
@@ -56,7 +56,7 @@ abstract class VariantPropertiesImpl(
     variantScope,
     variantData,
     transformManager,
-    variantApiScope,
+    variantApiServices,
     globalScope
 ), VariantProperties, VariantCreationConfig {
 

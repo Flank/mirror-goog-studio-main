@@ -93,7 +93,7 @@ public class LibraryVariantImpl extends BaseVariantImpl implements LibraryVarian
     public Zip getPackageLibrary() {
         variantData
                 .getGlobalScope()
-                .getDslScope()
+                .getDslServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getPackageLibraryProvider()",

@@ -23,13 +23,13 @@ import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.internal.CompileOptions
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import org.gradle.api.NamedDomainObjectContainer
 
 /** Internal implementation of the 'new' DSL interface */
 class LibraryExtensionImpl(
-    dslScope: DslScope,
+    dslServices: DslServices,
     buildTypes: NamedDomainObjectContainer<BuildType>,
     defaultConfig: DefaultConfig,
     productFlavors: NamedDomainObjectContainer<ProductFlavor>,
@@ -43,7 +43,7 @@ class LibraryExtensionImpl(
             SigningConfig,
             LibraryVariant<LibraryVariantProperties>,
             LibraryVariantProperties>(
-        dslScope,
+        dslServices,
         buildTypes,
         defaultConfig,
         productFlavors,
@@ -69,21 +69,21 @@ class LibraryExtensionImpl(
             TestOptions.UnitTestOptions> {
 
     override val buildFeatures: LibraryBuildFeatures =
-        dslScope.objectFactory.newInstance(LibraryBuildFeaturesImpl::class.java)
+        dslServices.newInstance(LibraryBuildFeaturesImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
     override val onVariants: GenericFilteredComponentActionRegistrar<LibraryVariant<LibraryVariantProperties>>
-        get() = dslScope.objectFactory.newInstance(
+        get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
-            dslScope,
+            dslServices,
             variantOperations,
             LibraryVariant::class.java
         ) as GenericFilteredComponentActionRegistrar<LibraryVariant<LibraryVariantProperties>>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<LibraryVariantProperties>
-        get() = dslScope.objectFactory.newInstance(
+        get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
-            dslScope,
+            dslServices,
             variantPropertiesOperations,
             LibraryVariantProperties::class.java
         ) as GenericFilteredComponentActionRegistrar<LibraryVariantProperties>

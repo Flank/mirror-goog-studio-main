@@ -2417,7 +2417,7 @@ public abstract class TaskManager<
         if (isTestCoverageEnabled) {
             if (componentProperties.getVariantScope().getDexer() == DexerTool.DX) {
                 globalScope
-                        .getDslScope()
+                        .getDslServices()
                         .getIssueReporter()
                         .reportWarning(
                                 Type.GENERIC,
@@ -3228,7 +3228,8 @@ public abstract class TaskManager<
         DependencySet kaptDeps = project.getConfigurations().getByName("kapt").getAllDependencies();
         kaptDeps.forEach(
                 (Dependency dependency) -> {
-                    // if it is a data binding compiler dependency w/ a different version, report error
+                    // if it is a data binding compiler dependency w/ a different version, report
+                    // error
                     if (Objects.equals(
                                     dependency.getGroup() + ":" + dependency.getName(),
                                     SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT)
@@ -3240,7 +3241,7 @@ public abstract class TaskManager<
                                         + ":"
                                         + dependency.getVersion();
                         globalScope
-                                .getDslScope()
+                                .getDslServices()
                                 .getIssueReporter()
                                 .reportError(
                                         Type.GENERIC,

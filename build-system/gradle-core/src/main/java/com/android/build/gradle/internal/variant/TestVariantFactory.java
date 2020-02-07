@@ -43,9 +43,9 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantApiScope;
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.VariantApiServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
@@ -64,10 +64,10 @@ public class TestVariantFactory
         extends AbstractAppVariantFactory<TestVariantImpl, TestVariantPropertiesImpl> {
 
     public TestVariantFactory(
-            @NonNull VariantApiScope variantApiScope,
-            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull VariantApiServices variantApiServices,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull GlobalScope globalScope) {
-        super(variantApiScope, variantPropertiesApiScope, globalScope);
+        super(variantApiServices, variantPropertiesApiServices, globalScope);
     }
 
     @Override
@@ -80,10 +80,12 @@ public class TestVariantFactory
     public TestVariantImpl createVariantObject(
             @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
         return globalScope
-                .getDslScope()
-                .getObjectFactory()
+                .getDslServices()
                 .newInstance(
-                        TestVariantImpl.class, variantDslInfo, componentIdentity, variantApiScope);
+                        TestVariantImpl.class,
+                        variantDslInfo,
+                        componentIdentity,
+                        variantApiServices);
     }
 
     @NonNull
@@ -116,8 +118,7 @@ public class TestVariantFactory
             @NonNull TransformManager transformManager) {
         TestVariantPropertiesImpl variantProperties =
                 globalScope
-                        .getDslScope()
-                        .getObjectFactory()
+                        .getDslServices()
                         .newInstance(
                                 TestVariantPropertiesImpl.class,
                                 componentIdentity,
@@ -130,7 +131,7 @@ public class TestVariantFactory
                                 variantScope,
                                 variantData,
                                 transformManager,
-                                variantPropertiesApiScope,
+                                variantPropertiesApiServices,
                                 globalScope);
 
         // create default output

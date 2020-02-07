@@ -35,9 +35,9 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantApiScope;
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.VariantApiServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
@@ -49,29 +49,29 @@ public abstract class BaseVariantFactory<
                 VariantPropertiesT extends VariantPropertiesImpl>
         implements VariantFactory<VariantT, VariantPropertiesT> {
 
-    @NonNull protected final VariantApiScope variantApiScope;
-    @NonNull protected final VariantPropertiesApiScope variantPropertiesApiScope;
+    @NonNull protected final VariantApiServices variantApiServices;
+    @NonNull protected final VariantPropertiesApiServices variantPropertiesApiServices;
     @NonNull protected final GlobalScope globalScope;
 
     public BaseVariantFactory(
-            @NonNull VariantApiScope variantApiScope,
-            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull VariantApiServices variantApiServices,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull GlobalScope globalScope) {
-        this.variantApiScope = variantApiScope;
-        this.variantPropertiesApiScope = variantPropertiesApiScope;
+        this.variantApiServices = variantApiServices;
+        this.variantPropertiesApiServices = variantPropertiesApiServices;
         this.globalScope = globalScope;
     }
 
     @Override
     @NonNull
-    public VariantApiScope getVariantApiScope() {
-        return variantApiScope;
+    public VariantApiServices getVariantApiScope() {
+        return variantApiServices;
     }
 
     @Override
     @NonNull
-    public VariantPropertiesApiScope getVariantPropertiesApiScope() {
-        return variantPropertiesApiScope;
+    public VariantPropertiesApiServices getVariantPropertiesApiScope() {
+        return variantPropertiesApiServices;
     }
 
     @NonNull
@@ -79,10 +79,9 @@ public abstract class BaseVariantFactory<
     public UnitTestImpl createUnitTestObject(
             @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
         return globalScope
-                .getDslScope()
-                .getObjectFactory()
+                .getDslServices()
                 .newInstance(
-                        UnitTestImpl.class, variantDslInfo, componentIdentity, variantApiScope);
+                        UnitTestImpl.class, variantDslInfo, componentIdentity, variantApiServices);
     }
 
     @NonNull
@@ -90,10 +89,12 @@ public abstract class BaseVariantFactory<
     public AndroidTestImpl createAndroidTestObject(
             @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
         return globalScope
-                .getDslScope()
-                .getObjectFactory()
+                .getDslServices()
                 .newInstance(
-                        AndroidTestImpl.class, variantDslInfo, componentIdentity, variantApiScope);
+                        AndroidTestImpl.class,
+                        variantDslInfo,
+                        componentIdentity,
+                        variantApiServices);
     }
 
     @NonNull
@@ -112,8 +113,7 @@ public abstract class BaseVariantFactory<
             @NonNull TransformManager transformManager) {
         UnitTestPropertiesImpl unitTestProperties =
                 globalScope
-                        .getDslScope()
-                        .getObjectFactory()
+                        .getDslServices()
                         .newInstance(
                                 UnitTestPropertiesImpl.class,
                                 componentIdentity,
@@ -127,7 +127,7 @@ public abstract class BaseVariantFactory<
                                 variantData,
                                 testedVariantProperties,
                                 transformManager,
-                                variantPropertiesApiScope,
+                                variantPropertiesApiServices,
                                 globalScope);
 
         unitTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
@@ -151,8 +151,7 @@ public abstract class BaseVariantFactory<
             @NonNull TransformManager transformManager) {
         AndroidTestPropertiesImpl androidTestProperties =
                 globalScope
-                        .getDslScope()
-                        .getObjectFactory()
+                        .getDslServices()
                         .newInstance(
                                 AndroidTestPropertiesImpl.class,
                                 componentIdentity,
@@ -166,7 +165,7 @@ public abstract class BaseVariantFactory<
                                 variantData,
                                 testedVariantProperties,
                                 transformManager,
-                                variantPropertiesApiScope,
+                                variantPropertiesApiServices,
                                 globalScope);
 
         androidTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
@@ -178,7 +177,7 @@ public abstract class BaseVariantFactory<
     public void preVariantWork(Project project) {
         if (project.getPluginManager().hasPlugin(ANDROID_APT_PLUGIN_NAME)) {
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportError(
                             Type.INCOMPATIBLE_PLUGIN,
@@ -203,7 +202,7 @@ public abstract class BaseVariantFactory<
         }
 
         if (!buildConfig) {
-            IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
+            IssueReporter issueReporter = globalScope.getDslServices().getIssueReporter();
 
             if (!model.getDefaultConfig().getProductFlavor().getBuildConfigFields().isEmpty()) {
                 issueReporter.reportError(
@@ -240,7 +239,7 @@ public abstract class BaseVariantFactory<
         }
 
         if (!resValues) {
-            IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
+            IssueReporter issueReporter = globalScope.getDslServices().getIssueReporter();
 
             if (!model.getDefaultConfig().getProductFlavor().getResValues().isEmpty()) {
                 issueReporter.reportError(

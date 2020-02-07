@@ -19,14 +19,19 @@ package com.android.build.gradle.internal.core;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
+import com.android.build.gradle.internal.services.DslServices;
 
 /** Implementation of CoreJavaCompileOptions used to merge multiple configs together. */
 public class MergedJavaCompileOptions
         implements JavaCompileOptions, MergedOptions<JavaCompileOptions> {
 
-    private com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
-            annotationProcessorOptions =
-                    new com.android.build.gradle.internal.dsl.AnnotationProcessorOptions(null);
+    private final com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
+            annotationProcessorOptions;
+
+    public MergedJavaCompileOptions(@NonNull DslServices dslServices) {
+        annotationProcessorOptions =
+                new com.android.build.gradle.internal.dsl.AnnotationProcessorOptions(dslServices);
+    }
 
     @NonNull
     @Override

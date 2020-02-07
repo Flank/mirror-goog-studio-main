@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope
+package com.android.build.gradle.internal.services
 
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -22,20 +22,21 @@ import java.io.File
 import java.util.concurrent.Callable
 
 /**
- * Scope of the VariantProperties API objects.
+ * Services for the VariantProperties API objects.
  *
  * This contains whatever is needed by all the variant properties objects.
  *
  * This is meant to be used only by the variant properties api objects. Other stages of the plugin
- * will use different scope objects.
+ * will use different services objects.
  */
-interface VariantPropertiesApiScope: BaseScope {
+interface VariantPropertiesApiServices:
+    BaseServices {
 
     /**
      * Creates a new property.
      *
      * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiScope.newPropertyBackingDeprecatedApi]
+     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
      *
      * The property will be marked as [Property.finalizeValueOnRead], and will be locked
      * with [Property.disallowChanges] after the variant API(s) have run.
@@ -46,7 +47,7 @@ interface VariantPropertiesApiScope: BaseScope {
      * Creates a new property.
      *
      * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiScope.newPropertyBackingDeprecatedApi]
+     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
      *
      * The property will be marked as [Property.finalizeValueOnRead], and will be locked
      * with [Property.disallowChanges] after the variant API(s) have run.
@@ -57,7 +58,7 @@ interface VariantPropertiesApiScope: BaseScope {
      * Creates a new property.
      *
      * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiScope.newPropertyBackingDeprecatedApi]
+     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
      *
      * The property will be marked as [Property.finalizeValueOnRead], and will be locked
      * with [Property.disallowChanges] after the variant API(s) have run.
@@ -68,7 +69,7 @@ interface VariantPropertiesApiScope: BaseScope {
      * Creates a new property.
      *
      * This should be used for properties used in the new API. If the property is backing an
-     * old API that returns T, use [VariantPropertiesApiScope.newPropertyBackingDeprecatedApi]
+     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
      *
      * The property will be marked as [Property.finalizeValueOnRead], and will be locked
      * with [Property.disallowChanges] after the variant API(s) have run.

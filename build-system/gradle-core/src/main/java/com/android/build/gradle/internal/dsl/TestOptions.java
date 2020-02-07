@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.api.dsl.DslScope;
+import com.android.build.gradle.internal.services.DslServices;
 import com.android.builder.model.TestOptions.Execution;
 import com.android.utils.HelpfulEnumConverter;
 import com.google.common.base.Preconditions;
@@ -55,8 +55,8 @@ public class TestOptions
     @NonNull private final UnitTestOptions unitTests;
 
     @Inject
-    public TestOptions(DslScope dslScope) {
-        this.unitTests = dslScope.getObjectFactory().newInstance(UnitTestOptions.class, dslScope);
+    public TestOptions(DslServices dslServices) {
+        this.unitTests = dslServices.newInstance(UnitTestOptions.class, dslServices);
     }
 
     public void unitTests(Action<UnitTestOptions> action) {
@@ -150,8 +150,8 @@ public class TestOptions
         private boolean includeAndroidResources;
 
         @Inject
-        public UnitTestOptions(@NonNull DslScope dslScope) {
-            testTasks = dslScope.getObjectFactory().domainObjectSet(Test.class);
+        public UnitTestOptions(@NonNull DslServices dslServices) {
+            testTasks = dslServices.getObjectFactory().domainObjectSet(Test.class);
         }
 
         public boolean isReturnDefaultValues() {

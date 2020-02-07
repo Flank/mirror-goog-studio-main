@@ -35,6 +35,6 @@ internal fun createIssueReporterService(
     global: GlobalScope,
     services: CxxServiceRegistryBuilder) {
     services.registerFactory(EVAL_ISSUE_REPORTER_SERVICE_KEY) {
-        global.dslScope.issueReporter
+        global.dslServices.issueReporter
     }
 }

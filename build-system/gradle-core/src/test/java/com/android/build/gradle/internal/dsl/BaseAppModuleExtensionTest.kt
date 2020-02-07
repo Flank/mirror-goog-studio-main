@@ -22,7 +22,7 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.variant2.createFakeDslScope
+import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
@@ -38,14 +38,14 @@ class BaseAppModuleExtensionTest {
     @Suppress("UNCHECKED_CAST")
     @Before
     fun setUp() {
-        val dslScope = createFakeDslScope()
+        val dslServices = createDslServices()
 
         val defaultConfig = Mockito.mock(DefaultConfig::class.java)
         val vectorDrawablesOptions = Mockito.mock(VectorDrawablesOptions::class.java)
         Mockito.`when`(defaultConfig.vectorDrawables).thenReturn(vectorDrawablesOptions)
         Mockito.`when`(defaultConfig.name).thenReturn("default")
         val extension = ApplicationExtensionImpl(
-            dslScope = dslScope,
+            dslServices = dslServices,
             buildTypes = Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BuildType>,
             defaultConfig = defaultConfig,
             productFlavors = Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<ProductFlavor>,
@@ -53,7 +53,7 @@ class BaseAppModuleExtensionTest {
         )
 
         appExtension = BaseAppModuleExtension(
-            dslScope,
+            dslServices,
             Mockito.mock(ProjectOptions::class.java),
             Mockito.mock(GlobalScope::class.java),
             Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BaseVariantOutput>,

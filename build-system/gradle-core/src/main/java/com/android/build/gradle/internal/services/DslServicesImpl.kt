@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.variant2
+package com.android.build.gradle.internal.services
 
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.ProjectScope
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
 import org.gradle.api.file.ProjectLayout
@@ -29,24 +26,25 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ProviderFactory
 import java.io.File
 
-class DslScopeImpl(
-        private val projectScope: ProjectScope,
+class DslServicesImpl(
+        projectServices: ProjectServices,
         override val variableFactory: DslVariableFactory
-) : DslScope {
+): BaseServicesImpl(projectServices),
+        DslServices {
 
         override val issueReporter: IssueReporter
-                get() = projectScope.issueReporter
+                get() = projectServices.issueReporter
         override val deprecationReporter: DeprecationReporter
-                get() = projectScope.deprecationReporter
+                get() = projectServices.deprecationReporter
         override val objectFactory: ObjectFactory
-                get() = projectScope.objectFactory
+                get() = projectServices.objectFactory
         override val logger: Logger
-                get() = projectScope.logger
+                get() = projectServices.logger
         override val providerFactory: ProviderFactory
-                get() = projectScope.providerFactory
+                get() = projectServices.providerFactory
         override val projectLayout: ProjectLayout
-                get() = projectScope.projectLayout
+                get() = projectServices.projectLayout
         override val projectOptions: ProjectOptions
-                get() = projectScope.projectOptions
-        override fun file(file: Any): File = projectScope.fileResolver(file)
+                get() = projectServices.projectOptions
+        override fun file(file: Any): File = projectServices.fileResolver(file)
 }

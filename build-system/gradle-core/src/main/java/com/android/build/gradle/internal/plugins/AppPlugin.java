@@ -26,7 +26,6 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.AppModelBuilder;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.ApplicationExtensionImpl;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -34,10 +33,10 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantApiScope;
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
+import com.android.build.gradle.internal.services.DslServices;
+import com.android.build.gradle.internal.services.VariantApiServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.internal.tasks.ApplicationTaskManager;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.ComponentInfo;
@@ -45,10 +44,8 @@ import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.builder.profile.Recorder;
 import java.util.List;
 import javax.inject.Inject;
-import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -92,7 +89,7 @@ public class AppPlugin
     @NonNull
     @Override
     protected AppExtension createExtension(
-            @NonNull DslScope dslScope,
+            @NonNull DslServices dslServices,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull DefaultConfig defaultConfig,
@@ -105,14 +102,14 @@ public class AppPlugin
                 .create(
                         "android",
                         getExtensionClass(),
-                        dslScope,
+                        dslServices,
                         projectOptions,
                         globalScope,
                         buildOutputs,
                         sourceSetManager,
                         extraModelInfo,
                         new ApplicationExtensionImpl(
-                                globalScope.getDslScope(),
+                                globalScope.getDslServices(),
                                 buildTypeContainer,
                                 defaultConfig,
                                 productFlavorContainer,
@@ -140,41 +137,13 @@ public class AppPlugin
                 variants, testComponents, hasFlavors, globalScope, extension, threadRecorder);
     }
 
-    private static class DeprecatedConfigurationAction implements Action<Dependency> {
-        @NonNull private final String newDslElement;
-        @NonNull private final String configName;
-        @NonNull private final DeprecationReporter deprecationReporter;
-        @NonNull private final DeprecationReporter.DeprecationTarget target;
-        private boolean warningPrintedAlready = false;
-
-        public DeprecatedConfigurationAction(
-                @NonNull String newDslElement,
-                @NonNull String configName,
-                @NonNull DeprecationReporter deprecationReporter,
-                @NonNull DeprecationReporter.DeprecationTarget target) {
-            this.newDslElement = newDslElement;
-            this.configName = configName;
-            this.deprecationReporter = deprecationReporter;
-            this.target = target;
-        }
-
-        @Override
-        public void execute(@NonNull Dependency dependency) {
-            if (!warningPrintedAlready) {
-                warningPrintedAlready = true;
-                deprecationReporter.reportDeprecatedConfiguration(
-                        newDslElement, configName, target);
-            }
-        }
-    }
-
     @NonNull
     @Override
     protected ApplicationVariantFactory createVariantFactory(
-            @NonNull VariantApiScope variantApiScope,
-            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull VariantApiServices variantApiServices,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull GlobalScope globalScope) {
         return new ApplicationVariantFactory(
-                variantApiScope, variantPropertiesApiScope, globalScope);
+                variantApiServices, variantPropertiesApiServices, globalScope);
     }
 }

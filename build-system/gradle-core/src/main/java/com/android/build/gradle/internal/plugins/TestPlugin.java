@@ -27,7 +27,6 @@ import com.android.build.gradle.TestExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TestApplicationTaskManager;
-import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -35,8 +34,9 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.TestExtensionImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantApiScope;
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
+import com.android.build.gradle.internal.services.DslServices;
+import com.android.build.gradle.internal.services.VariantApiServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.builder.profile.Recorder;
@@ -64,7 +64,7 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
     @NonNull
     @Override
     protected BaseExtension createExtension(
-            @NonNull DslScope dslScope,
+            @NonNull DslServices dslServices,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull DefaultConfig defaultConfig,
@@ -77,14 +77,14 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
                 .create(
                         "android",
                         TestExtension.class,
-                        dslScope,
+                        dslServices,
                         projectOptions,
                         globalScope,
                         buildOutputs,
                         sourceSetManager,
                         extraModelInfo,
                         new TestExtensionImpl(
-                                globalScope.getDslScope(),
+                                globalScope.getDslServices(),
                                 buildTypeContainer,
                                 defaultConfig,
                                 productFlavorContainer,
@@ -124,9 +124,10 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
     @NonNull
     @Override
     protected TestVariantFactory createVariantFactory(
-            @NonNull VariantApiScope variantApiScope,
-            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull VariantApiServices variantApiServices,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull GlobalScope globalScope) {
-        return new TestVariantFactory(variantApiScope, variantPropertiesApiScope, globalScope);
+        return new TestVariantFactory(
+                variantApiServices, variantPropertiesApiServices, globalScope);
     }
 }

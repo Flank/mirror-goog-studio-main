@@ -194,7 +194,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                 return componentProperties.getJavaSources();
             default:
                 componentProperties
-                        .getVariantApiScope()
+                        .getVariantPropertiesApiServices()
                         .getIssueReporter()
                         .reportError(
                                 IssueReporter.Type.GENERIC,
@@ -229,7 +229,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         // else and cannot be known at config time.
         if (componentProperties.getVariantType().isDynamicFeature()) {
             componentProperties
-                    .getVariantApiScope()
+                    .getVariantPropertiesApiServices()
                     .getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -243,7 +243,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public TextResource getApplicationIdTextResource() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "VariantProperties.applicationId",
@@ -257,7 +257,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public Task getPreBuild() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getPreBuildProvider()",
@@ -278,7 +278,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public Task getCheckManifest() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getCheckManifestProvider()",
@@ -302,7 +302,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public AidlCompile getAidlCompile() {
         if (!componentProperties.getBuildFeatures().getAidl()) {
             componentProperties
-                    .getVariantApiScope()
+                    .getVariantPropertiesApiServices()
                     .getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -311,7 +311,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         }
 
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getAidlCompileProvider()",
@@ -326,7 +326,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public TaskProvider<AidlCompile> getAidlCompileProvider() {
         if (!componentProperties.getBuildFeatures().getAidl()) {
             componentProperties
-                    .getVariantApiScope()
+                    .getVariantPropertiesApiServices()
                     .getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -344,7 +344,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public RenderscriptCompile getRenderscriptCompile() {
         if (!componentProperties.getBuildFeatures().getRenderScript()) {
             componentProperties
-                    .getVariantApiScope()
+                    .getVariantPropertiesApiServices()
                     .getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -353,7 +353,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         }
 
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getRenderscriptCompileProvider()",
@@ -368,7 +368,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider() {
         if (!componentProperties.getBuildFeatures().getRenderScript()) {
             componentProperties
-                    .getVariantApiScope()
+                    .getVariantPropertiesApiServices()
                     .getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -384,7 +384,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public MergeResources getMergeResources() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getMergeResourcesProvider()",
@@ -405,7 +405,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public MergeSourceSetFolders getMergeAssets() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getMergeAssetsProvider()",
@@ -426,7 +426,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public GenerateBuildConfig getGenerateBuildConfig() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getGenerateBuildConfigProvider()",
@@ -448,7 +448,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public JavaCompile getJavaCompile() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getJavaCompileProvider()",
@@ -469,7 +469,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public Task getJavaCompiler() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getJavaCompileProvider()",
@@ -483,7 +483,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public Collection<ExternalNativeBuildTask> getExternalNativeBuildTasks() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getExternalNativeBuildProviders()",
@@ -523,7 +523,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public File getMappingFile() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getMappingFileProvider()",
@@ -550,7 +550,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public Sync getProcessJavaResources() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getProcessJavaResourcesProvider()",
@@ -573,7 +573,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     public Task getAssemble() {
         componentProperties
-                .getVariantApiScope()
+                .getVariantPropertiesApiServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getAssembleProvider()",

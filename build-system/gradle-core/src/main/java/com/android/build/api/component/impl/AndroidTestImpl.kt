@@ -19,16 +19,16 @@ package com.android.build.api.component.impl
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.scope.VariantApiScope
+import com.android.build.gradle.internal.services.VariantApiServices
 import javax.inject.Inject
 
 open class AndroidTestImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
-    variantApiScope: VariantApiScope
+    variantApiServices: VariantApiServices
 ) : TestComponentImpl<AndroidTestPropertiesImpl>(
     variantDslInfo,
     variantConfiguration,
-    variantApiScope
+    variantApiServices
 ), AndroidTest<AndroidTestPropertiesImpl> {
 }

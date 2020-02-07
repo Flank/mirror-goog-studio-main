@@ -26,7 +26,6 @@ import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -35,8 +34,9 @@ import com.android.build.gradle.internal.dsl.DynamicFeatureExtensionImpl;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantApiScope;
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
+import com.android.build.gradle.internal.services.DslServices;
+import com.android.build.gradle.internal.services.VariantApiServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.internal.tasks.DynamicFeatureTaskManager;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.DynamicFeatureVariantFactory;
@@ -83,7 +83,7 @@ public class DynamicFeaturePlugin
     @NonNull
     @Override
     protected AppExtension createExtension(
-            @NonNull DslScope dslScope,
+            @NonNull DslServices dslServices,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull DefaultConfig defaultConfig,
@@ -96,14 +96,14 @@ public class DynamicFeaturePlugin
                 .create(
                         "android",
                         getExtensionClass(),
-                        dslScope,
+                        dslServices,
                         projectOptions,
                         globalScope,
                         buildOutputs,
                         sourceSetManager,
                         extraModelInfo,
                         new DynamicFeatureExtensionImpl(
-                                globalScope.getDslScope(),
+                                globalScope.getDslServices(),
                                 buildTypeContainer,
                                 defaultConfig,
                                 productFlavorContainer,
@@ -137,10 +137,10 @@ public class DynamicFeaturePlugin
     @NonNull
     @Override
     protected DynamicFeatureVariantFactory createVariantFactory(
-            @NonNull VariantApiScope variantApiScope,
-            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull VariantApiServices variantApiServices,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull GlobalScope globalScope) {
         return new DynamicFeatureVariantFactory(
-                variantApiScope, variantPropertiesApiScope, globalScope);
+                variantApiServices, variantPropertiesApiServices, globalScope);
     }
 }

@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope
+package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
 
 /**
- * Impl for BaseScope over a [ProjectScope]
+ * Impl for BaseScope over a [ProjectServices]
  */
-abstract class BaseScopeImpl(protected val projectScope: ProjectScope): BaseScope {
+abstract class BaseServicesImpl(protected val projectServices: ProjectServices):
+    BaseServices {
 
-    override fun <T> newInstance(type: Class<T>, vararg args: Any?): T = projectScope.objectFactory.newInstance(type, *args)
+    override fun <T> newInstance(type: Class<T>, vararg args: Any?): T = projectServices.objectFactory.newInstance(type, *args)
 
     override val issueReporter: IssueReporter
-        get() = projectScope.issueReporter
+        get() = projectServices.issueReporter
     override val deprecationReporter: DeprecationReporter
-        get() = projectScope.deprecationReporter
+        get() = projectServices.deprecationReporter
     override val projectOptions: ProjectOptions
-        get() = projectScope.projectOptions
+        get() = projectServices.projectOptions
 }

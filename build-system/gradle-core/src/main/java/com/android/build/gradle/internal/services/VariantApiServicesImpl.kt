@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.scope
+package com.android.build.gradle.internal.services
 
-import com.android.build.gradle.internal.scope.VariantApiScope.Value
+import com.android.build.gradle.internal.services.VariantApiServices.Value
 
-class VariantApiScopeImpl(
-    projectScope: ProjectScope
-): BaseScopeImpl(projectScope), VariantApiScope {
+class VariantApiServicesImpl(
+    projectServices: ProjectServices
+): BaseServicesImpl(projectServices),
+    VariantApiServices {
 
     override fun lockValues() {
         disallowSet = true

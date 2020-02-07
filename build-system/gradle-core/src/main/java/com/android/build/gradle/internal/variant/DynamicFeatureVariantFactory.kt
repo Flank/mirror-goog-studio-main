@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
@@ -31,8 +30,8 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantApiScope
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -40,12 +39,12 @@ import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 
 internal class DynamicFeatureVariantFactory(
-    variantApiScope: VariantApiScope,
-    variantPropertiesApiScope: VariantPropertiesApiScope,
+    variantApiServices: VariantApiServices,
+    variantPropertiesApiServices: VariantPropertiesApiServices,
     globalScope: GlobalScope
 ) : AbstractAppVariantFactory<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl>(
-    variantApiScope,
-    variantPropertiesApiScope,
+    variantApiServices,
+    variantPropertiesApiServices,
     globalScope
 ) {
 
@@ -54,13 +53,12 @@ internal class DynamicFeatureVariantFactory(
         variantDslInfo: VariantDslInfo
     ): DynamicFeatureVariantImpl {
         return globalScope
-            .dslScope
-            .objectFactory
+            .dslServices
             .newInstance(
                 DynamicFeatureVariantImpl::class.java,
                 variantDslInfo,
                 componentIdentity,
-                variantApiScope
+                variantApiServices
             )
     }
 
@@ -78,8 +76,7 @@ internal class DynamicFeatureVariantFactory(
         transformManager: TransformManager
     ): DynamicFeatureVariantPropertiesImpl {
         val variantProperties = globalScope
-            .dslScope
-            .objectFactory
+            .dslServices
             .newInstance(
                 DynamicFeatureVariantPropertiesImpl::class.java,
                 componentIdentity,
@@ -92,7 +89,7 @@ internal class DynamicFeatureVariantFactory(
                 variantScope,
                 variantData,
                 transformManager,
-                variantPropertiesApiScope,
+                variantPropertiesApiServices,
                 globalScope
             )
 

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.services.DslServices;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -44,11 +45,11 @@ public class AnnotationProcessorOptions
 
     private final Boolean includeCompileClasspath = false;
 
-    @Nullable private final DeprecationReporter deprecationReporter;
+    @NonNull private final DslServices dslServices;
 
     @Inject
-    public AnnotationProcessorOptions(@Nullable DeprecationReporter deprecationReporter) {
-        this.deprecationReporter = deprecationReporter;
+    public AnnotationProcessorOptions(@NonNull DslServices dslServices) {
+        this.dslServices = dslServices;
     }
 
     @NonNull
@@ -138,18 +139,20 @@ public class AnnotationProcessorOptions
      */
     @Override
     public Boolean getIncludeCompileClasspath() {
-        deprecationReporter.reportObsoleteUsage(
-                "annotationProcessorOptions.includeCompileClasspath",
-                DeprecationReporter.DeprecationTarget.INCLUDE_COMPILE_CLASSPATH);
+        dslServices
+                .getDeprecationReporter()
+                .reportObsoleteUsage(
+                        "annotationProcessorOptions.includeCompileClasspath",
+                        DeprecationReporter.DeprecationTarget.INCLUDE_COMPILE_CLASSPATH);
         return includeCompileClasspath;
     }
 
     public void setIncludeCompileClasspath(@Nullable Boolean includeCompileClasspath) {
-        if (deprecationReporter != null) {
-            deprecationReporter.reportObsoleteUsage(
-                    "annotationProcessorOptions.includeCompileClasspath",
-                    DeprecationReporter.DeprecationTarget.INCLUDE_COMPILE_CLASSPATH);
-        }
+        dslServices
+                .getDeprecationReporter()
+                .reportObsoleteUsage(
+                        "annotationProcessorOptions.includeCompileClasspath",
+                        DeprecationReporter.DeprecationTarget.INCLUDE_COMPILE_CLASSPATH);
     }
 
     public void _initWith(com.android.build.gradle.api.AnnotationProcessorOptions aptOptions) {

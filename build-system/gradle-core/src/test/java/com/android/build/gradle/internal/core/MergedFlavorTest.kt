@@ -17,9 +17,11 @@
 package com.android.build.gradle.internal.core
 
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
-import com.android.builder.core.DefaultApiVersion
+import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.services.createDslServices
+import com.android.build.gradle.internal.services.createProjectServices
 import com.android.builder.core.AbstractProductFlavor
-import com.android.builder.errors.IssueReporter
+import com.android.builder.core.DefaultApiVersion
 import com.android.builder.internal.ClassFieldImpl
 import com.android.testutils.internal.CopyOfTester
 import com.google.common.collect.ImmutableList
@@ -36,7 +38,7 @@ class MergedFlavorTest {
     private lateinit var defaultFlavor2: AbstractProductFlavor
     private lateinit var custom: AbstractProductFlavor
     private lateinit var custom2: AbstractProductFlavor
-    private lateinit var issueReporter: IssueReporter
+    private lateinit var dslServices: DslServices
 
     @Before
     fun setUp() {
@@ -76,25 +78,29 @@ class MergedFlavorTest {
         custom2.versionNameSuffix = "custom2"
         custom2.applicationId = "com.custom2.app"
 
-        issueReporter = FakeSyncIssueReporter(throwOnError = true)
+        dslServices = createDslServices(
+            createProjectServices(
+                issueReporter = FakeSyncIssueReporter(throwOnError = true)
+            )
+        )
     }
 
     @Test
     fun testClone() {
-        val flavor = MergedFlavor.clone(custom, issueReporter)
+        val flavor = MergedFlavor.clone(custom, dslServices)
         assertThat(flavor.toString().substringAfter("{"))
                 .isEqualTo(custom.toString().substringAfter("{"))
 
         CopyOfTester
                 .assertAllGettersCalled(
                         AbstractProductFlavor::class.java, custom,
-                        { MergedFlavor.clone(it, issueReporter) })
+                        { MergedFlavor.clone(it, dslServices) })
     }
 
     @Test
     fun testMergeOnDefault() {
         val flavor =
-                MergedFlavor.mergeFlavors(defaultFlavor, ImmutableList.of(custom), issueReporter)
+                MergedFlavor.mergeFlavors(defaultFlavor, ImmutableList.of(custom), dslServices)
 
         assertThat(flavor.minSdkVersion?.apiLevel).isEqualTo(42)
         assertThat(flavor.targetSdkVersion?.apiLevel).isEqualTo(43)
@@ -111,7 +117,7 @@ class MergedFlavorTest {
     @Test
     fun testMergeOnCustom() {
         val flavor =
-                MergedFlavor.mergeFlavors(custom, ImmutableList.of(defaultFlavor), issueReporter)
+                MergedFlavor.mergeFlavors(custom, ImmutableList.of(defaultFlavor), dslServices)
 
         assertThat(flavor.minSdkVersion?.apiLevel).isEqualTo(42)
         assertThat(flavor.targetSdkVersion?.apiLevel).isEqualTo(43)
@@ -130,7 +136,7 @@ class MergedFlavorTest {
         val flavor =
                 MergedFlavor
                         .mergeFlavors(
-                                defaultFlavor2, ImmutableList.of(defaultFlavor), issueReporter)
+                                defaultFlavor2, ImmutableList.of(defaultFlavor), dslServices)
 
         assertThat(flavor.minSdkVersion).isNull()
         assertThat(flavor.targetSdkVersion).isNull()
@@ -146,7 +152,7 @@ class MergedFlavorTest {
 
     @Test
     fun testResourceConfigMerge() {
-        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), issueReporter)
+        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), dslServices)
 
         val configs = flavor.resourceConfigurations
         assertThat(configs).containsExactly("hdpi", "ldpi")
@@ -154,7 +160,7 @@ class MergedFlavorTest {
 
     @Test
     fun testManifestPlaceholdersMerge() {
-        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), issueReporter)
+        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), dslServices)
 
         val manifestPlaceholders = flavor.manifestPlaceholders
         assertThat(manifestPlaceholders)
@@ -163,7 +169,7 @@ class MergedFlavorTest {
 
     @Test
     fun testResValuesMerge() {
-        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), issueReporter)
+        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), dslServices)
 
         val resValues = flavor.resValues
         assertThat(resValues).hasSize(3)
@@ -174,7 +180,7 @@ class MergedFlavorTest {
 
     @Test
     fun testBuildConfigFieldMerge() {
-        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), issueReporter)
+        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), dslServices)
 
         val buildConfigFields = flavor.buildConfigFields
         assertThat(buildConfigFields).hasSize(3)
@@ -191,7 +197,7 @@ class MergedFlavorTest {
         custom3.versionNameSuffix = "custom3"
 
         val flavor =
-                MergedFlavor.mergeFlavors(custom, ImmutableList.of(custom3, custom2), issueReporter)
+                MergedFlavor.mergeFlavors(custom, ImmutableList.of(custom3, custom2), dslServices)
 
         assertThat(flavor.minSdkVersion).isEqualTo(
             DefaultApiVersion(
@@ -208,7 +214,7 @@ class MergedFlavorTest {
         custom3.minSdkVersion = DefaultApiVersion(102)
 
         val flavor =
-                MergedFlavor.mergeFlavors(custom, ImmutableList.of(custom3, custom2), issueReporter)
+                MergedFlavor.mergeFlavors(custom, ImmutableList.of(custom3, custom2), dslServices)
         assertThat(flavor.minSdkVersion).isEqualTo(
             DefaultApiVersion(
                 102
@@ -221,7 +227,7 @@ class MergedFlavorTest {
 
     @Test
     fun testSetVersionCodeError() {
-        val flavor = MergedFlavor.clone(defaultFlavor, issueReporter)
+        val flavor = MergedFlavor.clone(defaultFlavor, dslServices)
         try {
             flavor.versionCode = 123
             fail("Setting versionCode should result in RuntimeException from issueReporter")
@@ -242,7 +248,7 @@ class MergedFlavorTest {
 
     @Test
     fun testSetVersionNameError() {
-        val flavor = MergedFlavor.clone(defaultFlavor, issueReporter)
+        val flavor = MergedFlavor.clone(defaultFlavor, dslServices)
         try {
             flavor.versionName = "foo"
             fail("Setting versionName should result in RuntimeException from issueReporter")

@@ -69,11 +69,11 @@ abstract class BaseVariantData(
     val extraGeneratedSourceFolders: MutableList<File> = mutableListOf()
     internal var extraGeneratedSourceFileTrees: MutableList<ConfigurableFileTree>? = null
     internal var externalAptJavaOutputFileTrees: MutableList<ConfigurableFileTree>? = null
-    val extraGeneratedResFolders: ConfigurableFileCollection = globalScope.dslScope.objectFactory.fileCollection()
+    val extraGeneratedResFolders: ConfigurableFileCollection = globalScope.dslServices.objectFactory.fileCollection()
     private var preJavacGeneratedBytecodeMap: MutableMap<Any, FileCollection>? = null
-    private var preJavacGeneratedBytecodeLatest: FileCollection = globalScope.dslScope.objectFactory.fileCollection()
-    val allPreJavacGeneratedBytecode: ConfigurableFileCollection = globalScope.dslScope.objectFactory.fileCollection()
-    val allPostJavacGeneratedBytecode: ConfigurableFileCollection = globalScope.dslScope.objectFactory.fileCollection()
+    private var preJavacGeneratedBytecodeLatest: FileCollection = globalScope.dslServices.objectFactory.fileCollection()
+    val allPreJavacGeneratedBytecode: ConfigurableFileCollection = globalScope.dslServices.objectFactory.fileCollection()
+    val allPostJavacGeneratedBytecode: ConfigurableFileCollection = globalScope.dslServices.objectFactory.fileCollection()
     private var rawAndroidResources: FileCollection? = null
 
     private lateinit var densityFilters: Set<String>

@@ -41,9 +41,9 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.VariantApiScope;
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.VariantApiServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.BuilderConstants;
@@ -57,10 +57,10 @@ public class LibraryVariantFactory
         extends BaseVariantFactory<LibraryVariantImpl, LibraryVariantPropertiesImpl> {
 
     public LibraryVariantFactory(
-            @NonNull VariantApiScope variantApiScope,
-            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull VariantApiServices variantApiServices,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull GlobalScope globalScope) {
-        super(variantApiScope, variantPropertiesApiScope, globalScope);
+        super(variantApiServices, variantPropertiesApiServices, globalScope);
     }
 
     @NonNull
@@ -68,13 +68,12 @@ public class LibraryVariantFactory
     public LibraryVariantImpl createVariantObject(
             @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
         return globalScope
-                .getDslScope()
-                .getObjectFactory()
+                .getDslServices()
                 .newInstance(
                         LibraryVariantImpl.class,
                         variantDslInfo,
                         componentIdentity,
-                        variantApiScope);
+                        variantApiServices);
     }
 
     @NonNull
@@ -93,8 +92,7 @@ public class LibraryVariantFactory
             @NonNull TransformManager transformManager) {
         LibraryVariantPropertiesImpl variantProperties =
                 globalScope
-                        .getDslScope()
-                        .getObjectFactory()
+                        .getDslServices()
                         .newInstance(
                                 LibraryVariantPropertiesImpl.class,
                                 componentIdentity,
@@ -107,7 +105,7 @@ public class LibraryVariantFactory
                                 variantScope,
                                 variantData,
                                 transformManager,
-                                variantPropertiesApiScope,
+                                variantPropertiesApiServices,
                                 globalScope);
 
         // create default output
@@ -207,7 +205,7 @@ public class LibraryVariantFactory
     public void validateModel(@NonNull VariantInputModel model) {
         super.validateModel(model);
 
-        IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
+        IssueReporter issueReporter = globalScope.getDslServices().getIssueReporter();
 
         if (model.getDefaultConfig().getProductFlavor().getApplicationId() != null) {
             String applicationId = model.getDefaultConfig().getProductFlavor().getApplicationId();

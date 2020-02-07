@@ -25,7 +25,6 @@ import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
-import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
@@ -45,7 +44,6 @@ import com.android.build.gradle.internal.SdkComponents;
 import com.android.build.gradle.internal.SdkLocator;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.attribution.AttributionListenerInitializer;
 import com.android.build.gradle.internal.crash.CrashReporting;
 import com.android.build.gradle.internal.dependency.ConstraintHandler;
@@ -69,16 +67,17 @@ import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.profile.ProfileAgent;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
 import com.android.build.gradle.internal.profile.RecordingBuildListener;
-import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.ProjectScope;
-import com.android.build.gradle.internal.scope.VariantApiScope;
-import com.android.build.gradle.internal.scope.VariantApiScopeImpl;
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScopeImpl;
 import com.android.build.gradle.internal.services.Aapt2Daemon;
 import com.android.build.gradle.internal.services.Aapt2Workers;
+import com.android.build.gradle.internal.services.DslServices;
+import com.android.build.gradle.internal.services.DslServicesImpl;
+import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.VariantApiServices;
+import com.android.build.gradle.internal.services.VariantApiServicesImpl;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -86,7 +85,6 @@ import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.build.gradle.internal.variant.VariantInputModelImpl;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.internal.variant.VariantModelImpl;
-import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -151,7 +149,7 @@ public abstract class BasePlugin<
 
     protected ProjectOptions projectOptions;
 
-    private ProjectScope projectScope;
+    private ProjectServices projectServices;
     GlobalScope globalScope;
     protected SyncIssueReporterImpl syncIssueHandler;
 
@@ -184,7 +182,7 @@ public abstract class BasePlugin<
 
     @NonNull
     protected abstract BaseExtension createExtension(
-            @NonNull DslScope dslScope,
+            @NonNull DslServices dslServices,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull DefaultConfig defaultConfig,
@@ -199,8 +197,8 @@ public abstract class BasePlugin<
 
     @NonNull
     protected abstract VariantFactory<VariantT, VariantPropertiesT> createVariantFactory(
-            @NonNull VariantApiScope variantApiScope,
-            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull VariantApiServices variantApiServices,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull GlobalScope globalScope);
 
     @NonNull
@@ -334,8 +332,8 @@ public abstract class BasePlugin<
         // Apply the Java plugin
         project.getPlugins().apply(JavaBasePlugin.class);
 
-        projectScope =
-                new ProjectScope(
+        projectServices =
+                new ProjectServices(
                         syncIssueHandler,
                         deprecationReporter,
                         objectFactory,
@@ -345,10 +343,8 @@ public abstract class BasePlugin<
                         projectOptions,
                         project::file);
 
-        DslScopeImpl dslScope =
-                new DslScopeImpl(
-                        projectScope,
-                        new DslVariableFactory(syncIssueHandler));
+        DslServicesImpl dslServices =
+                new DslServicesImpl(projectServices, new DslVariableFactory(syncIssueHandler));
 
         MessageReceiverImpl messageReceiver =
                 new MessageReceiverImpl(SyncOptions.getErrorFormatMode(projectOptions), logger);
@@ -357,7 +353,7 @@ public abstract class BasePlugin<
                 new GlobalScope(
                         project,
                         creator,
-                        dslScope,
+                        dslServices,
                         sdkComponents,
                         registry,
                         messageReceiver,
@@ -411,17 +407,17 @@ public abstract class BasePlugin<
     }
 
     private void configureExtension() {
-        DslScope dslScope = globalScope.getDslScope();
+        DslServices dslServices = globalScope.getDslServices();
 
         final NamedDomainObjectContainer<BuildType> buildTypeContainer =
-                project.container(BuildType.class, new BuildTypeFactory(dslScope));
+                project.container(BuildType.class, new BuildTypeFactory(dslServices));
         final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
-                project.container(ProductFlavor.class, new ProductFlavorFactory(dslScope));
+                project.container(ProductFlavor.class, new ProductFlavorFactory(dslServices));
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
                 project.container(
                         SigningConfig.class,
                         new SigningConfigFactory(
-                                dslScope.getObjectFactory(),
+                                dslServices.getObjectFactory(),
                                 GradleKeystoreHelper.getDefaultDebugKeystoreLocation()));
 
         final NamedDomainObjectContainer<BaseVariantOutput> buildOutputs =
@@ -431,15 +427,16 @@ public abstract class BasePlugin<
 
         sourceSetManager =
                 new SourceSetManager(
-                        project, isPackagePublished(), dslScope, new DelayedActionsExecutor());
+                        project, isPackagePublished(), dslServices, new DelayedActionsExecutor());
 
         DefaultConfig defaultConfig =
-                dslScope.getObjectFactory()
-                        .newInstance(DefaultConfig.class, BuilderConstants.MAIN, dslScope);
+                dslServices
+                        .getObjectFactory()
+                        .newInstance(DefaultConfig.class, BuilderConstants.MAIN, dslServices);
 
         extension =
                 createExtension(
-                        dslScope,
+                        dslServices,
                         globalScope,
                         buildTypeContainer,
                         defaultConfig,
@@ -451,12 +448,12 @@ public abstract class BasePlugin<
 
         globalScope.setExtension(extension);
 
-        VariantApiScope variantApiScope = new VariantApiScopeImpl(projectScope);
-        VariantPropertiesApiScopeImpl variantPropertiesApiScope =
-                new VariantPropertiesApiScopeImpl(projectScope);
+        VariantApiServices variantApiServices = new VariantApiServicesImpl(projectServices);
+        VariantPropertiesApiServicesImpl variantPropertiesApiServices =
+                new VariantPropertiesApiServicesImpl(projectServices);
 
         variantFactory =
-                createVariantFactory(variantApiScope, variantPropertiesApiScope, globalScope);
+                createVariantFactory(variantApiServices, variantPropertiesApiServices, globalScope);
 
         variantInputModel =
                 new VariantInputModelImpl(globalScope, extension, variantFactory, sourceSetManager);
@@ -530,7 +527,7 @@ public abstract class BasePlugin<
                                 variantManager.getTestComponents().stream()
                                         .map(ComponentInfo::getProperties)
                                         .collect(Collectors.toList()),
-                        globalScope.getDslScope().getIssueReporter());
+                        globalScope.getDslServices().getIssueReporter());
 
         registerModelBuilder(registry, globalScope, variantModel, extension, extraModelInfo);
 
@@ -608,7 +605,7 @@ public abstract class BasePlugin<
             }
 
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportError(
                             Type.COMPILE_SDK_VERSION_NOT_SET,
@@ -639,7 +636,7 @@ public abstract class BasePlugin<
                             + "To learn more, go to https://d.android.com/r/"
                             + "tools/java-8-support-message.html\n";
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportWarning(IssueReporter.Type.GENERIC, warningMsg);
         }
@@ -659,7 +656,7 @@ public abstract class BasePlugin<
         hasCreatedTasks = true;
 
         extension.disableWrite();
-        globalScope.getDslScope().getVariableFactory().disableWrite();
+        globalScope.getDslServices().getVariableFactory().disableWrite();
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setCompileSdk(extension.getCompileSdkVersion())
@@ -759,7 +756,7 @@ public abstract class BasePlugin<
         // The Play Store doesn't allow Pure splits
         if (generatePureSplits) {
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportWarning(
                             Type.GENERIC,
@@ -769,7 +766,7 @@ public abstract class BasePlugin<
 
         if (!generatePureSplits && splits.getLanguage().isEnable()) {
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportWarning(
                             Type.GENERIC,

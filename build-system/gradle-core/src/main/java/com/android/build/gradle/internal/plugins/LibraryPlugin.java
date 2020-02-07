@@ -26,7 +26,6 @@ import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LibraryTaskManager;
-import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -34,8 +33,9 @@ import com.android.build.gradle.internal.dsl.LibraryExtensionImpl;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantApiScope;
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
+import com.android.build.gradle.internal.services.DslServices;
+import com.android.build.gradle.internal.services.VariantApiServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.builder.profile.Recorder;
@@ -59,7 +59,7 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
     @NonNull
     @Override
     protected BaseExtension createExtension(
-            @NonNull DslScope dslScope,
+            @NonNull DslServices dslServices,
             @NonNull GlobalScope globalScope,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull DefaultConfig defaultConfig,
@@ -72,14 +72,14 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
                 .create(
                         "android",
                         getExtensionClass(),
-                        dslScope,
+                        dslServices,
                         projectOptions,
                         globalScope,
                         buildOutputs,
                         sourceSetManager,
                         extraModelInfo,
                         new LibraryExtensionImpl(
-                                globalScope.getDslScope(),
+                                globalScope.getDslServices(),
                                 buildTypeContainer,
                                 defaultConfig,
                                 productFlavorContainer,
@@ -100,10 +100,11 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
     @NonNull
     @Override
     protected LibraryVariantFactory createVariantFactory(
-            @NonNull VariantApiScope variantApiScope,
-            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull VariantApiServices variantApiServices,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull GlobalScope globalScope) {
-        return new LibraryVariantFactory(variantApiScope, variantPropertiesApiScope, globalScope);
+        return new LibraryVariantFactory(
+                variantApiServices, variantPropertiesApiServices, globalScope);
     }
 
     @Override

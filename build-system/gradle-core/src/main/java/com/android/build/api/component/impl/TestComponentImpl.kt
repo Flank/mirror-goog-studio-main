@@ -19,12 +19,12 @@ package com.android.build.api.component.impl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.TestComponent
 import com.android.build.gradle.internal.core.VariantDslInfo
-import com.android.build.gradle.internal.scope.VariantApiScope
+import com.android.build.gradle.internal.services.VariantApiServices
 
 abstract class TestComponentImpl<PropertiesT : TestComponentPropertiesImpl>(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
-    variantApiScope: VariantApiScope
-) : ComponentImpl<PropertiesT>(variantDslInfo, variantConfiguration, variantApiScope),
+    variantApiServices: VariantApiServices
+) : ComponentImpl<PropertiesT>(variantDslInfo, variantConfiguration, variantApiServices),
     TestComponent<PropertiesT> {
 }

@@ -21,8 +21,8 @@ import com.android.build.api.dsl.ApplicationBuildFeatures;
 import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures;
 import com.android.build.api.dsl.LibraryBuildFeatures;
-import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.options.BooleanOption;
 import java.util.function.Supplier;
 import javax.inject.Inject;
@@ -32,16 +32,16 @@ public class DataBindingOptions
         implements com.android.builder.model.DataBindingOptions,
                 com.android.build.api.dsl.DataBinding {
     @NonNull private final Supplier<BuildFeatures> featuresProvider;
-    @NonNull private final DslScope dslScope;
+    @NonNull private final DslServices dslServices;
     private String version;
     private boolean addDefaultAdapters = true;
     private boolean enabledForTests = false;
 
     @Inject
     public DataBindingOptions(
-            @NonNull Supplier<BuildFeatures> featuresProvider, @NonNull DslScope dslScope) {
+            @NonNull Supplier<BuildFeatures> featuresProvider, @NonNull DslServices dslServices) {
         this.featuresProvider = featuresProvider;
-        this.dslScope = dslScope;
+        this.dslServices = dslServices;
     }
 
     /**
@@ -62,7 +62,8 @@ public class DataBindingOptions
     @Override
     @Deprecated
     public boolean isEnabled() {
-        dslScope.getDeprecationReporter()
+        dslServices
+                .getDeprecationReporter()
                 .reportDeprecatedUsage(
                         "android.buildFeatures.dataBinding",
                         "android.dataBinding.enabled",
@@ -80,13 +81,14 @@ public class DataBindingOptions
         if (bool != null) {
             return bool;
         }
-        return dslScope.getProjectOptions().get(BooleanOption.BUILD_FEATURE_DATABINDING);
+        return dslServices.getProjectOptions().get(BooleanOption.BUILD_FEATURE_DATABINDING);
     }
 
     @Override
     @Deprecated
     public void setEnabled(boolean enabled) {
-        dslScope.getDeprecationReporter()
+        dslServices
+                .getDeprecationReporter()
                 .reportDeprecatedUsage(
                         "android.buildFeatures.dataBinding",
                         "android.dataBinding.enabled",
@@ -100,7 +102,8 @@ public class DataBindingOptions
         } else if (buildFeatures instanceof DynamicFeatureBuildFeatures) {
             ((DynamicFeatureBuildFeatures) buildFeatures).setDataBinding(enabled);
         } else {
-            dslScope.getLogger()
+            dslServices
+                    .getLogger()
                     .warn("dataBinding.setEnabled has no impact on this sub-project type");
         }
     }

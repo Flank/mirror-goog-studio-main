@@ -19,12 +19,13 @@ package com.android.build.gradle.internal.variant
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.variant2.createFakeDslScope
+import com.android.build.gradle.internal.services.DslServicesImpl
+import com.android.build.gradle.internal.services.createDslServices
 import com.android.builder.core.BuilderConstants
 import com.google.common.collect.ImmutableList
 import org.gradle.api.Named
@@ -58,10 +59,10 @@ interface Container<T: Named> {
  * After running the DSL, use [toModel]
  */
 class VariantInputModelBuilder(
-    private val dslScope: DslScope = createFakeDslScope()
+    private val dslServices: DslServices = createDslServices()
 ): VariantInputModelDsl {
-    val buildTypes: ContainerImpl<BuildType> = ContainerImpl { name -> BuildType(name, dslScope) }
-    val productFlavors: ContainerImpl<ProductFlavor> = ContainerImpl { name -> ProductFlavor(name, dslScope) }
+    val buildTypes: ContainerImpl<BuildType> = ContainerImpl { name -> BuildType(name, dslServices) }
+    val productFlavors: ContainerImpl<ProductFlavor> = ContainerImpl { name -> ProductFlavor(name, dslServices) }
 
     override fun buildTypes(action: Container<BuildType>.() -> Unit) {
         action(buildTypes)
@@ -90,7 +91,7 @@ class VariantInputModelBuilder(
 
         // the default Config
         val defaultConfig = ProductFlavorData(
-            DefaultConfig(BuilderConstants.MAIN, dslScope),
+            DefaultConfig(BuilderConstants.MAIN, dslServices),
             Mockito.mock(DefaultAndroidSourceSet::class.java),
             Mockito.mock(DefaultAndroidSourceSet::class.java),
             Mockito.mock(DefaultAndroidSourceSet::class.java)

@@ -37,8 +37,8 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.OutputFactory
-import com.android.build.gradle.internal.scope.VariantApiScope
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -58,11 +58,11 @@ import java.util.function.Consumer
 import java.util.stream.Collectors
 
 class ApplicationVariantFactory(
-    variantApiScope: VariantApiScope,
-    variantApiPropertiesScope: VariantPropertiesApiScope,
+    variantApiServices: VariantApiServices,
+    variantApiPropertiesScope: VariantPropertiesApiServices,
     globalScope: GlobalScope
 ) : AbstractAppVariantFactory<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>(
-    variantApiScope,
+    variantApiServices,
     variantApiPropertiesScope,
     globalScope
 ) {
@@ -74,14 +74,13 @@ class ApplicationVariantFactory(
         val extension = globalScope.extension as BaseAppModuleExtension
 
         return globalScope
-            .dslScope
-            .objectFactory
+            .dslServices
             .newInstance(
                 ApplicationVariantImpl::class.java,
                 variantDslInfo,
                 extension.dependenciesInfo,
                 componentIdentity,
-                variantApiScope
+                variantApiServices
             )
     }
 
@@ -99,8 +98,7 @@ class ApplicationVariantFactory(
         transformManager: TransformManager
     ): ApplicationVariantPropertiesImpl {
         val variantProperties = globalScope
-            .dslScope
-            .objectFactory
+            .dslServices
             .newInstance(
                 ApplicationVariantPropertiesImpl::class.java,
                 componentIdentity,
@@ -114,7 +112,7 @@ class ApplicationVariantFactory(
                 variantData,
                 variant.dependenciesInfo as DependenciesInfo,
                 transformManager,
-                variantPropertiesApiScope,
+                variantPropertiesApiServices,
                 globalScope
             )
 
@@ -269,7 +267,7 @@ class ApplicationVariantFactory(
             return
         }
         // if we have any ABI splits, whether it's a full or pure ABI splits, it's an error.
-        val issueReporter = globalScope.dslScope.issueReporter
+        val issueReporter = globalScope.dslServices.issueReporter
         issueReporter.reportError(
             IssueReporter.Type.GENERIC, String.format(
                 "Conflicting configuration : '%1\$s' in ndk abiFilters "
@@ -318,7 +316,7 @@ class ApplicationVariantFactory(
                 }
                 .collect(Collectors.toList())
             globalScope
-                .dslScope
+                .dslServices
                 .issueReporter
                 .reportWarning(
                     IssueReporter.Type.GENERIC, String.format(

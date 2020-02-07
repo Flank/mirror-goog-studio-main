@@ -54,8 +54,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MLKIT_SOURCE
 import com.android.build.gradle.internal.scope.InternalArtifactType.NAMESPACED_CLASSES_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
@@ -92,7 +92,7 @@ abstract class ComponentPropertiesImpl(
     override val variantScope: VariantScope,
     val variantData: BaseVariantData,
     override val transformManager: TransformManager,
-    override val variantApiScope: VariantPropertiesApiScope,
+    override val variantPropertiesApiServices: VariantPropertiesApiServices,
     override val globalScope: GlobalScope
 ): ComponentProperties, BaseCreationConfig, ComponentIdentity by componentIdentity {
 
@@ -203,7 +203,7 @@ abstract class ComponentPropertiesImpl(
         // the DSL objects are now locked, if the versionCode is provided, use that
         // otherwise use the lazy manifest reader to extract the value from the manifest
         // file.
-        val versionCodeProperty = variantApiScope.newPropertyBackingDeprecatedApi(
+        val versionCodeProperty = variantPropertiesApiServices.newPropertyBackingDeprecatedApi(
             Int::class.java,
             Callable {
                 val versionCode = variantDslInfo.getVersionCode(true)
@@ -219,7 +219,7 @@ abstract class ComponentPropertiesImpl(
         // the DSL objects are now locked, if the versionName is provided, use that; otherwise use
         // the lazy manifest reader to extract the value from the manifest file.
         val versionName = variantDslInfo.getVersionName(true)
-        val versionNameProperty = variantApiScope.newPropertyBackingDeprecatedApi(
+        val versionNameProperty = variantPropertiesApiServices.newPropertyBackingDeprecatedApi(
             String::class.java,
             Callable {
                 versionName ?: variantDslInfo.manifestVersionNameSupplier.get() ?: ""
@@ -238,7 +238,7 @@ abstract class ComponentPropertiesImpl(
         return VariantOutputImpl(
             versionCodeProperty,
             versionNameProperty,
-            variantApiScope.newPropertyBackingDeprecatedApi(Boolean::class.java, true, "$name::isEnabled"),
+            variantPropertiesApiServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true, "$name::isEnabled"),
             variantOutputConfiguration,
             apkData
         ).also {

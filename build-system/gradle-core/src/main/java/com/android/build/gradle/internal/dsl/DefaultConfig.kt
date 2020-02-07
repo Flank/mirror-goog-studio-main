@@ -16,15 +16,15 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.DefaultConfig
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.resources.Density
 import com.google.common.collect.Sets
 import javax.inject.Inject
 
 /** DSL object for the defaultConfig object.  */
 // Exposed in the DSL.
-open class DefaultConfig @Inject constructor(name: String, dslScope: DslScope) :
-    BaseFlavor(name, dslScope), DefaultConfig {
+open class DefaultConfig @Inject constructor(name: String, dslServices: DslServices) :
+    BaseFlavor(name, dslServices), DefaultConfig {
 
     init {
         val densities = Density.getRecommendedValuesForDevice()

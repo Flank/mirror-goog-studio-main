@@ -45,7 +45,7 @@ typealias Report = Map<String, BuildArtifactsHolder.ProducersData>
  *
  * @param project the Gradle [Project]
  * @param rootOutputDir a supplier for the intermediate directories to place output files.
- * @parma dslScope the scope for dsl parsing issue raising.
+ * @parma dslServices the scope for dsl parsing issue raising.
  */
 abstract class BuildArtifactsHolder(
     private val project: Project,

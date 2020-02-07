@@ -58,7 +58,7 @@ public abstract class ApkVariantImpl extends InstallableVariantImpl implements A
         BaseVariantData variantData = getVariantData();
         variantData
                 .getGlobalScope()
-                .getDslScope()
+                .getDslServices()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getPackageApplicationProvider()",

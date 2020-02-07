@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.component
 import android.databinding.tool.LayoutXmlProcessor
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
-import com.android.build.gradle.internal.scope.VariantApiScope
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -31,8 +30,8 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
@@ -92,7 +91,7 @@ interface BaseCreationConfig : ComponentIdentity {
     val taskContainer: MutableTaskContainer
     val transformManager: TransformManager
     val paths: VariantPathHelper
-    val variantApiScope: VariantPropertiesApiScope
+    val variantPropertiesApiServices: VariantPropertiesApiServices
     val globalScope: GlobalScope
 
     val layoutXmlProcessor: LayoutXmlProcessor

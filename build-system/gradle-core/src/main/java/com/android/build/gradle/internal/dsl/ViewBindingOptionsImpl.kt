@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.gradle.api.ViewBindingOptions
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -28,12 +28,13 @@ import javax.inject.Inject
 open class ViewBindingOptionsImpl @Inject constructor(
     private val features: BuildFeatures,
     private val projectOptions: ProjectOptions,
-    private val dslScope: DslScope) : ViewBindingOptions {
+    private val dslServices: DslServices
+) : ViewBindingOptions {
 
     /** Whether to enable data binding.  */
     override var isEnabled: Boolean
         get() {
-            dslScope.deprecationReporter
+            dslServices.deprecationReporter
                 .reportDeprecatedUsage(
                     "android.buildFeatures.viewBinding",
                     "android.viewBinding.enabled",
@@ -46,7 +47,7 @@ open class ViewBindingOptionsImpl @Inject constructor(
             return projectOptions[BooleanOption.BUILD_FEATURE_VIEWBINDING]
         }
         set(value) {
-            dslScope.deprecationReporter
+            dslServices.deprecationReporter
                 .reportDeprecatedUsage(
                     "android.buildFeatures.viewBinding",
                     "android.viewBinding.enabled",

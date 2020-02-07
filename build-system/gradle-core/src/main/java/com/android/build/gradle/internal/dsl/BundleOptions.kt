@@ -16,24 +16,21 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
-import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.model.ObjectFactory
 import javax.inject.Inject
 
 /** Features that apply to distribution by the bundle  */
-open class BundleOptions @Inject constructor(
-    objectFactory: ObjectFactory,
-    deprecationReporter: DeprecationReporter
+abstract class BundleOptions @Inject constructor(
+    dslServices: DslServices
 ) {
 
-    val abi: BundleOptionsAbi = objectFactory.newInstance(BundleOptionsAbi::class.java)
-    val density: BundleOptionsDensity = objectFactory.newInstance(BundleOptionsDensity::class.java)
-    val language: BundleOptionsLanguage = objectFactory.newInstance(BundleOptionsLanguage::class.java)
-    val texture: BundleOptionsTexture = objectFactory.newInstance(BundleOptionsTexture::class.java)
-    val integrityConfigDir: DirectoryProperty = objectFactory.directoryProperty()
+    val abi: BundleOptionsAbi = dslServices.newInstance(BundleOptionsAbi::class.java)
+    val density: BundleOptionsDensity = dslServices.newInstance(BundleOptionsDensity::class.java)
+    val language: BundleOptionsLanguage = dslServices.newInstance(BundleOptionsLanguage::class.java)
+    val texture: BundleOptionsTexture = dslServices.newInstance(BundleOptionsTexture::class.java)
+    abstract val integrityConfigDir: DirectoryProperty
 
     fun abi(action: Action<BundleOptionsAbi>) {
         action.execute(abi)

@@ -221,7 +221,7 @@ public class VariantScopeImpl implements VariantScope {
         // TODO: support resource shrinking for multi-apk applications http://b/78119690
         if (variantType.isDynamicFeature() || globalScope.hasDynamicFeatures()) {
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,
@@ -232,7 +232,7 @@ public class VariantScopeImpl implements VariantScope {
         if (variantType.isAar()) {
             if (!globalScope.getProject().getPlugins().hasPlugin("com.android.feature")) {
                 globalScope
-                        .getDslScope()
+                        .getDslServices()
                         .getIssueReporter()
                         .reportError(
                                 Type.GENERIC, "Resource shrinker cannot be used for libraries.");
@@ -242,7 +242,7 @@ public class VariantScopeImpl implements VariantScope {
 
         if (getCodeShrinker() == null) {
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,
@@ -466,7 +466,7 @@ public class VariantScopeImpl implements VariantScope {
 
         if (libDesugarEnabled && !langDesugarEnabled) {
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,
@@ -476,7 +476,7 @@ public class VariantScopeImpl implements VariantScope {
 
         if (libDesugarEnabled && !multidexEnabled) {
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,
@@ -630,7 +630,7 @@ public class VariantScopeImpl implements VariantScope {
 
         BooleanOption missingFlag = shrinker == R8 ? ENABLE_R8_DESUGARING : ENABLE_D8_DESUGARING;
         globalScope
-                .getDslScope()
+                .getDslServices()
                 .getIssueReporter()
                 .reportError(
                         Type.GENERIC,
@@ -663,7 +663,7 @@ public class VariantScopeImpl implements VariantScope {
                             + "gradle.properties file, is not supported when %s.";
             String msg = String.format(template, flag.getPropertyName(), String.join(",", invalid));
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC, msg, variantDslInfo.getComponentIdentity().getName());

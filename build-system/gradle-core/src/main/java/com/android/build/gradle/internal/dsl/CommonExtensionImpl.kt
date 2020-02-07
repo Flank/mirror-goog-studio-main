@@ -23,7 +23,7 @@ import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantOperations
 import com.android.build.gradle.internal.CompileOptions
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.Action
@@ -39,7 +39,7 @@ abstract class CommonExtensionImpl<
         SigningConfigT: com.android.build.api.dsl.SigningConfig,
         VariantT: Variant<VariantPropertiesT>,
         VariantPropertiesT: VariantProperties>(
-    protected val dslScope: DslScope,
+    protected val dslServices: DslServices,
     override val buildTypes: NamedDomainObjectContainer<BuildTypeT>,
     override val defaultConfig: DefaultConfigT,
     override val productFlavors: NamedDomainObjectContainer<ProductFlavorT>,
@@ -67,16 +67,16 @@ abstract class CommonExtensionImpl<
         VariantPropertiesT>, ActionableVariantObjectOperationsExecutor<VariantT, VariantPropertiesT> {
 
     override val aaptOptions: AaptOptions =
-        dslScope.objectFactory.newInstance(
+        dslServices.newInstance(
             AaptOptions::class.java,
-            dslScope.projectOptions[BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT]
+            dslServices.projectOptions[BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT]
         )
 
     override fun aaptOptions(action: AaptOptions.() -> Unit) {
         action.invoke(aaptOptions)
     }
 
-    override val adbOptions: AdbOptions = dslScope.objectFactory.newInstance(AdbOptions::class.java)
+    override val adbOptions: AdbOptions = dslServices.newInstance(AdbOptions::class.java)
 
     override fun adbOptions(action: AdbOptions.() -> Unit) {
         action.invoke(adbOptions)
@@ -93,13 +93,13 @@ abstract class CommonExtensionImpl<
     protected val variantOperations = VariantOperations<VariantT>()
     protected val variantPropertiesOperations = VariantOperations<VariantPropertiesT>()
 
-    override val compileOptions: CompileOptions = dslScope.objectFactory.newInstance(CompileOptions::class.java)
+    override val compileOptions: CompileOptions = dslServices.newInstance(CompileOptions::class.java)
 
     override fun compileOptions(action: CompileOptions.() -> Unit) {
         action.invoke(compileOptions)
     }
 
-    override var compileSdkVersion: String? by dslScope.variableFactory.newProperty(null)
+    override var compileSdkVersion: String? by dslServices.variableFactory.newProperty(null)
 
     override fun compileSdkVersion(version: String) {
         this.compileSdkVersion = version
@@ -114,10 +114,10 @@ abstract class CommonExtensionImpl<
     }
 
     override val dataBinding: DataBindingOptions =
-        dslScope.objectFactory.newInstance(
+        dslServices.newInstance(
             DataBindingOptions::class.java,
             Supplier { buildFeatures },
-            dslScope
+            dslServices
         )
 
     override fun dataBinding(action: DataBindingOptions.() -> Unit) {
@@ -129,13 +129,13 @@ abstract class CommonExtensionImpl<
     }
 
     override val externalNativeBuild: ExternalNativeBuild =
-        dslScope.objectFactory.newInstance(ExternalNativeBuild::class.java, dslScope)
+        dslServices.newInstance(ExternalNativeBuild::class.java, dslServices)
 
     override fun externalNativeBuild(action: (ExternalNativeBuild) -> Unit) {
         action.invoke(externalNativeBuild)
     }
 
-    override val jacoco: JacocoOptions = dslScope.objectFactory.newInstance(JacocoOptions::class.java)
+    override val jacoco: JacocoOptions = dslServices.newInstance(JacocoOptions::class.java)
 
     override fun jacoco(action: JacocoOptions.() -> Unit) {
         action.invoke(jacoco)
@@ -150,14 +150,14 @@ abstract class CommonExtensionImpl<
     }
 
     override val splits: Splits =
-        dslScope.objectFactory.newInstance(Splits::class.java, dslScope.objectFactory)
+        dslServices.newInstance(Splits::class.java, dslServices.objectFactory)
 
     override fun splits(action: Splits.() -> Unit) {
         action.invoke(splits)
     }
 
     override val testOptions: TestOptions =
-        dslScope.objectFactory.newInstance(TestOptions::class.java, dslScope)
+        dslServices.newInstance(TestOptions::class.java, dslServices)
 
     override fun testOptions(action: TestOptions.() -> Unit) {
         action.invoke(testOptions)
