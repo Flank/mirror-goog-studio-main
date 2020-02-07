@@ -140,7 +140,6 @@ val basicActivityTemplate get() = template {
   }
 
   recipe = { data: TemplateData ->
-    formFactor = FormFactor.Wear
     generateBasicActivity(
       data as ModuleTemplateData, activityClass.value, layoutName.value, contentLayoutName.value, packageName.value,
       menuName.value, activityTitle.value, isLauncher.value, firstFragmentLayoutName.value, secondFragmentLayoutName.value)
