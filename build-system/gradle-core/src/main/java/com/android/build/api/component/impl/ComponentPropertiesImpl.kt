@@ -71,6 +71,7 @@ import com.android.utils.appendCapitalized
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
+import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
@@ -413,11 +414,7 @@ abstract class ComponentPropertiesImpl(
             taskContainer.dataBindingExportBuildInfoTask?.let {
                 sourceSets.add(project.fileTree(paths.classOutputForDataBinding).builtBy(it))
             }
-            if (artifacts.hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)) {
-                val baseClassSource =
-                    artifacts.getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)
-                sourceSets.add(project.fileTree(baseClassSource).builtBy(baseClassSource))
-            }
+            addDataBindingSources(project, sourceSets)
         }
         if (!variantDslInfo.renderscriptNdkModeEnabled
             && taskContainer.renderscriptCompileTask != null
@@ -433,6 +430,18 @@ abstract class ComponentPropertiesImpl(
             )
         }
         sourceSets.build()
+    }
+
+    /**
+     * adds databinding sources to the list of sources.
+     */
+    open fun addDataBindingSources(
+        project: Project,
+        sourceSets: ImmutableList.Builder<ConfigurableFileTree>)
+    {
+        val baseClassSource =
+            artifacts.getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)
+        sourceSets.add(project.fileTree(baseClassSource).builtBy(baseClassSource))
     }
 
     /** Returns the path(s) to compiled R classes (R.jar). */

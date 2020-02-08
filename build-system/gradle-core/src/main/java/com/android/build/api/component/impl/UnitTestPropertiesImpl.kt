@@ -30,6 +30,9 @@ import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.google.common.collect.ImmutableList
+import org.gradle.api.Project
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.provider.Property
 import java.util.concurrent.Callable
 import javax.inject.Inject
@@ -74,4 +77,8 @@ open class UnitTestPropertiesImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val applicationId: Property<String> = variantApiScope.propertyOf(String::class.java, Callable{ variantDslInfo.testApplicationId })
+
+    override fun addDataBindingSources(
+        project: Project,
+        sourceSets: ImmutableList.Builder<ConfigurableFileTree>) {}
 }

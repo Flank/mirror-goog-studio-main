@@ -142,7 +142,10 @@ public class LibraryVariantFactory
             }
 
             return new BuildFeatureValuesImpl(
-                    buildFeatures, androidResources, dataBinding, projectOptions);
+                    buildFeatures,
+                    androidResources,
+                    dataBinding && androidResources,
+                    projectOptions);
         } else {
             throw new RuntimeException("buildFeatures not of type DynamicFeatureBuildFeatures");
         }
