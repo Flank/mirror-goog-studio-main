@@ -24,8 +24,6 @@ import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotli
 import com.android.tools.idea.wizard.template.impl.activities.common.generateAppBar
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleMenu
-import com.android.tools.idea.wizard.template.impl.activities.common.navigation.addSafeArgsPlugin
-import com.android.tools.idea.wizard.template.impl.activities.common.navigation.addSafeArgsPluginToClasspath
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.navigationDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.saveFragmentAndViewModel
 import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.res.layout.navigationContentMain
@@ -56,7 +54,7 @@ fun RecipeExecutor.generateNavigationDrawer(
   val excludeMenu = false
   val menuName = classToResource(activityClass)
 
-  val (projectTemplateData, srcOut, resOut, _, _, _, rootOut, _, isNewModule) = data
+  val (projectTemplateData, srcOut, resOut, _, _, _, _, _, isNewModule) = data
   val apis = data.apis
   val (_, minApiLevel, nullableBuildApi, targetApi) = apis
   val buildApi = nullableBuildApi ?: 28
@@ -65,7 +63,6 @@ fun RecipeExecutor.generateNavigationDrawer(
   val useAndroidX = projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
 
-  addSafeArgsPluginToClasspath(useAndroidX)
   addAllKotlinDependencies(data)
   addDependency("com.android.support:support-v4:${buildApi}.+")
 
@@ -103,12 +100,14 @@ fun RecipeExecutor.generateNavigationDrawer(
     generateSimpleMenu(packageName, activityClass, resOut, menuName)
   }
 
-  saveFragmentAndViewModel(resOut, srcOut, language, packageName, "home", useAndroidX, true)
+  saveFragmentAndViewModel(resOut, srcOut, language, packageName, "home", useAndroidX)
   saveFragmentAndViewModel(resOut, srcOut, language, packageName, "gallery", useAndroidX)
   saveFragmentAndViewModel(resOut, srcOut, language, packageName, "slideshow", useAndroidX)
+  if (language == Language.Kotlin) {
+    requireJavaVersion("1.8", true)
+  }
   val generateKotlin = language == Language.Kotlin
   navigationDependencies(generateKotlin, useAndroidX, buildApi)
-  addSafeArgsPlugin(generateKotlin, rootOut)
 
   save(mobileNavigation(packageName), resOut.resolve("navigation/mobile_navigation.xml"))
   open(resOut.resolve("navigation/mobile_navigation.xml"))

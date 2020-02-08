@@ -38,16 +38,16 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.zip.ZipInputStream
 
-private const val DESUGAR_LIB_NAME = "com.android.tools:desugar_jdk_libs:"
-private const val DESUGAR_LIB_CONFIG_NAME = "com.android.tools:desugar_jdk_libs_configuration:"
+// The name of desugar config json file
 private const val DESUGAR_LIB_CONFIG_FILE = "desugar.json"
-// The output of L8 invocation, which is the dex output of desugar_jdk_libs.jar
-const val DESUGAR_LIB_DEX = "_internal-desugar-jdk-libs-dex"
-// The output of DesugarLibConfigExtractor which unzips desugar_jdk_libs_configuration.jar
-const val DESUGAR_LIB_CONFIG = "_internal-desugar-jdk-libs-config"
+// The output of L8 invocation, which is the dex output of desugar lib jar
+const val DESUGAR_LIB_DEX = "_internal-desugar-lib-dex"
+// The output of DesugarLibConfigExtractor which extracts the desugar config json file from
+// desugar lib configuration jar
+const val DESUGAR_LIB_CONFIG = "_internal-desugar-lib-config"
 
 /**
- * Returns a file collection which contains desugar_jdk_libs.jar
+ * Returns a file collection which contains desugar lib jars
  */
 fun getDesugarLibJarFromMaven(project: Project): FileCollection {
     val configuration = getDesugarLibConfiguration(project)
@@ -55,7 +55,7 @@ fun getDesugarLibJarFromMaven(project: Project): FileCollection {
 }
 
 /**
- * Returns a file collection which contains desugar_jdk_libs.jar's dex file generated
+ * Returns a file collection which contains desugar lib jars' dex file generated
  * by artifact transform
  */
 fun getDesugarLibDexFromTransform(variantScope: VariantScope): FileCollection {
@@ -69,7 +69,7 @@ fun getDesugarLibDexFromTransform(variantScope: VariantScope): FileCollection {
 
 /**
  * Returns a provider which represents the content of desugar.json file extracted from
- * desugar_jdk_libs_configuration.jar
+ * desugar lib configuration jars
  */
 fun getDesugarLibConfig(project: Project): Provider<String> {
     val configuration = project.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
@@ -79,12 +79,12 @@ fun getDesugarLibConfig(project: Project): Provider<String> {
         if (locations.isEmpty()) {
             null
         } else {
-            val dir = locations.map { it.asFile }.first()
-            Files.walk(dir.toPath()).use { paths ->
-                paths.filter{ it.toFile().name == DESUGAR_LIB_CONFIG_FILE }.findAny()
-            }.let { configFile ->
-                String(Files.readAllBytes(configFile.get()), StandardCharsets.UTF_8)
+            val content = StringBuilder()
+            val dirs = locations.map { it.asFile.toPath() }
+            dirs.forEach {
+                content.append(String(Files.readAllBytes(it), StandardCharsets.UTF_8))
             }
+            content.toString()
         }
     }
 }
@@ -114,9 +114,6 @@ private fun getDesugarLibDexFromTransform(configuration: Configuration, minSdkVe
             )
             it.attribute(ATTR_L8_MIN_SDK, minSdkVersion.toString())
         }
-        config.componentFilter {
-            it.displayName.contains(DESUGAR_LIB_NAME)
-        }
     }.artifacts.artifactFiles
 }
 
@@ -127,9 +124,6 @@ private fun getDesugarLibConfigFromTransform(configuration: Configuration): File
                 ArtifactAttributes.ARTIFACT_FORMAT,
                 DESUGAR_LIB_CONFIG
             )
-        }
-        configuration.componentFilter {
-            it.displayName.contains(DESUGAR_LIB_CONFIG_NAME)
         }
     }.artifacts.artifactFiles
 }
@@ -142,9 +136,6 @@ private fun getArtifactCollection(configuration: Configuration): FileCollection 
                 ArtifactTypeDefinition.JAR_TYPE
             )
         }
-        config.componentFilter {
-            it.displayName.contains(DESUGAR_LIB_NAME)
-        }
     }.artifacts.artifactFiles
 
 private fun registerDesugarLibConfigTransform(project: Project) {
@@ -155,7 +146,8 @@ private fun registerDesugarLibConfigTransform(project: Project) {
 }
 
 /**
- * Unzips the desugar_jdk_libs_configuration.jar
+ * Extract the desugar config json file from desugar lib configuration jar. If there is no desugar
+ * config json file, an empty file will be created as the output file.
  */
 abstract class DesugarLibConfigExtractor : TransformAction<TransformParameters.None> {
     @get:InputArtifact
@@ -163,19 +155,20 @@ abstract class DesugarLibConfigExtractor : TransformAction<TransformParameters.N
 
     override fun transform(outputs: TransformOutputs) {
         val inputFile = inputArtifact.get().asFile
-        val outputDir = outputs.dir(inputFile.nameWithoutExtension)
+        val outputFile = outputs.file(inputFile.nameWithoutExtension + "-$DESUGAR_LIB_CONFIG_FILE")
         ZipInputStream(inputFile.inputStream().buffered()).use { zipInputStream ->
             while(true) {
                 val entry = zipInputStream.nextEntry ?: break
-                if (entry.isDirectory) {
-                    continue
-                }
-                val destinationFile = outputDir.resolve(entry.name).toPath()
-                Files.createDirectories(destinationFile.parent)
-                Files.newOutputStream(destinationFile).buffered().use { output ->
-                    ByteStreams.copy(zipInputStream, output)
+                if (entry.name.endsWith(DESUGAR_LIB_CONFIG_FILE)) {
+                    Files.newOutputStream(outputFile.toPath()).buffered().use { output ->
+                        ByteStreams.copy(zipInputStream, output)
+                    }
+                    break
                 }
             }
+        }
+        if (!outputFile.exists()) {
+            outputFile.createNewFile()
         }
     }
 }

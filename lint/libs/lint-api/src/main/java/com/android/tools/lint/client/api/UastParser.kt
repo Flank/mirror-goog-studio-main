@@ -20,8 +20,10 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Location
 import com.google.common.annotations.Beta
+import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
@@ -57,11 +59,17 @@ abstract class UastParser {
      *
      * @param contexts a list of production source contexts to be parsed
      * @param testContexts a list of test source contexts to be parsed
+     * @param javaLanguageLevel the language level to parse Java programming language
+     *          files with
+     * @param kotlinLanguageLevel the language level settings to parse Kotlin source
+     *          files with
      * @return true if the preparation succeeded; false if there were errors
      */
     open fun prepare(
         contexts: List<JavaContext>,
-        testContexts: List<JavaContext>
+        testContexts: List<JavaContext>,
+        javaLanguageLevel: LanguageLevel? = null,
+        kotlinLanguageLevel: LanguageVersionSettings? = null
     ): Boolean {
         return true
     }

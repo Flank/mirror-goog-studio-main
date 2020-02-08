@@ -6,7 +6,11 @@ iml_module(
     srcs = ["runtime_compile_cycle_start/src"],
     iml_files = ["runtime_compile_cycle_start/runtime_compile_cycle_start.iml"],
     visibility = ["//visibility:public"],
-    runtime_deps = ["//:runtime_compile_cycle_end"],
+    # do not sort: must match IML order
+    runtime_deps = [
+        "//:runtime_compile_cycle_end",
+        "//:lib/lib",
+    ],
 )
 
 # managed by go/iml_to_build
@@ -15,6 +19,7 @@ iml_module(
     srcs = ["runtime_compile_cycle_end/src"],
     iml_files = ["runtime_compile_cycle_end/runtime_compile_cycle_end.iml"],
     visibility = ["//visibility:public"],
+    runtime_deps = ["//:lib/lib"],
     deps = ["//:runtime_compile_cycle_start[module]"],
 )
 
@@ -95,12 +100,14 @@ iml_module(
     test_runtime_deps = [
         "//:runtime_after_test",
         "//:runtime_test_cycle_end",
+        "//:lib/lib",
     ],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     runtime_deps = [
         "//:runtime",
         "//:runtime_compile_cycle_end",
+        "//:lib/lib",
     ],
     # do not sort: must match IML order
     deps = [
@@ -178,7 +185,11 @@ iml_module(
     srcs = ["runtime_test_cycle_start/src"],
     iml_files = ["runtime_test_cycle_start/runtime_test_cycle_start.iml"],
     visibility = ["//visibility:public"],
-    runtime_deps = ["//:runtime_test_cycle_end"],
+    # do not sort: must match IML order
+    runtime_deps = [
+        "//:runtime_test_cycle_end",
+        "//:lib/lib",
+    ],
 )
 
 # managed by go/iml_to_build
@@ -187,5 +198,13 @@ iml_module(
     srcs = ["runtime_test_cycle_end/src"],
     iml_files = ["runtime_test_cycle_end/runtime_test_cycle_end.iml"],
     visibility = ["//visibility:public"],
+    runtime_deps = ["//:lib/lib"],
     deps = ["//:runtime_test_cycle_start[module, test]"],
+)
+
+# managed by go/iml_to_build
+java_import(
+    name = "lib/lib",
+    jars = ["lib/lib.jar"],
+    visibility = ["//visibility:public"],
 )

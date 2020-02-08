@@ -2114,6 +2114,14 @@ fun PsiMethod.getUMethod(): UMethod? {
     return UastFacade.convertElementWithParent(this, UMethod::class.java) as? UMethod
 }
 
+fun isJreFolder(homePath: File): Boolean {
+    return File(homePath, "bin/java").isFile || File(homePath, "bin/java.exe").isFile
+}
+
+fun isJdkFolder(homePath: File): Boolean {
+    return File(homePath, "bin/javac").isFile || File(homePath, "bin/javac.exe").isFile
+}
+
 // For compatibility reasons
 @Suppress("unused")
 object LintUtils {

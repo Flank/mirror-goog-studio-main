@@ -48,7 +48,12 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.google.common.io.ByteStreams
 import com.google.common.io.Files
+import com.intellij.pom.java.LanguageLevel
 import com.intellij.util.io.URLUtil
+import org.jetbrains.kotlin.config.ApiVersion
+import org.jetbrains.kotlin.config.LanguageVersion
+import org.jetbrains.kotlin.config.LanguageVersionSettings
+import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.io.File
@@ -73,6 +78,7 @@ private const val TAG_RESOURCE = "resource"
 private const val TAG_AAR = "aar"
 private const val TAG_JAR = "jar"
 private const val TAG_SDK = "sdk"
+private const val TAG_JDK = "jdk"
 private const val TAG_JDK_BOOT_CLASS_PATH = "jdk-boot-classpath"
 private const val TAG_LINT_CHECKS = "lint-checks"
 private const val TAG_BASELINE = "baseline"
@@ -95,6 +101,8 @@ private const val ATTR_MODULE = "module"
 private const val ATTR_INCOMPLETE = "incomplete"
 private const val ATTR_JAVA8_LIBS = "android_java8_libs"
 private const val ATTR_DESUGAR = "desugar"
+private const val ATTR_JAVA_LEVEL = "javaLanguage"
+private const val ATTR_KOTLIN_LEVEL = "kotlinLanguage"
 private const val DOT_SRCJAR = ".srcjar"
 
 /**
@@ -121,6 +129,8 @@ data class ProjectMetadata(
     val baseline: File? = null,
     /** The SDK to use, if overriding the default */
     val sdk: File? = null,
+    /** The JDK to use, if overriding the default */
+    val jdk: File? = null,
     /** The cache directory to use, if overriding the default */
     val cache: File? = null,
     /** A map from module to a merged manifest for that module, if any */
@@ -256,6 +266,7 @@ private class ProjectInitializer(
         // may refer to modules we have not encountered yet.
         var child = getFirstSubTag(projectElement)
         var sdk: File? = null
+        var jdk: File? = null
         var baseline: File? = null
         val jdkBootClasspath = mutableListOf<File>()
         while (child != null) {
@@ -275,6 +286,9 @@ private class ProjectInitializer(
                 }
                 TAG_SDK -> {
                     sdk = getFile(child, this.root)
+                }
+                TAG_JDK -> {
+                    jdk = getFile(child, this.root)
                 }
                 TAG_JDK_BOOT_CLASS_PATH -> {
                     val path = child.getAttribute(ATTR_PATH)
@@ -353,6 +367,7 @@ private class ProjectInitializer(
         return ProjectMetadata(
             projects = sortedModules,
             sdk = sdk,
+            jdk = jdk,
             baseline = baseline,
             globalLintChecks = globalLintChecks,
             lintChecks = lintChecks,
@@ -442,6 +457,36 @@ private class ProjectInitializer(
 
         if (android) {
             this.android = true
+        }
+
+        val javaLanguageLevel = moduleElement.getAttribute(ATTR_JAVA_LEVEL).let { level ->
+            if (level.isNotBlank()) {
+                val languageLevel = LanguageLevel.parse(level) ?: run {
+                    reportError("Invalid Java language level \"$level\"", moduleElement)
+                    null
+                }
+                languageLevel
+            } else {
+                null
+            }
+        }
+
+        val kotlinLanguageLevel = moduleElement.getAttribute(ATTR_KOTLIN_LEVEL).let { level ->
+            if (level.isNotBlank()) {
+                val languageLevel = LanguageVersion.fromVersionString(level) ?: run {
+                    reportError("Invalid Kotlin language level \"$level\"", moduleElement)
+                    null
+                }
+                if (languageLevel != null) {
+                    LanguageVersionSettingsImpl(languageLevel,
+                        ApiVersion.createByLanguageVersion(languageLevel)
+                    )
+                } else {
+                    null
+                }
+            } else {
+                null
+            }
         }
 
         // Special case: if the module is a path (with an optional :suffix),
@@ -544,7 +589,7 @@ private class ProjectInitializer(
             computeUniqueSourceRoots("generated", generatedSources, sourceRoots)
 
         val resourceRoots = mutableListOf<File>()
-        if (!resources.isEmpty()) {
+        if (resources.isNotEmpty()) {
             // Compute resource roots. Note that these directories are not allowed
             // to overlap.
             for (file in resources) {
@@ -566,7 +611,8 @@ private class ProjectInitializer(
         module.setClasspath(classes, true)
         module.setClasspath(classpath, false)
         module.desugaring = desugaring
-
+        javaLanguageLevel?.let { module.javaLanguageLevel = it }
+        kotlinLanguageLevel?.let { module.kotlinLanguageLevel = it }
         module.setCompileSdkVersion(buildApi)
 
         this.lintChecks[module] = lintChecks
@@ -953,6 +999,14 @@ constructor(
     }
 
     override fun hashCode(): Int = name.hashCode()
+
+    fun setJavaLanguageLevel(level: LanguageLevel) {
+        this.javaLanguageLevel = level
+    }
+
+    fun setKotlinLanguageLevel(level: LanguageVersionSettings) {
+        this.kotlinLanguageLevel = level
+    }
 
     /** Sets the given files as the manifests applicable for this module */
     fun setManifests(manifests: List<File>) {

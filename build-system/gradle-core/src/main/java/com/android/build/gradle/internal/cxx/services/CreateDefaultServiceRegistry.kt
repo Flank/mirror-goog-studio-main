@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.scope.GlobalScope
  */
 fun createBuildModelServiceRegistry() : CxxServiceRegistry {
     val registry = CxxServiceRegistryBuilder()
-    createCompleteModelService(registry)
     createFinishListenerService(registry)
     createBuildModelListenerService(registry)
     return registry.build()

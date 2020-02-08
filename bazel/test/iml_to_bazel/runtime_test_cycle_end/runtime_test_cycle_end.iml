@@ -8,5 +8,12 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="runtime_test_cycle_start" scope="TEST" />
+    <orderEntry type="module-library" scope="RUNTIME">
+        <library name="tips-idea-ce" >
+            <classes>
+                <root url="jar://$MODULE_DIR$/../lib/lib.jar!/" />
+            </classes>
+        </library>
+    </orderEntry>
   </component>
 </module>

@@ -51,6 +51,7 @@ import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VectorDrawablesOptions;
+import com.android.builder.model.ViewBindingOptions;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
@@ -1184,6 +1185,23 @@ public class GradleModelMocker {
                     break;
                 case "baseline":
                     flags.setBaselineFile(file(arg, true));
+                    break;
+            }
+        } else if (key.startsWith("android.buildFeatures.")) {
+            key = key.substring("android.buildFeatures.".length());
+            int argIndex = key.indexOf(' ');
+            if (argIndex == -1) {
+                error("No value supplied for build feature: " + key);
+                return;
+            }
+            String arg = key.substring(argIndex).trim();
+            key = key.substring(0, argIndex);
+
+            switch (key) {
+                case "viewBinding":
+                    ViewBindingOptions viewBindingOptions = mock(ViewBindingOptions.class);
+                    when(viewBindingOptions.isEnabled()).thenReturn(toBoolean(arg));
+                    when(project.getViewBindingOptions()).thenReturn(viewBindingOptions);
                     break;
             }
         } else {

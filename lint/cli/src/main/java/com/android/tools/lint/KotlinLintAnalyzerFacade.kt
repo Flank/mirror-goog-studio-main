@@ -30,6 +30,7 @@ import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.io.URLUtil
@@ -38,8 +39,6 @@ import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.CliModuleVisibilityManagerImpl
 import org.jetbrains.kotlin.cli.common.CommonCompilerPerformanceManager
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
-import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
-import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.compiler.ClasspathRootsResolver
 import org.jetbrains.kotlin.cli.jvm.compiler.CliVirtualFileFinderFactory
 import org.jetbrains.kotlin.cli.jvm.compiler.JvmPackagePartProvider
@@ -54,6 +53,8 @@ import org.jetbrains.kotlin.cli.jvm.config.JvmModulePathRoot
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
 import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
+import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesDynamicCompoundIndex
+import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndex
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndexImpl
 import org.jetbrains.kotlin.cli.jvm.index.SingleJavaFileRootsIndex
 import org.jetbrains.kotlin.cli.jvm.modules.CliJavaModuleFinder
@@ -62,6 +63,8 @@ import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
+import org.jetbrains.kotlin.config.LanguageVersionSettings
+import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.load.kotlin.MetadataFinderFactory
 import org.jetbrains.kotlin.load.kotlin.ModuleVisibilityManager
@@ -72,10 +75,10 @@ import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.resolve.jvm.modules.JavaModuleResolver
 import org.jetbrains.kotlin.resolve.lazy.declarations.CliDeclarationProviderFactoryService
 import org.jetbrains.kotlin.resolve.lazy.declarations.DeclarationProviderFactoryService
-import org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
 import org.jetbrains.kotlin.scripting.configuration.ScriptingConfigurationKeys
 import org.jetbrains.kotlin.scripting.definitions.ScriptDefinition
+import org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.internal.CliKotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.internal.UastAnalysisHandlerExtension
@@ -89,7 +92,14 @@ import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 // Analyze PSI files with Kotlin compiler and produce binding context
 // From https://github.com/JetBrains/kotlin/commits/rr/yan : fb82b72dc1892d377ccf98511d56ecce219c8098
 class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPerformanceManager? = null) {
-    fun analyze(files: List<File>, contentRoots: List<File>, project: MockProject): BindingTrace {
+    fun analyze(
+        files: List<File>,
+        contentRoots: List<File>,
+        project: MockProject,
+        environment: UastEnvironment,
+        javaLanguageLevel: LanguageLevel? = null,
+        kotlinLanguageLevel: LanguageVersionSettings? = null
+    ): BindingTrace {
 
         if (ServiceManager.getService(project, LightClassGenerationSupport::class.java) == null) {
             registerProjectComponents(project)
@@ -113,7 +123,10 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
             }
         }
 
-        return analyzePsi(ktFiles, contentRoots, project)
+        return analyzePsi(
+            ktFiles, contentRoots, project, environment,
+            javaLanguageLevel, kotlinLanguageLevel
+        )
     }
 
     private fun addKtFiles(
@@ -134,7 +147,10 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
     private fun analyzePsi(
         ktFiles: List<KtFile>,
         contentRoots: List<File>,
-        project: MockProject
+        project: MockProject,
+        environment: UastEnvironment,
+        javaLanguageLevel: LanguageLevel? = null,
+        kotlinLanguageLevel: LanguageVersionSettings? = null
     ): BindingTrace {
         val trace = NoScopeRecordCliBindingTrace()
         val localFs = StandardFileSystems.local()
@@ -164,12 +180,13 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
         // classpath.
         val extraRoots =
             if (!hasKotlinStdlib(contentRoots)) findKotlinStandardLibraries() else emptyList()
-        val allJavaRoots = javaBinaryRoots + javaSourceRoots + extraRoots
 
         val compilerConfiguration = createCompilerConfiguration(
             "lintWithKotlin",
-            javaBinaryRoots,
-            javaSourceRoots
+            javaBinaryRoots + extraRoots,
+            javaSourceRoots,
+            javaLanguageLevel,
+            kotlinLanguageLevel
         )
 
         compilerConfiguration.put(JVMConfigurationKeys.USE_PSI_CLASS_FILES_READING, true)
@@ -178,21 +195,12 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
         if (ScriptDefinitionProvider.getInstance(project) == null) {
             compilerConfiguration.add(
                 ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS,
-                ScriptingCompilerConfigurationComponentRegistrar())
+                ScriptingCompilerConfigurationComponentRegistrar()
+            )
         }
 
         for (registrar in compilerConfiguration.getList(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS)) {
             registrar.registerProjectComponents(project, compilerConfiguration)
-        }
-
-        fun createPackagePartProvider(scope: GlobalSearchScope): JvmPackagePartProvider {
-            return JvmPackagePartProvider(
-                compilerConfiguration.languageVersionSettings,
-                scope
-            ).apply {
-                addRoots(allJavaRoots, compilerConfiguration.getNotNull(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY))
-                packagePartProviders += this
-            }
         }
 
         project.picoContainer.unregisterComponent(DeclarationProviderFactoryService::class.java.name)
@@ -218,7 +226,7 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
 
         val classpathRootsResolver = ClasspathRootsResolver(
             PsiManager.getInstance(project),
-            PrintingMessageCollector(System.err, MessageRenderer.WITHOUT_PATHS, true),
+            MessageCollector.NONE,
             compilerConfiguration.getList(JVMConfigurationKeys.ADDITIONAL_JAVA_MODULES),
             this::contentRootToVirtualFile,
             javaModuleFinder,
@@ -227,11 +235,22 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
         )
 
         val (initialRoots, javaModules) =
-                classpathRootsResolver.convertClasspathRoots(
-                    compilerConfiguration.getList(
-                        CLIConfigurationKeys.CONTENT_ROOTS
-                    )
+            classpathRootsResolver.convertClasspathRoots(
+                compilerConfiguration.getList(CLIConfigurationKeys.CONTENT_ROOTS)
+            )
+
+        fun createPackagePartProvider(scope: GlobalSearchScope): JvmPackagePartProvider {
+            return JvmPackagePartProvider(
+                compilerConfiguration.languageVersionSettings,
+                scope
+            ).apply {
+                addRoots(
+                    initialRoots,
+                    compilerConfiguration.getNotNull(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY)
                 )
+                packagePartProviders += this
+            }
+        }
 
         val javaModuleResolver = CliJavaModuleResolver(
             classpathRootsResolver.javaModuleGraph,
@@ -240,10 +259,18 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
         project.registerServiceIfNeeded(JavaModuleResolver::class.java, javaModuleResolver)
 
         val (roots, singleJavaFileRoots) =
-                initialRoots.partition { (file) -> file.isDirectory || file.extension != JavaFileType.DEFAULT_EXTENSION }
+            initialRoots.partition { (file) -> file.isDirectory || file.extension != JavaFileType.DEFAULT_EXTENSION }
 
-        val rootsIndex = JvmDependenciesIndexImpl(roots)
+        fun updateClasspathFromRootsIndex(index: JvmDependenciesIndex) {
+            index.indexedRoots.forEach {
+                environment.projectEnvironment.addSourcesToClasspath(it.file)
+            }
+        }
 
+        val rootsIndex = JvmDependenciesDynamicCompoundIndex().apply {
+            addIndex(JvmDependenciesIndexImpl(roots))
+            updateClasspathFromRootsIndex(this)
+        }
         val finderFactory = CliVirtualFileFinderFactory(rootsIndex)
         project.registerServiceIfNeeded(MetadataFinderFactory::class.java, finderFactory)
         project.registerServiceIfNeeded(VirtualFileFinderFactory::class.java, finderFactory)
@@ -338,14 +365,24 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
     private fun createCompilerConfiguration(
         moduleName: String,
         javaBinaryRoots: List<JavaRoot>,
-        javaSourceRoots: List<JavaRoot>
+        javaSourceRoots: List<JavaRoot>,
+        javaLanguageLevel: LanguageLevel? = null,
+        kotlinLanguageLevel: LanguageVersionSettings? = null
     ): CompilerConfiguration {
         val configuration = CompilerConfiguration()
         configuration.put(CommonConfigurationKeys.MODULE_NAME, moduleName)
         configuration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, MessageCollector.NONE)
         if (configuration.getList(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS).isEmpty()) {
-            configuration.add(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS,
-                ScriptDefinition.getDefault(defaultJvmScriptingHostConfiguration))
+            configuration.add(
+                ScriptingConfigurationKeys.SCRIPT_DEFINITIONS,
+                ScriptDefinition.getDefault(defaultJvmScriptingHostConfiguration)
+            )
+        }
+
+        if (kotlinLanguageLevel != null &&
+            kotlinLanguageLevel.apiVersion != LanguageVersionSettingsImpl.DEFAULT.apiVersion
+        ) {
+            configuration.languageVersionSettings = kotlinLanguageLevel
         }
 
         val sourceRoots = javaSourceRoots.map { VfsUtilCore.virtualToIoFile(it.file) }

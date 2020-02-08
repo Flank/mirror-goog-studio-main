@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jetbrains.jps.model.JpsCompositeElement;
+import org.jetbrains.jps.model.JpsElement;
 import org.jetbrains.jps.model.JpsElementFactory;
 import org.jetbrains.jps.model.JpsElementReference;
 import org.jetbrains.jps.model.JpsProject;
@@ -121,6 +122,7 @@ public class ImlToIr {
         // We have to create the IrModules first because even iterating in topological order,
         // we do so on a test+compile scope, but there are still runtime dependency cycles.
         Map<JpsModule, IrModule> imlToIr = new HashMap<>();
+        Map<JpsLibrary, IrLibrary> libraryToIr = new HashMap<>();
         for (List<JpsModule> component : testCompileGraph.getConnectedComponents()) {
             IrModule irModule = createIrModule(component);
             irProject.modules.add(irModule);
@@ -208,6 +210,7 @@ public class ImlToIr {
                         irLibrary.addFile(file);
                     }
                     module.addDependency(irLibrary, isExported, scope);
+                    libraryToIr.put(library, irLibrary);
                 } else if (dependency instanceof JpsModuleDependency) {
                     // A dependency to another module
                     JpsModuleDependency moduleDependency = (JpsModuleDependency) dependency;
@@ -236,30 +239,60 @@ public class ImlToIr {
             }
         }
 
-        Map<JpsModule, Set<JpsModule>> runtimeDeps = calculateNewDependencies(compileGraph, runtimeGraph);
+        Map<JpsModule, Set<JpsElement>> runtimeDeps =
+                calculateNewDependencies(compileGraph, runtimeGraph);
 
         // Add extra runtime dependencies:
-        for (Map.Entry<JpsModule, Set<JpsModule>> entry : runtimeDeps.entrySet()) {
+        for (Map.Entry<JpsModule, Set<JpsElement>> entry : runtimeDeps.entrySet()) {
             IrModule from = imlToIr.get(entry.getKey());
-            for (JpsModule module : entry.getValue()) {
-                IrModule to = imlToIr.get(module);
-                if (to != from) {
-                    from.addDependency(to, false, IrModule.Scope.RUNTIME);
-                    dot.addEdge(from.getName(), to.getName(), "blue", "dashed");
+            for (JpsElement element : entry.getValue()) {
+                if (element instanceof JpsModule) {
+                    JpsModule module = (JpsModule) element;
+                    IrModule to = imlToIr.get(module);
+                    if (to != from) {
+                        from.addDependency(to, false, IrModule.Scope.RUNTIME);
+                        dot.addEdge(from.getName(), to.getName(), "blue", "dashed");
+                    }
+                } else if (element instanceof JpsLibrary) {
+                    JpsLibrary library = (JpsLibrary) element;
+                    IrLibrary lib = libraryToIr.get(library);
+                    from.addDependency(lib, false, IrModule.Scope.RUNTIME);
+                    dot.addEdge(from.getName(), lib.name, "blue", "dashed");
+                } else {
+                    throw new IllegalStateException(
+                            "Unexpected dependency type "
+                                    + element.getClass()
+                                    + " for "
+                                    + entry.getKey().getName());
                 }
             }
         }
 
-        Map<JpsModule, Set<JpsModule>> testRuntimeDeps = calculateNewDependencies(testCompileGraph, testCompileRuntimeGraph);
-        for (Map.Entry<JpsModule, Set<JpsModule>> entry : testRuntimeDeps.entrySet()) {
+        Map<JpsModule, Set<JpsElement>> testRuntimeDeps =
+                calculateNewDependencies(testCompileGraph, testCompileRuntimeGraph);
+        for (Map.Entry<JpsModule, Set<JpsElement>> entry : testRuntimeDeps.entrySet()) {
             IrModule from = imlToIr.get(entry.getKey());
-            Set<JpsModule> deps = new LinkedHashSet<>(entry.getValue());
+            Set<JpsElement> deps = new LinkedHashSet<>(entry.getValue());
             deps.removeAll(runtimeDeps.get(entry.getKey()));
-            for (JpsModule module : deps) {
-                IrModule to = imlToIr.get(module);
-                if (to != from) {
-                    from.addDependency(to, false, IrModule.Scope.TEST_RUNTIME);
-                    dot.addEdge(from.getName(), to.getName(), "green", "dashed");
+            for (JpsElement element : deps) {
+                if (element instanceof JpsModule) {
+                    JpsModule module = (JpsModule) element;
+                    IrModule to = imlToIr.get(module);
+                    if (to != from) {
+                        from.addDependency(to, false, IrModule.Scope.TEST_RUNTIME);
+                        dot.addEdge(from.getName(), to.getName(), "green", "dashed");
+                    }
+                } else if (element instanceof JpsLibrary) {
+                    JpsLibrary library = (JpsLibrary) element;
+                    IrLibrary lib = libraryToIr.get(library);
+                    from.addDependency(lib, false, IrModule.Scope.TEST_RUNTIME);
+                    dot.addEdge(from.getName(), lib.name, "green", "dashed");
+                } else {
+                    throw new IllegalStateException(
+                            "Unexpected dependency type "
+                                    + element.getClass()
+                                    + " for "
+                                    + entry.getKey().getName());
                 }
             }
         }
@@ -322,19 +355,24 @@ public class ImlToIr {
         return "";
     }
 
-    private static Map<JpsModule, Set<JpsModule>> calculateNewDependencies(
+    private static Map<JpsModule, Set<JpsElement>> calculateNewDependencies(
             JpsGraph partial, JpsGraph complete) {
-        Map<JpsModule, Set<JpsModule>> runtimeDeps = new LinkedHashMap<>();
+        Map<JpsModule, Set<JpsElement>> runtimeDeps = new LinkedHashMap<>();
         for (JpsModule module : partial.getModules()) {
-            Set<JpsModule> newRuntimeDeps = new LinkedHashSet<>();
-            Set<JpsModule> target = new LinkedHashSet<>(complete.getClosure(module));
-            Set<JpsModule> current = partial.getClosure(module);
+            Set<JpsElement> newRuntimeDeps = new LinkedHashSet<>();
+            Set<JpsElement> target = new LinkedHashSet<>(complete.getClosure(module));
+            Set<JpsElement> current = partial.getClosure(module);
             target.removeAll(current);
             while (!target.isEmpty()) {
-                JpsModule missing = target.iterator().next();
+                JpsElement missing = target.iterator().next();
                 newRuntimeDeps.add(missing);
-                target.removeAll(partial.getClosure(missing));
+                if (missing instanceof JpsModule) {
+                    target.removeAll(partial.getClosure((JpsModule) missing));
+                } else if (missing instanceof JpsLibrary) {
+                    target.remove(missing);
+                }
             }
+
             runtimeDeps.put(module, newRuntimeDeps);
         }
         return runtimeDeps;

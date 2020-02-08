@@ -163,7 +163,8 @@ class DeprecationReporterImpl(
             return
         }
 
-        val defaultValueMessage = option.defaultValue?.let { "\nThe current default is '$it'." }
+        val defaultValueMessage =
+            option.defaultValue?.let { "\nThe current default is '$it'." } ?: ""
         when (val status = option.status) {
             is Option.Status.EXPERIMENTAL -> {
                 if (option.defaultValue != value) {

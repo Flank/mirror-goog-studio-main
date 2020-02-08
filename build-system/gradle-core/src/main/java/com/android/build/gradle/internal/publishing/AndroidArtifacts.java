@@ -274,10 +274,10 @@ public class AndroidArtifacts {
         PROCESSED_JAR(TYPE_PROCESSED_JAR),
         // published dex folder for bundle
         DEX(TYPE_DEX),
-        // dex and keep rules(shrinking desugar_jdk_libs), a folder with a subfolder named dex
+        // dex and keep rules(shrinking desugar lib), a folder with a subfolder named dex
         // which contains dex files, and with a file named keep_rules
         DEX_AND_KEEP_RULES(TYPE_DEX_AND_KEEP_RULES),
-        // a file named keep_rules for shrinking desugar_jdk_libs
+        // a file named keep_rules for shrinking desugar lib
         KEEP_RULES(TYPE_KEEP_RULES),
 
         // manifest is published to both to compare and detect provided-only library dependencies.

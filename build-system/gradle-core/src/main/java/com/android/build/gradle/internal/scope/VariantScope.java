@@ -118,7 +118,7 @@ public interface VariantScope extends TransformVariantScope {
 
     boolean isCoreLibraryDesugaringEnabled();
 
-    /** Returns if we need to shrink desugar_jdk_libs when desugaring Core Library. */
+    /** Returns if we need to shrink desugar lib when desugaring Core Library. */
     boolean getNeedsShrinkDesugarLibrary();
 
     @NonNull
