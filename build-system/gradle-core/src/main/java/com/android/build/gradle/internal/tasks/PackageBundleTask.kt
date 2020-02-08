@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -289,8 +290,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     /**
      * CreateAction for a Task that will pack the bundle artifact.
      */
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<PackageBundleTask, ComponentPropertiesImpl>(
+    class CreationAction(componentProperties: ApplicationVariantPropertiesImpl) :
+        VariantTaskCreationAction<PackageBundleTask, ApplicationVariantPropertiesImpl>(
             componentProperties
         ) {
         override val name: String
@@ -327,25 +328,21 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 AndroidArtifacts.ArtifactType.MODULE_BUNDLE
             )
 
-            if (creationConfig.artifacts.hasFinalProduct(InternalArtifactType.ASSET_PACK_BUNDLE)) {
+            if (creationConfig.needAssetPackTasks.get()) {
                 creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.ASSET_PACK_BUNDLE, task.assetPackZips
                 )
             }
 
-            if(creationConfig.artifacts.hasFinalProduct(InternalArtifactType.BUNDLE_DEPENDENCY_REPORT)) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
-                    task.bundleDeps
-                )
-            }
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
+                task.bundleDeps
+            )
 
-            if (creationConfig.artifacts.hasFinalProduct(InternalArtifactType.APP_INTEGRITY_CONFIG)) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.APP_INTEGRITY_CONFIG,
-                    task.integrityConfigFile
-                )
-            }
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.APP_INTEGRITY_CONFIG,
+                task.integrityConfigFile
+            )
 
             task.aaptOptionsNoCompress =
             creationConfig.globalScope.extension.aaptOptions.noCompress
@@ -366,12 +363,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 // not reprocess the dex files.
             }
 
-            if (creationConfig.artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING)) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.APK_MAPPING,
-                    task.obsfuscationMappingFile
-                )
-            }
+            creationConfig.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.APK_MAPPING,
+                task.obsfuscationMappingFile
+            )
 
             task.debuggable
                 .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)

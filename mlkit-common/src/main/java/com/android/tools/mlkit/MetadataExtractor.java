@@ -17,9 +17,11 @@
 package com.android.tools.mlkit;
 
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
 import tflite.Metadata;
 import tflite.Model;
+import tflite.QuantizationParameters;
 import tflite.SubGraph;
 import tflite.Tensor;
 import tflite.TensorType;
@@ -99,12 +101,12 @@ public class MetadataExtractor {
     }
 
     /** Gets the input tensor with {@code subgraphIndex} and {@code inputIndex}. */
-    private Tensor getInputTensor(int subgraphIndex, int inputIndex) {
+    public Tensor getInputTensor(int subgraphIndex, int inputIndex) {
         return getTensor(subgraphIndex, inputIndex, true);
     }
 
     /** Gets the output tensor with {@code subgraphIndex} and {@code outputIndex}. */
-    private Tensor getOutputTensor(int subgraphIndex, int outputIndex) {
+    public Tensor getOutputTensor(int subgraphIndex, int outputIndex) {
         return getTensor(subgraphIndex, outputIndex, false);
     }
 
@@ -152,5 +154,79 @@ public class MetadataExtractor {
     public String getOutputLabelFileName() {
         ModelMetadata modelMetadata = getModelMetaData();
         return modelMetadata.subgraphMetadata(0).outputTensorMetadata(0).associatedFiles(0).name();
+    }
+
+    public QuantizationParams getQuantizationParams(Tensor tensor) {
+        byte tensorType = tensor.type();
+        float scale;
+        long zeroPoint;
+        // Gets the quantization parameters for integer tensors.
+        if (tensorType == TensorType.INT32
+                || tensorType == TensorType.INT64
+                || tensorType == TensorType.UINT8) {
+            QuantizationParameters quantization = tensor.quantization();
+            // Some integer tensors may not have quantization parameters, meaning they don't need
+            // quantization. Then both scale and zeroPoint are returned as 0. Reset scale to 1.0f to
+            // bypass quantization.
+            scale = quantization.scale(0) == 0.0f ? 1.0f : quantization.scale(0);
+            zeroPoint = quantization.zeroPoint(0);
+        } else {
+            // Non-integer type tensors do not need quantization. Set zeroPoint to 0 and scale to
+            // 1.0f to
+            // bypass the quantization.
+            scale = 1.0f;
+            zeroPoint = 0;
+        }
+
+        return new QuantizationParams(scale, zeroPoint);
+    }
+
+    public static class QuantizationParams {
+        /** The scale value used in dequantization. */
+        private final float scale;
+        /** The zero point value used in dequantization. */
+        private final long zeroPoint;
+
+        /**
+         * Creates a {@link QuantizationParams} with {@code scale} and {@code zero_point}.
+         *
+         * @param scale The scale value used in dequantization.
+         * @param zeroPoint The zero point value used in dequantization.
+         */
+        public QuantizationParams(final float scale, final long zeroPoint) {
+            this.scale = scale;
+            this.zeroPoint = zeroPoint;
+        }
+
+        /** Returns the scale value. */
+        public float getScale() {
+            return scale;
+        }
+
+        /** Returns the zero point value. */
+        public long getZeroPoint() {
+            return zeroPoint;
+        }
+    }
+
+    public static class NormalizationParams {
+        private final float[] mean;
+        private final float[] std;
+
+        public NormalizationParams(FloatBuffer meanBuffer, FloatBuffer stdBuffer) {
+            mean = new float[meanBuffer.limit()];
+            meanBuffer.get(mean);
+
+            std = new float[stdBuffer.limit()];
+            stdBuffer.get(std);
+        }
+
+        public float[] getMean() {
+            return mean;
+        }
+
+        public float[] getStd() {
+            return std;
+        }
     }
 }

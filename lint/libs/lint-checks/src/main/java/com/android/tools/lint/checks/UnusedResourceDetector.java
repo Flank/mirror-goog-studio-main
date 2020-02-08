@@ -21,11 +21,13 @@ import static com.android.SdkConstants.ATTR_DISCARD;
 import static com.android.SdkConstants.ATTR_KEEP;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_SHRINK_MODE;
+import static com.android.SdkConstants.ATTR_VIEW_BINDING_IGNORE;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.TAG_DATA;
 import static com.android.SdkConstants.TAG_LAYOUT;
 import static com.android.SdkConstants.TOOLS_PREFIX;
+import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.SdkConstants.XMLNS_PREFIX;
@@ -43,7 +45,9 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
+import com.android.builder.model.ViewBindingOptions;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceFolderType;
@@ -165,9 +169,15 @@ public class UnusedResourceDetector extends ResourceXmlDetector
 
     private final UnusedResourceDetectorUsageModel model = new UnusedResourceDetectorUsageModel();
 
-    // Map from data-binding ViewBinding classes (base names, not fully qualified names)
-    // to corresponding layout resource names, if any
-    private Map<String, String> bindingClasses;
+    private boolean projectUsesViewBinding = false;
+    /**
+     * Map of data binding / view binding Binding classes (simple names, not fully qualified names)
+     * to corresponding layout resource names (e.g. ActivityMainBinding -> "activity_main.xml")
+     *
+     * <p>This map is created lazily only once it encounters a relevant layout file, since a
+     * significant enough number of modules don't use data binding or view binding.
+     */
+    @Nullable private Map<String, String> bindingClasses;
 
     /**
      * Whether the resource detector will look for inactive resources (e.g. resource and code
@@ -228,6 +238,22 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                 resource.recordLocation(location);
             }
         }
+    }
+
+    @Override
+    public void beforeCheckEachProject(@NonNull Context context) {
+        projectUsesViewBinding = false;
+        GradleVersion gradleVersion = context.getProject().getGradleModelVersion();
+        if (gradleVersion != null && gradleVersion.isAtLeast(3, 6, 0)) {
+            IdeAndroidProject gradleModel = context.getProject().getGradleProjectModel();
+            ViewBindingOptions viewBindingOptions =
+                    (gradleModel != null) ? gradleModel.getViewBindingOptions() : null;
+            if (viewBindingOptions != null) {
+                projectUsesViewBinding = viewBindingOptions.isEnabled();
+            }
+        }
+
+        super.beforeCheckEachProject(context);
     }
 
     @Override
@@ -558,32 +584,52 @@ public class UnusedResourceDetector extends ResourceXmlDetector
 
             // Data binding layout? If so look for usages of the binding class too
             Element root = document.getDocumentElement();
-            if (folderType == ResourceFolderType.LAYOUT
-                    && root != null
-                    && TAG_LAYOUT.equals(root.getTagName())) {
-                if (bindingClasses == null) {
-                    bindingClasses = Maps.newHashMap();
-                }
-                String fileName = context.file.getName();
-                String resourceName = Lint.getBaseName(fileName);
-                Element data = getFirstSubTagByName(root, TAG_DATA);
-                String bindingClass = null;
-                while (data != null) {
-                    bindingClass = data.getAttribute(ATTR_CLASS);
-                    if (bindingClass != null && !bindingClass.isEmpty()) {
-                        int dot = bindingClass.lastIndexOf('.');
-                        bindingClass = bindingClass.substring(dot + 1);
-                        break;
+            if (root != null && folderType == ResourceFolderType.LAYOUT) {
+                // Data Binding layouts have a root <layout> tag
+                if (TAG_LAYOUT.equals(root.getTagName())) {
+                    if (bindingClasses == null) {
+                        bindingClasses = Maps.newHashMap();
                     }
-                    data = getNextTagByName(data, TAG_DATA);
-                }
-                if (bindingClass == null || bindingClass.isEmpty()) {
-                    // See ResourceBundle#getFullBindingClass
-                    bindingClass = toClassName(resourceName) + "Binding";
-                }
-                bindingClasses.put(bindingClass, resourceName);
-            }
 
+                    // By default, a data binding class name is derived from the name of the XML
+                    // file, but this can be overridden with a custom name using the
+                    // {@code <data class="..." />} attribute.
+                    String fileName = context.file.getName();
+                    String resourceName = Lint.getBaseName(fileName);
+                    Element data = getFirstSubTagByName(root, TAG_DATA);
+                    String bindingClass = null;
+                    while (data != null) {
+                        bindingClass = data.getAttribute(ATTR_CLASS);
+                        if (bindingClass != null && !bindingClass.isEmpty()) {
+                            int dot = bindingClass.lastIndexOf('.');
+                            bindingClass = bindingClass.substring(dot + 1);
+                            break;
+                        }
+                        data = getNextTagByName(data, TAG_DATA);
+                    }
+                    if (bindingClass == null || bindingClass.isEmpty()) {
+                        // See ResourceBundle#getFullBindingClass
+                        bindingClass = toClassName(resourceName) + "Binding";
+                    }
+                    bindingClasses.put(bindingClass, resourceName);
+                } else if (projectUsesViewBinding) {
+                    // ViewBinding always derives its name from the layout file. However, a layout
+                    // file should be skipped if the root tag contains the "viewBindingIgnore=true"
+                    // attribute.
+                    String ignoreAttribute =
+                            root.getAttributeNS(TOOLS_URI, ATTR_VIEW_BINDING_IGNORE);
+                    if (!VALUE_TRUE.equals(ignoreAttribute)) {
+                        if (bindingClasses == null) {
+                            bindingClasses = Maps.newHashMap();
+                        }
+                        String fileName = context.file.getName();
+                        String resourceName = Lint.getBaseName(fileName);
+                        String bindingClass = toClassName(resourceName) + "Binding";
+
+                        bindingClasses.put(bindingClass, resourceName);
+                    }
+                }
+            }
         } finally {
             model.context = model.xmlContext = null;
         }
@@ -640,8 +686,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector
     @Nullable
     @Override
     public UElementHandler createUastHandler(@NonNull final JavaContext context) {
-        // If using data binding we also have to look for references to the
-        // ViewBinding classes which could be implicit usages of layout resources
+        // If using data binding / view binding, we also have to look for references to the
+        // Binding classes which could be implicit usages of layout resources
         if (bindingClasses == null) {
             return null;
         }
@@ -662,7 +708,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                         if (evaluator.extendsClass(
                                         binding, "android.databinding.ViewDataBinding", true)
                                 || evaluator.extendsClass(
-                                        binding, "androidx.databinding.ViewDataBinding", true)) {
+                                        binding, "androidx.databinding.ViewDataBinding", true)
+                                || evaluator.extendsClass(
+                                        binding, "androidx.viewbinding.ViewBinding", true)) {
                             ResourceUsageModel.markReachable(
                                     model.getResource(ResourceType.LAYOUT, resourceName));
                         }

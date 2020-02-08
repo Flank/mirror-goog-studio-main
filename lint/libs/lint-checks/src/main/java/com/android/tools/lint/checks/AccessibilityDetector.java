@@ -22,6 +22,7 @@ import static com.android.SdkConstants.ATTR_HINT;
 import static com.android.SdkConstants.ATTR_IMPORTANT_FOR_ACCESSIBILITY;
 import static com.android.SdkConstants.IMAGE_BUTTON;
 import static com.android.SdkConstants.IMAGE_VIEW;
+import static com.android.SdkConstants.FLOATING_ACTION_BUTTON;
 import static com.android.SdkConstants.VALUE_NO;
 import static com.android.tools.lint.detector.api.LintFix.TODO;
 
@@ -77,7 +78,11 @@ public class AccessibilityDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(IMAGE_BUTTON, IMAGE_VIEW);
+        return Arrays.asList(
+          IMAGE_BUTTON,
+          IMAGE_VIEW,
+          FLOATING_ACTION_BUTTON.oldName(),
+          FLOATING_ACTION_BUTTON.newName());
     }
 
     @Override

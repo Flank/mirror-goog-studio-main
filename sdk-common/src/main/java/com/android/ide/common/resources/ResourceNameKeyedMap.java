@@ -67,7 +67,7 @@ public class ResourceNameKeyedMap<T> extends THashMap<String, T> {
                 }
 
                 private char normalize(char c) {
-                    if (ResourcesUtil.isInvalidResourceNameCharacter(c)) {
+                    if (ResourcesUtil.isInvalidResourceFieldNameCharacter(c)) {
                         return '_';
                     } else {
                         return c;

@@ -12,7 +12,6 @@ apply plugin: 'com.android.application'
 <@shared.androidConfig hasApplicationId=isApplicationProject applicationId=packageName hasTests=true canHaveCpp=true canUseProguard=isApplicationProject||isLibraryProject />
 
 dependencies {
-    ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
     <#if !improvedTestDeps>
     ${getConfigurationName("androidTestCompile")}('${resolveDependency("com.android.support.test.espresso:espresso-core:+")}', {
         exclude group: 'com.android.support', module: 'support-annotations'

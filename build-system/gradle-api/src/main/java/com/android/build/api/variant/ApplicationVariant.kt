@@ -16,6 +16,7 @@
 
 package com.android.build.api.variant
 
+import com.android.build.api.dsl.DependenciesInfo
 import org.gradle.api.Incubating
 
 /**
@@ -31,5 +32,12 @@ import org.gradle.api.Incubating
 @Incubating
 interface ApplicationVariant<PropertiesT: ApplicationVariantProperties> : Variant<PropertiesT> {
 
+    val debuggable: Boolean
+
+    /** Specify whether to include SDK dependency information in APKs and Bundles. */
+    val dependenciesInfo: DependenciesInfo
+
+    /** Specify whether to include SDK dependency information in APKs and Bundles. */
+    fun dependenciesInfo(action: DependenciesInfo.() -> Unit)
 
 }

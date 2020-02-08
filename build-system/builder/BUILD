@@ -85,7 +85,6 @@ kotlin_test(
         "src/test/java/**/*.kt",
         "src/test/java/**/*.java",
     ]),
-    coverage = True,
     data = [
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platforms/latest",

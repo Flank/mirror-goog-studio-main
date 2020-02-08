@@ -19,7 +19,6 @@ package com.android.build.api.component.impl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.TestComponentProperties
 import com.android.build.api.variant.impl.VariantPropertiesImpl
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -28,6 +27,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -44,7 +44,7 @@ abstract class TestComponentPropertiesImpl @Inject constructor(
     variantData: BaseVariantData,
     override val testedVariant: VariantPropertiesImpl,
     transformManager: TransformManager,
-    dslScope: DslScope,
+    variantApiScope: VariantPropertiesApiScope,
     globalScope: GlobalScope
 ) : ComponentPropertiesImpl(
     componentIdentity,
@@ -56,7 +56,7 @@ abstract class TestComponentPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    dslScope,
+    variantApiScope,
     globalScope
 ), TestComponentProperties, TestComponentCreationConfig {
 

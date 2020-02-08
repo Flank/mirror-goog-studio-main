@@ -25,7 +25,7 @@ fi
   --config=remote \
   --invocation_id=${invocation_id} \
   ${auth_options} \
-  --test_tag_filters=-no_linux,-no_test_linux,coverage-test,-perfgate \
+  --test_tag_filters=-no_linux,-no_test_linux,-perfgate \
   --define agent_coverage=true \
   -- \
   @cov//:all.suite \

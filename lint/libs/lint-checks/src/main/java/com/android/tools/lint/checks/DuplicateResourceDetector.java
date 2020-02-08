@@ -19,7 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TYPE;
 import static com.android.SdkConstants.TAG_ITEM;
-import static com.android.utils.SdkUtils.getResourceFieldName;
+import static com.android.ide.common.resources.ResourcesUtil.resourceNameToFieldName;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -237,7 +237,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
         String name = attribute.getValue();
         String originalName = name;
         // AAPT will flatten the namespace, turning dots, dashes and colons into _
-        name = getResourceFieldName(name);
+        name = resourceNameToFieldName(name);
 
         if (names.contains(name)) {
             String message = String.format("`%1$s` has already been defined in this folder", name);

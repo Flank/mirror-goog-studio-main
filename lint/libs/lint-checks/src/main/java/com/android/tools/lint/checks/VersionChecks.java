@@ -3,6 +3,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
 import static com.android.tools.lint.detector.api.Lint.skipParentheses;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
+import static com.android.utils.SdkUtils.startsWithIgnoreCase;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -598,7 +599,7 @@ public class VersionChecks {
     }
 
     private static final String[] VERSION_METHOD_NAME_PREFIXES = {
-        "isAtLeast", "isRunning", "is", "runningOn", "running"
+        "isAtLeast", "isRunning", "is", "runningOn", "running", "has"
     };
     private static final String[] VERSION_METHOD_NAME_SUFFIXES = {
         "OrLater", "OrAbove", "OrHigher", "OrNewer", "Sdk"
@@ -621,7 +622,7 @@ public class VersionChecks {
             }
         }
 
-        if ("isAtLeast".equals(prefix) && suffix == null) {
+        if (suffix == null && !"is".equals(prefix)) {
             suffix = "";
         }
 
@@ -635,6 +636,22 @@ public class VersionChecks {
                         && Character.isUpperCase(codeName.charAt(0))) {
                     // Some future API level
                     version = SdkVersionInfo.HIGHEST_KNOWN_API + 1;
+                } else if (startsWithIgnoreCase(codeName, "api")) {
+                    int length = codeName.length();
+                    int begin = 3; // "api".length
+                    if (begin < length && codeName.charAt(begin) == '_') {
+                        begin++;
+                    }
+                    int end = begin;
+                    while (end < length) {
+                        if (!Character.isDigit(codeName.charAt(end))) {
+                            break;
+                        }
+                        end++;
+                    }
+                    if (begin < end) {
+                        version = Integer.decode(codeName.substring(begin, end));
+                    }
                 }
             }
 

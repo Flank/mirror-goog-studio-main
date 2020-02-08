@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.ProjectScope
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
 import org.gradle.api.file.ProjectLayout
@@ -29,16 +30,24 @@ import org.gradle.api.provider.ProviderFactory
 import java.io.File
 
 class DslScopeImpl(
-        override val issueReporter: IssueReporter,
-        override val deprecationReporter: DeprecationReporter,
-        override val objectFactory: ObjectFactory,
-        override val logger: Logger,
+        private val projectScope: ProjectScope,
         override val buildFeatures: BuildFeatureValues,
-        override val providerFactory: ProviderFactory,
-        override val variableFactory: DslVariableFactory,
-        override val projectLayout: ProjectLayout,
-        override val projectOptions: ProjectOptions,
-        private val fileResolver: (Any) -> File
+        override val variableFactory: DslVariableFactory
 ) : DslScope {
-    override fun file(file: Any): File = fileResolver.invoke(file)
+
+        override val issueReporter: IssueReporter
+                get() = projectScope.issueReporter
+        override val deprecationReporter: DeprecationReporter
+                get() = projectScope.deprecationReporter
+        override val objectFactory: ObjectFactory
+                get() = projectScope.objectFactory
+        override val logger: Logger
+                get() = projectScope.logger
+        override val providerFactory: ProviderFactory
+                get() = projectScope.providerFactory
+        override val projectLayout: ProjectLayout
+                get() = projectScope.projectLayout
+        override val projectOptions: ProjectOptions
+                get() = projectScope.projectOptions
+        override fun file(file: Any): File = projectScope.fileResolver(file)
 }

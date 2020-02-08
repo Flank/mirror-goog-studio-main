@@ -135,12 +135,10 @@ public abstract class TestServerTask extends NonIncrementalTask {
 
             task.setTestServer(testServer);
 
-            if (testedVariant.getArtifacts().hasFinalProduct(InternalArtifactType.APK.INSTANCE)) {
-                testedVariant
-                        .getArtifacts()
-                        .setTaskInputToFinalProduct(
-                                InternalArtifactType.APK.INSTANCE, task.getTestedApks());
-            }
+            testedVariant
+                    .getArtifacts()
+                    .setTaskInputToFinalProduct(
+                            InternalArtifactType.APK.INSTANCE, task.getTestedApks());
 
             creationConfig
                     .getArtifacts()

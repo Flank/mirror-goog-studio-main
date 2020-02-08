@@ -17,13 +17,13 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.BundleOptions
 import com.android.build.gradle.internal.dsl.NoOpDeprecationReporter
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.createFakeVariantPropertiesApiScope
 import com.android.build.gradle.internal.variant2.createFakeDslScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -98,13 +98,19 @@ class ParseIntegrityConfigTaskTest {
     }
 
     private fun createScopeFromBundleOptions(bundleOptions: BundleOptions): ComponentPropertiesImpl {
-        val dslScope: DslScope = createFakeDslScope(
-            projectOptions = ProjectOptions(
-                ImmutableMap.of<String, Any>(
-                    BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
-                    false
-                )
+        val projectOptions = ProjectOptions(
+            ImmutableMap.of<String, Any>(
+                BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
+                false
             )
+        )
+
+        val dslScope = createFakeDslScope(
+            projectOptions = projectOptions
+        )
+
+        val variantApiScope = createFakeVariantPropertiesApiScope(
+            projectOptions = projectOptions
         )
 
         val componentProperties = Mockito.mock(ComponentPropertiesImpl::class.java)
@@ -115,7 +121,7 @@ class ParseIntegrityConfigTaskTest {
         val taskContainer = Mockito.mock(MutableTaskContainer::class.java)
         val preBuildTask = Mockito.mock(TaskProvider::class.java)
 
-        Mockito.`when`(componentProperties.dslScope).thenReturn(dslScope)
+        Mockito.`when`(componentProperties.variantApiScope).thenReturn(variantApiScope)
         Mockito.`when`(componentProperties.variantType).thenReturn(variantType)
         Mockito.`when`(componentProperties.name).thenReturn("variant")
         Mockito.`when`(componentProperties.taskContainer).thenReturn(taskContainer)

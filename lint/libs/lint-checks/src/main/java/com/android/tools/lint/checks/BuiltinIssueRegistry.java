@@ -32,7 +32,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 369;
+    public static final int INITIAL_CAPACITY = 378;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -210,6 +210,17 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(LayoutConsistencyDetector.INCONSISTENT_IDS);
         issues.add(LayoutInflationDetector.ISSUE);
         issues.add(LeakDetector.ISSUE);
+
+        issues.add(LintDetectorDetector.ID);
+        issues.add(LintDetectorDetector.PSI_COMPARE);
+        issues.add(LintDetectorDetector.CHECK_URL);
+        issues.add(LintDetectorDetector.DOLLAR_STRINGS);
+        issues.add(LintDetectorDetector.TEXT_FORMAT);
+        issues.add(LintDetectorDetector.TRIM_INDENT);
+        issues.add(LintDetectorDetector.UNEXPECTED_DOMAIN);
+        issues.add(LintDetectorDetector.USE_KOTLIN);
+        issues.add(LintDetectorDetector.USE_UAST);
+
         issues.add(LocaleDetector.FINAL_LOCALE);
         issues.add(LocaleDetector.STRING_LOCALE);
         issues.add(LocaleFolderDetector.DEPRECATED_CODE);
@@ -441,7 +452,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             }
 
             if (scope.contains(Scope.JAVA_FILE)) {
-                initialSize += 130;
+                initialSize += 150;
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 16;
             } else if (scope.contains(Scope.MANIFEST)) {

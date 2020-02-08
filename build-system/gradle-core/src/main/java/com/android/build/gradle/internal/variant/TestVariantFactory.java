@@ -38,6 +38,8 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantApiScope;
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
@@ -55,8 +57,11 @@ import org.gradle.api.artifacts.dsl.DependencyHandler;
 public class TestVariantFactory
         extends AbstractAppVariantFactory<TestVariantImpl, TestVariantPropertiesImpl> {
 
-    public TestVariantFactory(@NonNull GlobalScope globalScope) {
-        super(globalScope);
+    public TestVariantFactory(
+            @NonNull VariantApiScope variantApiScope,
+            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull GlobalScope globalScope) {
+        super(variantApiScope, variantPropertiesApiScope, globalScope);
     }
 
     @Override
@@ -71,7 +76,8 @@ public class TestVariantFactory
         return globalScope
                 .getDslScope()
                 .getObjectFactory()
-                .newInstance(TestVariantImpl.class, variantDslInfo, componentIdentity);
+                .newInstance(
+                        TestVariantImpl.class, variantDslInfo, componentIdentity, variantApiScope);
     }
 
     @NonNull
@@ -91,6 +97,7 @@ public class TestVariantFactory
     @NonNull
     @Override
     public TestVariantPropertiesImpl createVariantPropertiesObject(
+            @NonNull TestVariantImpl variant,
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -115,7 +122,7 @@ public class TestVariantFactory
                                 variantScope,
                                 variantData,
                                 transformManager,
-                                globalScope.getDslScope(),
+                                variantPropertiesApiScope,
                                 globalScope);
 
         // create default output

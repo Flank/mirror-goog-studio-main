@@ -14,7 +14,6 @@ iml_module(
     srcs = ["manifest-merger/src/main/java"],
     iml_files = ["manifest-merger/android.sdktools.manifest-merger.iml"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
-    test_coverage = True,
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/sdklib:studio.android.sdktools.sdklib"],
@@ -68,7 +67,6 @@ kotlin_test(
         "manifest-merger/src/test/java/**/*.kt",
         "manifest-merger/src/test/java/**/*.java",
     ]),
-    coverage = True,
     jvm_flags = ["-Dtest.suite.jar=tools.manifest-merger_tests.jar"],
     resources = glob(
         include = ["manifest-merger/src/test/java/**"],
@@ -111,7 +109,7 @@ maven_pom(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "6.1-rc-1"
+GRADLE_VERSION = "6.1.1"
 
 filegroup(
     name = "gradle-distrib",
@@ -126,8 +124,8 @@ filegroup(
 )
 
 filegroup(
-    name = "gradle-distrib-6.2-20200127141515+0000",
-    srcs = ["//tools/external/gradle:gradle-distrib-6.2-20200127141515+0000"],
+    name = "gradle-distrib-6.3-20200130230033+0000",
+    srcs = ["//tools/external/gradle:gradle-distrib-6.3-20200130230033+0000"],
     visibility = ["//visibility:public"],
 )
 

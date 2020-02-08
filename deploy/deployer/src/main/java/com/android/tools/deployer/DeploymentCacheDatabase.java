@@ -41,13 +41,19 @@ public class DeploymentCacheDatabase {
 
     public class Entry {
         private final List<Apk> apks;
+        private final OverlayId oid;
 
         public List<Apk> getApks() {
             return apks;
         }
 
-        private Entry(List<Apk> apks) {
+        public OverlayId getOverlayId() {
+            return oid;
+        }
+
+        private Entry(List<Apk> apks, OverlayId overlayId) {
             this.apks = apks;
+            this.oid = overlayId;
         }
     }
 
@@ -65,9 +71,10 @@ public class DeploymentCacheDatabase {
         return e;
     }
 
-    public boolean store(String serial, String appId, List<Apk> newInstalledApks) {
+    public boolean store(
+            String serial, String appId, List<Apk> newInstalledApks, OverlayId overlayId) {
         String key = String.format("%s:%s", serial, appId);
-        db.put(key, new Entry(newInstalledApks));
+        db.put(key, new Entry(newInstalledApks, overlayId));
         return true;
     }
 }

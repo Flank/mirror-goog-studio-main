@@ -31,8 +31,6 @@ import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.
 import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.secondFragmentJava
 import com.android.tools.idea.wizard.template.impl.activities.basicActivity.src.secondFragmentKt
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
-import com.android.tools.idea.wizard.template.impl.activities.common.navigation.addSafeArgsPlugin
-import com.android.tools.idea.wizard.template.impl.activities.common.navigation.addSafeArgsPluginToClasspath
 import com.android.tools.idea.wizard.template.impl.activities.common.generateAppBar
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.common.generateSimpleMenu
@@ -54,13 +52,6 @@ fun RecipeExecutor.generateBasicActivity(
   val buildApi = moduleData.apis.buildApi!!
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
-  if (useAndroidX) {
-    addClasspathDependency("androidx.navigation:navigation-safe-args-gradle-plugin:+")
-  }
-  else {
-    addClasspathDependency("android.arch.navigation:navigation-safe-args-gradle-plugin:+")
-  }
-  addSafeArgsPluginToClasspath(useAndroidX)
   addAllKotlinDependencies(moduleData)
   generateManifest(
     moduleData, activityClass, activityTitle, packageName, isLauncher, true,
@@ -72,7 +63,6 @@ fun RecipeExecutor.generateBasicActivity(
 
   addDependency("com.android.support:appcompat-v7:$buildApi.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
-  applyPlugin("androidx.navigation.safeargs")
   save(fragmentSimpleXml(useAndroidX, moduleData.isNew), moduleData.resDir.resolve("layout/$simpleLayoutName.xml"))
   if (moduleData.isNew) {
     generateSimpleMenu(packageName, activityClass, moduleData.resDir, menuName)
@@ -134,8 +124,9 @@ fun RecipeExecutor.generateBasicActivity(
     addDependency("android.arch.navigation:navigation-fragment:+")
     addDependency("android.arch.navigation:navigation-ui:+")
   }
-  addSafeArgsPlugin(generateKotlin, moduleData.rootDir)
-
+  if (generateKotlin) {
+    requireJavaVersion("1.8", true)
+  }
   open(simpleActivityPath)
 
   open(resOut.resolve("layout/$simpleLayoutName"))

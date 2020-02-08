@@ -23,6 +23,8 @@ java_binary(
 coverage_java_test(
     name = "agent_tests",
     srcs = glob(["src/test/**/*.java"]),
+    data = glob(["testData/**"]),
+    jvm_flags = ["-Dtest.suite.jar=agent_tests.jar"],
     resources = glob(["binary-resources/src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
@@ -32,6 +34,7 @@ coverage_java_test(
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-commons",
+        "//tools/idea/.idea/libraries:gson",
     ],
 )
 
@@ -52,7 +55,6 @@ iml_module(
     name = "studio.android.sdktools.aspects-agent",
     srcs = ["src/main"],
     iml_files = ["android.sdktools.aspects_agent.iml"],
-    test_coverage = True,
     test_data = glob(["testData/**"]),
     test_srcs = ["src/test"],
     visibility = ["//visibility:public"],

@@ -72,6 +72,11 @@ import com.android.build.gradle.internal.profile.RecordingBuildListener;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.ProjectScope;
+import com.android.build.gradle.internal.scope.VariantApiScope;
+import com.android.build.gradle.internal.scope.VariantApiScopeImpl;
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScopeImpl;
 import com.android.build.gradle.internal.services.Aapt2Daemon;
 import com.android.build.gradle.internal.services.Aapt2Workers;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
@@ -112,6 +117,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.BuildAdapter;
 import org.gradle.BuildResult;
@@ -124,6 +130,7 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.StopExecutionException;
@@ -144,6 +151,7 @@ public abstract class BasePlugin<
 
     protected ProjectOptions projectOptions;
 
+    private ProjectScope projectScope;
     GlobalScope globalScope;
     protected SyncIssueReporterImpl syncIssueHandler;
 
@@ -191,6 +199,8 @@ public abstract class BasePlugin<
 
     @NonNull
     protected abstract VariantFactory<VariantT, VariantPropertiesT> createVariantFactory(
+            @NonNull VariantApiScope variantApiScope,
+            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
             @NonNull GlobalScope globalScope);
 
     @NonNull
@@ -324,18 +334,22 @@ public abstract class BasePlugin<
         // Apply the Java plugin
         project.getPlugins().apply(JavaBasePlugin.class);
 
-        DslScopeImpl dslScope =
-                new DslScopeImpl(
+        projectScope =
+                new ProjectScope(
                         syncIssueHandler,
                         deprecationReporter,
                         objectFactory,
                         project.getLogger(),
-                        new BuildFeatureValuesImpl(projectOptions),
                         project.getProviders(),
-                        new DslVariableFactory(syncIssueHandler),
                         project.getLayout(),
                         projectOptions,
                         project::file);
+
+        DslScopeImpl dslScope =
+                new DslScopeImpl(
+                        projectScope,
+                        new BuildFeatureValuesImpl(projectOptions),
+                        new DslVariableFactory(syncIssueHandler));
 
         MessageReceiverImpl messageReceiver =
                 new MessageReceiverImpl(SyncOptions.getErrorFormatMode(projectOptions), logger);
@@ -442,12 +456,17 @@ public abstract class BasePlugin<
 
         globalScope.setExtension(extension);
 
-        variantFactory = createVariantFactory(globalScope);
+        VariantApiScope variantApiScope = new VariantApiScopeImpl(projectScope);
+        VariantPropertiesApiScopeImpl variantPropertiesApiScope =
+                new VariantPropertiesApiScopeImpl(projectScope);
+
+        variantFactory =
+                createVariantFactory(variantApiScope, variantPropertiesApiScope, globalScope);
 
         variantInputModel =
                 new VariantInputModelImpl(globalScope, extension, variantFactory, sourceSetManager);
         variantManager =
-                new VariantManager(
+                new VariantManager<>(
                         globalScope,
                         project,
                         projectOptions,
@@ -692,6 +711,10 @@ public abstract class BasePlugin<
             apiObjectFactory.create(componentProperties);
         }
 
+        // lock the Properties of the variant API after the old API because
+        // of the versionCode/versionName properties that are shared between the old and new APIs.
+        variantFactory.getVariantPropertiesApiScope().lockProperties();
+
         // Make sure no SourceSets were added through the DSL without being properly configured
         sourceSetManager.checkForUnconfiguredSourceSets();
 
@@ -765,20 +788,29 @@ public abstract class BasePlugin<
      * So far, checks that 2 modules do not have the same identification (group+name).
      */
     private void checkModulesForErrors() {
-        Project rootProject = project.getRootProject();
-        Map<String, Project> subProjectsById = new HashMap<>();
-        for (Project subProject : rootProject.getAllprojects()) {
+        String CHECKED_MODULES_FLAG = "checked_modules_for_errors";
+        ExtraPropertiesExtension extraProperties =
+                project.getRootProject().getExtensions().getExtraProperties();
+        boolean alreadyChecked = extraProperties.has(CHECKED_MODULES_FLAG);
+
+        if (alreadyChecked) {
+            return;
+        }
+        extraProperties.set(CHECKED_MODULES_FLAG, true);
+
+        Set<Project> allProjects = project.getRootProject().getAllprojects();
+        Map<String, Project> subProjectsById = new HashMap<>(allProjects.size());
+        for (Project subProject : allProjects) {
             String id = subProject.getGroup().toString() + ":" + subProject.getName();
             if (subProjectsById.containsKey(id)) {
-                String message = String.format(
-                        "Your project contains 2 or more modules with the same " +
-                                "identification %1$s\n" +
-                                "at \"%2$s\" and \"%3$s\".\n" +
-                                "You must use different identification (either name or group) for " +
-                                "each modules.",
-                        id,
-                        subProjectsById.get(id).getPath(),
-                        subProject.getPath() );
+                String message =
+                        String.format(
+                                "Your project contains 2 or more modules with the same "
+                                        + "identification %1$s\n"
+                                        + "at \"%2$s\" and \"%3$s\".\n"
+                                        + "You must use different identification (either name or group) for "
+                                        + "each modules.",
+                                id, subProjectsById.get(id).getPath(), subProject.getPath());
                 throw new StopExecutionException(message);
             } else {
                 subProjectsById.put(id, subProject);

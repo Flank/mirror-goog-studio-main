@@ -62,6 +62,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
+import com.android.build.gradle.internal.utils.DesugarLibUtils;
 import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.options.BooleanOption;
@@ -670,6 +671,13 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         checkProguardFiles(componentProperties);
 
+        Collection<File> desugarLibLint =
+                DesugarLibUtils.getDesugarLibLintFiles(
+                        componentProperties.getGlobalScope().getProject(),
+                        componentProperties.getVariantScope().isCoreLibraryDesugaringEnabled(),
+                        componentProperties.getMinSdkVersion(),
+                        componentProperties.getGlobalScope().getExtension().getCompileSdkVersion());
+
         return new VariantImpl(
                 variantName,
                 componentProperties.getBaseName(),
@@ -680,7 +688,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                 extraAndroidArtifacts,
                 clonedExtraJavaArtifacts,
                 testTargetVariants,
-                inspectManifestForInstantTag(componentProperties));
+                inspectManifestForInstantTag(componentProperties),
+                desugarLibLint);
     }
 
     private void checkProguardFiles(@NonNull ComponentPropertiesImpl componentProperties) {
@@ -759,7 +768,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                 componentProperties.getVariantData().getAllPreJavacGeneratedBytecode().getFiles());
         additionalTestClasses.addAll(
                 componentProperties.getVariantData().getAllPostJavacGeneratedBytecode().getFiles());
-        if (artifacts.hasFinalProduct(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY.INSTANCE)) {
+        if (componentProperties.getGlobalScope().getExtension().getTestOptions()
+                .getUnitTests().isIncludeAndroidResources()) {
             additionalTestClasses.add(
                     artifacts
                             .getFinalProduct(

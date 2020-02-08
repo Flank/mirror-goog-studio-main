@@ -27,9 +27,9 @@ import static com.android.SdkConstants.TAG_STRING_ARRAY;
 import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_TRUE;
+import static com.android.ide.common.resources.ResourcesUtil.resourceNameToFieldName;
 import static com.android.tools.lint.detector.api.Lint.getBaseName;
 import static com.android.tools.lint.detector.api.Lint.isXmlFile;
-import static com.android.utils.SdkUtils.getResourceFieldName;
 import static com.android.utils.SdkUtils.isBitmapFile;
 
 import com.android.annotations.NonNull;
@@ -193,7 +193,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
             for (Element item : XmlUtils.getSubTags(element)) {
                 Attr nameAttribute = item.getAttributeNode(ATTR_NAME);
                 if (nameAttribute != null) {
-                    String name = getResourceFieldName(nameAttribute.getValue());
+                    String name = resourceNameToFieldName(nameAttribute.getValue());
                     ResourceType resourceType = ResourceType.fromXmlTag(item);
                     if (resourceType != null && isPrivate(context, resourceType, name)) {
                         if (overriding == null) {
@@ -295,7 +295,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
             return;
         }
         ResourceType type = types.get(0);
-        String resourceName = getResourceFieldName(getBaseName(file.getName()));
+        String resourceName = resourceNameToFieldName(getBaseName(file.getName()));
         if (isPrivate(context, type, resourceName)) {
             String message = createOverrideErrorMessage(context, type, resourceName);
             Location location = Location.create(file);

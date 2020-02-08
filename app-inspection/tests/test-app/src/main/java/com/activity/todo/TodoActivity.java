@@ -43,7 +43,7 @@ public final class TodoActivity extends TransportTestActivity {
     @NonNull
     public TodoItem newItem() {
         if (activeGroup == null) {
-            throw new IllegalStateException("Attempt to create an item without a group");
+            newGroup();
         }
         TodoItem item = new TodoItem("Item #" + activeGroup.getItems().size() + 1);
         activeGroup.addItem(item);

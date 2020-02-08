@@ -5,7 +5,6 @@ apply plugin: 'kotlin'
 </#if>
 
 dependencies {
-    ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
     <@kt.addKotlinDependencies />
 }
 

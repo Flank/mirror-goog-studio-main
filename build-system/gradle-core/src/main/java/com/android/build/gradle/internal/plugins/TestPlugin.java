@@ -35,6 +35,8 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.TestExtensionImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantApiScope;
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.builder.profile.Recorder;
@@ -121,7 +123,10 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
 
     @NonNull
     @Override
-    protected TestVariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
-        return new TestVariantFactory(globalScope);
+    protected TestVariantFactory createVariantFactory(
+            @NonNull VariantApiScope variantApiScope,
+            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull GlobalScope globalScope) {
+        return new TestVariantFactory(variantApiScope, variantPropertiesApiScope, globalScope);
     }
 }

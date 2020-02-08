@@ -1,5 +1,4 @@
 load("//tools/base/bazel/avd:avd.bzl", "avd")
-load("@exec_properties//:constants.bzl", "EMULATOR_MACHINE")
 
 # This test demonstrates running an emulator on RBE and using it for a Java
 # test.
@@ -17,7 +16,6 @@ java_test(
         ":emulator_test_device",
         "//prebuilts/studio/sdk:platform-tools",
     ],
-    exec_properties = EMULATOR_MACHINE,
     tags = [
         "no_mac",
         "no_windows",

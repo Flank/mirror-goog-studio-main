@@ -19,21 +19,27 @@ package com.android.build.gradle.internal.variant
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl
-import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantApiScope
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 
 internal class DynamicFeatureVariantFactory(
+    variantApiScope: VariantApiScope,
+    variantPropertiesApiScope: VariantPropertiesApiScope,
     globalScope: GlobalScope
-    ): AbstractAppVariantFactory<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl>(globalScope) {
+) : AbstractAppVariantFactory<DynamicFeatureVariantImpl, DynamicFeatureVariantPropertiesImpl>(
+    variantApiScope,
+    variantPropertiesApiScope,
+    globalScope
+) {
 
     override fun createVariantObject(
         componentIdentity: ComponentIdentity,
@@ -45,11 +51,13 @@ internal class DynamicFeatureVariantFactory(
             .newInstance(
                 DynamicFeatureVariantImpl::class.java,
                 variantDslInfo,
-                componentIdentity
+                componentIdentity,
+                variantApiScope
             )
     }
 
     override fun createVariantPropertiesObject(
+        variant: DynamicFeatureVariantImpl,
         componentIdentity: ComponentIdentity,
         variantDslInfo: VariantDslInfo,
         variantDependencies: VariantDependencies,
@@ -74,7 +82,7 @@ internal class DynamicFeatureVariantFactory(
                 variantScope,
                 variantData,
                 transformManager,
-                globalScope.dslScope,
+                variantPropertiesApiScope,
                 globalScope
             )
 

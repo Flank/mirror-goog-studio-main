@@ -15,19 +15,14 @@
  */
 #include "app_inspection_service.h"
 
-#ifdef APP_INSPECTION_EXPERIMENT
 #include <functional>
 #include <unordered_map>
-#endif
 
 #include "agent/jvmti_helper.h"
-#ifdef APP_INSPECTION_EXPERIMENT
 #include "app_inspection_transform.h"
 #include "slicer/reader.h"
 #include "slicer/writer.h"
 #include "utils/device_info.h"
-#endif
-
 #include "utils/log.h"
 
 using namespace profiler;
@@ -57,15 +52,11 @@ AppInspectionService* AppInspectionService::create(JNIEnv* env) {
   }
   auto service = new AppInspectionService(jvmti);
 
-#ifdef APP_INSPECTION_EXPERIMENT
   service->Initialize();
-#endif
   return service;
 }
 
 AppInspectionService::AppInspectionService(jvmtiEnv* jvmti) : jvmti_(jvmti) {}
-
-#ifdef APP_INSPECTION_EXPERIMENT
 
 static jvmtiIterationControl JNICALL HeapObjectCallback(jlong class_tag,
                                                         jlong size,
@@ -76,24 +67,51 @@ static jvmtiIterationControl JNICALL HeapObjectCallback(jlong class_tag,
   return JVMTI_ITERATION_CONTINUE;
 }
 
-jobjectArray AppInspectionService::FindInstances(JNIEnv* jni, jclass jclass) {
+jobjectArray AppInspectionService::FindInstances(JNIEnv* jni, jclass clazz) {
+  if (jni->IsSameObject(clazz, jni->FindClass("java/lang/Class"))) {
+    // Special-case handling for the Class object. Internally, ART creates many
+    // dummy Class objects that we don't care about. Calling GetLoadedClasses
+    // returns us the list of the real Class instances.
+    jint count;
+    jclass* classes;
+
+    if (CheckJvmtiError(jvmti_, jvmti_->GetLoadedClasses(&count, &classes))) {
+      return jni->NewObjectArray(0, clazz, NULL);
+    }
+
+    auto result = jni->NewObjectArray(count, clazz, NULL);
+    for (int i = 0; i < count; ++i) {
+      jni->SetObjectArrayElement(result, i, (jobject)classes[i]);
+    }
+    jvmti_->Deallocate((unsigned char*)classes);
+
+    return result;
+  }
+
   jvmtiPhase phase_ptr;
   jvmti_->GetPhase(&phase_ptr);
+
   jlong tag = nextTag;
+  if (CheckJvmtiError(jvmti_, jvmti_->IterateOverInstancesOfClass(
+                                  clazz, JVMTI_HEAP_OBJECT_EITHER,
+                                  HeapObjectCallback, &tag))) {
+    return jni->NewObjectArray(0, clazz, NULL);
+  }
   nextTag++;
-  jvmtiError err = jvmti_->IterateOverInstancesOfClass(
-      jclass, JVMTI_HEAP_OBJECT_EITHER, HeapObjectCallback, &tag);
 
   jint count;
   jobject* instances;
-  jvmti_->GetObjectsWithTags(1, &tag, &count, &instances, NULL);
-  Log::V(Log::Tag::APPINSPECT,
-         "App Inspection: found %ld  %d objects with tag\n", tag, count);
-  auto result = jni->NewObjectArray(count, jclass, NULL);
+  if (CheckJvmtiError(jvmti_, jvmti_->GetObjectsWithTags(1, &tag, &count,
+                                                         &instances, NULL))) {
+    return jni->NewObjectArray(0, clazz, NULL);
+  }
+
+  auto result = jni->NewObjectArray(count, clazz, NULL);
   for (int i = 0; i < count; ++i) {
     jni->SetObjectArrayElement(result, i, instances[i]);
   }
   jvmti_->Deallocate((unsigned char*)instances);
+
   return result;
 }
 
@@ -176,8 +194,6 @@ void AppInspectionService::OnClassFileLoaded(
 
 void AppInspectionService::Initialize() {
   SetAllCapabilities(jvmti_);
-  jvmtiError error;
-  CheckJvmtiError(jvmti_, error);
 
   jvmtiEventCallbacks callbacks;
   memset(&callbacks, 0, sizeof(callbacks));
@@ -218,8 +234,6 @@ void AppInspectionService::AddTransform(JNIEnv* jni,
   app_transform->AddTransform(class_name.c_str(), method_name.c_str(),
                               signature.c_str(), is_entry);
 
-  bool filter_class_load_hook = DeviceInfo::feature_level() < DeviceInfo::P;
-
   jclass found_class = nullptr;
   jint class_count;
   jclass* loaded_classes;
@@ -238,17 +252,23 @@ void AppInspectionService::AddTransform(JNIEnv* jni,
   if (found_class != nullptr) {
     jthread thread = nullptr;
     jvmti_->GetCurrentThread(&thread);
-    if (filter_class_load_hook) {
+
+    // Class file load hooks are automatically managed on P (and newer) devices
+    bool manually_toggle_load_hook =
+        DeviceInfo::feature_level() < DeviceInfo::P;
+
+    if (manually_toggle_load_hook) {
       CheckJvmtiError(
           jvmti_, jvmti_->SetEventNotificationMode(
                       JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
     }
     CheckJvmtiError(jvmti_, jvmti_->RetransformClasses(1, &found_class));
-    if (filter_class_load_hook) {
+    if (manually_toggle_load_hook) {
       CheckJvmtiError(
           jvmti_, jvmti_->SetEventNotificationMode(
                       JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread));
     }
+
     if (thread != nullptr) {
       jni->DeleteLocalRef(thread);
     }
@@ -259,7 +279,5 @@ void AppInspectionService::AddTransform(JNIEnv* jni,
   }
   jvmti_->Deallocate(reinterpret_cast<unsigned char*>(loaded_classes));
 }
-
-#endif
 
 }  // namespace app_inspection

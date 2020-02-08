@@ -28,11 +28,13 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import org.jetbrains.jps.model.JpsElement;
 import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.java.JpsJavaDependencyExtension;
 import org.jetbrains.jps.model.java.JpsJavaDependencyScope;
 import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.module.JpsDependencyElement;
+import org.jetbrains.jps.model.module.JpsLibraryDependency;
 import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.model.module.JpsModuleDependency;
 
@@ -41,7 +43,7 @@ import org.jetbrains.jps.model.module.JpsModuleDependency;
  */
 class JpsGraph {
 
-    private final LinkedHashMap<JpsModule, Set<JpsModule>> closures;
+    private final LinkedHashMap<JpsModule, Set<JpsElement>> closures;
     private final List<List<JpsModule>> components;
     private final BazelToolsLogger logger;
 
@@ -60,13 +62,12 @@ class JpsGraph {
         int k = 0;
         for (int i = 0; i < scCs.size(); i++) {
             int s = scCs.get(i);
-            LinkedHashSet<JpsModule> closure = new LinkedHashSet<>();
             List<JpsModule> component = new ArrayList<>(s);
             for (int j = 0; j < s; j++) {
                 component.add(builder.getNodeByTNumber(k + j));
             }
             components.add(component);
-            closure.addAll(component);
+            LinkedHashSet<JpsElement> closure = new LinkedHashSet<>(component);
             for (JpsModule module : component) {
                 Iterator<JpsModule> it = graph.getIn(module);
                 while (it.hasNext()) {
@@ -77,6 +78,20 @@ class JpsGraph {
                     }
                 }
             }
+
+            // Add libraries to the closure
+            for (JpsModule module : component) {
+                for (JpsDependencyElement dep : module.getDependenciesList().getDependencies()) {
+                    JpsJavaDependencyExtension extension =
+                            JpsJavaExtensionService.getInstance().getDependencyExtension(dep);
+                    if (dep instanceof JpsLibraryDependency
+                            && extension != null
+                            && scope.contains(extension.getScope())) {
+                        closure.add(((JpsLibraryDependency) dep).getLibrary());
+                    }
+                }
+            }
+
             for (JpsModule module : component) {
                 closures.put(module, closure);
             }
@@ -126,7 +141,7 @@ class JpsGraph {
         return closures.keySet();
     }
 
-    public Set<JpsModule> getClosure(JpsModule module) {
+    public Set<JpsElement> getClosure(JpsModule module) {
         return closures.get(module);
     }
 

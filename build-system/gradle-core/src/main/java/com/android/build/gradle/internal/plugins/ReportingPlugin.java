@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.errors.DeprecationReporterImpl;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
+import com.android.build.gradle.internal.scope.ProjectScope;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.test.report.ReportType;
@@ -64,18 +65,22 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
         DeprecationReporterImpl deprecationReporter =
                 new DeprecationReporterImpl(syncIssueHandler, projectOptions, project.getPath());
 
-        DslScope dslScope =
-                new DslScopeImpl(
+        ProjectScope projectScope =
+                new ProjectScope(
                         syncIssueHandler,
                         deprecationReporter,
                         project.getObjects(),
                         project.getLogger(),
-                        new BuildFeatureValuesImpl(projectOptions),
                         project.getProviders(),
-                        new DslVariableFactory(syncIssueHandler),
                         project.getLayout(),
                         projectOptions,
                         project::file);
+
+        DslScope dslScope =
+                new DslScopeImpl(
+                        projectScope,
+                        new BuildFeatureValuesImpl(projectOptions),
+                        new DslVariableFactory(syncIssueHandler));
 
         extension = project.getExtensions().create("android", TestOptions.class, dslScope);
 

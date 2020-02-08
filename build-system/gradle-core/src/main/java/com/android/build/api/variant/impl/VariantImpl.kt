@@ -25,18 +25,23 @@ import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.scope.VariantApiScope
 import org.gradle.api.Action
 
 abstract class VariantImpl<PropertiesT: VariantPropertiesImpl>(
     variantDslInfo: VariantDslInfo,
-    componentIdentity: ComponentIdentity
-):
-    ComponentImpl<PropertiesT>(variantDslInfo, componentIdentity), Variant<PropertiesT> {
+    componentIdentity: ComponentIdentity,
+    variantApiScope: VariantApiScope
+) :
+    ComponentImpl<PropertiesT>(variantDslInfo, componentIdentity, variantApiScope),
+    Variant<PropertiesT> {
 
     private val unitTestActions = DelayedActionExecutor<UnitTest<UnitTestProperties>>()
+    private val unitTestPropertiesOperations = DelayedActionExecutor<UnitTestProperties>()
+
     private val androidTestActions = DelayedActionExecutor<AndroidTest<AndroidTestProperties>>()
+    private val androidTestPropertiesOperations = DelayedActionExecutor<AndroidTestProperties>()
 
     override var minSdkVersion = variantDslInfo.minSdkVersion.apiLevel
 
@@ -48,12 +53,28 @@ abstract class VariantImpl<PropertiesT: VariantPropertiesImpl>(
         unitTestActions.registerAction(action)
     }
 
+    override fun unitTestProperties(action: UnitTestProperties.() -> Unit) {
+        unitTestPropertiesOperations.registerAction(Action { action(it) })
+    }
+
+    fun unitTestProperties(action: Action<UnitTestProperties>) {
+        unitTestPropertiesOperations.registerAction(action)
+    }
+
     override fun androidTest(action: AndroidTest<AndroidTestProperties>.() -> Unit) {
         androidTestActions.registerAction(Action { action(it) })
     }
 
     fun androidTest(action: Action<AndroidTest<AndroidTestProperties>>) {
         androidTestActions.registerAction(action)
+    }
+
+    override fun androidTestProperties(action: AndroidTestProperties.() -> Unit) {
+        androidTestPropertiesOperations.registerAction(Action { action(it) })
+    }
+
+    fun androidTestProperties(action: Action<AndroidTestProperties>) {
+        androidTestPropertiesOperations.registerAction(action)
     }
 
     // FIXME should be internal
@@ -63,8 +84,18 @@ abstract class VariantImpl<PropertiesT: VariantPropertiesImpl>(
     }
 
     // FIXME should be internal
+    fun executeUnitTestPropertiesActions(target: UnitTestProperties) {
+        unitTestPropertiesOperations.executeActions(target)
+    }
+
+    // FIXME should be internal
     fun executeAndroidTestActions(target: AndroidTestImpl) {
         @Suppress("UNCHECKED_CAST")
         androidTestActions.executeActions(target as AndroidTest<AndroidTestProperties>)
+    }
+
+    // FIXME should be internal
+    fun executeAndroidTestPropertiesActions(target: AndroidTestProperties) {
+        androidTestPropertiesOperations.executeActions(target)
     }
 }

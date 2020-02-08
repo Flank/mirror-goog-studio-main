@@ -1658,6 +1658,7 @@ public class Project {
                 }
 
                 // Are there any splits that specify densities?
+                /* Hotfix for b/148602190
                 if (relevantDensities.isEmpty()) {
                     AndroidArtifact mainArtifact = variant.getMainArtifact();
                     Collection<AndroidArtifactOutput> outputs = mainArtifact.getOutputs();
@@ -1672,6 +1673,7 @@ public class Project {
                         }
                     }
                 }
+                */
 
                 if (!relevantDensities.isEmpty()) {
                     mCachedApplicableDensities = Lists.newArrayListWithExpectedSize(10);

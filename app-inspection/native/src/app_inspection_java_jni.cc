@@ -126,7 +126,6 @@ jobject CreateAppInspectionService(JNIEnv *env) {
                         reinterpret_cast<jlong>(service));
 }
 
-#ifdef APP_INSPECTION_EXPERIMENT
 static std::string ConvertClass(JNIEnv *env, jclass cls) {
   jclass classClass = env->FindClass("java/lang/Class");
   jmethodID mid =
@@ -188,7 +187,6 @@ void AddExitTransformation(JNIEnv *env, jlong nativePtr, jclass origin_class,
                               method_str.get().substr(found));
 }
 
-#endif
 }  // namespace app_inspection
 
 extern "C" {
@@ -247,35 +245,21 @@ JNIEXPORT void JNICALL
 Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegisterEntryHook(
     JNIEnv *env, jclass jclazz, jlong servicePtr, jclass originClass,
     jstring originMethod) {
-#ifdef APP_INSPECTION_EXPERIMENT
   app_inspection::AddEntryTransformation(env, servicePtr, originClass,
                                          originMethod);
-#else
-  Log::E(Log::Tag::APPINSPECT, "REGISTER ENTRY HOOK NOT IMPLEMENTED");
-#endif
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeRegisterExitHook(
     JNIEnv *env, jclass jclazz, jlong servicePtr, jclass originClass,
     jstring originMethod) {
-#ifdef APP_INSPECTION_EXPERIMENT
   app_inspection::AddExitTransformation(env, servicePtr, originClass,
                                         originMethod);
-#else
-  Log::E(Log::Tag::APPINSPECT, "REGISTER EXIT HOOK NOT IMPLEMENTED");
-#endif
 }
 
 JNIEXPORT jobjectArray JNICALL
 Java_com_android_tools_agent_app_inspection_InspectorEnvironmentImpl_nativeFindInstances(
     JNIEnv *env, jclass callerClass, jlong servicePtr, jclass jclass) {
-#ifdef APP_INSPECTION_EXPERIMENT
   return app_inspection::FindInstances(env, servicePtr, jclass);
-#else
-  Log::E(Log::Tag::APPINSPECT, "FIND INSTANCES NOT IMPLEMENTED");
-  auto result = env->NewObjectArray(0, jclass, NULL);
-  return result;
-#endif
 }
 }

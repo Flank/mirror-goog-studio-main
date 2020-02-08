@@ -19,6 +19,7 @@ package com.android.tools.deploy.instrument;
 import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
 
 import android.content.pm.ApplicationInfo;
+import android.os.Build;
 import android.util.Log;
 import java.io.File;
 import java.nio.file.Path;
@@ -35,7 +36,7 @@ public final class InstrumentationHooks {
 
     private static boolean mRestart;
     private static Object mActivityThread;
-    private static int mCmd;
+    private static boolean isPackageChanging;
 
     // Set of all previous installation locations of the package.
     private static final HashSet<Path> oldPackagePaths = new HashSet<>();
@@ -98,10 +99,13 @@ public final class InstrumentationHooks {
             // Need to ensure that a background thread isn't retrieving resources while a
             // --dont-kill installation is occurring.
             synchronized (oldPackagePaths) {
-                // First check if this Element points to the current package path. If so, we don't need
-                // to do anything. We check this first because currentPackagePath can end up in the
-                // old paths set without the package actually having been moved.
-                if (currentPackagePath.equals(dir)) {
+                // First check if this Element points to the current package path. If so, we don't
+                // need to do anything. We check this first because currentPackagePath can end up in
+                // the old paths set without the package actually having been moved.
+                //
+                // If currentPackagePath is null, no --dont-kill install has been triggered by Apply
+                // Changes, so we don't need to do anything.
+                if (currentPackagePath == null || currentPackagePath.equals(dir)) {
                     return;
                 }
 
@@ -122,9 +126,17 @@ public final class InstrumentationHooks {
     public static void handleDispatchPackageBroadcastEntry(
             Object activityThread, int cmd, String[] packages) {
         mActivityThread = activityThread;
-        mCmd = cmd;
+        isPackageChanging = false;
 
         try {
+            final String currentPackageName = getPackageName(activityThread);
+            for (String pkg : packages) {
+                if (pkg.equals(currentPackageName)) {
+                    isPackageChanging = cmd == PACKAGE_REPLACED;
+                    break;
+                }
+            }
+
             synchronized (oldPackagePaths) {
                 oldPackagePaths.add(getPackagePath(mActivityThread));
             }
@@ -134,18 +146,21 @@ public final class InstrumentationHooks {
     }
 
     public static void handleDispatchPackageBroadcastExit() {
-        if (mCmd != PACKAGE_REPLACED) {
+        if (!isPackageChanging) {
             return;
         }
 
         try {
-            // Update the application and activity context objects to properly point to the new
-            // LoadedApk that was created by the package update. We fix activity contexts even if
-            // the activities wil be restarted, as those contexts may still be in use by app code.
-            Log.v(TAG, "Fixing application and activity contexts");
-            Object newResourcesImpl = fixAppContext(mActivityThread);
-            for (Object activity : getActivityClientRecords(mActivityThread)) {
-                fixActivityContext(activity, newResourcesImpl);
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                // Update the application and activity context objects to properly point to the new
+                // LoadedApk that was created by the package update. We fix activity contexts even
+                // if the activities wil be restarted, as those contexts may still be in use by app
+                // code.
+                Log.v(TAG, "Fixing application and activity contexts");
+                Object newResourcesImpl = fixAppContext(mActivityThread);
+                for (Object activity : getActivityClientRecords(mActivityThread)) {
+                    fixActivityContext(activity, newResourcesImpl);
+                }
             }
 
             if (mRestart) {
@@ -161,13 +176,16 @@ public final class InstrumentationHooks {
             Log.e(TAG, "Error in package installer patch", ex);
         } finally {
             mRestart = false;
+            isPackageChanging = false;
         }
     }
 
+    public static String getPackageName(Object activityThread) throws Exception {
+        return call(activityThread, "currentPackageName").toString();
+    }
+
     public static Path getPackagePath(Object activityThread) throws Exception {
-        Object boundApplication = getDeclaredField(activityThread, "mBoundApplication");
-        Object appInfo = getDeclaredField(boundApplication, "appInfo");
-        Object packageName = getField(appInfo, "packageName");
+        Object packageName = getPackageName(activityThread);
         Object loadedApk =
                 call(activityThread, "peekPackageInfo", arg(packageName), arg(true, boolean.class));
         ApplicationInfo info = (ApplicationInfo) call(loadedApk, "getApplicationInfo");

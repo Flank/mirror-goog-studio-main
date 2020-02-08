@@ -31,6 +31,9 @@ import java.io.File
  * Scope of the DSL objects.
  *
  * This contains whatever is needed by all the DSL objects.
+ *
+ * This is meant to be transient and only available by the DSL objects. Other stages of the
+ * plugin will use different scope objects.
  */
 interface DslScope {
 

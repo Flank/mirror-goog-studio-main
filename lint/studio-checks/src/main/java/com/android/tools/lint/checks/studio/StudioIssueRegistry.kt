@@ -20,6 +20,7 @@ import com.android.tools.lint.checks.AssertDetector
 import com.android.tools.lint.checks.CommentDetector
 import com.android.tools.lint.checks.DateFormatDetector
 import com.android.tools.lint.checks.InteroperabilityDetector
+import com.android.tools.lint.checks.LintDetectorDetector
 import com.android.tools.lint.checks.SamDetector
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient.Companion.isStudio

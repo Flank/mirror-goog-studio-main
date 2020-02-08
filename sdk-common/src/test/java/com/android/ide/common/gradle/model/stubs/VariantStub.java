@@ -20,6 +20,7 @@ import com.android.builder.model.*;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -35,6 +36,7 @@ public class VariantStub extends BaseStub implements Variant {
     @NonNull private final ProductFlavor myMergedFlavor;
     @NonNull private final Collection<TestedTargetVariant> myTestedTargetVariants;
     private final boolean myInstantAppCompatible;
+    @NonNull private final Collection<File> myDesugarLibLintFiles;
 
     public VariantStub() {
         this(
@@ -47,7 +49,8 @@ public class VariantStub extends BaseStub implements Variant {
                 Lists.newArrayList("flavor"),
                 new ProductFlavorStub(),
                 Lists.newArrayList(new TestedTargetVariantStub()),
-                false);
+                false,
+                Lists.newArrayList());
     }
 
     public VariantStub(String name, String buildType, String... flavors) {
@@ -61,7 +64,8 @@ public class VariantStub extends BaseStub implements Variant {
                 ImmutableList.copyOf(flavors),
                 new ProductFlavorStub(),
                 Lists.newArrayList(new TestedTargetVariantStub()),
-                false);
+                false,
+                Lists.newArrayList());
     }
 
     public VariantStub(
@@ -74,7 +78,8 @@ public class VariantStub extends BaseStub implements Variant {
             @NonNull List<String> productFlavors,
             @NonNull ProductFlavor mergedFlavor,
             @NonNull Collection<TestedTargetVariant> testedTargetVariants,
-            boolean instantAppCompatible) {
+            boolean instantAppCompatible,
+            @NonNull Collection<File> desugarLibLintFiles) {
         myName = name;
         myDisplayName = displayName;
         myMainArtifact = mainArtifact;
@@ -85,6 +90,7 @@ public class VariantStub extends BaseStub implements Variant {
         myMergedFlavor = mergedFlavor;
         myTestedTargetVariants = testedTargetVariants;
         myInstantAppCompatible = instantAppCompatible;
+        myDesugarLibLintFiles = desugarLibLintFiles;
     }
 
     @Override
@@ -146,6 +152,12 @@ public class VariantStub extends BaseStub implements Variant {
         return myInstantAppCompatible;
     }
 
+    @NonNull
+    @Override
+    public Collection<File> getDesugarLibLintFiles() {
+        return myDesugarLibLintFiles;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -164,7 +176,8 @@ public class VariantStub extends BaseStub implements Variant {
                 && Objects.equals(getProductFlavors(), variant.getProductFlavors())
                 && Objects.equals(getMergedFlavor(), variant.getMergedFlavor())
                 && Objects.equals(getTestedTargetVariants(), variant.getTestedTargetVariants())
-                && Objects.equals(isInstantAppCompatible(), variant.isInstantAppCompatible());
+                && Objects.equals(isInstantAppCompatible(), variant.isInstantAppCompatible())
+                && Objects.equals(getDesugarLibLintFiles(), variant.getDesugarLibLintFiles());
     }
 
     @Override
@@ -179,7 +192,8 @@ public class VariantStub extends BaseStub implements Variant {
                 getProductFlavors(),
                 getMergedFlavor(),
                 getTestedTargetVariants(),
-                isInstantAppCompatible());
+                isInstantAppCompatible(),
+                getDesugarLibLintFiles());
     }
 
     @Override
@@ -208,6 +222,8 @@ public class VariantStub extends BaseStub implements Variant {
                 + myTestedTargetVariants
                 + ", myInstantAppCompatible="
                 + myInstantAppCompatible
+                + ", myDesugarLibLintFiles="
+                + myDesugarLibLintFiles
                 + "}";
     }
 }

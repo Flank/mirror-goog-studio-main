@@ -62,6 +62,7 @@ import com.android.SdkConstants.VIEW_INCLUDE
 import com.android.SdkConstants.VIEW_TAG
 import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.resources.configuration.FolderConfiguration
+import com.android.ide.common.resources.resourceNameToFieldName
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
 import com.android.sdklib.SdkVersionInfo
@@ -102,7 +103,6 @@ import com.android.tools.lint.detector.api.getInternalMethodName
 import com.android.tools.lint.detector.api.isKotlin
 import com.android.tools.lint.detector.api.isString
 import com.android.tools.lint.detector.api.skipParentheses
-import com.android.utils.SdkUtils.getResourceFieldName
 import com.android.utils.XmlUtils
 import com.android.utils.usLocaleCapitalize
 import com.android.utils.usLocaleDecapitalize
@@ -368,7 +368,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             TAG_STYLE == attribute.ownerElement.tagName
         ) {
             owner = "android/R\$style"
-            name = getResourceFieldName(value.substring(PREFIX_ANDROID.length))
+            name = resourceNameToFieldName(value.substring(PREFIX_ANDROID.length))
             prefix = null
         } else {
             return
@@ -380,7 +380,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             when {
                 index >= 0 -> {
                     owner = "android/R$" + value.substring(prefix?.length ?: 0, index)
-                    name = getResourceFieldName(value.substring(index + 1))
+                    name = resourceNameToFieldName(value.substring(index + 1))
                 }
                 value.startsWith(ANDROID_THEME_PREFIX) -> {
                     owner = "android/R\$attr"
@@ -494,7 +494,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                             val typeString = text.substring(ANDROID_PREFIX.length, index)
                             if (ResourceType.fromXmlValue(typeString) != null) {
                                 val owner = "android/R$$typeString"
-                                val name = getResourceFieldName(text.substring(index + 1))
+                                val name = resourceNameToFieldName(text.substring(index + 1))
                                 val api = apiDatabase.getFieldVersion(owner, name)
                                 val minSdk = getMinSdk(context)
                                 if (api > minSdk &&

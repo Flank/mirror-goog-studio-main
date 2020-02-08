@@ -34,6 +34,8 @@ import com.android.build.gradle.internal.dsl.LibraryExtensionImpl;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantApiScope;
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.builder.profile.Recorder;
@@ -97,8 +99,11 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
 
     @NonNull
     @Override
-    protected LibraryVariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
-        return new LibraryVariantFactory(globalScope);
+    protected LibraryVariantFactory createVariantFactory(
+            @NonNull VariantApiScope variantApiScope,
+            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull GlobalScope globalScope) {
+        return new LibraryVariantFactory(variantApiScope, variantPropertiesApiScope, globalScope);
     }
 
     @Override

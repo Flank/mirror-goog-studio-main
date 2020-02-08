@@ -18,20 +18,22 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.VariantOutput
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
-import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.OutputFactory
+import com.android.build.gradle.internal.scope.VariantApiScope
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
@@ -50,24 +52,35 @@ import java.util.function.Consumer
 import java.util.stream.Collectors
 
 class ApplicationVariantFactory(
+    variantApiScope: VariantApiScope,
+    variantApiPropertiesScope: VariantPropertiesApiScope,
     globalScope: GlobalScope
-): AbstractAppVariantFactory<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>(globalScope) {
+) : AbstractAppVariantFactory<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>(
+    variantApiScope,
+    variantApiPropertiesScope,
+    globalScope
+) {
 
     override fun createVariantObject(
         componentIdentity: ComponentIdentity,
         variantDslInfo: VariantDslInfo
     ): ApplicationVariantImpl {
+        val extension = globalScope.extension as BaseAppModuleExtension
+
         return globalScope
             .dslScope
             .objectFactory
             .newInstance(
                 ApplicationVariantImpl::class.java,
                 variantDslInfo,
-                componentIdentity
+                extension.dependenciesInfo,
+                componentIdentity,
+                variantApiScope
             )
     }
 
     override fun createVariantPropertiesObject(
+        variant: ApplicationVariantImpl,
         componentIdentity: ComponentIdentity,
         variantDslInfo: VariantDslInfo,
         variantDependencies: VariantDependencies,
@@ -91,8 +104,9 @@ class ApplicationVariantFactory(
                 artifacts,
                 variantScope,
                 variantData,
+                variant.dependenciesInfo as DependenciesInfo,
                 transformManager,
-                globalScope.dslScope,
+                variantPropertiesApiScope,
                 globalScope
             )
 

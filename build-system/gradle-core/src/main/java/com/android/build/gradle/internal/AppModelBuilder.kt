@@ -73,7 +73,7 @@ class AppModelBuilder(
         for (component in variantModel.variants) {
             val artifacts = component.artifacts
 
-            if (artifacts.hasFinalProduct(InternalArtifactType.BUNDLE)) {
+            if (component.variantType.isBaseModule) {
                 val bundleFile = artifacts.getFinalProduct(InternalArtifactType.BUNDLE)
                 val apkFolder = artifacts.getFinalProduct(InternalArtifactType.EXTRACTED_APKS)
                 variantsOutput.add(

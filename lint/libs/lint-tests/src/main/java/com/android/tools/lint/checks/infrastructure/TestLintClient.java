@@ -555,6 +555,14 @@ public class TestLintClient extends LintCliClient {
         return driver;
     }
 
+    @Override
+    public boolean isProjectDirectory(@NotNull File dir) {
+        if (task.dirToProjectDescription.containsKey(dir)) {
+            return true;
+        }
+        return super.isProjectDirectory(dir);
+    }
+
     protected void addCleanupDir(@NonNull File dir) {
         cleanupDirs.add(dir);
         try {

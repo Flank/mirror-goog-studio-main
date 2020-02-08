@@ -17,11 +17,17 @@ package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.*;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.BaseArtifact;
+import com.android.builder.model.JavaArtifact;
+import com.android.builder.model.ProductFlavor;
+import com.android.builder.model.TestedTargetVariant;
+import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.repository.GradleVersion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,8 +38,9 @@ import java.util.function.Function;
 
 /** Creates a deep copy of a {@link Variant}. */
 public final class IdeVariantImpl implements IdeVariant, Serializable {
-    // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    // Increase the value when adding/removing fields or when changing the
+    // serialization/deserialization mechanism.
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final String myName;
     @NonNull private final String myDisplayName;
@@ -46,6 +53,7 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
     @NonNull private final Collection<TestedTargetVariant> myTestedTargetVariants;
     private final int myHashCode;
     private final boolean myInstantAppCompatible;
+    @NonNull private final Collection<File> myDesugarLibLintFiles;
 
     // Used for serialization by the IDE.
     @SuppressWarnings("unused")
@@ -60,6 +68,7 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
         myMergedFlavor = new IdeProductFlavor();
         myTestedTargetVariants = Collections.emptyList();
         myInstantAppCompatible = false;
+        myDesugarLibLintFiles = Collections.emptyList();
 
         myHashCode = 0;
     }
@@ -106,6 +115,10 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
                 modelVersion != null
                         && modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true)
                         && variant.isInstantAppCompatible();
+        myDesugarLibLintFiles =
+                ImmutableList.copyOf(
+                        IdeModel.copyNewPropertyNonNull(
+                                variant::getDesugarLibLintFiles, Collections.emptyList()));
 
         myHashCode = calculateHashCode();
     }
@@ -229,6 +242,12 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
         return myInstantAppCompatible;
     }
 
+    @NonNull
+    @Override
+    public Collection<File> getDesugarLibLintFiles() {
+        return myDesugarLibLintFiles;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -247,7 +266,8 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
                 && Objects.equals(myProductFlavors, variant.myProductFlavors)
                 && Objects.equals(myMergedFlavor, variant.myMergedFlavor)
                 && Objects.equals(myTestedTargetVariants, variant.myTestedTargetVariants)
-                && Objects.equals(myInstantAppCompatible, variant.myInstantAppCompatible);
+                && Objects.equals(myInstantAppCompatible, variant.myInstantAppCompatible)
+                && Objects.equals(myDesugarLibLintFiles, variant.myDesugarLibLintFiles);
     }
 
     @Override
@@ -266,7 +286,8 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
                 myProductFlavors,
                 myMergedFlavor,
                 myTestedTargetVariants,
-                myInstantAppCompatible);
+                myInstantAppCompatible,
+                myDesugarLibLintFiles);
     }
 
     @Override
@@ -295,6 +316,8 @@ public final class IdeVariantImpl implements IdeVariant, Serializable {
                 + myTestedTargetVariants
                 + ", myInstantAppCompatible="
                 + myInstantAppCompatible
+                + ", myDesugarLibLintFiles="
+                + myDesugarLibLintFiles
                 + "}";
     }
 }

@@ -6,7 +6,6 @@ kotlin_test(
         "java/**/*.kt",
         "java/**/*.java",
     ]),
-    coverage = False,
     data = [
         "//tools/base/sdklib:commandlinetools",
     ],

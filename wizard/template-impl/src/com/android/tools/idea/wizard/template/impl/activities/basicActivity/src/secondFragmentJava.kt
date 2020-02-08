@@ -27,7 +27,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
@@ -46,10 +45,6 @@ public class ${secondFragmentClass} extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        String myArg = ${secondFragmentClass}Args.fromBundle(getArguments()).getMyArg();
-        TextView textView = view.findViewById(R.id.textview_second);
-        textView.setText(getString(R.string.hello_second_fragment, myArg));
 
         view.findViewById(R.id.button_second).setOnClickListener(new View.OnClickListener() {
             @Override

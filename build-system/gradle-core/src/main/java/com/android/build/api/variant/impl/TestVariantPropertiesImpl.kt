@@ -18,7 +18,6 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.TestVariantProperties
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -26,14 +25,12 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.utils.init
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.builder.dexing.DexingType
-import com.google.common.collect.ImmutableSet
 import org.gradle.api.provider.Property
+import java.util.concurrent.Callable
 import javax.inject.Inject
 
 open class TestVariantPropertiesImpl @Inject constructor(
@@ -46,7 +43,7 @@ open class TestVariantPropertiesImpl @Inject constructor(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    dslScope: DslScope,
+    variantApiScope: VariantPropertiesApiScope,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
     componentIdentity,
@@ -58,7 +55,7 @@ open class TestVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    dslScope,
+    variantApiScope,
     globalScope
 ), TestVariantProperties, ApkCreationConfig {
 
@@ -69,8 +66,8 @@ open class TestVariantPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> = dslScope.objectFactory.property(String::class.java)
-        .init(dslScope.providerFactory.provider { variantDslInfo.applicationId })
+    override val applicationId: Property<String> =
+        variantApiScope.propertyOf(String::class.java, Callable { variantDslInfo.applicationId })
 
     override val manifestPlaceholders: Map<String, Any>
         get() = variantDslInfo.manifestPlaceholders

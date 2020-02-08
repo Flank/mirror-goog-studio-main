@@ -9,10 +9,7 @@ transport_test(
     app_runtime_deps = ["//tools/base/app-inspection/tests/test-inspector:test-inspector"],
     jvm_flags = [
         "-Dtest.inspector.dex.location=$(location //tools/base/app-inspection/tests/test-inspector:test-inspector)",
-    ] + select({
-        "//tools/base/app-inspection:app_inspection_experimental": ["-Dapp.inspection.experimental=true"],
-        "//conditions:default": [],
-    }),
+    ],
     deps = [
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         "//tools/base/app-inspection/tests/test-inspector/api:test-inspector-api",

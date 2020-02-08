@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.builder.model.CodeShrinker
 import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarMerger
 import com.android.builder.packaging.TypedefRemover
@@ -320,12 +321,10 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
 
             val artifacts = creationConfig.artifacts
 
-            if (artifacts.hasFinalProduct(InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE)) {
-                artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE,
-                    task.typedefRecipe
-                )
-            }
+            artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE,
+                task.typedefRecipe
+            )
 
             task.packageName.set(
                 creationConfig.globalScope.project.provider {
@@ -349,7 +348,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
              * which means gradle will have to deal with possibly non-existent files in the cache
              */
             task.mainScopeClassFiles.from(
-                if (artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_CLASSES)) {
+                if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
                     artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES)
                         .get()
@@ -371,7 +370,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             task.mainScopeClassFiles.disallowChanges()
 
             task.mainScopeResourceFiles.from(
-                if (artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)) {
+                if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
                     artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_JAVA_RES)
                         .get()

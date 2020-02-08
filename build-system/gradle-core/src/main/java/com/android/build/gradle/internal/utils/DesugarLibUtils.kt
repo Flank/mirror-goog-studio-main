@@ -20,19 +20,29 @@ package com.android.build.gradle.internal.utils
 
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.dependency.ATTR_L8_MIN_SDK
+import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_CORE_LIBRARY_DESUGARING
+import com.android.sdklib.AndroidTargetHash
+import com.android.sdklib.AndroidVersion
 import com.google.common.io.ByteStreams
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.artifacts.transform.TransformParameters
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
+import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.internal.artifacts.ArtifactAttributes
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.zip.ZipInputStream
@@ -44,6 +54,9 @@ const val DESUGAR_LIB_DEX = "_internal-desugar-lib-dex"
 // The output of DesugarLibConfigExtractor which extracts the desugar config json file from
 // desugar lib configuration jar
 const val DESUGAR_LIB_CONFIG = "_internal-desugar-lib-config"
+private const val DESUGAR_LIB_LINT = "_internal-desugar-lib-lint"
+private val ATTR_LINT_MIN_SDK: Attribute<String> = Attribute.of("lint-min-sdk", String::class.java)
+private val ATTR_LINT_COMPILE_SDK: Attribute<String> = Attribute.of("lint-compile-sdk", String::class.java)
 
 /**
  * Returns a file collection which contains desugar lib jars
@@ -86,6 +99,26 @@ fun getDesugarLibConfig(project: Project): Provider<String> {
             content.toString()
         }
     }
+}
+
+/**
+ * Returns a collection of files with desugared APIs provided by desugar lib configuration jar.
+ */
+fun getDesugarLibLintFiles(
+    project: Project,
+    coreLibraryDesugaringEnabled: Boolean,
+    minSdkVersion: AndroidVersion,
+    compileSdkVersion: String?
+): Collection<File> {
+    val configuration = project.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
+
+    if (compileSdkVersion == null || !coreLibraryDesugaringEnabled || configuration.dependencies.isEmpty())
+        return setOf()
+
+    val minSdk = minSdkVersion.featureLevel
+    val compileSdk = AndroidTargetHash.getPlatformVersion(compileSdkVersion)!!.featureLevel
+    registerDesugarLibLintTransform(project, minSdk, compileSdk)
+    return getDesugarLibLintFromTransform(configuration, minSdk, compileSdk ).files
 }
 
 /**
@@ -144,9 +177,40 @@ private fun registerDesugarLibConfigTransform(project: Project) {
     }
 }
 
+private fun registerDesugarLibLintTransform(project: Project, minSdkVersion: Int, compileSdkVersion: Int) {
+    project.dependencies.registerTransform(DesugarLibLintExtractor::class.java) { spec ->
+        spec.parameters { parameters ->
+            parameters.minSdkVersion.set(minSdkVersion)
+            parameters.compileSdkVersion.set(compileSdkVersion)
+        }
+        spec.from.attribute(ArtifactAttributes.ARTIFACT_FORMAT, ArtifactTypeDefinition.JAR_TYPE)
+        spec.to.attribute(ArtifactAttributes.ARTIFACT_FORMAT, DESUGAR_LIB_LINT)
+        spec.from.attribute(ATTR_LINT_MIN_SDK, minSdkVersion.toString())
+        spec.to.attribute(ATTR_LINT_MIN_SDK, minSdkVersion.toString())
+        spec.from.attribute(ATTR_LINT_COMPILE_SDK, compileSdkVersion.toString())
+        spec.to.attribute(ATTR_LINT_COMPILE_SDK, compileSdkVersion.toString())
+    }
+}
+
+private fun getDesugarLibLintFromTransform(
+    configuration: Configuration,
+    minSdkVersion: Int,
+    compileSdkVersion: Int
+): FileCollection {
+    return configuration.incoming.artifactView { configuration ->
+        configuration.attributes {
+            it.attribute(
+                ArtifactAttributes.ARTIFACT_FORMAT,
+                DESUGAR_LIB_LINT
+            )
+            it.attribute(ATTR_LINT_MIN_SDK, minSdkVersion.toString())
+            it.attribute(ATTR_LINT_COMPILE_SDK, compileSdkVersion.toString())
+        }
+    }.artifacts.artifactFiles
+}
+
 /**
- * Extract the desugar config json file from desugar lib configuration jar. If there is no desugar
- * config json file, an empty file will be created as the output file.
+ * Extract the desugar config json file from desugar lib configuration jar.
  */
 abstract class DesugarLibConfigExtractor : TransformAction<TransformParameters.None> {
     @get:InputArtifact
@@ -154,11 +218,11 @@ abstract class DesugarLibConfigExtractor : TransformAction<TransformParameters.N
 
     override fun transform(outputs: TransformOutputs) {
         val inputFile = inputArtifact.get().asFile
-        val outputFile = outputs.file(inputFile.nameWithoutExtension + "-$DESUGAR_LIB_CONFIG_FILE")
         ZipInputStream(inputFile.inputStream().buffered()).use { zipInputStream ->
             while(true) {
                 val entry = zipInputStream.nextEntry ?: break
                 if (entry.name.endsWith(DESUGAR_LIB_CONFIG_FILE)) {
+                    val outputFile = outputs.file(inputFile.nameWithoutExtension + "-$DESUGAR_LIB_CONFIG_FILE")
                     Files.newOutputStream(outputFile.toPath()).buffered().use { output ->
                         ByteStreams.copy(zipInputStream, output)
                     }
@@ -166,8 +230,51 @@ abstract class DesugarLibConfigExtractor : TransformAction<TransformParameters.N
                 }
             }
         }
-        if (!outputFile.exists()) {
-            outputFile.createNewFile()
+    }
+}
+
+
+/**
+ * Extract the specific lint file with desugared APIs based on minSdkVersion & compileSdkVersion
+ * from desugar lib configuration jar.
+ */
+@CacheableTransform
+abstract class DesugarLibLintExtractor : TransformAction<DesugarLibLintExtractor.Parameters> {
+    interface Parameters: GenericTransformParameters {
+        @get:Input
+        val minSdkVersion: Property<Int>
+
+        @get:Input
+        val compileSdkVersion: Property<Int>
+    }
+
+    @get:InputArtifact
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val inputArtifact: Provider<FileSystemLocation>
+
+    override fun transform(outputs: TransformOutputs) {
+        val inputFile = inputArtifact.get().asFile
+
+        ZipInputStream(inputFile.inputStream().buffered()).use { zipInputStream ->
+            while(true) {
+                val entry = zipInputStream.nextEntry ?: break
+
+                val compileSdkVersion = parameters.compileSdkVersion.get()
+                val minSdkVersion = parameters.minSdkVersion.get()
+                val pattern = if (minSdkVersion >= 21) {
+                    "${compileSdkVersion}_21.txt"
+                } else {
+                    "${compileSdkVersion}_1.txt"
+                }
+
+                if (entry.name.endsWith(pattern)) {
+                    val outputFile = outputs.file(inputFile.nameWithoutExtension + "-desugar-lint.txt")
+                    Files.newOutputStream(outputFile.toPath()).buffered().use { output ->
+                        ByteStreams.copy(zipInputStream, output)
+                    }
+                    break
+                }
+            }
         }
     }
 }

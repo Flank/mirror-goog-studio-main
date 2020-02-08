@@ -18,12 +18,17 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.DynamicFeatureVariant
-import com.android.build.api.variant.DynamicFeatureVariantProperties
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.scope.VariantApiScope
 import javax.inject.Inject
 
 open class DynamicFeatureVariantImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
-    variantConfiguration: ComponentIdentity
-) : VariantImpl<DynamicFeatureVariantPropertiesImpl>(variantDslInfo, variantConfiguration), DynamicFeatureVariant<DynamicFeatureVariantPropertiesImpl> {
+    variantConfiguration: ComponentIdentity,
+    variantApiScope: VariantApiScope
+) : VariantImpl<DynamicFeatureVariantPropertiesImpl>(
+    variantDslInfo,
+    variantConfiguration,
+    variantApiScope
+), DynamicFeatureVariant<DynamicFeatureVariantPropertiesImpl> {
 }

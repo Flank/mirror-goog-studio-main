@@ -12,7 +12,6 @@ iml_module(
     tags = [
         "no_mac",
     ],
-    test_coverage = True,
     test_data = glob(["src/test/resource/**"]) + select({
         "//tools/base/bazel:windows": [],
         "//conditions:default": [

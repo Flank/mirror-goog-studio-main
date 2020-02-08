@@ -61,6 +61,7 @@ import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResource;
@@ -193,9 +194,8 @@ public abstract class BaseVariantImpl implements BaseVariant {
             case JAVA:
                 return getVariantData().getJavaSources();
             default:
-                getVariantData()
-                        .getGlobalScope()
-                        .getDslScope()
+                componentProperties
+                        .getVariantApiScope()
                         .getIssueReporter()
                         .reportError(
                                 IssueReporter.Type.GENERIC,
@@ -230,7 +230,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         // else and cannot be known at config time.
         if (componentProperties.getVariantType().isDynamicFeature()) {
             componentProperties
-                    .getDslScope()
+                    .getVariantApiScope()
                     .getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -244,7 +244,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public TextResource getApplicationIdTextResource() {
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "VariantProperties.applicationId",
@@ -258,7 +258,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public Task getPreBuild() {
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getPreBuildProvider()",
@@ -279,7 +279,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public Task getCheckManifest() {
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getCheckManifestProvider()",
@@ -303,7 +303,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public AidlCompile getAidlCompile() {
         if (!componentProperties.getGlobalScope().getBuildFeatures().getAidl()) {
             componentProperties
-                    .getDslScope()
+                    .getVariantApiScope()
                     .getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -312,7 +312,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         }
 
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getAidlCompileProvider()",
@@ -327,7 +327,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public TaskProvider<AidlCompile> getAidlCompileProvider() {
         if (!componentProperties.getGlobalScope().getBuildFeatures().getAidl()) {
             componentProperties
-                    .getDslScope()
+                    .getVariantApiScope()
                     .getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -345,7 +345,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public RenderscriptCompile getRenderscriptCompile() {
         if (!componentProperties.getGlobalScope().getBuildFeatures().getRenderScript()) {
             componentProperties
-                    .getDslScope()
+                    .getVariantApiScope()
                     .getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -354,7 +354,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         }
 
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getRenderscriptCompileProvider()",
@@ -369,8 +369,8 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider() {
         final GlobalScope globalScope = getVariantData().getGlobalScope();
         if (!globalScope.getBuildFeatures().getRenderScript()) {
-            globalScope
-                    .getDslScope()
+            componentProperties
+                    .getVariantApiScope()
                     .getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -386,7 +386,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public MergeResources getMergeResources() {
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getMergeResourcesProvider()",
@@ -407,7 +407,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public MergeSourceSetFolders getMergeAssets() {
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getMergeAssetsProvider()",
@@ -428,7 +428,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public GenerateBuildConfig getGenerateBuildConfig() {
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getGenerateBuildConfigProvider()",
@@ -450,7 +450,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public JavaCompile getJavaCompile() {
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getJavaCompileProvider()",
@@ -471,7 +471,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public Task getJavaCompiler() {
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getJavaCompileProvider()",
@@ -485,7 +485,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public Collection<ExternalNativeBuildTask> getExternalNativeBuildTasks() {
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getExternalNativeBuildProviders()",
@@ -525,7 +525,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public File getMappingFile() {
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getMappingFileProvider()",
@@ -533,15 +533,11 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
-        if (artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE)) {
-            //     bypass the configuration time resolution check as some calls this API during
-            // configuration.
-            return artifacts
-                    .getFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE)
-                    .get()
-                    .getAsFile();
-        }
-        return null;
+        //     bypass the configuration time resolution check as some calls this API during
+        // configuration.
+        RegularFile mappingFile =
+                artifacts.getFinalProduct(InternalArtifactType.APK_MAPPING.INSTANCE).getOrNull();
+        return mappingFile != null ? mappingFile.getAsFile() : null;
     }
 
     @NonNull
@@ -556,7 +552,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public Sync getProcessJavaResources() {
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getProcessJavaResourcesProvider()",
@@ -579,7 +575,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     public Task getAssemble() {
         componentProperties
-                .getDslScope()
+                .getVariantApiScope()
                 .getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getAssembleProvider()",

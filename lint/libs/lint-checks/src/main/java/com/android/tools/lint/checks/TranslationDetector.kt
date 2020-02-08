@@ -30,6 +30,7 @@ import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.configuration.DensityQualifier
 import com.android.ide.common.resources.configuration.FolderConfiguration
 import com.android.ide.common.resources.configuration.VersionQualifier
+import com.android.ide.common.resources.resourceNameToFieldName
 import com.android.ide.common.resources.getLocales
 import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.android.resources.FolderTypeRelationship
@@ -61,7 +62,6 @@ import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
 import com.android.tools.lint.detector.api.getLocaleAndRegion
 import com.android.utils.SdkUtils.fileNameToResourceName
-import com.android.utils.SdkUtils.getResourceFieldName
 import com.android.utils.SdkUtils.isServiceKey
 import com.android.utils.XmlUtils
 import com.google.common.collect.Lists
@@ -270,7 +270,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                             )
                         }
                     } else {
-                        val name = getResourceFieldName(originalName)
+                        val name = resourceNameToFieldName(originalName)
                         visitResource(context, type, name, originalName, child, defaultLocale)
                     }
                 }
@@ -796,7 +796,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         container: ProductFlavorContainer
     ) {
         val flavor = container.productFlavor
-        if (variantFlavors == null || variantFlavors.contains(flavor.name)) {
+        if (variantFlavors == null || variantFlavors.contains(flavor.getName())) {
             if (!flavor.resourceConfigurations.isEmpty()) {
                 for (resConfig in flavor.resourceConfigurations) {
                     // Look for languages; these are of length 2. (ResConfigs

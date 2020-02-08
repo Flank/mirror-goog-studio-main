@@ -87,7 +87,7 @@ abstract class VariantTaskCreationAction<TaskT, CreationConfigT: BaseCreationCon
 
         task.variantName = creationConfig.name
         task.enableGradleWorkers.set(
-            creationConfig.dslScope.projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS)
+            creationConfig.variantApiScope.projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS)
         )
     }
 }

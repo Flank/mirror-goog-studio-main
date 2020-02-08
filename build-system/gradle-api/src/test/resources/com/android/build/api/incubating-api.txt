@@ -3,9 +3,6 @@ Incubating Android Gradle Plugin API.
 ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
-Sha256 of below classes:
-61ba6b284cc7eb029649e868b09410854e8464f8a57ca569540810e54f6edcc7
--------------------------------------------------------------------------
 com.android.build.api.artifact.AppendRequest
 com.android.build.api.artifact.AppendRequest.on: com.android.build.api.artifact.AppendRequest<FILE_TYPE> (ARTIFACT_TYPE)
 com.android.build.api.artifact.ArtifactKind implements java.io.Serializable
@@ -150,6 +147,8 @@ com.android.build.api.dsl.AssetPackExtension
 com.android.build.api.dsl.AssetPackExtension.dynamicDelivery: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DynamicDelivery, kotlin.Unit>)
 com.android.build.api.dsl.AssetPackExtension.getDynamicDelivery: com.android.build.api.dsl.DynamicDelivery ()
 com.android.build.api.dsl.AssetPackExtension.getPackName: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.dsl.BaseConfig
+com.android.build.api.dsl.BaseFlavor implements com.android.build.api.dsl.BaseConfig
 com.android.build.api.dsl.BuildFeatures implements org.gradle.api.plugins.ExtensionAware
 com.android.build.api.dsl.BuildFeatures.getAidl: java.lang.Boolean ()
 com.android.build.api.dsl.BuildFeatures.getBuildConfig: java.lang.Boolean ()
@@ -167,7 +166,7 @@ com.android.build.api.dsl.BuildFeatures.setRenderScript: void (java.lang.Boolean
 com.android.build.api.dsl.BuildFeatures.setResValues: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setShaders: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
-com.android.build.api.dsl.BuildType implements org.gradle.api.Named
+com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android.build.api.dsl.BaseConfig
 com.android.build.api.dsl.BuildType.isDefault: boolean ()
 com.android.build.api.dsl.BuildType.setDefault: void (boolean)
 com.android.build.api.dsl.Cmake
@@ -236,7 +235,7 @@ com.android.build.api.dsl.DataBinding.setAddDefaultAdapters: void (boolean)
 com.android.build.api.dsl.DataBinding.setEnabled: void (boolean)
 com.android.build.api.dsl.DataBinding.setEnabledForTests: void (boolean)
 com.android.build.api.dsl.DataBinding.setVersion: void (java.lang.String)
-com.android.build.api.dsl.DefaultConfig
+com.android.build.api.dsl.DefaultConfig implements com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.DensitySplit implements com.android.build.api.dsl.SplitOptions
 com.android.build.api.dsl.DensitySplit.compatibleScreens: void (java.lang.String[])
 com.android.build.api.dsl.DensitySplit.getCompatibleScreens: java.util.Collection<java.lang.String> ()
@@ -244,8 +243,8 @@ com.android.build.api.dsl.DensitySplit.isStrict: boolean ()
 com.android.build.api.dsl.DensitySplit.setCompatibleScreens: void (java.util.Collection<java.lang.String>)
 com.android.build.api.dsl.DensitySplit.setStrict: void (boolean)
 com.android.build.api.dsl.DependenciesInfo
-com.android.build.api.dsl.DependenciesInfo.getInclude: boolean ()
-com.android.build.api.dsl.DependenciesInfo.setInclude: void (boolean)
+com.android.build.api.dsl.DependenciesInfo.getIncludeInApk: boolean ()
+com.android.build.api.dsl.DependenciesInfo.setIncludeInApk: void (boolean)
 com.android.build.api.dsl.DynamicDelivery
 com.android.build.api.dsl.DynamicDelivery.getDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.dsl.DynamicDelivery.getInstantDeliveryType: org.gradle.api.provider.Property<java.lang.String> ()
@@ -273,7 +272,7 @@ com.android.build.api.dsl.NdkBuild.getPath: java.io.File ()
 com.android.build.api.dsl.NdkBuild.path: void (java.lang.Object)
 com.android.build.api.dsl.NdkBuild.setBuildStagingDirectory: void (java.io.File)
 com.android.build.api.dsl.NdkBuild.setPath: void (java.io.File)
-com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named
+com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.ProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ProductFlavor.setDefault: void (boolean)
 com.android.build.api.dsl.SigningConfig implements org.gradle.api.Named
@@ -326,8 +325,12 @@ com.android.build.api.dsl.UnitTestOptions.setIncludeAndroidResources: void (bool
 com.android.build.api.dsl.UnitTestOptions.setReturnDefaultValues: void (boolean)
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
 com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.ApplicationVariant.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
+com.android.build.api.variant.ApplicationVariant.getDebuggable: boolean ()
+com.android.build.api.variant.ApplicationVariant.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
 com.android.build.api.variant.ApplicationVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.ApplicationVariantProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.variant.ApplicationVariantProperties.getDependenciesInfo: com.android.build.api.variant.DependenciesInfo ()
 com.android.build.api.variant.BuiltArtifact
 com.android.build.api.variant.BuiltArtifact.getFilters: java.util.Collection<com.android.build.api.variant.FilterConfiguration> ()
 com.android.build.api.variant.BuiltArtifact.getOutputFile: java.lang.String ()
@@ -350,6 +353,8 @@ com.android.build.api.variant.BuiltArtifacts.save: void (org.gradle.api.file.Dir
 com.android.build.api.variant.BuiltArtifactsLoader
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.Directory)
 com.android.build.api.variant.BuiltArtifactsLoader.load: com.android.build.api.variant.BuiltArtifacts (org.gradle.api.file.FileCollection)
+com.android.build.api.variant.DependenciesInfo
+com.android.build.api.variant.DependenciesInfo.getIncludeInApk: boolean ()
 com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.DynamicFeatureVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.DynamicFeatureVariantProperties.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
@@ -375,9 +380,11 @@ com.android.build.api.variant.TestVariantProperties implements com.android.build
 com.android.build.api.variant.TestVariantProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.Variant implements com.android.build.api.component.Component, com.android.build.api.component.ActionableComponentObject
 com.android.build.api.variant.Variant.androidTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTest<com.android.build.api.component.AndroidTestProperties>, kotlin.Unit>)
+com.android.build.api.variant.Variant.androidTestProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTestProperties, kotlin.Unit>)
 com.android.build.api.variant.Variant.getMinSdkVersion: int ()
 com.android.build.api.variant.Variant.setMinSdkVersion: void (int)
 com.android.build.api.variant.Variant.unitTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTest<com.android.build.api.component.UnitTestProperties>, kotlin.Unit>)
+com.android.build.api.variant.Variant.unitTestProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.UnitTestProperties, kotlin.Unit>)
 com.android.build.api.variant.VariantInfo
 com.android.build.api.variant.VariantInfo.getBuildTypeName: java.lang.String ()
 com.android.build.api.variant.VariantInfo.getFlavorNames: com.google.common.collect.ImmutableList<java.lang.String> ()

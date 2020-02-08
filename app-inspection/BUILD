@@ -37,12 +37,8 @@ cc_library(
     ],
     hdrs = [
         "native/include/app_inspection_service.h",
-    ] + select({
-        ":app_inspection_experimental": [
-            "native/include/app_inspection_transform.h",
-        ],
-        "//conditions:default": [],
-    }),
+        "native/include/app_inspection_transform.h",
+    ],
     copts = ANDROID_COPTS + [
         "-Itools/base/app-inspection/native/include",
         # TODO: Remove dependency when agent.h no longer includes
@@ -50,10 +46,7 @@ cc_library(
         "-Itools/base/profiler/native/agent",
         "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/transport",
-    ] + select({
-        ":app_inspection_experimental": ["-DAPP_INSPECTION_EXPERIMENT=1"],
-        "//conditions:default": [],
-    }),
+    ],
     linkstatic = 1,
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
@@ -67,15 +60,4 @@ cc_library(
         "//tools/base/transport/proto:cc_proto",
     ],
     alwayslink = 1,
-)
-
-# to compile app-inspection with experimental code run following command:
-# bazel build //tools/adt/idea/android:artifacts --define app_inspection_experimental=true
-# TODO(b/145807005): Delete this flag
-config_setting(
-    name = "app_inspection_experimental",
-    values = {
-        "define": "app_inspection_experimental=true",
-    },
-    visibility = ["//visibility:public"],
 )

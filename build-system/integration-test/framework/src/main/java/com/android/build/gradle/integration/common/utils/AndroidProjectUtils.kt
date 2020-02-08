@@ -66,7 +66,7 @@ fun AndroidProject.getArtifactMetaData(name: String): ArtifactMetaData {
 
 fun AndroidProject.getProductFlavor(name: String): ProductFlavorContainer {
     return searchForExistingItem(
-            productFlavors, name, { it.productFlavor.name }, "ProductFlavorContainer")
+            productFlavors, name, { it.productFlavor.getName() }, "ProductFlavorContainer")
 }
 
 fun AndroidProject.findTestedBuildType(): String? {
@@ -108,7 +108,7 @@ fun AndroidProject.testDefaultSourceSets(projectDir: File) {
         SourceProviderHelper(
                 name,
                 projectDir,
-                btContainer.buildType.name,
+                btContainer.buildType.getName(),
                 btContainer.sourceProvider)
                 .test()
 
@@ -119,7 +119,7 @@ fun AndroidProject.testDefaultSourceSets(projectDir: File) {
                 .map { it.artifactName }
                 .toSet()
 
-        if (btContainer.buildType.name == testedBuildType) {
+        if (btContainer.buildType.getName() == testedBuildType) {
             TruthHelper.assertThat(extraSourceProviderNames)
                     .containsExactly(AndroidProject.ARTIFACT_ANDROID_TEST,
                             AndroidProject.ARTIFACT_UNIT_TEST)

@@ -56,12 +56,15 @@ public class StableApiTest {
     }
 
     protected static ApiTester getIncubatingApiTester() throws IOException {
-        return getApiTester(ApiTester.Filter.INCUBATING_ONLY, INCUBATING_API_URL);
+        return getApiTester(
+                ApiTester.Filter.INCUBATING_ONLY, INCUBATING_API_URL, ApiTester.Flag.OMIT_HASH);
     }
 
-
     private static ApiTester getApiTester(
-            @NonNull ApiTester.Filter filter, @NonNull URL expectedFileUrl) throws IOException {
+            @NonNull ApiTester.Filter filter,
+            @NonNull URL expectedFileUrl,
+            @NonNull ApiTester.Flag... flags)
+            throws IOException {
 
         String type = filter == ApiTester.Filter.STABLE_ONLY ? "Stable" : "Incubating";
         ImmutableSet<ClassPath.ClassInfo> allClasses =
@@ -89,6 +92,7 @@ public class StableApiTest {
                         + "the api change or re-run StableApiUpdater.main[] from the IDE "
                         + "to update the API file.\n"
                         + "StableApiUpdater will apply the following changes if run:\n",
-                expectedFileUrl);
+                expectedFileUrl,
+                flags);
     }
 }

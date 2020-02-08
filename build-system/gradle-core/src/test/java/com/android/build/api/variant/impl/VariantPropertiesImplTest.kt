@@ -26,7 +26,11 @@ import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.scope.VariantApiScope
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.createFakeVariantApiScope
+import com.android.build.gradle.internal.scope.createFakeVariantPropertiesApiScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.internal.variant2.createFakeDslScope
@@ -60,7 +64,8 @@ class VariantPropertiesImplTest {
     @Mock lateinit var variantData: BaseVariantData
     @Mock lateinit var componentIdentity: ComponentIdentity
     @Mock lateinit var artifacts: BuildArtifactsHolder
-    val dslScope: DslScope = createFakeDslScope()
+    private val dslScope: DslScope = createFakeDslScope()
+    private val variantApiScope = createFakeVariantPropertiesApiScope()
 
     lateinit var properties: VariantPropertiesImpl
     lateinit var project: Project
@@ -84,7 +89,7 @@ class VariantPropertiesImplTest {
             variantScope,
             variantData,
             Mockito.mock(TransformManager::class.java),
-            dslScope,
+            variantApiScope,
             globalScope)
     }
 
@@ -114,7 +119,7 @@ class VariantPropertiesImplTest {
             variantScope,
             variantData,
             Mockito.mock(TransformManager::class.java),
-            dslScope,
+            variantApiScope,
             globalScope) {
             @Suppress("UNCHECKED_CAST")
             override val applicationId: Property<String> = Mockito.mock(Property::class.java) as Property<String>
@@ -156,7 +161,7 @@ class VariantPropertiesImplTest {
         variantScope: VariantScope,
         variantData: BaseVariantData,
         transformManager: TransformManager,
-        dslScope: DslScope,
+        variantApiScope: VariantPropertiesApiScope,
         globalScope: GlobalScope
     ) : VariantPropertiesImpl(
         componentIdentity,
@@ -168,7 +173,7 @@ class VariantPropertiesImplTest {
         variantScope,
         variantData,
         transformManager,
-        dslScope,
+        variantApiScope,
         globalScope
     ) {
         override val applicationId: Provider<String>

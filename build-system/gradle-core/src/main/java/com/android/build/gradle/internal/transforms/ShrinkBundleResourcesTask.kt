@@ -238,10 +238,9 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                 InternalArtifactType.MERGED_NOT_COMPILED_RES,
                 task.resourceDir)
 
-            if (artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING))
-                artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.APK_MAPPING,
-                    task.mappingFileSrc)
+            artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.APK_MAPPING,
+                task.mappingFileSrc)
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,

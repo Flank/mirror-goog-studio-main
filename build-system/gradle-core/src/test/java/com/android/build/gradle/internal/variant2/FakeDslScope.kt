@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.fixtures.ProjectFactory
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.ProjectScope
 import com.android.build.gradle.options.ProjectOptions
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.file.ProjectLayout
@@ -49,15 +50,16 @@ fun createFakeDslScope(
     projectLayout: ProjectLayout = ProjectFactory.project.layout,
     projectOptions: ProjectOptions = ProjectOptions(ImmutableMap.of()),
     fileResolver: (Any) -> File = { File(it.toString()) }
-): DslScopeImpl = DslScopeImpl(
-    issueReporter,
-    deprecationReporter,
-    objectFactory,
-    logger,
-    buildFeatures,
-    providerFactory,
-    dslVariableFactory,
-    projectLayout,
-    projectOptions,
-    fileResolver
-)
+): DslScopeImpl {
+    val projectScope = ProjectScope(
+        issueReporter,
+        deprecationReporter,
+        objectFactory,
+        logger,
+        providerFactory,
+        projectLayout,
+        projectOptions,
+        fileResolver)
+
+    return DslScopeImpl(projectScope, buildFeatures, dslVariableFactory)
+}

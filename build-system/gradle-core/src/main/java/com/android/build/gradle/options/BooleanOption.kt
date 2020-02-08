@@ -84,6 +84,9 @@ enum class BooleanOption(
     ENABLE_PREFAB("android.enablePrefab", false, FeatureStage.Supported),
     INCLUDE_DEPENDENCY_INFO_IN_APKS("android.includeDependencyInfoInApks", false, FeatureStage.Supported),
 
+    // FIXME switch to false once we know we don't use these getters internally.
+    DISABLE_MEMOIZATION("android.compatibility.disableMemoization", true, FeatureStage.Supported),
+
     /* ---------------------
      * EXPERIMENTAL FEATURES
      */
@@ -159,7 +162,7 @@ enum class BooleanOption(
     ENABLE_D8("android.enableD8", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.LEGACY_DEXER)),
 
     /** Whether Jetifier will skip libraries that already support AndroidX. */
-    JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.FUTURE_VERSION)),
+    JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_5_0)),
     @Suppress("unused")
     ENABLE_BUILD_CACHE(
         "android.enableBuildCache",

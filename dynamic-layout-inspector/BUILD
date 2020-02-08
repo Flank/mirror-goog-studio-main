@@ -11,7 +11,6 @@ kotlin_test(
         "src/test/**/*.kt",
         "src/test/**/*.java",
     ]),
-    coverage = True,
     data = select({
         "windows": [],
         "mac": [":libjni-test.dylib"],

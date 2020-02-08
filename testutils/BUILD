@@ -26,7 +26,6 @@ iml_module(
 iml_module(
     name = "studio.testutils-tests",
     iml_files = ["testutils-tests.iml"],
-    test_coverage = True,
     test_data = ["//prebuilts/studio/sdk:platforms/latest"] + glob(["src/test/data/**"]),
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -83,7 +82,6 @@ kotlin_test(
         "src/test/java/**/*.kt",
         "src/test/java/**/*.java",
     ]),
-    coverage = True,
     data = ["//prebuilts/studio/sdk:platforms/latest"] + glob(["src/test/data/**"]),
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),

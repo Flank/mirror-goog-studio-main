@@ -19,6 +19,7 @@ package com.android.tools.mlkit;
 import org.tensorflow.lite.support.metadata.schema.AssociatedFile;
 import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
 import org.tensorflow.lite.support.metadata.schema.TensorMetadata;
+import tflite.Tensor;
 
 /**
  * Stores necessary data for each single input or output. For tflite model, this class stores
@@ -28,7 +29,7 @@ public class Param {
     public enum DataType {
         FLOAT32(0),
         INT32(2),
-        BYTE(3),
+        UINT8(3),
         INT64(4);
 
         private int id;
@@ -102,8 +103,8 @@ public class Param {
     private Source source;
     private ContentType contentType;
     private String description;
-
-    private Param() {}
+    private MetadataExtractor.NormalizationParams normalizationParams;
+    private MetadataExtractor.QuantizationParams quantizationParams;
 
     public String getName() {
         return name;
@@ -137,6 +138,14 @@ public class Param {
         return description;
     }
 
+    public MetadataExtractor.NormalizationParams getNormalizationParams() {
+        return normalizationParams;
+    }
+
+    public MetadataExtractor.QuantizationParams getQuantizationParams() {
+        return quantizationParams;
+    }
+
     public static class Builder {
         private String name;
         private int[] shape;
@@ -146,6 +155,8 @@ public class Param {
         private Source source;
         private ContentType contentType = ContentType.UNKNOWN;
         private String description;
+        private MetadataExtractor.NormalizationParams normalizationParams;
+        private MetadataExtractor.QuantizationParams quantizationParams;
 
         public Builder setName(String name) {
             this.name = name;
@@ -154,11 +165,6 @@ public class Param {
 
         public Builder setShape(int[] shape) {
             this.shape = shape;
-            return this;
-        }
-
-        public Builder setSource(Source source) {
-            this.source = source;
             return this;
         }
 
@@ -187,6 +193,23 @@ public class Param {
             return this;
         }
 
+        public Builder setNormalizationParams(
+                MetadataExtractor.NormalizationParams normalizationParams) {
+            this.normalizationParams = normalizationParams;
+            return this;
+        }
+
+        public Builder setQuantizationParams(
+                MetadataExtractor.QuantizationParams quantizationParams) {
+            this.quantizationParams = quantizationParams;
+            return this;
+        }
+
+        public Builder setSource(Source source) {
+            this.source = source;
+            return this;
+        }
+
         public Param build() {
             Param param = new Param();
             param.name = name;
@@ -197,13 +220,15 @@ public class Param {
             param.source = source;
             param.contentType = contentType;
             param.description = description;
+            param.normalizationParams = normalizationParams;
+            param.quantizationParams = quantizationParams;
 
             return param;
         }
     }
 
     public static Param parseFrom(MetadataExtractor extractor, Source source, int index) {
-        Builder builder = new Builder();
+        Param.Builder builder = new Param.Builder();
         if (source == Source.INPUT) {
             builder.setShape(extractor.getInputTensorShape(0, index));
             builder.setDataType(DataType.fromByte(extractor.getInputTensorType(0, index)));
@@ -217,6 +242,10 @@ public class Param {
                 source == Source.INPUT
                         ? metadata.subgraphMetadata(0).inputTensorMetadata(index)
                         : metadata.subgraphMetadata(0).outputTensorMetadata(index);
+        Tensor tensor =
+                source == Source.INPUT
+                        ? extractor.getInputTensor(0, index)
+                        : extractor.getOutputTensor(0, index);
 
         AssociatedFile file = tensorMetadata.associatedFiles(0);
         if (file != null) {
@@ -227,7 +256,15 @@ public class Param {
         builder.setContentType(ContentType.fromByte(tensorMetadata.contentType()));
         builder.setName(tensorMetadata.name() == null ? "data" + index : tensorMetadata.name());
         builder.setDescription(tensorMetadata.description());
+        builder.setQuantizationParams(extractor.getQuantizationParams(tensor));
         builder.setSource(source);
+
+        if (tensorMetadata.stats() != null && tensorMetadata.stats().meanAsByteBuffer() != null) {
+            builder.setNormalizationParams(
+                    new MetadataExtractor.NormalizationParams(
+                            tensorMetadata.stats().meanAsByteBuffer().asFloatBuffer(),
+                            tensorMetadata.stats().stdAsByteBuffer().asFloatBuffer()));
+        }
 
         return builder.build();
     }

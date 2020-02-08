@@ -42,6 +42,7 @@ import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_SAFE;
 import static com.android.SdkConstants.VALUE_STRICT;
 import static com.android.SdkConstants.VIEW_FRAGMENT;
+import static com.android.ide.common.resources.ResourcesUtil.resourceNameToFieldName;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 import static com.android.utils.SdkUtils.fileNameToResourceName;
 import static com.android.utils.SdkUtils.globToRegexp;
@@ -121,7 +122,7 @@ public class ResourceUsageModel {
 
 
     public static String getResourceFieldName(Element element) {
-        return SdkUtils.getResourceFieldName(element.getAttribute(ATTR_NAME));
+        return resourceNameToFieldName(element.getAttribute(ATTR_NAME));
     }
 
     @Nullable
@@ -154,7 +155,7 @@ public class ResourceUsageModel {
     public Resource getResource(@NonNull ResourceType type, @NonNull String name) {
         Map<String, Resource> nameMap = mTypeToName.get(type);
         if (nameMap != null) {
-            return nameMap.get(SdkUtils.getResourceFieldName(name));
+            return nameMap.get(resourceNameToFieldName(name));
         }
         return null;
     }
@@ -163,7 +164,7 @@ public class ResourceUsageModel {
     public Resource getResourceFromUrl(@NonNull String possibleUrlReference) {
         ResourceUrl url = ResourceUrl.parse(possibleUrlReference);
         if (url != null && !url.isFramework()) {
-            return addResource(url.type, SdkUtils.getResourceFieldName(url.name), null);
+            return addResource(url.type, resourceNameToFieldName(url.name), null);
         }
 
         return null;
@@ -573,7 +574,7 @@ public class ResourceUsageModel {
         }
         Map<String, Resource> nameMap =
                 mTypeToName.computeIfAbsent(type, k -> Maps.newHashMapWithExpectedSize(30));
-        nameMap.put(SdkUtils.getResourceFieldName(name), resource);
+        nameMap.put(resourceNameToFieldName(name), resource);
 
         // TODO: Assert that we don't set the same resource multiple times to different values.
         // Could happen if you pass in stale data!
@@ -614,7 +615,7 @@ public class ResourceUsageModel {
             addResourceToWhitelist(resource);
         } else if (url.name.contains("*") || url.name.contains("?")) {
             // Look for globbing patterns
-            String regexp = globToRegexp(SdkUtils.getResourceFieldName(url.name));
+            String regexp = globToRegexp(resourceNameToFieldName(url.name));
             try {
                 Pattern pattern = Pattern.compile(regexp);
                 Map<String, Resource> nameMap = mTypeToName.get(url.type);
@@ -650,7 +651,7 @@ public class ResourceUsageModel {
             markUnreachable(resource);
         } else if (url.name.contains("*") || url.name.contains("?")) {
             // Look for globbing patterns
-            String regexp = globToRegexp(SdkUtils.getResourceFieldName(url.name));
+            String regexp = globToRegexp(resourceNameToFieldName(url.name));
             try {
                 Pattern pattern = Pattern.compile(regexp);
                 Map<String, Resource> nameMap = mTypeToName.get(url.type);
@@ -1089,8 +1090,7 @@ public class ResourceUsageModel {
                                     parentStyle = STYLE_RESOURCE_PREFIX + parentStyle;
                                 }
                             }
-                            Resource ps =
-                                    getResourceFromUrl(SdkUtils.getResourceFieldName(parentStyle));
+                            Resource ps = getResourceFromUrl(resourceNameToFieldName(parentStyle));
                             if (ps != null && definition != null) {
                                 definition.addReference(ps);
                             }
@@ -1105,7 +1105,7 @@ public class ResourceUsageModel {
                                 Resource ps =
                                         getResourceFromUrl(
                                                 STYLE_RESOURCE_PREFIX
-                                                        + SdkUtils.getResourceFieldName(name));
+                                                        + resourceNameToFieldName(name));
                                 if (ps != null && definition != null) {
                                     definition.addReference(ps);
                                 }
@@ -1137,8 +1137,7 @@ public class ResourceUsageModel {
             }
         } else if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
             String text = node.getNodeValue().trim();
-            // Why are we calling getResourceFieldName here? That doesn't make sense! for styles I guess
-            Resource textResource = getResourceFromUrl(SdkUtils.getResourceFieldName(text));
+            Resource textResource = getResourceFromUrl(resourceNameToFieldName(text));
             if (textResource != null && from != null) {
                 from.addReference(textResource);
             }
@@ -1805,8 +1804,7 @@ public class ResourceUsageModel {
             // URLs are often within the raw folder
             resource =
                     getResource(
-                            ResourceType.RAW,
-                            SdkUtils.getResourceFieldName(fileNameToResourceName(url)));
+                            ResourceType.RAW, resourceNameToFieldName(fileNameToResourceName(url)));
         }
         if (resource != null) {
             if (from != null) {

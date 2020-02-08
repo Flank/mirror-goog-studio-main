@@ -1045,6 +1045,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    /* Temporarily disabled as part of hotfix for b/b/148602190
     public void testSplits1() {
         // splits in the Gradle model sets up the specific set of resource configs
         // that are included in the packaging: we use this to limit the set of required
@@ -1081,6 +1082,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(expected);
     }
+    */
 
     public void testWebpEligible() {
         String expected =

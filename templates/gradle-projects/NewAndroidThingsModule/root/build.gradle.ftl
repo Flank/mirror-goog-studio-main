@@ -42,6 +42,5 @@ android {
 }
 
 dependencies {
-    ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
     <@kt.addKotlinDependencies />
 }

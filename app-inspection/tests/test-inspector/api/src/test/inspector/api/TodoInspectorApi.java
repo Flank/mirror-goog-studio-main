@@ -34,7 +34,9 @@ public final class TodoInspectorApi {
     public enum Event {
         UNKNOWN,
 
+        TODO_GROUP_CREATING,
         TODO_GROUP_CREATED,
+        TODO_ITEM_CREATING,
         TODO_ITEM_CREATED;
 
         @NonNull

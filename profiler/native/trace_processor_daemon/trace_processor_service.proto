@@ -1,0 +1,139 @@
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package profiler.perfetto.proto;
+option java_package = "com.android.tools.profiler.perfetto.proto";
+option java_outer_classname = "TraceProcessor";
+
+service TraceProcessorService {
+
+  // Request to load a trace into the daemon.
+  rpc LoadTrace(LoadTraceRequest) returns (LoadTraceResponse) {}
+
+  // Send one or more batched queries to the service.
+  rpc QueryBatch(QueryBatchRequest) returns (QueryBatchResponse) {}
+}
+
+message LoadTraceRequest {
+  // Unique Identifier for the trace being loaded.
+  int64 trace_id = 1;
+
+  // Absolute file path for the .trace file to be loaded and parsed.
+  string trace_path = 2;
+}
+
+message LoadTraceResponse {
+  // If the trace was successfully loaded.
+  bool ok = 1;
+
+  // In case the trace was not loaded correctly, this field contains
+  // a string explaining the reason.
+  string error = 2;
+
+  // Available processes and threads in the trace.
+  ProcessMetadataResult process_metadata = 3;
+}
+
+message QueryBatchRequest {
+  // Each query request can batch multiple queries in order to avoid excesive
+  // RPC overhead.
+  repeated QueryParameters query = 1;
+}
+
+message QueryBatchResponse {
+  // There will be one result for each QueryRequest.query received on the
+  // QueryRequest msg.
+  repeated QueryResult result = 1;
+}
+
+message QueryParameters {
+  // Fields 1 to 100 reserved to future metadata passed on the request.
+
+  oneof query {
+    ProcessMetadataParameters process_metadata = 101;
+    ProcessTraceEventsParameters process_events = 102;
+    CpuTraceEventsParameters cpu_events = 103;
+  }
+
+  // Returns metadata information for a set of processes.
+  // See ResultProcessMetadata for the data returned from this.
+  message ProcessMetadataParameters {
+    repeated int64 process_id = 1;
+  }
+
+  // Returns all the trace events for a set of processes.
+  // Includes all the threads under those processes.
+  // See ResultProcessTraceEvents for the data returned from this.
+  message ProcessTraceEventsParameters {
+    repeated int64 process_id = 1;
+  }
+
+  // Returns all the trace events for a set of CPU cores.
+  // If the set of core ids is empty, will return trace events
+  // for all the cores.
+  // See ResultCpuTraceEvents for the data returned from this.
+  message CpuTraceEventsParameters {
+    repeated int32 core_id = 1;
+  }
+}
+
+message QueryResult {
+  // Fields 1 to 100 reserved to metadata returned by the query.
+  string error = 1;
+
+  // Can be set to none if the received query was invalid. In this case,
+  // check the error field.
+  oneof result {
+    ProcessMetadataResult process_metadata = 101;
+    ProcessTraceEventsResult process_events = 102;
+    CpuTraceEventsResult cpu_events = 103;
+  }
+
+}
+
+message ProcessMetadataResult {
+  repeated ProcessMetadata process = 1;
+
+  message ProcessMetadata {
+    int64 id = 1;
+    int64 internal_id = 2;
+    string name = 3;
+
+    repeated ThreadMetadata thread = 4;
+  }
+
+  message ThreadMetadata {
+    int64 id = 1;
+    int64 internal_id = 2;
+    string name = 3;
+  }
+}
+
+message ProcessTraceEventsResult {
+  repeated ProcessTraceEvents events = 1;
+
+  message ProcessTraceEvents {
+  }
+}
+
+message CpuTraceEventsResult {
+  repeated CpuTraceEvents events = 1;
+
+  message CpuTraceEvents {
+  }
+}
+

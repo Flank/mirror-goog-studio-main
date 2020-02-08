@@ -1,77 +1,80 @@
 load(":coverage.bzl", "coverage_java_test")
-load(":functions.bzl", "create_java_compiler_args_srcs", "explicit_target", "label_workspace_path", "workspace_path")
+load(":functions.bzl", "create_java_compiler_args_srcs", "explicit_target")
 load(":maven.bzl", "maven_pom")
 load(":utils.bzl", "singlejar")
 load(":lint.bzl", "lint_test")
 
-def kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs, kotlin_deps, package_prefixes, kotlin_jar, friends):
-    merged = []
-    for root in roots:
-        if root in package_prefixes:
-            root += ":" + package_prefixes[root]
-        merged += [label_workspace_path(ctx.label) + "/" + root]
+def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
+    """Runs kotlinc on the given source files.
 
-    kotlin_deps = kotlin_deps.to_list() + ctx.files._kotlin
-    args, option_files = create_java_compiler_args_srcs(ctx, merged, kotlin_jar, ctx.files._bootclasspath + kotlin_deps)
+    Args:
+        ctx:      the analysis context
+        name:     the name of the module being compiled
+        srcs:     a list of Java and Kotlin source files
+        deps:     a depset of compile-time jar dependencies
+        friends:  a list of friend jars (allowing access to 'internal' members)
+        jre:      a list of jars to put on the bootclasspath, *instead* of the
+                    default JRE determined by kotlinc
+        out:      the output jar file
+
+    Expects that ctx.files._kotlinc is defined.
+
+    Note: kotlinc only compiles Kotlin, not Java. So if there are Java
+    sources, then you will also need to run javac after this action.
+    """
+    deps = depset(direct = jre, transitive = [deps])
+    src_paths = [src.path for src in srcs]
+    args, option_files = \
+        create_java_compiler_args_srcs(ctx, src_paths, out, deps.to_list())
 
     args += ["--module_name", name]
     for friend in friends:
         args += ["--friend_dir", friend.path]
-    args += ["--no-jdk"]
+    if jre:
+        args += ["--no-jdk"]
 
     ctx.actions.run(
-        inputs = java_srcs + kotlin_srcs + option_files + kotlin_deps + friends + ctx.files._bootclasspath,
-        outputs = [kotlin_jar],
+        inputs = depset(direct = srcs + option_files, transitive = [deps]),
+        outputs = [out],
         mnemonic = "kotlinc",
         arguments = args,
         executable = ctx.executable._kotlinc,
-    )
-    return JavaInfo(
-        output_jar = kotlin_jar,
-        compile_jar = kotlin_jar,
     )
 
 def _kotlin_jar_impl(ctx):
-    class_jar = ctx.outputs.class_jar
-
-    all_deps = depset(direct = ctx.files.deps + ctx.files._kotlin)
-    for this_dep in ctx.attr.deps:
-        if JavaInfo in this_dep:
-            all_deps = depset(transitive = [all_deps, this_dep[JavaInfo].transitive_runtime_deps])
-
-    merged = [src.path for src in ctx.files.srcs]
-    if ctx.attr.package_prefixes:
-        merged = [a + ":" + b if b else a for (a, b) in zip(merged, ctx.attr.package_prefixes)]
-
-    args, option_files = create_java_compiler_args_srcs(ctx, merged, class_jar, all_deps.to_list())
-
-    for dir in ctx.files.friends:
-        args += ["--friend_dir", dir.path]
-
-    if ctx.attr.module_name:
-        args += ["--module_name", ctx.attr.module_name]
-
-    ctx.actions.run(
-        inputs = ctx.files.inputs + all_deps.to_list() + option_files + ctx.files.friends,
-        outputs = [class_jar],
-        mnemonic = "kotlinc",
-        arguments = args,
-        executable = ctx.executable._kotlinc,
+    # TODO: We would prefer to use transitive_compile_time_jars instead of
+    # transitive_runtime_deps, but currently there are issues when mixing Kotlin
+    # and ijars. (ijar strips needed Kotlin metadata and inline method bodies.)
+    # Note that transitive_runtime_deps excludes neverlink dependencies,
+    # so we try to get those back by adding ctx.files.deps directly. Fixing
+    # these issues and adding ijar/hjar support could significantly improve
+    # build times.
+    compile_deps = depset(
+        direct = ctx.files.deps + ctx.files._kotlin_stdlib,
+        transitive = [
+            dep[JavaInfo].transitive_runtime_deps
+            for dep in ctx.attr.deps
+            if JavaInfo in dep
+        ],
+    )
+    kotlin_compile(
+        ctx = ctx,
+        name = ctx.attr.module_name,
+        srcs = ctx.files.srcs,
+        deps = compile_deps,
+        friends = ctx.files.friends,
+        out = ctx.outputs.output_jar,
     )
 
-kotlin_jar = rule(
+_kotlin_jar = rule(
     attrs = {
         "srcs": attr.label_list(
             allow_empty = False,
             allow_files = True,
         ),
-        "inputs": attr.label_list(
-            allow_files = True,
-        ),
         "friends": attr.label_list(
             allow_files = True,
         ),
-        "package_prefixes": attr.string_list(),
         "deps": attr.label_list(
             mandatory = False,
             allow_files = [".jar"],
@@ -83,13 +86,13 @@ kotlin_jar = rule(
             default = Label("//tools/base/bazel:kotlinc"),
             allow_files = True,
         ),
-        "_kotlin": attr.label(
+        "_kotlin_stdlib": attr.label(
             default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"),
             allow_files = True,
         ),
     },
     outputs = {
-        "class_jar": "lib%{name}.jar",
+        "output_jar": "lib%{name}.jar",
     },
     implementation = _kotlin_jar_impl,
 )
@@ -97,10 +100,11 @@ kotlin_jar = rule(
 def kotlin_library(
         name,
         srcs,
-        java_srcs = [],
         javacopts = None,
         resources = [],
+        resource_strip_prefix = None,
         deps = [],
+        runtime_deps = [],
         bundled_deps = [],
         friends = [],
         pom = None,
@@ -110,10 +114,10 @@ def kotlin_library(
         testonly = None,
         lint_baseline = None,
         lint_classpath = [],
-        module_name = None,
-        **kwargs):
+        module_name = None):
+    """Compiles a library jar from Java and Kotlin sources"""
     kotlins = [src for src in srcs if src.endswith(".kt")]
-    javas = [src for src in srcs if src.endswith(".java")] + java_srcs
+    javas = [src for src in srcs if src.endswith(".java")]
 
     if not kotlins and not javas:
         print("No sources found for kotlin_library " + name)
@@ -124,10 +128,9 @@ def kotlin_library(
         kotlin_name = name + ".kotlin"
         targets += [kotlin_name]
         kdeps += [":lib" + kotlin_name + ".jar"]
-        kotlin_jar(
+        _kotlin_jar(
             name = kotlin_name,
             srcs = srcs,
-            inputs = kotlins + javas,
             deps = deps + bundled_deps,
             friends = friends,
             visibility = visibility,
@@ -144,11 +147,12 @@ def kotlin_library(
             srcs = javas,
             javacopts = javacopts if javas else None,
             resources = resources_with_notice,
+            resource_strip_prefix = resource_strip_prefix,
             deps = (kdeps + deps + bundled_deps) if javas else None,
+            runtime_deps = runtime_deps,
             resource_jars = bundled_deps,
             visibility = visibility,
             testonly = testonly,
-            **kwargs
         )
 
     singlejar(
@@ -183,7 +187,7 @@ def kotlin_library(
             tags = ["no_windows"],
         )
 
-def kotlin_test(name, srcs, deps = [], runtime_deps = [], friends = [], coverage = False, visibility = None, **kwargs):
+def kotlin_test(name, srcs, deps = [], runtime_deps = [], friends = [], visibility = None, **kwargs):
     kotlin_library(
         name = name + ".testlib",
         srcs = srcs,
@@ -200,7 +204,6 @@ def kotlin_test(name, srcs, deps = [], runtime_deps = [], friends = [], coverage
         runtime_deps = [
             ":" + name + ".testlib",
         ] + runtime_deps,
-        coverage = coverage,
         visibility = visibility,
         **kwargs
     )

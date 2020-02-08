@@ -18,6 +18,7 @@
 #define APP_INSPECTION_SERVICE_H_
 
 #include <string>
+
 #include "jvmti.h"
 
 namespace app_inspection {
@@ -26,7 +27,6 @@ class AppInspectionService {
  public:
   static AppInspectionService* create(JNIEnv* env);
 
-#ifdef APP_INSPECTION_EXPERIMENT
   // transforms the given method and inserts AppInspectionService.onEntry call
   // as an entry hook
   void AddEntryTransform(JNIEnv* jni, const std::string& class_name,
@@ -44,7 +44,7 @@ class AppInspectionService {
   }
   // finds instances of the given class in the heap
   jobjectArray FindInstances(JNIEnv* jni, jclass jclass);
-#endif
+
  private:
   explicit AppInspectionService(jvmtiEnv* jvmti);
   // java object AppInspectionService that keeps reference to this object is
@@ -54,7 +54,6 @@ class AppInspectionService {
 
   jvmtiEnv* jvmti_;
 
-#ifdef APP_INSPECTION_EXPERIMENT
   void AddTransform(JNIEnv* jni, const std::string& class_name,
                     const std::string& method_name,
                     const std::string& signature, bool is_entry);
@@ -70,7 +69,6 @@ class AppInspectionService {
                                 unsigned char** new_class_data);
 
   jlong nextTag = 1;
-#endif
 };
 
 }  // namespace app_inspection

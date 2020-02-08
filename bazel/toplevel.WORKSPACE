@@ -62,10 +62,6 @@ custom_exec_properties(
         "LARGE_MACHINE": create_rbe_exec_properties_dict(
             pool = "large-machines",
         ),
-        "EMULATOR_MACHINE": create_rbe_exec_properties_dict(
-            pool = "emulator-machines",
-            docker_privileged = True,
-        ),
     },
 )
 

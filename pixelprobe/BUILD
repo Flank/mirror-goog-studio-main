@@ -11,7 +11,6 @@ iml_module(
     ],
     iml_files = ["android.sdktools.pixelprobe.iml"],
     resources = ["src/main/resources"],
-    test_coverage = True,
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],

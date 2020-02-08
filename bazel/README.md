@@ -87,12 +87,7 @@ bazel test //tools/adt/idea/android/... --test_filter=AndroidLayoutDomTest --jav
 We currently do not use the in-built Bazel coverage support.
 
 To enable a test in coverage runs do the following:
-1. Enable coverage for the test by:
-   |Bazel Rule    | Instruction |
-   |------------- | ----------- |
-   |`java_test`   | use `coverage_java_test` from //tools/base/bazel:coverage.bzl instead |
-   |`kotlin_test` | pass `coverage = true` to the rule |
-   |`iml_module`  | pass `test_coverage = true` to the rule |
+1. If you used `java_test`, then you need to replace it with `coverage_java_test` from //tools/base/bazel:coverage.bzl
 2. Add the test target to the "all" coverage_report in tools/base/bazel/coverage/BUILD for inclusion in overall coverage
 3. (Optional) Create your own coverage_report target in tools/base/bazel/coverage/BUILD for your team/feature
 
@@ -159,6 +154,9 @@ Attribute        | Description
 > the files needed to run the tests. These files are known as _runfiles_ and are
 > specified via the `test_data` attribute. This is essential to determining
 > which test targets need to be run when an arbitrary file has changed.
+
+More details on the implementation of the `iml_module` rule can be found in
+[docs/iml-module.md](docs/iml-module.md).
 
 ## Circular Dependencies
 

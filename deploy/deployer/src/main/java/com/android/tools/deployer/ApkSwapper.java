@@ -150,6 +150,7 @@ public class ApkSwapper {
         }
         return true;
     }
+
     /**
      * Performs a swap with hopeful optimism.
      *
@@ -161,10 +162,12 @@ public class ApkSwapper {
             String packageId,
             List<Integer> pids,
             Deploy.Arch arch,
-            DexComparator.ChangedClasses changedClasses)
+            DexComparator.ChangedClasses changedClasses,
+            OverlayId expectedOid,
+            OverlayId oid)
             throws DeployerException {
         Deploy.OverlaySwapRequest swapRequest =
-                buildOverlaySwapRequest(packageId, pids, arch, changedClasses);
+                buildOverlaySwapRequest(packageId, pids, arch, changedClasses, expectedOid, oid);
         sendSwapRequest(swapRequest, new InstallerBasedClassRedefiner(installer));
         return true;
     }
@@ -173,7 +176,9 @@ public class ApkSwapper {
             String packageId,
             List<Integer> pids,
             Deploy.Arch arch,
-            DexComparator.ChangedClasses changedClasses)
+            DexComparator.ChangedClasses changedClasses,
+            OverlayId oldIds,
+            OverlayId newIds)
             throws DeployerException {
         Deploy.OverlaySwapRequest.Builder request =
                 Deploy.OverlaySwapRequest.newBuilder()
@@ -183,6 +188,9 @@ public class ApkSwapper {
                         .setArch(arch)
                         .setOverlayId("")
                         .setExpectedOverlayId("");
+
+        request.setExpectedOverlayId(oldIds.getSha());
+        request.setOverlayId(newIds.getSha());
 
         for (DexClass clazz : changedClasses.newClasses) {
             request.addNewClasses(

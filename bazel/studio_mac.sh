@@ -35,7 +35,7 @@ readonly bazel_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
   readonly bin_dir="$("${script_dir}"/bazel info bazel-bin)"
-  cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${DIST_DIR}
+  cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${dist_dir}
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 fi
 

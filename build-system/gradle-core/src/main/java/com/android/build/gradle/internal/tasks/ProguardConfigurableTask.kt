@@ -211,7 +211,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            if (testedConfig?.artifacts?.hasFinalProduct(APK_MAPPING) == true) {
+            if (testedConfig?.variantScope?.codeShrinker != null) {
                 task.testedMappingFile.from(
                     testedConfig
                         .artifacts

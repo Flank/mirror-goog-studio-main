@@ -18,6 +18,7 @@ platform(
         container_image = "docker://gcr.io/google.com/android-studio-alphasource/rbe-ubuntu16-as@sha256:aa2a7ab0825b6b7b13c5b2e1184674f8dd452853c11ae4b5fdf83f1fd9265926",
         docker_add_capabilities = "SYS_NICE",
         docker_network = "off",
+        docker_privileged = True,  # This is required to support emulators/nested KVM.
         docker_use_urandom = True,
         os_family = "Linux",
         pool = "default",

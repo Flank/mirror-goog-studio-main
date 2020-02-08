@@ -2,8 +2,6 @@
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <#import "root://activities/common/navigation/navigation_common_macros.ftl" as navigation>
 <recipe>
-    <@navigation.addSafeArgsPluginToClasspath />
-
     <@kt.addAllKotlinDependencies />
     <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+"/>
 
@@ -39,11 +37,13 @@
         <#include "../common/recipe_simple_menu.xml.ftl" />
     </#if>
 
-    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="home" withSafeArgs=true />
+    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="home" />
     <@navigation.instantiateFragmentAndViewModel fragmentPrefix="gallery" />
     <@navigation.instantiateFragmentAndViewModel fragmentPrefix="slideshow" />
     <@navigation.navigationDependencies />
-    <@navigation.addSafeArgsPlugin />
+    <#if generateKotlin>
+        <requireJavaVersion version="1.8" kotlinSupport="true" />
+    </#if>
 
     <instantiate from="root/res/navigation/mobile_navigation.xml.ftl"
                  to="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />

@@ -45,6 +45,8 @@ import java.util.logging.Logger;
  */
 public class ProfilerToBenchmarkAdapter {
 
+    public static String TOTAL_BUILD_TIME_METRIC = "TOTAL_BUILD_TIME";
+
     private static final Logger LOGGER =
             Logger.getLogger(ProfilerToBenchmarkAdapter.class.getName());
 
@@ -166,8 +168,7 @@ public class ProfilerToBenchmarkAdapter {
 
     public void commit() {
 
-
-        Metric totalBuildTime = new Metric("TOTAL_BUILD_TIME");
+        Metric totalBuildTime = new Metric(TOTAL_BUILD_TIME_METRIC);
         Metric totalGcTime = new Metric("TOTAL_GC_TIME");
 
         consolidatedTimingsPerIterations
@@ -243,7 +244,7 @@ public class ProfilerToBenchmarkAdapter {
     private static void setAnalyzers(Metric metric, Benchmark benchmark) {
         if (MIN_ANALYZER_METRICS.contains(metric.getMetricName())) {
             metric.setAnalyzers(benchmark, Arrays.asList(MIN_ANALYZER));
-        } else if ("TOTAL_BUILD_TIME".equals(metric.getMetricName())) {
+        } else if (TOTAL_BUILD_TIME_METRIC.equals(metric.getMetricName())) {
             metric.setAnalyzers(benchmark, Arrays.asList(TOTAL_BUILD_TIME_ANALYZER));
         } else {
             metric.setAnalyzers(benchmark, Arrays.asList(DEFAULT_ANALYZER));

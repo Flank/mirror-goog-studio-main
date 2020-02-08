@@ -20,6 +20,7 @@ import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
+import com.android.build.api.variant.impl.MutableDependenciesInfoImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.TaskManager
@@ -91,7 +92,7 @@ class ApplicationTaskManager(
             )
         }
 
-        createDynamicBundleTask(variantProperties)
+        createDynamicBundleTask(variant)
 
         handleMicroApp(variantProperties)
 
@@ -179,7 +180,6 @@ class ApplicationTaskManager(
             project.configurations.maybeCreate("assetPackFiles")
         val assetPackManifestConfiguration =
             project.configurations.maybeCreate("assetPackManifest")
-        var needToRegisterAssetPackTasks = false
         val assetPacks: Set<String> =
             (extension as BaseAppModuleExtension).assetPacks
         for (assetPack in assetPacks) {
@@ -200,12 +200,12 @@ class ApplicationTaskManager(
                         "manifestElements"
                     )
                 depHandler.add("assetPackManifest", depHandler.project(manifestDependency))
-                needToRegisterAssetPackTasks = true
+                variantProperties.needAssetPackTasks.set(true)
             } else {
                 notFound.add(assetPack)
             }
         }
-        if (needToRegisterAssetPackTasks) {
+        if (variantProperties.needAssetPackTasks.get()) {
             val assetPackManifest =
                 assetPackManifestConfiguration.incoming.files
             val assetFiles = assetPackFilesConfiguration.incoming.files
@@ -241,7 +241,8 @@ class ApplicationTaskManager(
         }
     }
 
-    private fun createDynamicBundleTask(variantProperties: ApplicationVariantPropertiesImpl) {
+    private fun createDynamicBundleTask(variant: ComponentInfo<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>) {
+        val variantProperties = variant.properties
 
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
         // and the bundle can't be created. For now, just don't add the bundle task.
@@ -257,7 +258,7 @@ class ApplicationTaskManager(
             )
         )
 
-        val addDependenciesTask = addDependenciesTask(variantProperties)
+        val addDependenciesTask = addDependenciesTask(variant.variant)
 
         if (addDependenciesTask) {
             taskFactory.register(PerModuleReportDependenciesTask.CreationAction(variantProperties))
@@ -301,8 +302,7 @@ class ApplicationTaskManager(
         }
     }
 
-    private fun addDependenciesTask(variantProperties: ApplicationVariantPropertiesImpl): kotlin.Boolean {
-        return !variantProperties.debuggable
-                && (extension as BaseAppModuleExtension).dependenciesInfo.include
+    private fun addDependenciesTask(variant: ApplicationVariantImpl): Boolean {
+        return !variant.debuggable && variant.dependenciesInfo.includeInApk
     }
 }

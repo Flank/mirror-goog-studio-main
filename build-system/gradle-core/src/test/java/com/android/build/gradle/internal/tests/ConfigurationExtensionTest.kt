@@ -17,10 +17,10 @@
 package com.android.build.gradle.internal.tests
 
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.internal.plugins.BasePlugin
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.build.gradle.internal.fixture.createAndConfig
+import com.android.build.gradle.internal.plugins.BasePlugin
 import com.android.build.gradle.internal.plugins.runAfterEvaluate
 import com.android.ide.common.util.multimapOf
 import com.android.ide.common.util.multimapWithSingleKeyOf
@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSetMultimap
 import com.google.common.collect.Multimap
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
+import java.util.Locale
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.junit.Before
@@ -36,7 +37,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.util.Locale
 
 /**
  * Tests that specific configurations properly extendFrom others.
@@ -250,19 +250,19 @@ class ConfigurationExtensionTest(private val pluginType: TestProjects.Plugin) {
         android.flavorDimensions("api", "mode")
 
         android.productFlavors.createAndConfig("demo") {
-            setDimension("mode")
+            dimension = "mode"
         }
 
         android.productFlavors.createAndConfig("full") {
-            setDimension("mode")
+            dimension = "mode"
         }
 
         android.productFlavors.createAndConfig("mnc") {
-            setDimension("api")
+            dimension = "api"
         }
 
         android.productFlavors.createAndConfig("lollipop") {
-            setDimension("api")
+            dimension = "api"
         }
 
         plugin.runAfterEvaluate()

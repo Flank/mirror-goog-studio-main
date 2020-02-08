@@ -47,6 +47,8 @@ class OverlaySwapCommand : public BaseSwapCommand {
   proto::OverlaySwapRequest request_;
 
   void BuildOverlayUpdateRequest(proto::OverlayUpdateRequest* request);
+  proto::SwapResponse::Status OverlayStatusToSwapStatus(
+      proto::OverlayUpdateResponse::Status status);
 };
 
 }  // namespace deploy

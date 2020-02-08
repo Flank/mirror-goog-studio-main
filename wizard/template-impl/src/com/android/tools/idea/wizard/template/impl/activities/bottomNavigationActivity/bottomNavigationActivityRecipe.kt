@@ -27,8 +27,6 @@ import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationAc
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.src.app_package.mainActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
-import com.android.tools.idea.wizard.template.impl.activities.common.navigation.addSafeArgsPlugin
-import com.android.tools.idea.wizard.template.impl.activities.common.navigation.addSafeArgsPluginToClasspath
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.navigationDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.saveFragmentAndViewModel
 import navigationXml
@@ -41,7 +39,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   layoutName: String,
   packageName: String
 ) {
-  val (projectData, srcOut, resOut, _, _, _, rootOut, _, isNewModule) = moduleData
+  val (projectData, srcOut, resOut) = moduleData
   val buildApi = moduleData.apis.buildApi
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
@@ -50,8 +48,6 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   val isLauncher = moduleData.isNew
   addAllKotlinDependencies(moduleData)
 
-  addSafeArgsPluginToClasspath(useAndroidX)
-  addSafeArgsPlugin(generateKotlin, rootOut)
   addDependency("com.android.support:design:${buildApi}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 
@@ -72,11 +68,13 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   )
 
   val language = projectData.language
-  saveFragmentAndViewModel(resOut, srcOut, language, packageName, "home", useAndroidX, true)
+  saveFragmentAndViewModel(resOut, srcOut, language, packageName, "home", useAndroidX)
   saveFragmentAndViewModel(resOut, srcOut, language, packageName, "dashboard", useAndroidX)
   saveFragmentAndViewModel(resOut, srcOut, language, packageName, "notifications", useAndroidX)
   navigationDependencies(generateKotlin, useAndroidX, moduleData.apis.buildApiRevision ?: 28)
-  addSafeArgsPlugin(generateKotlin, rootOut)
+  if (generateKotlin) {
+    requireJavaVersion("1.8", true)
+  }
 
   save(mobileNavigationXml(packageName), resOut.resolve("navigation/mobile_navigation.xml"))
   open(resOut.resolve("navigation/mobile_navigation.xml"))

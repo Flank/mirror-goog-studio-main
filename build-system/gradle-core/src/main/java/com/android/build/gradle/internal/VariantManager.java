@@ -232,6 +232,11 @@ public class VariantManager<
         for (DimensionCombination variant : variants) {
             createVariantsFromCombination(variant, testBuildTypeData);
         }
+
+        // FIXME we should lock the variant API properties after all the onVariants, and
+        // before any onVariantProperties to avoid cross access between the two.
+        // This means changing the way to run onVariants vs onVariantProperties.
+        variantFactory.getVariantApiScope().lockValues();
     }
 
     @Nullable
@@ -404,6 +409,7 @@ public class VariantManager<
         // then the new VariantProperties which will contain the 2 old objects.
         VariantPropertiesT variantProperties =
                 variantFactory.createVariantPropertiesObject(
+                        variant,
                         componentIdentity,
                         variantDslInfo,
                         variantDependencies,
@@ -518,6 +524,7 @@ public class VariantManager<
                     variantFactory.createAndroidTestObject(
                             variantDslInfo.getComponentIdentity(), variantDslInfo);
 
+            // run the action registered on the tested variant via androidTest {}
             testedVariant.executeAndroidTestActions(androidTestVariant);
 
             component = androidTestVariant;
@@ -527,6 +534,7 @@ public class VariantManager<
                     variantFactory.createUnitTestObject(
                             variantDslInfo.getComponentIdentity(), variantDslInfo);
 
+            // run the action registered on the tested variant via unitTest {}
             testedVariant.executeUnitTestActions(unitTestVariant);
 
             component = unitTestVariant;
@@ -653,7 +661,12 @@ public class VariantManager<
                             testVariantData,
                             testedVariantProperties,
                             transformManager);
+
+            // also execute the delayed actions registered on the Component via
+            // androidTest { onProperties {} }
             testComponent.executePropertiesActions(androidTestProperties);
+            // or on the tested variant via unitTestProperties {}
+            testedVariant.executeAndroidTestPropertiesActions(androidTestProperties);
 
             componentProperties = androidTestProperties;
         } else {
@@ -671,8 +684,11 @@ public class VariantManager<
                             testedVariantProperties,
                             transformManager);
 
-            // also execute the delayed actions registered on the Variant object itself
+            // execute the delayed actions registered on the Component via
+            // unitTest { onProperties {} }
             testComponent.executePropertiesActions(unitTestProperties);
+            // or on the tested variant via unitTestProperties {}
+            testedVariant.executeUnitTestPropertiesActions(unitTestProperties);
 
             componentProperties = unitTestProperties;
         }

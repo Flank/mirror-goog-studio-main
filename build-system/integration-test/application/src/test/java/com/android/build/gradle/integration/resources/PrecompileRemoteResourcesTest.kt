@@ -31,6 +31,7 @@ import com.android.testutils.apk.Apk
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -186,6 +187,27 @@ class PrecompileRemoteResourcesTest {
         "files-2.1"
     )
 
+    // ensure that the cache output of any previous run of this test has been cleared
+    private fun clearPreviousTransformOutput() {
+        if (!transformCacheDir.exists() || !transformCacheDir.isDirectory) {
+            return
+        }
+        for (subdirectory in transformCacheDir.listFiles()!!) {
+            if (subdirectory.isDirectory) {
+                val outputDirCandidate =
+                    File(subdirectory, "com.precompileRemoteResourcesTest.publishedLib")
+                if (outputDirCandidate.exists() && outputDirCandidate.isDirectory) {
+                    FileUtils.deleteRecursivelyIfExists(outputDirCandidate)
+                }
+            }
+        }
+    }
+
+    @Before
+    fun setUp() {
+        clearPreviousTransformOutput()
+    }
+
     @Test
     fun checkAppBuild() {
         project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
@@ -239,7 +261,7 @@ class PrecompileRemoteResourcesTest {
             assertThat(it.get("res/layout/layout_random_name.xml")!!.read()).isEqualTo(
                 ResourceUsageAnalyzer.TINY_BINARY_XML
             )
-            assertThat(it.get("res/drawable-v26/button.xml")!!.read()).isNotEqualTo(
+            assertThat(it.get("res/drawable-anydpi-v26/button.xml")!!.read()).isNotEqualTo(
                 ResourceUsageAnalyzer.TINY_BINARY_XML
             )
             assertThat(it.get("res/drawable-v26/ic_launcher_background.xml")!!.read()).isNotEqualTo(
@@ -278,7 +300,7 @@ class PrecompileRemoteResourcesTest {
                     File(File("drawable-v26"), "ic_launcher_background.xml")
                 ),
                 Aapt2RenamingConventions.compilationRename(
-                    File(File("drawable-v26"), "button.xml")
+                    File(File("drawable-anydpi-v26"), "button.xml")
                 )
             )
         )

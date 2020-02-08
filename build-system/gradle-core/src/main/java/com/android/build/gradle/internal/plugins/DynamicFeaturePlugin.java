@@ -35,6 +35,8 @@ import com.android.build.gradle.internal.dsl.DynamicFeatureExtensionImpl;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantApiScope;
+import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
 import com.android.build.gradle.internal.tasks.DynamicFeatureTaskManager;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.DynamicFeatureVariantFactory;
@@ -134,7 +136,11 @@ public class DynamicFeaturePlugin
 
     @NonNull
     @Override
-    protected DynamicFeatureVariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
-        return new DynamicFeatureVariantFactory(globalScope);
+    protected DynamicFeatureVariantFactory createVariantFactory(
+            @NonNull VariantApiScope variantApiScope,
+            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
+            @NonNull GlobalScope globalScope) {
+        return new DynamicFeatureVariantFactory(
+                variantApiScope, variantPropertiesApiScope, globalScope);
     }
 }

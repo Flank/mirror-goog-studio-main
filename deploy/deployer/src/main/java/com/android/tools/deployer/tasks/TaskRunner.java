@@ -183,6 +183,104 @@ public class TaskRunner {
         return task;
     }
 
+    public <T, U, V, W, X, O, E extends Enum> Task<O> create(
+            E id,
+            ThrowingPentaFunction<T, U, V, W, X, O> function,
+            Task<T> input1,
+            Task<U> input2,
+            Task<V> input3,
+            Task<W> input4,
+            Task<X> input5) {
+        return create(id, function, null, input1, input2, input3, input4, input5);
+    }
+
+    public <T, U, V, W, X, O, E extends Enum> Task<O> create(
+            E id,
+            ThrowingPentaFunction<T, U, V, W, X, O> function,
+            ThrowingPentaFunction<T, U, V, W, X, Void> errorFunction,
+            Task<T> input1,
+            Task<U> input2,
+            Task<V> input3,
+            Task<W> input4,
+            Task<X> input5) {
+        Callable<O> callable =
+                () -> {
+                    try {
+                        // The input value is already done
+                        T value1 = input1.future.get();
+                        U value2 = input2.future.get();
+                        V value3 = input3.future.get();
+                        W value4 = input4.future.get();
+                        X value5 = input5.future.get();
+                        return function.apply(value1, value2, value3, value4, value5);
+                    } catch (Exception e) {
+                        T value1 = getTaskValue(input1);
+                        U value2 = getTaskValue(input2);
+                        V value3 = getTaskValue(input3);
+                        W value4 = getTaskValue(input4);
+                        X value5 = getTaskValue(input5);
+                        if (errorFunction != null) {
+                            errorFunction.apply(value1, value2, value3, value4, value5);
+                        }
+                        throw e;
+                    }
+                };
+        Task<O> task = new Task<>(id.name(), callable, input1, input2, input3, input4, input5);
+        tasks.add(task);
+        return task;
+    }
+
+    public <T, U, V, W, X, Y, O, E extends Enum> Task<O> create(
+            E id,
+            ThrowingHexFunction<T, U, V, W, X, Y, O> function,
+            Task<T> input1,
+            Task<U> input2,
+            Task<V> input3,
+            Task<W> input4,
+            Task<X> input5,
+            Task<Y> input6) {
+        return create(id, function, null, input1, input2, input3, input4, input5, input6);
+    }
+
+    public <T, U, V, W, X, Y, O, E extends Enum> Task<O> create(
+            E id,
+            ThrowingHexFunction<T, U, V, W, X, Y, O> function,
+            ThrowingHexFunction<T, U, V, W, X, Y, Void> errorFunction,
+            Task<T> input1,
+            Task<U> input2,
+            Task<V> input3,
+            Task<W> input4,
+            Task<X> input5,
+            Task<Y> input6) {
+        Callable<O> callable =
+                () -> {
+                    try {
+                        // The input value is already done
+                        T value1 = input1.future.get();
+                        U value2 = input2.future.get();
+                        V value3 = input3.future.get();
+                        W value4 = input4.future.get();
+                        X value5 = input5.future.get();
+                        Y value6 = input6.future.get();
+                        return function.apply(value1, value2, value3, value4, value5, value6);
+                    } catch (Exception e) {
+                        T value1 = getTaskValue(input1);
+                        U value2 = getTaskValue(input2);
+                        V value3 = getTaskValue(input3);
+                        W value4 = getTaskValue(input4);
+                        X value5 = getTaskValue(input5);
+                        Y value6 = getTaskValue(input6);
+                        if (errorFunction != null) {
+                            errorFunction.apply(value1, value2, value3, value4, value5, value6);
+                        }
+                        throw e;
+                    }
+                };
+        Task<O> task = new Task<>(id.name(), callable, input1, input2, input3, input4, input5);
+        tasks.add(task);
+        return task;
+    }
+
     private <O> O getTaskValue(Task<O> task) {
         try {
             return task.get();
@@ -278,5 +376,13 @@ public class TaskRunner {
 
     public interface ThrowingQuadFunction<T, U, V, W, R> {
         R apply(T t, U u, V v, W w) throws Exception;
+    }
+
+    public interface ThrowingPentaFunction<T, U, V, W, X, R> {
+        R apply(T t, U u, V v, W w, X x) throws Exception;
+    }
+
+    public interface ThrowingHexFunction<T, U, V, W, X, Y, R> {
+        R apply(T t, U u, V v, W w, X x, Y y) throws Exception;
     }
 }

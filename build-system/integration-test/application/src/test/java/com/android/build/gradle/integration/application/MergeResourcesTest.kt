@@ -484,5 +484,38 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         assertThat(inMergedDir).doesNotExist()
         assertThat(smallMerge).doesNotContain("my_library_string")
     }
+
+    @Test
+    fun testVectorDrawablesWithVersionQualifiersRenderCorrectly() {
+        val appProject = project.getSubproject(":app")
+        val appBuildFile = appProject.buildFile
+        TestFileUtils.appendToFile(appBuildFile,
+                "android { defaultConfig { minSdkVersion 19 }    }"
+        )
+
+        val drawable = appProject.file("src/main/res/drawable/icon.xml")
+        val drawable24 = appProject.file("src/main/res/drawable-v24/icon.xml")
+        val drawable28 = appProject.file("src/main/res/drawable-v28/icon.xml")
+
+        FileUtils.createFile(drawable, "<vector>a</vector>")
+        FileUtils.createFile(drawable24, "<vector>b</vector>")
+        FileUtils.createFile(drawable28, "<vector>c</vector>")
+
+        val generatedPngs = FileUtils.join(appProject.testDir,
+                "build", "generated", "res", "pngs", "debug")
+
+        project.executor()
+                .run(":app:assembleDebug")
+
+        assertThat(FileUtils.join(generatedPngs, "drawable-anydpi-v21", "icon.xml")
+                .readLines()).containsExactlyElementsIn(listOf("<vector>a</vector>"))
+
+        assertThat(FileUtils.join(generatedPngs, "drawable-anydpi-v24", "icon.xml")
+                .readLines()).containsExactlyElementsIn(listOf("<vector>b</vector>"))
+
+        assertThat(FileUtils.join(generatedPngs, "drawable-anydpi-v28", "icon.xml")
+                .readLines()).containsExactlyElementsIn(listOf("<vector>c</vector>"))
+    }
+
 }
 

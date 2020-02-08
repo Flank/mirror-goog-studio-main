@@ -35,9 +35,9 @@ import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.TRANSPARENT_COLOR;
 import static com.android.SdkConstants.VALUE_DISABLED;
+import static com.android.ide.common.resources.ResourcesUtil.resourceNameToFieldName;
 import static com.android.tools.lint.detector.api.Lint.endsWith;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
-import static com.android.utils.SdkUtils.getResourceFieldName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -391,7 +391,7 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
             if (activityToTheme == null) {
                 activityToTheme = new HashMap<>();
             }
-            activityToTheme.put(name, getResourceFieldName(theme));
+            activityToTheme.put(name, resourceNameToFieldName(theme));
         }
     }
 
@@ -412,7 +412,7 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
         }
         parent = parent.replace('.', '_');
 
-        String resource = STYLE_RESOURCE_PREFIX + getResourceFieldName(styleName);
+        String resource = STYLE_RESOURCE_PREFIX + resourceNameToFieldName(styleName);
 
         NodeList items = element.getChildNodes();
         for (int i = 0, n = items.getLength(); i < n; i++) {
