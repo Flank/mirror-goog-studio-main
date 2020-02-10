@@ -1192,8 +1192,8 @@ public class Svg2Vector {
                     if (presentationMap.containsKey(attr)) {
                         path.fillPresentationAttributes(attr, val);
                     } else if (attr.equals(SVG_OPACITY)) {
-                        // TODO: This is hacky, since we don't have a group level
-                        // android:opacity. This only works when the path didn't overlap.
+                        // TODO: This is hacky, since we don't have a group level android:opacity.
+                        //       This only works when the paths don't overlap.
                         path.fillPresentationAttributes(SVG_FILL_OPACITY, nameValue[1]);
                     }
 
