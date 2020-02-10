@@ -329,18 +329,6 @@ abstract class ComponentPropertiesImpl(
                         outputSpec.artifactType,
                         outputSpec.publishedConfigTypes
                     )
-            } else {
-                if (buildArtifactType === InternalArtifactType.ALL_CLASSES) {
-                    val allClasses =
-                        artifacts.getFinalProductAsFileCollection(InternalArtifactType.ALL_CLASSES)
-                    val file = allClasses.map { it.singleFile }
-                    variantScope
-                        .publishIntermediateArtifact(
-                            file,
-                            outputSpec.artifactType,
-                            outputSpec.publishedConfigTypes
-                        )
-                }
             }
         }
     }
