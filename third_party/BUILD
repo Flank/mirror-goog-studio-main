@@ -166,7 +166,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.errorprone_error_prone_annotations",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.3.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.3.2:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -182,7 +182,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.guava_guava",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/27.1-jre:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/28.1-jre:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.findbugs_jsr305",
@@ -228,7 +228,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.j2objc_j2objc-annotations",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/j2objc/j2objc-annotations/1.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/j2objc/j2objc-annotations/1.3:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -263,7 +263,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.protobuf_protobuf-java",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.10.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -271,10 +271,11 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.protobuf_protobuf-java-util",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.4.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.10.0:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.gson_gson",
+        ":com.google.errorprone_error_prone_annotations",
         ":com.google.guava_guava",
         ":com.google.protobuf_protobuf-java",
     ],
@@ -974,7 +975,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.checkerframework_checker-qual",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/checkerframework/checker-qual/2.5.5:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/checkerframework/checker-qual/2.8.1:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -990,7 +991,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.mojo_animal-sniffer-annotations",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/mojo/animal-sniffer-annotations/1.17:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/mojo/animal-sniffer-annotations/1.18:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
