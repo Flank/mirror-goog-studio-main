@@ -1680,7 +1680,8 @@ public abstract class TaskManager<
                                 .files(testConfigInputs.getMergedManifest())
                                 .withPropertyName("mergedManifest")
                                 .withPathSensitivity(PathSensitivity.RELATIVE);
-                        taskInputs.property("mainApkInfo", testConfigInputs.getMainApkInfo());
+                        taskInputs.property(
+                                "mainVariantOutput", testConfigInputs.getMainVariantOutput());
                         taskInputs.property(
                                 "packageNameOfFinalRClassProvider",
                                 (Supplier<String>) testConfigInputs::getPackageNameOfFinalRClass);
@@ -2590,11 +2591,6 @@ public abstract class TaskManager<
 
         Provider<Directory> manifests = creationConfig.getArtifacts().getFinalProduct(manifestType);
 
-        InternalArtifactType resourceFilesInputType =
-                variantScope.useResourceShrinker()
-                        ? InternalArtifactType.SHRUNK_PROCESSED_RES.INSTANCE
-                        : InternalArtifactType.PROCESSED_RES.INSTANCE;
-
         // Common code for both packaging tasks.
         Action<Task> configureResourcesAndAssetsDependencies =
                 task -> {
@@ -2609,7 +2605,7 @@ public abstract class TaskManager<
                         new PackageApplication.CreationAction(
                                 creationConfig,
                                 creationConfig.getPaths().getApkLocation(),
-                                resourceFilesInputType,
+                                variantScope.useResourceShrinker(),
                                 manifests,
                                 manifestType,
                                 packagesCustomClassDependencies(creationConfig)),

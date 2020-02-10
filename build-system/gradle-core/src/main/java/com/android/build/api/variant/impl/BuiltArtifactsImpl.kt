@@ -19,6 +19,8 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
+import com.android.build.api.variant.VariantOutput
+import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.ide.common.build.CommonBuiltArtifacts
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.gson.GsonBuilder
@@ -45,6 +47,15 @@ class BuiltArtifactsImpl(
         val outFile = File(out.asFile, METADATA_FILE_NAME)
         saveToFile(outFile)
     }
+
+    fun getBuiltArtifact(outputType: VariantOutputConfiguration.OutputType) =
+        elements.firstOrNull { it.outputType == outputType }
+
+
+    fun getBuiltArtifact(variantOutputConfiguration: VariantOutputConfiguration): BuiltArtifactImpl? =
+        elements.firstOrNull {
+            it.outputType == variantOutputConfiguration.outputType
+            it.filters == variantOutputConfiguration.filters }
 
     /**
      * Similar implementation of [BuiltArtifacts.transform] using the [WorkerExecutorFacade]
@@ -82,9 +93,11 @@ class BuiltArtifactsImpl(
         }
     }
 
-    internal fun saveToFile(out: File) {
+    fun saveToDirectory(folder: File) =
+        saveToFile(File(folder, METADATA_FILE_NAME))
+
+    fun saveToFile(out: File) =
         out.writeText(persist(out.parentFile.toPath()), Charsets.UTF_8)
-    }
 
     private fun persist(projectPath: Path): String {
         val gsonBuilder = GsonBuilder()
@@ -104,15 +117,14 @@ class BuiltArtifactsImpl(
             elements
                 .asSequence()
                 .map { builtArtifact ->
-                    BuiltArtifactImpl(
+                    BuiltArtifactImpl.make(
                         outputFile = projectPath.relativize(
                             Paths.get(builtArtifact.outputFile)).toString(),
                         properties = builtArtifact.properties,
                         versionCode = builtArtifact.versionCode,
                         versionName = builtArtifact.versionName,
                         isEnabled = builtArtifact.isEnabled,
-                        outputType = builtArtifact.outputType,
-                        filters = builtArtifact.filters,
+                        variantOutputConfiguration = builtArtifact.variantOutputConfiguration,
                         baseName = builtArtifact.baseName,
                         fullName = builtArtifact.fullName
                     )

@@ -21,6 +21,12 @@ import com.android.SdkConstants.FN_RES_BASE
 import com.android.SdkConstants.FN_R_CLASS_JAR
 import com.android.SdkConstants.RES_QUALIFIER_SEP
 import com.android.build.VariantOutput
+import com.android.build.api.variant.FilterConfiguration
+import com.android.build.api.variant.VariantOutputConfiguration
+import com.android.build.api.variant.impl.BuiltArtifactImpl
+import com.android.build.api.variant.impl.BuiltArtifactsImpl
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -34,9 +40,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildElements
-import com.android.build.gradle.internal.scope.BuildOutput
-import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SplitList
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
@@ -70,6 +73,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -99,10 +103,11 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     companion object {
         private val LOG = Logging.getLogger(LinkApplicationAndroidResourcesTask::class.java)
 
-        private fun getOutputBaseNameFile(apkData: ApkData, resPackageOutputFolder: File): File {
+        private fun getOutputBaseNameFile(variantOutput: VariantOutputImpl.SerializedForm,
+            resPackageOutputFolder: File): File {
             return File(
                 resPackageOutputFolder,
-                FN_RES_BASE + RES_QUALIFIER_SEP + apkData.fullName + SdkConstants.DOT_RES
+                FN_RES_BASE + RES_QUALIFIER_SEP + variantOutput.fullName + SdkConstants.DOT_RES
             )
         }
     }
@@ -228,6 +233,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     var useFinalIds: Boolean = true
         private set
 
+    @get:Nested
+    abstract val variantOutputs : ListProperty<VariantOutputImpl>
+
     @get:Internal
     abstract val aapt2DaemonBuildService: Property<Aapt2DaemonBuildService>
 
@@ -243,11 +251,11 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val outputDirectory = resPackageOutputFolder.get().asFile
         FileUtils.deleteDirectoryContents(outputDirectory)
 
-        val manifestBuildElements =
-            if (aaptFriendlyManifestFiles.isPresent)
-                ExistingBuildElements.from(
-                    InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS, aaptFriendlyManifestFiles)
-            else ExistingBuildElements.from(taskInputType, manifestFiles)
+        val manifestBuiltArtifacts =
+            (if (aaptFriendlyManifestFiles.isPresent)
+                BuiltArtifactsLoaderImpl().load(aaptFriendlyManifestFiles)
+            else BuiltArtifactsLoaderImpl().load(manifestFiles))
+                ?: throw RuntimeException("Cannot load processed manifest files, please file a bug.")
 
         val featureResourcePackages = if (featureResourcePackages != null)
             featureResourcePackages!!.files
@@ -267,10 +275,12 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         )
 
         getWorkerFacadeWithWorkers().use {
-            val unprocessedManifest = manifestBuildElements.toMutableList()
-            val mainOutput = chooseOutput(manifestBuildElements)
+            val variantOutputsList = variantOutputs.get()
 
-            unprocessedManifest.remove(mainOutput)
+            val unprocessedOutputs = variantOutputsList.toMutableList()
+            val mainOutput = chooseOutput(variantOutputsList)
+
+            unprocessedOutputs.remove(mainOutput)
 
             val compiledDependenciesResourcesDirs =
                 getCompiledDependenciesResources()?.reversed()?.toImmutableList()
@@ -279,12 +289,13 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             it.submit(
                 AaptSplitInvoker::class.java,
                 AaptSplitInvokerParams(
-                    mainOutput,
+                    mainOutput.toSerializedForm(),
+                    manifestBuiltArtifacts.getBuiltArtifact(mainOutput)
+                        ?: throw RuntimeException("Cannot find built manifest for $mainOutput"),
                     dependencies,
                     imports,
                     splitList,
                     featureResourcePackages,
-                    mainOutput.apkData,
                     true,
                     aapt2ServiceKey,
                     compiledDependenciesResourcesDirs,
@@ -298,43 +309,34 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 // finish since the output of the main split is used by the full splits bellow.
                 it.await()
 
-                for (manifestBuildOutput in unprocessedManifest) {
-                    val apkInfo = manifestBuildOutput.apkData
-                    if (apkInfo.requiresAapt()) {
-                        it.submit(
-                            AaptSplitInvoker::class.java,
-                            AaptSplitInvokerParams(
-                                manifestBuildOutput,
-                                dependencies,
-                                imports,
-                                splitList,
-                                featureResourcePackages,
-                                apkInfo,
-                                false,
-                                aapt2ServiceKey,
-                                compiledDependenciesResourcesDirs,
-                                this
-                            )
+                for (variantOutput in unprocessedOutputs) {
+                    it.submit(
+                        AaptSplitInvoker::class.java,
+                        AaptSplitInvokerParams(
+                            variantOutput.toSerializedForm(),
+                            manifestBuiltArtifacts.getBuiltArtifact(variantOutput)
+                                ?: throw RuntimeException("Cannot find build manifest for $variantOutput"),
+                            dependencies,
+                            imports,
+                            splitList,
+                            featureResourcePackages,
+                            false,
+                            aapt2ServiceKey,
+                            compiledDependenciesResourcesDirs,
+                            this
                         )
-                    }
+                    )
                 }
             }
             it
         }
     }
 
-    private fun chooseOutput(manifestBuildElements: BuildElements): BuildOutput {
-            val nonDensity = manifestBuildElements
-                .stream()
-                .filter { output ->
-                    output.apkData.getFilter(VariantOutput.FilterType.DENSITY) == null
-                }
-                .findFirst()
-            if (!nonDensity.isPresent) {
-                throw RuntimeException("No non-density apk found")
-            }
-            return nonDensity.get()
-    }
+    private fun chooseOutput(variantOutputs: List<VariantOutputImpl>): VariantOutputImpl =
+           variantOutputs.firstOrNull{ variantOutput ->
+               variantOutput.variantOutputConfiguration.getFilter(
+                   FilterConfiguration.FilterType.DENSITY) == null
+                } ?: throw RuntimeException("No non-density apk found")
 
     abstract class BaseCreationAction(
         creationConfig: BaseCreationConfig,
@@ -478,6 +480,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
+
+            creationConfig.outputs.getEnabledVariantOutputs().forEach(task.variantOutputs::add)
         }
     }
 
@@ -638,18 +642,21 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             @Throws(IOException::class)
             fun appendOutput(
                 applicationId: String,
-                variantType: VariantType,
-                output: BuildOutput,
+                variantName: String,
+                output: BuiltArtifactImpl,
                 resPackageOutputFolder: File
             ) {
-                val buildOutputs = ArrayList(
-                    ExistingBuildElements.from(resPackageOutputFolder).elements
+                val currentBuiltArtifacts = ArrayList(
+                    BuiltArtifactsLoaderImpl.loadFromDirectory(resPackageOutputFolder)?.elements
+                        ?: ArrayList()
                 )
-                buildOutputs.add(output)
-                BuildElements(
+                currentBuiltArtifacts.add(output)
+                BuiltArtifactsImpl(
+                    artifactType = InternalArtifactType.PROCESSED_RES,
                     applicationId = applicationId,
-                    variantType = variantType.toString(),
-                    elements = buildOutputs).save(resPackageOutputFolder)
+                    variantName = variantName,
+                    elements = currentBuiltArtifacts
+                ).saveToDirectory(resPackageOutputFolder)
             }
         }
 
@@ -667,23 +674,22 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             val featurePackagesBuilder = ImmutableList.builder<File>()
             for (featurePackage in params.featureResourcePackages) {
-                val buildElements = ExistingBuildElements.from(
-                    InternalArtifactType.PROCESSED_RES, featurePackage
-                )
-                if (!buildElements.isEmpty()) {
-                    val mainBuildOutput = buildElements.elementByType(VariantOutput.OutputType.MAIN)
+                val buildElements = BuiltArtifactsLoaderImpl.loadFromDirectory(featurePackage)
+
+                if (buildElements?.elements != null && buildElements.elements.isNotEmpty()) {
+                    val mainBuildOutput = buildElements.getBuiltArtifact(VariantOutputConfiguration.OutputType.SINGLE)
                     if (mainBuildOutput != null) {
-                        featurePackagesBuilder.add(mainBuildOutput.outputFile)
+                        featurePackagesBuilder.add(File(mainBuildOutput.outputFile))
                     } else {
                         throw IOException(
-                            "Cannot find PROCESSED_RES output for " + params.apkData
+                            "Cannot find PROCESSED_RES output for " + params.variantOutput
                         )
                     }
                 }
             }
 
             val resOutBaseNameFile =
-                getOutputBaseNameFile(params.apkData, params.resPackageOutputFolder)
+                getOutputBaseNameFile(params.variantOutput, params.resPackageOutputFolder)
             val manifestFile = params.manifestOutput.outputFile
 
             var packageForR: String? = null
@@ -705,7 +711,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 mainDexListProguardOutputFile = params.mainDexListProguardOutputFile
             }
 
-            val densityFilterData = params.apkData.getFilter(VariantOutput.FilterType.DENSITY)
+            val densityFilterData = params.variantOutput.variantOutputConfiguration
+                .getFilter(FilterConfiguration.FilterType.DENSITY)
             // if resConfigs is set, we should not use our preferredDensity.
             val preferredDensity =
                 densityFilterData?.identifier
@@ -718,7 +725,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 // resources through the new parsers
                 run {
                     val configBuilder = AaptPackageConfig.Builder()
-                        .setManifestFile(manifestFile)
+                        .setManifestFile(File(manifestFile))
                         .setOptions(params.aaptOptions)
                         .setCustomPackageForR(packageForR)
                         .setSymbolOutputDir(symbolOutputDir)
@@ -786,18 +793,15 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 ) {
                     SymbolIo.writeSymbolListWithPackageName(
                         params.textSymbolOutputFile!!.toPath(),
-                        manifestFile.toPath(),
+                        File(manifestFile).toPath(),
                         params.symbolsWithPackageNameOutputFile.toPath()
                     )
                 }
                 appendOutput(
                     params.applicationId.orEmpty(),
-                    params.variantType,
-                    BuildOutput(
-                        InternalArtifactType.PROCESSED_RES,
-                        params.apkData,
-                        resOutBaseNameFile,
-                        params.manifestOutput.properties
+                    params.variantName,
+                    params.manifestOutput.newOutput(
+                        resOutBaseNameFile.toPath()
                     ),
                     params.resPackageOutputFolder
                 )
@@ -810,12 +814,12 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     }
 
     private class AaptSplitInvokerParams internal constructor(
-        val manifestOutput: BuildOutput,
+        val variantOutput: VariantOutputImpl.SerializedForm,
+        val manifestOutput: BuiltArtifactImpl,
         val dependencies: Set<File>,
         val imports: Set<File>,
         splitList: SplitList,
         val featureResourcePackages: Set<File>,
-        val apkData: ApkData,
         val generateCode: Boolean,
         val aapt2ServiceKey: Aapt2DaemonServiceKey?,
         val compiledDependenciesResourcesDirs: List<File>,
@@ -834,6 +838,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val buildTargetDensity: String? = task.buildTargetDensity
         val aaptOptions: AaptOptions = task.aaptOptions
         val variantType: VariantType = task.type
+        val variantName: String = task.name
         val packageId: Int? = task.resOffset.orNull
         val incrementalFolder: File = task.incrementalFolder!!
         val androidJarPath: String =

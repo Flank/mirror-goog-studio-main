@@ -33,11 +33,11 @@ import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.DependenciesInfo;
 import com.android.build.api.variant.FilterConfiguration;
-import com.android.build.api.variant.VariantOutputConfiguration;
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.ExtraModelInfo;
@@ -228,14 +228,14 @@ public class ModelBuilderTest {
                         "com.android.test",
                         "debug",
                         ImmutableList.of(
-                                new BuiltArtifactImpl(
+                                BuiltArtifactImpl.make(
                                         apkOutput.getAbsolutePath(),
                                         ImmutableMap.of(),
                                         123,
                                         "version_name",
                                         true,
-                                        VariantOutputConfiguration.OutputType.SINGLE,
-                                        ImmutableList.of(),
+                                        new VariantOutputConfigurationImpl(
+                                                false, ImmutableList.of()),
                                         "baseName",
                                         "fullName")))
                 .save(new FakeGradleDirectory(variantOutputFolder));
@@ -287,16 +287,18 @@ public class ModelBuilderTest {
             File apkOutput = createApk(variantOutputFolder, "split_" + i + ".apk");
 
             builtArtifactsBuilder.add(
-                    new BuiltArtifactImpl(
+                    BuiltArtifactImpl.make(
                             apkOutput.getAbsolutePath(),
                             ImmutableMap.of(),
                             123,
                             "version_name",
                             true,
-                            VariantOutputConfiguration.OutputType.ONE_OF_MANY,
-                            ImmutableList.of(
-                                    new FilterConfiguration(
-                                            FilterConfiguration.FilterType.DENSITY, "hdpi")),
+                            new VariantOutputConfigurationImpl(
+                                    false,
+                                    ImmutableList.of(
+                                            new FilterConfiguration(
+                                                    FilterConfiguration.FilterType.DENSITY,
+                                                    "hdpi"))),
                             "baseName",
                             "fullName"));
         }
@@ -363,14 +365,14 @@ public class ModelBuilderTest {
                             "com.android.test",
                             "debug",
                             ImmutableList.of(
-                                    new BuiltArtifactImpl(
+                                    BuiltArtifactImpl.make(
                                             apkOutput.getAbsolutePath(),
                                             ImmutableMap.of(),
                                             123,
                                             "version_name",
                                             true,
-                                            VariantOutputConfiguration.OutputType.SINGLE,
-                                            ImmutableList.of(),
+                                            new VariantOutputConfigurationImpl(
+                                                    false, ImmutableList.of()),
                                             "baseName",
                                             "fullName")))
                     .save(new FakeGradleDirectory(variantOutputFolder));

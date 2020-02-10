@@ -52,7 +52,7 @@ public class StubTestData implements TestData {
     }
 
     @Override
-    public void loadFromMetadataFile(File metadataFile)
+    public void load(File metadataFile)
             throws ParserConfigurationException, SAXException, IOException {
         // Do nothing
     }

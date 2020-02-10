@@ -27,6 +27,7 @@ import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.fullName
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
@@ -246,6 +247,9 @@ abstract class ComponentPropertiesImpl(
             versionNameProperty,
             variantPropertiesApiServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true, "$name::isEnabled"),
             variantOutputConfiguration,
+            apkData.baseName.orEmpty(),
+            apkData.fullName.orEmpty(),
+            apkData.outputFileName.orEmpty(),
             apkData
         ).also {
             apkData.variantOutput = it

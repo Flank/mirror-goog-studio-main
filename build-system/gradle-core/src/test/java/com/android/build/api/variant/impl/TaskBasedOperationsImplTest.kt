@@ -22,7 +22,6 @@ import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.artifact.impl.ProfilerEnabledWorkQueue
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.FilterConfiguration
-import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.gradle.internal.profile.ProfileAgent
 import com.android.build.gradle.internal.profile.RecordingBuildListener
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -38,6 +37,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -107,7 +107,7 @@ class TaskBasedOperationsImplTest {
 
         @TaskAction
         fun execute() {
-            replacementRequest.submit { builtArtifact ->
+            replacementRequest.submit(this) { builtArtifact ->
                 outputDir.get().file(File(builtArtifact.outputFile).name).asFile.apply {
                     writeText(builtArtifact.filters.joinToString { it.identifier })
                 }
@@ -163,7 +163,9 @@ class TaskBasedOperationsImplTest {
         checkOutputFolderCorrectness(outputFolder)
     }
 
-    abstract class InternalApiTask @Inject constructor(var workers: WorkerExecutor): VariantAwareTask, DefaultTask() {
+    abstract class InternalApiTask @Inject constructor(
+        val objectFactory: ObjectFactory,
+        var workers: WorkerExecutor): VariantAwareTask, DefaultTask() {
 
         @get:InputFiles
         abstract val inputDir: DirectoryProperty
@@ -195,7 +197,9 @@ class TaskBasedOperationsImplTest {
             val counter = AtomicInteger(0)
             // depending if profiler information is requested, invoke the right submit API.
             val updatedBuiltArtifacts = if (useProfiler.get()) {
-                (replacementRequest as ArtifactTransformationRequestImpl<*, *>).submitWithProfiler(
+                (replacementRequest as ArtifactTransformationRequestImpl<*, InternalApiTask>).submitWithProfiler(
+                    this,
+                    objectFactory,
                     workers.noIsolation(),
                     WorkItem::class.java,
                     WorkItemParameters::class.java
@@ -207,6 +211,7 @@ class TaskBasedOperationsImplTest {
                 }
             } else {
                 replacementRequest.submit(
+                    this,
                     workers.noIsolation(),
                     WorkItem::class.java,
                     WorkItemParameters::class.java
@@ -410,16 +415,17 @@ class TaskBasedOperationsImplTest {
         fileName: String,
         densityValue: String
     ) =
-        BuiltArtifactImpl(
+        BuiltArtifactImpl.make(
             outputFile = File(outputFolder, "$fileName.xml").absolutePath,
             properties = mapOf("key1" to "value1", "key2" to "value2"),
             versionCode = 12,
             versionName = "12",
             isEnabled = true,
-            outputType = VariantOutputConfiguration.OutputType.ONE_OF_MANY,
-            filters = listOf(
-                FilterConfiguration(FilterConfiguration.FilterType.DENSITY, densityValue)
-            ),
+            variantOutputConfiguration = VariantOutputConfigurationImpl(
+                isUniversal = false,
+                filters = listOf(
+                    FilterConfiguration(FilterConfiguration.FilterType.DENSITY, densityValue)
+                )),
             baseName = "someBaseName",
             fullName = "someFullName"
         )

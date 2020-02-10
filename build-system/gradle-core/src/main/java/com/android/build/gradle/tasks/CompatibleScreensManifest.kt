@@ -17,11 +17,12 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.VariantOutput
+import com.android.build.api.variant.FilterConfiguration
+import com.android.build.api.variant.impl.BuiltArtifactImpl
+import com.android.build.api.variant.impl.BuiltArtifactsImpl
+import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildElements
-import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -64,7 +65,7 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
     abstract val outputFolder: DirectoryProperty
 
     @get:Nested
-    abstract val apkDataList : ListProperty<ApkData>
+    abstract val variantOutputs : ListProperty<VariantOutputImpl>
 
     @get:Input
     @get:Optional
@@ -72,21 +73,28 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
 
     override fun doTaskAction() {
 
-        BuildElements(
+        BuiltArtifactsImpl(
+            artifactType = COMPATIBLE_SCREEN_MANIFEST,
             applicationId = applicationId.get(),
-            variantType = variantType.get(),
-            elements = apkDataList.get().mapNotNull {
+            variantName = variantName,
+            elements = variantOutputs.get().mapNotNull {
                 val generatedManifest = generate(it)
                 if (generatedManifest != null)
-                    BuildOutput(COMPATIBLE_SCREEN_MANIFEST, it, generatedManifest)
+                    BuiltArtifactImpl.make(
+                        outputFile = generatedManifest.absolutePath,
+                        versionCode = it.versionCode.get(),
+                        versionName = it.versionName.get(),
+                        variantOutputConfiguration = it.variantOutputConfiguration
+                    )
                 else
                     null
-            }.toList()).save(outputFolder.get().asFile)
+            }
+        ).save(outputFolder.get())
     }
 
-    private fun generate(apkData: ApkData): File? {
-        val densityFilter = apkData.getFilter(VariantOutput.FilterType.DENSITY)
-                ?: return null
+    private fun generate(variantOutput: VariantOutputImpl): File? {
+        val densityFilter = variantOutput.variantOutputConfiguration.getFilter(
+            FilterConfiguration.FilterType.DENSITY) ?: return null
 
         val content = StringBuilder()
         content.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
@@ -114,7 +122,8 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
                 "    </compatible-screens>\n" + "</manifest>"
         )
 
-        val splitFolder = File(outputFolder.get().asFile, apkData.dirName)
+        val splitFolder = File(outputFolder.get().asFile,
+            variantOutput.variantOutputConfiguration.dirName())
         FileUtils.mkdirs(splitFolder)
         val manifestFile = File(splitFolder, SdkConstants.ANDROID_MANIFEST_XML)
 
@@ -168,10 +177,8 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
             task.variantType.set(creationConfig.variantType.toString())
             task.variantType.disallowChanges()
 
-            creationConfig.outputs.getEnabledVariantOutputs().forEach {
-                task.apkDataList.add(it.apkData)
-            }
-            task.apkDataList.disallowChanges()
+            creationConfig.outputs.getEnabledVariantOutputs().forEach(task.variantOutputs::add)
+            task.variantOutputs.disallowChanges()
 
             task.minSdkVersion.set(task.project.provider { creationConfig.minSdkVersion.apiString })
             task.minSdkVersion.disallowChanges()

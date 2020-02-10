@@ -47,7 +47,7 @@ internal class BundleTestDataImpl(
     null
 ) {
 
-    override fun loadFromMetadataFile(metadataFile: File) {
+    override fun load(metadataFile: File) {
         // do nothing, there is nothing in the metadata file we cannot get from the tested scope.
     }
 

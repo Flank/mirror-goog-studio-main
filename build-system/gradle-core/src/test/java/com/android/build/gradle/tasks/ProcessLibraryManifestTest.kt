@@ -17,6 +17,8 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.VariantOutput
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
+import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.scope.ApkData
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
@@ -52,18 +54,26 @@ class ProcessLibraryManifestTest {
         task.packageOverride.set("packageOverride")
         task.manifestPlaceholders.set(mapOf())
         task.mainSplit.set(
-            ApkData.of(
-                VariantOutput.OutputType.MAIN,
-                emptyList(),
-                1,
-                "",
-                "",
-                "",
-                "fooRelease",
-                "",
-                ""
-            )
-        )
+            VariantOutputImpl(
+                versionCode = project.objects.property(Int::class.java).also { it.set(1) },
+                versionName = project.objects.property(String::class.java).also { it.set("version_name")},
+                enabled = project.objects.property(Boolean::class.java).also { it.set(true) },
+                variantOutputConfiguration = VariantOutputConfigurationImpl(),
+                baseName = "base_name",
+                fullName = "fooRelease",
+                outputFileName = "output_file_name",
+                apkData = ApkData.of(
+                    VariantOutput.OutputType.MAIN,
+                    emptyList(),
+                    1,
+                    "",
+                    "",
+                    "",
+                    "fooRelease",
+                    "",
+                    ""
+                )
+        ))
     }
 
     @Test

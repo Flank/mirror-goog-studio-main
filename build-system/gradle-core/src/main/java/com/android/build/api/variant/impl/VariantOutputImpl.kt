@@ -16,15 +16,79 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.gradle.internal.scope.ApkData
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
+import java.io.File
+import java.io.Serializable
 
 data class VariantOutputImpl(
+    @get:Input
     override val versionCode: Property<Int>,
+    @get:Input
     override val versionName: Property<String>,
-    override val isEnabled: Property<Boolean>,
-    private val variantOutputConfiguration: VariantOutputConfiguration,
+    @get:Input
+    override val enabled: Property<Boolean>,
+
+    @get:Input
+    val variantOutputConfiguration: VariantOutputConfigurationImpl,
+
+    // private APG APIs.
+    @get:Input
+    val baseName: String,
+    @get:Input
+    val fullName: String,
+    @get:Input
+    val outputFileName: String,
+    @get:Internal
     val apkData: ApkData /* remove once all tasks started using public API to load output.json */
-) : VariantOutput, VariantOutputConfiguration by variantOutputConfiguration
+) : VariantOutput, VariantOutputConfiguration by variantOutputConfiguration {
+
+    data class SerializedForm(
+        @get:Input
+        val versionCode: Int,
+        @get:Input
+        val versionName: String,
+        @get:Input
+        val variantOutputConfiguration: VariantOutputConfigurationImpl,
+        @get:Input
+        val baseName: String,
+        @get:Input
+        val fullName: String,
+        @get:Input
+        val outputFileName: String): Serializable {
+
+        fun toBuiltArtifact(outputFile: File, properties: Map<String, String>): BuiltArtifactImpl =
+            BuiltArtifactImpl.make(outputFile = outputFile.absolutePath,
+                properties = properties,
+                versionCode = versionCode,
+                versionName = versionName,
+                isEnabled = true,
+                variantOutputConfiguration = variantOutputConfiguration
+            )
+    }
+
+    fun toBuiltArtifact(outputFile: File, properties: Map<String, String>): BuiltArtifactImpl =
+        BuiltArtifactImpl.make(outputFile = outputFile.absolutePath,
+            properties = properties,
+            versionCode = versionCode.get(),
+            versionName = versionName.get(),
+            isEnabled = enabled.get(),
+            variantOutputConfiguration = variantOutputConfiguration
+            )
+
+    fun toSerializedForm() = SerializedForm(
+        versionCode = versionCode.get(),
+        versionName = versionName.get(),
+        variantOutputConfiguration = variantOutputConfiguration,
+        fullName = fullName,
+        baseName = baseName,
+        outputFileName = outputFileName)
+
+    fun getFilter(filterType: FilterConfiguration.FilterType): FilterConfiguration? =
+        filters.firstOrNull { it.filterType == filterType }
+}

@@ -18,9 +18,9 @@ package com.android.build.gradle.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.component.impl.UnitTestPropertiesImpl
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.dsl.TestOptions
-import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
@@ -146,8 +146,8 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         @get:Input
         val buildDirectoryPath: String
 
-        @get:Input
-        val mainApkInfo: ApkData
+        @get:Nested
+        val mainVariantOutput: VariantOutputImpl
 
         private val packageNameOfFinalRClassProvider: () -> String
 
@@ -160,7 +160,7 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             resourceApk = unitTestProperties.artifacts.getFinalProduct(APK_FOR_LOCAL_TEST)
             mergedAssets = testedVariant.artifacts.getFinalProduct(MERGED_ASSETS)
             mergedManifest = testedVariant.artifacts.getFinalProduct(MERGED_MANIFESTS)
-            mainApkInfo = testedVariant.outputs.getMainSplit().apkData
+            mainVariantOutput = testedVariant.outputs.getMainSplit()
             packageNameOfFinalRClassProvider = {
                 testedVariant.variantDslInfo.originalApplicationId
             }
@@ -178,13 +178,13 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
 
         fun computeProperties(projectDir: File): TestConfigProperties {
             val manifestOutput =
-                ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, mergedManifest)
-                    .element(mainApkInfo) ?: error("Unable to find manifest output")
+                BuiltArtifactsLoaderImpl().load(mergedManifest)?.getBuiltArtifact(mainVariantOutput)
+                    ?: error("Unable to find manifest output")
 
             return TestConfigProperties(
                 resourceApk?.get()?.let { getRelativePathIfRequired(it.asFile, projectDir) },
                 getRelativePathIfRequired(mergedAssets.get().asFile, projectDir),
-                getRelativePathIfRequired(manifestOutput.outputFile, projectDir),
+                getRelativePathIfRequired(File(manifestOutput.outputFile), projectDir),
                 packageNameOfFinalRClass
             )
         }

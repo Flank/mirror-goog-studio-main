@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.android.build.VariantOutput.OutputType.FULL_SPLIT;
-import static com.android.build.VariantOutput.OutputType.MAIN;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.LINT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
@@ -31,6 +29,10 @@ import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
+import com.android.build.api.variant.BuiltArtifact;
+import com.android.build.api.variant.VariantOutputConfiguration;
+import com.android.build.api.variant.impl.BuiltArtifactsImpl;
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.BaseExtension;
@@ -39,11 +41,7 @@ import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollections;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.BuildElements;
-import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.core.VariantType;
 import com.android.repository.Revision;
@@ -360,39 +358,40 @@ public abstract class LintBaseTask extends DefaultTask {
             if (file.isFile()) {
                 return file;
             }
+            BuiltArtifactsImpl manifests = BuiltArtifactsLoaderImpl.loadFromDirectory(file);
 
-            BuildElements manifests =
-                    ExistingBuildElements.from(
-                            InternalArtifactType.MERGED_MANIFESTS.INSTANCE, file);
-
-            if (manifests.isEmpty()) {
+            if (manifests == null || manifests.getElements().isEmpty()) {
                 throw new RuntimeException("Can't find any manifest in folder: " + file);
             }
 
             // first search for a main manifest
-            Optional<File> mainManifest =
-                    manifests
-                            .stream()
-                            .filter(buildOutput -> buildOutput.getApkData().getType() == MAIN)
-                            .map(BuildOutput::getOutputFile)
+            Optional<String> mainManifest =
+                    manifests.getElements().stream()
+                            .filter(
+                                    buildOutput ->
+                                            buildOutput.getOutputType()
+                                                    == VariantOutputConfiguration.OutputType.SINGLE)
+                            .map(BuiltArtifact::getOutputFile)
                             .findFirst();
             if (mainManifest.isPresent()) {
-                return mainManifest.get();
+                return new File(mainManifest.get());
             }
 
             // else search for a full_split with no filters.
-            Optional<File> universalSplit =
-                    manifests
-                            .stream()
+            Optional<String> universalSplit =
+                    manifests.getElements().stream()
                             .filter(
                                     output ->
-                                            output.getApkData().getType() == FULL_SPLIT
-                                                    && output.getFilters().isEmpty())
-                            .map(BuildOutput::getOutputFile)
+                                            output.getOutputType()
+                                                    == VariantOutputConfiguration.OutputType
+                                                            .UNIVERSAL)
+                            .map(BuiltArtifact::getOutputFile)
                             .findFirst();
 
             // return the universal Manifest, or a random one if not found.
-            return universalSplit.orElseGet(() -> manifests.iterator().next().getOutputFile());
+            return new File(
+                    universalSplit.orElseGet(
+                            () -> manifests.getElements().iterator().next().getOutputFile()));
         }
 
         @Override

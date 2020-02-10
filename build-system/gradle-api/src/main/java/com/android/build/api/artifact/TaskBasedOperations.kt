@@ -44,7 +44,7 @@ interface TaskBasedOperations<TaskT: Task> {
      * @param at the location at which the [TaskT] will be reading the built artifacts from.
      */
     fun <ArtifactTypeT> toRead(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>): TaskBasedOperations<TaskT>
-            where ArtifactTypeT: ArtifactType<Directory>, ArtifactTypeT: ArtifactType.Many, ArtifactTypeT: ArtifactType.Single
+            where ArtifactTypeT: ArtifactType<Directory>, ArtifactTypeT: ArtifactType.ContainsMany, ArtifactTypeT: ArtifactType.Single
 
     /**
      * Completes a [TaskBasedOperations] by specifying that [TaskT] will be producing [BuiltArtifact]
@@ -54,7 +54,19 @@ interface TaskBasedOperations<TaskT: Task> {
      * @param at the location it produces these artifacts in.
      */
     fun <ArtifactTypeT> andWrite(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>): ArtifactTransformationRequest
-        where ArtifactTypeT : ArtifactType<Directory>, ArtifactTypeT : ArtifactType.Many, ArtifactTypeT: ArtifactType.Single
+        where ArtifactTypeT : ArtifactType<Directory>, ArtifactTypeT : ArtifactType.ContainsMany, ArtifactTypeT: ArtifactType.Single
+
+    /**
+     * Completes a [TaskBasedOperations] by specifying that [TaskT] will be producing [BuiltArtifact]
+     * of type [ArtifactTypeT] at the location identified by [at].
+     *
+     * @param type the artifact type the [TaskT] is producing
+     * @param at the task's Property to produce these artifacts in.
+     * @param atLocation the file system location to put these artifacts.
+     */
+    // TODO : consider moving both andWrite to a separate interface to support atLocation, withName...
+    fun <ArtifactTypeT> andWrite(type: ArtifactTypeT, at: (TaskT) -> FileSystemLocationProperty<Directory>, atLocation: String): ArtifactTransformationRequest
+            where ArtifactTypeT : ArtifactType<Directory>, ArtifactTypeT : ArtifactType.ContainsMany, ArtifactTypeT: ArtifactType.Single
 }
 
 /**
@@ -78,6 +90,7 @@ interface ArtifactTransformationRequest {
     /**
      * Submit a [org.gradle.workers] style of [WorkAction] to process each input [BuiltArtifact]
      *
+     * @param task : the Task initiating the [WorkQueue] requests.
      * @param workQueue the Gradle [WorkQueue] instance to use to spawn worker items with.
      * @param actionType the type of the [WorkAction] subclass that process that input [BuiltArtifact]
      * @param parameterType the type of parameters expected by the [WorkAction]
@@ -85,6 +98,7 @@ interface ArtifactTransformationRequest {
      * [BuiltArtifact]
      */
     fun <ParamT> submit(
+        task: Task,
         workQueue: WorkQueue,
         actionType: Class<out WorkAction<ParamT>>,
         parameterType: Class<out ParamT>,
@@ -97,5 +111,5 @@ interface ArtifactTransformationRequest {
     /**
      * Submit a lambda to process synchronously each input [BuiltArtifact]
      */
-    fun submit(transformer: (input: BuiltArtifact) -> File)
+    fun submit(task: Task, transformer: (input: BuiltArtifact) -> File)
 }

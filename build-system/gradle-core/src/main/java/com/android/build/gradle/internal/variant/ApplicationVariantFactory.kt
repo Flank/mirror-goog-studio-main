@@ -336,7 +336,7 @@ class ApplicationVariantFactory(
         }
         variantOutputs.forEach {
             if (!apksToGenerate.contains(it.apkData)) {
-                it.isEnabled.set(false)
+                it.enabled.set(false)
             }
         }
     }

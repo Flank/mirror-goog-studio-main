@@ -72,6 +72,7 @@ import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.artifact.ArtifactTransformationRequest
 
 abstract class ProducerTask extends DefaultTask {
@@ -112,10 +113,10 @@ abstract class ProducerTask extends DefaultTask {
         123,
         "123",
         true,
-        VariantOutputConfiguration.OutputType.ONE_OF_MANY,
-        [
-          new FilterConfiguration(FilterConfiguration.FilterType.DENSITY, identifier)
-        ],
+        new VariantOutputConfigurationImpl(false,
+          [
+            new FilterConfiguration(FilterConfiguration.FilterType.DENSITY, identifier)
+          ]),
         identifier,
         identifier
       )
@@ -125,6 +126,7 @@ abstract class ProducerTask extends DefaultTask {
 
 abstract class ConsumerTask extends DefaultTask {
     private final WorkerExecutor workerExecutor
+    private final ObjectFactory objectFactory
 
     @InputFiles
     abstract DirectoryProperty getCompatibleManifests()
@@ -133,7 +135,10 @@ abstract class ConsumerTask extends DefaultTask {
     abstract DirectoryProperty getOutputDir()
 
     @Inject
-    public ConsumerTask(WorkerExecutor workerExecutor) {
+    public ConsumerTask(
+      ObjectFactory objectFactory,
+      WorkerExecutor workerExecutor) {
+      this.objectFactory = objectFactory
       this.workerExecutor = workerExecutor
     }
 
@@ -174,9 +179,9 @@ abstract class ConsumerTask extends DefaultTask {
 
     @TaskAction
     void taskAction() {
-      replacementRequest.submitWithProfiler(
+      replacementRequest.submit(
+                this,
                 workerExecutor.noIsolation(),
-                ConcreteClass.class,
                 WorkItem.class,
                 MyWorkItemParameters.class
             ) { BuiltArtifact builtArtifact, Directory outputLocation, MyWorkItemParameters parameters ->

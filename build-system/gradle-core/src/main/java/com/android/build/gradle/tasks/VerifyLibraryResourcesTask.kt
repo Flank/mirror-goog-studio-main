@@ -18,13 +18,13 @@ package com.android.build.gradle.tasks
 
 import com.android.aaptcompiler.canCompileResourceInJvm
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
 import com.android.build.gradle.internal.res.ResourceCompilerRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
-import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
@@ -61,7 +61,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -123,11 +122,9 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     override fun doTaskAction(inputChanges: InputChanges) {
-        val manifestsOutputs = ExistingBuildElements.from(
-            InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
-            manifestFiles.get().asFile
-        )
-        val manifestFile = Iterables.getOnlyElement(manifestsOutputs).outputFile
+        val manifestsOutputs = BuiltArtifactsLoaderImpl().load(manifestFiles)
+            ?: throw RuntimeException("Cannot load manifests from $manifestFiles")
+        val manifestFile = Iterables.getOnlyElement(manifestsOutputs.elements).outputFile
 
         val aapt2ServiceKey =
             aapt2DaemonBuildService.get().registerAaptService(aapt2FromMaven, LoggerWrapper(logger))
@@ -140,7 +137,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             aapt2WorkersBuildServiceKey = aapt2WorkersBuildServiceKey,
             errorFormatMode = errorFormatMode,
             inputs = inputChanges.getChangesInSerializableForm(inputDirectory),
-            manifestFile = manifestFile,
+            manifestFile = File(manifestFile),
             compiledDependenciesResources = compiledDependenciesResources.files,
             manifestMergeBlameFile = manifestMergeBlameFile.get().asFile,
             compiledDirectory = compiledDirectory,

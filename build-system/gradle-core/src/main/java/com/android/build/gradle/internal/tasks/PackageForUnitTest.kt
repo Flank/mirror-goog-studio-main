@@ -18,9 +18,9 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
-import com.android.build.VariantOutput
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.scope.ExistingBuildElements
+import com.android.build.api.variant.FilterConfiguration
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
@@ -92,31 +92,32 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
     }
 
     internal fun apkFrom(compiledResourcesZip: Provider<Directory>): File {
-        val builtElements = ExistingBuildElements.from(PROCESSED_RES, compiledResourcesZip)
+        val builtArtifacts = BuiltArtifactsLoaderImpl().load(compiledResourcesZip)
+            ?: throw RuntimeException("Cannot load resources from $compiledResourcesZip")
 
 
-        if (builtElements.size() == 1) {
-            return builtElements.first().outputFile
+        if (builtArtifacts.elements.size == 1) {
+            return File(builtArtifacts.elements.first().outputFile)
         }
-        builtElements.forEach { buildOutput ->
-            if (buildOutput.filters.isEmpty()) {
+        builtArtifacts.elements.forEach { builtArtifact ->
+            if (builtArtifact.filters.isEmpty()) {
                 // universal APK, take it !
-                return buildOutput.outputFile
+                return File(builtArtifact.outputFile)
             }
-            if (buildOutput.filters.size == 1
-                && buildOutput.getFilter(VariantOutput.FilterType.ABI.name) != null) {
+            if (builtArtifact.filters.size == 1
+                && builtArtifact.getFilter(FilterConfiguration.FilterType.ABI) != null) {
 
                 // the only filter is ABI, good enough for getting all resources.
-                return buildOutput.outputFile
+                return File(builtArtifact.outputFile)
             }
         }
 
         // if we are here, we could not find an appropriate build output, raise this as an error.
-        if (builtElements.isEmpty()) {
+        if (builtArtifacts.elements.isEmpty()) {
             throw java.lang.RuntimeException("No resources build output, please file a bug.")
         }
         val sb = StringBuilder("Found following build outputs : \n")
-        builtElements.forEach {
+        builtArtifacts.elements.forEach {
             sb.append("BuildOutput: ${Joiner.on(',').join(it.filters)}\n")
         }
         sb.append("Cannot find a build output with all resources, please file a bug.")

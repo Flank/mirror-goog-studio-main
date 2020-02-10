@@ -19,7 +19,6 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.PublicArtifactType
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.FilterConfiguration
-import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.ide.common.build.GenericBuiltArtifactsLoader
 import com.android.utils.NullLogger
@@ -47,14 +46,12 @@ class BuiltArtifactsImplTest {
             applicationId = "com.android.test",
             variantName = "debug",
             elements = listOf(
-                BuiltArtifactImpl(
+                BuiltArtifactImpl.make(
                     outputFile = File(outputFolder, "file1.apk").absolutePath,
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
                     isEnabled = true,
-                    outputType = VariantOutputConfiguration.OutputType.SINGLE,
-                    filters = listOf(),
                     baseName = "someBaseName",
                     fullName = "someFullName"
                 )
@@ -98,38 +95,41 @@ class BuiltArtifactsImplTest {
             applicationId = "com.android.test",
             variantName = "debug",
             elements = listOf(
-                BuiltArtifactImpl(
+                BuiltArtifactImpl.make(
                     outputFile = File(outputFolder, "file1.apk").absolutePath,
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
                     isEnabled = true,
-                    outputType = VariantOutputConfiguration.OutputType.ONE_OF_MANY,
-                    filters = listOf(
-                        FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xhdpi")
-                    )
+                    variantOutputConfiguration = VariantOutputConfigurationImpl(
+                        isUniversal = false,
+                        filters = listOf(
+                            FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xhdpi")
+                        ))
                 ),
-                BuiltArtifactImpl(
+                BuiltArtifactImpl.make(
                     outputFile = File(outputFolder, "file2.apk").absolutePath,
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
                     isEnabled = true,
-                    outputType = VariantOutputConfiguration.OutputType.ONE_OF_MANY,
-                    filters = listOf(
-                        FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xxhdpi")
-                    )
+                    variantOutputConfiguration = VariantOutputConfigurationImpl(
+                        isUniversal = false,
+                        filters = listOf(
+                            FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xxhdpi")
+                        ))
                 ),
-                BuiltArtifactImpl(
+                BuiltArtifactImpl.make(
                     outputFile = File(outputFolder, "file3.apk").absolutePath,
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
                     isEnabled = true,
-                    outputType = VariantOutputConfiguration.OutputType.ONE_OF_MANY,
-                    filters = listOf(
-                        FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xxxhdpi")
-                    )
+                    variantOutputConfiguration = VariantOutputConfigurationImpl(
+                        isUniversal = false,
+                        filters = listOf(
+                            FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xxxhdpi")
+                        ))
                 )
             )
         ).save(FakeGradleDirectory(outputFolder))
@@ -329,16 +329,17 @@ class BuiltArtifactsImplTest {
         versionCode: Int,
         densityValue: String
     ) =
-        BuiltArtifactImpl(
+        BuiltArtifactImpl.make(
             outputFile = File(outputFolder, "$fileName.apk").absolutePath,
             properties = mapOf("key1" to "value1", "key2" to "value2"),
             versionCode = versionCode,
             versionName = versionCode.toString(),
             isEnabled = true,
-            outputType = VariantOutputConfiguration.OutputType.ONE_OF_MANY,
-            filters = listOf(
-                FilterConfiguration(FilterConfiguration.FilterType.DENSITY, densityValue)
-            ),
+            variantOutputConfiguration = VariantOutputConfigurationImpl(
+                isUniversal = false,
+                filters = listOf(
+                    FilterConfiguration(FilterConfiguration.FilterType.DENSITY, densityValue)
+                )),
             baseName = "someBaseName",
             fullName = "someFullName"
         )

@@ -13,13 +13,13 @@ com.android.build.api.artifact.ArtifactKind$FILE.dataType: kotlin.reflect.KClass
 com.android.build.api.artifact.ArtifactKind.<init>: com.android.build.api.artifact.ArtifactKind<T> (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.artifact.ArtifactKind.dataType: kotlin.reflect.KClass<T> ()
 com.android.build.api.artifact.ArtifactTransformationRequest
-com.android.build.api.artifact.ArtifactTransformationRequest.submit: java.util.function.Supplier<com.android.build.api.variant.BuiltArtifacts> (org.gradle.workers.WorkQueue, java.lang.Class<? extends org.gradle.workers.WorkAction<ParamT>>, java.lang.Class<? extends ParamT>, kotlin.jvm.functions.Function3<? super com.android.build.api.variant.BuiltArtifact, ? super org.gradle.api.file.Directory, ? super ParamT, ? extends java.io.File>)
-com.android.build.api.artifact.ArtifactTransformationRequest.submit: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.BuiltArtifact, ? extends java.io.File>)
+com.android.build.api.artifact.ArtifactTransformationRequest.submit: java.util.function.Supplier<com.android.build.api.variant.BuiltArtifacts> (org.gradle.api.Task, org.gradle.workers.WorkQueue, java.lang.Class<? extends org.gradle.workers.WorkAction<ParamT>>, java.lang.Class<? extends ParamT>, kotlin.jvm.functions.Function3<? super com.android.build.api.variant.BuiltArtifact, ? super org.gradle.api.file.Directory, ? super ParamT, ? extends java.io.File>)
+com.android.build.api.artifact.ArtifactTransformationRequest.submit: void (org.gradle.api.Task, kotlin.jvm.functions.Function1<? super com.android.build.api.variant.BuiltArtifact, ? extends java.io.File>)
 com.android.build.api.artifact.ArtifactType implements java.io.Serializable
 com.android.build.api.artifact.ArtifactType$Appendable implements com.android.build.api.artifact.ArtifactType$Multiple
 com.android.build.api.artifact.ArtifactType$Companion
 com.android.build.api.artifact.ArtifactType$Companion.<init>: com.android.build.api.artifact.ArtifactType$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
-com.android.build.api.artifact.ArtifactType$Many
+com.android.build.api.artifact.ArtifactType$ContainsMany
 com.android.build.api.artifact.ArtifactType$Multiple
 com.android.build.api.artifact.ArtifactType$Multiple.name: java.lang.String ()
 com.android.build.api.artifact.ArtifactType$Replaceable implements com.android.build.api.artifact.ArtifactType$Single
@@ -54,6 +54,7 @@ com.android.build.api.artifact.ReplaceRequest
 com.android.build.api.artifact.ReplaceRequest.on: void (ARTIFACT_TYPE)
 com.android.build.api.artifact.TaskBasedOperations
 com.android.build.api.artifact.TaskBasedOperations.andWrite: com.android.build.api.artifact.ArtifactTransformationRequest (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<org.gradle.api.file.Directory>>)
+com.android.build.api.artifact.TaskBasedOperations.andWrite: com.android.build.api.artifact.ArtifactTransformationRequest (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<org.gradle.api.file.Directory>>, java.lang.String)
 com.android.build.api.artifact.TaskBasedOperations.toRead: com.android.build.api.artifact.TaskBasedOperations<TaskT> (ArtifactTypeT, kotlin.jvm.functions.Function1<? super TaskT, ? extends org.gradle.api.file.FileSystemLocationProperty<org.gradle.api.file.Directory>>)
 com.android.build.api.artifact.TransformRequest
 com.android.build.api.artifact.TransformRequest.on: void (ARTIFACT_TYPE)
@@ -542,10 +543,8 @@ com.android.build.api.variant.ApplicationVariant.getDependenciesInfo: com.androi
 com.android.build.api.variant.ApplicationVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.ApplicationVariantProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.ApplicationVariantProperties.getDependenciesInfo: com.android.build.api.variant.DependenciesInfo ()
-com.android.build.api.variant.BuiltArtifact
-com.android.build.api.variant.BuiltArtifact.getFilters: java.util.Collection<com.android.build.api.variant.FilterConfiguration> ()
+com.android.build.api.variant.BuiltArtifact implements com.android.build.api.variant.VariantOutputConfiguration
 com.android.build.api.variant.BuiltArtifact.getOutputFile: java.lang.String ()
-com.android.build.api.variant.BuiltArtifact.getOutputType: com.android.build.api.variant.VariantOutputConfiguration$OutputType ()
 com.android.build.api.variant.BuiltArtifact.getProperties: java.util.Map<java.lang.String, java.lang.String> ()
 com.android.build.api.variant.BuiltArtifact.getVersionCode: int ()
 com.android.build.api.variant.BuiltArtifact.getVersionName: java.lang.String ()
@@ -604,9 +603,9 @@ com.android.build.api.variant.VariantInfo.getFullVariantName: java.lang.String (
 com.android.build.api.variant.VariantInfo.isDebuggable: boolean ()
 com.android.build.api.variant.VariantInfo.isTest: boolean ()
 com.android.build.api.variant.VariantOutput implements com.android.build.api.variant.VariantOutputConfiguration
+com.android.build.api.variant.VariantOutput.getEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.VariantOutput.getVersionCode: org.gradle.api.provider.Property<java.lang.Integer> ()
 com.android.build.api.variant.VariantOutput.getVersionName: org.gradle.api.provider.Property<java.lang.String> ()
-com.android.build.api.variant.VariantOutput.isEnabled: org.gradle.api.provider.Property<java.lang.Boolean> ()
 com.android.build.api.variant.VariantOutputConfiguration
 com.android.build.api.variant.VariantOutputConfiguration$OutputType extends java.lang.Enum
 com.android.build.api.variant.VariantOutputConfiguration$OutputType.valueOf: com.android.build.api.variant.VariantOutputConfiguration$OutputType (java.lang.String)

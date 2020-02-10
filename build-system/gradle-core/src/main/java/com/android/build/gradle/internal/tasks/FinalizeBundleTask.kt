@@ -18,11 +18,9 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.apksig.ApkSigner
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.signing.SigningConfigProvider
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams
@@ -137,10 +135,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 applicationId = params.applicationId,
                 variantName = params.variantName,
                 elements = listOf(
-                    BuiltArtifactImpl(
-                        outputFile = params.finalBundleFile.absolutePath,
-                        outputType = VariantOutputConfiguration.OutputType.SINGLE)
-                )
+                    BuiltArtifactImpl.make(outputFile = params.finalBundleFile.absolutePath))
             ).saveToFile(params.bundleIdeModel)
         }
     }
@@ -188,7 +183,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 InternalArtifactType.BUNDLE_IDE_MODEL,
                 taskProvider,
                 FinalizeBundleTask::bundleIdeModel,
-                ExistingBuildElements.METADATA_FILE_NAME
+                BuiltArtifactsImpl.METADATA_FILE_NAME
             )
         }
 

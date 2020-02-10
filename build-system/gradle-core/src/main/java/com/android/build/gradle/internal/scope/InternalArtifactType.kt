@@ -159,7 +159,7 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // compiled resources (output of aapt)
     object PROCESSED_RES_FINAL: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // compiled resources (output of aapt)
-    object PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     // Processed res after an AAPT2 optimize operation
     object OPTIMIZED_PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // package resources for aar publishing.
@@ -176,7 +176,7 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object LOCAL_ONLY_PARTIAL_SYMBOL_DIRECTORY: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // public.txt output
     object PUBLIC_RES: InternalArtifactType<RegularFile>(FILE), Replaceable
-    object SHRUNK_PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object SHRUNK_PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     object DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object ABI_PROCESSED_SPLIT_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object DENSITY_OR_LANGUAGE_PACKAGED_SPLIT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
@@ -246,8 +246,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // removed it yet for compatibility reasons.
     object CHECK_MANIFEST_RESULT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
-    object COMPATIBLE_SCREEN_MANIFEST: InternalArtifactType<Directory>(DIRECTORY), Replaceable, Many
-    object MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable, Many
+    object COMPATIBLE_SCREEN_MANIFEST: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
+    object MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     object LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Same as above: InternalArtifactType<RegularFile>(FILE), Replaceable but the resource references have stripped namespaces.
     object NON_NAMESPACED_LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
@@ -313,7 +313,7 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
 
     object ABI_PACKAGED_SPLIT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object FULL_APK: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    object APK: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object APK: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     object APK_FOR_LOCAL_TEST: InternalArtifactType<RegularFile>(FILE), Replaceable
     object APK_MAPPING: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS, "mapping"), Replaceable
     // zip of APK + mapping files used when publishing the APKs to a repo

@@ -275,7 +275,6 @@ class CompileLibraryResourcesTest {
         val compressed = project.getSubproject(":app").getIntermediateFile(
             "shrunk_processed_res",
             "release",
-            "out",
             "resources-release-stripped.ap_"
         )
 

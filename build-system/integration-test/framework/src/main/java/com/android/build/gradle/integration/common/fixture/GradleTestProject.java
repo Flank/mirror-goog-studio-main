@@ -31,7 +31,6 @@ import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.cxx.configure.NdkLocatorKt;
 import com.android.build.gradle.internal.plugins.VersionCheckPlugin;
-import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.AndroidArtifact;
@@ -310,7 +309,7 @@ public final class GradleTestProject implements TestRule {
      *
      * @param subProject name of the subProject, or the subProject's gradle project path
      * @param rootProject root GradleTestProject.
-     * @param heapSize
+     * @param heapSize heap size
      */
     private GradleTestProject(
             @NonNull String subProject,
@@ -1290,7 +1289,7 @@ public final class GradleTestProject implements TestRule {
      *
      * @param tasks Variadic list of tasks to execute.
      * @return the output models for the project as map of output model name (variant name +
-     *     artifact name) to the associated {@link BuildElements}
+     *     artifact name) to the associated {@link BuiltArtifacts}
      */
     @Nullable
     public Map<String, BuiltArtifacts> executeAndReturnOutputModels(String... tasks)

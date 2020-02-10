@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.transforms
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.variant.VariantOutput
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.pipeline.StreamFilter
-import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -88,7 +88,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
     @get:Input
     abstract val enableRTxtResourceShrinking: Property<Boolean>
 
-    private lateinit var mainSplit: ApkData
+    private lateinit var mainSplit: VariantOutput
 
     override fun doTaskAction() {
         val uncompressedResourceFile = uncompressedResources.get().asFile
@@ -113,16 +113,15 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             lightRClasses.get().asFile
         }
 
-        val manifestFile = ExistingBuildElements.from(InternalArtifactType.BUNDLE_MANIFEST, mergedManifests)
-            .element(mainSplit)
-            ?.outputFile
-                ?: throw RuntimeException("Cannot find merged manifest file")
+        val manifestFile = BuiltArtifactsLoaderImpl().load(mergedManifests)
+            ?.getBuiltArtifact(mainSplit)
+            ?: throw java.lang.RuntimeException("Cannot find merged manifest file for $mainSplit")
 
         // Analyze resources and usages and strip out unused
         val analyzer = ResourceUsageAnalyzer(
             rSource,
             classes,
-            manifestFile,
+            File(manifestFile.outputFile),
             mappingFile,
             resourceDir.get().asFile,
             reportFile,
@@ -205,7 +204,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE,
                 task.uncompressedResources
             )
-            task.mainSplit = creationConfig.outputs.getMainSplit().apkData
+            task.mainSplit = creationConfig.outputs.getMainSplit()
 
             task.dex = creationConfig.globalScope.project.files(
                 if (creationConfig.variantScope.consumesFeatureJars()) {
