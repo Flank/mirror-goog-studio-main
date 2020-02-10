@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.tools.build.libraries.metadata.AppDependencies
 import org.gradle.api.tasks.OutputFile
 import com.google.crypto.tink.BinaryKeysetReader
 import com.google.crypto.tink.hybrid.HybridConfig
@@ -33,6 +34,8 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.ByteArrayOutputStream
+import java.io.FileInputStream
+import java.io.PrintStream
 import java.nio.file.Files;
 import java.util.zip.DeflaterOutputStream
 
@@ -74,9 +77,19 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
   @get:OutputFile
   abstract val sdkDependencyData: RegularFileProperty
 
+  @get:OutputFile
+  abstract val sdkDependencyDataPublic: RegularFileProperty
+
   public override fun doTaskAction() {
     FileOutputStream(sdkDependencyData.get().asFile).use {
       it.write(encrypt(compress(Files.readAllBytes(dependencies.get().asFile.toPath()))))
+    }
+
+    PrintStream(sdkDependencyDataPublic.get().asFile).use {
+      it.print("# List of SDK dependencies of this app, this information is also included in an"
+        + " encrypted form in the APK.\n# For more information visit:"
+        + " https://d.android.com/r/tools/dependency-metadata\n\n")
+      it.print(AppDependencies.parseFrom(FileInputStream(dependencies.get().asFile)).toString())
     }
   }
 
@@ -113,6 +126,15 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
           taskProvider,
           SdkDependencyDataGeneratorTask::sdkDependencyData,
           fileName = "sdkDependencyData.pb"
+        )
+
+      creationConfig
+        .artifacts
+        .producesFile(
+          InternalArtifactType.SDK_DEPENDENCY_DATA_PUBLIC,
+            taskProvider,
+            SdkDependencyDataGeneratorTask::sdkDependencyDataPublic,
+            fileName = "sdkDependencies.txt"
         )
     }
 
