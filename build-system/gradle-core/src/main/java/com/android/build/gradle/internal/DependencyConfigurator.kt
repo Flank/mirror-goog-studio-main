@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.dependency.AlternateCompatibilityRule
 import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution.replaceOldSupportLibraries
 import com.android.build.gradle.internal.dependency.ClassesDirToClassesTransform
+import com.android.build.gradle.internal.dependency.EnumerateClassesTransform
 import com.android.build.gradle.internal.dependency.ExtractAarTransform
 import com.android.build.gradle.internal.dependency.ExtractProGuardRulesTransform
 import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform
@@ -690,6 +691,23 @@ class DependencyConfigurator(
                         params.projectName.set(project.name)
                     }
                 }
+            }
+        }
+
+        if (globalScope.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
+            dependencies.registerTransform(
+                EnumerateClassesTransform::class.java
+            ) { spec: TransformSpec<GenericTransformParameters> ->
+                spec.parameters.projectName.set(globalScope.project.name)
+                spec.from.attribute(
+                    ArtifactAttributes.ARTIFACT_FORMAT,
+                    AndroidArtifacts.ArtifactType.CLASSES_JAR.type
+                )
+                spec.to
+                    .attribute(
+                        ArtifactAttributes.ARTIFACT_FORMAT,
+                        AndroidArtifacts.ArtifactType.ENUMERATED_RUNTIME_CLASSES.type
+                    )
             }
         }
 

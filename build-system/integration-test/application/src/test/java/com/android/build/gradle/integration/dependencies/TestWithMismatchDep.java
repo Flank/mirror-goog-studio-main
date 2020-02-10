@@ -26,6 +26,7 @@ import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
 /**
  * Tests the handling of test dependencies.
  */
@@ -62,8 +63,7 @@ public class TestWithMismatchDep {
     public void testMismatchDependencyBreaksTestBuild() throws Exception {
         // want to check the log, so can't use Junit's expected exception mechanism.
 
-        GradleBuildResult result =
-                project.executor().expectFailure().run("assembleAndroidTest");
+        GradleBuildResult result = project.executor().expectFailure().run("assembleAndroidTest");
         Throwable t = result.getException();
         while (t.getCause() != null) {
             t = t.getCause();
