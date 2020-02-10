@@ -152,6 +152,11 @@ public class SourceProviderImpl implements SourceProvider, Serializable {
     Collection<File> getShadersDirectories() {
         return Collections.emptyList()
     }
+
+    @NonNull
+    Collection<File> getMlModelsDirectories() {
+        return Collections.emptyList()
+    }
 }
 
 SourceProvider getProvider(String name) {

@@ -41,6 +41,7 @@ public final class IdeSourceProvider implements SourceProvider, Serializable {
     @NonNull private final Collection<File> myAssetsDirectories;
     @NonNull private final Collection<File> myJniLibsDirectories;
     @NonNull private final Collection<File> myShadersDirectories;
+    @NonNull private final Collection<File> myMlModelsDirectories;
     private final int myHashCode;
 
     // Used for serialization by the IDE.
@@ -58,6 +59,7 @@ public final class IdeSourceProvider implements SourceProvider, Serializable {
         myAssetsDirectories = Collections.emptyList();
         myJniLibsDirectories = Collections.emptyList();
         myShadersDirectories = Collections.emptyList();
+        myMlModelsDirectories = Collections.emptyList();
 
         myHashCode = 0;
     }
@@ -77,6 +79,10 @@ public final class IdeSourceProvider implements SourceProvider, Serializable {
         myShadersDirectories =
                 IdeModel.copyNewProperty(
                         () -> ImmutableList.copyOf(provider.getShadersDirectories()),
+                        Collections.emptyList());
+        myMlModelsDirectories =
+                IdeModel.copyNewProperty(
+                        () -> ImmutableList.copyOf(provider.getMlModelsDirectories()),
                         Collections.emptyList());
         myHashCode = calculateHashCode();
     }
@@ -154,6 +160,12 @@ public final class IdeSourceProvider implements SourceProvider, Serializable {
     }
 
     @Override
+    @NonNull
+    public Collection<File> getMlModelsDirectories() {
+        return myMlModelsDirectories;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -173,7 +185,8 @@ public final class IdeSourceProvider implements SourceProvider, Serializable {
                 && Objects.equals(myResDirectories, provider.myResDirectories)
                 && Objects.equals(myAssetsDirectories, provider.myAssetsDirectories)
                 && Objects.equals(myJniLibsDirectories, provider.myJniLibsDirectories)
-                && Objects.equals(myShadersDirectories, provider.myShadersDirectories);
+                && Objects.equals(myShadersDirectories, provider.myShadersDirectories)
+                && Objects.equals(myMlModelsDirectories, provider.myMlModelsDirectories);
     }
 
     @Override
@@ -194,7 +207,8 @@ public final class IdeSourceProvider implements SourceProvider, Serializable {
                 myResDirectories,
                 myAssetsDirectories,
                 myJniLibsDirectories,
-                myShadersDirectories);
+                myShadersDirectories,
+                myMlModelsDirectories);
     }
 
     @Override
@@ -225,6 +239,8 @@ public final class IdeSourceProvider implements SourceProvider, Serializable {
                 + myJniLibsDirectories
                 + ", myShadersDirectories="
                 + myShadersDirectories
+                + ", myMlModelsDirectories="
+                + myMlModelsDirectories
                 + '}';
     }
 }

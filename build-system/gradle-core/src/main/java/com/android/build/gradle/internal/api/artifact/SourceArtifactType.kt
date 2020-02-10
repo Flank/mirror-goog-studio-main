@@ -36,4 +36,5 @@ sealed class SourceArtifactType: ArtifactType<Directory>(
     object JNI : SourceArtifactType()
     object JNI_LIBS : SourceArtifactType()
     object SHADERS : SourceArtifactType()
+    object ML_MODELS : SourceArtifactType()
 }

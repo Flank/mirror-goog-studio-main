@@ -209,6 +209,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object MERGED_JNI_LIBS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // source folder shaders merged into a single folder
     object MERGED_SHADERS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // source folder machine learning models merged into a single folder
+    object MERGED_ML_MODELS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // folder for NDK *.so libraries
     object NDK_LIBS: InternalArtifactType<RegularFile>(FILE), Replaceable
     // native libs merged from module(s)

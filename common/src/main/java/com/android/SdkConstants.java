@@ -403,6 +403,8 @@ public final class SdkConstants {
     public static final String FD_SYMBOLS = "symbols"; //$NON-NLS-1$
     /** resource blame output folder */
     public static final String FD_BLAME = "blame"; //$NON-NLS-1$
+    /** Machine learning models folder. */
+    public static final String FD_ML_MODELS = "ml"; // $NON-NLS-1$
 
     /** rs Libs output folder for support mode */
     public static final String FD_RS_LIBS = "rsLibs"; //$NON-NLS-1$

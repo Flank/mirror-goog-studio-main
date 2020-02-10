@@ -105,4 +105,10 @@ class MockSourceProvider implements SourceProvider {
     public Collection<File> getShadersDirectories() {
         return Collections.singleton(new File(mRoot, "shaders"));
     }
+
+    @NonNull
+    @Override
+    public Collection<File> getMlModelsDirectories() {
+        return Collections.singleton(new File(mRoot, "ml"));
+    }
 }

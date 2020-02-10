@@ -121,4 +121,12 @@ public interface SourceProvider {
      */
     @NonNull
     Collection<File> getShadersDirectories();
+
+    /**
+     * Returns the machine learning models folders.
+     *
+     * @return a list of folders. They may not all exist.
+     */
+    @NonNull
+    Collection<File> getMlModelsDirectories();
 }

@@ -57,6 +57,7 @@ open class DefaultAndroidSourceSet @Inject constructor(
     final override val jni: AndroidSourceDirectorySet
     final override val jniLibs: AndroidSourceDirectorySet
     final override val shaders: AndroidSourceDirectorySet
+    final override val mlModels: AndroidSourceDirectorySet
     private val displayName : String = GUtil.toWords(this.name)
 
     init {
@@ -104,6 +105,10 @@ open class DefaultAndroidSourceSet @Inject constructor(
 
         shaders = DefaultAndroidSourceDirectorySet(
             "$displayName shaders", project, SourceArtifactType.SHADERS
+        )
+
+        mlModels = DefaultAndroidSourceDirectorySet(
+            "$displayName ML models", project, SourceArtifactType.ML_MODELS
         )
 
         initRoot("src/$name")
@@ -232,6 +237,15 @@ open class DefaultAndroidSourceSet @Inject constructor(
         return this
     }
 
+    override fun mlModels(action: com.android.build.api.dsl.AndroidSourceDirectorySet.() -> Unit) {
+        action.invoke(mlModels)
+    }
+
+    override fun mlModels(configureClosure: Closure<*>): AndroidSourceSet {
+        ConfigureUtil.configure(configureClosure, mlModels)
+        return this
+    }
+
     override fun java(action: com.android.build.api.dsl.AndroidSourceDirectorySet.() -> Unit) {
         action.invoke(java)
     }
@@ -265,6 +279,7 @@ open class DefaultAndroidSourceSet @Inject constructor(
         jni.setSrcDirs(listOf("$path/jni"))
         jniLibs.setSrcDirs(listOf("$path/jniLibs"))
         shaders.setSrcDirs(listOf("$path/shaders"))
+        mlModels.setSrcDirs(listOf("$path/${SdkConstants.FD_ML_MODELS}"))
         return this
     }
 
@@ -316,4 +331,7 @@ open class DefaultAndroidSourceSet @Inject constructor(
         return shaders.srcDirs
     }
 
+    override fun getMlModelsDirectories(): Collection<File> {
+        return mlModels.srcDirs
+    }
 }

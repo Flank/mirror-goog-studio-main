@@ -79,6 +79,11 @@ interface AndroidSourceSet : Named {
     /** The Android shaders directory for this source set. */
     fun shaders(action: AndroidSourceDirectorySet.() -> Unit)
 
+    /** The machine learning models directory for this source set. */
+    val mlModels: AndroidSourceDirectorySet
+    /** The machine learning models directory for this source set. */
+    fun mlModels(action: AndroidSourceDirectorySet.() -> Unit)
+
     /**
      * Sets the root of the source sets to a given path.
      *

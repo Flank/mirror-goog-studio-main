@@ -190,5 +190,18 @@ interface AndroidSourceSet: com.android.build.api.dsl.AndroidSourceSet {
      */
     fun shaders(configureClosure: Closure<*>): AndroidSourceSet
 
+    override val mlModels: AndroidSourceDirectorySet
+
+    /**
+     * Configures the location of the machine learning models for this set.
+     *
+     * <p>The given closure is used to configure the {@link AndroidSourceDirectorySet} which
+     * contains the ml models.
+     *
+     * @param configureClosure The closure to use to configure the ml models.
+     * @return this
+     */
+    fun mlModels(configureClosure: Closure<*>): AndroidSourceSet
+
     override fun setRoot(path: String): AndroidSourceSet
 }

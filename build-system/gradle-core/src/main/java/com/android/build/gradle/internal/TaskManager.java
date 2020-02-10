@@ -1151,6 +1151,9 @@ public abstract class TaskManager<
 
     public void createMlkitTask(@NonNull ComponentPropertiesImpl componentProperties) {
         if (componentProperties.getServices().getProjectOptions().get(BooleanOption.ENABLE_MLKIT)) {
+            taskFactory.register(
+                    new MergeSourceSetFolders.MergeMlModelsSourceFoldersCreationAction(
+                            componentProperties));
             TaskProvider<GenerateMlModelClass> generateMlModelClassTask =
                     taskFactory.register(
                             new GenerateMlModelClass.CreationAction(componentProperties));

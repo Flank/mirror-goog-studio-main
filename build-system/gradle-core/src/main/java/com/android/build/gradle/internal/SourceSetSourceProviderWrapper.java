@@ -109,4 +109,10 @@ public class SourceSetSourceProviderWrapper implements SourceProvider {
     public Collection<File> getShadersDirectories() {
         return ImmutableList.of();
     }
+
+    @NonNull
+    @Override
+    public Collection<File> getMlModelsDirectories() {
+        return ImmutableList.of();
+    }
 }
