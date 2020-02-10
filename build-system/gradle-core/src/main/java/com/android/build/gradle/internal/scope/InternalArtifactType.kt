@@ -416,6 +416,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
 
     // File containing SDK dependency block value.
     object SDK_DEPENDENCY_DATA: InternalArtifactType<RegularFile>(FILE), Replaceable
+    // Public file containing SDK dependency (unencrypted).
+    object SDK_DEPENDENCY_DATA_PUBLIC: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS, "sdk-dependencies"), Replaceable
 
     // Artifacts privately shared with Android Studio.
     object APK_IDE_MODEL: InternalArtifactType<RegularFile>(FILE), Replaceable

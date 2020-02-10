@@ -36,6 +36,7 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
+import java.io.PrintStream
 import java.nio.file.Files;
 import java.util.zip.DeflaterOutputStream
 
@@ -79,9 +80,19 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
   @get:OutputFile
   abstract val sdkDependencyData: RegularFileProperty
 
+  @get:OutputFile
+  abstract val sdkDependencyDataPublic: RegularFileProperty
+
   public override fun doTaskAction() {
     FileOutputStream(sdkDependencyData.get().asFile).use {
       it.write(encrypt(compress(Files.readAllBytes(dependencies.get().asFile.toPath()))))
+    }
+
+    PrintStream(sdkDependencyDataPublic.get().asFile).use {
+      it.print("# List of SDK dependencies of this app, this information is also included in an"
+        + " encrypted form in the APK.\n# For more information visit:"
+        + " https://d.android.com/r/tools/dependency-metadata\n\n")
+      it.print(AppDependencies.parseFrom(FileInputStream(dependencies.get().asFile)).toString())
     }
   }
 
@@ -114,6 +125,15 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
           taskProvider,
           SdkDependencyDataGeneratorTask::sdkDependencyData,
           fileName = "sdkDependencyData.pb"
+        )
+
+      variantScope
+        .artifacts
+        .producesFile(
+          InternalArtifactType.SDK_DEPENDENCY_DATA_PUBLIC,
+            taskProvider,
+            SdkDependencyDataGeneratorTask::sdkDependencyDataPublic,
+            fileName = "sdkDependencies.txt"
         )
     }
 
