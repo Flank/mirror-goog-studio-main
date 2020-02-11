@@ -82,7 +82,7 @@ public class SymbolTest {
             // noinspection ConstantConditions
             SymbolTestUtils.createSymbol("attr", null, "int", "");
             fail();
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             assertThat(e.getMessage()).contains("name");
         }
     }

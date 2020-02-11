@@ -144,5 +144,12 @@ javadoc {
 compileKotlin {
     kotlinOptions {
         jvmTarget = "1.8"
+	freeCompilerArgs = ["-Xno-optimized-callable-references"]
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ["-Xno-optimized-callable-references"]
     }
 }

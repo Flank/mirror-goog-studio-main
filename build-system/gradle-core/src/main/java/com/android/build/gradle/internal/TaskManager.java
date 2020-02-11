@@ -315,7 +315,7 @@ public abstract class TaskManager<
             "kotlinCompilerClasspath";
     public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "0.1.0-dev16";
     public static final String COMPOSE_KOTLIN_COMPILER_VERSION =
-            "1.4.0-rc-316";
+            "1.4.0";
     public static final String CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar";
 
     @NonNull protected final Project project;

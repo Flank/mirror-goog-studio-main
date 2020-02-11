@@ -223,7 +223,7 @@ class MergeJavaResourcesDelegate(
                 .keys
                 .filter { input ->
                     containsHighPriorityScope(
-                        contentMap[input]?.scopes ?: TransformManager.EMPTY_SCOPES
+                        (contentMap[input]?.scopes ?: TransformManager.EMPTY_SCOPES) as MutableSet<in QualifiedContent.Scope>
                     )
                 }
 
