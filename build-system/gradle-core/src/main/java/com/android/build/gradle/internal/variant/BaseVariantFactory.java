@@ -19,15 +19,20 @@ package com.android.build.gradle.internal.variant;
 import static com.android.build.gradle.tasks.factory.AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.build.VariantOutput;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
+import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
+import com.android.build.gradle.internal.api.BaseVariantImpl;
+import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -36,6 +41,10 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.BaseServices;
+import com.android.build.gradle.internal.services.BaseServicesImpl;
+import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.services.VariantApiServices;
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.options.BooleanOption;
@@ -49,37 +58,25 @@ public abstract class BaseVariantFactory<
                 VariantPropertiesT extends VariantPropertiesImpl>
         implements VariantFactory<VariantT, VariantPropertiesT> {
 
-    @NonNull protected final VariantApiServices variantApiServices;
-    @NonNull protected final VariantPropertiesApiServices variantPropertiesApiServices;
+    @NonNull protected final ProjectServices projectServices;
     @NonNull protected final GlobalScope globalScope;
+    @Deprecated @NonNull private final BaseServices servicesForOldVariantObjectsOnly;
 
     public BaseVariantFactory(
-            @NonNull VariantApiServices variantApiServices,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull GlobalScope globalScope) {
-        this.variantApiServices = variantApiServices;
-        this.variantPropertiesApiServices = variantPropertiesApiServices;
+            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
+        this.projectServices = projectServices;
         this.globalScope = globalScope;
-    }
-
-    @Override
-    @NonNull
-    public VariantApiServices getVariantApiScope() {
-        return variantApiServices;
-    }
-
-    @Override
-    @NonNull
-    public VariantPropertiesApiServices getVariantPropertiesApiScope() {
-        return variantPropertiesApiServices;
+        servicesForOldVariantObjectsOnly = new BaseServicesImpl(projectServices);
     }
 
     @NonNull
     @Override
     public UnitTestImpl createUnitTestObject(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
-        return globalScope
-                .getDslServices()
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantApiServices variantApiServices) {
+        return projectServices
+                .getObjectFactory()
                 .newInstance(
                         UnitTestImpl.class, variantDslInfo, componentIdentity, variantApiServices);
     }
@@ -87,9 +84,11 @@ public abstract class BaseVariantFactory<
     @NonNull
     @Override
     public AndroidTestImpl createAndroidTestObject(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
-        return globalScope
-                .getDslServices()
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantApiServices variantApiServices) {
+        return projectServices
+                .getObjectFactory()
                 .newInstance(
                         AndroidTestImpl.class,
                         variantDslInfo,
@@ -110,10 +109,12 @@ public abstract class BaseVariantFactory<
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
             @NonNull VariantPropertiesImpl testedVariantProperties,
-            @NonNull TransformManager transformManager) {
+            @NonNull TransformManager transformManager,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull TaskCreationServices taskCreationServices) {
         UnitTestPropertiesImpl unitTestProperties =
-                globalScope
-                        .getDslServices()
+                projectServices
+                        .getObjectFactory()
                         .newInstance(
                                 UnitTestPropertiesImpl.class,
                                 componentIdentity,
@@ -128,6 +129,7 @@ public abstract class BaseVariantFactory<
                                 testedVariantProperties,
                                 transformManager,
                                 variantPropertiesApiServices,
+                                taskCreationServices,
                                 globalScope);
 
         unitTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
@@ -148,10 +150,12 @@ public abstract class BaseVariantFactory<
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
             @NonNull VariantPropertiesImpl testedVariantProperties,
-            @NonNull TransformManager transformManager) {
+            @NonNull TransformManager transformManager,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull TaskCreationServices taskCreationServices) {
         AndroidTestPropertiesImpl androidTestProperties =
-                globalScope
-                        .getDslServices()
+                projectServices
+                        .getObjectFactory()
                         .newInstance(
                                 AndroidTestPropertiesImpl.class,
                                 componentIdentity,
@@ -166,6 +170,7 @@ public abstract class BaseVariantFactory<
                                 testedVariantProperties,
                                 transformManager,
                                 variantPropertiesApiServices,
+                                taskCreationServices,
                                 globalScope);
 
         androidTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
@@ -174,10 +179,36 @@ public abstract class BaseVariantFactory<
     }
 
     @Override
+    @Nullable
+    public BaseVariantImpl createVariantApi(
+            @NonNull GlobalScope globalScope,
+            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull BaseVariantData variantData,
+            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
+        Class<? extends BaseVariantImpl> implementationClass =
+                getVariantImplementationClass(variantData);
+
+        return projectServices
+                .getObjectFactory()
+                .newInstance(
+                        implementationClass,
+                        variantData,
+                        componentProperties,
+                        servicesForOldVariantObjectsOnly,
+                        readOnlyObjectProvider,
+                        globalScope.getProject().container(VariantOutput.class));
+    }
+
+    @Deprecated
+    @NonNull
+    public BaseServices getServicesForOldVariantObjectsOnly() {
+        return servicesForOldVariantObjectsOnly;
+    }
+
+    @Override
     public void preVariantWork(Project project) {
         if (project.getPluginManager().hasPlugin(ANDROID_APT_PLUGIN_NAME)) {
-            globalScope
-                    .getDslServices()
+            projectServices
                     .getIssueReporter()
                     .reportError(
                             Type.INCOMPATIBLE_PLUGIN,
@@ -198,11 +229,13 @@ public abstract class BaseVariantFactory<
         Boolean buildConfig = globalScope.getExtension().getBuildFeatures().getBuildConfig();
         if (buildConfig == null) {
             buildConfig =
-                    globalScope.getProjectOptions().get(BooleanOption.BUILD_FEATURE_BUILDCONFIG);
+                    projectServices
+                            .getProjectOptions()
+                            .get(BooleanOption.BUILD_FEATURE_BUILDCONFIG);
         }
 
         if (!buildConfig) {
-            IssueReporter issueReporter = globalScope.getDslServices().getIssueReporter();
+            IssueReporter issueReporter = projectServices.getIssueReporter();
 
             if (!model.getDefaultConfig().getProductFlavor().getBuildConfigFields().isEmpty()) {
                 issueReporter.reportError(
@@ -235,11 +268,12 @@ public abstract class BaseVariantFactory<
     void validateResValues(@NonNull VariantInputModel model) {
         Boolean resValues = globalScope.getExtension().getBuildFeatures().getResValues();
         if (resValues == null) {
-            resValues = globalScope.getProjectOptions().get(BooleanOption.BUILD_FEATURE_RESVALUES);
+            resValues =
+                    projectServices.getProjectOptions().get(BooleanOption.BUILD_FEATURE_RESVALUES);
         }
 
         if (!resValues) {
-            IssueReporter issueReporter = globalScope.getDslServices().getIssueReporter();
+            IssueReporter issueReporter = projectServices.getIssueReporter();
 
             if (!model.getDefaultConfig().getProductFlavor().getResValues().isEmpty()) {
                 issueReporter.reportError(

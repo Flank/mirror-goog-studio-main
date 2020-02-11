@@ -36,7 +36,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
     com.android.build.api.dsl.BaseFlavor<AnnotationProcessorOptions> {
 
     /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
-    override val ndk: NdkOptions = dslServices.objectFactory.newInstance(NdkOptions::class.java)
+    override val ndk: NdkOptions = dslServices.newInstance(NdkOptions::class.java)
 
     override val ndkConfig: CoreNdkOptions
         get() {
@@ -481,7 +481,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
 
     /** Options for configuring the shader compiler.  */
     override val shaders: ShaderOptions =
-        dslServices.objectFactory.newInstance(ShaderOptions::class.java)
+        dslServices.newInstance(ShaderOptions::class.java)
 
     /** Configure the shader compiler options for this product flavor.  */
     fun shaders(action: Action<ShaderOptions>) {

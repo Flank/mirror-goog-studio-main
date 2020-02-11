@@ -1309,7 +1309,7 @@ com.android.build.gradle.internal.dsl.SigningConfig.storePassword: void (java.la
 com.android.build.gradle.internal.dsl.SigningConfig.storeType: void (java.lang.String)
 com.android.build.gradle.internal.dsl.SigningConfig.toString: java.lang.String ()
 com.android.build.gradle.internal.dsl.SigningConfigFactory implements org.gradle.api.NamedDomainObjectFactory
-com.android.build.gradle.internal.dsl.SigningConfigFactory.<init>: com.android.build.gradle.internal.dsl.SigningConfigFactory (org.gradle.api.model.ObjectFactory, java.io.File)
+com.android.build.gradle.internal.dsl.SigningConfigFactory.<init>: com.android.build.gradle.internal.dsl.SigningConfigFactory (com.android.build.gradle.internal.services.DslServices, java.io.File)
 com.android.build.gradle.internal.dsl.SigningConfigFactory.create: com.android.build.gradle.internal.dsl.SigningConfig (java.lang.String)
 com.android.build.gradle.internal.dsl.SigningConfigFactory.create: java.lang.Object (java.lang.String)
 com.android.build.gradle.internal.dsl.SplitOptions implements com.android.build.api.dsl.SplitOptions
@@ -1320,7 +1320,7 @@ com.android.build.gradle.internal.dsl.SplitOptions.isEnable: boolean ()
 com.android.build.gradle.internal.dsl.SplitOptions.reset: void ()
 com.android.build.gradle.internal.dsl.SplitOptions.setEnable: void (boolean)
 com.android.build.gradle.internal.dsl.Splits implements com.android.build.api.dsl.Splits
-com.android.build.gradle.internal.dsl.Splits.<init>: com.android.build.gradle.internal.dsl.Splits (org.gradle.api.model.ObjectFactory)
+com.android.build.gradle.internal.dsl.Splits.<init>: com.android.build.gradle.internal.dsl.Splits (com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.Splits.abi: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.AbiSplitOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.Splits.abi: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.AbiSplitOptions>)
 com.android.build.gradle.internal.dsl.Splits.density: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.DensitySplitOptions, kotlin.Unit>)

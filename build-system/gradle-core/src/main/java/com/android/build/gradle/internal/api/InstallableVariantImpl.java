@@ -25,6 +25,7 @@ import com.android.build.gradle.api.InstallableVariant;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Incubating;
@@ -32,7 +33,6 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
-import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -43,10 +43,10 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
 
     protected InstallableVariantImpl(
             @NonNull ComponentPropertiesImpl componentProperties,
-            @NonNull ObjectFactory objectFactory,
+            @NonNull BaseServices services,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(componentProperties, objectFactory, immutableObjectProvider, outputs);
+        super(componentProperties, services, immutableObjectProvider, outputs);
     }
 
     @NonNull
@@ -55,9 +55,7 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
 
     @Override
     public DefaultTask getInstall() {
-        componentProperties
-                .getVariantPropertiesApiServices()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variantOutput.getInstallProvider()",
                         "variantOutput.getInstall()",
@@ -82,9 +80,7 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
 
     @Override
     public DefaultTask getUninstall() {
-        componentProperties
-                .getVariantPropertiesApiServices()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variantOutput.getUninstallProvider()",
                         "variantOutput.getUninstall()",

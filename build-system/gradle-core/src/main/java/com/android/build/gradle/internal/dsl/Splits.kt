@@ -16,17 +16,18 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
 import javax.inject.Inject
 
-open class Splits @Inject constructor(objectFactory: ObjectFactory) :
+open class Splits @Inject constructor(dslServices: DslServices) :
     com.android.build.api.dsl.Splits<AbiSplitOptions, DensitySplitOptions> {
 
     override val density: DensitySplitOptions =
-        objectFactory.newInstance(DensitySplitOptions::class.java)
+        dslServices.newInstance(DensitySplitOptions::class.java)
 
-    override val abi: AbiSplitOptions = objectFactory.newInstance(AbiSplitOptions::class.java)
+    override val abi: AbiSplitOptions = dslServices.newInstance(AbiSplitOptions::class.java)
 
     /**
      * Encapsulates settings for
@@ -37,7 +38,7 @@ open class Splits @Inject constructor(objectFactory: ObjectFactory) :
      * for [Android Instant Apps](https://developer.android.com/topic/instant-apps/index.html).
      */
     val language: LanguageSplitOptions =
-        objectFactory.newInstance(LanguageSplitOptions::class.java)
+        dslServices.newInstance(LanguageSplitOptions::class.java)
 
     /**
      * Encapsulates settings for

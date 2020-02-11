@@ -103,7 +103,7 @@ open class LibraryExtension(
     ActionableVariantObjectOperationsExecutor<com.android.build.api.variant.LibraryVariant<LibraryVariantProperties>, LibraryVariantProperties> by publicExtensionImpl {
 
     private val libraryVariantList: DomainObjectSet<LibraryVariant> =
-        dslServices.objectFactory.domainObjectSet(LibraryVariant::class.java)
+        dslServices.domainObjectSet(LibraryVariant::class.java)
 
     private var _packageBuildConfig = true
 
@@ -114,7 +114,7 @@ open class LibraryExtension(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
             projectOptions,
-            globalScope.dslServices
+            dslServices
         )
 
     // this is needed because the impl class needs this but the interface does not,

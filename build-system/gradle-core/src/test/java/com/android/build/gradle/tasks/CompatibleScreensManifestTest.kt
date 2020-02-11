@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
@@ -81,7 +82,7 @@ class CompatibleScreensManifestTest {
 
         task = project.tasks.create("test", CompatibleScreensManifest::class.java)
 
-        val variantApiServices = createVariantPropertiesApiServices()
+        val services = createTaskCreationServices()
 
         MockitoAnnotations.initMocks(this)
         `when`(variantProperties.name).thenReturn("fullVariantName")
@@ -93,7 +94,7 @@ class CompatibleScreensManifestTest {
         `when`(variantProperties.variantScope).thenReturn(scope)
         `when`(variantProperties.variantType).thenReturn(VariantTypeImpl.BASE_APK)
         `when`(variantProperties.variantData).thenReturn(variantData)
-        `when`(variantProperties.variantPropertiesApiServices).thenReturn(variantApiServices)
+        `when`(variantProperties.services).thenReturn(services)
         `when`<AndroidVersion>(variantProperties.minSdkVersion).thenReturn(AndroidVersion(21))
 
 

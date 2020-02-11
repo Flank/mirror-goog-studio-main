@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.tasks.ModuleMetadata
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -51,6 +52,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     variantData: BaseVariantData,
     transformManager: TransformManager,
     variantApiServices: VariantPropertiesApiServices,
+    taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
     componentIdentity,
@@ -64,6 +66,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     variantData,
     transformManager,
     variantApiServices,
+    taskCreationServices,
     globalScope
 ), DynamicFeatureVariantProperties, DynamicFeatureCreationConfig {
 

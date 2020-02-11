@@ -23,15 +23,15 @@ import com.android.builder.errors.IssueReporter
 /**
  * Impl for BaseScope over a [ProjectServices]
  */
-abstract class BaseServicesImpl(protected val projectServices: ProjectServices):
+open class BaseServicesImpl(protected val projectServices: ProjectServices):
     BaseServices {
 
-    override fun <T> newInstance(type: Class<T>, vararg args: Any?): T = projectServices.objectFactory.newInstance(type, *args)
+    final override fun <T> newInstance(type: Class<T>, vararg args: Any?): T = projectServices.objectFactory.newInstance(type, *args)
 
-    override val issueReporter: IssueReporter
+    final override val issueReporter: IssueReporter
         get() = projectServices.issueReporter
-    override val deprecationReporter: DeprecationReporter
+    final override val deprecationReporter: DeprecationReporter
         get() = projectServices.deprecationReporter
-    override val projectOptions: ProjectOptions
+    final override val projectOptions: ProjectOptions
         get() = projectServices.projectOptions
 }

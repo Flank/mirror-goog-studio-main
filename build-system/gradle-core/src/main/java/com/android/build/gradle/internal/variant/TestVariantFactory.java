@@ -44,6 +44,8 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.services.VariantApiServices;
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.options.ProjectOptions;
@@ -64,10 +66,8 @@ public class TestVariantFactory
         extends AbstractAppVariantFactory<TestVariantImpl, TestVariantPropertiesImpl> {
 
     public TestVariantFactory(
-            @NonNull VariantApiServices variantApiServices,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull GlobalScope globalScope) {
-        super(variantApiServices, variantPropertiesApiServices, globalScope);
+            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
+        super(projectServices, globalScope);
     }
 
     @Override
@@ -78,9 +78,11 @@ public class TestVariantFactory
     @NonNull
     @Override
     public TestVariantImpl createVariantObject(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
-        return globalScope
-                .getDslServices()
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantApiServices variantApiServices) {
+        return projectServices
+                .getObjectFactory()
                 .newInstance(
                         TestVariantImpl.class,
                         variantDslInfo,
@@ -91,14 +93,18 @@ public class TestVariantFactory
     @NonNull
     @Override
     public UnitTestImpl createUnitTestObject(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantApiServices variantApiServices) {
         throw new RuntimeException("cannot instantiate unit-test in test plugin");
     }
 
     @NonNull
     @Override
     public AndroidTestImpl createAndroidTestObject(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo) {
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantApiServices variantApiServices) {
         throw new RuntimeException("cannot instantiate android-test in test plugin");
     }
 
@@ -115,10 +121,12 @@ public class TestVariantFactory
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull VariantScope variantScope,
             @NonNull BaseVariantData variantData,
-            @NonNull TransformManager transformManager) {
+            @NonNull TransformManager transformManager,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull TaskCreationServices taskCreationServices) {
         TestVariantPropertiesImpl variantProperties =
-                globalScope
-                        .getDslServices()
+                projectServices
+                        .getObjectFactory()
                         .newInstance(
                                 TestVariantPropertiesImpl.class,
                                 componentIdentity,
@@ -132,6 +140,7 @@ public class TestVariantFactory
                                 variantData,
                                 transformManager,
                                 variantPropertiesApiServices,
+                                taskCreationServices,
                                 globalScope);
 
         // create default output
@@ -177,7 +186,9 @@ public class TestVariantFactory
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
             @NonNull VariantPropertiesImpl testedVariantProperties,
-            @NonNull TransformManager transformManager) {
+            @NonNull TransformManager transformManager,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull TaskCreationServices taskCreationServices) {
         throw new RuntimeException("cannot instantiate unit-test properties in test plugin");
     }
 
@@ -194,7 +205,9 @@ public class TestVariantFactory
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
             @NonNull VariantPropertiesImpl testedVariantProperties,
-            @NonNull TransformManager transformManager) {
+            @NonNull TransformManager transformManager,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull TaskCreationServices taskCreationServices) {
         throw new RuntimeException("cannot instantiate android-test properties in test plugin");
     }
 

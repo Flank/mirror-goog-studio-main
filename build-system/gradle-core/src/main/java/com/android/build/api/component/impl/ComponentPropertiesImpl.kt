@@ -19,6 +19,7 @@ package com.android.build.api.component.impl
 import android.databinding.tool.LayoutXmlProcessor
 import android.databinding.tool.LayoutXmlProcessor.OriginalFileLookup
 import com.android.build.api.artifact.Operations
+import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.ComponentProperties
 import com.android.build.api.variant.FilterConfiguration
@@ -27,6 +28,8 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.internal.DependencyConfigurator.Companion.addFlavorStrategy
+import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec.Companion.get
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.component.BaseCreationConfig
@@ -53,6 +56,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MLKIT_SOURCE
 import com.android.build.gradle.internal.scope.InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -68,9 +72,11 @@ import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -90,7 +96,8 @@ abstract class ComponentPropertiesImpl(
     override val variantScope: VariantScope,
     val variantData: BaseVariantData,
     override val transformManager: TransformManager,
-    override val variantPropertiesApiServices: VariantPropertiesApiServices,
+    protected val variantPropertiesApiServices: VariantPropertiesApiServices,
+    override val services: TaskCreationServices,
     override val globalScope: GlobalScope
 ): ComponentProperties, BaseCreationConfig, ComponentIdentity by componentIdentity {
 
@@ -507,4 +514,34 @@ abstract class ComponentPropertiesImpl(
         }
         return mainCollection
     }
+
+    fun handleMissingDimensionStrategy(dimension: String, alternatedValues: ImmutableList<String>) {
+
+        // First, setup the requested value, which isn't the actual requested value, but
+        // the variant name, modified
+        val requestedValue = VariantManager.getModifiedName(name)
+        val attributeKey =
+            Attribute.of(
+                dimension,
+                ProductFlavorAttr::class.java
+            )
+        val attributeValue: ProductFlavorAttr = variantPropertiesApiServices.named(
+            ProductFlavorAttr::class.java, requestedValue
+        )
+
+        variantDependencies.compileClasspath.attributes.attribute(attributeKey, attributeValue)
+        variantDependencies.runtimeClasspath.attributes.attribute(attributeKey, attributeValue)
+        variantDependencies
+            .annotationProcessorConfiguration
+            .attributes
+            .attribute(attributeKey, attributeValue)
+
+        // then add the fallbacks which contain the actual requested value
+        addFlavorStrategy(
+            globalScope.project.dependencies.attributesSchema,
+            dimension,
+            ImmutableMap.of(requestedValue, alternatedValues)
+        )
+    }
+
 }

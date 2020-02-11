@@ -35,8 +35,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.TestExtensionImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.DslServices;
-import com.android.build.gradle.internal.services.VariantApiServices;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
+import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.builder.profile.Recorder;
@@ -84,7 +83,7 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
                         sourceSetManager,
                         extraModelInfo,
                         new TestExtensionImpl(
-                                globalScope.getDslServices(),
+                                dslServices,
                                 buildTypeContainer,
                                 defaultConfig,
                                 productFlavorContainer,
@@ -124,10 +123,7 @@ public class TestPlugin extends BasePlugin<TestVariantImpl, TestVariantPropertie
     @NonNull
     @Override
     protected TestVariantFactory createVariantFactory(
-            @NonNull VariantApiServices variantApiServices,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull GlobalScope globalScope) {
-        return new TestVariantFactory(
-                variantApiServices, variantPropertiesApiServices, globalScope);
+            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
+        return new TestVariantFactory(projectServices, globalScope);
     }
 }

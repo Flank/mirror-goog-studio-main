@@ -74,10 +74,6 @@ import com.android.build.gradle.internal.services.Aapt2Workers;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
 import com.android.build.gradle.internal.services.ProjectServices;
-import com.android.build.gradle.internal.services.VariantApiServices;
-import com.android.build.gradle.internal.services.VariantApiServicesImpl;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl;
 import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -150,7 +146,8 @@ public abstract class BasePlugin<
     protected ProjectOptions projectOptions;
 
     private ProjectServices projectServices;
-    GlobalScope globalScope;
+    protected DslServices dslServices;
+    protected GlobalScope globalScope;
     protected SyncIssueReporterImpl syncIssueHandler;
 
     private VariantFactory<VariantT, VariantPropertiesT> variantFactory;
@@ -197,9 +194,7 @@ public abstract class BasePlugin<
 
     @NonNull
     protected abstract VariantFactory<VariantT, VariantPropertiesT> createVariantFactory(
-            @NonNull VariantApiServices variantApiServices,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull GlobalScope globalScope);
+            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope);
 
     @NonNull
     protected abstract TaskManager<VariantT, VariantPropertiesT> createTaskManager(
@@ -343,7 +338,7 @@ public abstract class BasePlugin<
                         projectOptions,
                         project::file);
 
-        DslServicesImpl dslServices =
+        dslServices =
                 new DslServicesImpl(projectServices, new DslVariableFactory(syncIssueHandler));
 
         MessageReceiverImpl messageReceiver =
@@ -407,8 +402,6 @@ public abstract class BasePlugin<
     }
 
     private void configureExtension() {
-        DslServices dslServices = globalScope.getDslServices();
-
         final NamedDomainObjectContainer<BuildType> buildTypeContainer =
                 project.container(BuildType.class, new BuildTypeFactory(dslServices));
         final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
@@ -417,7 +410,7 @@ public abstract class BasePlugin<
                 project.container(
                         SigningConfig.class,
                         new SigningConfigFactory(
-                                dslServices.getObjectFactory(),
+                                dslServices,
                                 GradleKeystoreHelper.getDefaultDebugKeystoreLocation()));
 
         final NamedDomainObjectContainer<BaseVariantOutput> buildOutputs =
@@ -431,7 +424,6 @@ public abstract class BasePlugin<
 
         DefaultConfig defaultConfig =
                 dslServices
-                        .getObjectFactory()
                         .newInstance(DefaultConfig.class, BuilderConstants.MAIN, dslServices);
 
         extension =
@@ -448,12 +440,7 @@ public abstract class BasePlugin<
 
         globalScope.setExtension(extension);
 
-        VariantApiServices variantApiServices = new VariantApiServicesImpl(projectServices);
-        VariantPropertiesApiServicesImpl variantPropertiesApiServices =
-                new VariantPropertiesApiServicesImpl(projectServices);
-
-        variantFactory =
-                createVariantFactory(variantApiServices, variantPropertiesApiServices, globalScope);
+        variantFactory = createVariantFactory(projectServices, globalScope);
 
         variantInputModel =
                 new VariantInputModelImpl(globalScope, extension, variantFactory, sourceSetManager);
@@ -466,6 +453,7 @@ public abstract class BasePlugin<
                         variantFactory,
                         variantInputModel,
                         sourceSetManager,
+                        projectServices,
                         threadRecorder);
 
         registerModels(
@@ -527,7 +515,7 @@ public abstract class BasePlugin<
                                 variantManager.getTestComponents().stream()
                                         .map(ComponentInfo::getProperties)
                                         .collect(Collectors.toList()),
-                        globalScope.getDslServices().getIssueReporter());
+                        dslServices.getIssueReporter());
 
         registerModelBuilder(registry, globalScope, variantModel, extension, extraModelInfo);
 
@@ -604,8 +592,7 @@ public abstract class BasePlugin<
                 extension.setCompileSdkVersion(newCompileSdkVersion);
             }
 
-            globalScope
-                    .getDslServices()
+            dslServices
                     .getIssueReporter()
                     .reportError(
                             Type.COMPILE_SDK_VERSION_NOT_SET,
@@ -635,10 +622,7 @@ public abstract class BasePlugin<
                             + "    apply plugin: 'me.tatarka.retrolambda'\n"
                             + "To learn more, go to https://d.android.com/r/"
                             + "tools/java-8-support-message.html\n";
-            globalScope
-                    .getDslServices()
-                    .getIssueReporter()
-                    .reportWarning(IssueReporter.Type.GENERIC, warningMsg);
+            dslServices.getIssueReporter().reportWarning(IssueReporter.Type.GENERIC, warningMsg);
         }
 
         // don't do anything if the project was not initialized.
@@ -656,7 +640,7 @@ public abstract class BasePlugin<
         hasCreatedTasks = true;
 
         extension.disableWrite();
-        globalScope.getDslServices().getVariableFactory().disableWrite();
+        dslServices.getVariableFactory().disableWrite();
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setCompileSdk(extension.getCompileSdkVersion())
@@ -705,7 +689,7 @@ public abstract class BasePlugin<
 
         // lock the Properties of the variant API after the old API because
         // of the versionCode/versionName properties that are shared between the old and new APIs.
-        variantFactory.getVariantPropertiesApiScope().lockProperties();
+        variantManager.lockVariantProperties();
 
         // Make sure no SourceSets were added through the DSL without being properly configured
         sourceSetManager.checkForUnconfiguredSourceSets();
@@ -755,8 +739,7 @@ public abstract class BasePlugin<
 
         // The Play Store doesn't allow Pure splits
         if (generatePureSplits) {
-            globalScope
-                    .getDslServices()
+            dslServices
                     .getIssueReporter()
                     .reportWarning(
                             Type.GENERIC,
@@ -765,8 +748,7 @@ public abstract class BasePlugin<
         }
 
         if (!generatePureSplits && splits.getLanguage().isEnable()) {
-            globalScope
-                    .getDslServices()
+            dslServices
                     .getIssueReporter()
                     .reportWarning(
                             Type.GENERIC,

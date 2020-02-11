@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.dsl.DslVariableFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
+import org.gradle.api.DomainObjectSet
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
@@ -32,10 +33,8 @@ class DslServicesImpl(
 ): BaseServicesImpl(projectServices),
         DslServices {
 
-        override val issueReporter: IssueReporter
-                get() = projectServices.issueReporter
-        override val deprecationReporter: DeprecationReporter
-                get() = projectServices.deprecationReporter
+        override fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T> = projectServices.objectFactory.domainObjectSet(type)
+
         override val objectFactory: ObjectFactory
                 get() = projectServices.objectFactory
         override val logger: Logger
@@ -44,7 +43,5 @@ class DslServicesImpl(
                 get() = projectServices.providerFactory
         override val projectLayout: ProjectLayout
                 get() = projectServices.projectLayout
-        override val projectOptions: ProjectOptions
-                get() = projectServices.projectOptions
         override fun file(file: Any): File = projectServices.fileResolver(file)
 }

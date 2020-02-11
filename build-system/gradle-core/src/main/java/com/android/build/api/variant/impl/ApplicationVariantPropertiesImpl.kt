@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import org.gradle.api.provider.Property
@@ -45,7 +46,8 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     variantData: BaseVariantData,
     variantDependencyInfo: com.android.build.api.variant.DependenciesInfo,
     transformManager: TransformManager,
-    variantApiServices: VariantPropertiesApiServices,
+    variantPropertiesApiServices: VariantPropertiesApiServices,
+    taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
     componentIdentity,
@@ -58,7 +60,8 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    variantApiServices,
+    variantPropertiesApiServices,
+    taskCreationServices,
     globalScope
 ), ApplicationVariantProperties, ApplicationCreationConfig {
 
@@ -69,7 +72,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> = variantApiServices.propertyOf(String::class.java, Callable{variantDslInfo.applicationId})
+    override val applicationId: Property<String> = variantPropertiesApiServices.propertyOf(String::class.java, Callable{variantDslInfo.applicationId})
 
     override val embedsMicroApp: Boolean
         get() = variantDslInfo.isEmbedMicroApp
@@ -87,5 +90,5 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
         get() = variantScope.isTestOnly
 
     override val needAssetPackTasks: Property<Boolean> =
-        variantApiServices.propertyOf(Boolean::class.java, false)
+        variantPropertiesApiServices.propertyOf(Boolean::class.java, false)
 }

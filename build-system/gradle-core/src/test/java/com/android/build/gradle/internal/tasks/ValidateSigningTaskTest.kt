@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
+import com.android.build.gradle.internal.services.createDslServices
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.hash.Hashing
 import com.google.common.truth.Truth.assertThat
@@ -87,7 +88,9 @@ class ValidateSigningTaskTest {
 
     @Test
     fun testErrorIfCustomKeystoreFileDoesNotExist() {
-        val dslSigningConfig = SigningConfigFactory(project!!.objects,
+        val dslServices = createDslServices()
+
+        val dslSigningConfig = SigningConfigFactory(dslServices,
                 temporaryFolder.newFile()).create("release")
         dslSigningConfig.storeFile = File(temporaryFolder.newFolder(), "does_not_exist")
         dslSigningConfig.storePassword = "store password"
@@ -113,8 +116,10 @@ class ValidateSigningTaskTest {
 
     @Test
     fun testDefaultDebugKeystoreIsCreatedAutomatically() {
+        val dslServices = createDslServices()
+
         val dslSigningConfig =
-                SigningConfigFactory(project!!.objects, defaultDebugKeystore).create("debug")
+                SigningConfigFactory(dslServices, defaultDebugKeystore).create("debug")
         val task = project!!.tasks.create("validateRedSigning", ValidateSigningTask::class.java)
         task.signingConfig = dslSigningConfig
         task.dummyOutputDirectory.set(outputDirectory)

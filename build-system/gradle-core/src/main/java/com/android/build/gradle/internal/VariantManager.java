@@ -59,6 +59,12 @@ import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.services.DslServices;
+import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.TaskCreationServices;
+import com.android.build.gradle.internal.services.TaskCreationServicesImpl;
+import com.android.build.gradle.internal.services.VariantApiServices;
+import com.android.build.gradle.internal.services.VariantApiServicesImpl;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServicesImpl;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.DimensionCombination;
@@ -102,6 +108,10 @@ public class VariantManager<
     @NonNull private final VariantFactory<VariantT, VariantPropertiesT> variantFactory;
     @NonNull private final VariantInputModel variantInputModel;
     @NonNull private final SourceSetManager sourceSetManager;
+    @NonNull private final VariantApiServices variantApiServices;
+    @NonNull private final VariantPropertiesApiServicesImpl variantPropertiesApiServices;
+    @NonNull private final TaskCreationServices taskCreationServices;
+    @NonNull private final ProjectServices projectServices;
     @NonNull private final Recorder recorder;
     @NonNull private final VariantFilter variantFilter;
 
@@ -132,6 +142,7 @@ public class VariantManager<
             @NonNull VariantFactory<VariantT, VariantPropertiesT> variantFactory,
             @NonNull VariantInputModel variantInputModel,
             @NonNull SourceSetManager sourceSetManager,
+            @NonNull ProjectServices projectServices,
             @NonNull Recorder recorder) {
         this.globalScope = globalScope;
         this.extension = extension;
@@ -140,10 +151,15 @@ public class VariantManager<
         this.variantFactory = variantFactory;
         this.variantInputModel = variantInputModel;
         this.sourceSetManager = sourceSetManager;
+        this.projectServices = projectServices;
         this.recorder = recorder;
         this.signingOverride = createSigningOverride();
         this.variantFilter = new VariantFilter(new ReadOnlyObjectProvider());
         this.manifestParserMap = Maps.newHashMap();
+
+        variantApiServices = new VariantApiServicesImpl(projectServices);
+        variantPropertiesApiServices = new VariantPropertiesApiServicesImpl(projectServices);
+        taskCreationServices = new TaskCreationServicesImpl(projectServices);
     }
 
     /**
@@ -220,7 +236,7 @@ public class VariantManager<
         DimensionCombinator computer =
                 new DimensionCombinator(
                         variantInputModel,
-                        globalScope.getDslServices().getIssueReporter(),
+                        projectServices.getIssueReporter(),
                         variantFactory.getVariantType(),
                         flavorDimensionList);
 
@@ -237,7 +253,7 @@ public class VariantManager<
         // FIXME we should lock the variant API properties after all the onVariants, and
         // before any onVariantProperties to avoid cross access between the two.
         // This means changing the way to run onVariants vs onVariantProperties.
-        variantFactory.getVariantApiScope().lockValues();
+        variantApiServices.lockValues();
     }
 
     @Nullable
@@ -299,7 +315,9 @@ public class VariantManager<
 
         // create the Variant object so that we can run the action which may interrupt the creation
         // (in case of enabled = false)
-        VariantT variant = variantFactory.createVariantObject(componentIdentity, variantDslInfo);
+        VariantT variant =
+                variantFactory.createVariantObject(
+                        componentIdentity, variantDslInfo, variantApiServices);
 
         // HACK, we need access to the new type rather than the old. This will go away in the
         // future
@@ -362,7 +380,7 @@ public class VariantManager<
                 VariantDependenciesBuilder.builder(
                                 project,
                                 projectOptions,
-                                globalScope.getDslServices().getIssueReporter(),
+                                projectServices.getIssueReporter(),
                                 variantDslInfo)
                         .setFlavorSelection(getFlavorSelection(variantDslInfo))
                         .addSourceSets(variantSourceSets);
@@ -371,7 +389,7 @@ public class VariantManager<
             builder.setFeatureList(((BaseAppModuleExtension) extension).getDynamicFeatures());
         }
 
-        final VariantDependencies variantDependencies = builder.build(globalScope);
+        final VariantDependencies variantDependencies = builder.build();
 
         // Done. Create the (too) many variant objects
 
@@ -420,7 +438,9 @@ public class VariantManager<
                         artifacts,
                         variantScope,
                         variantData,
-                        transformManager);
+                        transformManager,
+                        variantPropertiesApiServices,
+                        taskCreationServices);
 
         // Run the VariantProperties actions
         commonExtension.executeVariantPropertiesOperations(variantProperties);
@@ -523,7 +543,9 @@ public class VariantManager<
         if (variantType.isApk()) {
             AndroidTestImpl androidTestVariant =
                     variantFactory.createAndroidTestObject(
-                            variantDslInfo.getComponentIdentity(), variantDslInfo);
+                            variantDslInfo.getComponentIdentity(),
+                            variantDslInfo,
+                            variantApiServices);
 
             // run the action registered on the tested variant via androidTest {}
             testedVariant.executeAndroidTestActions(androidTestVariant);
@@ -533,7 +555,9 @@ public class VariantManager<
             // this is UNIT_TEST
             UnitTestImpl unitTestVariant =
                     variantFactory.createUnitTestObject(
-                            variantDslInfo.getComponentIdentity(), variantDslInfo);
+                            variantDslInfo.getComponentIdentity(),
+                            variantDslInfo,
+                            variantApiServices);
 
             // run the action registered on the tested variant via unitTest {}
             testedVariant.executeUnitTestActions(unitTestVariant);
@@ -601,13 +625,13 @@ public class VariantManager<
                 VariantDependenciesBuilder.builder(
                                 project,
                                 projectOptions,
-                                globalScope.getDslServices().getIssueReporter(),
+                                projectServices.getIssueReporter(),
                                 variantDslInfo)
                         .addSourceSets(testVariantSourceSets)
                         .setFlavorSelection(getFlavorSelection(variantDslInfo))
                         .setTestedVariant(testedVariantProperties);
 
-        final VariantDependencies variantDependencies = builder.build(globalScope);
+        final VariantDependencies variantDependencies = builder.build();
 
         VariantPathHelper pathHelper = new VariantPathHelper(project, variantDslInfo, dslServices);
         ComponentIdentity componentIdentity = variantDslInfo.getComponentIdentity();
@@ -666,7 +690,9 @@ public class VariantManager<
                             variantScope,
                             testVariantData,
                             testedVariantProperties,
-                            transformManager);
+                            transformManager,
+                            variantPropertiesApiServices,
+                            taskCreationServices);
 
             // also execute the delayed actions registered on the Component via
             // androidTest { onProperties {} }
@@ -689,7 +715,9 @@ public class VariantManager<
                             variantScope,
                             testVariantData,
                             testedVariantProperties,
-                            transformManager);
+                            transformManager,
+                            variantPropertiesApiServices,
+                            taskCreationServices);
 
             // execute the delayed actions registered on the Component via
             // unitTest { onProperties {} }
@@ -777,8 +805,7 @@ public class VariantManager<
                 int minSdkVersion = variantDslInfo.getMinSdkVersion().getApiLevel();
                 int targetSdkVersion = variantDslInfo.getTargetSdkVersion().getApiLevel();
                 if (minSdkVersion > 0 && targetSdkVersion > 0 && minSdkVersion > targetSdkVersion) {
-                    globalScope
-                            .getDslServices()
+                    projectServices
                             .getIssueReporter()
                             .reportWarning(
                                     IssueReporter.Type.GENERIC,
@@ -925,7 +952,7 @@ public class VariantManager<
                                 f,
                                 this::canParseManifest,
                                 isManifestFileRequired,
-                                globalScope.getDslServices().getIssueReporter()));
+                                projectServices.getIssueReporter()));
     }
 
     private boolean canParseManifest() {
@@ -934,5 +961,9 @@ public class VariantManager<
 
     public void setHasCreatedTasks(boolean hasCreatedTasks) {
         this.hasCreatedTasks = hasCreatedTasks;
+    }
+
+    public void lockVariantProperties() {
+        variantPropertiesApiServices.lockProperties();
     }
 }

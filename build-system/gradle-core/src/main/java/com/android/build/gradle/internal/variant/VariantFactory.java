@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.VariantOutput;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
@@ -43,13 +42,14 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.services.BaseServices;
+import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.services.VariantApiServices;
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantType;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.api.model.ObjectFactory;
 
 /**
  * Interface for Variant Factory.
@@ -62,22 +62,22 @@ public interface VariantFactory<
         VariantPropertiesT extends VariantPropertiesImpl> {
 
     @NonNull
-    VariantApiServices getVariantApiScope();
-
-    @NonNull
-    VariantPropertiesApiServices getVariantPropertiesApiScope();
-
-    @NonNull
     VariantT createVariantObject(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo);
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantApiServices variantApiServices);
 
     @NonNull
     UnitTestImpl createUnitTestObject(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo);
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantApiServices variantApiServices);
 
     @NonNull
     AndroidTestImpl createAndroidTestObject(
-            @NonNull ComponentIdentity componentIdentity, @NonNull VariantDslInfo variantDslInfo);
+            @NonNull ComponentIdentity componentIdentity,
+            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull VariantApiServices variantApiServices);
 
     @NonNull
     VariantPropertiesT createVariantPropertiesObject(
@@ -91,7 +91,9 @@ public interface VariantFactory<
             @NonNull BuildArtifactsHolder artifacts,
             @NonNull VariantScope variantScope,
             @NonNull BaseVariantData variantData,
-            @NonNull TransformManager transformManager);
+            @NonNull TransformManager transformManager,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull TaskCreationServices taskCreationServices);
 
     @NonNull
     UnitTestPropertiesImpl createUnitTestProperties(
@@ -105,7 +107,9 @@ public interface VariantFactory<
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
             @NonNull VariantPropertiesImpl testedVariantProperties,
-            @NonNull TransformManager transformManager);
+            @NonNull TransformManager transformManager,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull TaskCreationServices taskCreationServices);
 
     @NonNull
     AndroidTestPropertiesImpl createAndroidTestProperties(
@@ -119,7 +123,9 @@ public interface VariantFactory<
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
             @NonNull VariantPropertiesImpl testedVariantProperties,
-            @NonNull TransformManager transformManager);
+            @NonNull TransformManager transformManager,
+            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
+            @NonNull TaskCreationServices taskCreationServices);
 
     @NonNull
     BaseVariantData createVariantData(
@@ -147,24 +153,14 @@ public interface VariantFactory<
             @NonNull BaseVariantData variantData);
 
     @Nullable
-    default BaseVariantImpl createVariantApi(
+    BaseVariantImpl createVariantApi(
             @NonNull GlobalScope globalScope,
             @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull BaseVariantData variantData,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        Class<? extends BaseVariantImpl> implementationClass =
-                getVariantImplementationClass(variantData);
+            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider);
 
-        ObjectFactory objectFactory = globalScope.getDslServices().getObjectFactory();
-
-        return objectFactory.newInstance(
-                implementationClass,
-                variantData,
-                componentProperties,
-                objectFactory,
-                readOnlyObjectProvider,
-                globalScope.getProject().container(VariantOutput.class));
-    }
+    @NonNull
+    BaseServices getServicesForOldVariantObjectsOnly();
 
     @NonNull
     VariantType getVariantType();

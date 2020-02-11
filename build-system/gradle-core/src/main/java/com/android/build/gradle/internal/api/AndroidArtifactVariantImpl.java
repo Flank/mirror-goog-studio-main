@@ -21,11 +21,11 @@ import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.api.AndroidArtifactVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.builder.model.SigningConfig;
 import java.util.Set;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.model.ObjectFactory;
 
 /**
  * Implementation of the {@link AndroidArtifactVariant} interface around a {@link ApkVariantData}
@@ -36,10 +36,10 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl
 
     protected AndroidArtifactVariantImpl(
             @NonNull ComponentPropertiesImpl componentProperties,
-            @NonNull ObjectFactory objectFactory,
+            @NonNull BaseServices services,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(componentProperties, objectFactory, immutableObjectProvider, outputs);
+        super(componentProperties, services, immutableObjectProvider, outputs);
     }
 
     @NonNull

@@ -38,8 +38,10 @@ import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.services.VariantApiServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
@@ -58,23 +60,22 @@ import java.util.function.Consumer
 import java.util.stream.Collectors
 
 class ApplicationVariantFactory(
-    variantApiServices: VariantApiServices,
-    variantApiPropertiesScope: VariantPropertiesApiServices,
+    projectServices: ProjectServices,
     globalScope: GlobalScope
 ) : AbstractAppVariantFactory<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>(
-    variantApiServices,
-    variantApiPropertiesScope,
+    projectServices,
     globalScope
 ) {
 
     override fun createVariantObject(
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo
+        variantDslInfo: VariantDslInfo,
+        variantApiServices: VariantApiServices
     ): ApplicationVariantImpl {
         val extension = globalScope.extension as BaseAppModuleExtension
 
-        return globalScope
-            .dslServices
+        return projectServices
+            .objectFactory
             .newInstance(
                 ApplicationVariantImpl::class.java,
                 variantDslInfo,
@@ -95,10 +96,12 @@ class ApplicationVariantFactory(
         artifacts: BuildArtifactsHolder,
         variantScope: VariantScope,
         variantData: BaseVariantData,
-        transformManager: TransformManager
+        transformManager: TransformManager,
+        variantPropertiesApiServices: VariantPropertiesApiServices,
+        taskCreationServices: TaskCreationServices
     ): ApplicationVariantPropertiesImpl {
-        val variantProperties = globalScope
-            .dslServices
+        val variantProperties = projectServices
+            .objectFactory
             .newInstance(
                 ApplicationVariantPropertiesImpl::class.java,
                 componentIdentity,
@@ -113,6 +116,7 @@ class ApplicationVariantFactory(
                 variant.dependenciesInfo as DependenciesInfo,
                 transformManager,
                 variantPropertiesApiServices,
+                taskCreationServices,
                 globalScope
             )
 
@@ -267,7 +271,7 @@ class ApplicationVariantFactory(
             return
         }
         // if we have any ABI splits, whether it's a full or pure ABI splits, it's an error.
-        val issueReporter = globalScope.dslServices.issueReporter
+        val issueReporter = projectServices.issueReporter
         issueReporter.reportError(
             IssueReporter.Type.GENERIC, String.format(
                 "Conflicting configuration : '%1\$s' in ndk abiFilters "
@@ -282,7 +286,7 @@ class ApplicationVariantFactory(
         variantDslInfo: VariantDslInfo, variantOutputs: VariantOutputList
     ) {
         val supportedAbis: Set<String?>? = variantDslInfo.supportedAbis
-        val projectOptions = globalScope.projectOptions
+        val projectOptions = projectServices.projectOptions
         val buildTargetAbi =
             (if (projectOptions[BooleanOption.BUILD_ONLY_TARGET_ABI]
                 || globalScope.extension.splits.abi.isEnable
@@ -315,8 +319,7 @@ class ApplicationVariantFactory(
                     )
                 }
                 .collect(Collectors.toList())
-            globalScope
-                .dslServices
+            projectServices
                 .issueReporter
                 .reportWarning(
                     IssueReporter.Type.GENERIC, String.format(

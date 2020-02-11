@@ -246,6 +246,14 @@ public class GlobalScope {
                 .getArtifactFiles();
     }
 
+    /**
+     * Do not use unless you have to.
+     *
+     * <p>If the code has access to DslServices directly, use that. If the code has access to
+     * VariantPropertiesApiServices or VariantApiServices, use that. If the code has access to
+     * TaskCreationServices, use that
+     */
+    @Deprecated
     @NonNull
     public DslServices getDslServices() {
         return dslServices;

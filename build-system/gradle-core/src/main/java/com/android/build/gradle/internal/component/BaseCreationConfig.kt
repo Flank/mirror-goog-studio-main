@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
@@ -91,7 +92,7 @@ interface BaseCreationConfig : ComponentIdentity {
     val taskContainer: MutableTaskContainer
     val transformManager: TransformManager
     val paths: VariantPathHelper
-    val variantPropertiesApiServices: VariantPropertiesApiServices
+    val services: TaskCreationServices
     val globalScope: GlobalScope
 
     val layoutXmlProcessor: LayoutXmlProcessor

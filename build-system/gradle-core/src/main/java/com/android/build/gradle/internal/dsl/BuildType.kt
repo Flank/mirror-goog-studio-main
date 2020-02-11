@@ -130,7 +130,7 @@ open class BuildType @Inject constructor(
         POSTPROCESSING_BLOCK, OLD_DSL
     }
 
-    override val ndkConfig: NdkOptions = dslServices.objectFactory.newInstance(NdkOptions::class.java)
+    override val ndkConfig: NdkOptions = dslServices.newInstance(NdkOptions::class.java)
     override val externalNativeBuildOptions: ExternalNativeBuildOptions = dslServices.newInstance(
         ExternalNativeBuildOptions::class.java, dslServices
     )
@@ -229,8 +229,7 @@ open class BuildType @Inject constructor(
         action.invoke(javaCompileOptions)
     }
 
-    override val shaders: ShaderOptions =
-        dslServices.objectFactory.newInstance(ShaderOptions::class.java)
+    override val shaders: ShaderOptions = dslServices.newInstance(ShaderOptions::class.java)
 
     /**
      * Initialize the DSL object with the debug signingConfig. Not meant to be used from the build

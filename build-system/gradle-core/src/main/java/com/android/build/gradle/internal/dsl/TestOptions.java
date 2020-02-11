@@ -151,7 +151,7 @@ public class TestOptions
 
         @Inject
         public UnitTestOptions(@NonNull DslServices dslServices) {
-            testTasks = dslServices.getObjectFactory().domainObjectSet(Test.class);
+            testTasks = dslServices.domainObjectSet(Test.class);
         }
 
         public boolean isReturnDefaultValues() {

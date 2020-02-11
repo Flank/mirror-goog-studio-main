@@ -167,7 +167,7 @@ abstract class CommonExtensionImpl<
     }
 
     override val splits: Splits =
-        dslServices.newInstance(Splits::class.java, dslServices.objectFactory)
+        dslServices.newInstance(Splits::class.java, dslServices)
 
     override fun splits(action: Splits.() -> Unit) {
         action.invoke(splits)

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.services
 
 import com.android.build.api.variant.impl.GradleProperty
 import com.android.build.gradle.options.BooleanOption
+import org.gradle.api.Named
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -145,9 +146,12 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
+    override fun <T : Named> named(type: Class<T>, name: String): T =
+        projectServices.objectFactory.named(type, name)
+
     override fun file(file: Any): File = projectServices.fileResolver.invoke(file)
 
-    override fun lockProperties() {
+    fun lockProperties() {
         for (property in properties) {
             property.disallowChanges()
         }

@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.services.createProjectServices
+import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
@@ -80,7 +81,7 @@ class BundleAllClassesTest {
             )
         )
         val dslServices = createDslServices(projectServices)
-        val variantApiServices = createVariantPropertiesApiServices(projectServices)
+        val services = createTaskCreationServices(projectServices)
 
         MockitoAnnotations.initMocks(this)
         Mockito.`when`(componentProperties.artifacts).thenReturn(artifacts)
@@ -89,7 +90,7 @@ class BundleAllClassesTest {
         Mockito.`when`(componentProperties.variantScope).thenReturn(scope)
         Mockito.`when`(componentProperties.taskContainer).thenReturn(taskContainer)
         Mockito.`when`(componentProperties.variantData).thenReturn(variantData)
-        Mockito.`when`(componentProperties.variantPropertiesApiServices).thenReturn(variantApiServices)
+        Mockito.`when`(componentProperties.services).thenReturn(services)
         Mockito.`when`(variantData.allPostJavacGeneratedBytecode).thenReturn(postJavacClasses)
         Mockito.`when`(variantData.allPreJavacGeneratedBytecode).thenReturn(preJavacClasses)
         Mockito.`when`(globalScope.extension).thenReturn(extension)

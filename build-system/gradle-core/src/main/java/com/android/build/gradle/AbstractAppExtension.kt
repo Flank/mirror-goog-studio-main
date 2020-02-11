@@ -61,7 +61,7 @@ abstract class AbstractAppExtension(
     </pre> *
      */
     val applicationVariants: DomainObjectSet<ApplicationVariant> =
-        dslServices.objectFactory.domainObjectSet(ApplicationVariant::class.java)
+        dslServices.domainObjectSet(ApplicationVariant::class.java)
 
     override fun addVariant(variant: BaseVariant) {
         applicationVariants.add(variant as ApplicationVariant)

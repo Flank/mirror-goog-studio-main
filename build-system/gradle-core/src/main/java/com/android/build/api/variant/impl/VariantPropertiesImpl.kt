@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
@@ -43,7 +44,8 @@ abstract class VariantPropertiesImpl(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    variantApiServices: VariantPropertiesApiServices,
+    variantPropertiesApiServices: VariantPropertiesApiServices,
+    taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : ComponentPropertiesImpl(
     componentIdentity,
@@ -56,7 +58,8 @@ abstract class VariantPropertiesImpl(
     variantScope,
     variantData,
     transformManager,
-    variantApiServices,
+    variantPropertiesApiServices,
+    taskCreationServices,
     globalScope
 ), VariantProperties, VariantCreationConfig {
 

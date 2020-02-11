@@ -34,8 +34,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.DslServices;
-import com.android.build.gradle.internal.services.VariantApiServices;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
+import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.builder.profile.Recorder;
@@ -79,7 +78,7 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
                         sourceSetManager,
                         extraModelInfo,
                         new LibraryExtensionImpl(
-                                globalScope.getDslServices(),
+                                dslServices,
                                 buildTypeContainer,
                                 defaultConfig,
                                 productFlavorContainer,
@@ -100,11 +99,8 @@ public class LibraryPlugin extends BasePlugin<LibraryVariantImpl, LibraryVariant
     @NonNull
     @Override
     protected LibraryVariantFactory createVariantFactory(
-            @NonNull VariantApiServices variantApiServices,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull GlobalScope globalScope) {
-        return new LibraryVariantFactory(
-                variantApiServices, variantPropertiesApiServices, globalScope);
+            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
+        return new LibraryVariantFactory(projectServices, globalScope);
     }
 
     @Override

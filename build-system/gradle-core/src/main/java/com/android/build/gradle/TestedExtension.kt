@@ -39,10 +39,10 @@ abstract class TestedExtension(
 ), TestedAndroidConfig, com.android.build.api.dsl.TestedExtension {
 
     private val testVariantList: DomainObjectSet<TestVariant> =
-        dslServices.objectFactory.domainObjectSet(TestVariant::class.java)
+        dslServices.domainObjectSet(TestVariant::class.java)
 
     private val unitTestVariantList: DomainObjectSet<UnitTestVariant> =
-        dslServices.objectFactory.domainObjectSet(UnitTestVariant::class.java)
+        dslServices.domainObjectSet(UnitTestVariant::class.java)
 
     init {
         sourceSetManager.setUpTestSourceSet(VariantType.ANDROID_TEST_PREFIX)

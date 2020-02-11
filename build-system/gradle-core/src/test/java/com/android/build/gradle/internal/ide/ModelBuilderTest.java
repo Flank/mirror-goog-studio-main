@@ -63,6 +63,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.FakeServices;
 import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantInputModelBuilder;
@@ -501,8 +502,9 @@ public class ModelBuilderTest {
             @Nullable VariantPropertiesImpl testedVariant) {
         // prepare the objects required for the constructor
         final VariantType type = variantDslInfo.getVariantType();
-        VariantPropertiesApiServices variantApiServices =
+        VariantPropertiesApiServices variantPropertiesApiServices =
                 FakeServices.createVariantPropertiesApiServices();
+        TaskCreationServices taskCreationServices = FakeServices.createTaskCreationServices();
 
         ComponentIdentity componentIdentity =
                 new ComponentIdentityImpl(variantName, "flavorName", "debug", ImmutableList.of());
@@ -525,7 +527,7 @@ public class ModelBuilderTest {
                 || componentClass.equals(AndroidTestPropertiesImpl.class)) {
             assertThat(testedVariant).named("tested variant").isNotNull();
             ComponentT unitTestComponent =
-                    variantApiServices.newInstance(
+                    variantPropertiesApiServices.newInstance(
                             componentClass,
                             componentIdentity,
                             Mockito.mock(BuildFeatureValues.class),
@@ -538,7 +540,8 @@ public class ModelBuilderTest {
                             variantData,
                             testedVariant,
                             Mockito.mock(TransformManager.class),
-                            variantApiServices,
+                            variantPropertiesApiServices,
+                            taskCreationServices,
                             globalScope);
 
             testedVariant
@@ -553,7 +556,7 @@ public class ModelBuilderTest {
         if (componentClass.equals(ApplicationVariantPropertiesImpl.class)) {
             DependenciesInfo dependenciesInfo = Mockito.mock(DependenciesInfo.class);
 
-            return variantApiServices.newInstance(
+            return variantPropertiesApiServices.newInstance(
                     componentClass,
                     componentIdentity,
                     Mockito.mock(BuildFeatureValues.class),
@@ -566,11 +569,12 @@ public class ModelBuilderTest {
                     variantData,
                     dependenciesInfo,
                     Mockito.mock(TransformManager.class),
-                    variantApiServices,
+                    variantPropertiesApiServices,
+                    taskCreationServices,
                     globalScope);
         }
 
-        return variantApiServices.newInstance(
+        return variantPropertiesApiServices.newInstance(
                 componentClass,
                 componentIdentity,
                 Mockito.mock(BuildFeatureValues.class),
@@ -582,7 +586,8 @@ public class ModelBuilderTest {
                 variantScope,
                 variantData,
                 Mockito.mock(TransformManager.class),
-                variantApiServices,
+                variantPropertiesApiServices,
+                taskCreationServices,
                 globalScope);
     }
 

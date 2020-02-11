@@ -29,7 +29,7 @@ import java.io.File
  * Service object for the project, containing a bunch of project-provided items that can be exposed
  * to different stages of the plugin work.
  *
- * This is not meant to be exposed directly though. It's meant to be a convenient storage for
+ * This is not meant to be exposed directly to most classes. It's meant to be a convenient storage for
  * all these objects so that they don't have to be recreated or passed to methods/constructors
  * all the time.
  *

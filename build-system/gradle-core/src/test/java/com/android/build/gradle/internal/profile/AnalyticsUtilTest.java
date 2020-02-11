@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.dsl.Splits;
-import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
+import com.android.build.gradle.internal.services.FakeServices;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
@@ -68,7 +68,7 @@ public class AnalyticsUtilTest {
 
     @Test
     public void splitConverterTest() {
-        Splits splits = new Splits(FakeObjectFactory.getFactory());
+        Splits splits = new Splits(FakeServices.createDslServices());
         // Defaults
         {
             GradleBuildSplits proto = AnalyticsUtil.toProto(splits);

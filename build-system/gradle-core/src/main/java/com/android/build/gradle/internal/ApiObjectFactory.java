@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.api.UnitTestVariantImpl;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dsl.VariantOutputFactory;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import org.gradle.api.model.ObjectFactory;
@@ -44,7 +45,7 @@ import org.gradle.api.model.ObjectFactory;
  */
 public class ApiObjectFactory {
     @NonNull private final BaseExtension extension;
-    @NonNull private final VariantFactory variantFactory;
+    @NonNull private final VariantFactory<?, ?> variantFactory;
     @NonNull private final GlobalScope globalScope;
 
     @NonNull
@@ -52,7 +53,7 @@ public class ApiObjectFactory {
 
     public ApiObjectFactory(
             @NonNull BaseExtension extension,
-            @NonNull VariantFactory variantFactory,
+            @NonNull VariantFactory<?, ?> variantFactory,
             @NonNull GlobalScope globalScope) {
         this.extension = extension;
         this.variantFactory = variantFactory;
@@ -74,21 +75,21 @@ public class ApiObjectFactory {
             return null;
         }
 
-        ObjectFactory objectFactory = globalScope.getDslServices().getObjectFactory();
-
         if (variantFactory.hasTestScope()) {
+            BaseServices services = variantFactory.getServicesForOldVariantObjectsOnly();
+
             VariantPropertiesImpl variantProperties = (VariantPropertiesImpl) componentProperties;
             ComponentPropertiesImpl androidTestVariantProperties =
                     variantProperties.getTestComponents().get(ANDROID_TEST);
 
             if (androidTestVariantProperties != null) {
                 TestVariantImpl androidTestVariant =
-                        objectFactory.newInstance(
+                        services.newInstance(
                                 TestVariantImpl.class,
                                 androidTestVariantProperties.getVariantData(),
                                 androidTestVariantProperties,
                                 variantApi,
-                                objectFactory,
+                                services,
                                 readOnlyObjectProvider,
                                 globalScope.getProject().container(VariantOutput.class));
                 createVariantOutput(androidTestVariantProperties, androidTestVariant);
@@ -102,12 +103,12 @@ public class ApiObjectFactory {
 
             if (unitTestVariantProperties != null) {
                 UnitTestVariantImpl unitTestVariant =
-                        objectFactory.newInstance(
+                        services.newInstance(
                                 UnitTestVariantImpl.class,
                                 unitTestVariantProperties.getVariantData(),
                                 unitTestVariantProperties,
                                 variantApi,
-                                objectFactory,
+                                services,
                                 readOnlyObjectProvider,
                                 globalScope.getProject().container(VariantOutput.class));
 

@@ -35,8 +35,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.DslServices;
-import com.android.build.gradle.internal.services.VariantApiServices;
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
+import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.tasks.ApplicationTaskManager;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.ComponentInfo;
@@ -109,7 +108,7 @@ public class AppPlugin
                         sourceSetManager,
                         extraModelInfo,
                         new ApplicationExtensionImpl(
-                                globalScope.getDslServices(),
+                                dslServices,
                                 buildTypeContainer,
                                 defaultConfig,
                                 productFlavorContainer,
@@ -140,10 +139,7 @@ public class AppPlugin
     @NonNull
     @Override
     protected ApplicationVariantFactory createVariantFactory(
-            @NonNull VariantApiServices variantApiServices,
-            @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
-            @NonNull GlobalScope globalScope) {
-        return new ApplicationVariantFactory(
-                variantApiServices, variantPropertiesApiServices, globalScope);
+            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
+        return new ApplicationVariantFactory(projectServices, globalScope);
     }
 }

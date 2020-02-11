@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.dsl.DslVariableFactory
+import org.gradle.api.DomainObjectSet
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
@@ -33,6 +34,16 @@ import java.io.File
  */
 interface DslServices: BaseServices {
 
+    fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T>
+
+    /**
+     * Direct access to the instantiator is deprecated. Using direct methods instead (like [DslServices.domainObjectSet] or [DslServices.newInstance].)
+     *
+     * If the direct method you want does not yet exist, ask yourself whether you really need this object before using [DslServices.objectFactory].
+     * If the need is valid then add a new method instead. Direct access to the objectFactory
+     * will disappear in the future.
+     */
+    @Deprecated("Use instantiator methods directly")
     val objectFactory: ObjectFactory
 
     val logger: Logger

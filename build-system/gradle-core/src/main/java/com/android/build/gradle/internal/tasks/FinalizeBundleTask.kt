@@ -178,7 +178,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                     taskProvider,
                     FinalizeBundleTask::finalBundleFile,
                     FileUtils.join(
-                        creationConfig.variantPropertiesApiServices.file(apkLocationOverride),
+                        creationConfig.services.file(apkLocationOverride),
                         creationConfig.dirName).absolutePath,
                     bundleName
                 )

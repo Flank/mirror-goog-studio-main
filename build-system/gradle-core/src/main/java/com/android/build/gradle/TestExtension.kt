@@ -81,7 +81,7 @@ open class TestExtension(
     ActionableVariantObjectOperationsExecutor<TestVariant<TestVariantProperties>, TestVariantProperties> by publicExtensionImpl {
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =
-        dslServices.objectFactory.domainObjectSet(ApplicationVariant::class.java)
+        dslServices.domainObjectSet(ApplicationVariant::class.java)
 
     private var _targetProjectPath: String? = null
 
@@ -90,7 +90,7 @@ open class TestExtension(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
             projectOptions,
-            globalScope.dslServices
+            dslServices
         )
 
     // this is needed because the impl class needs this but the interface does not,
