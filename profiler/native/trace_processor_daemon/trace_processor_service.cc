@@ -111,7 +111,7 @@ void TraceProcessorServiceImpl::LoadAllProcessMetadata(
     auto tid = it_thread.Get(2).long_value;
     thread_proto->set_id(tid);
 
-    auto name_sql_value = it_process.Get(3);
+    auto name_sql_value = it_thread.Get(3);
     auto name = name_sql_value.is_null() ? "" : name_sql_value.string_value;
     thread_proto->set_name(name);
   }
