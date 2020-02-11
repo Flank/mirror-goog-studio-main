@@ -76,6 +76,7 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,
     maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -84,6 +85,7 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,
     maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -92,6 +94,7 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/api"],
     maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -100,6 +103,7 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/basic"],
     maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -108,6 +112,7 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/basic"],
     maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -116,6 +121,7 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/composeHelloWorld"],
     maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -124,6 +130,7 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,
     maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -132,6 +139,7 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/densitySplit"],
     maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -140,6 +148,7 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/flavored"],
     maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
@@ -148,6 +157,7 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/parentLibsTest"],
     maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
