@@ -31,6 +31,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.xml.parsers.ParserConfigurationException;
+import org.gradle.api.artifacts.transform.CacheableTransform;
 import org.gradle.api.artifacts.transform.InputArtifact;
 import org.gradle.api.artifacts.transform.TransformAction;
 import org.gradle.api.artifacts.transform.TransformOutputs;
@@ -46,6 +47,7 @@ import org.xml.sax.SAXException;
  * <p>This means that one artifact contains all the information needed to build a {@link
  * SymbolTable} for {@link LinkApplicationAndroidResourcesTask}
  */
+@CacheableTransform
 public abstract class LibrarySymbolTableTransform
         implements TransformAction<GenericTransformParameters> {
 

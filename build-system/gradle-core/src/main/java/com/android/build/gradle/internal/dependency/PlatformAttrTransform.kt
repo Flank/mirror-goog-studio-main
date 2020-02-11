@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dependency
 import com.android.build.gradle.internal.tasks.recordArtifactTransformSpan
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType
 import com.google.common.collect.Lists
+import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
@@ -35,6 +36,7 @@ import java.util.zip.ZipFile
 /**
  * Extract attr IDs from a jar file and puts it in a R.txt
  */
+@CacheableTransform
 abstract class PlatformAttrTransform : TransformAction<GenericTransformParameters> {
     @get:Classpath
     @get:InputArtifact

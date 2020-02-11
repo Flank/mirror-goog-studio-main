@@ -29,6 +29,7 @@ import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.symbols.rTxtToSymbolTable
 import com.android.ide.common.xml.AndroidManifestParser
 import com.google.common.annotations.VisibleForTesting
+import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
@@ -47,6 +48,7 @@ import java.util.zip.ZipFile
 /**
  * A Gradle Artifact [TransformAction] from a processed AAR to a single classes JAR file.
  */
+@CacheableTransform
 abstract class AarToClassTransform : TransformAction<AarToClassTransform.Params> {
 
     interface Params : TransformParameters {

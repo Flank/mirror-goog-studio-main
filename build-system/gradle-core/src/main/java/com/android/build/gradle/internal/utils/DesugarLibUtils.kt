@@ -212,7 +212,9 @@ private fun getDesugarLibLintFromTransform(
 /**
  * Extract the desugar config json file from desugar lib configuration jar.
  */
+@CacheableTransform
 abstract class DesugarLibConfigExtractor : TransformAction<TransformParameters.None> {
+    @get:PathSensitive(PathSensitivity.NONE)
     @get:InputArtifact
     abstract val inputArtifact: Provider<FileSystemLocation>
 
