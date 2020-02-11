@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.AdbOptions
+import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.DataBindingOptions
@@ -82,6 +83,7 @@ open class LibraryExtension(
             AaptOptions,
             AbiSplitOptions,
             AdbOptions,
+            AnnotationProcessorOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,

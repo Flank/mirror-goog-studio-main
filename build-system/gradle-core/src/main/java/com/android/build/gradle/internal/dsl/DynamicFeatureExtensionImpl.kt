@@ -35,6 +35,7 @@ class DynamicFeatureExtensionImpl(
     signingConfigs: NamedDomainObjectContainer<SigningConfig>
 )  :
     CommonExtensionImpl<
+            AnnotationProcessorOptions,
             DynamicFeatureBuildFeatures,
             BuildType,
             DefaultConfig,
@@ -53,6 +54,7 @@ class DynamicFeatureExtensionImpl(
             AaptOptions,
             AbiSplitOptions,
             AdbOptions,
+            AnnotationProcessorOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,

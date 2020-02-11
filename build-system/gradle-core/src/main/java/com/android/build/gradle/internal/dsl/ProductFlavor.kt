@@ -55,7 +55,8 @@ import org.gradle.api.provider.Property
  * [filter variants using `android.variantFilter`](https://developer.android.com/studio/build/build-variants.html#filter-variants).
  */
 open class ProductFlavor @Inject constructor(name: String, dslServices: DslServices) :
-    BaseFlavor(name, dslServices), com.android.build.api.dsl.ProductFlavor {
+    BaseFlavor(name, dslServices),
+    com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions> {
 
     private val _isDefaultProperty =
         dslServices.objectFactory.property(Boolean::class.java).convention(false)

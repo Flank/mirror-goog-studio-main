@@ -36,6 +36,7 @@ class TestExtensionImpl(
     signingConfigs: NamedDomainObjectContainer<SigningConfig>
 ) :
     CommonExtensionImpl<
+            AnnotationProcessorOptions,
             TestBuildFeatures,
             BuildType,
             DefaultConfig,
@@ -53,6 +54,7 @@ class TestExtensionImpl(
             AaptOptions,
             AbiSplitOptions,
             AdbOptions,
+            AnnotationProcessorOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,

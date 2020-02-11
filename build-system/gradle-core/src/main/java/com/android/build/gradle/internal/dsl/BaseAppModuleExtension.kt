@@ -55,6 +55,7 @@ open class BaseAppModuleExtension(
         AaptOptions,
         AbiSplitOptions,
         AdbOptions,
+        AnnotationProcessorOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,

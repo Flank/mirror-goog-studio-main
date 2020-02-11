@@ -21,6 +21,7 @@ import org.gradle.api.Named
 
 /** DSL object to configure product flavors. */
 @Incubating
-interface ProductFlavor : Named, BaseFlavor {
+interface ProductFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions> : Named,
+    BaseFlavor<AnnotationProcessorOptionsT> {
     var isDefault: Boolean
 }

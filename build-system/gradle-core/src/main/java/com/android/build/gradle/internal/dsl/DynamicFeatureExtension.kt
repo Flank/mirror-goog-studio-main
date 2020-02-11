@@ -48,6 +48,7 @@ internal open class DynamicFeatureExtension(
         AaptOptions,
         AbiSplitOptions,
         AdbOptions,
+        AnnotationProcessorOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,

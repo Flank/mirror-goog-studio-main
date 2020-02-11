@@ -25,7 +25,7 @@ import java.io.File
  * That is, [BuildType] and [ProductFlavor] and [DefaultConfig].
  */
 @Incubating
-interface BaseConfig {
+interface BaseConfig<AnnotationProcessorOptionsT : AnnotationProcessorOptions> {
     /**
      * Application id suffix. It is appended to the "base" application id when calculating the final
      * application id for a variant.
@@ -214,4 +214,10 @@ interface BaseConfig {
      * [Inject Build Variables into the Manifest](https://developer.android.com/studio/build/manifest-build-variables.html).
      */
     fun addManifestPlaceholders(manifestPlaceholders: Map<String, Any>)
+
+    /** Options for configuring Java compilation. */
+    val javaCompileOptions: JavaCompileOptions<AnnotationProcessorOptionsT>
+
+    /** Options for configuring Java compilation. */
+    fun javaCompileOptions(action: JavaCompileOptions<AnnotationProcessorOptionsT>.() -> Unit)
 }

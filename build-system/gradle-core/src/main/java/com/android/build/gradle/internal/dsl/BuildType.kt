@@ -35,9 +35,12 @@ import java.io.Serializable
 import javax.inject.Inject
 
 /** DSL object to configure build types.  */
-open class BuildType @Inject constructor(private val name: String, private val dslServices: DslServices) :
+open class BuildType @Inject constructor(
+    private val name: String,
+    private val dslServices: DslServices
+) :
     AbstractBuildType(), CoreBuildType, Serializable,
-    com.android.build.api.dsl.BuildType {
+    com.android.build.api.dsl.BuildType<AnnotationProcessorOptions> {
 
     /**
      * Name of this build type.
@@ -219,11 +222,15 @@ open class BuildType @Inject constructor(private val name: String, private val d
         matchingFallbacks = ImmutableList.of(fallback)
     }
 
-    /** Options for configuration Java compilation.  */
     override val javaCompileOptions: JavaCompileOptions =
-        dslServices.objectFactory.newInstance(JavaCompileOptions::class.java, dslServices)
+        dslServices.newInstance(JavaCompileOptions::class.java, dslServices)
 
-    override val shaders: ShaderOptions = dslServices.objectFactory.newInstance(ShaderOptions::class.java)
+    override fun javaCompileOptions(action: com.android.build.api.dsl.JavaCompileOptions<AnnotationProcessorOptions>.() -> Unit) {
+        action.invoke(javaCompileOptions)
+    }
+
+    override val shaders: ShaderOptions =
+        dslServices.objectFactory.newInstance(ShaderOptions::class.java)
 
     /**
      * Initialize the DSL object with the debug signingConfig. Not meant to be used from the build

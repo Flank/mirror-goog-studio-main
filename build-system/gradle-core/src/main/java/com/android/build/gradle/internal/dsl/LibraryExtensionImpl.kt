@@ -36,6 +36,7 @@ class LibraryExtensionImpl(
     signingConfigs: NamedDomainObjectContainer<SigningConfig>
 ) :
     CommonExtensionImpl<
+            AnnotationProcessorOptions,
             LibraryBuildFeatures,
             BuildType,
             DefaultConfig,
@@ -53,6 +54,7 @@ class LibraryExtensionImpl(
             AaptOptions,
             AbiSplitOptions,
             AdbOptions,
+            AnnotationProcessorOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,

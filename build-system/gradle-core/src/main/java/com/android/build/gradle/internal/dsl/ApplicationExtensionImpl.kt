@@ -38,6 +38,7 @@ class ApplicationExtensionImpl(
     signingConfigs: NamedDomainObjectContainer<SigningConfig>
 ) :
     CommonExtensionImpl<
+            AnnotationProcessorOptions,
             ApplicationBuildFeatures,
             BuildType,
             DefaultConfig,
@@ -55,6 +56,7 @@ class ApplicationExtensionImpl(
             AaptOptions,
             AbiSplitOptions,
             AdbOptions,
+            AnnotationProcessorOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,

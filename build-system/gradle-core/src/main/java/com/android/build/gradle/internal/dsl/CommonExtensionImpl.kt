@@ -32,13 +32,14 @@ import java.util.function.Supplier
 
 /** Internal implementation of the 'new' DSL interface */
 abstract class CommonExtensionImpl<
-        BuildFeaturesT: BuildFeatures,
-        BuildTypeT: com.android.build.api.dsl.BuildType,
-        DefaultConfigT: DefaultConfig,
-        ProductFlavorT: com.android.build.api.dsl.ProductFlavor,
-        SigningConfigT: com.android.build.api.dsl.SigningConfig,
-        VariantT: Variant<VariantPropertiesT>,
-        VariantPropertiesT: VariantProperties>(
+        AnnotationProcessorOptionsT : com.android.build.api.dsl.AnnotationProcessorOptions,
+        BuildFeaturesT : BuildFeatures,
+        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptionsT>,
+        DefaultConfigT : DefaultConfig<AnnotationProcessorOptionsT>,
+        ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptionsT>,
+        SigningConfigT : com.android.build.api.dsl.SigningConfig,
+        VariantT : Variant<VariantPropertiesT>,
+        VariantPropertiesT : VariantProperties>(
     protected val dslServices: DslServices,
     override val buildTypes: NamedDomainObjectContainer<BuildTypeT>,
     override val defaultConfig: DefaultConfigT,
@@ -48,6 +49,7 @@ abstract class CommonExtensionImpl<
         AaptOptions,
         AbiSplitOptions,
         AdbOptions,
+        AnnotationProcessorOptionsT,
         BuildFeaturesT,
         BuildTypeT,
         CmakeOptions,
