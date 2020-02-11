@@ -419,10 +419,12 @@ def _iml_test_module_impl(ctx):
             providers += [dep[JavaInfo]]
         if hasattr(dep, "module"):
             providers += [dep.module.test_provider]
-    combined = java_common.merge(providers)
-    return struct(
-        providers = [combined],
-    )
+    java_info = java_common.merge(providers)
+    runfiles = ctx.runfiles(transitive_files = ctx.attr.iml_module.module.transitive_data)
+    return [
+        java_info,
+        DefaultInfo(runfiles = runfiles),
+    ]
 
 _iml_test_module_ = rule(
     attrs = {
