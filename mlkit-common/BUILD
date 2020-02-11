@@ -15,6 +15,7 @@ iml_module(
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:commons-io[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
+        "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
     ],
 )
 
@@ -23,6 +24,7 @@ java_library(
     srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
+        "//tools/base/sdk-common:studio.android.sdktools.sdk-common",
         "//tools/base/third_party:com.google.flatbuffers_flatbuffers-java",
         "//tools/base/third_party:org.tensorflow_tensorflow-lite-support",
     ],
