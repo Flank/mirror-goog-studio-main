@@ -66,9 +66,10 @@ public class ModelData {
         return modelLicense;
     }
 
-    public static ModelData buildFrom(MetadataExtractor extractor) {
-        ModelData modelData = new ModelData();
+    public static ModelData buildFrom(MetadataExtractor extractor) throws ModelParsingException {
+        ModelVerifier.verifyModel(extractor);
 
+        ModelData modelData = new ModelData();
         int inputLength = extractor.getInputTensorCount(0);
         for (int i = 0; i < inputLength; i++) {
             modelData.inputs.add(Param.parseFrom(extractor, Param.Source.INPUT, i));

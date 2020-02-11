@@ -43,7 +43,7 @@ public class ModelDataTest {
     }
 
     @Test
-    public void testModelExtractedCorrectly() {
+    public void testModelExtractedCorrectly() throws ModelParsingException {
         ModelData modelData = ModelData.buildFrom(metadataExtractor);
 
         assertEquals(modelData.getInputs().size(), 1);

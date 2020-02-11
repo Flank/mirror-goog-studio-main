@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codebl
 import com.android.tools.mlkit.MetadataExtractor;
 import com.android.tools.mlkit.MlkitNames;
 import com.android.tools.mlkit.ModelData;
+import com.android.tools.mlkit.ModelParsingException;
 import com.android.tools.mlkit.Param;
 import com.google.common.base.CaseFormat;
 import com.squareup.javapoet.ClassName;
@@ -51,7 +52,8 @@ public class TfliteModelGenerator implements ModelGenerator {
     private final String className;
     private final String packageName;
 
-    public TfliteModelGenerator(File modelFile, String packageName, String localModelPath) {
+    public TfliteModelGenerator(File modelFile, String packageName, String localModelPath)
+            throws ModelParsingException {
         this.extractor = ModelUtils.createMetadataExtractor(modelFile);
         this.localModelPath = localModelPath;
         this.modelData = ModelData.buildFrom(extractor);

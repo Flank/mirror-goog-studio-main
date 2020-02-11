@@ -23,11 +23,13 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.TfliteModelGenerator;
 import com.android.tools.mlkit.MlkitNames;
+import com.android.tools.mlkit.ModelParsingException;
 import java.io.File;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.FileVisitor;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
@@ -63,12 +65,16 @@ public abstract class GenerateMlModelClass extends NonIncrementalTask {
                     public void visitFile(FileVisitDetails fileVisitDetails) {
                         File modelFile = fileVisitDetails.getFile();
                         if (modelFile.getName().endsWith(".tflite")) {
-                            TfliteModelGenerator modelGenerator =
-                                    new TfliteModelGenerator(
-                                            modelFile,
-                                            getPackageName().get() + MlkitNames.PACKAGE_SUFFIX,
-                                            fileVisitDetails.getRelativePath().getPathString());
-                            modelGenerator.generateBuildClass(getSourceOutDir());
+                            try {
+                                TfliteModelGenerator modelGenerator =
+                                        new TfliteModelGenerator(
+                                                modelFile,
+                                                getPackageName().get() + MlkitNames.PACKAGE_SUFFIX,
+                                                fileVisitDetails.getRelativePath().getPathString());
+                                modelGenerator.generateBuildClass(getSourceOutDir());
+                            } catch (ModelParsingException e) {
+                                Logging.getLogger(this.getClass()).warn(e.getMessage());
+                            }
                         }
                     }
                 });
