@@ -88,8 +88,6 @@ abstract class BaseVariantData(
     var outputsAreSigned = false
     val outputFactory: OutputFactory
     @JvmField
-    var variantOutputFactory: VariantOutputFactory? = null
-    @JvmField
     var applicationIdTextResource: TextResource = globalScope.project.resources.text.fromString("")
 
     abstract val description: String

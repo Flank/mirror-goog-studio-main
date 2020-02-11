@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
-import org.gradle.api.model.ObjectFactory;
 
 /**
  * Factory to create ApiObject from VariantData.
@@ -63,9 +62,8 @@ public class ApiObjectFactory {
     public BaseVariantImpl create(@NonNull ComponentPropertiesImpl componentProperties) {
         BaseVariantData variantData = componentProperties.getVariantData();
         if (componentProperties.getVariantType().isTestComponent()) {
-            // Testing variants are handled together with their "owners".
-            createVariantOutput(componentProperties, null);
-            return null;
+            throw new RuntimeException(
+                    "Testing variants are handled together with their \"owners\".");
         }
 
         BaseVariantImpl variantApi =
@@ -134,28 +132,24 @@ public class ApiObjectFactory {
     private void createVariantOutput(
             @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull BaseVariantImpl variantApi) {
-        ObjectFactory objectFactory = globalScope.getDslServices().getObjectFactory();
 
-        componentProperties.getVariantData().variantOutputFactory =
+        final BaseServices services = variantFactory.getServicesForOldVariantObjectsOnly();
+        VariantOutputFactory variantOutputFactory =
                 new VariantOutputFactory(
                         (componentProperties.getVariantType().isAar())
                                 ? LibraryVariantOutputImpl.class
                                 : ApkVariantOutputImpl.class,
-                        objectFactory,
+                        services,
                         extension,
                         variantApi,
                         componentProperties.getTaskContainer(),
-                        globalScope.getDslServices().getDeprecationReporter());
+                        services.getDeprecationReporter());
 
         componentProperties
                 .getOutputs()
                 .forEach(
-                        variantOutput ->
-                                // pass the new api variant output object so the override method can
-                                // delegate to the new location.
-                                componentProperties
-                                        .getVariantData()
-                                        .variantOutputFactory
-                                        .create(variantOutput));
+                        // pass the new api variant output object so the override method can
+                        // delegate to the new location.
+                        variantOutputFactory::create);
     }
 }
