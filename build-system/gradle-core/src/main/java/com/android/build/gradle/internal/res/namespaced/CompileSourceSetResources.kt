@@ -233,7 +233,7 @@ abstract class CompileSourceSetResources : IncrementalTask() {
             task.dependsOn(creationConfig.taskContainer.resourceGenTask)
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                creationConfig.globalScope.projectOptions
+                creationConfig.services.projectOptions
             )
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }

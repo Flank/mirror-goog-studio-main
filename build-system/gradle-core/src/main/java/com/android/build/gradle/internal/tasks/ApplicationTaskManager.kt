@@ -254,7 +254,7 @@ class ApplicationTaskManager(
         taskFactory.register(
             PerModuleBundleTask.CreationAction(
                 variantProperties,
-                TaskManager.packagesCustomClassDependencies(variantProperties, projectOptions)
+                TaskManager.packagesCustomClassDependencies(variantProperties)
             )
         )
 
@@ -272,8 +272,8 @@ class ApplicationTaskManager(
                 if (includeSdkInfoInBundle) {
                     taskFactory.register(BundleReportDependenciesTask.CreationAction(variantProperties))
                 }
-                if (includeSdkInfoInApk && variantProperties.globalScope
-                    .projectOptions[BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS]) {
+                if (includeSdkInfoInApk && variantProperties.services
+                        .projectOptions[BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS]) {
                     taskFactory.register(SdkDependencyDataGeneratorTask.CreationAction(variantProperties))
                 }
             }

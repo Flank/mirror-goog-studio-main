@@ -187,7 +187,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
             task.aapt2Version = aapt2Version
             task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                creationConfig.globalScope.projectOptions
+                creationConfig.services.projectOptions
             )
             task.noCompress =
                 creationConfig.globalScope.extension.aaptOptions.noCompress.toList().sorted()

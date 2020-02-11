@@ -211,7 +211,7 @@ public abstract class AbstractAppTaskManager<
         if (variantType.isApk()) {
             boolean useDependencyConstraints =
                     componentProperties
-                            .getGlobalScope()
+                            .getServices()
                             .getProjectOptions()
                             .get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS);
 
@@ -290,7 +290,10 @@ public abstract class AbstractAppTaskManager<
                 Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
 
         // TODO(b/138780301): Also use it in android tests.
-        if (projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
+        if (variantProperties
+                        .getServices()
+                        .getProjectOptions()
+                        .get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
                 && !variantProperties.getVariantType().isForTesting()
                 && !variantProperties
                         .getGlobalScope()

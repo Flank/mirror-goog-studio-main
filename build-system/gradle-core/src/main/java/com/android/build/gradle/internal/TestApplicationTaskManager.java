@@ -117,7 +117,7 @@ public class TestApplicationTaskManager
                         testingApk,
                         testedApks);
 
-        configureTestData(testData);
+        configureTestData(testVariantProperties, testData);
 
         // create the test connected check task.
         TaskProvider<DeviceProviderInstrumentTestTask> instrumentTestTask =

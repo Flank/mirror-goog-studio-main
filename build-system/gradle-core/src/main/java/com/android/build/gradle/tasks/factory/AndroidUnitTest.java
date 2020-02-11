@@ -112,7 +112,8 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             boolean includeAndroidResources =
                     extension.getTestOptions().getUnitTests().isIncludeAndroidResources();
             boolean useRelativePathInTestConfig =
-                    globalScope
+                    creationConfig
+                            .getServices()
                             .getProjectOptions()
                             .get(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG);
 
@@ -194,7 +195,10 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
 
             // 4. The separately compile R class, if applicable.
             if (!globalScope.getExtension().getAaptOptions().getNamespaced()
-                    && !globalScope.getProjectOptions().get(BooleanOption.GENERATE_R_JAVA)) {
+                    && !component
+                            .getServices()
+                            .getProjectOptions()
+                            .get(BooleanOption.GENERATE_R_JAVA)) {
                 collection.from(component.getVariantScope().getRJarForUnitTests());
             }
 

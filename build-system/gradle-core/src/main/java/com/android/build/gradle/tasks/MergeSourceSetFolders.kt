@@ -305,7 +305,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
             task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
 
-            task.errorFormatMode = SyncOptions.getErrorFormatMode(creationConfig.globalScope.projectOptions)
+            task.errorFormatMode = SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions)
         }
     }
 

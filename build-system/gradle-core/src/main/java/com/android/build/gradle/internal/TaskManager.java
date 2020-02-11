@@ -300,7 +300,6 @@ public abstract class TaskManager<
     public static final String CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar";
 
     @NonNull protected final Project project;
-    @NonNull protected final ProjectOptions projectOptions;
     @NonNull protected final BaseExtension extension;
     @NonNull private final List<ComponentInfo<VariantT, VariantPropertiesT>> variants;
 
@@ -348,7 +347,6 @@ public abstract class TaskManager<
         this.hasFlavors = hasFlavors;
         this.globalScope = globalScope;
         this.project = globalScope.getProject();
-        this.projectOptions = globalScope.getProjectOptions();
         this.extension = extension;
         this.recorder = recorder;
         this.logger = Logging.getLogger(this.getClass());
@@ -438,7 +436,10 @@ public abstract class TaskManager<
 
         if (variantProperties.getVariantDslInfo().isLegacyMultiDexMode()) {
             String multiDexDependency =
-                    globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
+                    variantProperties
+                                    .getServices()
+                                    .getProjectOptions()
+                                    .get(BooleanOption.USE_ANDROID_X)
                             ? ANDROIDX_MULTIDEX_MULTIDEX
                             : COM_ANDROID_SUPPORT_MULTIDEX;
             project.getDependencies()
@@ -507,7 +508,10 @@ public abstract class TaskManager<
         if (componentProperties.getVariantType().isApk()) { // ANDROID_TEST
             if (variantDslInfo.isLegacyMultiDexMode()) {
                 String multiDexInstrumentationDep =
-                        globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
+                        componentProperties
+                                        .getServices()
+                                        .getProjectOptions()
+                                        .get(BooleanOption.USE_ANDROID_X)
                                 ? ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION
                                 : COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION;
                 project.getDependencies()
@@ -932,18 +936,20 @@ public abstract class TaskManager<
 
     /** Returns whether or not dependencies from the {@link CustomClassTransform} are packaged */
     protected static boolean packagesCustomClassDependencies(
-            @NonNull BaseCreationConfig creationConfig, @NonNull ProjectOptions options) {
-        return appliesCustomClassTransforms(creationConfig, options)
+            @NonNull BaseCreationConfig creationConfig) {
+        return appliesCustomClassTransforms(creationConfig)
                 && !creationConfig.getVariantType().isDynamicFeature();
     }
 
     /** Returns whether or not custom class transforms are applied */
     protected static boolean appliesCustomClassTransforms(
-            @NonNull BaseCreationConfig creationConfig, @NonNull ProjectOptions options) {
+            @NonNull BaseCreationConfig creationConfig) {
         if (creationConfig instanceof ApkCreationConfig) {
             return ((ApkCreationConfig) creationConfig).getDebuggable()
                     && !creationConfig.getVariantType().isForTesting()
-                    && !getAdvancedProfilingTransforms(options).isEmpty();
+                    && !getAdvancedProfilingTransforms(
+                                    creationConfig.getServices().getProjectOptions())
+                            .isEmpty();
         }
         return false;
     }
@@ -963,7 +969,10 @@ public abstract class TaskManager<
             @NonNull ApkCreationConfig creationConfig) {
         return taskFactory.register(
                 new ProcessApplicationManifest.CreationAction(
-                        creationConfig, !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
+                        creationConfig,
+                        !getAdvancedProfilingTransforms(
+                                        creationConfig.getServices().getProjectOptions())
+                                .isEmpty()));
     }
 
     protected void createProcessTestManifestTask(
@@ -1147,8 +1156,7 @@ public abstract class TaskManager<
     }
 
     public void createMlkitTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (projectOptions.get(BooleanOption.ENABLE_MLKIT)) {
-            VariantScope scope = componentProperties.getVariantScope();
+        if (componentProperties.getServices().getProjectOptions().get(BooleanOption.ENABLE_MLKIT)) {
             TaskProvider<GenerateMlModelClass> generateMlModelClassTask =
                     taskFactory.register(
                             new GenerateMlModelClass.CreationAction(componentProperties));
@@ -1185,7 +1193,10 @@ public abstract class TaskManager<
                 globalScope.getProjectBaseName());
 
         // TODO(b/138780301): Also use it in android tests.
-        if (projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
+        if (componentProperties
+                        .getServices()
+                        .getProjectOptions()
+                        .get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
                 && !componentProperties.getVariantType().isForTesting()
                 && !globalScope.getExtension().getAaptOptions().getNamespaced()) {
             // Generate the COMPILE TIME only R class using the local resources instead of waiting
@@ -1265,6 +1276,8 @@ public abstract class TaskManager<
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules) {
 
         BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
+        ProjectOptions projectOptions = componentProperties.getServices().getProjectOptions();
+
         if (mergeType == MergeType.PACKAGE) {
             // MergeType.PACKAGE means we will only merged the resources from our current module
             // (little merge). This is used for finding what goes into the AAR (packaging), and also
@@ -1709,7 +1722,10 @@ public abstract class TaskManager<
     protected void registerRClassTransformStream(
             @NonNull ComponentPropertiesImpl componentProperties) {
         if (globalScope.getExtension().getAaptOptions().getNamespaced()
-                || projectOptions.get(BooleanOption.GENERATE_R_JAVA)) {
+                || componentProperties
+                        .getServices()
+                        .getProjectOptions()
+                        .get(BooleanOption.GENERATE_R_JAVA)) {
             return;
         }
 
@@ -1996,7 +2012,7 @@ public abstract class TaskManager<
                             isLibrary ? null : testedApkFileCollection);
         }
 
-        configureTestData(testData);
+        configureTestData(androidTestProperties, testData);
 
         TaskProvider<DeviceProviderInstrumentTestTask> connectedTask =
                 taskFactory.register(
@@ -2154,16 +2170,17 @@ public abstract class TaskManager<
         }
 
         // ----- Android studio profiling transforms
-        if (appliesCustomClassTransforms(componentProperties, projectOptions)) {
-            for (String jar : getAdvancedProfilingTransforms(projectOptions)) {
+
+        if (appliesCustomClassTransforms(componentProperties)) {
+            for (String jar :
+                    getAdvancedProfilingTransforms(
+                            componentProperties.getServices().getProjectOptions())) {
                 if (jar != null) {
                     transformManager.addTransform(
                             taskFactory,
                             componentProperties,
                             new CustomClassTransform(
-                                    jar,
-                                    packagesCustomClassDependencies(
-                                            componentProperties, projectOptions)));
+                                    jar, packagesCustomClassDependencies(componentProperties)));
                 }
             }
         }
@@ -2284,14 +2301,21 @@ public abstract class TaskManager<
         boolean supportsDesugaring =
                 java8SLangSupport == Java8LangSupport.UNUSED
                         || (java8SLangSupport == Java8LangSupport.D8
-                                && projectOptions.get(
-                                        BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM));
+                                && componentProperties
+                                        .getServices()
+                                        .getProjectOptions()
+                                        .get(
+                                                BooleanOption
+                                                        .ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM));
         boolean enableDexingArtifactTransform =
-                globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM)
+                componentProperties
+                                .getServices()
+                                .getProjectOptions()
+                                .get(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM)
                         && !registeredExternalTransform
                         && !minified
                         && supportsDesugaring
-                        && !appliesCustomClassTransforms(componentProperties, projectOptions);
+                        && !appliesCustomClassTransforms(componentProperties);
 
         taskFactory.register(
                 new DexArchiveBuilderTask.CreationAction(
@@ -2588,7 +2612,7 @@ public abstract class TaskManager<
                                 resourceFilesInputType,
                                 manifests,
                                 manifestType,
-                                packagesCustomClassDependencies(creationConfig, projectOptions)),
+                                packagesCustomClassDependencies(creationConfig)),
                         null,
                         task -> {
                             task.dependsOn(taskContainer.getJavacTask());
@@ -3322,15 +3346,23 @@ public abstract class TaskManager<
         kaptTask.getOutputs().dir(databindingArtifact);
     }
 
-    protected void configureTestData(AbstractTestDataImpl testData) {
+    protected void configureTestData(
+            @NonNull ComponentPropertiesImpl componentProperties,
+            @NonNull AbstractTestDataImpl testData) {
         testData.setAnimationsDisabled(extension.getTestOptions().getAnimationsDisabled());
         testData.setExtraInstrumentationTestRunnerArgs(
-                projectOptions.getExtraInstrumentationTestRunnerArgs());
+                componentProperties
+                        .getServices()
+                        .getProjectOptions()
+                        .getExtraInstrumentationTestRunnerArgs());
     }
 
     private void maybeCreateCheckDuplicateClassesTask(
             @NonNull ComponentPropertiesImpl componentProperties) {
-        if (projectOptions.get(BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK)) {
+        if (componentProperties
+                .getServices()
+                .getProjectOptions()
+                .get(BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK)) {
             taskFactory.register(new CheckDuplicateClassesTask.CreationAction(componentProperties));
         }
     }

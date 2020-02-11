@@ -1072,7 +1072,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .set(creationConfig.getVariantDslInfo().isDebuggable());
             packageAndroidArtifact.getDebugBuild().disallowChanges();
 
-            ProjectOptions projectOptions = creationConfig.getGlobalScope().getProjectOptions();
+            ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();
             packageAndroidArtifact.projectBaseName = globalScope.getProjectBaseName();
             packageAndroidArtifact.manifestType = manifestType;
             packageAndroidArtifact.buildTargetAbi =
@@ -1120,7 +1120,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             if (creationConfig.getVariantType().isBaseModule()
                     && creationConfig
-                            .getGlobalScope()
+                            .getServices()
                             .getProjectOptions()
                             .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
                 creationConfig

@@ -387,7 +387,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task: LinkApplicationAndroidResourcesTask
         ) {
             super.configure(task)
-            val projectOptions = creationConfig.globalScope.projectOptions
+            val projectOptions = creationConfig.services.projectOptions
 
             preconditionsCheck(creationConfig)
 
@@ -471,7 +471,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.useFinalIds = !projectOptions.get(BooleanOption.USE_NON_FINAL_RES_IDS)
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                creationConfig.globalScope.projectOptions
+                creationConfig.services.projectOptions
             )
 
             task.manifestMergeBlameFile = creationConfig.artifacts.getFinalProduct(
@@ -511,7 +511,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.handleProvider(taskProvider)
 
-            if (creationConfig.globalScope.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
+            if (creationConfig.services.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
                 creationConfig.artifacts.producesDir(
                     InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
                     taskProvider,
@@ -536,7 +536,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 SdkConstants.FN_RESOURCE_TEXT
             )
 
-            if (!creationConfig.globalScope.projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS]) {
+            if (!creationConfig.services.projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS]) {
                 // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created
                 // in process resources for local subprojects.
                 creationConfig.artifacts.producesFile(

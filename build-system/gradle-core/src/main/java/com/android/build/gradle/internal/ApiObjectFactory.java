@@ -59,16 +59,12 @@ public class ApiObjectFactory {
         this.globalScope = globalScope;
     }
 
-    public BaseVariantImpl create(@NonNull ComponentPropertiesImpl componentProperties) {
-        BaseVariantData variantData = componentProperties.getVariantData();
-        if (componentProperties.getVariantType().isTestComponent()) {
-            throw new RuntimeException(
-                    "Testing variants are handled together with their \"owners\".");
-        }
+    public BaseVariantImpl create(@NonNull VariantPropertiesImpl variantProperties) {
+        BaseVariantData variantData = variantProperties.getVariantData();
 
         BaseVariantImpl variantApi =
                 variantFactory.createVariantApi(
-                        globalScope, componentProperties, variantData, readOnlyObjectProvider);
+                        globalScope, variantProperties, variantData, readOnlyObjectProvider);
         if (variantApi == null) {
             return null;
         }
@@ -76,7 +72,6 @@ public class ApiObjectFactory {
         if (variantFactory.hasTestScope()) {
             BaseServices services = variantFactory.getServicesForOldVariantObjectsOnly();
 
-            VariantPropertiesImpl variantProperties = (VariantPropertiesImpl) componentProperties;
             ComponentPropertiesImpl androidTestVariantProperties =
                     variantProperties.getTestComponents().get(ANDROID_TEST);
 
@@ -115,7 +110,7 @@ public class ApiObjectFactory {
             }
         }
 
-        createVariantOutput(componentProperties, variantApi);
+        createVariantOutput(variantProperties, variantApi);
 
         try {
             // Only add the variant API object to the domain object set once it's been fully

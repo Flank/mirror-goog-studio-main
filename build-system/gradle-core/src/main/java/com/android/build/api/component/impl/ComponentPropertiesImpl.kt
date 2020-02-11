@@ -98,6 +98,7 @@ abstract class ComponentPropertiesImpl(
     override val transformManager: TransformManager,
     protected val variantPropertiesApiServices: VariantPropertiesApiServices,
     override val services: TaskCreationServices,
+    @Deprecated("Do not use if you can avoid it. Check if services has what you need")
     override val globalScope: GlobalScope
 ): ComponentProperties, BaseCreationConfig, ComponentIdentity by componentIdentity {
 
@@ -158,7 +159,7 @@ abstract class ComponentPropertiesImpl(
     // overlay rules applied, so we have to go through the MergeResources pipeline in case it's
     // enabled, see b/134766811.
     override val isPrecompileDependenciesResourcesEnabled: Boolean
-        get() = globalScope.projectOptions[BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES] && !variantScope.useResourceShrinker()
+        get() = variantPropertiesApiServices.projectOptions[BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES] && !variantScope.useResourceShrinker()
 
     /**
      * Returns the tested variant. This is null for [VariantPropertiesImpl] instances
@@ -200,7 +201,7 @@ abstract class ComponentPropertiesImpl(
                 val original = mergingLog.find(input)
                 if (original === input) null else original.sourceFile
             },
-            globalScope.projectOptions[BooleanOption.USE_ANDROID_X]
+            variantPropertiesApiServices.projectOptions[BooleanOption.USE_ANDROID_X]
         )
     }
 
@@ -317,7 +318,7 @@ abstract class ComponentPropertiesImpl(
     // TODO Move these outside of Variant specific class (maybe GlobalTaskScope?)
 
     override val manifestArtifactType: InternalArtifactType<Directory>
-        get() = if (globalScope.projectOptions[BooleanOption.IDE_DEPLOY_AS_INSTANT_APP])
+        get() = if (variantPropertiesApiServices.projectOptions[BooleanOption.IDE_DEPLOY_AS_INSTANT_APP])
             InternalArtifactType.INSTANT_APP_MANIFEST
         else
             InternalArtifactType.MERGED_MANIFESTS
@@ -396,7 +397,7 @@ abstract class ComponentPropertiesImpl(
         }
 
         // then all the generated src folders.
-        if (globalScope.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
+        if (variantPropertiesApiServices.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
             val rClassSource = artifacts.getFinalProduct(NOT_NAMESPACED_R_CLASS_SOURCES)
             if (rClassSource.isPresent) {
                 sourceSets.add(project.fileTree(rClassSource).builtBy(rClassSource))
@@ -423,7 +424,7 @@ abstract class ComponentPropertiesImpl(
             val rsFC = artifacts.getFinalProduct(RENDERSCRIPT_SOURCE_OUTPUT_DIR)
             sourceSets.add(project.fileTree(rsFC).builtBy(rsFC))
         }
-        if (globalScope.projectOptions.get(BooleanOption.ENABLE_MLKIT)) {
+        if (variantPropertiesApiServices.projectOptions.get(BooleanOption.ENABLE_MLKIT)) {
             val mlkitModelClassSourceOut: Provider<Directory> =
                 artifacts.getFinalProduct(MLKIT_SOURCE_OUT)
             sourceSets.add(
@@ -473,7 +474,7 @@ abstract class ComponentPropertiesImpl(
 
             if (testedConfig == null) {
                 // TODO(b/138780301): Also use it in android tests.
-                val useCompileRClassInApp = (globalScope
+                val useCompileRClassInApp = (variantPropertiesApiServices
                     .projectOptions[BooleanOption
                     .ENABLE_APP_COMPILE_TIME_R_CLASS]
                         && !variantType.isForTesting)
@@ -497,7 +498,7 @@ abstract class ComponentPropertiesImpl(
                     mainCollection = project.files(rJar)
                 }
             } else { // Android test or unit test
-                if (!globalScope.projectOptions[BooleanOption.GENERATE_R_JAVA]
+                if (!variantPropertiesApiServices.projectOptions[BooleanOption.GENERATE_R_JAVA]
                 ) {
                     val rJar: Provider<RegularFile>
                     if (variantType === VariantTypeImpl.ANDROID_TEST) {

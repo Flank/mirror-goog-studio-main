@@ -259,7 +259,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             task.disableMinification.set(disableMinification)
             task.messageReceiver = creationConfig.globalScope.messageReceiver
             task.dexingType = creationConfig.dexingType
-            task.useFullR8.set(creationConfig.globalScope.projectOptions[BooleanOption.FULL_R8])
+            task.useFullR8.set(creationConfig.services.projectOptions[BooleanOption.FULL_R8])
 
             task.proguardConfigurations = proguardConfigurations
 

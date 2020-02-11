@@ -880,7 +880,9 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.pseudoLocalesEnabled = creationConfig.getVariantDslInfo().isPseudoLocalesEnabled();
             task.flags = flags;
 
-            task.errorFormatMode = SyncOptions.getErrorFormatMode(globalScope.getProjectOptions());
+            task.errorFormatMode =
+                    SyncOptions.getErrorFormatMode(
+                            creationConfig.getServices().getProjectOptions());
 
             task.precompileDependenciesResources =
                     mergeType.equals(MERGE)
@@ -927,7 +929,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             task.useJvmResourceCompiler =
                     creationConfig
-                            .getGlobalScope()
+                            .getServices()
                             .getProjectOptions()
                             .get(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER);
             task.getAapt2WorkersBuildService()

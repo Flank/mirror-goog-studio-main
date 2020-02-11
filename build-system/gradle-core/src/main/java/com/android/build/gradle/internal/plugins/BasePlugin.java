@@ -22,7 +22,6 @@ import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.api.variant.impl.GradleProperty;
@@ -100,7 +99,6 @@ import com.android.tools.lint.gradle.api.ToolingRegistryProvider;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
-import com.google.common.collect.Streams;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.io.File;
@@ -678,13 +676,8 @@ public abstract class BasePlugin<
         ApiObjectFactory apiObjectFactory =
                 new ApiObjectFactory(extension, variantFactory, globalScope);
 
-        List<? extends ComponentPropertiesImpl> allProperties =
-                Streams.concat(variants.stream(), variantManager.getTestComponents().stream())
-                        .map(ComponentInfo::getProperties)
-                        .collect(Collectors.toList());
-
-        for (ComponentPropertiesImpl componentProperties : allProperties) {
-            apiObjectFactory.create(componentProperties);
+        for (ComponentInfo<VariantT, VariantPropertiesT> variant : variants) {
+            apiObjectFactory.create(variant.getProperties());
         }
 
         // lock the Properties of the variant API after the old API because

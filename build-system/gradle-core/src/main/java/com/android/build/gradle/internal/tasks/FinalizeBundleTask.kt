@@ -164,7 +164,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             super.handleProvider(taskProvider)
 
             val bundleName = "${creationConfig.globalScope.projectBaseName}-${creationConfig.baseName}.aab"
-            val apkLocationOverride = creationConfig.globalScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
+            val apkLocationOverride = creationConfig.services.projectOptions.get(StringOption.IDE_APK_LOCATION)
             if (apkLocationOverride == null) {
                 creationConfig.artifacts.producesFile(
                     InternalArtifactType.BUNDLE,

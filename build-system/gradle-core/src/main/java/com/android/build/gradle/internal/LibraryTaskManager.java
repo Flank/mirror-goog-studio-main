@@ -226,7 +226,10 @@ public class LibraryTaskManager
         // Some versions of retrolambda remove the actions from the extract annotations task.
         // TODO: remove this hack once tests are moved to a version that doesn't do this
         // b/37564303
-        if (projectOptions.get(BooleanOption.ENABLE_EXTRACT_ANNOTATIONS)) {
+        if (libVariantProperties
+                .getServices()
+                .getProjectOptions()
+                .get(BooleanOption.ENABLE_EXTRACT_ANNOTATIONS)) {
             taskFactory.register(new ExtractAnnotations.CreationAction(libVariantProperties));
         }
 

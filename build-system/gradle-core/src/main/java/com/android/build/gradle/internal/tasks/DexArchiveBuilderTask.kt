@@ -334,7 +334,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     classesFilter
                 )
                 dexExternalLibsInArtifactTransform =
-                    componentProperties.globalScope.projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS]
+                    componentProperties.services.projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS]
                             && componentProperties.variantScope.dexer == DexerTool.D8
             }
 
@@ -462,7 +462,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         override fun configure(task: DexArchiveBuilderTask) {
             super.configure(task)
 
-            val projectOptions = creationConfig.globalScope.projectOptions
+            val projectOptions = creationConfig.services.projectOptions
 
             task.projectClasses.from(projectClasses)
             task.subProjectClasses.from(subProjectsClasses)

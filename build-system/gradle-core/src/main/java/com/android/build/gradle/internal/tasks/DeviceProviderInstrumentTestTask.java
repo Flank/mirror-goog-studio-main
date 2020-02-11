@@ -451,7 +451,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             boolean isAdditionalAndroidTestOutputEnabled =
                     creationConfig
-                            .getGlobalScope()
+                            .getServices()
                             .getProjectOptions()
                             .get(BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT);
 
@@ -514,7 +514,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             GlobalScope globalScope = creationConfig.getGlobalScope();
             Project project = globalScope.getProject();
-            ProjectOptions projectOptions = globalScope.getProjectOptions();
+            ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();
 
             // this can be null for test plugin
             VariantCreationConfig testedConfig = creationConfig.getTestedConfig();

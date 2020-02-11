@@ -837,10 +837,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             }
         }
         if (creationConfig.getDexingType() == DexingType.LEGACY_MULTIDEX) {
-            if (creationConfig
-                    .getGlobalScope()
-                    .getProjectOptions()
-                    .get(BooleanOption.USE_ANDROID_X)) {
+            if (creationConfig.getServices().getProjectOptions().get(BooleanOption.USE_ANDROID_X)) {
                 features.add(Feature.ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME);
             } else {
                 features.add(Feature.ADD_SUPPORT_MULTIDEX_APPLICATION_IF_NO_NAME);
@@ -848,7 +845,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         }
 
         if (creationConfig
-                .getGlobalScope()
+                .getServices()
                 .getProjectOptions()
                 .get(BooleanOption.ENFORCE_UNIQUE_PACKAGE_NAMES)) {
             features.add(Feature.ENFORCE_UNIQUE_PACKAGE_NAME);

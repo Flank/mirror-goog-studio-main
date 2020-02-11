@@ -248,7 +248,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             )
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                creationConfig.globalScope.projectOptions
+                creationConfig.services.projectOptions
             )
 
             if (creationConfig.variantScope.isPrecompileDependenciesResourcesEnabled) {
@@ -261,7 +261,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             }
 
             task.useJvmResourceCompiler =
-              creationConfig.globalScope.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
+              creationConfig.services.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
             task.aapt2WorkersBuildService.set(getAapt2WorkersBuildService(task.project))
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }

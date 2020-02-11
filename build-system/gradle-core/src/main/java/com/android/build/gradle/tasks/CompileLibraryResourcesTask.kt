@@ -255,10 +255,10 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
             task.crunchPng = creationConfig.variantScope.isCrunchPngs
 
             task.errorFormatMode =
-                SyncOptions.getErrorFormatMode(creationConfig.globalScope.projectOptions)
+                SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions)
 
             task.useJvmResourceCompiler =
-              creationConfig.globalScope.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
+              creationConfig.services.projectOptions[BooleanOption.ENABLE_JVM_RESOURCE_COMPILER]
             task.aapt2WorkersBuildService.set(getAapt2WorkersBuildService(task.project))
             task.aapt2DaemonBuildService.set(getAapt2DaemonBuildService(task.project))
         }

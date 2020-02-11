@@ -221,7 +221,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
             task.bootClasspath.disallowChanges()
 
             task.errorFormatMode =
-                SyncOptions.getErrorFormatMode(creationConfig.globalScope.projectOptions)
+                SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions)
 
             if (creationConfig.variantScope.isCoreLibraryDesugaringEnabled) {
                 task.libConfiguration.set(getDesugarLibConfig(creationConfig.globalScope.project))

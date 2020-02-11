@@ -78,7 +78,6 @@ class VariantPropertiesImplTest {
         MockitoAnnotations.initMocks(this)
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
         Mockito.`when`(globalScope.project).thenReturn(project)
-        Mockito.`when`(globalScope.projectOptions).thenReturn(Mockito.mock(ProjectOptions::class.java))
         Mockito.`when`(variantData.taskContainer).thenReturn(MutableTaskContainer())
 
         properties = FakeVariantProperties(

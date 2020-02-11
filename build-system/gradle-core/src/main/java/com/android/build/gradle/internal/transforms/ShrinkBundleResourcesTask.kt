@@ -215,7 +215,8 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                 })
 
             if (creationConfig
-                    .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]) {
+                    .services.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]
+            ) {
                 artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.RUNTIME_SYMBOL_LIST,
                     task.rTxtFile
@@ -228,8 +229,9 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             }
 
             task.enableRTxtResourceShrinking.set(
-                creationConfig.globalScope
-                .projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING])
+                creationConfig.services
+                    .projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]
+            )
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES,

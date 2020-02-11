@@ -180,12 +180,12 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             creationConfig.artifacts.setTaskInputToFinalProduct(InternalArtifactType.APKS_FROM_BUNDLE,
                 task.apkSetArchive)
 
-            val devicePath = creationConfig.globalScope.projectOptions.get(StringOption.IDE_APK_SELECT_CONFIG)
+            val devicePath = creationConfig.services.projectOptions.get(StringOption.IDE_APK_SELECT_CONFIG)
             if (devicePath != null) {
                 task.deviceConfig = File(devicePath)
             }
 
-            task.extractInstant = creationConfig.globalScope.projectOptions.get(BooleanOption.IDE_EXTRACT_INSTANT)
+            task.extractInstant = creationConfig.services.projectOptions.get(BooleanOption.IDE_EXTRACT_INSTANT)
             task.applicationId.setDisallowChanges(creationConfig.applicationId)
         }
     }

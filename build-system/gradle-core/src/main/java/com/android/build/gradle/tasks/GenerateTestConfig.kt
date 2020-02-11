@@ -154,7 +154,7 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         init {
             val testedVariant = unitTestProperties.testedVariant
 
-            isUseRelativePathEnabled = unitTestProperties.globalScope.projectOptions.get(
+            isUseRelativePathEnabled = unitTestProperties.services.projectOptions.get(
                 BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
             )
             resourceApk = unitTestProperties.artifacts.getFinalProduct(APK_FOR_LOCAL_TEST)

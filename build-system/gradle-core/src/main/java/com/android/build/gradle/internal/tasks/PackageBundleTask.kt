@@ -402,7 +402,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     ((creationConfig.globalScope.extension as BaseAppModuleExtension).bundle).convert()
 
             task.bundleFlags = BundleFlags(
-                enableUncompressedNativeLibs = creationConfig.globalScope.projectOptions[BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE]
+                enableUncompressedNativeLibs = creationConfig.services.projectOptions[BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE]
             )
 
             if (creationConfig.variantScope.needsMainDexListForBundle) {

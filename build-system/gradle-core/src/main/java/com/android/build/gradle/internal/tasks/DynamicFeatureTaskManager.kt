@@ -82,7 +82,7 @@ internal class DynamicFeatureTaskManager(
         taskFactory.register(
             PerModuleBundleTask.CreationAction(
                 variantProperties,
-                TaskManager.packagesCustomClassDependencies(variantProperties, projectOptions)
+                TaskManager.packagesCustomClassDependencies(variantProperties)
             )
         )
 

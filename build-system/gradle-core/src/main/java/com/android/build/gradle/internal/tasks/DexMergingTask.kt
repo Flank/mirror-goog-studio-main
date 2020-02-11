@@ -204,12 +204,12 @@ abstract class DexMergingTask : NonIncrementalTask() {
             }
 
             task.errorFormatMode =
-                SyncOptions.getErrorFormatMode(creationConfig.globalScope.projectOptions)
+                SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions)
             task.dexMerger = creationConfig.variantScope.dexMerger
             task.minSdkVersion = creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
             task.debuggable
                 .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
-            if (creationConfig.globalScope.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
+            if (creationConfig.services.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
                 creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DUPLICATE_CLASSES_CHECK,
                     task.duplicateClassesCheck
