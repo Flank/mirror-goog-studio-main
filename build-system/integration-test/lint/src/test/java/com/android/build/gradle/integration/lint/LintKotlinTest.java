@@ -33,7 +33,7 @@ public class LintKotlinTest {
             GradleTestProject.builder().fromTestProject("lintKotlin").create();
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         Throwable exception = project.executeExpectingFailure("clean", ":app:lintDebug");
         while (exception.getCause() != null && exception.getCause() != exception) {
             exception = exception.getCause();
@@ -43,7 +43,7 @@ public class LintKotlinTest {
     }
 
     @Test
-    public void checkFindNestedResult() {
+    public void checkFindErrors() {
         File lintReport = project.file("app/lint-report.xml");
         assertThat(lintReport)
                 .contains(

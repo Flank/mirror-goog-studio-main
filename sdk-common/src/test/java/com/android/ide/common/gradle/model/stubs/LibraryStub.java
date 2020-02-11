@@ -23,6 +23,7 @@ import com.android.ide.common.gradle.model.UnusedModelMethodException;
 
 public class LibraryStub extends BaseStub implements Library {
     @NonNull private final MavenCoordinates myResolvedCoordinates;
+    @Nullable private final MavenCoordinates myRequestedCoordinates;
     @Nullable private final String myBuildId;
     @Nullable private final String myProject;
     @Nullable private final String myName;
@@ -40,7 +41,19 @@ public class LibraryStub extends BaseStub implements Library {
             @Nullable String name,
             boolean provided,
             boolean isSkipped) {
-        myResolvedCoordinates = coordinates;
+        this(coordinates, coordinates, buildId, project, name, provided, isSkipped);
+    }
+
+    public LibraryStub(
+      @Nullable MavenCoordinates resolvedCoordinates,
+      @NonNull MavenCoordinates requestedCoordinates,
+      @Nullable String buildId,
+      @Nullable String project,
+      @Nullable String name,
+      boolean provided,
+      boolean isSkipped) {
+        myResolvedCoordinates = resolvedCoordinates;
+        myRequestedCoordinates = requestedCoordinates;
         myBuildId = buildId;
         myProject = project;
         myName = name;
@@ -51,7 +64,7 @@ public class LibraryStub extends BaseStub implements Library {
     @Override
     @Nullable
     public MavenCoordinates getRequestedCoordinates() {
-        throw new UnusedModelMethodException("getRequestedCoordinates");
+        return myRequestedCoordinates;
     }
 
     @Override
@@ -93,6 +106,8 @@ public class LibraryStub extends BaseStub implements Library {
         return "LibraryStub{"
                 + "myResolvedCoordinates="
                 + myResolvedCoordinates
+               + "myRequestedCoordinates="
+               + myRequestedCoordinates
                 + ", myBuildId='"
                 + myBuildId
                 + ", myProject='"

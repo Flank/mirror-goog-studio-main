@@ -15,7 +15,8 @@ compileKotlin {
 
 dependencies {
     compile project(':base:sdk-common')
-    compile project(':base:builder-model')
+    compile project(':base:lint-model')
+    implementation project(':base:builder-model')
     compile libs.guava
     compile project(':base:intellij-core')
     compile project(':base:kotlin-compiler')

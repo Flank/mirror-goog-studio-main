@@ -43,7 +43,6 @@ import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
-import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import com.android.tools.lint.LintCliFlags;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
@@ -66,6 +65,11 @@ public class GradleModelMockerTest {
     @Rule public TemporaryFolder tempFolder = new TemporaryFolder();
 
     private GradleModelMocker createMocker(@Language("Groovy") String gradle) {
+        return createMocker(gradle, tempFolder);
+    }
+
+    public static GradleModelMocker createMocker(
+            @Language("Groovy") String gradle, TemporaryFolder tempFolder) {
         try {
             return new GradleModelMocker(gradle)
                     .withLogger(
@@ -309,15 +313,15 @@ public class GradleModelMockerTest {
                                 + "    flavorDimensions  \"pricing\", \"releaseType\"\n"
                                 + "    productFlavors {\n"
                                 + "        beta {\n"
-                                + "            flavorDimension \"releaseType\"\n"
+                                + "            dimension \"releaseType\"\n"
                                 + "            resConfig \"en\"\n"
                                 + "            resConfigs \"nodpi\", \"hdpi\"\n"
                                 + "            versionNameSuffix \"-beta\"\n"
                                 + "            applicationIdSuffix '.beta'\n"
                                 + "        }\n"
-                                + "        normal { flavorDimension \"releaseType\" }\n"
-                                + "        free { flavorDimension \"pricing\" }\n"
-                                + "        paid { flavorDimension \"pricing\" }\n"
+                                + "        normal { dimension \"releaseType\" }\n"
+                                + "        free { dimension \"pricing\" }\n"
+                                + "        paid { dimension \"pricing\" }\n"
                                 + "    }\n"
                                 + "}");
         IdeAndroidProject project = mocker.getProject();
@@ -335,7 +339,7 @@ public class GradleModelMockerTest {
         assertThat(findProductFlavor(mocker, "free").getDimension()).isEqualTo("pricing");
         assertThat(findProductFlavor(mocker, "paid").getDimension()).isEqualTo("pricing");
 
-        assertThat(variant.getName()).isEqualTo("debugBetaFree");
+        assertThat(variant.getName()).isEqualTo("freeBetaDebug");
 
         // ResConfigs
         ProductFlavor beta = findProductFlavor(mocker, "beta");
@@ -575,12 +579,12 @@ public class GradleModelMockerTest {
                                 + "}");
 
         Variant variant = mocker.getVariant();
-        assertThat(variant.getName()).isEqualTo("debugFlavor1");
+        assertThat(variant.getName()).isEqualTo("flavor1Debug");
         assertThat(variant.getBuildType()).isEqualTo("debug");
         assertThat(variant.getProductFlavors()).containsExactly("flavor1");
 
-        mocker.setVariantName("releaseFlavor2");
-        assertThat(variant.getName()).isEqualTo("releaseFlavor2");
+        mocker.setVariantName("flavor2Release");
+        assertThat(variant.getName()).isEqualTo("flavor2Release");
         assertThat(variant.getBuildType()).isEqualTo("release");
         assertThat(variant.getProductFlavors()).containsExactly("flavor2");
     }
@@ -1027,11 +1031,11 @@ public class GradleModelMockerTest {
         assertThat(coordinates.getVersion()).isEqualTo("1.10.19");
         assertThat(coordinates.getPackaging()).isEqualTo("aar");
 
-        try {
-            coordinates = library.getRequestedCoordinates();
-            fail("Expected this method to throw as done in IdeLibrary");
-        } catch (UnusedModelMethodException pass) {
-        }
+        coordinates = library.getRequestedCoordinates();
+        assertThat(coordinates.getGroupId()).isEqualTo("org.mockito");
+        assertThat(coordinates.getArtifactId()).isEqualTo("mockito-core");
+        assertThat(coordinates.getVersion()).isEqualTo("1.10.8");
+        assertThat(coordinates.getPackaging()).isEqualTo("aar");
     }
 
     @Test

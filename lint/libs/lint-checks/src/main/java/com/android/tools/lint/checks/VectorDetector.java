@@ -25,8 +25,6 @@ import static com.android.SdkConstants.UNIT_DP;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.Variant;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceUrl;
@@ -38,6 +36,8 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.model.LmModule;
+import com.android.tools.lint.model.LmVariant;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.function.Predicate;
@@ -266,13 +266,8 @@ public class VectorDetector extends ResourceXmlDetector {
             return false;
         }
 
-        Variant currentVariant = project.getCurrentVariant();
-        return currentVariant != null
-                && Boolean.TRUE.equals(
-                        currentVariant
-                                .getMergedFlavor()
-                                .getVectorDrawables()
-                                .getUseSupportLibrary());
+        LmVariant variant = project.getBuildVariant();
+        return variant != null && variant.getUseSupportLibraryVectorDrawables();
     }
 
     /** Recursive element check for unsupported attributes and tags */
@@ -288,8 +283,11 @@ public class VectorDetector extends ResourceXmlDetector {
                             apiThreshold);
             context.report(ISSUE, element, context.getLocation(element), message);
         } else if ("group".equals(tag)) {
-            IdeAndroidProject model = context.getMainProject().getGradleProjectModel();
-            if (model != null && model.getModelVersion().startsWith("1.4.")) {
+            LmModule model = context.getMainProject().getBuildModule();
+            if (model != null
+                    && model.getGradleVersion() != null
+                    && model.getGradleVersion().getMajor() == 1
+                    && model.getGradleVersion().getMinor() == 4) {
                 String message =
                         "Update Gradle plugin version to 1.5+ to correctly handle "
                                 + "`<group>` tags in generated bitmaps";

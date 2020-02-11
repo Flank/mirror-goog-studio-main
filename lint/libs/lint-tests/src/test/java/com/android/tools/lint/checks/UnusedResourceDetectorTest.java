@@ -795,7 +795,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 ""
                         + "build.gradle: Warning: The resource R.string.cat appears to be unused [UnusedResources]\n"
                         + "build.gradle: Warning: The resource R.string.dog appears to be unused [UnusedResources]\n"
-                        + "0 errors, 2 warnings\n";
+                        + "build.gradle: Warning: The resource R.string.foo appears to be unused [UnusedResources]\n"
+                        + "0 errors, 3 warnings\n";
 
         //noinspection all // Sample code
         lint().files(

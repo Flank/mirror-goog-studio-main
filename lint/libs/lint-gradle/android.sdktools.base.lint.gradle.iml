@@ -14,6 +14,7 @@
     <orderEntry type="module" module-name="android.sdktools.base.layoutlib-api-base" />
     <orderEntry type="module" module-name="android.sdktools.base.sdk-common-base" />
     <orderEntry type="module" module-name="android.sdktools.builder-model" />
+    <orderEntry type="module" module-name="android.sdktools.base.lint.model-base" />
     <orderEntry type="module" module-name="android.sdktools.base.sdklib-base" />
     <orderEntry type="module" module-name="android.sdktools.repository" />
     <orderEntry type="module" module-name="android.sdktools.base.build-system.manifest-merger-base" />

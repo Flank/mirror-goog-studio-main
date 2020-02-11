@@ -34,8 +34,6 @@ import static com.android.utils.SdkUtils.isBitmapFile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.MavenCoordinates;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.ResourceVisibilityLookup;
 import com.android.ide.common.resources.ResourceRepository;
@@ -321,22 +319,15 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
     }
 
     /** Pick a suitable name to describe the library defining the private resource */
-    @Nullable
+    @NonNull
     private static String getLibraryName(
             @NonNull Context context, @NonNull ResourceType type, @NonNull String name) {
         ResourceVisibilityLookup lookup = context.getProject().getResourceVisibility();
-        AndroidLibrary library = lookup.getPrivateIn(type, name);
+        String library = lookup.getPrivateIn(type, name);
         if (library != null) {
-            String libraryName = library.getProject();
-            if (libraryName != null) {
-                return libraryName;
-            }
-            MavenCoordinates coordinates = library.getResolvedCoordinates();
-            //noinspection ConstantConditions
-            if (coordinates != null) {
-                return coordinates.getGroupId() + ':' + coordinates.getArtifactId();
-            }
+            return library;
+        } else {
+            return "the library";
         }
-        return "the library";
     }
 }

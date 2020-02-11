@@ -24,7 +24,6 @@ import com.android.SdkConstants.TAG_RESOURCES
 import com.android.SdkConstants.TAG_STRING_ARRAY
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VALUE_FALSE
-import com.android.builder.model.ProductFlavorContainer
 import com.android.ide.common.resources.LocaleManager
 import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.configuration.DensityQualifier
@@ -64,7 +63,6 @@ import com.android.tools.lint.detector.api.getLocaleAndRegion
 import com.android.utils.SdkUtils.fileNameToResourceName
 import com.android.utils.SdkUtils.isServiceKey
 import com.android.utils.XmlUtils
-import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import org.w3c.dom.Attr
@@ -760,52 +758,16 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
     }
 
     private fun getResConfigLanguages(project: Project): List<String>? {
-        if (project.isGradleProject && project.gradleProjectModel != null &&
-            project.currentVariant != null
-        ) {
-            val relevantDensities = Sets.newHashSet<String>()
-            val variant = project.currentVariant
-            val variantFlavors = variant!!.productFlavors
-            val gradleProjectModel = project.gradleProjectModel
-
-            addResConfigsFromFlavor(
-                relevantDensities, null,
-                project.gradleProjectModel!!.defaultConfig
-            )
-            for (container in gradleProjectModel!!.productFlavors) {
-                addResConfigsFromFlavor(relevantDensities, variantFlavors, container)
-            }
-            if (!relevantDensities.isEmpty()) {
-                val strings = Lists.newArrayList(relevantDensities)
-                strings.sort()
-                return strings
-            }
+        val variant = project.buildVariant ?: return null
+        val resourceConfigurations = variant.resourceConfigurations
+        if (resourceConfigurations.isEmpty()) {
+            return null
         }
-
-        return null
-    }
-
-    /**
-     * Adds in the resConfig values specified by the given flavor container, assuming
-     * it's in one of the relevant variantFlavors, into the given set
-     */
-    private fun addResConfigsFromFlavor(
-        relevantLanguages: MutableSet<String>,
-        variantFlavors: List<String>?,
-        container: ProductFlavorContainer
-    ) {
-        val flavor = container.productFlavor
-        if (variantFlavors == null || variantFlavors.contains(flavor.name)) {
-            if (!flavor.resourceConfigurations.isEmpty()) {
-                for (resConfig in flavor.resourceConfigurations) {
-                    // Look for languages; these are of length 2. (ResConfigs
-                    // can also refer to densities, etc.)
-                    if (resConfig.length == 2) {
-                        relevantLanguages.add(resConfig)
-                    }
-                }
-            }
-        }
+        return resourceConfigurations.filter { resConfig ->
+            // Look for languages; these are of length 2. (ResConfigs
+            // can also refer to densities, etc.)
+            resConfig.length == 2
+        }.sorted().toList()
     }
 
     companion object {

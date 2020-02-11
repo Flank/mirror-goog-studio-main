@@ -105,8 +105,8 @@ abstract class DeprecatedSdkRegistry(
 
     /** Finds the metadata element for the given coordinate */
     fun findDeclaration(dependency: GradleCoordinate): Element? {
-        val groupId = dependency.groupId ?: return null
-        val artifactId = dependency.artifactId ?: return null
+        val groupId = dependency.groupId
+        val artifactId = dependency.artifactId
 
         if (groupToArtifactToElement.isEmpty()) {
             val stream = findData("") ?: return null
@@ -136,8 +136,8 @@ abstract class DeprecatedSdkRegistry(
                     val recommendedVersion = library.getAttribute(ATTR_RECOMMENDED_VERSION)
                     val status = versionElement.getAttribute(ATTR_STATUS)
                     val description = versionElement.getAttribute(ATTR_DESCRIPTION)
-                    val groupId = dependency.groupId ?: return null
-                    val artifactId = dependency.artifactId ?: return null
+                    val groupId = dependency.groupId
+                    val artifactId = dependency.artifactId
 
                     if (recommendedVersion.isNotEmpty()) {
                         // In case the most recent (buggy) version is open ended, and there

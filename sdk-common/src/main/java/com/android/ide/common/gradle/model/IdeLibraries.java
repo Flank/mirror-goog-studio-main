@@ -19,6 +19,7 @@ import static com.android.utils.FileUtils.isFileInDirectory;
 import static com.google.common.base.Strings.nullToEmpty;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies.ProjectIdentifier;
 import com.android.builder.model.JavaLibrary;
@@ -110,5 +111,14 @@ public final class IdeLibraries {
             }
             return new IdeMavenCoordinates(jarFile);
         }
+    }
+
+    @Nullable
+    public static IdeMavenCoordinates computeRequestedCoordinate(@NonNull Library library) {
+        MavenCoordinates requestedCoordinates = library.getRequestedCoordinates();
+        if (requestedCoordinates == null) {
+            return null;
+        }
+        return new IdeMavenCoordinates(requestedCoordinates);
     }
 }

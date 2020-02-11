@@ -23,7 +23,9 @@ import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.tasks.VariantAwareTask;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.StringHelper;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
@@ -77,6 +79,12 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
         public VariantInputs getVariantInputs(@NonNull String variantName) {
             assert variantName.equals(getVariantName());
             return variantInputs;
+        }
+
+        @NonNull
+        @Override
+        public Set<String> getVariantNames() {
+            return Collections.singleton(variantName);
         }
 
         @Override

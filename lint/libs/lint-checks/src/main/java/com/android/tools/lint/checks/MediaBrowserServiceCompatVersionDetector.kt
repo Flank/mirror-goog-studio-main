@@ -63,13 +63,11 @@ class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
         }
 
         val dependencies = GradleDetector.getCompileDependencies(context.project) ?: return
-        for (library in dependencies.libraries) {
+        for (library in dependencies.direct) {
             val mc = library.resolvedCoordinates
-            @Suppress("SENSELESS_COMPARISON")
-            if (mc != null &&
-                mc.groupId == SdkConstants.SUPPORT_LIB_GROUP_ID &&
+            if (mc.groupId == SdkConstants.SUPPORT_LIB_GROUP_ID &&
                 mc.artifactId == "support-v4" &&
-                mc.version != null
+                mc.version.isNotBlank()
             ) {
                 val libVersion = GradleCoordinate.parseVersionOnly(mc.version)
                 if (COMPARE_PLUS_HIGHER.compare(libVersion, MIN_SUPPORT_V4_VERSION) < 0) {

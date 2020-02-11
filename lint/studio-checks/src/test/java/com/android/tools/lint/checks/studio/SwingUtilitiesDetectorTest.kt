@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks.studio
 
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
-import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import org.junit.Test
 
 class SwingUtilitiesDetectorTest {

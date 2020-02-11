@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -64,6 +65,12 @@ public class LintGlobalTask extends LintBaseTask {
         @Override
         public VariantInputs getVariantInputs(@NonNull String variantName) {
             return variantInputMap.get(variantName);
+        }
+
+        @NonNull
+        @Override
+        public Set<String> getVariantNames() {
+            return variantInputMap.keySet();
         }
     }
 

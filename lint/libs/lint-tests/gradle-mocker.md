@@ -23,13 +23,13 @@ android {
     flavorDimensions  "pricing", "releaseType"
     productFlavors {
         beta {
-            flavorDimension "releaseType"
+            dimension "releaseType"
             resConfig "en"
             resConfigs "nodpi", "hdpi"
         }
-        normal { flavorDimension "releaseType" }
-        free { flavorDimension "pricing" }
-        paid { flavorDimension "pricing" }
+        normal { dimension "releaseType" }
+        free { dimension "pricing" }
+        paid { dimension "pricing" }
     }
 }
 ```
@@ -124,13 +124,13 @@ GradleModelMocker mocker = createMocker(""
         + "    flavorDimensions  \"pricing\", \"releaseType\"\n"
         + "    productFlavors {\n"
         + "        beta {\n"
-        + "            flavorDimension \"releaseType\"\n"
+        + "            dimension \"releaseType\"\n"
         + "            resConfig \"en\"\n"
         + "            resConfigs \"nodpi\", \"hdpi\"\n"
         + "        }\n"
-        + "        normal { flavorDimension \"releaseType\" }\n"
-        + "        free { flavorDimension \"pricing\" }\n"
-        + "        paid { flavorDimension \"pricing\" }\n"
+        + "        normal { dimension \"releaseType\" }\n"
+        + "        free { dimension \"pricing\" }\n"
+        + "        paid { dimension \"pricing\" }\n"
         + "    }\n"
         + "}");
 AndroidProject project = mocker.getProject();

@@ -21,20 +21,12 @@ import com.android.SdkConstants.FD_BUILD_TOOLS
 import com.android.SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION
 import com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION
 import com.android.SdkConstants.SUPPORT_LIB_GROUP_ID
-import com.android.builder.model.AndroidLibrary
-import com.android.builder.model.Dependencies
-import com.android.builder.model.JavaLibrary
-import com.android.builder.model.Library
-import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.repository.GoogleMavenRepository
 import com.android.ide.common.repository.GoogleMavenRepository.Companion.MAVEN_GOOGLE_CACHE_DIR_KEY
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER
 import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.MavenRepositories
-import com.android.projectmodel.ARTIFACT_NAME_ANDROID_TEST
-import com.android.projectmodel.ARTIFACT_NAME_UNIT_TEST
-import com.android.projectmodel.ProjectType
 import com.android.repository.io.FileOpUtils
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.SdkVersionInfo
@@ -62,9 +54,12 @@ import com.android.tools.lint.detector.api.guessGradleLocation
 import com.android.tools.lint.detector.api.isNumberString
 import com.android.tools.lint.detector.api.readUrlData
 import com.android.tools.lint.detector.api.readUrlDataAsString
+import com.android.tools.lint.model.LmDependencies
+import com.android.tools.lint.model.LmLibrary
+import com.android.tools.lint.model.LmMavenName
+import com.android.tools.lint.model.LmModuleType
 import com.android.utils.appendCapitalized
 import com.android.utils.usLocaleCapitalize
-import com.google.common.base.Charsets.UTF_8
 import com.google.common.base.Joiner
 import com.google.common.base.Splitter
 import com.google.common.collect.ArrayListMultimap
@@ -81,6 +76,7 @@ import java.util.HashMap
 import java.util.HashSet
 import java.util.Locale
 import java.util.function.Predicate
+import kotlin.text.Charsets.UTF_8
 
 /** Checks Gradle files for potential errors */
 open class GradleDetector : Detector(), GradleScanner {
@@ -196,7 +192,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             val fix = fix().name(label)
                                 .replace()
                                 .all()
-                                .with(Integer.toString(highest))
+                                .with(highest.toString())
                                 .build()
 
                             // Don't report if already suppressed with EXPIRING
@@ -231,7 +227,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             val fix = fix().name(label)
                                 .replace()
                                 .all()
-                                .with(Integer.toString(highest))
+                                .with(highest.toString())
                                 .build()
                             report(context, valueCookie, EXPIRING_TARGET_SDK_VERSION, message, fix)
                             warned = true
@@ -250,7 +246,7 @@ open class GradleDetector : Detector(), GradleScanner {
                         val fix = fix().name(label)
                             .replace()
                             .all()
-                            .with(Integer.toString(highest))
+                            .with(highest.toString())
                             .build()
                         report(context, valueCookie, TARGET_NEWER, message, fix)
                     }
@@ -645,7 +641,7 @@ open class GradleDetector : Detector(), GradleScanner {
     }
 
     private fun checkMinSdkVersion(context: GradleContext, version: Int, valueCookie: Any) {
-        if (version in 1..(LOWEST_ACTIVE_API - 1)) {
+        if (version in 1 until LOWEST_ACTIVE_API) {
             val message =
                 "The value of minSdkVersion is too low. It can be incremented " +
                         "without noticeably reducing the number of supported devices."
@@ -653,8 +649,8 @@ open class GradleDetector : Detector(), GradleScanner {
             val label = "Update minSdkVersion to $LOWEST_ACTIVE_API"
             val fix = fix().name(label)
                 .replace()
-                .text(Integer.toString(version))
-                .with(Integer.toString(LOWEST_ACTIVE_API))
+                .text(version.toString())
+                .with(LOWEST_ACTIVE_API.toString())
                 .build()
             report(context, valueCookie, MIN_SDK_TOO_LOW, message, fix)
         }
@@ -715,8 +711,8 @@ open class GradleDetector : Detector(), GradleScanner {
                     ")"
             val fix = fix().name("Set compileSdkVersion to $targetSdkVersion")
                 .replace()
-                .text(Integer.toString(compileSdkVersion))
-                .with(Integer.toString(targetSdkVersion))
+                .text(compileSdkVersion.toString())
+                .with(targetSdkVersion.toString())
                 .build()
             reportNonFatalCompatibilityIssue(context, compileSdkVersionCookie!!, message, fix)
         }
@@ -736,7 +732,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val artifactId = dependency.artifactId
         val revision = dependency.revision
         var safeReplacement: GradleVersion? = null
-        if (version == null || groupId == null || artifactId == null) {
+        if (version == null) {
             return
         }
         var newerVersion: GradleVersion? = null
@@ -1076,8 +1072,8 @@ open class GradleDetector : Detector(), GradleScanner {
         newerVersion: GradleVersion?,
         cookie: Any
     ) {
-        val groupId = dependency.groupId ?: return
-        val artifactId = dependency.artifactId ?: return
+        val groupId = dependency.groupId
+        val artifactId = dependency.artifactId
 
         // For artifacts that follow the platform numbering scheme, check that it matches the SDK
         // versions used.
@@ -1179,8 +1175,8 @@ open class GradleDetector : Detector(), GradleScanner {
         revision: String,
         cookie: Any
     ) {
-        val groupId = dependency.groupId ?: return
-        val artifactId = dependency.artifactId ?: return
+        val groupId = dependency.groupId
+        val artifactId = dependency.artifactId
 
         // 5.2.08 is not supported; special case and warn about this
         if ("5.2.08" == revision && context.isEnabled(COMPATIBILITY)) {
@@ -1263,7 +1259,7 @@ open class GradleDetector : Detector(), GradleScanner {
         }
     }
 
-    private fun MavenCoordinates.isSupportLibArtifact() =
+    private fun LmMavenName.isSupportLibArtifact() =
         isSupportLibraryDependentOnCompileSdk(groupId, artifactId)
 
     /**
@@ -1271,7 +1267,7 @@ open class GradleDetector : Detector(), GradleScanner {
      * starts with "androidx." but there is an special case for the navigation artifact which does
      * start with "androidx." but links to non-androidx classes
      */
-    private fun MavenCoordinates.isAndroidxArtifact() =
+    private fun LmMavenName.isAndroidxArtifact() =
         groupId.startsWith(ANDROIDX_PKG_PREFIX) && groupId != "androidx.navigation"
 
     private fun checkConsistentSupportLibraries(
@@ -1280,9 +1276,9 @@ open class GradleDetector : Detector(), GradleScanner {
     ) {
         checkConsistentLibraries(context, cookie, SUPPORT_LIB_GROUP_ID, null)
 
-        val androidLibraries = getAndroidLibraries(context.project)
-        var usesOldSupportLib: MavenCoordinates? = null
-        var usesAndroidX: MavenCoordinates? = null
+        val androidLibraries = getAllLibraries(context.project)
+        var usesOldSupportLib: LmMavenName? = null
+        var usesAndroidX: LmMavenName? = null
         for (library in androidLibraries) {
             val coordinates = library.resolvedCoordinates
             if (usesOldSupportLib == null && coordinates.isSupportLibArtifact()) {
@@ -1331,26 +1327,19 @@ open class GradleDetector : Detector(), GradleScanner {
         }
         val supportVersions = HashSet<String>()
         val wearableVersions = HashSet<String>()
-        for (library in getAndroidLibraries(project)) {
+        for (library in getAllLibraries(project)) {
             val coordinates = library.resolvedCoordinates
-            // Claims to be non-null but may not be after a failed gradle sync
-            @Suppress("SENSELESS_COMPARISON")
-            if (coordinates != null &&
-                WEARABLE_ARTIFACT_ID == coordinates.artifactId &&
+            if (WEARABLE_ARTIFACT_ID == coordinates.artifactId &&
                 GOOGLE_SUPPORT_GROUP_ID == coordinates.groupId
             ) {
                 supportVersions.add(coordinates.version)
             }
-        }
-        for (library in getJavaLibraries(project)) {
-            val coordinates = library.resolvedCoordinates
+
             // Claims to be non-null but may not be after a failed gradle sync
-            @Suppress("SENSELESS_COMPARISON")
-            if (coordinates != null &&
-                WEARABLE_ARTIFACT_ID == coordinates.artifactId &&
+            if (WEARABLE_ARTIFACT_ID == coordinates.artifactId &&
                 ANDROID_WEAR_GROUP_ID == coordinates.groupId
             ) {
-                if (!library.isProvided) {
+                if (!library.provided) {
                     if (cookie != null) {
                         val message =
                             "This dependency should be marked as `provided`, not `compile`"
@@ -1368,7 +1357,7 @@ open class GradleDetector : Detector(), GradleScanner {
             }
         }
 
-        if (!supportVersions.isEmpty()) {
+        if (supportVersions.isNotEmpty()) {
             if (wearableVersions.isEmpty()) {
                 val list = ArrayList(supportVersions)
                 val first = Collections.min(list)
@@ -1415,6 +1404,10 @@ open class GradleDetector : Detector(), GradleScanner {
         }
     }
 
+    private fun getAllLibraries(project: Project): Collection<LmLibrary> {
+        return project.buildVariant?.mainArtifact?.dependencies?.all ?: emptyList()
+    }
+
     private fun checkConsistentLibraries(
         context: Context,
         cookie: Any?,
@@ -1425,14 +1418,11 @@ open class GradleDetector : Detector(), GradleScanner {
         // (b/22709708)
 
         val project = context.mainProject
-        val versionToCoordinate = ArrayListMultimap.create<String, MavenCoordinates>()
-        val androidLibraries = getAndroidLibraries(project)
-        for (library in androidLibraries) {
+        val versionToCoordinate = ArrayListMultimap.create<String, LmMavenName>()
+        val allLibraries = getAllLibraries(project)
+        for (library in allLibraries) {
             val coordinates = library.resolvedCoordinates
-            // Claims to be non-null but may not be after a failed gradle sync
-            @Suppress("SENSELESS_COMPARISON")
-            if (coordinates != null &&
-                (coordinates.groupId == groupId || coordinates.groupId == groupId2) &&
+            if ((coordinates.groupId == groupId || coordinates.groupId == groupId2) &&
                 // Historically the multidex library ended up in the support package but
                 // decided to do its own numbering (and isn't tied to the rest in terms
                 // of implementation dependencies)
@@ -1443,18 +1433,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 !coordinates.artifactId.startsWith("renderscript") &&
                 // Similarly firebase job dispatcher doesn't follow normal firebase version
                 // numbering
-                !coordinates.artifactId.startsWith("firebase-jobdispatcher")
-            ) {
-                versionToCoordinate.put(coordinates.version, coordinates)
-            }
-        }
-
-        for (library in getJavaLibraries(project)) {
-            val coordinates = library.resolvedCoordinates
-            // Claims to be non-null but may not be after a failed gradle sync
-            @Suppress("SENSELESS_COMPARISON")
-            if (coordinates != null &&
-                (coordinates.groupId == groupId || coordinates.groupId == groupId2) &&
+                !coordinates.artifactId.startsWith("firebase-jobdispatcher") &&
                 // The Android annotations library is decoupled from the rest and doesn't
                 // need to be matched to the other exact support library versions
                 coordinates.artifactId != "support-annotations"
@@ -1500,22 +1479,14 @@ open class GradleDetector : Detector(), GradleScanner {
             // Create an improved error message for a confusing scenario where you use
             // data binding and end up with conflicting versions:
             // https://code.google.com/p/android/issues/detail?id=229664
-            for (library in androidLibraries) {
+            for (library in allLibraries) {
                 val coordinates = library.resolvedCoordinates
-
-                // Claims to be non-null but may not be after a failed gradle sync
-                @Suppress("SENSELESS_COMPARISON")
-                if (coordinates != null &&
-                    coordinates.groupId == "com.android.databinding" &&
+                if (coordinates.groupId == "com.android.databinding" &&
                     coordinates.artifactId == "library"
                 ) {
-                    for (dep in library.libraryDependencies) {
+                    for (dep in library.dependencies) {
                         val c = dep.resolvedCoordinates
-
-                        // Claims to be non-null but may not be after a failed gradle sync
-                        @Suppress("SENSELESS_COMPARISON")
-                        if (c != null &&
-                            c.groupId == "com.android.support" &&
+                        if (c.groupId == "com.android.support" &&
                             c.artifactId == "support-v4" &&
                             sortedVersions[0] != c.version
                         ) {
@@ -1597,7 +1568,7 @@ open class GradleDetector : Detector(), GradleScanner {
     private fun checkBlacklistedDependencies(context: Context, project: Project) {
         val blacklistedDeps = blacklisted[project] ?: return
         val dependencies = blacklistedDeps.getBlacklistedDependencies()
-        if (!dependencies.isEmpty()) {
+        if (dependencies.isNotEmpty()) {
             for (path in dependencies) {
                 val message = getBlacklistedDependencyMessage(context, path) ?: continue
                 val projectDir = context.project.dir
@@ -1743,6 +1714,7 @@ open class GradleDetector : Detector(), GradleScanner {
         return version
     }
 
+    @SuppressWarnings("ExpensiveAssertion")
     private fun resolveCoordinate(
         context: GradleContext,
         property: String,
@@ -1750,29 +1722,26 @@ open class GradleDetector : Detector(), GradleScanner {
     ): GradleCoordinate? {
         assert(gc.revision.contains("$")) { gc.revision }
         val project = context.project
-        val variant = project.currentVariant
+        val variant = project.buildVariant
         if (variant != null) {
             val artifact =
                 when {
-                    property.startsWith("androidTest") -> variant.extraAndroidArtifacts.firstOrNull { it.name == ARTIFACT_NAME_ANDROID_TEST }
-                    property.startsWith("test") -> variant.extraJavaArtifacts.firstOrNull { it.name == ARTIFACT_NAME_UNIT_TEST }
+                    property.startsWith("androidTest") -> variant.androidTestArtifact
+                    property.startsWith("test") -> variant.testArtifact
                     else -> variant.mainArtifact
                 } ?: return null
             val dependencies = artifact.dependencies
-            for (library in dependencies.libraries + dependencies.javaLibraries) {
+            for (library in dependencies.all) {
                 val mc = library.resolvedCoordinates
                 // Even though the method is annotated as non-null, this code can run
                 // after a failed sync and there are observed scenarios where it returns
                 // null in that ase
 
-                // Claims to be non-null but may not be after a failed gradle sync
-                @Suppress("SENSELESS_COMPARISON")
-                if (mc != null &&
-                    mc.groupId == gc.groupId &&
+                if (mc.groupId == gc.groupId &&
                     mc.artifactId == gc.artifactId
                 ) {
                     val revisions = GradleCoordinate.parseRevisionNumber(mc.version)
-                    if (!revisions.isEmpty()) {
+                    if (revisions.isNotEmpty()) {
                         return GradleCoordinate(
                             mc.groupId, mc.artifactId, revisions, null
                         )
@@ -1786,8 +1755,8 @@ open class GradleDetector : Detector(), GradleScanner {
 
     /** True if the given project uses the legacy http library */
     private fun usesLegacyHttpLibrary(project: Project): Boolean {
-        val model = project.gradleProjectModel ?: return false
-        for (path in model.bootClasspath) {
+        val model = project.buildModule ?: return false
+        for (path in model.bootClassPath) {
             if (path.endsWith("org.apache.http.legacy.jar")) {
                 return true
             }
@@ -1870,16 +1839,13 @@ open class GradleDetector : Detector(), GradleScanner {
                 artifactId != "support-annotations")
     }
 
-    private fun findFirst(coordinates: Collection<MavenCoordinates>): MavenCoordinates {
-        return Collections.min(
-            coordinates,
-            { o1, o2 -> o1.toString().compareTo(o2.toString()) }
-        )
+    private fun findFirst(coordinates: Collection<LmMavenName>): LmMavenName {
+        return Collections.min(coordinates) { o1, o2 -> o1.toString().compareTo(o2.toString()) }
     }
 
     private fun getBlacklistedDependencyMessage(
         context: Context,
-        path: List<Library>
+        path: List<LmLibrary>
     ): String? {
         if (context.mainProject.minSdkVersion.apiLevel >= 23 && !usesLegacyHttpLibrary(context.mainProject)) {
             return null
@@ -2537,9 +2503,6 @@ open class GradleDetector : Detector(), GradleScanner {
         ): GradleVersion? {
             val groupId = dependency.groupId
             val artifactId = dependency.artifactId
-            if (groupId == null || artifactId == null) {
-                return null
-            }
             val query = StringBuilder()
             val encoding = UTF_8.name()
             try {
@@ -2612,7 +2575,7 @@ open class GradleDetector : Detector(), GradleScanner {
                     index += 4
                     val start = response.indexOf('"', index) + 1
                     val end = response.indexOf('"', start + 1)
-                    if (start in 0..(end - 1)) {
+                    if (start in 0 until end) {
                         val substring = response.substring(start, end)
                         val revision = GradleVersion.tryParse(substring)
                         if (revision != null) {
@@ -2635,52 +2598,11 @@ open class GradleDetector : Detector(), GradleScanner {
         }
 
         @JvmStatic
-        fun getCompileDependencies(project: Project): Dependencies? {
+        fun getCompileDependencies(project: Project): LmDependencies? {
             if (!project.isGradleProject) {
                 return null
             }
-            val variant = project.currentVariant ?: return null
-
-            val artifact = variant.mainArtifact
-            return artifact.dependencies
-        }
-
-        fun getAndroidLibraries(project: Project): Collection<AndroidLibrary> {
-            val compileDependencies = getCompileDependencies(project) ?: return emptyList()
-            val allLibraries = HashSet<AndroidLibrary>()
-            addIndirectAndroidLibraries(compileDependencies.libraries, allLibraries)
-            return allLibraries
-        }
-
-        fun getJavaLibraries(project: Project): Collection<JavaLibrary> {
-            val compileDependencies = getCompileDependencies(project) ?: return emptyList()
-            val allLibraries = HashSet<JavaLibrary>()
-            addIndirectJavaLibraries(compileDependencies.javaLibraries, allLibraries)
-            return allLibraries
-        }
-
-        private fun addIndirectAndroidLibraries(
-            libraries: Collection<AndroidLibrary>,
-            result: MutableSet<AndroidLibrary>
-        ) {
-            for (library in libraries) {
-                if (!result.contains(library)) {
-                    result.add(library)
-                    addIndirectAndroidLibraries(library.libraryDependencies, result)
-                }
-            }
-        }
-
-        private fun addIndirectJavaLibraries(
-            libraries: Collection<JavaLibrary>,
-            result: MutableSet<JavaLibrary>
-        ) {
-            for (library in libraries) {
-                if (!result.contains(library)) {
-                    result.add(library)
-                    addIndirectJavaLibraries(library.dependencies, result)
-                }
-            }
+            return project.buildVariant?.mainArtifact?.dependencies
         }
 
         // Convert a long-hand dependency, like
@@ -2724,7 +2646,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 }
 
                 if (artifact != null && group != null && version != null) {
-                    return group + ':'.toString() + artifact + ':'.toString() + version
+                    return "$group:$artifact:$version"
                 }
             }
 
@@ -2781,7 +2703,7 @@ open class GradleDetector : Detector(), GradleScanner {
                     }
                 }
 
-                if (!revisions.isEmpty()) {
+                if (revisions.isNotEmpty()) {
                     latestBuildTools = Collections.max(revisions)
                 }
             }
@@ -2792,15 +2714,15 @@ open class GradleDetector : Detector(), GradleScanner {
         private fun suggestApiConfigurationUse(project: Project, configuration: String): Boolean {
             return when {
                 configuration.startsWith("test") || configuration.startsWith("androidTest") -> false
-                else -> when (project.projectType) {
-                    ProjectType.APP ->
+                else -> when (project.type) {
+                    LmModuleType.APP ->
                         // Applications can only generally be consumed if there are dynamic features
                         // (Ignoring the test-only project for this purpose)
                         project.hasDynamicFeatures()
-                    ProjectType.LIBRARY -> true
-                    ProjectType.FEATURE, ProjectType.DYNAMIC_FEATURE, ProjectType.ATOM -> true
-                    ProjectType.TEST -> false
-                    ProjectType.INSTANT_APP -> false
+                    LmModuleType.LIBRARY -> true
+                    LmModuleType.FEATURE, LmModuleType.DYNAMIC_FEATURE -> true
+                    LmModuleType.TEST -> false
+                    LmModuleType.INSTANT_APP -> false
                 }
             }
         }

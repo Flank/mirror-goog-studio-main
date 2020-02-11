@@ -18,10 +18,10 @@ package com.android.tools.lint.detector.api
 
 import com.intellij.psi.PsiArrayInitializerMemberValue
 import com.intellij.psi.impl.compiled.ClsAnnotationImpl
-import java.util.Arrays
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.util.isArrayInitializer
+import java.util.Arrays
 
 internal sealed class AnnotationValuesExtractor {
 

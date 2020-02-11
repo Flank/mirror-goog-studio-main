@@ -32,24 +32,32 @@ public class AndroidLibraryStub extends AndroidBundleStub implements AndroidLibr
     @NonNull private final File myProguardRules;
     @NonNull private final File myLintJar;
     @NonNull private final File myPublicResources;
+    @NonNull private final File mySymbolFile;
+    @NonNull private final File myExternalAnnotations;
 
     public AndroidLibraryStub() {
         this(
                 Lists.newArrayList(new File("jar")),
                 new File("proguardRules"),
                 new File("lintJar"),
-                new File("publicResources"));
+                new File("publicResources"),
+                new File("symbolFile"),
+                new File("externalAnnotations"));
     }
 
     public AndroidLibraryStub(
             @NonNull Collection<File> jars,
             @NonNull File proguardRules,
             @NonNull File lintJar,
-            @NonNull File publicResources) {
+            @NonNull File publicResources,
+            @NonNull File symbolFile,
+            @NonNull File externalAnnotations) {
         myLocalJars = jars;
         myProguardRules = proguardRules;
         myLintJar = lintJar;
         myPublicResources = publicResources;
+        mySymbolFile = symbolFile;
+        myExternalAnnotations = externalAnnotations;
     }
 
     public AndroidLibraryStub(
@@ -73,7 +81,9 @@ public class AndroidLibraryStub extends AndroidBundleStub implements AndroidLibr
             @NonNull Collection<File> jars,
             @NonNull File proguardRules,
             @NonNull File lintJar,
-            @NonNull File publicResources) {
+            @NonNull File publicResources,
+            @NonNull File symbolFile,
+            @NonNull File externalAnnotations) {
         super(
                 coordinates,
                 buildId,
@@ -96,6 +106,8 @@ public class AndroidLibraryStub extends AndroidBundleStub implements AndroidLibr
         myProguardRules = proguardRules;
         myLintJar = lintJar;
         myPublicResources = publicResources;
+        mySymbolFile = symbolFile;
+        myExternalAnnotations = externalAnnotations;
     }
 
     @Override
@@ -137,7 +149,7 @@ public class AndroidLibraryStub extends AndroidBundleStub implements AndroidLibr
     @Override
     @NonNull
     public File getExternalAnnotations() {
-        throw new UnusedModelMethodException("getExternalAnnotations");
+        return myExternalAnnotations;
     }
 
     @Override
@@ -149,7 +161,7 @@ public class AndroidLibraryStub extends AndroidBundleStub implements AndroidLibr
     @Override
     @NonNull
     public File getSymbolFile() {
-        throw new UnusedModelMethodException("getSymbolFile");
+        return mySymbolFile;
     }
 
     @Override
@@ -179,7 +191,9 @@ public class AndroidLibraryStub extends AndroidBundleStub implements AndroidLibr
                 && Objects.equals(getLocalJars(), library.getLocalJars())
                 && Objects.equals(getProguardRules(), library.getProguardRules())
                 && Objects.equals(getLintJar(), library.getLintJar())
-                && Objects.equals(getPublicResources(), library.getPublicResources());
+                && Objects.equals(getPublicResources(), library.getPublicResources())
+                && Objects.equals(getSymbolFile(), library.getSymbolFile())
+                && Objects.equals(getExternalAnnotations(), library.getExternalAnnotations());
     }
 
     @Override
@@ -197,7 +211,9 @@ public class AndroidLibraryStub extends AndroidBundleStub implements AndroidLibr
                 getLocalJars(),
                 getProguardRules(),
                 getLintJar(),
-                getPublicResources());
+                getPublicResources(),
+                getSymbolFile(),
+                getExternalAnnotations());
     }
 
     @Override
@@ -211,6 +227,10 @@ public class AndroidLibraryStub extends AndroidBundleStub implements AndroidLibr
                 + myLintJar
                 + ", myPublicResources="
                 + myPublicResources
+               + ", mySymbolFile="
+               + mySymbolFile
+               + ", myExternalAnnotations="
+               + myExternalAnnotations
                 + "} "
                 + super.toString();
     }

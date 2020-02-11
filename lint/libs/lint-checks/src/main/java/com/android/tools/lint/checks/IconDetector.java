@@ -49,8 +49,6 @@ import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.ProductFlavorContainer;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
@@ -1041,7 +1039,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                 double widthStdDev = Math.sqrt(squareWidthSum / (double) count);
                 double heightStdDev = Math.sqrt(squareHeightSum / (double) count);
 
-                if (widthStdDev > meanWidth / 10 || heightStdDev > meanHeight) {
+                if ((widthStdDev > (meanWidth / 10)) || (heightStdDev > meanHeight)) {
                     StringBuilder sb = new StringBuilder(100);
                     sb.append("The image `")
                             .append(name)
@@ -1351,30 +1349,6 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
         }
 
         return cachedRequiredDensities;
-    }
-
-    /**
-     * Adds in the resConfig values specified by the given flavor container, assuming it's in one of
-     * the relevant variantFlavors, into the given set
-     */
-    private static void addResConfigsFromFlavor(
-            @NonNull Set<String> relevantDensities,
-            @Nullable List<String> variantFlavors,
-            @NonNull ProductFlavorContainer container) {
-        ProductFlavor flavor = container.getProductFlavor();
-        if (variantFlavors == null || variantFlavors.contains(flavor.getName())) {
-            if (!flavor.getResourceConfigurations().isEmpty()) {
-                for (String densityName : flavor.getResourceConfigurations()) {
-                    Density density = Density.getEnum(densityName);
-                    if (density != null
-                            && density.isRecommended()
-                            && density != Density.NODPI
-                            && density != Density.ANYDPI) {
-                        relevantDensities.add(densityName);
-                    }
-                }
-            }
-        }
     }
 
     /**

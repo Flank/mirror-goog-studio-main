@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.gradle
+package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.detector.api.CURRENT_API
 import com.android.tools.lint.detector.api.Issue
 import java.util.ArrayList

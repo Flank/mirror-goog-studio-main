@@ -1323,13 +1323,13 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    flavorDimensions  \"pricing\", \"releaseType\"\n"
                                         + "    productFlavors {\n"
                                         + "        beta {\n"
-                                        + "            flavorDimension \"releaseType\"\n"
+                                        + "            dimension \"releaseType\"\n"
                                         + "            resConfig \"en\", \"de\"\n"
                                         + "            resConfigs \"nodpi\", \"hdpi\"\n"
                                         + "        }\n"
-                                        + "        normal { flavorDimension \"releaseType\" }\n"
-                                        + "        free { flavorDimension \"pricing\" }\n"
-                                        + "        paid { flavorDimension \"pricing\" }\n"
+                                        + "        normal { dimension \"releaseType\" }\n"
+                                        + "        free { dimension \"pricing\" }\n"
+                                        + "        paid { dimension \"pricing\" }\n"
                                         + "    }\n"
                                         + "}\n"))
                 .issues(ManifestDetector.MIPMAP)
@@ -1806,8 +1806,12 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "</manifest>\n"),
                         gradle(
                                 ""
+                                        + "\n"
                                         + "apply plugin: 'com.android.application'\n"
                                         + "\n"
+                                        + "android {\n"
+                                        + "    compileSdkVersion 19\n"
+                                        + "}\n"
                                         + "dependencies {\n"
                                         + "    compile 'com.google.android.gms:play-services-wearable:8.1.+'\n"
                                         + "}"))

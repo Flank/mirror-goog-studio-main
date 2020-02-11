@@ -53,17 +53,6 @@ import static com.android.xml.AndroidManifest.NODE_METADATA;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ApiVersion;
-import com.android.builder.model.BuildTypeContainer;
-import com.android.builder.model.Dependencies;
-import com.android.builder.model.MavenCoordinates;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.SourceProviderContainer;
-import com.android.builder.model.Variant;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.MavenRepositories;
@@ -72,6 +61,7 @@ import com.android.ide.common.resources.ResourceRepository;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.resources.ResourceUrl;
+import com.android.sdklib.AndroidVersion;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -84,6 +74,10 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
+import com.android.tools.lint.model.LmLibrary;
+import com.android.tools.lint.model.LmMavenName;
+import com.android.tools.lint.model.LmSourceProvider;
+import com.android.tools.lint.model.LmVariant;
 import com.android.utils.StringHelper;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Maps;
@@ -123,41 +117,41 @@ public class ManifestDetector extends Detector implements XmlScanner {
     /** Missing a {@code <uses-sdk>} element */
     public static final Issue USES_SDK =
             Issue.create(
-                            "UsesMinSdkAttributes",
-                            "Minimum SDK and target SDK attributes not defined",
-                            "The manifest should contain a `<uses-sdk>` element which defines the "
-                                    + "minimum API Level required for the application to run, "
-                                    + "as well as the target version (the highest API level you have tested "
-                                    + "the version for).",
-                            Category.CORRECTNESS,
-                            9,
-                            Severity.WARNING,
-                            IMPLEMENTATION)
+                    "UsesMinSdkAttributes",
+                    "Minimum SDK and target SDK attributes not defined",
+                    "The manifest should contain a `<uses-sdk>` element which defines the "
+                            + "minimum API Level required for the application to run, "
+                            + "as well as the target version (the highest API level you have tested "
+                            + "the version for).",
+                    Category.CORRECTNESS,
+                    9,
+                    Severity.WARNING,
+                    IMPLEMENTATION)
                     .addMoreInfo(
                             "https://developer.android.com/guide/topics/manifest/uses-sdk-element.html");
 
     /** Using a targetSdkVersion that isn't recent */
     public static final Issue TARGET_NEWER =
             Issue.create(
-                            "OldTargetApi",
-                            "Target SDK attribute is not targeting latest version",
-                            "When your application runs on a version of Android that is more recent than your "
-                                    + "`targetSdkVersion` specifies that it has been tested with, various compatibility "
-                                    + "modes kick in. This ensures that your application continues to work, but it may "
-                                    + "look out of place. For example, if the `targetSdkVersion` is less than 14, your "
-                                    + "app may get an option button in the UI.\n"
-                                    + "\n"
-                                    + "To fix this issue, set the `targetSdkVersion` to the highest available value. Then "
-                                    + "test your app to make sure everything works correctly. You may want to consult "
-                                    + "the compatibility notes to see what changes apply to each version you are adding "
-                                    + "support for: "
-                                    + "https://developer.android.com/reference/android/os/Build.VERSION_CODES.html "
-                                    + "as well as follow this guide:\n"
-                                    + "https://developer.android.com/distribute/best-practices/develop/target-sdk.html",
-                            Category.CORRECTNESS,
-                            6,
-                            Severity.WARNING,
-                            IMPLEMENTATION)
+                    "OldTargetApi",
+                    "Target SDK attribute is not targeting latest version",
+                    "When your application runs on a version of Android that is more recent than your "
+                            + "`targetSdkVersion` specifies that it has been tested with, various compatibility "
+                            + "modes kick in. This ensures that your application continues to work, but it may "
+                            + "look out of place. For example, if the `targetSdkVersion` is less than 14, your "
+                            + "app may get an option button in the UI.\n"
+                            + "\n"
+                            + "To fix this issue, set the `targetSdkVersion` to the highest available value. Then "
+                            + "test your app to make sure everything works correctly. You may want to consult "
+                            + "the compatibility notes to see what changes apply to each version you are adding "
+                            + "support for: "
+                            + "https://developer.android.com/reference/android/os/Build.VERSION_CODES.html "
+                            + "as well as follow this guide:\n"
+                            + "https://developer.android.com/distribute/best-practices/develop/target-sdk.html",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION)
                     .addMoreInfo(
                             "https://developer.android.com/distribute/best-practices/develop/target-sdk.html")
                     .addMoreInfo(
@@ -166,33 +160,33 @@ public class ManifestDetector extends Detector implements XmlScanner {
     /** Using multiple {@code <uses-sdk>} elements */
     public static final Issue MULTIPLE_USES_SDK =
             Issue.create(
-                            "MultipleUsesSdk",
-                            "Multiple `<uses-sdk>` elements in the manifest",
-                            "The `<uses-sdk>` element should appear just once; the tools will **not** merge the "
-                                    + "contents of all the elements so if you split up the attributes across multiple "
-                                    + "elements, only one of them will take effect. To fix this, just merge all the "
-                                    + "attributes from the various elements into a single <uses-sdk> element.",
-                            Category.CORRECTNESS,
-                            6,
-                            Severity.FATAL,
-                            IMPLEMENTATION)
+                    "MultipleUsesSdk",
+                    "Multiple `<uses-sdk>` elements in the manifest",
+                    "The `<uses-sdk>` element should appear just once; the tools will **not** merge the "
+                            + "contents of all the elements so if you split up the attributes across multiple "
+                            + "elements, only one of them will take effect. To fix this, just merge all the "
+                            + "attributes from the various elements into a single <uses-sdk> element.",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.FATAL,
+                    IMPLEMENTATION)
                     .addMoreInfo(
                             "https://developer.android.com/guide/topics/manifest/uses-sdk-element.html");
 
     /** Missing a {@code <uses-sdk>} element */
     public static final Issue WRONG_PARENT =
             Issue.create(
-                            "WrongManifestParent",
-                            "Wrong manifest parent",
-                            "The `<uses-library>` element should be defined as a direct child of the "
-                                    + "`<application>` tag, not the `<manifest>` tag or an `<activity>` tag. Similarly, "
-                                    + "a `<uses-sdk>` tag must be declared at the root level, and so on. This check "
-                                    + "looks for incorrect declaration locations in the manifest, and complains "
-                                    + "if an element is found in the wrong place.",
-                            Category.CORRECTNESS,
-                            6,
-                            Severity.FATAL,
-                            IMPLEMENTATION)
+                    "WrongManifestParent",
+                    "Wrong manifest parent",
+                    "The `<uses-library>` element should be defined as a direct child of the "
+                            + "`<application>` tag, not the `<manifest>` tag or an `<activity>` tag. Similarly, "
+                            + "a `<uses-sdk>` tag must be declared at the root level, and so on. This check "
+                            + "looks for incorrect declaration locations in the manifest, and complains "
+                            + "if an element is found in the wrong place.",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.FATAL,
+                    IMPLEMENTATION)
                     .addMoreInfo(
                             "https://developer.android.com/guide/topics/manifest/manifest-intro.html");
 
@@ -217,34 +211,34 @@ public class ManifestDetector extends Detector implements XmlScanner {
     /** Not explicitly defining allowBackup */
     public static final Issue ALLOW_BACKUP =
             Issue.create(
-                            "AllowBackup",
-                            "AllowBackup/FullBackupContent Problems",
-                            "The `allowBackup` attribute determines if an application's data can be backed up "
-                                    + "and restored. It is documented at "
-                                    + "https://developer.android.com/reference/android/R.attr.html#allowBackup\n"
-                                    + "\n"
-                                    + "By default, this flag is set to `true` which means application data can be "
-                                    + "backed up and restored by the OS. Setting `allowBackup=\"false\"` opts the "
-                                    + "application out of being backed up and so users can't restore data related "
-                                    + "to it when they go through the device setup wizard.\n"
-                                    + "\n"
-                                    + "Allowing backups may have security consequences for an application. Currently "
-                                    + "`adb backup` allows users who have enabled USB debugging to copy application "
-                                    + "data off of the device. Once backed up, all application data can be read by "
-                                    + "the user. `adb restore` allows creation of application data from a source specified "
-                                    + "by the user. Following a restore, applications should not assume that the "
-                                    + "data, file permissions, and directory permissions were created by the "
-                                    + "application itself.\n"
-                                    + "\n"
-                                    + "To fix this warning, decide whether your application should support backup, "
-                                    + "and explicitly set `android:allowBackup=(true|false)\"`.\n"
-                                    + "\n"
-                                    + "If not set to false, and if targeting API 23 or later, lint will also warn "
-                                    + "that you should set `android:fullBackupContent` to configure auto backup.",
-                            Category.SECURITY,
-                            3,
-                            Severity.WARNING,
-                            IMPLEMENTATION)
+                    "AllowBackup",
+                    "AllowBackup/FullBackupContent Problems",
+                    "The `allowBackup` attribute determines if an application's data can be backed up "
+                            + "and restored. It is documented at "
+                            + "https://developer.android.com/reference/android/R.attr.html#allowBackup\n"
+                            + "\n"
+                            + "By default, this flag is set to `true` which means application data can be "
+                            + "backed up and restored by the OS. Setting `allowBackup=\"false\"` opts the "
+                            + "application out of being backed up and so users can't restore data related "
+                            + "to it when they go through the device setup wizard.\n"
+                            + "\n"
+                            + "Allowing backups may have security consequences for an application. Currently "
+                            + "`adb backup` allows users who have enabled USB debugging to copy application "
+                            + "data off of the device. Once backed up, all application data can be read by "
+                            + "the user. `adb restore` allows creation of application data from a source specified "
+                            + "by the user. Following a restore, applications should not assume that the "
+                            + "data, file permissions, and directory permissions were created by the "
+                            + "application itself.\n"
+                            + "\n"
+                            + "To fix this warning, decide whether your application should support backup, "
+                            + "and explicitly set `android:allowBackup=(true|false)\"`.\n"
+                            + "\n"
+                            + "If not set to false, and if targeting API 23 or later, lint will also warn "
+                            + "that you should set `android:fullBackupContent` to configure auto backup.",
+                    Category.SECURITY,
+                    3,
+                    Severity.WARNING,
+                    IMPLEMENTATION)
                     .addMoreInfo(BACKUP_DOCUMENTATION_URL)
                     .addMoreInfo(
                             "https://developer.android.com/reference/android/R.attr.html#allowBackup");
@@ -270,18 +264,18 @@ public class ManifestDetector extends Detector implements XmlScanner {
     /** Using a resource for attributes that do not allow it */
     public static final Issue SET_VERSION =
             Issue.create(
-                            "MissingVersion",
-                            "Missing application name/version",
-                            "You should define the version information for your application.\n"
-                                    + "`android:versionCode`: An integer value that represents the version of the "
-                                    + "application code, relative to other versions.\n"
-                                    + "\n"
-                                    + "`android:versionName`: A string value that represents the release version of "
-                                    + "the application code, as it should be shown to users.",
-                            Category.CORRECTNESS,
-                            2,
-                            Severity.WARNING,
-                            IMPLEMENTATION)
+                    "MissingVersion",
+                    "Missing application name/version",
+                    "You should define the version information for your application.\n"
+                            + "`android:versionCode`: An integer value that represents the version of the "
+                            + "application code, relative to other versions.\n"
+                            + "\n"
+                            + "`android:versionName`: A string value that represents the release version of "
+                            + "the application code, as it should be shown to users.",
+                    Category.CORRECTNESS,
+                    2,
+                    Severity.WARNING,
+                    IMPLEMENTATION)
                     .addMoreInfo(
                             "https://developer.android.com/studio/publish/versioning#appversioning");
 
@@ -313,15 +307,15 @@ public class ManifestDetector extends Detector implements XmlScanner {
     /** Not explicitly defining application icon */
     public static final Issue APPLICATION_ICON =
             Issue.create(
-                            "MissingApplicationIcon",
-                            "Missing application icon",
-                            "You should set an icon for the application as whole because there is no "
-                                    + "default. This attribute must be set as a reference to a drawable resource "
-                                    + "containing the image (for example `@drawable/icon`).",
-                            Category.ICONS,
-                            5,
-                            Severity.WARNING,
-                            IMPLEMENTATION)
+                    "MissingApplicationIcon",
+                    "Missing application icon",
+                    "You should set an icon for the application as whole because there is no "
+                            + "default. This attribute must be set as a reference to a drawable resource "
+                            + "containing the image (for example `@drawable/icon`).",
+                    Category.ICONS,
+                    5,
+                    Severity.WARNING,
+                    IMPLEMENTATION)
                     .addMoreInfo(
                             "https://developer.android.com/studio/publish/preparing#publishing-configure");
 
@@ -405,30 +399,30 @@ public class ManifestDetector extends Detector implements XmlScanner {
     /** Uses Wear Bind Listener which is deprecated */
     public static final Issue WEARABLE_BIND_LISTENER =
             Issue.create(
-                            "WearableBindListener",
-                            "Usage of Android Wear BIND_LISTENER is deprecated",
-                            "BIND_LISTENER receives all Android Wear events whether the application needs "
-                                    + "them or not. This can be inefficient and cause applications to wake up "
-                                    + "unnecessarily. With Google Play Services 8.2.0 or later it is recommended to use "
-                                    + "a more efficient combination of manifest listeners and api-based live "
-                                    + "listeners filtered by action, path and/or path prefix. ",
-                            Category.PERFORMANCE,
-                            6,
-                            Severity.FATAL,
-                            IMPLEMENTATION)
+                    "WearableBindListener",
+                    "Usage of Android Wear BIND_LISTENER is deprecated",
+                    "BIND_LISTENER receives all Android Wear events whether the application needs "
+                            + "them or not. This can be inefficient and cause applications to wake up "
+                            + "unnecessarily. With Google Play Services 8.2.0 or later it is recommended to use "
+                            + "a more efficient combination of manifest listeners and api-based live "
+                            + "listeners filtered by action, path and/or path prefix. ",
+                    Category.PERFORMANCE,
+                    6,
+                    Severity.FATAL,
+                    IMPLEMENTATION)
                     .addMoreInfo(
                             "https://android-developers.googleblog.com/2016/04/deprecation-of-bindlistener.html");
 
     public static final Issue APP_INDEXING_SERVICE =
             Issue.create(
-                            "AppIndexingService",
-                            "App Indexing Background Services",
-                            "Apps targeting Android 8.0 or higher can no longer rely on background services while listening for updates "
-                                    + "to the on-device index. Use a `BroadcastReceiver` for the `UPDATE_INDEX` intent to continue supporting indexing in your app.",
-                            Category.CORRECTNESS,
-                            4,
-                            Severity.WARNING,
-                            IMPLEMENTATION)
+                    "AppIndexingService",
+                    "App Indexing Background Services",
+                    "Apps targeting Android 8.0 or higher can no longer rely on background services while listening for updates "
+                            + "to the on-device index. Use a `BroadcastReceiver` for the `UPDATE_INDEX` intent to continue supporting indexing in your app.",
+                    Category.CORRECTNESS,
+                    4,
+                    Severity.WARNING,
+                    IMPLEMENTATION)
                     .addMoreInfo(
                             "https://firebase.google.com/docs/app-indexing/android/personal-content#add-a-broadcast-receiver-to-your-app");
 
@@ -442,7 +436,8 @@ public class ManifestDetector extends Detector implements XmlScanner {
             GradleCoordinate.parseVersionOnly("8.2.0");
 
     /** Constructs a new {@link ManifestDetector} check */
-    public ManifestDetector() {}
+    public ManifestDetector() {
+    }
 
     private boolean mSeenApplication;
 
@@ -653,10 +648,9 @@ public class ManifestDetector extends Detector implements XmlScanner {
     private static void checkOverride(XmlContext context, Element element, String attributeName) {
         Project project = context.getProject();
         Attr attribute = element.getAttributeNodeNS(ANDROID_URI, attributeName);
-        if (project.isGradleProject() && attribute != null && context.isEnabled(GRADLE_OVERRIDES)) {
-            Variant variant = project.getCurrentVariant();
+        if (attribute != null && context.isEnabled(GRADLE_OVERRIDES)) {
+            LmVariant variant = project.getBuildVariant();
             if (variant != null) {
-                ProductFlavor flavor = variant.getMergedFlavor();
                 String gradleValue = null;
                 if (ATTR_MIN_SDK_VERSION.equals(attributeName)) {
                     if (element.hasAttributeNS(TOOLS_URI, "overrideLibrary")) {
@@ -667,18 +661,18 @@ public class ManifestDetector extends Detector implements XmlScanner {
                         // but for now we filter these out; http://b.android.com/186762
                         return;
                     }
-                    ApiVersion minSdkVersion = flavor.getMinSdkVersion();
+                    AndroidVersion minSdkVersion = variant.getMinSdkVersion();
                     gradleValue = minSdkVersion != null ? minSdkVersion.getApiString() : null;
                 } else if (ATTR_TARGET_SDK_VERSION.equals(attributeName)) {
-                    ApiVersion targetSdkVersion = flavor.getTargetSdkVersion();
+                    AndroidVersion targetSdkVersion = variant.getTargetSdkVersion();
                     gradleValue = targetSdkVersion != null ? targetSdkVersion.getApiString() : null;
                 } else if (ATTR_VERSION_CODE.equals(attributeName)) {
-                    Integer versionCode = flavor.getVersionCode();
+                    Integer versionCode = variant.getVersionCode();
                     if (versionCode != null) {
                         gradleValue = versionCode.toString();
                     }
                 } else if (ATTR_VERSION_NAME.equals(attributeName)) {
-                    gradleValue = flavor.getVersionName();
+                    gradleValue = variant.getVersionName();
                 } else {
                     assert false : attributeName;
                     return;
@@ -784,7 +778,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                             Attr attr = innerChild.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
                             if (attr != null
                                     && "com.google.firebase.appindexing.UPDATE_INDEX"
-                                            .equals(attr.getValue())) {
+                                    .equals(attr.getValue())) {
                                 String message =
                                         "`UPDATE_INDEX` is configured as a service in your app, "
                                                 + "which is no longer supported for the API level you're targeting. "
@@ -805,7 +799,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                         Attr attr = innerChild.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
                         if (attr != null
                                 && "com.google.android.gms.wearable.BIND_LISTENER"
-                                        .equals(attr.getValue())) {
+                                .equals(attr.getValue())) {
                             bindListenerAttr = attr;
                             break;
                         }
@@ -815,10 +809,9 @@ public class ManifestDetector extends Detector implements XmlScanner {
                     return;
                 }
                 // Ensure that the play-services-wearable version dependency is >= 8.2.0
-                Variant variant = project.getCurrentVariant();
+                LmVariant variant = context.getMainProject().getBuildVariant();
                 if (variant != null) {
-                    Dependencies dependencies = variant.getMainArtifact().getDependencies();
-                    for (AndroidLibrary library : dependencies.getLibraries()) {
+                    for (LmLibrary library : variant.getMainArtifact().getDependencies().getAll()) {
                         if (hasWearableGmsDependency(library)) {
                             context.report(
                                     WEARABLE_BIND_LISTENER,
@@ -830,6 +823,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                         }
                     }
                 }
+
                 // It's possible they are using an older version of play services so
                 // check the build version and report an error if compileSdkVersion >= 24
                 if (project.getBuildSdk() >= 24) {
@@ -1011,7 +1005,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
             Attr name = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
             if (name != null
                     && name.getValue().equals(MOCK_LOCATION_PERMISSION)
-                    && context.getMainProject().isGradleProject()
+                    && context.getMainProject().getBuildModule() != null
                     && !isDebugOrTestManifest(context, context.file)
                     && context.isEnabled(MOCK_LOCATION)) {
                 String message =
@@ -1180,23 +1174,14 @@ public class ManifestDetector extends Detector implements XmlScanner {
 
     // Method to check if the app has a gms wearable dependency that
     // matches the specific criteria i.e >= MIN_WEARABLE_GMS_VERSION
-    private static boolean hasWearableGmsDependency(AndroidLibrary library) {
-        MavenCoordinates mc = library.getResolvedCoordinates();
-        // Annotated as non-null, but observed to be null after failed Gradle syncs
-        //noinspection ConstantConditions
-        if (mc != null
-                && mc.getGroupId().equals(GMS_GROUP_ID)
+    private static boolean hasWearableGmsDependency(LmLibrary library) {
+        LmMavenName mc = library.getResolvedCoordinates();
+        if (mc.getGroupId().equals(GMS_GROUP_ID)
                 && mc.getArtifactId().equals("play-services-wearable")) {
             GradleCoordinate gc = GradleCoordinate.parseVersionOnly(mc.getVersion());
-            if (COMPARE_PLUS_HIGHER.compare(gc, MIN_WEARABLE_GMS_VERSION) >= 0) {
-                return true;
-            }
+            return COMPARE_PLUS_HIGHER.compare(gc, MIN_WEARABLE_GMS_VERSION) >= 0;
         }
-        for (AndroidLibrary dependency : library.getLibraryDependencies()) {
-            if (hasWearableGmsDependency(dependency)) {
-                return true;
-            }
-        }
+
         return false;
     }
 
@@ -1289,39 +1274,14 @@ public class ManifestDetector extends Detector implements XmlScanner {
      * Returns true iff the given manifest file is in a debug-specific source set, or a test source
      * set
      */
+    @SuppressWarnings("FileComparisons")
     private static boolean isDebugOrTestManifest(
             @NonNull XmlContext context, @NonNull File manifestFile) {
-        IdeAndroidProject model = context.getProject().getGradleProjectModel();
-        if (model != null) {
-            // Quickly check if it's the main manifest first; that's the most likely scenario
-            if (manifestFile.equals(
-                    model.getDefaultConfig().getSourceProvider().getManifestFile())) {
-                return false;
-            }
-
-            // Debug build type?
-            for (BuildTypeContainer container : model.getBuildTypes()) {
-                if (container.getBuildType().isDebuggable()) {
-                    if (manifestFile.equals(container.getSourceProvider().getManifestFile())) {
-                        return true;
-                    }
-                }
-            }
-
-            // Test source set?
-            for (SourceProviderContainer extra :
-                    model.getDefaultConfig().getExtraSourceProviders()) {
-                String artifactName = extra.getArtifactName();
-                if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)
-                        && manifestFile.equals(extra.getSourceProvider().getManifestFile())) {
-                    return true;
-                }
-            }
-            for (ProductFlavorContainer container : model.getProductFlavors()) {
-                for (SourceProviderContainer extra : container.getExtraSourceProviders()) {
-                    String artifactName = extra.getArtifactName();
-                    if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)
-                            && manifestFile.equals(extra.getSourceProvider().getManifestFile())) {
+        LmVariant variant = context.getProject().getBuildVariant();
+        if (variant != null) {
+            for (LmSourceProvider provider : variant.getSourceProviders()) {
+                if (provider.isDebugOnly() || provider.isTest()) {
+                    if (manifestFile.equals(provider.getManifestFile())) {
                         return true;
                     }
                 }

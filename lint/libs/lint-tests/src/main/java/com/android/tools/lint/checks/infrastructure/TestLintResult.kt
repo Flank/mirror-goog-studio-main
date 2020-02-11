@@ -17,9 +17,9 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.SdkConstants.DOT_XML
-import com.android.tools.lint.UastEnvironment
 import com.android.tools.lint.LintStats
 import com.android.tools.lint.Reporter
+import com.android.tools.lint.UastEnvironment
 import com.android.tools.lint.Warning
 import com.android.tools.lint.XmlReporter
 import com.android.tools.lint.checks.BuiltinIssueRegistry

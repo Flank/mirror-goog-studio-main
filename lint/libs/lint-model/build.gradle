@@ -1,0 +1,28 @@
+apply plugin: 'java'
+apply plugin: 'kotlin'
+apply plugin: 'jacoco-tools-base'
+
+group = 'com.android.tools.lint'
+archivesBaseName = 'lint-model'
+version = rootProject.ext.baseVersion
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+dependencies {
+    compile project(':base:common')
+    compile project(':base:sdk-common')
+    compile project(':base:builder-model')
+    compile libs.kotlin_stdlib
+    compile libs.kxml
+}
+
+project.ext.pomName = 'Android Tools Lint Build System Model'
+project.ext.pomDesc = 'Lint build system model'
+
+apply from: "$rootDir/buildSrc/base/publish.gradle"
+apply from: "$rootDir/buildSrc/base/javadoc.gradle"
+

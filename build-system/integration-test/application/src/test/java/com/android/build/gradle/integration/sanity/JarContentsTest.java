@@ -1144,6 +1144,16 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
         expected.putAll(
+                "com/android/tools/lint/lint-model",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/lint/",
+                "com/android/tools/lint/model/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+        expected.putAll(
                 "com/android/tools/lint/lint-tests",
                 "com/",
                 "com/android/",

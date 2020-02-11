@@ -58,7 +58,6 @@ import com.android.tools.lint.detector.api.Severity.Companion.min
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.describeCounts
 import com.android.tools.lint.detector.api.getEncodedString
-import com.android.tools.lint.detector.api.getSourceProviders
 import com.android.tools.lint.detector.api.guessGradleLocation
 import com.android.tools.lint.detector.api.isJdkFolder
 import com.android.tools.lint.helpers.DefaultUastParser
@@ -216,17 +215,14 @@ open class LintCliClient : LintClient {
         }
     }
 
-    protected open val baselineVariantName: String
+    protected open val baselineVariantName: String?
         get() {
             if (flags.isFatalOnly) {
                 return LintBaseline.VARIANT_FATAL
             }
             val projects: Collection<Project> = driver.projects
             for (project in projects) {
-                val variant = project.currentVariant
-                if (variant != null) {
-                    return variant.name
-                }
+                return project.buildVariant?.name ?: continue
             }
             return LintBaseline.VARIANT_ALL
         }
@@ -237,14 +233,22 @@ open class LintCliClient : LintClient {
      */
     @Throws(IOException::class)
     fun run(registry: IssueRegistry, files: List<File>): Int {
+        val request = createLintRequest(files)
+        return run(registry, request)
+    }
+
+    /**
+     * Runs the static analysis command line driver. You need to add at least one error reporter to
+     * the command line flags.
+     */
+    @Throws(IOException::class)
+    fun run(registry: IssueRegistry, lintRequest: LintRequest): Int {
         val startTime = System.currentTimeMillis()
-        assert(flags.reporters.isNotEmpty())
         this.registry = registry
         val kotlinPerfReport = System.getenv("KOTLIN_PERF_REPORT")
         if (kotlinPerfReport != null && kotlinPerfReport.isNotEmpty()) {
             kotlinPerformanceManager = LintCliKotlinPerformanceManager(kotlinPerfReport)
         }
-        val lintRequest = createLintRequest(files)
         driver = createDriver(registry, lintRequest)
         driver.analysisStartTime = startTime
         addProgressPrinter()
@@ -392,7 +396,7 @@ open class LintCliClient : LintClient {
             if (creationVariant != null && creationVariant != checkVariant) {
                 println("\nNote: The baseline was created using a different target/variant than it was checked against.")
                 println("Creation variant: " + getTargetName(creationVariant))
-                println("Current variant: " + getTargetName(checkVariant))
+                println("Current variant: " + if (checkVariant != null) getTargetName(checkVariant) else "none")
             }
             // TODO: If the versions don't match, emit some additional diagnostic hints, such as
             // the possibility that newer versions of lint have newer checks not included in
@@ -469,7 +473,11 @@ open class LintCliClient : LintClient {
 
     /** Creates a lint request  */
     protected open fun createLintRequest(files: List<File>): LintRequest {
-        return LintRequest(this, files)
+        return LintRequest(this, files).also { configureLintRequest(it) }
+    }
+
+    /** Configures a lint request  */
+    protected open fun configureLintRequest(lintRequest: LintRequest) {
     }
 
     override fun log(severity: Severity, exception: Throwable?, format: String?, vararg args: Any) {
@@ -513,7 +521,6 @@ open class LintCliClient : LintClient {
         format: TextFormat,
         fix: LintFix?
     ) {
-        assert(context.isEnabled(issue) || issue.category === Category.LINT)
         if (severity.isError) {
             hasErrors = true
             errorCount++
@@ -1080,6 +1087,8 @@ open class LintCliClient : LintClient {
         knownProjects: Collection<Project>,
         files: MutableSet<File>
     ): Boolean {
+        // TODO: Use bootclasspath from Gradle?
+
         var buildTarget: IAndroidTarget? = null
         var isAndroid = false
         for (project in knownProjects) {
@@ -1221,10 +1230,10 @@ open class LintCliClient : LintClient {
         }
         val injectedFile = File("injected-from-gradle")
         val injectedXml = StringBuilder()
-        if (project.gradleProjectModel != null && project.currentVariant != null) {
-            val mergedFlavor = project.currentVariant!!.mergedFlavor
-            val targetSdkVersion = mergedFlavor.targetSdkVersion
-            val minSdkVersion = mergedFlavor.minSdkVersion
+        val target = project.buildVariant
+        if (target != null) {
+            val targetSdkVersion = target.targetSdkVersion
+            val minSdkVersion = target.minSdkVersion
             if (targetSdkVersion != null || minSdkVersion != null) {
                 injectedXml.append(
                     "" +
@@ -1245,11 +1254,8 @@ open class LintCliClient : LintClient {
             }
         }
         var mainManifest: File? = null
-        if (project.gradleProjectModel != null && project.currentVariant != null) {
-            for (provider in getSourceProviders(
-                project.gradleProjectModel!!,
-                project.currentVariant!!
-            )) {
+        if (target != null) {
+            for (provider in target.sourceProviders) {
                 val manifestFile = provider.manifestFile
                 if (manifestFile.exists()) { // model returns path whether or not it exists
                     if (mainManifest == null) {
@@ -1391,9 +1397,8 @@ open class LintCliClient : LintClient {
                 for (project in projects) {
                     sb.append('-')
                     sb.append(project.name)
-                    val variant = project.currentVariant
-                    if (variant != null) {
-                        sb.append(variant.name)
+                    project.buildVariant?.name.let { variantName ->
+                        sb.append(variantName)
                     }
                 }
             }

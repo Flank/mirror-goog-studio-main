@@ -16,23 +16,18 @@
 
 package com.android.tools.lint.gradle.api
 
-import com.android.builder.model.LintOptions
 import com.android.repository.Revision
+import com.android.tools.lint.model.LmLintOptions
 import org.gradle.api.Project
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import java.io.File
 
 abstract class LintExecutionRequest {
     abstract val project: Project
+
     abstract val gradlePluginVersion: String
 
-    abstract val buildToolsRevision: Revision?
-
-    abstract val lintOptions: LintOptions?
-
-    abstract val sdkHome: File?
-
-    abstract val toolingRegistry: ToolingModelBuilderRegistry?
+    abstract val lintOptions: LmLintOptions?
 
     open val isFatalOnly: Boolean
         get() = false
@@ -41,11 +36,33 @@ abstract class LintExecutionRequest {
 
     abstract val reportsDir: File?
 
-    abstract val variantName: String?
-
     abstract fun getKotlinSourceFolders(variantName: String, project: Project?): List<File>
 
-    abstract fun getVariantInputs(variantName: String): VariantInputs?
-
     open var autoFix = false
+
+    /**
+     * Whether this request is for analyzing Android code. Some fields here only apply
+     * in Android projects (variants etc are concepts from the Android Gradle plugin.)
+     */
+    open var android = true
+
+    // Android specific lint request data below
+
+    /** Version of the Android build tools to use, if specified */
+    abstract val buildToolsRevision: Revision?
+
+    /** Android SDK root directory */
+    abstract val sdkHome: File?
+
+    /** The tooling registry to use to build new builder models */
+    abstract val toolingRegistry: ToolingModelBuilderRegistry?
+
+    /** Non null if we're supposed to analyze exactly one (named) variant */
+    abstract val variantName: String?
+
+    /** All variant names, if we're analyzing across all variants */
+    abstract fun getVariantNames(): Set<String>
+
+    /** Look up additional variant data for the given variant name */
+    abstract fun getVariantInputs(variantName: String): VariantInputs?
 }

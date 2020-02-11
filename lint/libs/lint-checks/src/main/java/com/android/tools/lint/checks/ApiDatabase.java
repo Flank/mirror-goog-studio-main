@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import kotlin.text.Charsets;
 
 /**
  * Database for API checking, providing efficient lookup for a given class, method or field.
@@ -151,7 +152,7 @@ public class ApiDatabase {
 
             // First skip the header
             int offset = 0;
-            byte[] expectedHeader = FILE_HEADER.getBytes(StandardCharsets.US_ASCII);
+            byte[] expectedHeader = FILE_HEADER.getBytes(Charsets.US_ASCII);
             for (byte anExpectedHeader : expectedHeader) {
                 if (anExpectedHeader != b[offset++]) {
                     client.log(

@@ -88,6 +88,7 @@ import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiArrayInitializerExpression
@@ -98,6 +99,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteral
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.annotations.Contract
+import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.uast.UAnnotated
@@ -2379,6 +2381,18 @@ class LintDriver
         override fun getRelativePath(baseFile: File?, file: File?): String? {
             return delegate.getRelativePath(baseFile, file)
         }
+
+        override fun getJdkHome(project: Project?): File? {
+            return delegate.getJdkHome(project)
+        }
+
+        override fun getJavaLanguageLevel(project: Project): LanguageLevel {
+            return delegate.getJavaLanguageLevel(project)
+        }
+
+        override fun getKotlinLanguageLevel(project: Project): LanguageVersionSettings {
+            return delegate.getKotlinLanguageLevel(project)
+        }
     }
 
     private val runLaterOutsideReadActionList = mutableListOf<Runnable>()
@@ -2722,7 +2736,7 @@ class LintDriver
             }
         }
 
-        // Workaround: Kotlin AST is missing these annotations
+        // Workaround: Kotlin AST is missing these annotations (IDEA-234749)
         if (clause is KotlinUCatchClause) {
             clause.sourcePsi.catchParameter?.annotationEntries?.forEach { annotation ->
                 val argList = annotation.valueArgumentList

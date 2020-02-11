@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.sdklib.IAndroidTarget
+import com.android.tools.lint.checks.ApiDatabase.CacheCreator
 import com.android.tools.lint.client.api.LintClient
 import com.google.common.annotations.VisibleForTesting
 import java.io.File

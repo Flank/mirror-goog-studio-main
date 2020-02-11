@@ -64,11 +64,11 @@ class ConstraintLayoutDetector : LayoutDetector() {
         element: Element
     ) {
         // Make sure we're using the current version
-        val variant = context.mainProject.currentVariant
+        val variant = context.mainProject.buildVariant
         var latestAvailable: GradleCoordinate? = null
         if (variant != null) {
             val dependencies = variant.mainArtifact.dependencies
-            for (library in dependencies.libraries) {
+            for (library in dependencies.direct) {
                 val rc = library.resolvedCoordinates
                 if (CONSTRAINT_LAYOUT_LIB_GROUP_ID == rc.groupId &&
                     CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID == rc.artifactId) {

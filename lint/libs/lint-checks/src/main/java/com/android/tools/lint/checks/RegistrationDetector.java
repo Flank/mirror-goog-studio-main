@@ -29,10 +29,6 @@ import static com.android.SdkConstants.TAG_SERVICE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.SourceProviderContainer;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
@@ -45,10 +41,9 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
-import com.android.utils.SdkUtils;
+import com.android.tools.lint.model.LmModule;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Maps;
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -193,37 +188,8 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
         }
 
         // Don't flag activities registered in test source sets
-        if (context.getProject().isGradleProject()) {
-            IdeAndroidProject model = context.getProject().getGradleProjectModel();
-            if (model != null) {
-                String javaSource = context.file.getPath();
-                // Test source set?
-
-                for (SourceProviderContainer extra :
-                        model.getDefaultConfig().getExtraSourceProviders()) {
-                    String artifactName = extra.getArtifactName();
-                    if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)) {
-                        for (File file : extra.getSourceProvider().getJavaDirectories()) {
-                            if (SdkUtils.startsWithIgnoreCase(javaSource, file.getPath())) {
-                                return;
-                            }
-                        }
-                    }
-                }
-
-                for (ProductFlavorContainer container : model.getProductFlavors()) {
-                    for (SourceProviderContainer extra : container.getExtraSourceProviders()) {
-                        String artifactName = extra.getArtifactName();
-                        if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)) {
-                            for (File file : extra.getSourceProvider().getJavaDirectories()) {
-                                if (SdkUtils.startsWithIgnoreCase(javaSource, file.getPath())) {
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        if (context.isTestSource()) {
+            return;
         }
 
         Location location = context.getNameLocation(node);
@@ -232,6 +198,7 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
                         "The `<%1$s> %2$s` is not registered in the manifest", tag, className);
         context.report(ISSUE, node, location, message);
     }
+
 
     private static String getTag(@NonNull JavaEvaluator evaluator, @NonNull UClass cls) {
         String tag = null;

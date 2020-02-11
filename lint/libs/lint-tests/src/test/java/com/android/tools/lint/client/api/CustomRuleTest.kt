@@ -15,7 +15,6 @@
  */
 package com.android.tools.lint.client.api
 
-import com.android.tools.lint.checks.infrastructure.TestResultChecker
 import com.android.tools.lint.checks.infrastructure.TestFiles.base64gzip
 import com.android.tools.lint.checks.infrastructure.TestFiles.classpath
 import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
@@ -24,6 +23,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import com.android.tools.lint.checks.infrastructure.TestResultChecker
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Project
 import com.google.common.truth.Truth.assertThat
@@ -150,7 +150,7 @@ class CustomRuleTest {
             .incremental("bin/classes/test/pkg/AppCompatTest.class")
             .allowDelayedIssueRegistration()
             .issueIds("UnitTestAppCompatMethod")
-            .allowObsoleteLintChecks(false)
+            .allowObsoleteLintChecks(true)
             .modifyGradleMocks { _, variant ->
                 val dependencies = variant.mainArtifact.dependencies
                 val library = dependencies.libraries.iterator().next()
@@ -211,7 +211,7 @@ class CustomRuleTest {
                 context: Context?
             ) {
                 if (type == LintListener.EventType.REGISTERED_PROJECT) {
-                    val buildFolder = project?.gradleProjectModel?.buildFolder ?: return
+                    val buildFolder = project?.buildModule?.buildFolder ?: return
                     val lintFolder = File(buildFolder, "intermediates/lint")
                     lintFolder.mkdirs()
                     lintJar.copyTo(File(lintFolder, lintJar.name))

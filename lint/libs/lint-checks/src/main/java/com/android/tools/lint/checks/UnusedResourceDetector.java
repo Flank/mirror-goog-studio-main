@@ -39,16 +39,6 @@ import static com.google.common.base.Charsets.UTF_8;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.BuildType;
-import com.android.builder.model.BuildTypeContainer;
-import com.android.builder.model.ClassField;
-import com.android.builder.model.ProductFlavor;
-import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.SourceProvider;
-import com.android.builder.model.Variant;
-import com.android.builder.model.ViewBindingOptions;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
-import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceFolderType;
@@ -73,6 +63,10 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
+import com.android.tools.lint.model.LmModule;
+import com.android.tools.lint.model.LmResourceField;
+import com.android.tools.lint.model.LmSourceProvider;
+import com.android.tools.lint.model.LmVariant;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -191,42 +185,27 @@ public class UnusedResourceDetector extends ResourceXmlDetector
 
     private void addDynamicResources(@NonNull Context context) {
         Project project = context.getProject();
-        IdeAndroidProject model = project.getGradleProjectModel();
-        if (model != null) {
-            Variant selectedVariant = project.getCurrentVariant();
-            if (selectedVariant != null) {
-                ProductFlavor mergedProductFlavor = selectedVariant.getMergedFlavor();
-                recordManifestPlaceHolderUsages(mergedProductFlavor.getManifestPlaceholders());
-                for (BuildTypeContainer container : model.getBuildTypes()) {
-                    BuildType buildType = container.getBuildType();
-                    if (selectedVariant.getBuildType().equals(buildType.getName())) {
-                        addDynamicResources(project, buildType.getResValues());
-                        recordManifestPlaceHolderUsages(buildType.getManifestPlaceholders());
-                    }
-                }
-            }
-            ProductFlavor flavor = model.getDefaultConfig().getProductFlavor();
-            addDynamicResources(project, flavor.getResValues());
+        LmVariant variant = project.getBuildVariant();
+        if (variant != null) {
+            recordManifestPlaceHolderUsages(variant.getManifestPlaceholders());
+            addDynamicResources(project, variant.getResValues());
         }
     }
 
-    private void recordManifestPlaceHolderUsages(Map<String, Object> manifestPlaceholders) {
-        for (Object value : manifestPlaceholders.values()) {
-            if (value instanceof String) {
-                String string = (String) value;
-                Resource resource = model.getResourceFromUrl(string);
-                ResourceUsageModel.markReachable(resource);
-            }
+    private void recordManifestPlaceHolderUsages(Map<String, String> manifestPlaceholders) {
+        for (String value : manifestPlaceholders.values()) {
+            Resource resource = model.getResourceFromUrl(value);
+            ResourceUsageModel.markReachable(resource);
         }
     }
 
     private void addDynamicResources(
-            @NonNull Project project, @NonNull Map<String, ClassField> resValues) {
+            @NonNull Project project, @NonNull Map<String, LmResourceField> resValues) {
         Set<String> keys = resValues.keySet();
         if (!keys.isEmpty()) {
             Location location = Lint.guessGradleLocation(project);
             for (String name : keys) {
-                ClassField field = resValues.get(name);
+                LmResourceField field = resValues.get(name);
                 ResourceType type = ResourceType.fromClassName(field.getType());
                 if (type == null) {
                     // Highly unlikely. This would happen if in the future we add
@@ -244,17 +223,10 @@ public class UnusedResourceDetector extends ResourceXmlDetector
     @Override
     public void beforeCheckEachProject(@NonNull Context context) {
         projectUsesViewBinding = false;
-        GradleVersion gradleVersion = context.getProject().getGradleModelVersion();
-        if (gradleVersion != null && gradleVersion.isAtLeast(3, 6, 0)) {
-            IdeAndroidProject gradleModel = context.getProject().getGradleProjectModel();
-            ViewBindingOptions viewBindingOptions =
-                    (gradleModel != null) ? gradleModel.getViewBindingOptions() : null;
-            if (viewBindingOptions != null) {
-                projectUsesViewBinding = viewBindingOptions.isEnabled();
-            }
+        LmModule model = context.getProject().getBuildModule();
+        if (model != null) {
+            projectUsesViewBinding = model.getBuildFeatures().getViewBinding();
         }
-
-        super.beforeCheckEachProject(context);
     }
 
     @Override
@@ -276,14 +248,10 @@ public class UnusedResourceDetector extends ResourceXmlDetector
             // such that we don't incorrectly remove resources that are
             // used by some other source set.
             // In Gradle etc we don't need to do this (and in large projects it's expensive)
-            if (sIncludeInactiveReferences
-                    && project.isGradleProject()
-                    && !project.isLibrary()
-                    && LintClient.isStudio()) {
-                IdeAndroidProject model = project.getGradleProjectModel();
-                Variant variant = project.getCurrentVariant();
-                if (model != null && variant != null) {
-                    addInactiveReferences(model, variant);
+            if (sIncludeInactiveReferences && !project.isLibrary() && LintClient.isStudio()) {
+                LmVariant variant = project.getBuildVariant();
+                if (variant != null) {
+                    addInactiveReferences(variant);
                 }
             }
 
@@ -345,7 +313,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                         continue;
                     }
 
-                    // Try to figure out the file if it's a file based resource (such as R.layout) --
+                    // Try to figure out the file if it's a file based resource (such as R.layout);
                     // in that case we can figure out the filename since it has a simple mapping
                     // from the resource name (though the presence of qualifiers like -land etc
                     // makes it a little tricky if there's no base file provided)
@@ -429,56 +397,6 @@ public class UnusedResourceDetector extends ResourceXmlDetector
         }
     }
 
-    /** Returns source providers that are <b>not</b> part of the given variant */
-    @NonNull
-    private static List<SourceProvider> getInactiveSourceProviders(
-            @NonNull IdeAndroidProject project, @NonNull Variant variant) {
-        Collection<Variant> variants = project.getVariants();
-        List<SourceProvider> providers = Lists.newArrayList();
-
-        // Add other flavors
-        Collection<ProductFlavorContainer> flavors = project.getProductFlavors();
-        for (ProductFlavorContainer pfc : flavors) {
-            if (variant.getProductFlavors().contains(pfc.getProductFlavor().getName())) {
-                continue;
-            }
-            providers.add(pfc.getSourceProvider());
-        }
-
-        // Add other multi-flavor source providers
-        for (Variant v : variants) {
-            if (variant.getName().equals(v.getName())) {
-                continue;
-            }
-            SourceProvider provider = v.getMainArtifact().getMultiFlavorSourceProvider();
-            if (provider != null) {
-                providers.add(provider);
-            }
-        }
-
-        // Add other the build types
-        Collection<BuildTypeContainer> buildTypes = project.getBuildTypes();
-        for (BuildTypeContainer btc : buildTypes) {
-            if (variant.getBuildType().equals(btc.getBuildType().getName())) {
-                continue;
-            }
-            providers.add(btc.getSourceProvider());
-        }
-
-        // Add other the other variant source providers
-        for (Variant v : variants) {
-            if (variant.getName().equals(v.getName())) {
-                continue;
-            }
-            SourceProvider provider = v.getMainArtifact().getVariantSourceProvider();
-            if (provider != null) {
-                providers.add(provider);
-            }
-        }
-
-        return providers;
-    }
-
     private void recordInactiveJavaReferences(@NonNull File resDir) {
         File[] files = resDir.listFiles();
         if (files != null) {
@@ -544,8 +462,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector
         }
     }
 
-    private void addInactiveReferences(@NonNull IdeAndroidProject model, @NonNull Variant variant) {
-        for (SourceProvider provider : getInactiveSourceProviders(model, variant)) {
+    private void addInactiveReferences(@NonNull LmVariant active) {
+        LmModule module = active.getModule();
+        for (LmSourceProvider provider : module.getInactiveSourceProviders(active)) {
             for (File res : provider.getResDirectories()) {
                 // Scan resource directory
                 if (res.isDirectory()) {

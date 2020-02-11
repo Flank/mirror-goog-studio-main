@@ -30,7 +30,6 @@ import com.android.SdkConstants.LIBS_FOLDER
 import com.android.SdkConstants.PLATFORM_LINUX
 import com.android.SdkConstants.RES_FOLDER
 import com.android.SdkConstants.SRC_FOLDER
-import com.android.builder.model.AndroidLibrary
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.ResourceVisibilityLookup
@@ -57,17 +56,17 @@ import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.endsWith
 import com.android.tools.lint.detector.api.getLanguageLevel
 import com.android.tools.lint.detector.api.isManifestFolder
+import com.android.tools.lint.model.LmAndroidLibrary
+import com.android.tools.lint.model.LmLibrary
 import com.android.utils.CharSequences
 import com.android.utils.Pair
 import com.android.utils.XmlUtils
 import com.android.utils.findGradleBuildFile
 import com.google.common.annotations.Beta
-import com.google.common.base.Charsets.UTF_8
 import com.google.common.base.Splitter
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
-import com.google.common.io.Files
 import com.intellij.openapi.util.Computable
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.pom.java.LanguageLevel.JDK_1_7
@@ -1004,10 +1003,9 @@ abstract class LintClient {
 
     /** Returns the expected language level for Java source files in the given project */
     open fun getJavaLanguageLevel(project: Project): LanguageLevel {
-        val model = project.gradleProjectModel
+        val model = project.buildModule
         if (model != null) {
-            val javaCompileOptions = model.javaCompileOptions
-            val sourceCompatibility = javaCompileOptions.sourceCompatibility
+            val sourceCompatibility = model.javaSourceLevel
             val javaLanguageLevel = LanguageLevel.parse(sourceCompatibility)
             if (javaLanguageLevel != null) {
                 return javaLanguageLevel
@@ -1209,8 +1207,8 @@ abstract class LintClient {
      */
     open fun findRuleJars(project: Project): Iterable<File> {
         if (project.isGradleProject) {
-            if (project.isLibrary && project.gradleLibraryModel != null) {
-                val model = project.gradleLibraryModel
+            if (project.isLibrary && project.buildLibraryModel != null) {
+                val model = project.buildLibraryModel
                 if (model != null) {
                     val lintJar = model.lintJar
                     if (lintJar.exists()) {
@@ -1220,16 +1218,14 @@ abstract class LintClient {
             } else if (project.subset != null) {
                 // Probably just analyzing a single file: we still want to look for custom
                 // rules applicable to the file
-                val variant = project.currentVariant
+                val variant = project.buildVariant
                 if (variant != null) {
                     val rules = ArrayList<File>(4)
-                    addLintJarsFromDependencies(
-                        rules, variant.mainArtifact.dependencies.libraries,
-                        mutableSetOf()
-                    )
+                    addLintJarsFromDependencies(rules, variant.mainArtifact.dependencies.all)
+                    val model = variant.module
 
                     // Locally packaged jars
-                    project.gradleProjectModel?.buildFolder?.let {
+                    model.buildFolder.let {
                         // Soon we'll get these paths via the builder-model so we
                         // don't need to have hardcoded paths (b/66166521)
                         val lintPaths = arrayOf(
@@ -1256,7 +1252,7 @@ abstract class LintClient {
                         }
                     }
 
-                    if (!rules.isEmpty()) {
+                    if (rules.isNotEmpty()) {
                         return rules
                     }
                 }
@@ -1273,34 +1269,31 @@ abstract class LintClient {
 
     /**
      * Recursively add all lint jars found recursively from the given collection of
-     * [AndroidLibrary] instances into the given [lintJars] list
+     * [LmAndroidLibrary] instances into the given [lintJars] list
      */
     private fun addLintJarsFromDependencies(
         lintJars: MutableList<File>,
-        libraries: Collection<AndroidLibrary>,
-        seen: MutableSet<AndroidLibrary>
+        libraries: Collection<LmLibrary>
     ) {
         for (library in libraries) {
-            if (!seen.add(library)) { // Already processed
-                return
+            if (library is LmAndroidLibrary) {
+                addLintJarsFromDependency(lintJars, library)
             }
-            addLintJarsFromDependency(lintJars, library, seen)
         }
     }
 
     /**
-     * Recursively add all lint jars found from the given [AndroidLibrary] **or its dependencies**
+     * Recursively add all lint jars found from the given [LmAndroidLibrary] **or its dependencies**
      * into the given [lintJars] list
      */
     private fun addLintJarsFromDependency(
         lintJars: MutableList<File>,
-        library: AndroidLibrary,
-        seen: MutableSet<AndroidLibrary>
+        library: LmAndroidLibrary
     ) {
         val lintJar = library.lintJar
         if (lintJar.exists()) {
             lintJars.add(lintJar)
-        } else if (library.project != null) {
+        } else if (library.projectId != null) {
             // Local project: might have locally packaged lint jar
             // Kept for backward compatibility, see b/66166521
             val buildDir = library.folder.path.substringBefore("intermediates")
@@ -1329,7 +1322,6 @@ abstract class LintClient {
                 }
             }
         }
-        addLintJarsFromDependencies(lintJars, library.libraryDependencies, seen)
     }
 
     /**
@@ -1443,7 +1435,7 @@ abstract class LintClient {
         if (manifestFiles.size == 1) {
             val primary = manifestFiles[0]
             try {
-                val xml = Files.asCharSource(primary, UTF_8).read()
+                val xml = primary.readText()
                 return XmlUtils.parseDocumentSilently(xml, true)
             } catch (e: IOException) {
                 log(Severity.ERROR, e, "Could not read manifest $primary")
@@ -1686,51 +1678,32 @@ abstract class LintClient {
      * Returns the external annotation zip files for the given projects (transitively), if any.
      */
     open fun getExternalAnnotations(projects: Collection<Project>): List<File> {
-        val seen = Sets.newHashSet<AndroidLibrary>()
         val files = Lists.newArrayListWithExpectedSize<File>(2)
         for (project in projects) {
-            if (project.isGradleProject) {
-                val variant = project.currentVariant ?: continue
-                val dependencies = variant.mainArtifact.dependencies
-                for (library in dependencies.libraries) {
-                    addLibraries(files, library, seen)
+            val variant = project.buildVariant ?: continue
+            for (library in variant.mainArtifact.dependencies.all) {
+                if (library is LmAndroidLibrary) {
+                    // As of 1.2 this is available in the model:
+                    //  https://android-review.googlesource.com/#/c/137750/
+                    // Switch over to this when it's in more common usage
+                    // (until it is, we'll pay for failed proxying errors)
+                    try {
+                        val zip = library.externalAnnotations
+                        if (zip.exists()) {
+                            files.add(zip)
+                        }
+                    } catch (ignore: Throwable) {
+                        // Using some older version than 1.2
+                        val zip = File(library.resFolder.parent, FN_ANNOTATIONS_ZIP)
+                        if (zip.exists()) {
+                            files.add(zip)
+                        }
+                    }
                 }
             }
         }
 
         return files
-    }
-
-    private fun addLibraries(
-        result: MutableList<File>,
-        library: AndroidLibrary,
-        seen: MutableSet<AndroidLibrary>
-    ) {
-        if (seen.contains(library)) {
-            return
-        }
-        seen.add(library)
-
-        // As of 1.2 this is available in the model:
-        //  https://android-review.googlesource.com/#/c/137750/
-        // Switch over to this when it's in more common usage
-        // (until it is, we'll pay for failed proxying errors)
-        try {
-            val zip = library.externalAnnotations
-            if (zip.exists()) {
-                result.add(zip)
-            }
-        } catch (ignore: Throwable) {
-            // Using some older version than 1.2
-            val zip = File(library.resFolder.parent, FN_ANNOTATIONS_ZIP)
-            if (zip.exists()) {
-                result.add(zip)
-            }
-        }
-
-        for (dependency in library.libraryDependencies) {
-            addLibraries(result, dependency, seen)
-        }
     }
 
     /** Returns the path to a given [file], given a [baseFile] to make it relative to. */

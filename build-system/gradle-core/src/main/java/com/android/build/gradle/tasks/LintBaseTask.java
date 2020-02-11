@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.core.VariantType;
 import com.android.repository.Revision;
+import com.android.tools.lint.model.LmFactory;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
 import com.android.utils.Pair;
 import com.google.common.cache.Cache;
@@ -136,8 +137,12 @@ public abstract class LintBaseTask extends DefaultTask {
 
         @Nullable
         @Override
-        public LintOptions getLintOptions() {
-            return lintOptions;
+        public com.android.tools.lint.model.LmLintOptions getLintOptions() {
+            if (lintOptions != null) {
+                return LmFactory.getLintOptions(lintOptions);
+            } else {
+                return null;
+            }
         }
 
         @Override

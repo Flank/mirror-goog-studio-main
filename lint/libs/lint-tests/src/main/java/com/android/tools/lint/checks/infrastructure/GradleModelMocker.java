@@ -18,10 +18,12 @@ package com.android.tools.lint.checks.infrastructure;
 
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.DOT_JAR;
+import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_ANDROID_TEST;
+import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_MAIN;
 import static com.android.projectmodel.VariantUtil.ARTIFACT_NAME_UNIT_TEST;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -44,9 +46,11 @@ import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
+import com.android.builder.model.LintOptions;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
+import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
@@ -57,7 +61,6 @@ import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeLintOptions;
-import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
@@ -83,6 +86,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -100,8 +104,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import junit.framework.TestCase;
+import kotlin.text.StringsKt;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Contract;
+import org.mockito.Mockito;
 import org.mockito.stubbing.OngoingStubbing;
 
 /**
@@ -130,6 +136,7 @@ public class GradleModelMocker {
     private ProductFlavor mergedFlavor;
     private ProductFlavor defaultFlavor;
     private IdeLintOptions lintOptions;
+    private final HashMap<String, Integer> severityOverrides = new HashMap();
     private final LintCliFlags flags = new LintCliFlags();
     private File projectDir = new File("");
     private final List<ProductFlavor> productFlavors = Lists.newArrayList();
@@ -282,6 +289,7 @@ public class GradleModelMocker {
         to.setIgnoreWarnings(flags.isIgnoreWarnings());
         to.setWarningsAsErrors(flags.isWarningsAsErrors());
         to.setCheckTestSources(flags.isCheckTestSources());
+        to.setCheckDependencies(flags.isCheckDependencies());
         to.setCheckGeneratedSources(flags.isCheckGeneratedSources());
         to.setShowEverything(flags.isShowEverything());
         to.setDefaultConfiguration(flags.getDefaultConfiguration());
@@ -298,8 +306,10 @@ public class GradleModelMocker {
         when(project.getApiVersion()).thenReturn(apiVersion);
         when(project.getFlavorDimensions()).thenReturn(Lists.newArrayList());
         when(project.getName()).thenReturn("test_project");
+        when(project.getCompileTarget()).thenReturn("android-" + SdkVersionInfo.HIGHEST_KNOWN_API);
 
         variant = mock(Variant.class);
+        when(project.getVariants()).thenReturn(Collections.singletonList(variant));
 
         lintOptions = new IdeLintOptions();
         when(project.getLintOptions()).thenAnswer(invocation -> lintOptions);
@@ -337,11 +347,9 @@ public class GradleModelMocker {
             when(androidTestDependencies.getJavaLibraries()).thenThrow(new RuntimeException());
         }
 
-        //mergedFlavor = mock(ProductFlavor.class);
-        //when(variant.getMergedFlavor()).thenReturn(mergedFlavor);
-        // TODO: Apply merge logic to apply a suitable default here
-        when(variant.getMergedFlavor()).thenReturn(defaultFlavor);
-        mergedFlavor = defaultFlavor; // shortcut for now
+        mergedFlavor = getProductFlavor("mergedFlavor", true);
+        productFlavors.remove(mergedFlavor); // create mock but don't store as a separate flavor
+        when(variant.getMergedFlavor()).thenReturn(mergedFlavor);
         getVectorDrawableOptions(); // ensure initialized
         getAaptOptions(); // ensure initialized
 
@@ -360,6 +368,7 @@ public class GradleModelMocker {
         when(project.getBuildTypes()).thenReturn(containers);
         ProductFlavorContainer defaultContainer = mock(ProductFlavorContainer.class);
         when(defaultContainer.getProductFlavor()).thenReturn(defaultFlavor);
+        when(defaultContainer.toString()).thenReturn("defaultConfig");
         when(project.getDefaultConfig()).thenReturn(defaultContainer);
         SourceProvider mainProvider = createSourceProvider(projectDir, "main");
         when(defaultContainer.getSourceProvider()).thenReturn(mainProvider);
@@ -385,10 +394,11 @@ public class GradleModelMocker {
                 continue;
             }
             ProductFlavorContainer container = mock(ProductFlavorContainer.class);
-            SourceProvider flavorSourceProvider =
-                    createSourceProvider(projectDir, flavor.getName());
+            String flavorName = flavor.getName();
+            SourceProvider flavorSourceProvider = createSourceProvider(projectDir, flavorName);
             when(container.getSourceProvider()).thenReturn(flavorSourceProvider);
             when(container.getProductFlavor()).thenReturn(flavor);
+            when(container.toString()).thenReturn(flavorName);
             flavorContainers.add(container);
         }
         when(project.getProductFlavors()).thenReturn(flavorContainers);
@@ -398,8 +408,20 @@ public class GradleModelMocker {
         JavaArtifact testArtifact = mock(JavaArtifact.class);
         AndroidArtifact androidTestArtifact = mock(AndroidArtifact.class);
 
+        when(artifact.getName()).thenReturn(ARTIFACT_NAME_MAIN);
         when(testArtifact.getName()).thenReturn(ARTIFACT_NAME_UNIT_TEST);
         when(androidTestArtifact.getName()).thenReturn(ARTIFACT_NAME_ANDROID_TEST);
+        when(artifact.getClassesFolder()).thenReturn(new File(projectDir, "main-classes"));
+        when(testArtifact.getClassesFolder()).thenReturn(new File(projectDir, "test-classes"));
+        when(androidTestArtifact.getClassesFolder())
+                .thenReturn(new File(projectDir, "instrumentation-classes"));
+
+        String applicationId = project.getDefaultConfig().getProductFlavor().getApplicationId();
+        if (applicationId == null) {
+            applicationId = "test.pkg";
+        }
+        when(artifact.getApplicationId()).thenReturn(applicationId);
+        when(androidTestArtifact.getApplicationId()).thenReturn(applicationId);
 
         Collection<JavaArtifact> extraJavaArtifacts = Collections.singletonList(testArtifact);
         Collection<AndroidArtifact> extraAndroidArtifacts =
@@ -434,21 +456,55 @@ public class GradleModelMocker {
         when(artifact.getOutputs()).thenReturn(outputs);
 
         Set<String> seenDimensions = Sets.newHashSet();
-        String defaultVariant = "debug";
-        for (ProductFlavor flavor : productFlavors) {
-            if (flavor != defaultFlavor) {
-                String dimension = flavor.getDimension();
-                if (dimension == null) {
-                    dimension = "";
-                }
-                if (!seenDimensions.contains(dimension)) {
+        BuildType defaultBuildType = buildTypes.get(0);
+        String defaultBuildTypeName = defaultBuildType.getName();
+        StringBuilder variantNameSb = new StringBuilder();
+        Collection<String> flavorDimensions = project.getFlavorDimensions();
+        for (String dimension : flavorDimensions) {
+            for (ProductFlavor flavor : productFlavors) {
+                if (flavor != defaultFlavor && dimension.equals(flavor.getDimension())) {
+                    if (seenDimensions.contains(dimension)) {
+                        continue;
+                    }
                     seenDimensions.add(dimension);
                     String name = flavor.getName();
-                    defaultVariant += (Character.toUpperCase(name.charAt(0)) + name.substring(1));
+                    if (variantNameSb.length() == 0) {
+                        variantNameSb.append(name);
+                    } else {
+                        variantNameSb.append(StringsKt.capitalize(name));
+                    }
                 }
             }
         }
-        setVariantName(defaultVariant);
+        for (ProductFlavor flavor : productFlavors) {
+            if (flavor != defaultFlavor && flavor.getDimension() == null) {
+                String name = flavor.getName();
+                if (variantNameSb.length() == 0) {
+                    variantNameSb.append(name);
+                } else {
+                    variantNameSb.append(StringsKt.capitalize(name));
+                }
+                break;
+            }
+        }
+
+        if (flavorContainers.size() >= 2) {
+            SourceProvider multiVariantSourceSet =
+                    createSourceProvider(projectDir, variantNameSb.toString());
+            when(artifact.getMultiFlavorSourceProvider()).thenReturn(multiVariantSourceSet);
+        }
+        if (variantNameSb.length() == 0) {
+            variantNameSb.append(defaultBuildTypeName);
+        } else {
+            variantNameSb.append(StringsKt.capitalize(defaultBuildTypeName));
+        }
+        String defaultVariantName = variantNameSb.toString();
+        if (productFlavors.isEmpty()) {
+            SourceProvider variantSourceSet = createSourceProvider(projectDir, defaultVariantName);
+            when(artifact.getVariantSourceProvider()).thenReturn(variantSourceSet);
+        }
+        setVariantName(defaultVariantName);
+        when(project.getDefaultVariant()).thenReturn(defaultVariantName);
 
         // Generated sources: Special test support under folder "generated" instead of "src"
         File generated = new File(projectDir, "generated");
@@ -465,6 +521,97 @@ public class GradleModelMocker {
                 when(artifact.getGeneratedSourceFolders()).thenReturn(generatedSources);
             }
         }
+
+        // Merge values into mergedFlavor
+        ApiVersion minSdkVersion = defaultFlavor.getMinSdkVersion();
+        ApiVersion targetSdkVersion = defaultFlavor.getTargetSdkVersion();
+        Integer versionCode = defaultFlavor.getVersionCode();
+        String versionName = defaultFlavor.getVersionName();
+        Map<String, Object> manifestPlaceholders =
+                new HashMap<>(defaultFlavor.getManifestPlaceholders());
+        Map<String, ClassField> resValues = new HashMap<>(defaultFlavor.getResValues());
+        Collection<String> resourceConfigurations =
+                new HashSet<>(defaultFlavor.getResourceConfigurations());
+        for (ProductFlavorContainer container : flavorContainers) {
+            ProductFlavor flavor = container.getProductFlavor();
+            manifestPlaceholders.putAll(flavor.getManifestPlaceholders());
+            resValues.putAll(flavor.getResValues());
+            resourceConfigurations.addAll(flavor.getResourceConfigurations());
+        }
+        manifestPlaceholders.putAll(defaultBuildType.getManifestPlaceholders());
+        resValues.putAll(defaultBuildType.getResValues());
+
+        when(mergedFlavor.getMinSdkVersion()).thenReturn(minSdkVersion);
+        when(mergedFlavor.getTargetSdkVersion()).thenReturn(targetSdkVersion);
+        when(mergedFlavor.getApplicationId()).thenReturn(applicationId);
+        when(mergedFlavor.getVersionCode()).thenReturn(versionCode);
+        when(mergedFlavor.getVersionName()).thenReturn(versionName);
+        when(mergedFlavor.getManifestPlaceholders()).thenReturn(manifestPlaceholders);
+        when(mergedFlavor.getResValues()).thenReturn(resValues);
+        when(mergedFlavor.getResourceConfigurations()).thenReturn(resourceConfigurations);
+
+        // Attempt to make additional variants?
+        List<Variant> variants = new ArrayList<>();
+        variants.add(variant);
+        for (BuildType buildType : buildTypes) {
+            String buildTypeName = buildType.getName();
+
+            for (ProductFlavor flavor : productFlavors) {
+                if (flavor == defaultFlavor) {
+                    continue;
+                }
+                String variantName = flavor.getName() + StringsKt.capitalize(buildType.getName());
+                System.out.println();
+                if (!variantName.equals(variant.getName())) {
+                    Variant newVariant = mock(Variant.class, Mockito.RETURNS_SMART_NULLS);
+                    when(newVariant.getName()).thenReturn(variantName);
+                    when(newVariant.getBuildType()).thenReturn(buildTypeName);
+                    List<String> productFlavorNames = Collections.singletonList(flavor.getName());
+                    when(newVariant.getProductFlavors()).thenReturn(productFlavorNames);
+
+                    when(mergedFlavor.getApplicationId()).thenReturn(applicationId);
+                    minSdkVersion = mergedFlavor.getMinSdkVersion();
+                    targetSdkVersion = mergedFlavor.getTargetSdkVersion();
+                    String flavorName = mergedFlavor.getName();
+                    VectorDrawablesOptions vectorDrawables = mergedFlavor.getVectorDrawables();
+                    SigningConfig signingConfig = mergedFlavor.getSigningConfig();
+
+                    ProductFlavor variantFlavor = mock(ProductFlavor.class);
+                    when(variantFlavor.getMinSdkVersion()).thenReturn(minSdkVersion);
+                    when(variantFlavor.getTargetSdkVersion()).thenReturn(targetSdkVersion);
+                    when(variantFlavor.getName()).thenReturn(flavorName);
+                    when(variantFlavor.getVectorDrawables()).thenReturn(vectorDrawables);
+                    when(variantFlavor.getResourceConfigurations())
+                            .thenReturn(Collections.emptyList());
+                    when(variantFlavor.getResValues()).thenReturn(Collections.emptyMap());
+                    when(variantFlavor.getManifestPlaceholders())
+                            .thenReturn(Collections.emptyMap());
+                    when(variantFlavor.getSigningConfig()).thenReturn(signingConfig);
+
+                    when(newVariant.getMergedFlavor()).thenReturn(variantFlavor);
+
+                    AndroidArtifact mainArtifact = variant.getMainArtifact();
+                    when(newVariant.getMainArtifact()).thenReturn(mainArtifact);
+
+                    // Customize artifacts instead of just pointing to the main one
+                    // to avoid really redundant long dependency lists
+                    artifact = mock(AndroidArtifact.class);
+                    when(artifact.getName()).thenReturn(ARTIFACT_NAME_MAIN);
+                    when(artifact.getClassesFolder())
+                            .thenReturn(new File(projectDir, "main-classes"));
+                    when(artifact.getApplicationId()).thenReturn(applicationId);
+                    dependencies = mock(Dependencies.class);
+                    when(dependencies.getLibraries()).thenReturn(Collections.emptyList());
+                    when(artifact.getDependencies()).thenReturn(dependencies);
+                    when(newVariant.getMainArtifact()).thenReturn(artifact);
+                    when(newVariant.getExtraJavaArtifacts()).thenReturn(Collections.emptyList());
+                    when(newVariant.getExtraAndroidArtifacts()).thenReturn(Collections.emptyList());
+
+                    variants.add(newVariant);
+                }
+            }
+        }
+        when(project.getVariants()).thenReturn(variants);
     }
 
     @NonNull
@@ -516,7 +663,7 @@ public class GradleModelMocker {
                 GraphItem item = mock(GraphItem.class);
                 result.add(item);
                 when(item.getArtifactAddress()).thenReturn(name);
-                when(item.getRequestedCoordinates()).thenThrow(UnusedModelMethodException.class);
+                when(item.getRequestedCoordinates()).thenReturn(name);
                 when(item.getDependencies()).thenReturn(Lists.newArrayList());
 
                 if (library instanceof AndroidLibrary) {
@@ -1003,11 +1150,9 @@ public class GradleModelMocker {
                     flavorDimensions.add(dimension);
                 }
             }
-        } else if (line.startsWith("flavorDimension ")
-                && key.startsWith("android.productFlavors.")) {
+        } else if (line.startsWith("dimension ") && key.startsWith("android.productFlavors.")) {
             String name =
-                    key.substring(
-                            "android.productFlavors.".length(), key.indexOf(".flavorDimension"));
+                    key.substring("android.productFlavors.".length(), key.indexOf(".dimension"));
             ProductFlavor productFlavor = getProductFlavor(name, true);
             String dimension = getUnquotedValue(line);
             when(productFlavor.getDimension()).thenReturn(dimension);
@@ -1092,6 +1237,9 @@ public class GradleModelMocker {
                 AaptOptions options = getAaptOptions();
                 when(options.getNamespacing()).thenReturn(AaptOptions.Namespacing.REQUIRED);
             }
+        } else if (key.startsWith("groupId ")) {
+            String groupId = getUnquotedValue(key);
+            when(project.getGroupId()).thenReturn(groupId);
         } else if (key.startsWith("android.lintOptions.")) {
             key = key.substring("android.lintOptions.".length());
             int argIndex = key.indexOf(' ');
@@ -1143,17 +1291,36 @@ public class GradleModelMocker {
                     error("Test framework doesn't support lint DSL flag htmlReport");
                     break;
                 case "checkTestSources":
-                    flags.setCheckTestSources(toBoolean(arg));
-                    break;
+                    {
+                        boolean checkTests = toBoolean(arg);
+                        flags.setCheckTestSources(checkTests);
+                        updateLintOptions(null, null, null, checkTests, null);
+                        break;
+                    }
+                case "checkDependencies":
+                    {
+                        boolean checkDependencies = toBoolean(arg);
+                        flags.setCheckDependencies(checkDependencies);
+                        updateLintOptions(null, null, null, null, checkDependencies);
+                        break;
+                    }
                 case "checkGeneratedSources":
                     flags.setCheckGeneratedSources(toBoolean(arg));
                     break;
                 case "enable":
-                    flags.getEnabledIds().addAll(parseListDsl(arg));
-                    break;
+                    {
+                        Set<String> ids = parseListDsl(arg);
+                        flags.getEnabledIds().addAll(ids);
+                        setLintSeverity(ids, Severity.WARNING);
+                        break;
+                    }
                 case "disable":
-                    flags.getSuppressedIds().addAll(parseListDsl(arg));
-                    break;
+                    {
+                        Set<String> ids = parseListDsl(arg);
+                        flags.getSuppressedIds().addAll(ids);
+                        setLintSeverity(ids, Severity.IGNORE);
+                        break;
+                    }
                 case "check":
                     flags.setExactCheckedIds(parseListDsl(arg));
                     break;
@@ -1173,8 +1340,12 @@ public class GradleModelMocker {
                     parseSeverityOverrideDsl(Severity.IGNORE, arg);
                     break;
                 case "lintConfig":
-                    flags.setDefaultConfiguration(file(arg, true));
-                    break;
+                    {
+                        File file = file(arg, true);
+                        flags.setDefaultConfiguration(file);
+                        updateLintOptions(null, file, null, null, null);
+                        break;
+                    }
                 case "textOutput":
                     error("Test framework doesn't support lint DSL flag textOutput");
                     break;
@@ -1185,8 +1356,12 @@ public class GradleModelMocker {
                     error("Test framework doesn't support lint DSL flag htmlOutput");
                     break;
                 case "baseline":
-                    flags.setBaselineFile(file(arg, true));
-                    break;
+                    {
+                        File file = file(arg, true);
+                        flags.setBaselineFile(file);
+                        updateLintOptions(file, null, null, null, null);
+                        break;
+                    }
             }
         } else if (key.startsWith("android.buildFeatures.")) {
             key = key.substring("android.buildFeatures.".length());
@@ -1222,8 +1397,84 @@ public class GradleModelMocker {
 
     private void parseSeverityOverrideDsl(Severity severity, String dsl) {
         for (String s : Splitter.on(',').trimResults().omitEmptyStrings().split(dsl)) {
-            flags.getSeverityOverrides().put(stripQuotes(s, true), severity);
+            String id = stripQuotes(s, true);
+            setLintSeverity(id, severity);
         }
+    }
+
+    private void setLintSeverity(Set<String> ids, Severity severity) {
+        for (String id : ids) {
+            setLintSeverity(id, severity);
+        }
+    }
+
+    private void setLintSeverity(String id, Severity severity) {
+        flags.getSeverityOverrides().put(id, severity);
+        int severityValue;
+        switch (severity) {
+            case FATAL:
+                severityValue = LintOptions.SEVERITY_FATAL;
+                break;
+            case ERROR:
+                severityValue = LintOptions.SEVERITY_ERROR;
+                break;
+            case WARNING:
+                severityValue = LintOptions.SEVERITY_WARNING;
+                break;
+            case INFORMATIONAL:
+                severityValue = LintOptions.SEVERITY_INFORMATIONAL;
+                break;
+            case IGNORE:
+                severityValue = LintOptions.SEVERITY_IGNORE;
+                break;
+            default:
+                severityValue = LintOptions.SEVERITY_DEFAULT_ENABLED;
+                break;
+        }
+        severityOverrides.put(id, severityValue);
+
+        updateLintOptions(null, null, severityOverrides, null, null);
+        when(project.getLintOptions()).thenReturn(lintOptions);
+    }
+
+    private void updateLintOptions(
+            File baseline,
+            File lintConfig,
+            Map<String, Integer> severities,
+            Boolean tests,
+            Boolean dependencies) {
+        // No mocking IdeLintOptions; it's final
+        lintOptions =
+                new IdeLintOptions(
+                        baseline != null ? baseline : lintOptions.getBaselineFile(),
+                        lintConfig != null ? lintConfig : lintOptions.getLintConfig(),
+                        severities != null ? severities : severityOverrides,
+                        tests != null ? tests : lintOptions.isCheckTestSources(),
+                        dependencies != null ? dependencies : lintOptions.isCheckDependencies(),
+
+                        // TODO: Allow these to be customized by model mocker
+                        lintOptions.getEnable(),
+                        lintOptions.getDisable(),
+                        lintOptions.getCheck(),
+                        lintOptions.isAbortOnError(),
+                        lintOptions.isAbsolutePaths(),
+                        lintOptions.isNoLines(),
+                        lintOptions.isQuiet(),
+                        lintOptions.isCheckAllWarnings(),
+                        lintOptions.isIgnoreWarnings(),
+                        lintOptions.isWarningsAsErrors(),
+                        lintOptions.isIgnoreTestSources(),
+                        lintOptions.isCheckGeneratedSources(),
+                        lintOptions.isCheckReleaseBuilds(),
+                        lintOptions.isExplainIssues(),
+                        lintOptions.isShowAll(),
+                        lintOptions.getTextReport(),
+                        lintOptions.getTextOutput(),
+                        lintOptions.getHtmlReport(),
+                        lintOptions.getHtmlOutput(),
+                        lintOptions.getXmlReport(),
+                        lintOptions.getXmlOutput());
+        when(project.getLintOptions()).thenReturn(lintOptions);
     }
 
     private Set<String> parseListDsl(String dsl) {
@@ -1313,7 +1564,8 @@ public class GradleModelMocker {
     private BuildType createBuildType(@NonNull String name) {
         BuildType buildType = mock(BuildType.class);
         when(buildType.getName()).thenReturn(name);
-        when(buildType.isDebuggable()).thenReturn(name.equals("debug"));
+        when(buildType.toString()).thenReturn(name);
+        when(buildType.isDebuggable()).thenReturn(name.startsWith("debug"));
         buildTypes.add(buildType);
         // Creating mutable map here which we can add to later
         when(buildType.getResValues()).thenReturn(Maps.newHashMap());
@@ -1326,11 +1578,13 @@ public class GradleModelMocker {
             @NonNull String name,
             @Language("Groovy") @NonNull String blockBody,
             @NonNull String context) {
-        if ("android.productFlavors".equals(context)) {
+        if ("android.productFlavors".equals(context)
+                && buildTypes.stream().noneMatch(flavor -> flavor.getName().equals(name))) {
             // Defining new product flavors
             createProductFlavor(name);
         }
-        if ("android.buildTypes".equals(context)) {
+        if ("android.buildTypes".equals(context)
+                && buildTypes.stream().noneMatch(buildType -> buildType.getName().equals(name))) {
             // Defining new build types
             createBuildType(name);
         }
@@ -1357,6 +1611,7 @@ public class GradleModelMocker {
     private ProductFlavor createProductFlavor(@NonNull String name) {
         ProductFlavor flavor = mock(ProductFlavor.class);
         when(flavor.getName()).thenReturn(name);
+        when(flavor.toString()).thenReturn(name);
         // Creating mutable map here which we can add to later
         when(flavor.getResValues()).thenReturn(Maps.newHashMap());
         when(flavor.getManifestPlaceholders()).thenReturn(Maps.newHashMap());
@@ -1396,12 +1651,15 @@ public class GradleModelMocker {
                 .thenReturn(new File(root, "src/" + name + "/" + ANDROID_MANIFEST_XML));
         List<File> resDirectories = Lists.newArrayListWithCapacity(2);
         List<File> javaDirectories = Lists.newArrayListWithCapacity(2);
+        List<File> assetsDirectories = Lists.newArrayListWithCapacity(1);
         resDirectories.add(new File(root, "src/" + name + "/res"));
         javaDirectories.add(new File(root, "src/" + name + "/java"));
         javaDirectories.add(new File(root, "src/" + name + "/kotlin"));
+        assetsDirectories.add(new File(root, "src/" + name + "/assets"));
 
         when(provider.getResDirectories()).thenReturn(resDirectories);
         when(provider.getJavaDirectories()).thenReturn(javaDirectories);
+        when(provider.getAssetsDirectories()).thenReturn(assetsDirectories);
 
         // TODO: other file types
         return provider;
@@ -1693,7 +1951,7 @@ public class GradleModelMocker {
         when(mavenCoordinates.toString()).thenReturn(coordinateString);
 
         AndroidLibrary library = mock(AndroidLibrary.class);
-        when(library.getRequestedCoordinates()).thenThrow(UnusedModelMethodException.class);
+        when(library.getRequestedCoordinates()).thenReturn(mavenCoordinates);
         if (promotedTo != null) {
             mavenCoordinates = mock(MavenCoordinates.class);
             when(mavenCoordinates.getGroupId()).thenReturn(coordinate.getGroupId());
@@ -1733,15 +1991,24 @@ public class GradleModelMocker {
                                     + coordinate.getRevision());
         }
         when(library.getFolder()).thenReturn(dir);
+        when(library.getManifest()).thenReturn(new File(dir, FN_ANDROID_MANIFEST_XML));
         when(library.getLintJar()).thenReturn(new File(dir, "lint.jar"));
         when(library.isProvided()).thenReturn(isProvided);
         when(library.getLocalJars()).thenReturn(Collections.emptyList());
+        when(library.getProguardRules()).thenReturn(new File(dir, "proguard.pro"));
         when(library.getExternalAnnotations()).thenReturn(new File(dir, FN_ANNOTATIONS_ZIP));
         File jar = new File(dir, "jars/" + FN_CLASSES_JAR);
         if (!jar.exists()) {
             createEmptyJar(jar);
         }
         when(library.getJarFile()).thenReturn(jar);
+
+        // Additional source provider fields; these point to nonexistent files, but
+        // that's the required SourceProvider API
+        when(library.getResFolder()).thenReturn(new File(dir, "res"));
+        when(library.getAssetsFolder()).thenReturn(new File(dir, "assets"));
+        when(library.getPublicResources()).thenReturn(new File(dir, "public.txt"));
+        when(library.getSymbolFile()).thenReturn(new File(dir, "R.txt"));
 
         return library;
     }
@@ -1766,7 +2033,7 @@ public class GradleModelMocker {
         when(mavenCoordinates.toString()).thenReturn(coordinateString);
 
         JavaLibrary library = mock(JavaLibrary.class);
-        when(library.getRequestedCoordinates()).thenThrow(UnusedModelMethodException.class);
+        when(library.getRequestedCoordinates()).thenReturn(mavenCoordinates);
         if (promotedTo != null) {
             mavenCoordinates = mock(MavenCoordinates.class);
             when(mavenCoordinates.getGroupId()).thenReturn(coordinate.getGroupId());

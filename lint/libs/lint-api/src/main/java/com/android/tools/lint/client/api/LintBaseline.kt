@@ -182,8 +182,8 @@ class LintBaseline(
                         "baseline file (%2\$s) but not found in the project; perhaps they have " +
                         "been fixed?", fixedCount, getDisplayPath(client, project, baselineFile)
             )
-            if (LintClient.isGradle && project.gradleProjectModel != null &&
-                !project.gradleProjectModel!!.lintOptions.isCheckDependencies
+            if (LintClient.isGradle && project.buildModule != null &&
+                project.buildModule?.lintOptions?.checkDependencies == false
             ) {
                 message += " Another possible explanation is that lint recently stopped " +
                         "analyzing (and including results from) dependent projects by default. " +

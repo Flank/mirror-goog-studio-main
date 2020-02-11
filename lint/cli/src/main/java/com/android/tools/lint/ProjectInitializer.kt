@@ -41,6 +41,8 @@ import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Platform
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.model.LmSerialization
+import com.android.tools.lint.model.LmVariant
 import com.android.utils.XmlUtils.getFirstSubTag
 import com.android.utils.XmlUtils.getNextTag
 import com.android.utils.usLocaleCapitalize
@@ -107,6 +109,7 @@ private const val ATTR_JAVA8_LIBS = "android_java8_libs"
 private const val ATTR_DESUGAR = "desugar"
 private const val ATTR_JAVA_LEVEL = "javaLanguage"
 private const val ATTR_KOTLIN_LEVEL = "kotlinLanguage"
+private const val ATTR_MODEL = "model"
 private const val DOT_SRCJAR = ".srcjar"
 
 /**
@@ -507,6 +510,12 @@ private class ProjectInitializer(
         val module = ManualProject(client, dir, name, library, android)
         modules[name] = module
 
+        val model = if (moduleElement.hasAttribute(ATTR_MODEL)) {
+            LmSerialization.read(getFile(moduleElement, dir, ATTR_MODEL, false))
+        } else {
+            null
+        }
+
         val sources = mutableListOf<File>()
         val generatedSources = mutableListOf<File>()
         val testSources = mutableListOf<File>()
@@ -620,6 +629,7 @@ private class ProjectInitializer(
         this.lintChecks[module] = lintChecks
         this.mergedManifests[module] = mergedManifest
         this.baselines[module] = baseline
+        module.variant = model?.defaultVariant()
 
         client.registerProject(module.dir, module)
     }
@@ -998,6 +1008,8 @@ constructor(
     private var android: Boolean
 ) : Project(client, dir, dir) {
 
+    var variant: LmVariant? = null
+
     init {
         setName(name)
         directLibraries = mutableListOf()
@@ -1128,4 +1140,6 @@ constructor(
     override fun getResourceVisibility(): ResourceVisibilityLookup {
         return resourceVisibility ?: super.getResourceVisibility()
     }
+
+    override fun getBuildVariant(): LmVariant? = variant
 }
