@@ -83,7 +83,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
                 // Kotlin tasks are not FROM_CACHE because they includes the project name in the
                 // cache key, and the two project names in this test are currently different.
                 ":kaptGenerateStubsDebugKotlin" to DID_WORK,
-                ":kaptDebugKotlin" to DID_WORK,
+                ":kaptDebugKotlin" to FROM_CACHE,
                 ":compileDebugKotlin" to DID_WORK
             )
         } else {
@@ -176,9 +176,9 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         // Some tasks are no longer cacheable
         val updatedExpectedTaskStates = expectedTaskStates.toMutableMap()
         updatedExpectedTaskStates[":dataBindingGenBaseClassesDebug"] = DID_WORK
-        // JavaCompile is non-cacheable only when Kapt is not used, because when Kapt is used, data
-        // binding is processed by Kapt, so it doesn't affect JavaCompile.
-        if (!withKotlin) {
+        if (withKotlin) {
+            updatedExpectedTaskStates[":kaptDebugKotlin"] = DID_WORK
+        } else {
             updatedExpectedTaskStates[":compileDebugJavaWithJavac"] = DID_WORK
         }
 

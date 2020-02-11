@@ -151,7 +151,7 @@ kotlin_test(
         ":gradle-core",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.4:jar",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/0.11.0:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.61:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.72:jar",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/apkzlib",
         "//tools/base/annotations",
