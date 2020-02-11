@@ -704,6 +704,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.splits: void (kotli
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseFlavor extends com.android.builder.core.AbstractProductFlavor implements com.android.build.gradle.internal.dsl.CoreProductFlavor, com.android.build.api.dsl.BaseFlavor
 com.android.build.gradle.internal.dsl.BaseFlavor.<init>: com.android.build.gradle.internal.dsl.BaseFlavor (java.lang.String, com.android.build.gradle.internal.services.DslServices)
+com.android.build.gradle.internal.dsl.BaseFlavor._initWith: void (com.android.builder.model.BaseConfig)
 com.android.build.gradle.internal.dsl.BaseFlavor.buildConfigField: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.gradle.internal.dsl.BaseFlavor.consumerProguardFile: java.lang.Object (java.lang.Object)
 com.android.build.gradle.internal.dsl.BaseFlavor.consumerProguardFile: void (java.lang.Object)
@@ -728,6 +729,7 @@ com.android.build.gradle.internal.dsl.BaseFlavor.getSigningConfig: com.android.b
 com.android.build.gradle.internal.dsl.BaseFlavor.getSigningConfig: com.android.builder.model.SigningConfig ()
 com.android.build.gradle.internal.dsl.BaseFlavor.getTestProguardFiles: java.util.Collection ()
 com.android.build.gradle.internal.dsl.BaseFlavor.getTestProguardFiles: java.util.List<java.io.File> ()
+com.android.build.gradle.internal.dsl.BaseFlavor.getVectorDrawables: com.android.build.api.dsl.VectorDrawables ()
 com.android.build.gradle.internal.dsl.BaseFlavor.getVectorDrawables: com.android.build.gradle.internal.dsl.VectorDrawablesOptions ()
 com.android.build.gradle.internal.dsl.BaseFlavor.getVectorDrawables: com.android.builder.core.DefaultVectorDrawablesOptions ()
 com.android.build.gradle.internal.dsl.BaseFlavor.getVectorDrawables: com.android.builder.model.VectorDrawablesOptions ()
@@ -766,6 +768,7 @@ com.android.build.gradle.internal.dsl.BaseFlavor.testProguardFile: java.lang.Obj
 com.android.build.gradle.internal.dsl.BaseFlavor.testProguardFile: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.BaseFlavor.testProguardFiles: java.lang.Object (java.lang.Object[])
 com.android.build.gradle.internal.dsl.BaseFlavor.testProguardFiles: void (java.lang.Object[])
+com.android.build.gradle.internal.dsl.BaseFlavor.vectorDrawables: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.VectorDrawables, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseFlavor.vectorDrawables: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.VectorDrawablesOptions>)
 com.android.build.gradle.internal.dsl.BaseFlavor.wearAppUnbundled: void (java.lang.Boolean)
 com.android.build.gradle.internal.dsl.BuildType extends com.android.builder.core.AbstractBuildType implements com.android.build.gradle.internal.dsl.CoreBuildType, java.io.Serializable, com.android.build.api.dsl.BuildType
@@ -1349,9 +1352,10 @@ com.android.build.gradle.internal.dsl.TestOptions.setResultsDir: void (java.lang
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (groovy.lang.Closure)
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions>)
-com.android.build.gradle.internal.dsl.VectorDrawablesOptions extends com.android.builder.core.DefaultVectorDrawablesOptions
+com.android.build.gradle.internal.dsl.VectorDrawablesOptions extends com.android.builder.core.DefaultVectorDrawablesOptions implements com.android.build.api.dsl.VectorDrawables
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions.<init>: com.android.build.gradle.internal.dsl.VectorDrawablesOptions ()
 com.android.build.gradle.internal.dsl.VectorDrawablesOptions.generatedDensities: void (java.lang.String[])
+com.android.build.gradle.internal.dsl.VectorDrawablesOptions.setGeneratedDensities: void (java.util.Set<java.lang.String>)
 com.android.builder.core.AbstractBuildType extends com.android.builder.internal.BaseConfigImpl implements com.android.builder.model.BuildType
 com.android.builder.core.AbstractBuildType$Companion
 com.android.builder.core.AbstractBuildType$Companion.<init>: com.android.builder.core.AbstractBuildType$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
@@ -1400,7 +1404,6 @@ com.android.builder.core.AbstractProductFlavor$DimensionRequest.getFallbacks: co
 com.android.builder.core.AbstractProductFlavor$DimensionRequest.getFallbacks: java.util.List<java.lang.String> ()
 com.android.builder.core.AbstractProductFlavor$DimensionRequest.getRequested: java.lang.String ()
 com.android.builder.core.AbstractProductFlavor.<init>: com.android.builder.core.AbstractProductFlavor (java.lang.String)
-com.android.builder.core.AbstractProductFlavor.<init>: com.android.builder.core.AbstractProductFlavor (java.lang.String, com.android.builder.core.DefaultVectorDrawablesOptions)
 com.android.builder.core.AbstractProductFlavor._initWith: void (com.android.builder.model.BaseConfig)
 com.android.builder.core.AbstractProductFlavor.addResourceConfiguration: void (java.lang.String)
 com.android.builder.core.AbstractProductFlavor.addResourceConfigurations: void (java.lang.String[])
@@ -1426,7 +1429,6 @@ com.android.builder.core.AbstractProductFlavor.getTestHandleProfiling: java.lang
 com.android.builder.core.AbstractProductFlavor.getTestInstrumentationRunner: java.lang.String ()
 com.android.builder.core.AbstractProductFlavor.getTestInstrumentationRunnerArguments: java.util.Map<java.lang.String, java.lang.String> ()
 com.android.builder.core.AbstractProductFlavor.getVectorDrawables: com.android.builder.core.DefaultVectorDrawablesOptions ()
-com.android.builder.core.AbstractProductFlavor.getVectorDrawables: com.android.builder.model.VectorDrawablesOptions ()
 com.android.builder.core.AbstractProductFlavor.getVersionCode: java.lang.Integer ()
 com.android.builder.core.AbstractProductFlavor.getVersionName: java.lang.String ()
 com.android.builder.core.AbstractProductFlavor.getWearAppUnbundled: java.lang.Boolean ()

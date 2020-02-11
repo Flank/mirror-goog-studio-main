@@ -18,7 +18,9 @@ package com.android.build.gradle.internal.core
 
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractProductFlavor
+import com.android.builder.core.DefaultVectorDrawablesOptions
 import com.android.builder.errors.IssueReporter
+import com.android.builder.model.BaseConfig
 import com.android.builder.model.ProductFlavor
 import com.google.common.collect.Lists
 
@@ -89,6 +91,18 @@ class MergedFlavor(
             mergedFlavor.versionNameSuffix = versionNameSuffix
 
             return mergedFlavor
+        }
+    }
+
+    private var _vectorDrawables: DefaultVectorDrawablesOptions = DefaultVectorDrawablesOptions()
+
+    override val vectorDrawables: DefaultVectorDrawablesOptions
+        get() = _vectorDrawables
+
+    override fun _initWith(that: BaseConfig) {
+        super._initWith(that)
+        if (that is ProductFlavor) {
+            _vectorDrawables = DefaultVectorDrawablesOptions.copyOf(that.vectorDrawables)
         }
     }
 

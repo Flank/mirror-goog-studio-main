@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.DefaultApiVersion
+import com.android.builder.core.DefaultVectorDrawablesOptions
 import com.android.builder.internal.ClassFieldImpl
 import com.android.testutils.internal.CopyOfTester
 import com.google.common.collect.ImmutableList
@@ -91,10 +92,10 @@ class MergedFlavorTest {
         assertThat(flavor.toString().substringAfter("{"))
                 .isEqualTo(custom.toString().substringAfter("{"))
 
-        CopyOfTester
-                .assertAllGettersCalled(
-                        AbstractProductFlavor::class.java, custom,
-                        { MergedFlavor.clone(it, dslServices) })
+        CopyOfTester.assertAllGettersCalled(
+            ProductFlavorImpl::class.java,
+            custom as ProductFlavorImpl
+        ) { MergedFlavor.clone(it, dslServices) }
     }
 
     @Test
@@ -268,4 +269,7 @@ class MergedFlavorTest {
     }
 }
 
-private class ProductFlavorImpl(name: String) : AbstractProductFlavor(name)
+private class ProductFlavorImpl(
+    name: String,
+    override val vectorDrawables: DefaultVectorDrawablesOptions = DefaultVectorDrawablesOptions()
+) : AbstractProductFlavor(name)

@@ -58,6 +58,8 @@ class AbstractProductFlavorTest : TestCase() {
         assertEquals(custom.toString(), flavor.toString())
     }
 
-    private class ProductFlavorImpl(name: String) :
-        AbstractProductFlavor(name)
+    private class ProductFlavorImpl(
+        name: String,
+        override val vectorDrawables: DefaultVectorDrawablesOptions = DefaultVectorDrawablesOptions()
+    ) : AbstractProductFlavor(name)
 }

@@ -24,4 +24,10 @@ import org.gradle.api.Incubating
 @Incubating
 interface BaseFlavor : BaseConfig {
     // TODO(b/140406102)
+
+    /** Options to configure the build-time support for `vector` drawables. */
+    val vectorDrawables: VectorDrawables
+
+    /** Configures [VectorDrawables]. */
+    fun vectorDrawables(action: VectorDrawables.() -> Unit)
 }

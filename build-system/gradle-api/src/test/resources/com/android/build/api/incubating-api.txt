@@ -176,6 +176,8 @@ com.android.build.api.dsl.BaseConfig.setVersionNameSuffix: void (java.lang.Strin
 com.android.build.api.dsl.BaseConfig.testProguardFile: java.lang.Object (java.lang.Object)
 com.android.build.api.dsl.BaseConfig.testProguardFiles: java.lang.Object (java.lang.Object[])
 com.android.build.api.dsl.BaseFlavor implements com.android.build.api.dsl.BaseConfig
+com.android.build.api.dsl.BaseFlavor.getVectorDrawables: com.android.build.api.dsl.VectorDrawables ()
+com.android.build.api.dsl.BaseFlavor.vectorDrawables: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.VectorDrawables, kotlin.Unit>)
 com.android.build.api.dsl.BuildFeatures implements org.gradle.api.plugins.ExtensionAware
 com.android.build.api.dsl.BuildFeatures.getAidl: java.lang.Boolean ()
 com.android.build.api.dsl.BuildFeatures.getBuildConfig: java.lang.Boolean ()
@@ -443,6 +445,12 @@ com.android.build.api.dsl.UnitTestOptions.getIncludeAndroidResources: boolean ()
 com.android.build.api.dsl.UnitTestOptions.getReturnDefaultValues: boolean ()
 com.android.build.api.dsl.UnitTestOptions.setIncludeAndroidResources: void (boolean)
 com.android.build.api.dsl.UnitTestOptions.setReturnDefaultValues: void (boolean)
+com.android.build.api.dsl.VectorDrawables
+com.android.build.api.dsl.VectorDrawables.generatedDensities: void (java.lang.String[])
+com.android.build.api.dsl.VectorDrawables.getGeneratedDensities: java.util.Set<java.lang.String> ()
+com.android.build.api.dsl.VectorDrawables.getUseSupportLibrary: java.lang.Boolean ()
+com.android.build.api.dsl.VectorDrawables.setGeneratedDensities: void (java.util.Set<java.lang.String>)
+com.android.build.api.dsl.VectorDrawables.setUseSupportLibrary: void (java.lang.Boolean)
 com.android.build.api.transform.Transform.applyToVariant: boolean (com.android.build.api.variant.VariantInfo)
 com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant
 com.android.build.api.variant.ApplicationVariant.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)

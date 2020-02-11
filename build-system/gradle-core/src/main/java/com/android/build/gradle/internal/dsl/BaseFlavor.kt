@@ -19,8 +19,10 @@ import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultApiVersion
+import com.android.builder.core.DefaultVectorDrawablesOptions
 import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.ApiVersion
+import com.android.builder.model.BaseConfig
 import com.android.builder.model.ProductFlavor
 import com.google.common.base.Strings
 import org.gradle.api.Action
@@ -28,10 +30,7 @@ import java.io.File
 
 /** Base DSL object used to configure product flavors.  */
 abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
-    AbstractProductFlavor(
-        name,
-        dslServices.newInstance(VectorDrawablesOptions::class.java)
-    ),
+    AbstractProductFlavor(name),
     CoreProductFlavor,
     com.android.build.api.dsl.BaseFlavor {
 
@@ -496,14 +495,20 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
         vectorDrawables.setGeneratedDensities(generatedDensities)
     }
 
+    private var _vectorDrawables: VectorDrawablesOptions =
+        dslServices.newInstance(VectorDrawablesOptions::class.java)
+
     /** Configures [VectorDrawablesOptions].  */
     fun vectorDrawables(action: Action<VectorDrawablesOptions>) {
         action.execute(vectorDrawables)
     }
 
-    /** Options to configure the build-time support for `vector` drawables.  */
+    override fun vectorDrawables(action: com.android.build.api.dsl.VectorDrawables.() -> Unit) {
+        action.invoke(vectorDrawables)
+    }
+
     override val vectorDrawables: VectorDrawablesOptions
-        get() = super.vectorDrawables as VectorDrawablesOptions
+        get() = _vectorDrawables
 
     /**
      * Sets whether to enable unbundling mode for embedded wear app.
@@ -526,5 +531,13 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
                 }
             } else DefaultApiVersion(value)
         } else null
+    }
+
+    override fun _initWith(that: BaseConfig) {
+        super._initWith(that)
+        if (that is ProductFlavor) {
+            _vectorDrawables =
+                DefaultVectorDrawablesOptions.copyOf(that.vectorDrawables) as VectorDrawablesOptions
+        }
     }
 }

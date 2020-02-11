@@ -37,8 +37,7 @@ import com.google.common.collect.Sets
  */
 @Deprecated("This is deprecated, use DSL objects directly.")
 abstract class AbstractProductFlavor(
-    private val name: String,
-    private var _vectorDrawables: DefaultVectorDrawablesOptions
+    private val name: String
 ) : BaseConfigImpl(), ProductFlavor {
 
     override fun getName(): String = name
@@ -55,16 +54,6 @@ abstract class AbstractProductFlavor(
     open fun dimension(dimension: String?) {
         this.dimension = dimension
     }
-
-    /**
-     * Creates a ProductFlavor with a given name.
-     *
-     * Names can be important when dealing with flavor groups.
-     *
-     * @param name the name of the flavor.
-     * @see BuilderConstants.MAIN
-     */
-    constructor(name: String) : this(name, DefaultVectorDrawablesOptions())
 
     /**
      * The application ID.
@@ -291,8 +280,7 @@ abstract class AbstractProductFlavor(
     /**
      * Options to configure the build-time support for `vector` drawables.
      */
-    override val vectorDrawables: DefaultVectorDrawablesOptions
-        get() = _vectorDrawables
+    abstract override val vectorDrawables: DefaultVectorDrawablesOptions
 
     /**
      * Whether to enable unbundling mode for embedded wear app.
@@ -663,7 +651,6 @@ abstract class AbstractProductFlavor(
             testFunctionalTest = thatProductFlavor.testFunctionalTest
             // should this be a copy instead?
             _signingConfig = thatProductFlavor.signingConfig
-            _vectorDrawables = DefaultVectorDrawablesOptions.copyOf(thatProductFlavor.vectorDrawables)
             wearAppUnbundled = thatProductFlavor.wearAppUnbundled
             addResourceConfigurations(thatProductFlavor.resourceConfigurations)
             addManifestPlaceholders(thatProductFlavor.manifestPlaceholders)
