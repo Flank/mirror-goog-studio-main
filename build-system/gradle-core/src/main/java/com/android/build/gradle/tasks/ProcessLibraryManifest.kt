@@ -26,6 +26,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.mergeManifestsForApplication
+import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
@@ -64,11 +66,12 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
     abstract val packageOverride: Property<String>
 
     @get:Input
-    abstract val versionCode: Property<Int>
+    @get:Optional
+    abstract val versionCode: Property<Int?>
 
     @get:Optional
     @get:Input
-    abstract val versionName: Property<String>
+    abstract val versionName: Property<String?>
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFiles
@@ -98,7 +101,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                     mainManifest.get(),
                     manifestOverlays.get(),
                     packageOverride.get(),
-                    versionCode.get(),
+                    versionCode.orNull,
                     versionName.orNull,
                     minSdkVersion.orNull,
                     targetSdkVersion.orNull,
@@ -122,7 +125,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
         val mainManifest: File,
         val manifestOverlays: List<File>,
         val packageOverride: String,
-        val versionCode: Int,
+        val versionCode: Int?,
         val versionName: String?,
         val minSdkVersion: String?,
         val targetSdkVersion: String?,
@@ -315,10 +318,8 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             task.mainSplit.disallowChanges()
             task.isNamespaced =
                 creationConfig.globalScope.extension.aaptOptions.namespaced
-            task.versionName.set(task.project.provider<String>(variantDslInfo::versionName))
-            task.versionName.disallowChanges()
-            task.versionCode.set(task.project.provider(variantDslInfo::versionCode))
-            task.versionCode.disallowChanges()
+            task.versionName.setDisallowChanges(variantDslInfo.versionName)
+            task.versionCode.setDisallowChanges(variantDslInfo.versionCode)
             task.packageOverride.set(creationConfig.applicationId)
             task.packageOverride.disallowChanges()
             task.manifestPlaceholders.set(

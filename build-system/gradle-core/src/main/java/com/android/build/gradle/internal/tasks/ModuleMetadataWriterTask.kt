@@ -46,11 +46,12 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
     abstract val applicationId: Property<String>
 
     @get:Input
-    abstract val versionCode: Property<Int>
+    @get:Optional
+    abstract val versionCode: Property<Int?>
 
     @get:Input
     @get:Optional
-    abstract val versionName: Property<String>
+    abstract val versionName: Property<String?>
 
     @get:Input
     abstract val debuggable: Property<Boolean>
@@ -66,7 +67,7 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
         val declaration =
             ModuleMetadata(
                 applicationId = applicationId.get(),
-                versionCode = versionCode.get().toString(),
+                versionCode = versionCode.orNull?.toString(),
                 versionName = versionName.orNull,
                 debuggable = debuggable.get(),
                 abiFilters = abiFilters.orNull

@@ -59,21 +59,6 @@ public interface ManifestAttributeSupplier {
     Object getTargetSdkVersion();
 
     /**
-     * Returns the version name from the manifest file.
-     *
-     * @return the version name or null if not found.
-     */
-    @Nullable
-    String getVersionName();
-
-    /**
-     * Returns the version code from the manifest file.
-     *
-     * @return the version code or -1 if value is not set.
-     */
-    int getVersionCode();
-
-    /**
      * Returns the instrumentation runner from the instrumentation tag in the manifest file.
      *
      * @return the instrumentation runner or {@code null} if there is none specified.

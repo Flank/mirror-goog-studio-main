@@ -27,16 +27,16 @@ interface BuiltArtifact: VariantOutputConfiguration {
     /**
      * Returns a read-only version code.
      *
-     * @return version code
+     * @return version code or null if the version code is unknown (not set in manifest nor DSL)
      */
-    val versionCode: Int
+    val versionCode: Int?
 
     /**
      * Returns a read-only version name.
      *
-     * @return version name
+     * @return version name or null if the version name is unknown (not set in manifest nor DSL)
      */
-    val versionName: String
+    val versionName: String?
 
     /**
      * Absolute path to the built file

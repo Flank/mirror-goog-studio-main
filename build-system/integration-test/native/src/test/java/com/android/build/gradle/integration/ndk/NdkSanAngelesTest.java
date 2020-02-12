@@ -29,6 +29,7 @@ import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.VariantBuildInformation;
 import com.google.common.collect.Maps;
+import com.google.common.truth.Truth;
 import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -86,7 +87,7 @@ public class NdkSanAngelesTest {
                     // this checks we're not getting an unexpected builtArtifact.
                     assertNotNull("Check Valid builtArtifact: " + abiFilter, value);
 
-                    assertEquals(value.intValue(), builtArtifact.getVersionCode());
+                    Truth.assertThat(builtArtifact.getVersionCode()).isEqualTo(value);
                     expected.remove(abiFilter);
                 }
             }

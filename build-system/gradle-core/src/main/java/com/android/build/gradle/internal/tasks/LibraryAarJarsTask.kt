@@ -328,17 +328,9 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                 task.typedefRecipe
             )
 
-            task.packageName.set(
-                creationConfig.globalScope.project.provider {
-                    creationConfig.variantDslInfo.packageFromManifest
-                }
-            )
-            task.packageName.disallowChanges()
-
+            task.packageName.setDisallowChanges(creationConfig.variantDslInfo.packageFromManifest)
             task.jarCreatorType.setDisallowChanges(creationConfig.variantScope.jarCreatorType)
-
-            task.debugBuild
-                .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+            task.debugBuild.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
 
             /*
              * Only get files that are CLASS, and exclude files that are both CLASS and RESOURCES

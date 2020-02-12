@@ -104,13 +104,13 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
         Boolean::class.java,
         baseModuleMetadata.map { it.debuggable })
 
-    override val baseModuleVersionCode: Provider<Int> = variantApiServices.providerOf(
+    override val baseModuleVersionCode: Provider<Int?> = variantApiServices.nullableProviderOf(
         Int::class.java,
-        baseModuleMetadata.map { Integer.parseInt(it.versionCode) })
+        baseModuleMetadata.map { it.versionCode?.toInt() })
 
-    override val baseModuleVersionName: Provider<String> = variantApiServices.providerOf(
+    override val baseModuleVersionName: Provider<String?> = variantApiServices.nullableProviderOf(
         String::class.java,
-        baseModuleMetadata.map { it.versionName ?: "" })
+        baseModuleMetadata.map { it.versionName })
 
     override val featureName: Provider<String> =
         variantApiServices.providerOf(String::class.java, featureSetMetadata.map {

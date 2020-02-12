@@ -122,7 +122,7 @@ object GenericBuiltArtifactsSplitOutputMatcher {
         val match = Collections.max(
             matches
         ) { splitOutput: GenericBuiltArtifact, splitOutput2: GenericBuiltArtifact ->
-            val rc = splitOutput.versionCode - splitOutput2.versionCode
+            val rc = versionCodeDiff(splitOutput.versionCode, splitOutput2.versionCode)
             if (rc != 0) {
                 return@max rc
             }
@@ -137,6 +137,14 @@ object GenericBuiltArtifactsSplitOutputMatcher {
             )
         ) match else null
     }
+
+    /**
+     * Computes a - b.
+     *
+     * null values are considered to be the same as 1 since this is how the platform handles missing
+     * version code from the manifest
+     */
+    private fun versionCodeDiff(a: Int?, b: Int?): Int = (a ?: 1) - (b ?: 1)
 
     /**
      * Return the preference score of a VariantOutput for the deviceAbi list.

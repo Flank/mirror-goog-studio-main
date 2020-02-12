@@ -51,7 +51,7 @@ abstract class AbstractBuildGivenBuildExpectTest<GivenT, ResultT> :
     /**
      * Registers an action block returning the given state as a single object
      */
-    open fun given(action: GivenT.() -> Unit) {
+    protected open fun given(action: GivenT.() -> Unit) {
         checkState(TestState.START)
         givenAction = action
         state = TestState.GIVEN
@@ -60,11 +60,24 @@ abstract class AbstractBuildGivenBuildExpectTest<GivenT, ResultT> :
     /**
      * Registers an action block return the expected result values. This also runs the test.
      */
-    fun expect(expectedProvider: ResultT.() -> Unit) {
+    protected fun expect(expectedProvider: ResultT.() -> Unit) {
+        val given = instantiateGiven().also {
+            givenAction?.invoke(it) ?: throw RuntimeException("No given data")
+        }
         runTest(
-            instantiateGiven().also { givenAction?.invoke(it) ?: throw RuntimeException("No given data") },
-            instantiateResult().also { expectedProvider.invoke(it) }
+            given,
+            instantiateResult().also {
+                initResultDefaults(given, it)
+                expectedProvider.invoke(it)
+            }
         )
+    }
+
+    /**
+     * pre-process the result with the given, before passing it to the expect action
+     */
+    protected open fun initResultDefaults(given: GivenT, result: ResultT) {
+        // do nothing
     }
 
     abstract fun instantiateGiven(): GivenT

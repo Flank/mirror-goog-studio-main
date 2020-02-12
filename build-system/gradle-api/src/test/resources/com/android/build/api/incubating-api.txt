@@ -609,7 +609,7 @@ com.android.build.api.variant.ApplicationVariantProperties.getDependenciesInfo: 
 com.android.build.api.variant.BuiltArtifact implements com.android.build.api.variant.VariantOutputConfiguration
 com.android.build.api.variant.BuiltArtifact.getOutputFile: java.lang.String ()
 com.android.build.api.variant.BuiltArtifact.getProperties: java.util.Map<java.lang.String, java.lang.String> ()
-com.android.build.api.variant.BuiltArtifact.getVersionCode: int ()
+com.android.build.api.variant.BuiltArtifact.getVersionCode: java.lang.Integer ()
 com.android.build.api.variant.BuiltArtifact.getVersionName: java.lang.String ()
 com.android.build.api.variant.BuiltArtifacts
 com.android.build.api.variant.BuiltArtifacts$Companion

@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ClassesDirF
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.toSerializable
 import com.android.builder.dexing.isJarFile
@@ -84,7 +85,7 @@ private fun BundleLibraryClassesInputs.configure(
     packageRClass: Boolean,
     toIgnoreRegExps: Supplier<List<String>>
 ) {
-    packageName.set(component.globalScope.project.provider { component.variantDslInfo.packageFromManifest })
+    packageName.setDisallowChanges(component.variantDslInfo.packageFromManifest)
     classes.from(inputs)
     this.packageRClass.set(packageRClass)
     if (packageRClass) {

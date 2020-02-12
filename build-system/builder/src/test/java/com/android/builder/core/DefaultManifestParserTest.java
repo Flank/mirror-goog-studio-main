@@ -96,18 +96,6 @@ public class DefaultManifestParserTest {
     }
 
     @Test
-    public void getVersionName() {
-        String versionName = defaultManifestParser.getVersionName();
-        assertThat(versionName).isEqualTo("1.0");
-    }
-
-    @Test
-    public void getVersionCode() {
-        int versionCode = defaultManifestParser.getVersionCode();
-        assertThat(versionCode).isEqualTo(1);
-    }
-
-    @Test
     public void getMinSdkVersion() {
         ApiVersion minSdkVersion =
                 DefaultApiVersion.create(defaultManifestParser.getMinSdkVersion());

@@ -92,7 +92,9 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
                 "ApkVariantOutput.getVersionCodeOverride()",
                 BaseVariantImpl.USE_PROPERTIES_DEPRECATION_URL,
                 DeprecationReporter.DeprecationTarget.USE_PROPERTIES);
-        return variantOutput.getVersionCode().get();
+
+        // FIXME break if memoization of these is still enabled. b/150291033
+        return variantOutput.getVersionCode().getOrElse(-1);
     }
 
     @Override
@@ -108,12 +110,14 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
                 "ApkVariantOutput.getVersionNameOverride()",
                 BaseVariantImpl.USE_PROPERTIES_DEPRECATION_URL,
                 DeprecationReporter.DeprecationTarget.USE_PROPERTIES);
+        // FIXME break if memoization of these is still enabled. b/150291033
         return variantOutput.getVersionName().getOrNull();
     }
 
     @Override
     public int getVersionCode() {
-        return variantOutput.getVersionCode().get();
+        // FIXME break if memoization of these is still enabled. b/150291033
+        return variantOutput.getVersionCode().getOrElse(-1);
     }
 
     @Override

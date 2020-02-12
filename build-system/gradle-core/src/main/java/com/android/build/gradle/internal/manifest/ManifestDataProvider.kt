@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.component
+package com.android.build.gradle.internal.manifest
 
 import org.gradle.api.provider.Provider
 
-interface DynamicFeatureCreationConfig: ApkCreationConfig, VariantCreationConfig {
-
-    val featureName: Provider<String>
-    val resOffset: Provider<Int>
-
-    val baseModuleDebuggable: Provider<Boolean>
-    val baseModuleVersionCode: Provider<Int?>
-    val baseModuleVersionName: Provider<String?>
+/**
+ * A class that can provide a [Provider] of [ManifestData]
+ */
+interface ManifestDataProvider {
+    val manifestLocation: String
+    val manifestData: Provider<ManifestData>
 }

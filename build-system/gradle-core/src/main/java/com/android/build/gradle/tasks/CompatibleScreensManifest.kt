@@ -82,8 +82,8 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
                 if (generatedManifest != null)
                     BuiltArtifactImpl.make(
                         outputFile = generatedManifest.absolutePath,
-                        versionCode = it.versionCode.get(),
-                        versionName = it.versionName.get(),
+                        versionCode = it.versionCode.orNull,
+                        versionName = it.versionName.orNull,
                         variantOutputConfiguration = it.variantOutputConfiguration
                     )
                 else

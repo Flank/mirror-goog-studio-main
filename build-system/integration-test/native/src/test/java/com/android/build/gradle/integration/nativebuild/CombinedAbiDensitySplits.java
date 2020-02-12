@@ -17,8 +17,8 @@
 package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -33,6 +33,7 @@ import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.VariantBuildInformation;
 import com.android.testutils.apk.Zip;
+import com.android.testutils.truth.ZipFileSubject;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Collection;
@@ -91,9 +92,9 @@ public class CombinedAbiDensitySplits {
                     VariantOutputConfiguration.OutputType.ONE_OF_MANY,
                     builtArtifact.getOutputType());
 
-            assertEquals(123, builtArtifact.getVersionCode());
+            assertThat(builtArtifact.getVersionCode()).isEqualTo(123);
             try (Zip it = new Zip(new File(builtArtifact.getOutputFile()))) {
-                assertThat(it).entries("/lib/.*").hasSize(1);
+                ZipFileSubject.assertThat(it).entries("/lib/.*").hasSize(1);
             }
 
             if (densityFilter != null) {

@@ -35,8 +35,8 @@ data class GenericBuiltArtifact(
      */
     val filters: Collection<GenericFilterConfiguration> = listOf(),
 
-    override val versionCode: Int = -1,
-    override val versionName: String = "",
+    override val versionCode: Int? = null,
+    override val versionName: String? = null,
     override val outputFile: String,
     override val properties: Map<String, String> = mapOf()
 ): CommonBuiltArtifact

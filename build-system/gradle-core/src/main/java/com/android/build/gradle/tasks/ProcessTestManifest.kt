@@ -32,6 +32,8 @@ import com.android.build.gradle.internal.scope.BuiltArtifactProperty
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.build.gradle.tasks.ProcessApplicationManifest.Companion.getArtifactName
 import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.ManifestProviderImpl
 import com.android.builder.internal.TestManifestGenerator
@@ -391,7 +393,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
 
     @get:Optional
     @get:Input
-    abstract val testLabel: Property<String>
+    abstract val testLabel: Property<String?>
 
     @get:Input
     abstract val placeholdersValues: MapProperty<String, Any>
@@ -483,17 +485,10 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             task.testedApplicationId.disallowChanges()
             val testedConfig = variantDslInfo.testedVariant
             task.onlyTestApk = testedConfig != null && testedConfig.variantType.isAar
-            task.instrumentationRunner
-                .set(project.provider(variantDslInfo::instrumentationRunner))
-            task.instrumentationRunner.disallowChanges()
-            task.handleProfiling
-                .set(project.provider(variantDslInfo::handleProfiling))
-            task.handleProfiling.disallowChanges()
-            task.functionalTest
-                .set(project.provider(variantDslInfo::functionalTest))
-            task.functionalTest.disallowChanges()
-            task.testLabel.set(project.provider(variantDslInfo::testLabel))
-            task.testLabel.disallowChanges()
+            task.instrumentationRunner.setDisallowChanges(variantDslInfo.instrumentationRunner)
+            task.handleProfiling.setDisallowChanges(variantDslInfo.handleProfiling)
+            task.functionalTest.setDisallowChanges(variantDslInfo.functionalTest)
+            task.testLabel.setDisallowChanges(variantDslInfo.testLabel)
             task.manifests = creationConfig
                 .variantDependencies
                 .getArtifactCollection(

@@ -102,12 +102,41 @@ interface VariantPropertiesApiServices:
     fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Callable<T>, id: String = ""): Property<T>
 
     /**
+     * Creates a new property that is backing an old API returning T.
+     *
+     * By default this property is memoized with [Property.finalizeValueOnRead] but access
+     * to the old API getter will require disabling memoization
+     *
+     * The property will be locked with [Property.disallowChanges] after the variant API(s) have
+     * run.
+     */
+    fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T>, id: String = ""): Property<T>
+
+    /**
+     * Creates a new property that is backing an old API returning T.
+     *
+     * By default this property is memoized with [Property.finalizeValueOnRead] but access
+     * to the old API getter will require disabling memoization
+     *
+     * The property will be locked with [Property.disallowChanges] after the variant API(s) have
+     * run.
+     */
+    fun <T> newNullablePropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T?>, id: String = ""): Property<T?>
+
+    /**
      * Creates a memoized Provider around the given provider
      */
     fun <T> providerOf(type: Class<T>, value: Provider<T>, id: String = ""): Provider<T>
 
+    /**
+     * Creates a memoized Provider around the given provider
+     */
+    fun <T> nullableProviderOf(type: Class<T>, value: Provider<T?>, id: String = ""): Provider<T?>
+
     fun <T> setProviderOf(type: Class<T>, value: Provider<out Iterable<T>?>): Provider<Set<T>?>
     fun <T> setProviderOf(type: Class<T>, value: Iterable<T>?): Provider<Set<T>?>
+
+    fun <T> provider(callable: Callable<T>): Provider<T>
 
     fun <T : Named> named(type: Class<T>, name: String): T
 
@@ -117,4 +146,6 @@ interface VariantPropertiesApiServices:
     fun fileCollection(vararg files: Any): ConfigurableFileCollection
     fun fileTree(): ConfigurableFileTree
     fun fileTree(dir: Any): ConfigurableFileTree
+
+    fun lockProperties()
 }

@@ -75,10 +75,11 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
     @get:Input
     @get:Optional
-    abstract val versionName: Property<String>
+    abstract val versionName: Property<String?>
 
     @get:Input
-    abstract val versionCode: Property<Int>
+    @get:Optional
+    abstract val versionCode: Property<Int?>
 
     val itemValues: List<String>
         @Input
@@ -156,8 +157,11 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             }
         }
 
+        versionCode.orNull?.let {
+            generator
+                    .addField("int", "VERSION_CODE", it.toString())
+        }
         generator
-            .addField("int", "VERSION_CODE", Integer.toString(versionCode.get()))
             .addField(
                 "String",
                 "VERSION_NAME",
@@ -221,12 +225,8 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             val mainSplit = creationConfig.outputs.getMainSplit()
             // check the variant API property first (if there is one) in case the variant
             // output version has been overridden, otherwise use the variant configuration
-            task.versionCode.setDisallowChanges(
-                mainSplit?.versionCode
-                    ?: task.project.provider { variantDslInfo.versionCode })
-            task.versionName.setDisallowChanges(
-                mainSplit?.versionName
-                    ?: task.project.provider { variantDslInfo.versionName })
+            task.versionCode.setDisallowChanges(mainSplit.versionCode)
+            task.versionName.setDisallowChanges(mainSplit.versionName)
 
             task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
 

@@ -81,7 +81,6 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import java.io.File
-import java.util.concurrent.Callable
 
 abstract class ComponentPropertiesImpl(
     componentIdentity: ComponentIdentity,
@@ -208,32 +207,19 @@ abstract class ComponentPropertiesImpl(
         outputFileName: String? = null
     ): VariantOutputImpl {
 
-        // the DSL objects are now locked, if the versionCode is provided, use that
-        // otherwise use the lazy manifest reader to extract the value from the manifest
-        // file.
-        val versionCodeProperty = variantPropertiesApiServices.newPropertyBackingDeprecatedApi(
-            Int::class.java,
-            Callable {
-                val versionCode = variantDslInfo.getVersionCode(true)
-                if (versionCode <= 0) {
-                    variantDslInfo.manifestVersionCodeSupplier.asInt
-                } else {
-                    versionCode
-                }
-            },
-            "$name::versionCode"
-        )
+        val versionCodeProperty =
+            variantPropertiesApiServices.newNullablePropertyBackingDeprecatedApi(
+                Int::class.java,
+                variantDslInfo.versionCode,
+                "$name::versionCode"
+            )
 
-        // the DSL objects are now locked, if the versionName is provided, use that; otherwise use
-        // the lazy manifest reader to extract the value from the manifest file.
-        val versionName = variantDslInfo.getVersionName(true)
-        val versionNameProperty = variantPropertiesApiServices.newPropertyBackingDeprecatedApi(
-            String::class.java,
-            Callable {
-                versionName ?: variantDslInfo.manifestVersionNameSupplier.get() ?: ""
-            },
-            "$name::versionName"
-        )
+        val versionNameProperty =
+            variantPropertiesApiServices.newNullablePropertyBackingDeprecatedApi(
+                String::class.java,
+                variantDslInfo.versionName,
+                "$name::versionName"
+            )
 
         return VariantOutputImpl(
             versionCodeProperty,

@@ -136,26 +136,6 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
     }
 
     /**
-     * Gets the version name for the manifest file processed by this parser.
-     */
-    @Nullable
-    @Override
-    public String getVersionName() {
-        init();
-        return attributeValues.get(VERSION_NAME);
-    }
-
-    /**
-     * Gets the version code for the manifest file processed by this parser.
-     */
-    @Override
-    public int getVersionCode() {
-        init();
-        String versionCode = attributeValues.get(VERSION_CODE);
-        return (int) parseIntValueOrDefault(versionCode, -1, -1);
-    }
-
-    /**
      * Gets the minimum sdk version for the manifest file processed by this parser.
      */
     @Override

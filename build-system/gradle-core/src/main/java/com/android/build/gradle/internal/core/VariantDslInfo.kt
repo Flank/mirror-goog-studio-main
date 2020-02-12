@@ -32,9 +32,8 @@ import com.android.sdklib.AndroidVersion
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Provider
 import java.io.File
-import java.util.function.IntSupplier
-import java.util.function.Supplier
 
 /**
  * Represents a variant, initialized from the DSL object model (default config, build type, flavors)
@@ -166,31 +165,13 @@ interface VariantDslInfo {
     val testedApplicationId: String?
 
     /**
-     * Returns the application id override value coming from the Product Flavor and/or the Build
-     * Type. If the package/id is not overridden then this returns null.
-     *
-     * @return the id override or null
-     */
-    val idOverride: String?
-
-    /**
      * Returns the version name for this variant. This could be specified by the product flavors,
      * or, if not, it could be coming from the manifest. A suffix may be specified by the build
      * type.
      *
      * @return the version name or null if none defined
      */
-    val versionName: String?
-
-    /**
-     * Returns the version name for this variant. This could be specified by the product flavors,
-     * or, if not, it could be coming from the manifest. A suffix may be specified by the build
-     * type.
-     *
-     * @param ignoreManifest whether or not the manifest is ignored when getting the version code
-     * @return the version name or null if none defined
-     */
-    fun getVersionName(ignoreManifest: Boolean): String?
+    val versionName: Provider<String?>
 
     /**
      * Returns the version code for this variant. This could be specified by the product flavors,
@@ -198,20 +179,7 @@ interface VariantDslInfo {
      *
      * @return the version code or -1 if there was none defined.
      */
-    val versionCode: Int
-
-    /**
-     * Returns the version code for this variant. This could be specified by the product flavors,
-     * or, if not, it could be coming from the manifest.
-     *
-     * @param ignoreManifest whether or not the manifest is ignored when getting the version code
-     * @return the version code or -1 if there was none defined.
-     */
-    fun getVersionCode(ignoreManifest: Boolean): Int
-
-    val manifestVersionNameSupplier: Supplier<String?>
-
-    val manifestVersionCodeSupplier: IntSupplier
+    val versionCode: Provider<Int?>
 
     /**
      * Returns the instrumentationRunner to use to test this variant, or if the variant is a test,
@@ -219,7 +187,7 @@ interface VariantDslInfo {
      *
      * @return the instrumentation test runner name
      */
-    val instrumentationRunner: String
+    val instrumentationRunner: Provider<String>
 
     /**
      * Returns the instrumentationRunner arguments to use to test this variant, or if the variant is
@@ -233,7 +201,7 @@ interface VariantDslInfo {
      *
      * @return the handleProfiling value
      */
-    val handleProfiling: Boolean
+    val handleProfiling: Provider<Boolean>
 
     /**
      * Returns functionalTest value to use to test this variant, or if the variant is a test, the
@@ -241,13 +209,13 @@ interface VariantDslInfo {
      *
      * @return the functionalTest value
      */
-    val functionalTest: Boolean
+    val functionalTest: Provider<Boolean>
 
     /** Gets the test label for this variant  */
-    val testLabel: String?
+    val testLabel: Provider<String?>
 
     /** Reads the package name from the manifest. This is unmodified by the build type.  */
-    val packageFromManifest: String
+    val packageFromManifest: Provider<String>
 
     /**
      * Return the minSdkVersion for this variant.

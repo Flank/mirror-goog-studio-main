@@ -38,7 +38,7 @@ fun mergeManifestsForApplication(
     navigationJsons: Collection<File>,
     featureName: String?,
     packageOverride: String?,
-    versionCode: Int,
+    versionCode: Int?,
     versionName: String?,
     minSdkVersion: String?,
     targetSdkVersion: String?,
@@ -199,7 +199,7 @@ fun findOriginalManifestFilePosition(
 private fun setInjectableValues(
     invoker: ManifestMerger2.Invoker<*>,
     packageOverride: String?,
-    versionCode: Int,
+    versionCode: Int?,
     versionName: String?,
     minSdkVersion: String?,
     targetSdkVersion: String?,
@@ -209,12 +209,13 @@ private fun setInjectableValues(
     if (packageOverride != null && packageOverride.isNotEmpty()) {
         invoker.setOverride(ManifestSystemProperty.PACKAGE, packageOverride)
     }
-    if (versionCode > 0) {
-        invoker.setOverride(
-            ManifestSystemProperty.VERSION_CODE,
-            versionCode.toString()
-        )
+
+    versionCode?.let {
+        if (it > 0) {
+            invoker.setOverride(ManifestSystemProperty.VERSION_CODE, it.toString())
+        }
     }
+
     if (versionName != null && versionName.isNotEmpty()) {
         invoker.setOverride(ManifestSystemProperty.VERSION_NAME, versionName)
     }

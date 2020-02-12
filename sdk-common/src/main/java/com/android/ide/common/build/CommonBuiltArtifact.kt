@@ -32,14 +32,14 @@ interface CommonBuiltArtifact {
      *
      * @return version code
      */
-    val versionCode: Int
+    val versionCode: Int?
 
     /**
      * Returns a read-only version name.
      *
      * @return version name
      */
-    val versionName: String
+    val versionName: String?
 
     /**
      * Absolute path to the built file

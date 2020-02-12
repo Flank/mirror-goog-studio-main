@@ -102,13 +102,6 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     @get:Optional
     abstract val resOffset: Property<Int>
 
-    @get:Input
-    @get:Optional
-    abstract val versionName: Property<String?>
-
-    @get:Input
-    abstract val versionCode: Property<Int?>
-
     @get:OutputDirectory
     lateinit var incrementalFolder: File
         private set
@@ -261,11 +254,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
 
-            val mainSplit = creationConfig.outputs.getMainSplit()
-            task.versionCode.setDisallowChanges(mainSplit.versionCode)
-            task.versionName.setDisallowChanges(mainSplit.versionName)
-
-            task.mainSplit = mainSplit
+            task.mainSplit = creationConfig.outputs.getMainSplit()
 
             creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,

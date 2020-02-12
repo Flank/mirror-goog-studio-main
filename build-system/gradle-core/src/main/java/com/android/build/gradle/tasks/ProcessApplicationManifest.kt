@@ -110,11 +110,11 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
 
     @get:Optional
     @get:Input
-    abstract val baseModuleVersionCode: Property<Int>
+    abstract val baseModuleVersionCode: Property<Int?>
 
     @get:Optional
     @get:Input
-    abstract val baseModuleVersionName: Property<String>
+    abstract val baseModuleVersionName: Property<String?>
 
     @get:Optional
     @get:Input
@@ -216,10 +216,10 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 navJsons,
                 featureName.orNull,
                 packageOverride.get(),
-                if (baseModuleVersionCode.isPresent) baseModuleVersionCode.get() else variantOutput.versionCode.get(),
+                if (baseModuleVersionCode.isPresent) baseModuleVersionCode.orNull else variantOutput.versionCode.orNull,
                 if (baseModuleVersionName.isPresent
-                    && !baseModuleVersionName.get().isEmpty()
-                ) baseModuleVersionName.get() else variantOutput.versionName.get(),
+                    && !baseModuleVersionName.get().isNullOrEmpty()
+                ) baseModuleVersionName.orNull else variantOutput.versionName.orNull,
                 minSdkVersion.orNull,
                 targetSdkVersion.orNull,
                 maxSdkVersion.orNull,
