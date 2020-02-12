@@ -66,9 +66,9 @@ fun RecipeExecutor.scrollActivityRecipe(
   open(resOut.resolve("layout/${contentLayoutName}.xml"))
 
   val scrollActivity = when (projectData.language) {
-    Language.Java -> scrollActivityJava(activityClass, moduleData.projectTemplateData.applicationPackage, moduleData.isNew,
+    Language.Java -> scrollActivityJava(activityClass, moduleData.projectTemplateData.applicationPackage, moduleData.isNewModule,
                                         layoutName, menuName, packageName, useAndroidX, useMaterial2)
-    Language.Kotlin -> scrollActivityKt(activityClass, moduleData.isNew, layoutName, menuName, packageName, useAndroidX, useMaterial2)
+    Language.Kotlin -> scrollActivityKt(activityClass, moduleData.isNewModule, layoutName, menuName, packageName, useAndroidX, useMaterial2)
   }
   save(scrollActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
 

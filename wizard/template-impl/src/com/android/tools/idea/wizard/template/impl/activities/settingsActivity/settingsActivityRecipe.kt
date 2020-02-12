@@ -52,7 +52,7 @@ fun RecipeExecutor.settingsActivityRecipe(
   addDependency("androidx.preference:preference:1.1+")
 
   generateManifest(
-    moduleData, activityClass, activityClass, packageName, isLauncher = moduleData.isNew, hasNoActionBar = false,
+    moduleData, activityClass, activityClass, packageName, isLauncher = moduleData.isNewModule, hasNoActionBar = false,
     requireTheme = true, generateActivityTitle = true, useMaterial2 = useMaterial2
   )
 

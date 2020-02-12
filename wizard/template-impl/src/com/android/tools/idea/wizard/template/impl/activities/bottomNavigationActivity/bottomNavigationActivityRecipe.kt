@@ -45,7 +45,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
   val generateKotlin = projectData.language == Language.Kotlin
-  val isLauncher = moduleData.isNew
+  val isLauncher = moduleData.isNewModule
   addAllKotlinDependencies(moduleData)
 
   addDependency("com.android.support:design:${buildApi}.+")

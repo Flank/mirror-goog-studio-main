@@ -28,7 +28,7 @@ fun RecipeExecutor.setKotlinVersion(kotlinVersion: String) {
 
 fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData) {
   val projectData = data.projectTemplateData
-  if (!data.isNew && projectData.language == Language.Kotlin) {
+  if (!data.isNewModule && projectData.language == Language.Kotlin) {
     applyPlugin("kotlin-android")
     applyPlugin("kotlin-android-extensions")
     if (!hasKotlinStdlib()) {

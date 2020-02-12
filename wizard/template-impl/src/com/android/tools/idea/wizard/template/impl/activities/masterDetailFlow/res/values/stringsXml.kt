@@ -22,11 +22,11 @@ import com.android.tools.idea.wizard.template.renderIf
 fun stringsXml(
   collection_name: String,
   detailNameLayout: String,
-  isNew: Boolean,
+  isNewModule: Boolean,
   objectKind: String,
   objectKindPlural: String
 ): String {
-  val nameBlock = renderIf(!isNew) {"<string name=\"title_${collection_name}\">${objectKindPlural}</string>"}
+  val nameBlock = renderIf(!isNewModule) {"<string name=\"title_${collection_name}\">${objectKindPlural}</string>"}
   return """
 <resources>
     $nameBlock 

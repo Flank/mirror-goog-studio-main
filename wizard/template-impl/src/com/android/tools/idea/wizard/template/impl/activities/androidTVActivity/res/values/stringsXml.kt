@@ -22,9 +22,9 @@ import com.android.tools.idea.wizard.template.activityToLayout
 fun stringsXml(
   activityClass: String,
   activityTitle: String,
-  isNew: Boolean
+  isNewModule: Boolean
 ): String {
-  val labelBlock = if (isNew) "<string name=\"app_name\">Leanback ${activityTitle}</string>"
+  val labelBlock = if (isNewModule) "<string name=\"app_name\">Leanback ${activityTitle}</string>"
   else "<string name=\"title_${activityToLayout(activityClass)}\">Leanback ${activityTitle}</string>"
   return """
 <resources>
