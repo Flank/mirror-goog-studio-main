@@ -87,7 +87,8 @@ public class AndroidArtifacts {
             "android-databinding-class-log";
     private static final String TYPE_EXPLODED_AAR = "android-exploded-aar";
     private static final String TYPE_AAR_OR_JAR = "android-aar-or-jar";
-    private static final String TYPE_AAR_CLASS_LIST = "aar-class-list";
+    private static final String TYPE_AAR_ClASS_LIST_AND_RES_SYMBOLS =
+            "aar-class-list-and-res-symbols";
     private static final String TYPE_COMPILED_DEPENDENCIES_RESOURCES =
             "android-compiled-dependencies-resources";
     private static final String TYPE_MODULE_BUNDLE = "android-module-bundle";
@@ -393,8 +394,9 @@ public class AndroidArtifacts {
         PROCESSED_AAR(TYPE_PROCESSED_AAR),
         EXPLODED_AAR(TYPE_EXPLODED_AAR),
         AAR_OR_JAR(TYPE_AAR_OR_JAR), // See ArtifactUtils for how this is used.
-        // A list of all .class files from within an AAR's jar files.
-        AAR_CLASS_LIST(TYPE_AAR_CLASS_LIST),
+        // A directory containing a two files; a txt file containing all AAR .class filepaths
+        // containing unique AAR resource symbols.
+        AAR_CLASS_LIST_AND_RES_SYMBOLS(TYPE_AAR_ClASS_LIST_AND_RES_SYMBOLS),
 
         NAVIGATION_JSON(TYPE_NAVIGATION_JSON),
 

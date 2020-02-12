@@ -17,19 +17,12 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.dependency.getClassesFromExplodedAar
 import com.android.build.gradle.internal.dependency.getClassesInJar
-import com.android.build.gradle.internal.dependency.writeClassPathsToFile
+import com.android.build.gradle.internal.dependency.writePathsToFile
 import com.android.build.gradle.internal.fixtures.FakeArtifactCollection
 import com.android.build.gradle.internal.fixtures.FakeComponentIdentifier
 import com.android.build.gradle.internal.fixtures.FakeResolvedArtifactResult
-import com.android.build.gradle.internal.transforms.testdata.Animal
-import com.android.build.gradle.internal.transforms.testdata.CarbonForm
-import com.android.build.gradle.internal.transforms.testdata.Cat
-import com.android.build.gradle.internal.transforms.testdata.Dog
-import com.android.build.gradle.internal.transforms.testdata.Giraffe
-import com.android.build.gradle.internal.transforms.testdata.NewClass
-import com.android.build.gradle.internal.transforms.testdata.Toy
+import com.android.build.gradle.internal.transforms.testdata.*
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask.VariantClassesHolder
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask.VariantDependenciesHolder
 import com.android.build.gradle.tasks.ClassFinder
@@ -83,8 +76,10 @@ class AnalyzeDependenciesTaskUtilsTest {
         val api = listOf<Dependency>(dependency1)
         val dependenciesHolder = VariantDependenciesHolder(all, api)
 
-        assertThat(dependenciesHolder.buildDependencyId(dependency1)).isEqualTo("com/library:Dependency:1")
-        assertThat(dependenciesHolder.all).containsExactly("com/library:Dependency:1", "com/example:AnotherDependency:2")
+        assertThat(dependenciesHolder.buildDependencyId(dependency1))
+                .isEqualTo("com/library:Dependency:1")
+        assertThat(dependenciesHolder.all)
+                .containsExactly("com/library:Dependency:1", "com/example:AnotherDependency:2")
         assertThat(dependenciesHolder.api).containsExactly("com/library:Dependency:1")
     }
 
@@ -107,20 +102,15 @@ class AnalyzeDependenciesTaskUtilsTest {
                 barJar,
                 ImmutableList.of<Class<*>>(class3))
 
-        val transformTestOutputs = tmp.newFolder("transform")
+        val fooDependencySources = tmp.newFolder("dependency-sources-foo")
+        val barDependencySources = tmp.newFolder("dependency-sources-bar")
 
-        val fooClasses = writeClassPathsToFile(
-                File(transformTestOutputs, "foo-classes.txt"),
-                getClassesInJar(fooJar)
-        )
-        val barClasses = writeClassPathsToFile(
-                File(transformTestOutputs, "bar-classes.txt"),
-                getClassesInJar(barJar)
-        )
+        writePathsToFile(File(fooDependencySources, "classes.txt"), getClassesInJar(fooJar))
+        writePathsToFile(File(barDependencySources, "classes.txt"), getClassesInJar(barJar))
 
         val classesArtifacts = FakeArtifactCollection(mutableSetOf(
-                FakeResolvedArtifactResult(fooClasses, FakeComponentIdentifier(fooPackage)),
-                FakeResolvedArtifactResult(barClasses, FakeComponentIdentifier(barPackage))))
+                FakeResolvedArtifactResult(fooDependencySources, FakeComponentIdentifier(fooPackage)),
+                FakeResolvedArtifactResult(barDependencySources, FakeComponentIdentifier(barPackage))))
 
         val finder = ClassFinder(classesArtifacts)
 
@@ -164,25 +154,20 @@ class AnalyzeDependenciesTaskUtilsTest {
         val id2 = variantDependencies.buildDependencyId(dependency2)!!
         val id3 = variantDependencies.buildDependencyId(dependency3)!!
 
-        val transformTestOutputs = tmp.newFolder("transform")
-        val jarAClasses = writeClassPathsToFile(
-                File(transformTestOutputs, "jarA-classes.txt"),
-                getClassesInJar(jarA)
-        )
-        val jarBClasses = writeClassPathsToFile(
-                File(transformTestOutputs, "jarB-classes.txt"),
-                getClassesInJar(jarB)
-        )
-        val jarCClasses = writeClassPathsToFile(
-                File(transformTestOutputs, "jarC-classes.txt"),
-                getClassesInJar(jarC)
-        )
+        val dependency1Sources = tmp.newFolder("dependencySources-aar1")
+        val dependency2Sources = tmp.newFolder("dependencySources-aar2")
+        val dependency3Sources = tmp.newFolder("dependencySources-aar3")
+
+        writePathsToFile(File(dependency1Sources, "classes.txt"), getClassesInJar(jarA))
+        writePathsToFile(File(dependency2Sources, "classes.txt"), getClassesInJar(jarB))
+        writePathsToFile(File(dependency3Sources, "classes.txt"), getClassesInJar(jarC))
 
         // Create an ArtifactCollection
         val externalArtifactCollection = FakeArtifactCollection(mutableSetOf(
-            FakeResolvedArtifactResult(jarAClasses, FakeComponentIdentifier(id1)),
-            FakeResolvedArtifactResult(jarBClasses, FakeComponentIdentifier(id2)),
-            FakeResolvedArtifactResult(jarCClasses, FakeComponentIdentifier(id3))))
+                FakeResolvedArtifactResult(dependency1Sources, FakeComponentIdentifier(id1)),
+                FakeResolvedArtifactResult(dependency2Sources, FakeComponentIdentifier(id2)),
+                FakeResolvedArtifactResult(dependency3Sources, FakeComponentIdentifier(id3))))
+
 
         // Create some test classes
         val class6 = Giraffe::class.java
@@ -242,25 +227,19 @@ class AnalyzeDependenciesTaskUtilsTest {
         val id2 = variantDependencies.buildDependencyId(dependency2)!!
         val id3 = variantDependencies.buildDependencyId(dependency3)!!
 
-        val transformTestOutputs = tmp.newFolder("transform")
-        val jarAClasses = writeClassPathsToFile(
-                File(transformTestOutputs, "jarA-classes.txt"),
-                getClassesInJar(jarA)
-        )
-        val jarBClasses = writeClassPathsToFile(
-                File(transformTestOutputs, "jarB-classes.txt"),
-                getClassesInJar(jarB)
-        )
-        val jarCClasses = writeClassPathsToFile(
-                File(transformTestOutputs, "jarC-classes.txt"),
-                getClassesInJar(jarC)
-        )
+        val dependency1Sources = tmp.newFolder("dependencySources-aar1")
+        val dependency2Sources = tmp.newFolder("dependencySources-aar2")
+        val dependency3Sources = tmp.newFolder("dependencySources-aar3")
+
+        writePathsToFile(File(dependency1Sources, "classes.txt"), getClassesInJar(jarA))
+        writePathsToFile(File(dependency2Sources, "classes.txt"), getClassesInJar(jarB))
+        writePathsToFile(File(dependency3Sources, "classes.txt"), getClassesInJar(jarC))
 
         // Create an ArtifactCollection
         val externalArtifactCollection = FakeArtifactCollection(mutableSetOf(
-            FakeResolvedArtifactResult(jarAClasses, FakeComponentIdentifier(id1)),
-            FakeResolvedArtifactResult(jarBClasses, FakeComponentIdentifier(id2)),
-            FakeResolvedArtifactResult(jarCClasses, FakeComponentIdentifier(id3))))
+            FakeResolvedArtifactResult(dependency1Sources, FakeComponentIdentifier(id1)),
+            FakeResolvedArtifactResult(dependency2Sources, FakeComponentIdentifier(id2)),
+            FakeResolvedArtifactResult(dependency3Sources, FakeComponentIdentifier(id3))))
 
         // Create some test classes
         val class6 = Giraffe::class.java
@@ -276,7 +255,6 @@ class AnalyzeDependenciesTaskUtilsTest {
                     FakeComponentIdentifier("project"))))
 
         val variantClasses = VariantClassesHolder(projectClassesArtifact.artifactFiles)
-
         val classFinder = ClassFinder(externalArtifactCollection)
         val dependencyUsageFinder = DependencyUsageFinder(
             classFinder,
@@ -302,7 +280,6 @@ class AnalyzeDependenciesTaskUtilsTest {
             .containsExactly("com/library:Dependency:1", "com/example:AnotherDependency:2")
         assertThat(dependencyUsageFinder.unusedDirectDependencies)
             .containsExactly("com/test:NewDependency:3")
-
         // TODO: Add tests for the new dependency graph
     }
 

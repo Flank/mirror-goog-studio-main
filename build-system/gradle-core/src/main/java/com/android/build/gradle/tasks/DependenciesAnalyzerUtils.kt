@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.SdkConstants
 import com.android.utils.FileUtils
 import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
@@ -127,9 +128,10 @@ class ClassFinder(private val externalArtifactCollection : ArtifactCollection) {
         val map = mutableMapOf<String, String>()
         externalArtifactCollection
                 .forEach { artifact ->
-                    artifact.file.forEachLine { artifactClass ->
-                        map[artifactClass] = artifact.id.componentIdentifier.displayName
-                    }
+                    FileUtils.join(artifact.file, "classes${SdkConstants.DOT_TXT}")
+                            .forEachLine { artifactClass ->
+                                map[artifactClass] = artifact.id.componentIdentifier.displayName
+                            }
                 }
         return map
     }

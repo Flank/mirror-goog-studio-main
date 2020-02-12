@@ -180,7 +180,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
                 .variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.AAR_CLASS_LIST)
+                    AndroidArtifacts.ArtifactType.AAR_CLASS_LIST_AND_RES_SYMBOLS)
 
             task.apiDirectDependenciesConfiguration = creationConfig
                 .variantDependencies

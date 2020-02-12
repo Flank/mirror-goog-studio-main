@@ -81,7 +81,6 @@ class AnalyzeDependenciesTest {
                 }
             """.trimIndent())
 
-
     private val mavenRepo = MavenRepoGenerator(
             listOf(
                     MavenRepoGenerator.Library(
