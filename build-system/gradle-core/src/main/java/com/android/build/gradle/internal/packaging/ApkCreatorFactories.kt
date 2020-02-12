@@ -21,7 +21,6 @@ package com.android.build.gradle.internal.packaging
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zfile.ApkZFileCreatorFactory
 import com.android.tools.build.apkzlib.zip.ZFileOptions
-import com.android.tools.build.apkzlib.zip.compress.BestAndDefaultDeflateExecutorCompressor
 import com.android.tools.build.apkzlib.zip.compress.DeflateExecutionCompressor
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadPoolExecutor
@@ -62,17 +61,10 @@ fun fromProjectProperties(
     )
 
     if (debuggableBuild) {
-        options.compressor = DeflateExecutionCompressor(
-            compressionExecutor,
-            options.tracker,
-            Deflater.BEST_SPEED
-        )
+        options.compressor = DeflateExecutionCompressor(compressionExecutor, Deflater.BEST_SPEED)
     } else {
-        options.compressor = BestAndDefaultDeflateExecutorCompressor(
-            compressionExecutor,
-            options.tracker,
-            1.0
-        )
+        options.compressor =
+            DeflateExecutionCompressor(compressionExecutor, Deflater.DEFAULT_COMPRESSION)
         options.autoSortFiles = true
     }
 
