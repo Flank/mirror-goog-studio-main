@@ -50,7 +50,7 @@ fun RecipeExecutor.generateEmptyActivity(
   addAllKotlinDependencies(moduleData)
 
   if (generateLayout || includeCppSupport) {
-    generateSimpleLayout(moduleData, activityClass, layoutName, true, packageName)
+    generateSimpleLayout(moduleData, activityClass, layoutName, true, packageName, includeCppSupport = includeCppSupport)
   }
 
   val simpleActivityPath = srcOut.resolve("$activityClass.$ktOrJavaExt")
