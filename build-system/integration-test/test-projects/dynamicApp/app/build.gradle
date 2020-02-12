@@ -18,6 +18,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    lintOptions {
+        // *only* check unused resources
+        check "UnusedResources"
+        htmlReport true
+        htmlOutput file("lint-report.html")
+        textReport true
+        textOutput file("lint-results.txt")
+        explainIssues false
+        absolutePaths false
+        ignoreTestSources true
+    }
 }
 
 dependencies {

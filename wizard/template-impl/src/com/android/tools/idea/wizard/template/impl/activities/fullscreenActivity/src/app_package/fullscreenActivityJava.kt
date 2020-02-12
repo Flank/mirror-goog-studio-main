@@ -27,7 +27,7 @@ fun fullscreenActivityJava(
   packageName: String,
   superClassFqcn: String): String {
 
-  val applicationPackageBlock = renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }
+  val applicationPackageBlock = renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }
 
   return """package ${packageName};
 

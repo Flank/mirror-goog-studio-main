@@ -1686,6 +1686,13 @@ public class ResourceUsageModel {
         }
     }
 
+    /** Adds the resource identifiers found in the given Kotlin code into the reference map */
+    public void tokenizeKotlinCode(@NonNull String s) {
+        // the Java tokenizer works for Kotlin as well. It doesn't handle nested
+        // block comments but that's not common in Kotlin code.
+        tokenizeJavaCode(s);
+    }
+
     /** Adds the resource identifiers found in the given Java source code into the reference map */
     public void tokenizeJavaCode(@NonNull String s) {
         if (s.length() <= 2) {
