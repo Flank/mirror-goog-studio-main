@@ -288,4 +288,13 @@ public interface IdeAndroidProject extends Serializable {
      *     Sync.
      */
     void addSyncIssues(@NonNull Collection<SyncIssue> syncIssues);
+
+    /**
+     * Returns the minimal information of variants for this project, excluding test related
+     * variants.
+     *
+     * @since 4.1
+     */
+    @NonNull
+    Collection<IdeVariantBuildInformation> getVariantsBuildInformation();
 }

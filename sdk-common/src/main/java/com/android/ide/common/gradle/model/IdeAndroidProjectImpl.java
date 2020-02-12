@@ -49,7 +49,7 @@ import org.jetbrains.annotations.NotNull;
 public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializable {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.
-    private static final long serialVersionUID = 8L;
+    private static final long serialVersionUID = 9L;
 
     @NonNull private final String myModelVersion;
     @NonNull private final String myName;
@@ -71,6 +71,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
     @NonNull private final AaptOptions myAaptOptions;
     @NonNull private final File myBuildFolder;
     @NonNull private final Collection<String> myDynamicFeatures;
+    @NonNull private final Collection<IdeVariantBuildInformation> myVariantBuildInformation;
     @Nullable private final ViewBindingOptions myViewBindingOptions;
     @Nullable private final IdeDependenciesInfo myDependenciesInfo;
     @Nullable private final GradleVersion myParsedModelVersion;
@@ -187,6 +188,9 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                         IdeModel.copyNewPropertyNonNull(
                                 project::getDynamicFeatures, ImmutableList.of()));
 
+        Collection<IdeVariantBuildInformation> variantBuildInformation =
+                createVariantBuildInformation(project, parsedModelVersion);
+
         IdeViewBindingOptions viewBindingOptionsCopy =
                 IdeModel.copyNewProperty(
                         () -> new IdeViewBindingOptions(project.getViewBindingOptions()), null);
@@ -239,6 +243,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 aaptOptionsCopy,
                 project.getBuildFolder(),
                 dynamicFeaturesCopy,
+                variantBuildInformation,
                 viewBindingOptionsCopy,
                 dependenciesInfoCopy,
                 buildToolsVersionCopy,
@@ -276,6 +281,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         //noinspection ConstantConditions
         myBuildFolder = null;
         myDynamicFeatures = Collections.emptyList();
+        myVariantBuildInformation = Collections.emptyList();
         myViewBindingOptions = new IdeViewBindingOptions();
         myDependenciesInfo = new IdeDependenciesInfo();
         myBuildToolsVersion = null;
@@ -311,6 +317,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
             @NonNull AaptOptions aaptOptions,
             @NonNull File buildFolder,
             @NonNull Collection<String> dynamicFeatures,
+            @NonNull Collection<IdeVariantBuildInformation> variantBuildInformation,
             @Nullable ViewBindingOptions viewBindingOptions,
             @Nullable IdeDependenciesInfo dependenciesInfo,
             @Nullable String buildToolsVersion,
@@ -342,6 +349,7 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myAaptOptions = aaptOptions;
         myBuildFolder = buildFolder;
         myDynamicFeatures = dynamicFeatures;
+        myVariantBuildInformation = variantBuildInformation;
         myViewBindingOptions = viewBindingOptions;
         myDependenciesInfo = dependenciesInfo;
         myBuildToolsVersion = buildToolsVersion;
@@ -353,6 +361,19 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         myBaseSplit = baseSplit;
         myAgpFlags = agpFlags;
         myHashCode = calculateHashCode();
+    }
+
+    @NonNull
+    private static Collection<IdeVariantBuildInformation> createVariantBuildInformation(
+            @NonNull AndroidProject project, @Nullable GradleVersion agpVersion) {
+        if (agpVersion != null && agpVersion.compareIgnoringQualifiers("4.1.0") >= 0) {
+            // make deep copy of VariantBuildInformation.
+            return project.getVariantsBuildInformation().stream()
+                    .map(it -> new IdeVariantBuildInformation(it))
+                    .collect(ImmutableList.toImmutableList());
+        }
+        // VariantBuildInformation is not available.
+        return Collections.emptyList();
     }
 
     @NonNull
@@ -597,6 +618,12 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
         }
     }
 
+    @NonNull
+    @Override
+    public Collection<IdeVariantBuildInformation> getVariantsBuildInformation() {
+        return myVariantBuildInformation;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -636,7 +663,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 && Objects.equals(myViewBindingOptions, project.myViewBindingOptions)
                 && Objects.equals(myDependenciesInfo, project.myDependenciesInfo)
                 && Objects.equals(myGroupId, project.myGroupId)
-                && Objects.equals(myAgpFlags, project.myAgpFlags);
+                && Objects.equals(myAgpFlags, project.myAgpFlags)
+                && Objects.equals(myVariantBuildInformation, project.myVariantBuildInformation);
     }
 
     @Override
@@ -676,7 +704,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 myViewBindingOptions,
                 myDependenciesInfo,
                 myGroupId,
-                myAgpFlags);
+                myAgpFlags,
+                myVariantBuildInformation);
     }
 
     @Override
@@ -747,6 +776,8 @@ public final class IdeAndroidProjectImpl implements IdeAndroidProject, Serializa
                 + myGroupId
                 + ", myAgpFlags="
                 + myAgpFlags
+                + ", myVariantBuildInformation="
+                + myVariantBuildInformation
                 + "}";
     }
 }
