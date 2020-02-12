@@ -190,16 +190,6 @@ coverage_report(
 )
 
 coverage_report(
-    name = "navigationsafeargs",
-    srcpath_include = [
-        "tools/adt/idea/nav/safeargs",
-    ],
-    tests = [
-        "//tools/adt/idea/nav/safeargs:intellij.android.nav.safeargs.tests_tests",
-    ],
-)
-
-coverage_report(
     name = "motioneditor",
     srcpath_include = [
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/handlers/motion",
@@ -226,6 +216,16 @@ coverage_report(
     ],
     tests = [
         "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
+    ],
+)
+
+coverage_report(
+    name = "navigationsafeargs",
+    srcpath_include = [
+        "tools/adt/idea/nav/safeargs",
+    ],
+    tests = [
+        "//tools/adt/idea/nav/safeargs:intellij.android.nav.safeargs.tests_tests",
     ],
 )
 
@@ -384,6 +384,7 @@ combine_report_definitions(
         "motioneditor",
         "navigationeditor",
         "navigationpropertyinspector",
+        "navigationsafeargs",
         "profilers",
         "projectsystem",
         "r8-editing",
