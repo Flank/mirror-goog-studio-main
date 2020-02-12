@@ -16,9 +16,10 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.BundleDensity
 import javax.inject.Inject
 
-open class BundleOptionsDensity @Inject constructor() {
+open class BundleOptionsDensity @Inject constructor() : BundleDensity {
 
-    var enableSplit: Boolean? = null
+    override var enableSplit: Boolean? = null
 }

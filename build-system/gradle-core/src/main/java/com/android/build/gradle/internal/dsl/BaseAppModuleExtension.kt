@@ -100,8 +100,7 @@ open class BaseAppModuleExtension(
      */
     var assetPacks: MutableSet<String> = mutableSetOf()
 
-    val bundle: BundleOptions =
-        dslServices.newInstance(BundleOptions::class.java, dslServices)
+    override val bundle: BundleOptions = publicExtensionImpl.bundle
 
     fun bundle(action: Action<BundleOptions>) {
         action.execute(bundle)

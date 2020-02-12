@@ -634,6 +634,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.adbOptions: void (k
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.buildFeatures: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ApplicationBuildFeatures, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.buildFeatures: void (org.gradle.api.Action<com.android.build.api.dsl.ApplicationBuildFeatures>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.buildTypes: void (org.gradle.api.Action<? super org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType>>)
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.bundle: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Bundle, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.bundle: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptions>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.gradle.internal.CompileOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.compileSdkVersion: void (int)
@@ -656,6 +657,7 @@ com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBuildFeatures: c
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBuildFeatures: com.android.build.api.dsl.BuildFeatures ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBuildTypes: java.util.Collection ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.BuildType> ()
+com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBundle: com.android.build.api.dsl.Bundle ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getBundle: com.android.build.gradle.internal.dsl.BundleOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.getCompileOptions: com.android.build.gradle.internal.CompileOptions ()
@@ -879,30 +881,38 @@ com.android.build.gradle.internal.dsl.BuildTypeFactory implements org.gradle.api
 com.android.build.gradle.internal.dsl.BuildTypeFactory.<init>: com.android.build.gradle.internal.dsl.BuildTypeFactory (com.android.build.gradle.internal.services.DslServices)
 com.android.build.gradle.internal.dsl.BuildTypeFactory.create: com.android.build.gradle.internal.dsl.BuildType (java.lang.String)
 com.android.build.gradle.internal.dsl.BuildTypeFactory.create: java.lang.Object (java.lang.String)
-com.android.build.gradle.internal.dsl.BundleOptions
+com.android.build.gradle.internal.dsl.BundleOptions implements com.android.build.api.dsl.Bundle
 com.android.build.gradle.internal.dsl.BundleOptions.<init>: com.android.build.gradle.internal.dsl.BundleOptions (com.android.build.gradle.internal.services.DslServices)
+com.android.build.gradle.internal.dsl.BundleOptions.abi: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleAbi, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BundleOptions.abi: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptionsAbi>)
+com.android.build.gradle.internal.dsl.BundleOptions.density: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleDensity, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BundleOptions.density: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptionsDensity>)
+com.android.build.gradle.internal.dsl.BundleOptions.getAbi: com.android.build.api.dsl.BundleAbi ()
 com.android.build.gradle.internal.dsl.BundleOptions.getAbi: com.android.build.gradle.internal.dsl.BundleOptionsAbi ()
+com.android.build.gradle.internal.dsl.BundleOptions.getDensity: com.android.build.api.dsl.BundleDensity ()
 com.android.build.gradle.internal.dsl.BundleOptions.getDensity: com.android.build.gradle.internal.dsl.BundleOptionsDensity ()
 com.android.build.gradle.internal.dsl.BundleOptions.getIntegrityConfigDir: org.gradle.api.file.DirectoryProperty ()
+com.android.build.gradle.internal.dsl.BundleOptions.getLanguage: com.android.build.api.dsl.BundleLanguage ()
 com.android.build.gradle.internal.dsl.BundleOptions.getLanguage: com.android.build.gradle.internal.dsl.BundleOptionsLanguage ()
+com.android.build.gradle.internal.dsl.BundleOptions.getTexture: com.android.build.api.dsl.BundleTexture ()
 com.android.build.gradle.internal.dsl.BundleOptions.getTexture: com.android.build.gradle.internal.dsl.BundleOptionsTexture ()
+com.android.build.gradle.internal.dsl.BundleOptions.language: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleLanguage, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BundleOptions.language: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptionsLanguage>)
+com.android.build.gradle.internal.dsl.BundleOptions.texture: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleTexture, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.BundleOptions.texture: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.BundleOptionsTexture>)
-com.android.build.gradle.internal.dsl.BundleOptionsAbi
+com.android.build.gradle.internal.dsl.BundleOptionsAbi implements com.android.build.api.dsl.BundleAbi
 com.android.build.gradle.internal.dsl.BundleOptionsAbi.<init>: com.android.build.gradle.internal.dsl.BundleOptionsAbi ()
 com.android.build.gradle.internal.dsl.BundleOptionsAbi.getEnableSplit: java.lang.Boolean ()
 com.android.build.gradle.internal.dsl.BundleOptionsAbi.setEnableSplit: void (java.lang.Boolean)
-com.android.build.gradle.internal.dsl.BundleOptionsDensity
+com.android.build.gradle.internal.dsl.BundleOptionsDensity implements com.android.build.api.dsl.BundleDensity
 com.android.build.gradle.internal.dsl.BundleOptionsDensity.<init>: com.android.build.gradle.internal.dsl.BundleOptionsDensity ()
 com.android.build.gradle.internal.dsl.BundleOptionsDensity.getEnableSplit: java.lang.Boolean ()
 com.android.build.gradle.internal.dsl.BundleOptionsDensity.setEnableSplit: void (java.lang.Boolean)
-com.android.build.gradle.internal.dsl.BundleOptionsLanguage
+com.android.build.gradle.internal.dsl.BundleOptionsLanguage implements com.android.build.api.dsl.BundleLanguage
 com.android.build.gradle.internal.dsl.BundleOptionsLanguage.<init>: com.android.build.gradle.internal.dsl.BundleOptionsLanguage ()
 com.android.build.gradle.internal.dsl.BundleOptionsLanguage.getEnableSplit: java.lang.Boolean ()
 com.android.build.gradle.internal.dsl.BundleOptionsLanguage.setEnableSplit: void (java.lang.Boolean)
-com.android.build.gradle.internal.dsl.BundleOptionsTexture
+com.android.build.gradle.internal.dsl.BundleOptionsTexture implements com.android.build.api.dsl.BundleTexture
 com.android.build.gradle.internal.dsl.BundleOptionsTexture.<init>: com.android.build.gradle.internal.dsl.BundleOptionsTexture ()
 com.android.build.gradle.internal.dsl.BundleOptionsTexture.getEnableSplit: java.lang.Boolean ()
 com.android.build.gradle.internal.dsl.BundleOptionsTexture.setEnableSplit: void (java.lang.Boolean)

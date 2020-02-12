@@ -140,7 +140,9 @@ com.android.build.api.dsl.ApplicationBuildFeatures implements com.android.build.
 com.android.build.api.dsl.ApplicationBuildFeatures.getDataBinding: java.lang.Boolean ()
 com.android.build.api.dsl.ApplicationBuildFeatures.setDataBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.ApplicationExtension.bundle: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Bundle, kotlin.Unit>)
 com.android.build.api.dsl.ApplicationExtension.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
+com.android.build.api.dsl.ApplicationExtension.getBundle: com.android.build.api.dsl.Bundle ()
 com.android.build.api.dsl.ApplicationExtension.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
 com.android.build.api.dsl.AssetPackExtension
 com.android.build.api.dsl.AssetPackExtension.dynamicDelivery: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DynamicDelivery, kotlin.Unit>)
@@ -197,6 +199,27 @@ com.android.build.api.dsl.BuildFeatures.setViewBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.BuildType implements org.gradle.api.Named, com.android.build.api.dsl.BaseConfig
 com.android.build.api.dsl.BuildType.isDefault: boolean ()
 com.android.build.api.dsl.BuildType.setDefault: void (boolean)
+com.android.build.api.dsl.Bundle
+com.android.build.api.dsl.Bundle.abi: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleAbi, kotlin.Unit>)
+com.android.build.api.dsl.Bundle.density: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleDensity, kotlin.Unit>)
+com.android.build.api.dsl.Bundle.getAbi: com.android.build.api.dsl.BundleAbi ()
+com.android.build.api.dsl.Bundle.getDensity: com.android.build.api.dsl.BundleDensity ()
+com.android.build.api.dsl.Bundle.getLanguage: com.android.build.api.dsl.BundleLanguage ()
+com.android.build.api.dsl.Bundle.getTexture: com.android.build.api.dsl.BundleTexture ()
+com.android.build.api.dsl.Bundle.language: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleLanguage, kotlin.Unit>)
+com.android.build.api.dsl.Bundle.texture: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.BundleTexture, kotlin.Unit>)
+com.android.build.api.dsl.BundleAbi
+com.android.build.api.dsl.BundleAbi.getEnableSplit: java.lang.Boolean ()
+com.android.build.api.dsl.BundleAbi.setEnableSplit: void (java.lang.Boolean)
+com.android.build.api.dsl.BundleDensity
+com.android.build.api.dsl.BundleDensity.getEnableSplit: java.lang.Boolean ()
+com.android.build.api.dsl.BundleDensity.setEnableSplit: void (java.lang.Boolean)
+com.android.build.api.dsl.BundleLanguage
+com.android.build.api.dsl.BundleLanguage.getEnableSplit: java.lang.Boolean ()
+com.android.build.api.dsl.BundleLanguage.setEnableSplit: void (java.lang.Boolean)
+com.android.build.api.dsl.BundleTexture
+com.android.build.api.dsl.BundleTexture.getEnableSplit: java.lang.Boolean ()
+com.android.build.api.dsl.BundleTexture.setEnableSplit: void (java.lang.Boolean)
 com.android.build.api.dsl.Cmake
 com.android.build.api.dsl.Cmake.buildStagingDirectory: void (java.lang.Object)
 com.android.build.api.dsl.Cmake.getBuildStagingDirectory: java.io.File ()

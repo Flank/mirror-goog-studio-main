@@ -76,9 +76,13 @@ interface ApplicationExtension<
     TestedExtension {
     // TODO(b/140406102)
 
-  /** Specify whether to include SDK dependency information in APKs and Bundles. */
-  val dependenciesInfo: DependenciesInfo
+    /** Specify whether to include SDK dependency information in APKs and Bundles. */
+    val dependenciesInfo: DependenciesInfo
 
-  /** Specify whether to include SDK dependency information in APKs and Bundles. */
-  fun dependenciesInfo(action: DependenciesInfo.() -> Unit)
+    /** Specify whether to include SDK dependency information in APKs and Bundles. */
+    fun dependenciesInfo(action: DependenciesInfo.() -> Unit)
+
+    val bundle: Bundle
+
+    fun bundle(action: Bundle.() -> Unit)
 }

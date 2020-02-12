@@ -20,6 +20,7 @@ import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.component.impl.GenericFilteredComponentActionRegistrarImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.Bundle
 import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantProperties
@@ -95,7 +96,7 @@ class ApplicationExtensionImpl(
         ) as GenericFilteredComponentActionRegistrar<ApplicationVariantProperties>
 
     override val dependenciesInfo: DependenciesInfo =
-      dslServices.newInstance(DependenciesInfoImpl::class.java)
+        dslServices.newInstance(DependenciesInfoImpl::class.java)
 
     override fun dependenciesInfo(action: DependenciesInfo.() -> Unit) {
         action.invoke(dependenciesInfo)
@@ -103,5 +104,11 @@ class ApplicationExtensionImpl(
 
     fun dependenciesInfo(action: Action<DependenciesInfo>) {
         action.execute(dependenciesInfo)
+    }
+
+    override val bundle = dslServices.newInstance(BundleOptions::class.java, dslServices)
+
+    override fun bundle(action: Bundle.() -> Unit) {
+        action.invoke(bundle)
     }
 }
