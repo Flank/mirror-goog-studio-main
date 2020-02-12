@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/agent/app-inspection.agent.iml" filepath="$PROJECT_DIR$/../app-inspection/agent/app-inspection.agent.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../app-inspection/demo/live-store/app/app-inspection.demo.live-store.app.iml" filepath="$PROJECT_DIR$/../app-inspection/demo/live-store/app/app-inspection.demo.live-store.app.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/demo/live-store/inspector/app-inspection.demo.live-store.inspector.iml" filepath="$PROJECT_DIR$/../app-inspection/demo/live-store/inspector/app-inspection.demo.live-store.inspector.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/demo/live-store/library/app-inspection.demo.live-store.library.iml" filepath="$PROJECT_DIR$/../app-inspection/demo/live-store/library/app-inspection.demo.live-store.library.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/demo/live-store/protocol/app-inspection.demo.live-store.protocol.iml" filepath="$PROJECT_DIR$/../app-inspection/demo/live-store/protocol/app-inspection.demo.live-store.protocol.iml" />
