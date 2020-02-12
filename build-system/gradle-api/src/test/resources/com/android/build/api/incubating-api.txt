@@ -161,6 +161,7 @@ com.android.build.api.dsl.BaseConfig.getMultiDexKeepFile: java.io.File ()
 com.android.build.api.dsl.BaseConfig.getMultiDexKeepProguard: java.io.File ()
 com.android.build.api.dsl.BaseConfig.getNdk: com.android.build.api.dsl.Ndk ()
 com.android.build.api.dsl.BaseConfig.getProguardFiles: java.util.List<java.io.File> ()
+com.android.build.api.dsl.BaseConfig.getShaders: com.android.build.api.dsl.Shaders ()
 com.android.build.api.dsl.BaseConfig.getTestProguardFiles: java.util.List<java.io.File> ()
 com.android.build.api.dsl.BaseConfig.getVersionNameSuffix: java.lang.String ()
 com.android.build.api.dsl.BaseConfig.javaCompileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.JavaCompileOptions<AnnotationProcessorOptionsT>, kotlin.Unit>)
@@ -176,6 +177,7 @@ com.android.build.api.dsl.BaseConfig.setMultiDexKeepProguard: void (java.io.File
 com.android.build.api.dsl.BaseConfig.setProguardFiles: void (java.util.List<java.io.File>)
 com.android.build.api.dsl.BaseConfig.setTestProguardFiles: void (java.util.List<java.io.File>)
 com.android.build.api.dsl.BaseConfig.setVersionNameSuffix: void (java.lang.String)
+com.android.build.api.dsl.BaseConfig.shaders: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Shaders, kotlin.Unit>)
 com.android.build.api.dsl.BaseConfig.testProguardFile: java.lang.Object (java.lang.Object)
 com.android.build.api.dsl.BaseConfig.testProguardFiles: java.lang.Object (java.lang.Object[])
 com.android.build.api.dsl.BaseFlavor implements com.android.build.api.dsl.BaseConfig
@@ -467,6 +469,11 @@ com.android.build.api.dsl.PackagingOptions.setPickFirsts: void (java.util.Set<ja
 com.android.build.api.dsl.ProductFlavor implements org.gradle.api.Named, com.android.build.api.dsl.BaseFlavor
 com.android.build.api.dsl.ProductFlavor.isDefault: boolean ()
 com.android.build.api.dsl.ProductFlavor.setDefault: void (boolean)
+com.android.build.api.dsl.Shaders
+com.android.build.api.dsl.Shaders.getGlslcArgs: java.util.List<java.lang.String> ()
+com.android.build.api.dsl.Shaders.getScopedGlslcArgs: com.google.common.collect.ListMultimap<java.lang.String, java.lang.String> ()
+com.android.build.api.dsl.Shaders.glslcArgs: void (java.lang.String[])
+com.android.build.api.dsl.Shaders.glslcScopedArgs: void (java.lang.String, java.lang.String[])
 com.android.build.api.dsl.SigningConfig implements org.gradle.api.Named
 com.android.build.api.dsl.SigningConfig.getKeyAlias: java.lang.String ()
 com.android.build.api.dsl.SigningConfig.getKeyPassword: java.lang.String ()

@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.Ndk
+import com.android.build.api.dsl.Shaders
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.BuilderConstants
@@ -479,13 +480,16 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
         action.execute(javaCompileOptions)
     }
 
-    /** Options for configuring the shader compiler.  */
     override val shaders: ShaderOptions =
         dslServices.newInstance(ShaderOptions::class.java)
 
     /** Configure the shader compiler options for this product flavor.  */
     fun shaders(action: Action<ShaderOptions>) {
         action.execute(shaders)
+    }
+
+    override fun shaders(action: Shaders.() -> Unit) {
+        action.invoke(shaders)
     }
 
     /**

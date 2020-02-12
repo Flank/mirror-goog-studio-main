@@ -220,4 +220,10 @@ interface BaseConfig<AnnotationProcessorOptionsT : AnnotationProcessorOptions> {
 
     /** Options for configuring Java compilation. */
     fun javaCompileOptions(action: JavaCompileOptions<AnnotationProcessorOptionsT>.() -> Unit)
+
+    /** Options for configuring the shader compiler.  */
+    val shaders: Shaders
+
+    /** Configure the shader compiler options. */
+    fun shaders(action: Shaders.() -> Unit)
 }

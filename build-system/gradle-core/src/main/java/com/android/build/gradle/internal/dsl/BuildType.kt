@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.Ndk
+import com.android.build.api.dsl.Shaders
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractBuildType
@@ -549,6 +550,10 @@ open class BuildType @Inject constructor(
      */
     fun shaders(action: Action<ShaderOptions>) {
         action.execute(shaders)
+    }
+
+    override fun shaders(action: Shaders.() -> Unit) {
+        action.invoke(shaders)
     }
 
     /**
