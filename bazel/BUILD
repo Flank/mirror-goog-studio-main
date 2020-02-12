@@ -8,9 +8,8 @@ exports_files(["jarjar_rules.txt"])
 java_library(
     name = "utils",
     srcs = glob(["src/com/android/tools/utils/*.java"]),
-    visibility = [
-        "//tools/base/bazel/sdk:__pkg__",
-    ],
+    visibility = ["//tools/base/bazel/sdk:__pkg__"],
+    deps = ["@io_bazel_rules_kotlin//src/main/protobuf:worker_protocol_java_proto"],
 )
 
 java_binary(
@@ -73,8 +72,8 @@ java_binary(
     main_class = "com.android.tools.kotlin.KotlinCompiler",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib",
         "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-reflect",
+        "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib",
     ],
     deps = [
         ":utils",
