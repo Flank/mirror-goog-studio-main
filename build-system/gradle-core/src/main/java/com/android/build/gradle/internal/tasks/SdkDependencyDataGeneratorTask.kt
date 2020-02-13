@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import java.nio.charset.StandardCharsets.UTF_8
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.KeymaestroHybridEncrypter
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.tasks.OutputFile
