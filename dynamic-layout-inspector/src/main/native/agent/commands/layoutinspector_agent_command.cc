@@ -47,13 +47,11 @@ void LayoutInspectorAgentCommand::RegisterAgentLayoutInspectorCommandHandler(
 
         switch (liCommand->type()) {
           case LayoutInspectorCommand::GET_PROPERTIES: {
-            PropertyEvent event;
-            long viewId = liCommand->view_id();
-            jvalue args[] = {jvalue{.j = viewId}, jvalue{.j = (long)&event}};
             jmethodID properties_command_method = jni_env->GetMethodID(
-                inspector_class, "onGetPropertiesInspectorCommand", "(JJ)V");
-            jni_env->CallVoidMethodA(inspector_service,
-                                     properties_command_method, args);
+                inspector_class, "onGetPropertiesInspectorCommand", "(J)V");
+            jni_env->CallVoidMethod(inspector_service,
+                                    properties_command_method,
+                                    liCommand->view_id());
             break;
           }
 

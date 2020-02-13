@@ -23,7 +23,12 @@ using layoutinspector::Property_Type;
 using layoutinspector::PropertyEvent;
 using layoutinspector::Resource;
 using layoutinspector::StringEntry;
+using profiler::Agent;
 using profiler::JStringWrapper;
+using profiler::proto::AgentService;
+using profiler::proto::EmptyResponse;
+using profiler::proto::Event;
+using profiler::proto::SendEventRequest;
 
 /**
  * Native calls for loading the properties event protobuf.
@@ -34,6 +39,45 @@ void saveResource(Resource *resource, jint namespace_, jint type, jint name) {
   resource->set_type(type);
   resource->set_namespace_(namespace_);
   resource->set_name(name);
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_android_tools_agent_layoutinspector_Properties_allocatePropertyEvent(
+    JNIEnv *env, jclass clazz) {
+  PropertyEvent *event = new PropertyEvent();
+  return (long)event;
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_layoutinspector_Properties_freePropertyEvent(
+    JNIEnv *env, jclass clazz, jlong jevent) {
+  if (jevent != 0L) {
+    delete (PropertyEvent *)jevent;
+  }
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_layoutinspector_Properties_sendPropertyEvent(
+    JNIEnv *env, jclass clazz, jlong jevent, jlong viewId) {
+  PropertyEvent *event = (PropertyEvent *)jevent;
+  event->set_view_id((long)viewId);
+  PropertyEvent property_event = *event;
+
+  // Note: property_event is copied by value here which is not optimal.
+  Agent::Instance().SubmitAgentTasks(
+      {[property_event](AgentService::Stub &stub,
+                        grpc::ClientContext &ctx) mutable {
+        SendEventRequest request;
+        auto *event = request.mutable_event();
+        auto *inspector_event = event->mutable_layout_inspector_event();
+        auto *properties = inspector_event->mutable_properties();
+        *properties = property_event;
+        event->set_is_ended(true);
+        event->set_kind(Event::LAYOUT_INSPECTOR);
+        event->set_group_id(Event::PROPERTIES);
+        EmptyResponse response;
+        return stub.SendEvent(&ctx, request, &response);
+      }});
 }
 
 JNIEXPORT void JNICALL

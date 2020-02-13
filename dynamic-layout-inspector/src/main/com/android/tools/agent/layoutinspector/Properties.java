@@ -17,8 +17,10 @@
 package com.android.tools.agent.layoutinspector;
 
 import android.view.View;
+import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.android.tools.agent.layoutinspector.common.Resource;
 import com.android.tools.agent.layoutinspector.common.StringTable;
 import com.android.tools.agent.layoutinspector.property.LayoutParamsTypeTree;
@@ -35,11 +37,41 @@ class Properties {
     private final StringTable mStringTable = new StringTable();
 
     /**
-     * Write the properties of the specified view into the specified properties event buffer.
+     * Send the properties of the specified view to the agent.
      *
-     * @param view the view to load the properties for
-     * @param event a handle to a PropertyEvent protobuf to pass back in native calls
+     * @param view the view to send the properties for.
      */
+    void handleGetProperties(@NonNull View view) {
+        if (view instanceof WebView) {
+            // A WebView requires all property access to happen on the UI thread:
+
+            //noinspection Convert2Lambda
+            view.post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            handlePropertyEvent(view);
+                        }
+                    });
+        } else {
+            // All other views can use a non UI thread:
+            handlePropertyEvent(view);
+        }
+    }
+
+    private void handlePropertyEvent(@NonNull View view) {
+        long event = allocatePropertyEvent();
+        try {
+            writeProperties(view, event);
+            sendPropertyEvent(event, view.getUniqueDrawingId());
+        } catch (Throwable ex) {
+            LayoutInspectorService.sendErrorMessage(ex);
+        } finally {
+            freePropertyEvent(event);
+        }
+    }
+
+    @VisibleForTesting
     void writeProperties(@NonNull View view, long event) {
         mStringTable.clear();
         ViewTypeTree typeTree = new ViewTypeTree();
@@ -157,6 +189,15 @@ class Properties {
         }
         return propertyEvent;
     }
+
+    /** Allocates a PropertyEvent protobuf. */
+    private native long allocatePropertyEvent();
+
+    /** Frees a PropertyEvent protobuf. */
+    private native void freePropertyEvent(long event);
+
+    /** Sends a property event to Android Studio */
+    private native void sendPropertyEvent(long event, long viewId);
 
     /** Adds a string entry into the event protobuf. */
     private native void addString(long event, int id, @NonNull String str);

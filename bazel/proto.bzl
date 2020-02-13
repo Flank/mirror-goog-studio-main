@@ -177,7 +177,14 @@ def android_java_proto_library(
         java_deps = [],
         visibility = None):
     internal_name = "_" + name + "_internal"
-    java_proto_library(name = internal_name, srcs = srcs, grpc_support = grpc_support, protoc_grpc_version = protoc_grpc_version, java_deps = java_deps)
+    java_proto_library(
+        name = internal_name,
+        srcs = srcs,
+        grpc_support = grpc_support,
+        protoc_grpc_version = protoc_grpc_version,
+        java_deps = java_deps,
+        proto_java_runtime_library = ["//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/" + PROTOC_VERSION + ":jar"],
+    )
     java_jarjar(
         name = name,
         srcs = [":" + internal_name],
