@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.services
 
+import org.gradle.api.file.ConfigurableFileCollection
 import java.io.File
 
 /**
@@ -30,5 +31,10 @@ import java.io.File
  */
 interface TaskCreationServices: BaseServices {
     fun file(file: Any): File
+
+    fun fileCollection(): ConfigurableFileCollection
+    fun fileCollection(vararg files: Any): ConfigurableFileCollection
+//    fun fileTree(): ConfigurableFileTree
+//    fun fileTree(dir: Any): ConfigurableFileTree
 
 }

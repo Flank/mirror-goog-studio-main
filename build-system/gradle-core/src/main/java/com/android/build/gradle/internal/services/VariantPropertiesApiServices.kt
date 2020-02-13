@@ -117,5 +117,4 @@ interface VariantPropertiesApiServices:
     fun fileCollection(vararg files: Any): ConfigurableFileCollection
     fun fileTree(): ConfigurableFileTree
     fun fileTree(dir: Any): ConfigurableFileTree
-
 }

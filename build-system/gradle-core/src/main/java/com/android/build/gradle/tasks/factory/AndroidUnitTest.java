@@ -39,6 +39,7 @@ import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.builder.core.VariantType;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.Callable;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -167,7 +168,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             GlobalScope globalScope = component.getGlobalScope();
             BuildArtifactsHolder artifacts = component.getArtifacts();
 
-            ConfigurableFileCollection collection = component.getGlobalScope().getProject().files();
+            ConfigurableFileCollection collection = component.getServices().fileCollection();
 
             // the test classpath is made up of:
             // 1. the config file
@@ -221,10 +222,10 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         @NonNull
         private ConfigurableFileCollection getAdditionalAndRequestedOptionalLibraries(
                 GlobalScope globalScope) {
-            return globalScope
-                    .getProject()
-                    .files(
-                            (Callable)
+            return creationConfig
+                    .getServices()
+                    .fileCollection(
+                            (Callable<List<File>>)
                                     () ->
                                             BootClasspathBuilder.INSTANCE
                                                     .computeAdditionalAndRequestedOptionalLibraries(

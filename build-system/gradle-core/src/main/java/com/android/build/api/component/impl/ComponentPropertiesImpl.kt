@@ -290,7 +290,10 @@ abstract class ComponentPropertiesImpl(
         // and without the R class, as AGP publishing code assumes there is exactly one
         // artifact for each publication.
         mainCollection =
-            globalScope.project.files(getCompiledRClasses(configType), mainCollection)
+            variantPropertiesApiServices.fileCollection(
+                getCompiledRClasses(configType),
+                mainCollection
+            )
         return mainCollection
     }
 
@@ -304,7 +307,7 @@ abstract class ComponentPropertiesImpl(
         val extraArtifact = globalScope.project.provider {
             variantData.getGeneratedBytecode(generatedBytecodeKey);
         }
-        val combinedCollection = globalScope.project.files(
+        val combinedCollection = variantPropertiesApiServices.fileCollection(
             mainCollection.artifactFiles, extraArtifact
         )
         return ArtifactCollectionWithExtraArtifact.makeExtraCollection(
@@ -449,7 +452,7 @@ abstract class ComponentPropertiesImpl(
     /** Returns the path(s) to compiled R classes (R.jar). */
     fun getCompiledRClasses(configType: ConsumedConfigType): FileCollection {
         val project = globalScope.project
-        var mainCollection: FileCollection = project.files()
+        var mainCollection: FileCollection = variantPropertiesApiServices.fileCollection()
         if (globalScope.extension.aaptOptions.namespaced) {
             val namespacedRClassJar =
                 artifacts.getFinalProduct(
