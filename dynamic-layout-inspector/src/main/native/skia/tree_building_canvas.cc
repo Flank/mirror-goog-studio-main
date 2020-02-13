@@ -16,7 +16,6 @@
 #include "tree_building_canvas.h"
 
 #include <memory>
-#include <regex>
 #include <stack>
 
 #include "SkImage.h"
@@ -320,14 +319,7 @@ void TreeBuildingCanvas::onDrawAnnotation(const SkRect& rect, const char* key,
       } else {
         existingType = "null";
       }
-      std::string existingId;
-      // todo: factor out
-      std::regex rgx(".*id=(\\d+),.*");
-      std::cmatch match;
-      if (std::regex_search(existing.label, match, rgx)) {
-        existingId = match[1];
-      }
-
+      std::string existingId = parseIdFromLabel(existing.label);
       std::unique_ptr<std::string> empty;
       existing.node = createNode(
           existingId, existingType, SkScalarRoundToInt(existing.offsetX),
@@ -361,13 +353,7 @@ void TreeBuildingCanvas::exitView(bool hasData) {
     } else {
       type = "null";
     }
-    // todo: factor out
-    std::regex rgx(".*id=(\\d+),.*");
-    std::cmatch match;
-    std::string id;
-    if (std::regex_search(topView.label, match, rgx)) {
-      id = match[1];
-    }
+    std::string id = parseIdFromLabel(topView.label);
     auto last = views.rbegin() + 1;
     createNode(id, type, SkScalarRoundToInt(topView.offsetX),
                SkScalarRoundToInt(topView.offsetY), topView.width,
@@ -455,4 +441,24 @@ void TreeBuildingCanvas::createRealCanvas() {
   }
 
   views.back().canvas.reset(newCanvas);
+}
+
+/**
+ * Extract the id of a render node label.
+ *
+ * Use this old fashioned code to avoid using a regex which may or may not be
+ * implemented on the machine used to build this code.
+ *
+ * @param label example: "RenderNode(id=1, name='LinearLayout')"
+ * @param id output to receive the id as a string, example "1"
+ */
+std::string TreeBuildingCanvas::parseIdFromLabel(const char* label) {
+  const char* start = strstr(label, "(id=");
+  if (start == nullptr) {
+    return "";
+  }
+  start += 4;
+  const char* end = strchr(start, ',');
+  std::string id(start, (end - start));
+  return id;
 }

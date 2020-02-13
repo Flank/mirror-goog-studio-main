@@ -47,6 +47,7 @@ int main(int argc, char* argv[]) {
     std::cerr << "usage: SkiaParserServer <port>" << std::endl;
     return 1;
   }
+  std::cout << "  SkiaServer starting..." << std::endl;
 
   RunServer(argv[1]);
   return 0;

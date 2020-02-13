@@ -193,6 +193,8 @@ class TreeBuildingCanvas : public SkCanvas {
 
   void createRealCanvas();
 
+  std::string parseIdFromLabel(const char* label);
+
   std::deque<View> views;
 
   // See b/121323050
