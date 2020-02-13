@@ -430,6 +430,7 @@ coverage_report(
         "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
         "//tools/adt/idea/native-symbolizer:native-symbolizer_tests",
         "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
+        "//tools/adt/idea/nav/safeargs:intellij.android.nav.safeargs.tests_tests",
         "//tools/adt/idea/observable:intellij.android.observable_tests",
         "//tools/adt/idea/observable-ui:intellij.android.observable.ui_tests",
         "//tools/adt/idea/profilers:intellij.android.profilers_tests",
