@@ -349,8 +349,9 @@ public class ModelBuilder<Extension extends BaseExtension>
         DependenciesInfo dependenciesInfo = null;
         if (extension instanceof ApplicationExtension) {
             ApplicationExtension applicationExtension = (ApplicationExtension) extension;
-            boolean includeInApk = applicationExtension.getDependenciesInfo().getIncludeInApk();
-            dependenciesInfo = new DependenciesInfoImpl(includeInApk);
+            boolean inApk = applicationExtension.getDependenciesInfo().getIncludeInApk();
+            boolean inBundle = applicationExtension.getDependenciesInfo().getIncludeInBundle();
+            dependenciesInfo = new DependenciesInfoImpl(inApk, inBundle);
         }
 
         List<String> flavorDimensionList =

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-b8586697769944e57585b8cebebaa553825972fea5c61e4752e8b07610603e42
+c32036c70a6660af230e7d06eaba4f687eafd22c8d0a5dcfa68c6c7f33ec24c9
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -193,6 +193,7 @@ com.android.builder.model.Dependencies.getProjects: java.util.Collection<java.la
 com.android.builder.model.Dependencies.getRuntimeOnlyClasses: java.util.Collection<java.io.File> ()
 com.android.builder.model.DependenciesInfo
 com.android.builder.model.DependenciesInfo.getIncludeInApk: boolean ()
+com.android.builder.model.DependenciesInfo.getIncludeInBundle: boolean ()
 com.android.builder.model.DimensionAware
 com.android.builder.model.DimensionAware.getDimension: java.lang.String ()
 com.android.builder.model.InstantAppProjectBuildOutput

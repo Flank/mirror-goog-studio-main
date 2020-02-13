@@ -19,15 +19,20 @@ import com.android.builder.model.DependenciesInfo
 import java.util.Objects
 
 class DependenciesInfoStub(
-    override val includeInApk: Boolean = true
+    override val includeInApk: Boolean = true,
+    override val includeInBundle: Boolean = true
 ) : BaseStub(), DependenciesInfo {
     override fun equals(other: Any?) = when {
         this === other -> true
         other !is DependenciesInfo -> false
-        else -> Objects.equals(includeInApk, other.includeInApk)
+        else -> Objects.equals(includeInApk, other.includeInApk) &&
+                Objects.equals(includeInBundle, other.includeInBundle)
     }
 
-    override fun hashCode() = Objects.hash(includeInApk)
+    override fun hashCode() = Objects.hash(includeInApk, includeInBundle)
 
-    override fun toString() = "DependenciesInfoStub{includeInApk=$includeInApk}"
+    override fun toString() = "DependenciesInfoStub{" +
+            "includeInApk=$includeInApk" +
+            "includeInBundle=$includeInBundle" +
+            "}"
 }

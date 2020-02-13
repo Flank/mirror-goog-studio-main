@@ -21,6 +21,7 @@ import java.util.Objects
 
 class IdeDependenciesInfo : DependenciesInfo, Serializable {
     override val includeInApk: Boolean
+    override val includeInBundle: Boolean
     val hashCode: Int
 
     companion object {
@@ -30,11 +31,13 @@ class IdeDependenciesInfo : DependenciesInfo, Serializable {
 
     constructor(model: DependenciesInfo) {
         this.includeInApk = model.includeInApk
+        this.includeInBundle = model.includeInBundle
         this.hashCode = calculateHashCode()
     }
 
     constructor() {
         this.includeInApk = true
+        this.includeInBundle = true
         this.hashCode = 0
     }
 
@@ -42,13 +45,17 @@ class IdeDependenciesInfo : DependenciesInfo, Serializable {
         return when {
             this === other -> true
             other !is IdeDependenciesInfo -> false
-            else -> includeInApk == other.includeInApk
+            else -> includeInApk == other.includeInApk && includeInBundle == other.includeInBundle
         }
     }
 
     override fun hashCode(): Int = hashCode;
 
-    override fun toString(): String = "IdeDependenciesInfo{includeInApk=$includeInApk}"
+    override fun toString(): String = "IdeDependenciesInfo{" +
+            "includeInApk=$includeInApk, "+
+            "includeInBundle=$includeInBundle" +
+            "}"
 
-    private fun calculateHashCode(): Int = Objects.hash(includeInApk)
+
+    private fun calculateHashCode(): Int = Objects.hash(includeInApk, includeInBundle)
 }
