@@ -147,12 +147,12 @@ java_test(
 )
 
 java_test(
-    name = "testsInt",
+    name = "testInts",
     size = "small",
     srcs = [
         "test/src/java/com/android/zipflinger/TestInts.java",
     ],
-    jvm_flags = ["-Dtest.suite.jar=testsInt.jar"],
+    jvm_flags = ["-Dtest.suite.jar=testInts.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":zipflinger",
