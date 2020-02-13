@@ -31,6 +31,7 @@ import com.android.sdklib.AndroidVersion
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 import java.io.File
 import java.util.function.IntSupplier
 import java.util.function.Supplier
@@ -392,7 +393,7 @@ interface VariantDslInfo {
 
     val javaCompileOptions: JavaCompileOptions
 
-    fun createPostProcessingOptions(project: Project) : PostProcessingOptions
+    fun createPostProcessingOptions(buildDirectory: DirectoryProperty) : PostProcessingOptions
 
     val defaultGlslcArgs: List<String>
 

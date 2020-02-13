@@ -248,7 +248,7 @@ public class LibraryTaskManager
         List<Transform> customTransforms = extension.getTransforms();
         List<List<Object>> customTransformsDependencies = extension.getTransformsDependencies();
 
-        final IssueReporter issueReporter = globalScope.getDslServices().getIssueReporter();
+        final IssueReporter issueReporter = libVariantProperties.getServices().getIssueReporter();
 
         for (int i = 0, count = customTransforms.size(); i < count; i++) {
             Transform transform = customTransforms.get(i);

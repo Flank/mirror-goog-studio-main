@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.builder.core.VariantType
 import com.android.utils.appendCapitalized
 import com.android.utils.capitalizeAndAppend
@@ -37,6 +38,7 @@ class LibraryVariantData(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: BuildArtifactsHolder,
+    services: VariantPropertiesApiServices,
     globalScope: GlobalScope,
     taskContainer: MutableTaskContainer
 ) : BaseVariantData(
@@ -46,6 +48,7 @@ class LibraryVariantData(
     variantSources,
     paths,
     artifacts,
+    services,
     globalScope,
     taskContainer
 ), TestedVariantData {
@@ -76,10 +79,11 @@ class LibraryVariantData(
     ) {
         super.registerJavaGeneratingTask(task, *generatedSourceFolders)
 
-        taskContainer.generateAnnotationsTask?.let {
-            for (f in generatedSourceFolders) {
-                // FIXME we need to revise this API as it force-configure the tasks
-                it.get().source(f)
+        taskContainer.generateAnnotationsTask?.let { taskProvider ->
+            taskProvider.configure { task ->
+                for (f in generatedSourceFolders) {
+                    task.source(f)
+                }
             }
         }
     }
@@ -91,10 +95,11 @@ class LibraryVariantData(
     ) {
         super.registerJavaGeneratingTask(task, generatedSourceFolders)
 
-        taskContainer.generateAnnotationsTask?.let {
-            for (f in generatedSourceFolders) {
-                // FIXME we need to revise this API as it force-configure the tasks
-                it.get().source(f)
+        taskContainer.generateAnnotationsTask?.let { taskProvider ->
+            taskProvider.configure { task ->
+                for (f in generatedSourceFolders) {
+                    task.source(f)
+                }
             }
         }
     }

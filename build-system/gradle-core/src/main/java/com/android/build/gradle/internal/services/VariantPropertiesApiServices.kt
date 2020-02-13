@@ -17,9 +17,10 @@
 package com.android.build.gradle.internal.services
 
 import org.gradle.api.Named
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.reflect.ObjectInstantiationException
 import java.io.File
 import java.util.concurrent.Callable
 
@@ -111,5 +112,10 @@ interface VariantPropertiesApiServices:
     fun <T : Named> named(type: Class<T>, name: String): T
 
     fun file(file: Any): File
+
+    fun fileCollection(): ConfigurableFileCollection
+    fun fileCollection(vararg files: Any): ConfigurableFileCollection
+    fun fileTree(): ConfigurableFileTree
+    fun fileTree(dir: Any): ConfigurableFileTree
 
 }

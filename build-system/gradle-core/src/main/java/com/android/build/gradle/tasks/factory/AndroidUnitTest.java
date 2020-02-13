@@ -241,8 +241,8 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                                                                     globalScope
                                                                             .getExtension()
                                                                             .getLibraryRequests()),
-                                                            globalScope
-                                                                    .getDslServices()
+                                                            creationConfig
+                                                                    .getServices()
                                                                     .getIssueReporter()));
         }
     }

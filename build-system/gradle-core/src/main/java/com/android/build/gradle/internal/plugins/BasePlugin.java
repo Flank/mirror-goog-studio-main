@@ -144,7 +144,7 @@ public abstract class BasePlugin<
     protected ProjectOptions projectOptions;
 
     private ProjectServices projectServices;
-    protected DslServices dslServices;
+    protected DslServicesImpl dslServices;
     protected GlobalScope globalScope;
     protected SyncIssueReporterImpl syncIssueHandler;
 

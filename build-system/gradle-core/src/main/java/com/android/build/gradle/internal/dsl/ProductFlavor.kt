@@ -58,8 +58,10 @@ open class ProductFlavor @Inject constructor(name: String, dslServices: DslServi
     BaseFlavor(name, dslServices),
     com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions> {
 
+    // FIXME remove: b/149431538
+    @Suppress("DEPRECATION")
     private val _isDefaultProperty =
-        dslServices.objectFactory.property(Boolean::class.java).convention(false)
+        dslServices.property(Boolean::class.java).convention(false)
 
     /** Whether this product flavor should be selected in Studio by default  */
     override var isDefault: Boolean

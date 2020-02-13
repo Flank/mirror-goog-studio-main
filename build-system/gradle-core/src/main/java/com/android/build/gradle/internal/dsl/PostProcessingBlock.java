@@ -76,7 +76,7 @@ public class PostProcessingBlock implements ProguardFilesProvider {
                 ImmutableList.of(
                         ProguardFiles.getDefaultProguardFile(
                                 ProguardFiles.ProguardFile.NO_ACTIONS.fileName,
-                                dslServices.getProjectLayout())));
+                                dslServices.getBuildDirectory())));
     }
 
     @VisibleForTesting

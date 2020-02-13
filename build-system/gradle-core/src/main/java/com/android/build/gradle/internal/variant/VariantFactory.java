@@ -135,6 +135,7 @@ public interface VariantFactory<
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantPropertiesApiServices services,
             @NonNull GlobalScope globalScope,
             @NonNull MutableTaskContainer taskContainer);
 

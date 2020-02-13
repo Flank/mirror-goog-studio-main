@@ -103,7 +103,7 @@ abstract class CommonExtensionImpl<
         action.invoke(compileOptions)
     }
 
-    override var compileSdkVersion: String? by dslServices.variableFactory.newProperty(null)
+    override var compileSdkVersion: String? by dslServices.newVar(null)
 
     override fun compileSdkVersion(version: String) {
         this.compileSdkVersion = version

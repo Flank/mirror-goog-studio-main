@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -64,6 +65,7 @@ public abstract class AbstractAppVariantFactory<
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantPropertiesApiServices services,
             @NonNull GlobalScope globalScope,
             @NonNull MutableTaskContainer taskContainer) {
         return new ApplicationVariantData(
@@ -73,6 +75,7 @@ public abstract class AbstractAppVariantFactory<
                 variantSources,
                 paths,
                 artifacts,
+                services,
                 globalScope,
                 taskContainer);
     }

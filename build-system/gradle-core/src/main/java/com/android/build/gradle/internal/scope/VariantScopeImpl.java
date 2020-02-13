@@ -154,7 +154,8 @@ public class VariantScopeImpl implements VariantScope {
                                                 "runtime-deps",
                                                 variantDslInfo.getDirName(),
                                                 "desugar_try_with_resources.jar")));
-        this.postProcessingOptions = variantDslInfo.createPostProcessingOptions(project);
+        this.postProcessingOptions =
+                variantDslInfo.createPostProcessingOptions(project.getLayout().getBuildDirectory());
 
         configureNdk();
     }

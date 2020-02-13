@@ -41,7 +41,8 @@ public class ExtractProguardFiles extends DefaultTask {
         ImmutableList.Builder<File> outputs = ImmutableList.builder();
 
         for (String name : ProguardFiles.KNOWN_FILE_NAMES) {
-            outputs.add(ProguardFiles.getDefaultProguardFile(name, projectLayout));
+            outputs.add(
+                    ProguardFiles.getDefaultProguardFile(name, projectLayout.getBuildDirectory()));
         }
 
         this.generatedFiles = outputs.build();
@@ -55,7 +56,8 @@ public class ExtractProguardFiles extends DefaultTask {
     @TaskAction
     public void run() throws IOException {
         for (String name : ProguardFiles.KNOWN_FILE_NAMES) {
-            File defaultProguardFile = ProguardFiles.getDefaultProguardFile(name, projectLayout);
+            File defaultProguardFile =
+                    ProguardFiles.getDefaultProguardFile(name, projectLayout.getBuildDirectory());
             if (!defaultProguardFile.isFile()) {
                 ProguardFiles.createProguardFile(name, defaultProguardFile);
             }

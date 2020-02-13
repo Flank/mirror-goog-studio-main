@@ -17,31 +17,34 @@
 package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.dsl.DslVariableFactory
-import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.errors.IssueReporter
 import org.gradle.api.DomainObjectSet
-import org.gradle.api.file.ProjectLayout
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.ProviderFactory
+import org.gradle.api.provider.Property
 import java.io.File
+import kotlin.properties.ReadWriteProperty
 
 class DslServicesImpl(
-        projectServices: ProjectServices,
-        override val variableFactory: DslVariableFactory
-): BaseServicesImpl(projectServices),
-        DslServices {
+    projectServices: ProjectServices,
+    val variableFactory: DslVariableFactory
+) : BaseServicesImpl(projectServices),
+    DslServices {
 
-        override fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T> = projectServices.objectFactory.domainObjectSet(type)
+    override fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T> =
+        projectServices.objectFactory.domainObjectSet(type)
 
-        override val objectFactory: ObjectFactory
-                get() = projectServices.objectFactory
-        override val logger: Logger
-                get() = projectServices.logger
-        override val providerFactory: ProviderFactory
-                get() = projectServices.providerFactory
-        override val projectLayout: ProjectLayout
-                get() = projectServices.projectLayout
-        override fun file(file: Any): File = projectServices.fileResolver(file)
+    override fun <T> property(type: Class<T>): Property<T> = projectServices.objectFactory.property(type)
+
+    override fun <T> newVar(initialValue: T): ReadWriteProperty<Any?, T> =
+        variableFactory.newProperty(initialValue)
+
+    override val buildDirectory: DirectoryProperty
+        get() = projectServices.projectLayout.buildDirectory
+
+    override val logger: Logger
+        get() = projectServices.logger
+
+    override fun file(file: Any): File = projectServices.fileResolver(file)
 }

@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 
 /** Data about a variant that produces a APK.  */
 abstract class ApkVariantData protected constructor(
@@ -31,6 +32,7 @@ abstract class ApkVariantData protected constructor(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: BuildArtifactsHolder,
+    services: VariantPropertiesApiServices,
     globalScope: GlobalScope,
     taskContainer: MutableTaskContainer
 ) : BaseVariantData(
@@ -40,6 +42,7 @@ abstract class ApkVariantData protected constructor(
     variantSources,
     paths,
     artifacts,
+    services,
     globalScope,
     taskContainer
 ) {

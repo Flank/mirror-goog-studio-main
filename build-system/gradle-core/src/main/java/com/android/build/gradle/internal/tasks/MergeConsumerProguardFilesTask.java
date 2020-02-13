@@ -26,8 +26,10 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.errors.EvalIssueException;
 import java.io.IOException;
+import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -39,8 +41,14 @@ import org.gradle.api.tasks.TaskProvider;
 @CacheableTask
 public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
 
+    @NonNull private final ProjectLayout projectLayout;
     private boolean isDynamicFeature;
     private boolean isBaseModule;
+
+    @Inject
+    public MergeConsumerProguardFilesTask(@NonNull ProjectLayout projectLayout) {
+        this.projectLayout = projectLayout;
+    }
 
     @Input
     public boolean getIsDynamicFeature() {
@@ -63,7 +71,7 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
         // We check for default files unless it's a base feature, which can include default files.
         if (!isBaseModule) {
             ExportConsumerProguardFilesTask.checkProguardFiles(
-                    project,
+                    projectLayout.getBuildDirectory(),
                     isDynamicFeature,
                     getConsumerProguardFiles().getFiles(),
                     errorMessage -> {

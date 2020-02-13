@@ -259,7 +259,7 @@ com.android.build.gradle.ProguardFiles$ProguardFile.valueOf: com.android.build.g
 com.android.build.gradle.ProguardFiles$ProguardFile.values: com.android.build.gradle.ProguardFiles$ProguardFile[] ()
 com.android.build.gradle.ProguardFiles.<init>: com.android.build.gradle.ProguardFiles ()
 com.android.build.gradle.ProguardFiles.createProguardFile: void (java.lang.String, java.io.File) throws java.io.IOException
-com.android.build.gradle.ProguardFiles.getDefaultProguardFile: java.io.File (java.lang.String, org.gradle.api.file.ProjectLayout)
+com.android.build.gradle.ProguardFiles.getDefaultProguardFile: java.io.File (java.lang.String, org.gradle.api.file.DirectoryProperty)
 com.android.build.gradle.PseudoApiUpdater
 com.android.build.gradle.PseudoApiUpdater.<init>: com.android.build.gradle.PseudoApiUpdater ()
 com.android.build.gradle.PseudoApiUpdater.main: void (java.lang.String[]) throws java.io.IOException

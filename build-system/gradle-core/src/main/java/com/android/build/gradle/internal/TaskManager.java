@@ -2441,8 +2441,8 @@ public abstract class TaskManager<
                                                 .isAar()));
         if (isTestCoverageEnabled) {
             if (componentProperties.getVariantScope().getDexer() == DexerTool.DX) {
-                globalScope
-                        .getDslServices()
+                componentProperties
+                        .getServices()
                         .getIssueReporter()
                         .reportWarning(
                                 Type.GENERIC,

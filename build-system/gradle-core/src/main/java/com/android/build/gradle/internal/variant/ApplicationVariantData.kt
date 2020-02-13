@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.builder.core.VariantType
 import com.android.utils.appendCapitalized
 import com.android.utils.capitalizeAndAppend
@@ -40,6 +41,7 @@ class ApplicationVariantData(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: BuildArtifactsHolder,
+    services: VariantPropertiesApiServices,
     globalScope: GlobalScope,
     taskContainer: MutableTaskContainer
 ) : ApkVariantData(
@@ -49,6 +51,7 @@ class ApplicationVariantData(
     variantSources,
     paths,
     artifacts,
+    services,
     globalScope,
     taskContainer
 ), TestedVariantData {

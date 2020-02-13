@@ -25,12 +25,21 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.inject.Inject;
 import org.gradle.api.InvalidUserDataException;
+import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
 public abstract class CheckProguardFiles extends NonIncrementalTask {
+
+    @NonNull private final ProjectLayout projectLayout;
+
+    @Inject
+    public CheckProguardFiles(@NonNull ProjectLayout projectLayout) {
+        this.projectLayout = projectLayout;
+    }
 
     private List<File> proguardFiles;
 
@@ -42,12 +51,13 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
         Map<File, ProguardFile> oldFiles = new HashMap<>();
         oldFiles.put(
                 ProguardFiles.getDefaultProguardFile(
-                                ProguardFile.OPTIMIZE.fileName, getProject().getLayout())
+                                ProguardFile.OPTIMIZE.fileName, projectLayout.getBuildDirectory())
                         .getAbsoluteFile(),
                 ProguardFile.OPTIMIZE);
         oldFiles.put(
                 ProguardFiles.getDefaultProguardFile(
-                                ProguardFile.DONT_OPTIMIZE.fileName, getProject().getLayout())
+                                ProguardFile.DONT_OPTIMIZE.fileName,
+                                projectLayout.getBuildDirectory())
                         .getAbsoluteFile(),
                 ProguardFile.DONT_OPTIMIZE);
 

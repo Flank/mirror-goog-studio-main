@@ -718,7 +718,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                     componentProperties.getVariantScope().getConsumerProguardFilesForFeatures();
 
             ExportConsumerProguardFilesTask.checkProguardFiles(
-                    project,
+                    project.getLayout().getBuildDirectory(),
                     isDynamicFeature,
                     consumerProguardFiles,
                     errorMessage -> syncIssueReporter.reportError(Type.GENERIC, errorMessage));

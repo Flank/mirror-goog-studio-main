@@ -16,13 +16,14 @@
 
 package com.android.build.gradle.internal.services
 
-import com.android.build.gradle.internal.dsl.DslVariableFactory
 import org.gradle.api.DomainObjectSet
-import org.gradle.api.file.ProjectLayout
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.ProviderFactory
+import org.gradle.api.provider.Property
 import java.io.File
+import kotlin.properties.ReadWriteProperty
 
 /**
  * Services for the DSL objects.
@@ -34,25 +35,15 @@ import java.io.File
  */
 interface DslServices: BaseServices {
 
+    val logger: Logger
+    val buildDirectory: DirectoryProperty
+
     fun <T> domainObjectSet(type: Class<T>): DomainObjectSet<T>
 
-    /**
-     * Direct access to the instantiator is deprecated. Using direct methods instead (like [DslServices.domainObjectSet] or [DslServices.newInstance].)
-     *
-     * If the direct method you want does not yet exist, ask yourself whether you really need this object before using [DslServices.objectFactory].
-     * If the need is valid then add a new method instead. Direct access to the objectFactory
-     * will disappear in the future.
-     */
-    @Deprecated("Use instantiator methods directly")
-    val objectFactory: ObjectFactory
+    @Deprecated("do not use. DSL elements should not use Property<T> objects")
+    fun <T> property(type: Class<T>): Property<T>
 
-    val logger: Logger
-
-    val providerFactory: ProviderFactory
-
-    val variableFactory: DslVariableFactory
-
-    val projectLayout: ProjectLayout
+    fun <T> newVar(initialValue: T): ReadWriteProperty<Any?, T>
 
     fun file(file: Any): File
 }

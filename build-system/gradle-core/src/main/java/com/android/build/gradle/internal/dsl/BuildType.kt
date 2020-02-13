@@ -150,8 +150,10 @@ open class BuildType @Inject constructor(
      */
     override var isCrunchPngsDefault = true
 
+    // FIXME remove: b/149431538
+    @Suppress("DEPRECATION")
     private val _isDefaultProperty: Property<Boolean> =
-        dslServices.objectFactory.property(Boolean::class.java).convention(false)
+        dslServices.property(Boolean::class.java).convention(false)
 
     var _matchingFallbacks: ImmutableList<String>? = null
 

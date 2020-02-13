@@ -421,6 +421,7 @@ public class VariantManager<
                         variantSources,
                         pathHelper,
                         artifacts,
+                        variantPropertiesApiServices,
                         globalScope,
                         taskContainer);
 
@@ -662,6 +663,7 @@ public class VariantManager<
                         pathHelper,
                         artifacts,
                         (TestedVariantData) testedVariantProperties.getVariantData(),
+                        variantPropertiesApiServices,
                         globalScope,
                         taskContainer);
 

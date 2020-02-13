@@ -25,9 +25,9 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.immutableMapBuilder
 import com.android.builder.errors.EvalIssueException
 import com.android.utils.FileUtils
-import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -41,7 +41,9 @@ import java.util.function.Consumer
 import javax.inject.Inject
 
 @CacheableTask
-abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
+abstract class ExportConsumerProguardFilesTask @Inject constructor(
+    private val projectLayout: ProjectLayout
+) : NonIncrementalTask() {
 
     @get:Input
     var isBaseModule: Boolean = false
@@ -65,7 +67,7 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
         // We check for default files unless it's a base feature, which can include default files.
         if (!isBaseModule) {
             checkProguardFiles(
-                project,
+                projectLayout.buildDirectory,
                 isDynamicFeature,
                 consumerProguardFiles.files,
                 Consumer { exception -> throw EvalIssueException(exception) }
@@ -136,14 +138,14 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
     companion object {
         @JvmStatic
         fun checkProguardFiles(
-            project: Project,
+            buildDirectory: DirectoryProperty,
             isDynamicFeature: Boolean,
             consumerProguardFiles: Collection<File>,
             exceptionHandler: Consumer<String>
         ) {
             val defaultFiles = immutableMapBuilder<File, String> {
                 for (knownFileName in ProguardFiles.KNOWN_FILE_NAMES) {
-                    this.put(ProguardFiles.getDefaultProguardFile(knownFileName, project.layout),
+                    this.put(ProguardFiles.getDefaultProguardFile(knownFileName, buildDirectory),
                         knownFileName)
                 }
             }

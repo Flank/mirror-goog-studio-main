@@ -173,6 +173,7 @@ public class LibraryVariantFactory
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantPropertiesApiServices services,
             @NonNull GlobalScope globalScope,
             @NonNull MutableTaskContainer taskContainer) {
         return new LibraryVariantData(
@@ -182,6 +183,7 @@ public class LibraryVariantFactory
                 variantSources,
                 paths,
                 artifacts,
+                services,
                 globalScope,
                 taskContainer);
     }

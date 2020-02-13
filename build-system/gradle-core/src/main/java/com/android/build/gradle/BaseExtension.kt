@@ -585,7 +585,7 @@ abstract class BaseExtension protected constructor(
                     IssueReporter.Type.GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE
                 )
         }
-        return ProguardFiles.getDefaultProguardFile(name, dslServices.projectLayout)
+        return ProguardFiles.getDefaultProguardFile(name, dslServices.buildDirectory)
     }
 
     // ---------------

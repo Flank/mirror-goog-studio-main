@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.services
 import com.android.build.api.variant.impl.GradleProperty
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.Named
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -150,6 +152,17 @@ class VariantPropertiesApiServicesImpl(
         projectServices.objectFactory.named(type, name)
 
     override fun file(file: Any): File = projectServices.fileResolver.invoke(file)
+
+    override fun fileCollection(): ConfigurableFileCollection =
+        projectServices.objectFactory.fileCollection()
+
+    override fun fileCollection(vararg files: Any): ConfigurableFileCollection =
+        projectServices.objectFactory.fileCollection().from(*files)
+
+    override fun fileTree(): ConfigurableFileTree = projectServices.objectFactory.fileTree()
+
+    override fun fileTree(dir: Any): ConfigurableFileTree =
+        projectServices.objectFactory.fileTree().setDir(dir)
 
     fun lockProperties() {
         for (property in properties) {
