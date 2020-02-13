@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.compiling.BuildConfigCreator
+import com.android.builder.compiling.GeneratedCodeFileCreator
 import com.android.build.gradle.internal.generators.BuildConfigGenerator
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
@@ -160,7 +160,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                     }
                 }
 
-        val generator: BuildConfigCreator =
+        val generator: GeneratedCodeFileCreator =
                 if (bytecodeOutputFile.isPresent) {
                     val byteCodeBuildConfigData = buildConfigData
                             .setOutputPath(bytecodeOutputFile.get().asFile.parentFile.toPath())

@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.generators
 
 import com.android.SdkConstants
-import com.android.builder.compiling.BuildConfigCreator
+import com.android.builder.compiling.GeneratedCodeFileCreator
 import com.android.builder.packaging.JarFlinger
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.ClassWriter.COMPUTE_MAXS
@@ -32,7 +32,7 @@ import java.util.zip.Deflater.NO_COMPRESSION
 
 /** Creates a JVM bytecode BuildConfig. */
 class BuildConfigByteCodeGenerator(private val data: BuildConfigData) :
-    BuildConfigCreator {
+    GeneratedCodeFileCreator {
 
     private val fullyQualifiedBuildConfigClassName: String by lazy {
         "${data.buildConfigPackageName.replace('.', '/')}/${data.buildConfigName}"
@@ -40,14 +40,14 @@ class BuildConfigByteCodeGenerator(private val data: BuildConfigData) :
 
     override val folderPath: File = data.outputPath.toFile().also { it.mkdirs() }
 
-    override val buildConfigFile: File = File(folderPath,
+    override val generatedFilePath: File = File(folderPath,
         "${data.buildConfigName}${SdkConstants.DOT_JAR}")
 
     /** Creates a JAR file within the genFolder containing a build config .class which is
      * generated based on the current class attributes.
      */
     override fun generate() = writeToJar(
-            buildConfigFile.toPath(),
+            generatedFilePath.toPath(),
             """${data.buildConfigPackageName.replace('.', '/')}/${data
                     .buildConfigName}${SdkConstants.DOT_CLASS}""".trimMargin(),
             generateByteCode()
