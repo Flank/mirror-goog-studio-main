@@ -39,7 +39,7 @@ class BuildConfigGeneratorTest {
         val generator =
             BuildConfigGenerator(buildConfigData)
         generator.generate()
-        val file = generator.buildConfigFile
+        val file = generator.generatedFilePath
         Assert.assertTrue(file.exists())
         val actual =
             Files.toString(file, Charsets.UTF_8)
@@ -69,7 +69,7 @@ class BuildConfigGeneratorTest {
         val generator =
             BuildConfigGenerator(buildConfigData)
         generator.generate()
-        val file = generator.buildConfigFile
+        val file = generator.generatedFilePath
         Assert.assertTrue(file.exists())
         val actual =
             Files.toString(file, Charsets.UTF_8)
@@ -99,7 +99,7 @@ class BuildConfigGeneratorTest {
         val generator =
             BuildConfigGenerator(buildConfigData)
         generator.generate()
-        val file = generator.buildConfigFile
+        val file = generator.generatedFilePath
         Assert.assertTrue(file.exists())
         val actual =
             Files.toString(file, Charsets.UTF_8)
@@ -129,7 +129,7 @@ class BuildConfigGeneratorTest {
         val generator =
             BuildConfigGenerator(buildConfigData)
         generator.generate()
-        val file = generator.buildConfigFile
+        val file = generator.generatedFilePath
         Assert.assertTrue(file.exists())
         val actual =
             Files.toString(file, Charsets.UTF_8)

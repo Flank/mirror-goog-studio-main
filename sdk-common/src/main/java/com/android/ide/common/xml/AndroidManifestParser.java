@@ -235,6 +235,8 @@ public class AndroidManifestParser {
                                 }
 
                                 mManifestData.mFeatures.add(feature);
+                            } else if (AndroidManifest.NODE_PERMISSION.equals(localName)) {
+                                processPermissionNode(attributes);
                             }
                             break;
                         case LEVEL_INSIDE_APPLICATION:
@@ -603,6 +605,11 @@ public class AndroidManifestParser {
             mManifestData.mUsesConfiguration.mReqTouchScreen = TouchScreen.getEnum(
                     getAttributeValue(attributes,
                             AndroidManifest.ATTRIBUTE_REQ_TOUCHSCREEN, true /*hasNamespace*/));
+        }
+
+        private void processPermissionNode(Attributes attributes) {
+            mManifestData.mCustomPermissions.add(
+                    getAttributeValue(attributes, AndroidManifest.ATTRIBUTE_NAME, true));
         }
 
         /**

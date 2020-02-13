@@ -261,9 +261,10 @@ abstract class ComponentPropertiesImpl(
         // artifact for each publication.
         mainCollection =
             internalServices.fileCollection(
-                    getCompiledRClasses(configType),
-                    getCompiledBuildConfig(),
-                    mainCollection
+                getCompiledRClasses(configType),
+                getCompiledBuildConfig(),
+                getCompiledManifest(),
+                mainCollection
             )
         return mainCollection
     }
@@ -447,8 +448,8 @@ abstract class ComponentPropertiesImpl(
      * adds databinding sources to the list of sources.
      */
     open fun addDataBindingSources(
-        sourceSets: ImmutableList.Builder<ConfigurableFileTree>)
-    {
+        sourceSets: ImmutableList.Builder<ConfigurableFileTree>
+    ) {
         val baseClassSource = artifacts.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT)
         sourceSets.add(internalServices.fileTree(baseClassSource).builtBy(baseClassSource))
     }
@@ -514,8 +515,27 @@ abstract class ComponentPropertiesImpl(
         // BuildConfig JAR is not required to be added as a classpath for ANDROID_TEST and UNIT_TEST
         // variants as the tests will use JAR from GradleTestProject which doesn't use testedConfig.
         return if (isBuildConfigJar && !isAndroidTest && !isUnitTest && testedConfig == null) {
-            internalServices.fileCollection(artifacts.get(
-                    InternalArtifactType.COMPILE_BUILD_CONFIG_JAR))
+            internalServices.fileCollection(
+                artifacts.get(
+                    InternalArtifactType.COMPILE_BUILD_CONFIG_JAR
+                )
+            )
+        } else {
+            internalServices.fileCollection()
+        }
+    }
+
+    private fun getCompiledManifest(): FileCollection {
+        val isAndroidTest = variantDslInfo.variantType == VariantTypeImpl.ANDROID_TEST
+        val isUnitTest = variantDslInfo.variantType == VariantTypeImpl.UNIT_TEST
+        val isTest = variantDslInfo.variantType.isForTesting || isUnitTest || isAndroidTest
+        val manifestRequired = variantDslInfo.variantType.requiresManifest &&
+                services.projectOptions[BooleanOption.GENERATE_MANIFEST_CLASS]
+        val isLibrary = variantDslInfo.variantType.isAar
+        return if (manifestRequired && !isLibrary && !isTest && testedConfig == null) {
+            internalServices.fileCollection(
+                    artifacts.get(InternalArtifactType.COMPILE_MANIFEST_JAR)
+            )
         } else {
             internalServices.fileCollection()
         }
@@ -550,7 +570,7 @@ abstract class ComponentPropertiesImpl(
         )
     }
 
-    fun getBuildConfigType(): BuildConfigType {
+    fun getBuildConfigType() : BuildConfigType {
         return if (taskContainer.generateBuildConfigTask == null || !buildFeatures.buildConfig) {
             BuildConfigType.NONE
         } else if (services.projectOptions[BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE]

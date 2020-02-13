@@ -176,6 +176,7 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeCleanTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGeneratorBase;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
+import com.android.build.gradle.tasks.GenerateManifestJarTask;
 import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.build.gradle.tasks.JavaCompileCreationAction;
@@ -990,6 +991,7 @@ public abstract class TaskManager<
                 new ProcessManifestForMetadataFeatureTask.CreationAction(creationConfig));
         taskFactory.register(new ProcessManifestForInstantAppTask.CreationAction(creationConfig));
         taskFactory.register(new ProcessPackagedManifestTask.CreationAction(creationConfig));
+        taskFactory.register(new GenerateManifestJarTask.CreationAction(creationConfig));
 
         taskFactory.register(
                 new ProcessApplicationManifest.CreationAction(

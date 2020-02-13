@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
 import com.android.resources.TouchScreen;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeSet;
@@ -73,6 +74,8 @@ public final class ManifestData {
     final ArrayList<UsesLibrary> mLibraries = new ArrayList<UsesLibrary>();
     /** List of all feature in use declared by the manifest */
     final ArrayList<UsesFeature> mFeatures = new ArrayList<UsesFeature>();
+    /** List of all the custom permissions declared in the manifest */
+    final ArrayList<String> mCustomPermissions = new ArrayList<>();
 
     SupportsScreens mSupportsScreensFromManifest;
     SupportsScreens mSupportsScreensValues;
@@ -738,6 +741,11 @@ public final class ManifestData {
      */
     public UsesFeature[] getUsesFeatures() {
         return mFeatures.toArray(new UsesFeature[0]);
+    }
+
+    /** Returns the set of custom permissions declared in the manifest. */
+    public ImmutableList<String> getCustomPermissions() {
+        return ImmutableList.copyOf(mCustomPermissions);
     }
 
     /**
