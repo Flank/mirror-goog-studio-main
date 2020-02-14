@@ -393,6 +393,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @Internal
     protected abstract ArtifactType<Directory> getInternalArtifactType();
 
+    @Internal
+    public abstract Property<String> getProjectPath();
+
     @Override
     public void doTaskAction(@NonNull InputChanges changes) {
         if (!changes.isIncremental()) {
@@ -562,7 +565,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             this.apkInfo = apkInfo;
             this.androidResourcesFile = androidResourcesFile;
             this.androidResourcesChanged = androidResourcesChanged;
-            this.projectPath = task.getProject().getPath();
+            this.projectPath = task.getProjectPath().get();
             this.apkCreatorType = apkCreatorType;
 
             outputFile =
@@ -1126,6 +1129,8 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                 InternalArtifactType.SDK_DEPENDENCY_DATA.INSTANCE,
                                 packageAndroidArtifact.getDependencyDataFile());
             }
+
+            packageAndroidArtifact.getProjectPath().set(project.getPath());
 
             finalConfigure(packageAndroidArtifact);
         }

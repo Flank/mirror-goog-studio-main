@@ -263,7 +263,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                                 getAapt2DaemonBuildService().get())) {
 
             Blocks.recordSpan(
-                    getProject().getName(),
+                    getProjectName(),
                     getPath(),
                     GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_1,
                     () -> {
@@ -290,13 +290,13 @@ public abstract class MergeResources extends ResourceAwareTask {
                             getCrunchPng());
 
             Blocks.recordSpan(
-                    getProject().getName(),
+                    getProjectName(),
                     getPath(),
                     GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_2,
                     () -> merger.mergeData(writer, false /*doCleanUp*/));
 
             Blocks.recordSpan(
-                    getProject().getName(),
+                    getProjectName(),
                     getPath(),
                     GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_3,
                     () -> {
@@ -307,7 +307,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             // No exception? Write the known state.
             Blocks.recordSpan(
-                    getProject().getName(),
+                    getProjectName(),
                     getPath(),
                     GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_4,
                     () -> merger.writeBlobTo(getIncrementalFolder(), writer, false));

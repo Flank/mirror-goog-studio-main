@@ -33,6 +33,7 @@ import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
 import com.android.utils.PathUtils
 import com.google.common.collect.ArrayListMultimap
+import org.apache.log4j.Logger
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -100,7 +101,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                 bootClasspath = bootClasspath.files,
                 minSdk = minSdk.get(),
                 enableBugFixForJacoco = enableBugFixForJacoco.get(),
-                verbose = project.logger.isDebugEnabled,
+                verbose = Logger.getLogger(DesugarTask::class.java).isDebugEnabled,
                 executorFacade = executorFacade
             ).doProcess()
         }
