@@ -37,6 +37,7 @@ import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UClass;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UIdentifier;
 import org.jetbrains.uast.UIfExpression;
 import org.jetbrains.uast.ULambdaExpression;
 import org.jetbrains.uast.ULiteralExpression;
@@ -404,6 +405,12 @@ public class VersionChecks {
                             instanceof UReferenceExpression) {
                 // Method call via Kotlin property syntax
                 return isValidVersionCall(api, isLowerBound, and, element, (PsiMethod) resolved);
+            } else if (resolved == null && refExpression instanceof UQualifiedReferenceExpression) {
+                UExpression selector =
+                        ((UQualifiedReferenceExpression) refExpression).getSelector();
+                if (selector instanceof UCallExpression) {
+                    return isValidVersionCall(api, isLowerBound, and, (UCallExpression) selector);
+                }
             }
         } else if (element instanceof UUnaryExpression) {
             UUnaryExpression prefixExpression = (UUnaryExpression) element;
@@ -424,6 +431,15 @@ public class VersionChecks {
             int api, boolean isLowerBound, boolean and, UCallExpression call) {
         PsiMethod method = call.resolve();
         if (method == null) {
+            // Fallback when we can't resolve call: Try to guess just based on the method name
+            UIdentifier identifier = call.getMethodIdentifier();
+            if (identifier != null) {
+                String name = identifier.getName();
+                int version = getMinSdkVersionFromMethodName(name);
+                if (version != -1 && isLowerBound) {
+                    return api <= version;
+                }
+            }
             return null;
         }
         return isValidVersionCall(api, isLowerBound, and, call, method);

@@ -2645,6 +2645,41 @@ public class VersionChecksTest extends AbstractCheckTest {
                 .expectInlinedMessages(false);
     }
 
+    public void testFailedResolve() {
+        // Regression test for https://issuetracker.google.com/120255046
+        // Make sure method-name based checks work even if we can't resolve the
+        // utility method call
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "@file:Suppress(\"RemoveRedundantQualifierName\", \"unused\")\n"
+                                        + "\n"
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.support.annotation.RequiresApi\n"
+                                        + "import foo.bar.common.os.AndroidVersion\n"
+                                        + "import foo.bar.common.os.AndroidVersion.isAtLeastQ\n"
+                                        + "\n"
+                                        + "fun foo() {\n"
+                                        + "    if (AndroidVersion.isAtLeastQ()) {\n"
+                                        + "        bar()\n"
+                                        + "    }\n"
+                                        + "    if (com.evo.common.os.AndroidVersion.isAtLeastQ()) {\n"
+                                        + "        bar()\n"
+                                        + "    }\n"
+                                        + "    if (isAtLeastQ()) {\n"
+                                        + "        bar()\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "@RequiresApi(25)\n"
+                                        + "fun bar() {\n"
+                                        + "}"),
+                        mSupportJar)
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected Detector getDetector() {
         return new ApiDetector();
