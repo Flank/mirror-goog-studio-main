@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.options.BooleanOption
+import com.android.builder.errors.IssueReporter
 import com.android.builder.profile.Recorder
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.Action
@@ -237,7 +238,10 @@ class ApplicationTaskManager(
             )
         }
         if (!notFound.isEmpty()) {
-            logger.error("Unable to find matching projects for Asset Packs: $notFound")
+            variantProperties.services.issueReporter.reportError(
+                IssueReporter.Type.GENERIC,
+                "Unable to find matching projects for Asset Packs: $notFound"
+            )
         }
     }
 
