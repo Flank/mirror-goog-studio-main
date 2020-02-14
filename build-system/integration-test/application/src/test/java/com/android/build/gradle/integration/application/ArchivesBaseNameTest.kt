@@ -24,10 +24,13 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getDebugVariantBuildOutput
+import com.android.build.gradle.integration.common.utils.getOutputFiles
+import com.android.build.gradle.integration.common.utils.getSingleOutputFile
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.File
 
 private const val OLD_NAME = "random_name"
 private const val NEW_NAME = "changed_name"
@@ -56,15 +59,17 @@ class ArchivesBaseNameTest(plugin: String, private val extension: String) {
     }
 
     private fun checkApkName(name: String, extension: String) {
-        val projectBuildOutput = project.executeAndReturnOutputModel("assembleDebug")
+        val projectBuildOutput = project.executeAndReturnModel("clean","assembleDebug").onlyModel
         val debugBuildOutput = projectBuildOutput.getDebugVariantBuildOutput()
 
         // Get the apk file
-        assertThat(debugBuildOutput.outputs).hasSize(1)
+        val outputFile = if (debugBuildOutput.assembleTaskOutputListingFile != null) {
+            File(debugBuildOutput.getSingleOutputFile())
+        } else {
+            File(project.buildDir, "outputs/aar").listFiles()?.first()
+        }
 
-        val outputFile = debugBuildOutput.outputs.iterator().next().outputFile
-
-        assertThat(outputFile.name).isEqualTo("$name-debug.$extension")
+        assertThat(outputFile?.name).isEqualTo("$name-debug.$extension")
         assertThat(outputFile).isFile()
     }
 

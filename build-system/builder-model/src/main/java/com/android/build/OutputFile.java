@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import java.io.File;
 
 /** An output with an associated set of filters. */
+@Deprecated
 public interface OutputFile extends VariantOutput {
 
     /**

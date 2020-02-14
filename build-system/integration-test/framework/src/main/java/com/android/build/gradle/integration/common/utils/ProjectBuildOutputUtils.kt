@@ -17,14 +17,20 @@
 @file:JvmName("ProjectBuildOutputUtils")
 package com.android.build.gradle.integration.common.utils
 
+import com.android.build.api.variant.impl.BuiltArtifactImpl
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.builder.core.BuilderConstants
+import com.android.builder.model.AndroidProject
 import com.android.builder.model.ProjectBuildOutput
+import com.android.builder.model.VariantBuildInformation
 import com.android.builder.model.VariantBuildOutput
 import com.google.common.collect.Iterables
 import com.google.common.truth.Truth
 import org.junit.Assert
+import org.junit.Assert.fail
 import java.io.File
+import java.lang.RuntimeException
 
 /**
  * Returns the APK file for a single-output variant.
@@ -32,12 +38,12 @@ import java.io.File
  * @param variantName the name of the variant to return
  * @return the output file, always, or assert before.
  */
-fun ProjectBuildOutput.findOutputFileByVariantName(variantName: String): File {
+fun AndroidProject.findOutputFileByVariantName(variantName: String): File {
 
-    val variantOutput = getVariantBuildOutput(variantName)
+    val variantOutput = getVariantBuildInformationByName(variantName)
     Assert.assertNotNull("variant '$variantName' null-check", variantOutput)
 
-    val variantOutputFiles = variantOutput.outputs
+    val variantOutputFiles = variantOutput.getOutputFiles()
     Assert.assertNotNull("variantName '$variantName' outputs null-check", variantOutputFiles)
     // we only support single output artifact in this helper method.
     Assert.assertEquals(
@@ -45,32 +51,25 @@ fun ProjectBuildOutput.findOutputFileByVariantName(variantName: String): File {
             1,
             variantOutputFiles.size.toLong())
 
-    val output = variantOutputFiles.iterator().next()
+    val output = variantOutput.getSingleOutputFile()
     Assert.assertNotNull(
             "variantName '$variantName' single output null-check",
             output)
 
-    val outputFile = output.outputFile
-    Assert.assertNotNull("variantName '$variantName' mainOutputFile null-check", outputFile)
-
-    return outputFile
+    return File(output)
 }
 
-fun ProjectBuildOutput.compareDebugAndReleaseOutput() {
-    Truth.assertThat(variantsBuildOutput).named("variant count").hasSize(2)
+fun VariantBuildInformation.getBuiltArtifacts() =
+    (BuiltArtifactsLoaderImpl.loadFromFile(File(assembleTaskOutputListingFile!!))
+        ?: throw RuntimeException("Cannot load built artifacts from $assembleTaskOutputListingFile"))
 
-    // debug variant
-    val debugVariant = getVariantBuildOutput(BuilderConstants.DEBUG)
+fun VariantBuildInformation.getOutputFiles() =
+    getBuiltArtifacts()
+        .elements
+        .map(BuiltArtifactImpl::outputFile)
 
-    // release variant
-    val releaseVariant = getVariantBuildOutput(BuilderConstants.RELEASE)
-
-    val debugFile = Iterables.getOnlyElement(debugVariant.outputs).outputFile
-    val releaseFile = Iterables.getOnlyElement(releaseVariant.outputs).outputFile
-
-    Assert.assertFalse("debug: $debugFile / release: $releaseFile",
-            debugFile == releaseFile)
-}
+fun VariantBuildInformation.getSingleOutputFile() =
+    getOutputFiles().single()
 
 /**
  * Convenience method to verify that the given ProjectBuildOutput contains exactly two variants,
@@ -81,9 +80,9 @@ fun ProjectBuildOutput.compareDebugAndReleaseOutput() {
  * @throws AssertionError if the model contains more than two variants, or does not have a
  * "debug" variant
  */
-fun ProjectBuildOutput.getDebugVariantBuildOutput(): VariantBuildOutput {
-    TruthHelper.assertThat(variantsBuildOutput).hasSize(2)
-    val debugVariantOutput = getVariantBuildOutput(BuilderConstants.DEBUG)
+fun AndroidProject.getDebugVariantBuildOutput(): VariantBuildInformation {
+    TruthHelper.assertThat(variantsBuildInformation).hasSize(2)
+    val debugVariantOutput = getVariantBuildInformationByName(BuilderConstants.DEBUG)
     TruthHelper.assertThat(debugVariantOutput).isNotNull()
     return debugVariantOutput
 }
@@ -95,7 +94,7 @@ fun ProjectBuildOutput.getDebugVariantBuildOutput(): VariantBuildOutput {
  * @return the only item with the given name
  * @throws AssertionError if no items match or if multiple items match
  */
-fun ProjectBuildOutput.getVariantBuildOutput(name: String): VariantBuildOutput {
+fun AndroidProject.getVariantBuildInformation(name: String): VariantBuildInformation {
     return searchForExistingItem(
-            variantsBuildOutput, name, VariantBuildOutput::getName, "VariantBuildOutput")
+            this.variantsBuildInformation, name, VariantBuildInformation::variantName, "VariantBuildInformation")
 }

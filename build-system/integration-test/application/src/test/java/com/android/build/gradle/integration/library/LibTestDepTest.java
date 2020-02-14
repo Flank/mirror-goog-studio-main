@@ -24,13 +24,12 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
+import java.io.File;
 import java.io.IOException;
 import java.util.stream.Collectors;
 import org.junit.AfterClass;
@@ -45,19 +44,18 @@ public class LibTestDepTest {
             GradleTestProject.builder().fromTestProject("libTestDep").create();
 
     private static ModelContainer<AndroidProject> model;
-    private static ProjectBuildOutput outputModel;
+    private static AndroidProject outputModel;
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         model = project.executeAndReturnModel("clean", "assembleDebug");
-        outputModel = project.model().fetch(ProjectBuildOutput.class);
+        outputModel = model.getOnlyModel();
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
         model = null;
-        outputModel = null;
     }
 
     @Test
@@ -69,7 +67,7 @@ public class LibTestDepTest {
     public void checkTestVariantInheritsDepsFromMainVariant() {
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
-        Variant debugVariant = AndroidProjectUtils.getVariantByName(model.getOnlyModel(), DEBUG);
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(outputModel, DEBUG);
 
         AndroidArtifact testArtifact = VariantUtils.getAndroidTestArtifact(debugVariant);
 
@@ -93,7 +91,18 @@ public class LibTestDepTest {
     }
 
     @Test
-    public void checkDebugAndReleaseOutputHaveDifferentNames() {
-        ProjectBuildOutputUtils.compareDebugAndReleaseOutput(outputModel);
+    public void checkDebugAndReleaseOutputHaveDifferentNames()
+            throws IOException, InterruptedException {
+        File debugOutput = getOutputFile();
+        project.execute("clean", "assembleRelease");
+        File releaseOutput = getOutputFile();
+        assertThat(debugOutput.getName()).isNotEqualTo(releaseOutput.getName());
+    }
+
+    private File getOutputFile() {
+        File[] outputs = new File(project.getBuildDir(), "outputs/aar").listFiles();
+        assertThat(outputs).isNotNull();
+        assertThat(outputs).hasLength(1);
+        return outputs[0];
     }
 }

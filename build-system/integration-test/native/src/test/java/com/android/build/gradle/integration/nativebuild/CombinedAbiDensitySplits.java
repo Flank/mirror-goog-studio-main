@@ -23,14 +23,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.android.build.OutputFile;
-import com.android.build.VariantOutput;
+import com.android.build.api.variant.BuiltArtifact;
+import com.android.build.api.variant.FilterConfiguration;
+import com.android.build.api.variant.VariantOutputConfiguration;
+import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
-import com.android.builder.model.ProjectBuildOutput;
-import com.android.builder.model.VariantBuildOutput;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.VariantBuildInformation;
 import com.google.common.collect.Sets;
+import java.io.File;
 import java.util.Collection;
 import java.util.Set;
 import org.junit.Before;
@@ -53,13 +56,13 @@ public class CombinedAbiDensitySplits {
 
     @Test
     public void testCombinedDensityAndAbiPureSplits() throws Exception {
-        ProjectBuildOutput projectBuildOutput =
-                project.executeAndReturnOutputModel("clean", "assembleDebug");
-        VariantBuildOutput debugBuildOutput =
+        AndroidProject projectBuildOutput =
+                project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
+        VariantBuildInformation debugBuildOutput =
                 ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
 
         // get the outputs.
-        Collection<OutputFile> debugOutputs = debugBuildOutput.getOutputs();
+        Collection<String> debugOutputs = ProjectBuildOutputUtils.getOutputFiles(debugBuildOutput);
         assertNotNull(debugOutputs);
 
         // build a set of expectedDensities outputs
@@ -69,26 +72,36 @@ public class CombinedAbiDensitySplits {
         expectedDensities.add("xhdpi");
         expectedDensities.add("xxhdpi");
 
-        assertEquals(10, debugOutputs.size());
-        for (OutputFile outputFile : debugOutputs) {
-            String densityFilter = VariantOutputUtils.getFilter(outputFile, VariantOutput.DENSITY);
+        BuiltArtifactsImpl builtArtifacts =
+                ProjectBuildOutputUtils.getBuiltArtifacts(debugBuildOutput);
+        assertEquals(10, builtArtifacts.getElements().size());
+        for (BuiltArtifact builtArtifact : builtArtifacts.getElements()) {
+            String densityFilter =
+                    VariantOutputUtils.getFilter(
+                            builtArtifact, FilterConfiguration.FilterType.DENSITY);
             if (densityFilter == null) {
-                assertThat(VariantOutputUtils.getFilter(outputFile, VariantOutput.ABI)).isNotNull();
+                assertThat(
+                                VariantOutputUtils.getFilter(
+                                        builtArtifact, FilterConfiguration.FilterType.ABI))
+                        .isNotNull();
             }
 
-            assertEquals(VariantOutput.FULL_SPLIT, outputFile.getOutputType());
+            assertEquals(
+                    VariantOutputConfiguration.OutputType.ONE_OF_MANY,
+                    builtArtifact.getOutputType());
 
-            assertEquals(123, outputFile.getVersionCode());
-            assertThatZip(outputFile.getOutputFile()).entries("/lib/.*").hasSize(1);
+            assertEquals(123, builtArtifact.getVersionCode());
+            assertThatZip(new File(builtArtifact.getOutputFile())).entries("/lib/.*").hasSize(1);
+
             if (densityFilter != null) {
                 expectedDensities.remove(densityFilter);
 
                 // ensure the .so file presence (and only one)
-                assertThatZip(outputFile.getOutputFile())
+                assertThatZip(new File(builtArtifact.getOutputFile()))
                         .contains(
                                 "lib/"
                                         + VariantOutputUtils.getFilter(
-                                                outputFile, VariantOutput.ABI)
+                                                builtArtifact, FilterConfiguration.FilterType.ABI)
                                         + "/libhello-jni.so");
             }
         }

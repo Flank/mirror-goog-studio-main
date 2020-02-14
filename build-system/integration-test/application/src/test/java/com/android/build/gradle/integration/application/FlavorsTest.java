@@ -37,10 +37,9 @@ import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
-import com.android.builder.model.VariantBuildOutput;
+import com.android.builder.model.VariantBuildInformation;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
@@ -121,12 +120,12 @@ public class FlavorsTest {
                 .test();
 
         // Verify the build outputs
-        ProjectBuildOutput projectBuildOutput = project.model().fetch(ProjectBuildOutput.class);
-        Collection<VariantBuildOutput> variantBuildOutputs =
-                projectBuildOutput.getVariantsBuildOutput();
+        AndroidProject projectModel = project.model().fetchAndroidProjects().getOnlyModel();
+        Collection<VariantBuildInformation> variantBuildOutputs =
+                projectModel.getVariantsBuildInformation();
         assertThat(variantBuildOutputs).named("Variant Output Count").hasSize(8);
-        VariantBuildOutput f1f1VariantOutput =
-                ProjectBuildOutputUtils.getVariantBuildOutput(projectBuildOutput, "f1FaDebug");
+        VariantBuildInformation f1f1VariantOutput =
+                ProjectBuildOutputUtils.getVariantBuildInformation(projectModel, "f1FaDebug");
         new VariantHelper(
                         f1faDebugVariant,
                         f1f1VariantOutput,

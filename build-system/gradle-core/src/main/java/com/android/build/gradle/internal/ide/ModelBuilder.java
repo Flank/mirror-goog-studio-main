@@ -27,11 +27,8 @@ import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.VariantOutput;
-import com.android.build.api.artifact.PublicArtifactType;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.dsl.ApplicationExtension;
-import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
@@ -91,20 +88,16 @@ import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.ModelBuilderParameter;
 import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.ProjectSyncIssues;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
-import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildInformation;
-import com.android.builder.model.VariantBuildOutput;
 import com.android.builder.model.ViewBindingOptions;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.utils.Pair;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -185,7 +178,6 @@ public class ModelBuilder<Extension extends BaseExtension>
         // The default name for a model is the name of the Java interface.
         return modelName.equals(AndroidProject.class.getName())
                 || modelName.equals(GlobalLibraryMap.class.getName())
-                || modelName.equals(ProjectBuildOutput.class.getName())
                 || modelName.equals(Variant.class.getName())
                 || modelName.equals(ProjectSyncIssues.class.getName());
     }
@@ -233,9 +225,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
     @NonNull
     private Object buildNonParameterizedModels(@NonNull String modelName) {
-        if (modelName.equals(ProjectBuildOutput.class.getName())) {
-            return buildMinimalisticModel();
-        } else if (modelName.equals(GlobalLibraryMap.class.getName())) {
+        if (modelName.equals(GlobalLibraryMap.class.getName())) {
             return buildGlobalLibraryMap();
         } else if (modelName.equals(ProjectSyncIssues.class.getName())) {
             return buildProjectSyncIssuesModel();
@@ -248,38 +238,6 @@ public class ModelBuilder<Extension extends BaseExtension>
     @NonNull
     public Class<ModelBuilderParameter> getParameterType() {
         return ModelBuilderParameter.class;
-    }
-
-    @VisibleForTesting
-    ProjectBuildOutput buildMinimalisticModel() {
-
-        ImmutableList.Builder<VariantBuildOutput> variantsOutput = ImmutableList.builder();
-
-        // Loop on the tested variants
-        for (VariantPropertiesImpl variantProperties : variantModel.getVariants()) {
-            // get the output of their tests
-            Collection<TestVariantBuildOutput> testVariantBuildOutputs =
-                    variantProperties.getTestComponents().values().stream()
-                            .map(
-                                    testComponent ->
-                                            new DefaultTestVariantBuildOutput(
-                                                    testComponent.getName(),
-                                                    getBuildOutputSupplier(testComponent).get(),
-                                                    variantProperties.getName(),
-                                                    testComponent.getVariantType()
-                                                                    == VariantTypeImpl.ANDROID_TEST
-                                                            ? TestVariantBuildOutput.TestType
-                                                                    .ANDROID_TEST
-                                                            : TestVariantBuildOutput.TestType.UNIT))
-                            .collect(Collectors.toList());
-            variantsOutput.add(
-                    new DefaultVariantBuildOutput(
-                            variantProperties.getName(),
-                            getBuildOutputSupplier(variantProperties).get(),
-                            testVariantBuildOutputs));
-        }
-
-        return new DefaultProjectBuildOutput(variantsOutput.build());
     }
 
     private static Object buildGlobalLibraryMap() {
@@ -1010,57 +968,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                     "The targetSdk version should not be declared in the android"
                             + " manifest file. You can move the version from the manifest"
                             + " to the defaultConfig in the build.gradle file.");
-        }
-    }
-
-    private BuildOutputSupplier<Collection<EarlySyncBuildOutput>> getBuildOutputSupplier(
-            @NonNull ComponentPropertiesImpl componentProperties) {
-
-        VariantTypeImpl variantType = (VariantTypeImpl) componentProperties.getVariantType();
-
-        switch (variantType) {
-            case BASE_APK:
-            case OPTIONAL_APK:
-            case TEST_APK:
-            case ANDROID_TEST:
-                return new BuildOutputsSupplier(
-                        BuiltArtifacts.METADATA_FILE_VERSION,
-                        ImmutableList.of(PublicArtifactType.APK.INSTANCE),
-                        ImmutableList.of(componentProperties.getPaths().getApkLocation()));
-            case LIBRARY:
-                return BuildOutputSupplier.of(
-                        ImmutableList.of(
-                                new EarlySyncBuildOutput(
-                                        InternalArtifactType.AAR.INSTANCE,
-                                        VariantOutput.OutputType.MAIN,
-                                        ImmutableList.of(),
-                                        0,
-                                        componentProperties
-                                                .getArtifacts()
-                                                .getFinalProduct(InternalArtifactType.AAR.INSTANCE)
-                                                .get()
-                                                .getAsFile())));
-            case UNIT_TEST:
-                return BuildOutputSupplier.of(
-                        ImmutableList.of(
-                                new EarlySyncBuildOutput(
-                                        JAVAC.INSTANCE,
-                                        VariantOutput.OutputType.MAIN,
-                                        ImmutableList.of(),
-                                        componentProperties.getVariantDslInfo().getVersionCode(),
-                                        componentProperties
-                                                .getArtifacts()
-                                                .getAllClasses()
-                                                // We used to call .getSingleFile() but Kotlin
-                                                // projects currently have 2 output dirs
-                                                // specified for test classes. This supplier is
-                                                // going away in beta3, so this is obsolete in
-                                                // any case.
-                                                .iterator()
-                                                .next())));
-            default:
-                throw new RuntimeException(
-                        "Unhandled build type " + componentProperties.getVariantType());
         }
     }
 

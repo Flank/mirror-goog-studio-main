@@ -21,12 +21,12 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
-import com.android.builder.model.ProjectBuildOutput;
-import com.android.builder.model.VariantBuildOutput;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.VariantBuildInformation;
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -39,7 +39,7 @@ import org.junit.Test;
 
 /** Test for unresolved placeholders in libraries. */
 public class PlaceholderInLibsTest {
-    private static Map<String, ProjectBuildOutput> outputModels;
+    private static Map<String, AndroidProject> models;
 
     @ClassRule
     public static GradleTestProject project =
@@ -47,42 +47,38 @@ public class PlaceholderInLibsTest {
 
     @BeforeClass
     public static void setup() throws IOException, InterruptedException {
-        outputModels =
-                project.executeAndReturnOutputMultiModel(
-                        "clean",
-                        ":examplelibrary:generateDebugAndroidTestSources",
-                        "app:assembleDebug");
+        project.execute(
+                "clean", ":examplelibrary:generateDebugAndroidTestSources", "app:assembleDebug");
+        models = project.model().fetchAndroidProjects().getOnlyModelMap();
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        outputModels = null;
+        models = null;
     }
 
     @Test
     public void testLibraryPlaceholderSubstitutionInFinalApk() throws Exception {
 
         // Load the custom model for the project
-        ProjectBuildOutput projectBuildOutput = outputModels.get(":app");
-        Collection<VariantBuildOutput> variantBuildOutputs =
-                projectBuildOutput.getVariantsBuildOutput();
+        AndroidProject projectModel = models.get(":app");
+        Collection<VariantBuildInformation> variantBuildOutputs =
+                projectModel.getVariantsBuildInformation();
         assertThat(variantBuildOutputs).named("Variant Count").hasSize(2);
 
         // get the main artifact of the debug artifact
-        VariantBuildOutput debugOutput =
-                ProjectBuildOutputUtils.getVariantBuildOutput(projectBuildOutput, "flavorDebug");
+        VariantBuildInformation debugOutput =
+                ProjectBuildOutputUtils.getVariantBuildInformation(projectModel, "flavorDebug");
 
         // get the outputs.
-        Collection<OutputFile> debugOutputs = debugOutput.getOutputs();
+        Collection<String> debugOutputs = ProjectBuildOutputUtils.getOutputFiles(debugOutput);
         assertNotNull(debugOutputs);
 
         assertEquals(1, debugOutputs.size());
-        OutputFile output = debugOutputs.iterator().next();
-        assertEquals(1, output.getOutputs().size());
+        String output = debugOutputs.iterator().next();
 
-        List<String> apkBadging =
-                ApkSubject.getBadging(output.getOutputs().iterator().next().getOutputFile());
+        List<String> apkBadging = ApkSubject.getBadging(new File(output));
 
         for (String line : apkBadging) {
             if (line.contains("uses-permission: name=" +

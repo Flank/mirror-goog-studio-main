@@ -40,6 +40,8 @@ class BuiltArtifactsImpl(
     : CommonBuiltArtifacts, BuiltArtifacts, Serializable {
 
     companion object {
+        fun getMetadataFile(folder: File) = File(folder, METADATA_FILE_NAME)
+
         const val METADATA_FILE_NAME = "output.json"
     }
 

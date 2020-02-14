@@ -25,26 +25,30 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.AndroidProjectTypes;
-import com.android.build.OutputFile;
+import com.android.build.api.variant.VariantOutputConfiguration;
+import com.android.build.api.variant.impl.BuiltArtifactImpl;
+import com.android.build.api.variant.impl.BuiltArtifactsImpl;
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
+import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaCompileOptions;
-import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.Variant;
-import com.android.builder.model.VariantBuildOutput;
-import com.google.common.collect.Iterators;
-import java.util.List;
+import com.android.builder.model.VariantBuildInformation;
+import com.google.common.truth.Truth;
+import java.io.File;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.gradle.api.JavaVersion;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -62,17 +66,15 @@ public class BasicTest {
             .create();
 
     public static AndroidProject model;
-    public static ProjectBuildOutput outputModel;
 
     @BeforeClass
     public static void getModel() throws Exception {
-        outputModel =
-                project.executeAndReturnOutputModel("clean", "assembleDebug", "assembleRelease");
         // basic project overwrites buildConfigField which emits a sync warning
-        model = project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
-        project.model()
-                .ignoreSyncIssues()
-                .fetchAndroidProjects()
+        project.execute("clean", "assembleDebug", "assembleRelease");
+        ModelContainer<AndroidProject> container =
+                project.model().ignoreSyncIssues().fetchAndroidProjects();
+        model = container.getOnlyModel();
+        container
                 .getOnlyModelSyncIssues()
                 .forEach(
                         issue -> {
@@ -149,7 +151,21 @@ public class BasicTest {
 
     @Test
     public void checkDebugAndReleaseOutputHaveDifferentNames() {
-        ProjectBuildOutputUtils.compareDebugAndReleaseOutput(outputModel);
+        Truth.assertThat(model.getVariantsBuildInformation()).named("variant count").hasSize(2);
+
+        // debug variant
+        VariantBuildInformation debugVariant =
+                AndroidProjectUtils.getVariantBuildInformationByName(model, BuilderConstants.DEBUG);
+
+        // release variant
+        VariantBuildInformation releaseVariant =
+                AndroidProjectUtils.getVariantBuildInformationByName(
+                        model, BuilderConstants.RELEASE);
+
+        String debugFile = ProjectBuildOutputUtils.getSingleOutputFile(debugVariant);
+        String releaseFile = ProjectBuildOutputUtils.getSingleOutputFile(releaseVariant);
+
+        Assert.assertFalse("debug: $debugFile / release: $releaseFile", debugFile == releaseFile);
     }
 
     @Test
@@ -159,62 +175,41 @@ public class BasicTest {
 
     @Test
     public void testBuildOutputModel() throws Exception {
-        // Execute build and get the initial minimalistic model.
-        Map<String, ProjectBuildOutput> multi =
-                project.executeAndReturnOutputMultiModel(
-                        "assemble", "assembleDebugAndroidTest", "testDebugUnitTest");
+        project.execute("assemble", "assembleDebugAndroidTest", "testDebugUnitTest");
+        Map<String, AndroidProject> multi =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModelMap();
 
-        ProjectBuildOutput mainModule = multi.get(":");
-        assertThat(mainModule.getVariantsBuildOutput()).hasSize(2);
+        AndroidProject mainModule = multi.get(":");
+        assertThat(mainModule.getVariantsBuildInformation()).hasSize(2);
         assertThat(
-                        mainModule
-                                .getVariantsBuildOutput()
-                                .stream()
-                                .map(VariantBuildOutput::getName)
+                        mainModule.getVariantsBuildInformation().stream()
+                                .map(VariantBuildInformation::getVariantName)
                                 .collect(Collectors.toList()))
                 .containsExactly("debug", "release");
 
-        for (VariantBuildOutput variantBuildOutput : mainModule.getVariantsBuildOutput()) {
-            assertThat(variantBuildOutput.getOutputs()).hasSize(1);
-            OutputFile output = variantBuildOutput.getOutputs().iterator().next();
-            assertThat(output.getOutputFile().exists()).isTrue();
-            assertThat(output.getFilters()).isEmpty();
-            assertThat(output.getOutputType()).isEqualTo("MAIN");
+        for (VariantBuildInformation variantBuildOutput :
+                mainModule.getVariantsBuildInformation()) {
+            assertThat(variantBuildOutput.getAssembleTaskName()).contains("assemble");
+            assertThat(variantBuildOutput.getAssembleTaskOutputListingFile()).isNotNull();
+            File listingFile = new File(variantBuildOutput.getAssembleTaskOutputListingFile());
+            BuiltArtifactsImpl builtArtifacts =
+                    BuiltArtifactsLoaderImpl.loadFromFile(
+                            listingFile, listingFile.getParentFile().toPath());
 
-            int expectedTestedVariants = variantBuildOutput.getName().equals("debug") ? 2 : 1;
-            assertThat(variantBuildOutput.getTestingVariants()).hasSize(expectedTestedVariants);
-            List<String> testVariantTypes =
-                    variantBuildOutput
-                            .getTestingVariants()
-                            .stream()
-                            .map(TestVariantBuildOutput::getType)
-                            .collect(Collectors.toList());
-            if (expectedTestedVariants == 1) {
-                assertThat(testVariantTypes).containsExactly("UNIT");
-            } else {
-                assertThat(testVariantTypes).containsExactly("UNIT", "ANDROID_TEST");
-            }
-
-            for (TestVariantBuildOutput testVariantBuildOutput :
-                    variantBuildOutput.getTestingVariants()) {
-                assertThat(testVariantBuildOutput.getTestedVariantName())
-                        .isEqualTo(variantBuildOutput.getName());
-                assertThat(testVariantBuildOutput.getOutputs()).hasSize(1);
-                output = Iterators.getOnlyElement(testVariantBuildOutput.getOutputs().iterator());
-                assertThat(output.getOutputType()).isEqualTo("MAIN");
-                assertThat(output.getFilters()).isEmpty();
-                if (variantBuildOutput.getName().equals("debug")) {
-                    assertThat(output.getOutputFile().exists()).isTrue();
-                }
-            }
+            assertThat(builtArtifacts).isNotNull();
+            assertThat(builtArtifacts.getElements()).hasSize(1);
+            BuiltArtifactImpl built = builtArtifacts.getElements().iterator().next();
+            assertThat(new File(built.getOutputFile()).exists()).isTrue();
+            assertThat(built.getVariantOutputConfiguration().getFilters()).isEmpty();
+            assertThat(built.getVariantOutputConfiguration().getOutputType())
+                    .isEqualTo(VariantOutputConfiguration.OutputType.SINGLE);
         }
     }
 
     @Test
     public void testRenderscriptDidNotRun() throws Exception {
         // Execute renderscript task and check if it was skipped
-        Map<String, ProjectBuildOutput> multi =
-                project.executeAndReturnOutputMultiModel("compileDebugRenderscript");
+        project.execute("compileDebugRenderscript");
         assertThat(
                         project.getBuildResult()
                                 .getTask(":compileDebugRenderscript")

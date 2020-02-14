@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import java.util.Collection;
 
 /** Minimal model for a project output. */
+@Deprecated
 public interface ProjectBuildOutput {
 
     /**

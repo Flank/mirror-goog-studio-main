@@ -18,23 +18,22 @@ package com.android.build.gradle.integration.common.utils;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.OutputFile;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.Variant;
-import com.android.builder.model.VariantBuildOutput;
+import com.android.builder.model.VariantBuildInformation;
 import java.io.File;
 import java.util.Collection;
 
 public class VariantHelper {
 
     private final Variant variant;
-    private final VariantBuildOutput variantOutput;
+    private final VariantBuildInformation variantOutput;
     private final File projectDir;
     private final String outputFileName;
 
     public VariantHelper(
             Variant variant,
-            VariantBuildOutput variantOutput,
+            VariantBuildInformation variantOutput,
             File projectDir,
             String outputFileName) {
         this.variant = variant;
@@ -48,19 +47,19 @@ public class VariantHelper {
         assertThat(artifact).named("Main Artifact null-check").isNotNull();
 
         String variantName = variant.getName();
-        assertThat(variantName).isEqualTo(variantOutput.getName());
+        assertThat(variantName).isEqualTo(variantOutput.getVariantName());
         File build = new File(projectDir,  "build");
         File apk = new File(build, "outputs/apk/" + outputFileName);
 
         Collection<File> sourceFolders = artifact.getGeneratedSourceFolders();
         assertThat(sourceFolders).named("Gen src Folder count").hasSize(4);
 
-        Collection<OutputFile> outputs = variantOutput.getOutputs();
+        Collection<String> outputs = ProjectBuildOutputUtils.getOutputFiles(variantOutput);
         assertThat(outputs).named("artifact output").isNotNull();
         assertThat(outputs).hasSize(1);
 
-        OutputFile output = outputs.iterator().next();
+        File output = new File(ProjectBuildOutputUtils.getSingleOutputFile(variantOutput));
 
-        assertThat(output.getOutputFile()).named(variantName + " output").isEqualTo(apk);
+        assertThat(output).named(variantName + " output").isEqualTo(apk);
     }
 }

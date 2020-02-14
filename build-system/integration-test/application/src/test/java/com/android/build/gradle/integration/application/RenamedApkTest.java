@@ -19,12 +19,11 @@ package com.android.build.gradle.integration.application;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.model.ProjectBuildOutput;
-import com.android.builder.model.VariantBuildOutput;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.VariantBuildInformation;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -39,36 +38,36 @@ public class RenamedApkTest {
     public static GradleTestProject project =
             GradleTestProject.builder().fromTestProject("renamedApk").create();
 
-    private static ProjectBuildOutput outputModel;
+    private static AndroidProject model;
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        outputModel = project.executeAndReturnOutputModel("clean", "assembleDebug");
+        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        outputModel = null;
+        model = null;
     }
 
     @Test
     public void checkModelReflectsRenamedApk() throws Exception {
         File projectDir = project.getTestDir();
-        VariantBuildOutput variantBuildOutput =
-                ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
-        Collection<OutputFile> outputFiles = variantBuildOutput.getOutputs();
+        VariantBuildInformation variantBuildOutput =
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(model);
+        Collection<String> outputFiles = ProjectBuildOutputUtils.getOutputFiles(variantBuildOutput);
 
         File buildDir = new File(projectDir, "build/outputs/apk/debug");
 
         assertEquals(1, outputFiles.size());
-        OutputFile output = outputFiles.iterator().next();
+        String output = outputFiles.iterator().next();
 
         String variantName = BuilderConstants.DEBUG;
         assertEquals(
                 "Output file for " + variantName,
                 new File(buildDir, variantName + ".apk"),
-                output.getOutputFile());
+                new File(output));
     }
 
     @Test
