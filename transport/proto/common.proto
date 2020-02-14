@@ -93,6 +93,10 @@ message Event {
     MEMORY_JNI_REF_EVENTS = 410;
     // no specified group id.
     MEMORY_ALLOC_STATS = 411;
+    // group_id: capture id (start timestamp)
+    MEMORY_NATIVE_SAMPLE_CAPTURE = 412;
+    // group_id: capture id (start timestamp)
+    MEMORY_NATIVE_SAMPLE_STATUS =  413;
 
     // Energy Profiler Prefix = 500
     // no specified group id.
@@ -207,6 +211,8 @@ message Event {
     MemoryAllocEventsData memory_alloc_events = 409;
     MemoryJniRefData memory_jni_ref_events = 410;
     MemoryAllocStatsData memory_alloc_Stats = 411;
+    MemoryNativeTrackingData memory_native_tracking_status = 412;
+    MemoryNativeSampleData memory_native_sample = 413;
 
     // Energy Profiler Prefix = 500
     // Energy consumption calculated from CPU, network and location activities.

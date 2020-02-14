@@ -129,7 +129,6 @@ class TraceManager final {
   // Visible for testing.
   AtraceManager* atrace_manager() { return atrace_manager_.get(); }
 
-  // Visible for testing.
   PerfettoManager* perfetto_manager() { return perfetto_manager_.get(); }
 
  private:
