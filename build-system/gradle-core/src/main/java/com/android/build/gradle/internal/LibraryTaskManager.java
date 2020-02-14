@@ -510,9 +510,8 @@ public class LibraryTaskManager
         // create an anchor collection for usage inside the same module (unit tests basically)
         ConfigurableFileCollection files =
                 componentProperties
-                        .getGlobalScope()
-                        .getProject()
-                        .files(
+                        .getServices()
+                        .fileCollection(
                                 componentProperties.getArtifacts().getFinalProduct(JAVAC.INSTANCE),
                                 componentProperties
                                         .getVariantData()

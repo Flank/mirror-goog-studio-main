@@ -250,7 +250,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             super.configure(task)
 
             val variantScope = creationConfig.variantScope
-            val projectOptions = creationConfig.globalScope.projectOptions
+            val projectOptions = creationConfig.services.projectOptions
 
             task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
 
@@ -295,7 +295,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                creationConfig.globalScope.projectOptions
+                creationConfig.services.projectOptions
             )
 
             task.manifestMergeBlameFile = creationConfig.artifacts.getFinalProduct(

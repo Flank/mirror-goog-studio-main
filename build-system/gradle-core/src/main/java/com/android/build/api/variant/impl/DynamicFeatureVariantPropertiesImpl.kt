@@ -146,7 +146,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
 
         // Have to wrap the return of artifact.elements.map because we cannot call
         // finalizeValueOnRead directly on Provider
-        return variantPropertiesApiServices.providerOf(
+        return internalServices.providerOf(
             ModuleMetadata::class.java,
             artifact.elements.map { ModuleMetadata.load(it.single().asFile) })
     }
@@ -163,7 +163,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
 
         // Have to wrap the return of artifact.elements.map because we cannot call
         // finalizeValueOnRead directly on Provider
-        return variantPropertiesApiServices.providerOf(
+        return internalServices.providerOf(
             FeatureSetMetadata::class.java,
             artifact.elements.map { FeatureSetMetadata.load(it.single().asFile) })
     }

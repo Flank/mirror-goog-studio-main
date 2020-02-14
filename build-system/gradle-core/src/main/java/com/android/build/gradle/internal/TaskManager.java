@@ -1392,9 +1392,8 @@ public abstract class TaskManager<
                                     .addScope(Scope.PROJECT)
                                     .setFileCollection(
                                             componentProperties
-                                                    .getGlobalScope()
-                                                    .getProject()
-                                                    .files(
+                                                    .getServices()
+                                                    .fileCollection(
                                                             componentProperties
                                                                     .getArtifacts()
                                                                     .getFinalProduct(
@@ -3310,18 +3309,13 @@ public abstract class TaskManager<
                                 });
     }
 
-    private static void configureKaptTaskInScopeForDataBinding(
+    private void configureKaptTaskInScopeForDataBinding(
             @NonNull ComponentPropertiesImpl componentProperties, @NonNull Task kaptTask) {
         DirectoryProperty databindingArtifact =
                 componentProperties.getGlobalScope().getProject().getObjects().directoryProperty();
         RegularFileProperty exportClassListFile =
                 componentProperties.getGlobalScope().getProject().getObjects().fileProperty();
-        TaskProvider<Task> kaptTaskProvider =
-                componentProperties
-                        .getGlobalScope()
-                        .getProject()
-                        .getTasks()
-                        .named(kaptTask.getName());
+        TaskProvider<Task> kaptTaskProvider = taskFactory.named(kaptTask.getName());
 
         // Data binding artifacts are part of the annotation processing outputs
         JavaCompileKt.registerDataBindingOutputs(

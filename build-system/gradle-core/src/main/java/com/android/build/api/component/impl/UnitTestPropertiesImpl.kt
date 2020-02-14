@@ -82,6 +82,5 @@ open class UnitTestPropertiesImpl @Inject constructor(
     override val applicationId: Property<String> = variantPropertiesApiServices.propertyOf(String::class.java, Callable{ variantDslInfo.testApplicationId })
 
     override fun addDataBindingSources(
-        project: Project,
         sourceSets: ImmutableList.Builder<ConfigurableFileTree>) {}
 }

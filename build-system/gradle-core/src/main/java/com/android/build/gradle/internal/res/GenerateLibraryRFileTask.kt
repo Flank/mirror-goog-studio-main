@@ -240,7 +240,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
         ) {
             super.configure(task)
 
-            val projectOptions = creationConfig.globalScope.projectOptions
+            val projectOptions = creationConfig.services.projectOptions
 
             task.platformAttrRTxt.fromDisallowChanges(creationConfig.globalScope.platformAttrs)
 
@@ -325,7 +325,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task: GenerateLibraryRFileTask
         ) {
             super.configure(task)
-            val projectOptions = creationConfig.globalScope.projectOptions
+            val projectOptions = creationConfig.services.projectOptions
 
             task.platformAttrRTxt.fromDisallowChanges(creationConfig.globalScope.platformAttrs)
 

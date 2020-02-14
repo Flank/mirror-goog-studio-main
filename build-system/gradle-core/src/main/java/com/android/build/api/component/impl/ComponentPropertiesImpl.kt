@@ -72,15 +72,15 @@ import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
-import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import java.io.File
+import java.util.concurrent.Callable
 
 abstract class ComponentPropertiesImpl(
     componentIdentity: ComponentIdentity,
@@ -93,7 +93,7 @@ abstract class ComponentPropertiesImpl(
     override val variantScope: VariantScope,
     val variantData: BaseVariantData,
     override val transformManager: TransformManager,
-    protected val variantPropertiesApiServices: VariantPropertiesApiServices,
+    protected val internalServices: VariantPropertiesApiServices,
     override val services: TaskCreationServices,
     @Deprecated("Do not use if you can avoid it. Check if services has what you need")
     override val globalScope: GlobalScope
@@ -156,7 +156,7 @@ abstract class ComponentPropertiesImpl(
     // overlay rules applied, so we have to go through the MergeResources pipeline in case it's
     // enabled, see b/134766811.
     override val isPrecompileDependenciesResourcesEnabled: Boolean
-        get() = variantPropertiesApiServices.projectOptions[BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES] && !variantScope.useResourceShrinker()
+        get() = internalServices.projectOptions[BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES] && !variantScope.useResourceShrinker()
 
     /**
      * Returns the tested variant. This is null for [VariantPropertiesImpl] instances
@@ -198,7 +198,7 @@ abstract class ComponentPropertiesImpl(
                 val original = mergingLog.find(input)
                 if (original === input) null else original.sourceFile
             },
-            variantPropertiesApiServices.projectOptions[BooleanOption.USE_ANDROID_X]
+            internalServices.projectOptions[BooleanOption.USE_ANDROID_X]
         )
     }
 
@@ -208,14 +208,14 @@ abstract class ComponentPropertiesImpl(
     ): VariantOutputImpl {
 
         val versionCodeProperty =
-            variantPropertiesApiServices.newNullablePropertyBackingDeprecatedApi(
+            internalServices.newNullablePropertyBackingDeprecatedApi(
                 Int::class.java,
                 variantDslInfo.versionCode,
                 "$name::versionCode"
             )
 
         val versionNameProperty =
-            variantPropertiesApiServices.newNullablePropertyBackingDeprecatedApi(
+            internalServices.newNullablePropertyBackingDeprecatedApi(
                 String::class.java,
                 variantDslInfo.versionName,
                 "$name::versionName"
@@ -224,11 +224,11 @@ abstract class ComponentPropertiesImpl(
         return VariantOutputImpl(
             versionCodeProperty,
             versionNameProperty,
-            variantPropertiesApiServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true, "$name::isEnabled"),
+            internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true, "$name::isEnabled"),
             variantOutputConfiguration,
             variantOutputConfiguration.baseName(variantDslInfo),
             variantOutputConfiguration.fullName(variantDslInfo),
-            variantPropertiesApiServices.newPropertyBackingDeprecatedApi(
+            internalServices.newPropertyBackingDeprecatedApi(
                 String::class.java,
                 outputFileName
                     ?: variantDslInfo.getOutputFileName(
@@ -278,7 +278,7 @@ abstract class ComponentPropertiesImpl(
         // and without the R class, as AGP publishing code assumes there is exactly one
         // artifact for each publication.
         mainCollection =
-            variantPropertiesApiServices.fileCollection(
+            internalServices.fileCollection(
                 getCompiledRClasses(configType),
                 mainCollection
             )
@@ -292,10 +292,10 @@ abstract class ComponentPropertiesImpl(
     ): ArtifactCollection {
         val mainCollection =
             variantDependencies.getArtifactCollection(configType, ArtifactScope.ALL, classesType)
-        val extraArtifact = globalScope.project.provider {
+        val extraArtifact = internalServices.provider(Callable{
             variantData.getGeneratedBytecode(generatedBytecodeKey);
-        }
-        val combinedCollection = variantPropertiesApiServices.fileCollection(
+        })
+        val combinedCollection = internalServices.fileCollection(
             mainCollection.artifactFiles, extraArtifact
         )
         return ArtifactCollectionWithExtraArtifact.makeExtraCollection(
@@ -309,7 +309,7 @@ abstract class ComponentPropertiesImpl(
     // TODO Move these outside of Variant specific class (maybe GlobalTaskScope?)
 
     override val manifestArtifactType: InternalArtifactType<Directory>
-        get() = if (variantPropertiesApiServices.projectOptions[BooleanOption.IDE_DEPLOY_AS_INSTANT_APP])
+        get() = if (internalServices.projectOptions[BooleanOption.IDE_DEPLOY_AS_INSTANT_APP])
             InternalArtifactType.INSTANT_APP_MANIFEST
         else
             InternalArtifactType.PACKAGED_MANIFESTS
@@ -377,7 +377,6 @@ abstract class ComponentPropertiesImpl(
      * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
      */
     private val defaultJavaSources: List<ConfigurableFileTree> by lazy {
-        val project = globalScope.project
         // Build the list of source folders.
         val sourceSets = ImmutableList.builder<ConfigurableFileTree>()
 
@@ -389,29 +388,29 @@ abstract class ComponentPropertiesImpl(
 
         // for the other, there's no duplicate so no issue.
         taskContainer.generateBuildConfigTask?.let {
-            sourceSets.add(project.fileTree(paths.buildConfigSourceOutputDir).builtBy(it.name))
+            sourceSets.add(internalServices.fileTree(paths.buildConfigSourceOutputDir).builtBy(it.name))
         }
         if (taskContainer.aidlCompileTask != null) {
             val aidlFC = artifacts.getFinalProduct(AIDL_SOURCE_OUTPUT_DIR)
-            sourceSets.add(project.fileTree(aidlFC).builtBy(aidlFC))
+            sourceSets.add(internalServices.fileTree(aidlFC).builtBy(aidlFC))
         }
         if (buildFeatures.dataBinding || buildFeatures.viewBinding) {
             taskContainer.dataBindingExportBuildInfoTask?.let {
-                sourceSets.add(project.fileTree(paths.classOutputForDataBinding).builtBy(it))
+                sourceSets.add(internalServices.fileTree(paths.classOutputForDataBinding).builtBy(it))
             }
-            addDataBindingSources(project, sourceSets)
+            addDataBindingSources(sourceSets)
         }
         if (!variantDslInfo.renderscriptNdkModeEnabled
             && taskContainer.renderscriptCompileTask != null
         ) {
             val rsFC = artifacts.getFinalProduct(RENDERSCRIPT_SOURCE_OUTPUT_DIR)
-            sourceSets.add(project.fileTree(rsFC).builtBy(rsFC))
+            sourceSets.add(internalServices.fileTree(rsFC).builtBy(rsFC))
         }
         if (buildFeatures.mlModelBinding) {
             val mlkitModelClassSourceOut: Provider<Directory> =
                 artifacts.getFinalProduct(MLKIT_SOURCE_OUT)
             sourceSets.add(
-                project.fileTree(mlkitModelClassSourceOut).builtBy(mlkitModelClassSourceOut)
+                internalServices.fileTree(mlkitModelClassSourceOut).builtBy(mlkitModelClassSourceOut)
             )
         }
         sourceSets.build()
@@ -421,76 +420,68 @@ abstract class ComponentPropertiesImpl(
      * adds databinding sources to the list of sources.
      */
     open fun addDataBindingSources(
-        project: Project,
         sourceSets: ImmutableList.Builder<ConfigurableFileTree>)
     {
         val baseClassSource =
             artifacts.getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)
-        sourceSets.add(project.fileTree(baseClassSource).builtBy(baseClassSource))
+        sourceSets.add(internalServices.fileTree(baseClassSource).builtBy(baseClassSource))
     }
 
     /** Returns the path(s) to compiled R classes (R.jar). */
     fun getCompiledRClasses(configType: ConsumedConfigType): FileCollection {
-        val project = globalScope.project
-        var mainCollection: FileCollection = variantPropertiesApiServices.fileCollection()
-        if (globalScope.extension.aaptOptions.namespaced) {
-            val namespacedRClassJar = artifacts.getFinalProduct(COMPILE_R_CLASS_JAR)
-            val fileTree =
-                project.fileTree(namespacedRClassJar).builtBy(namespacedRClassJar)
-            mainCollection = mainCollection.plus(fileTree)
-            mainCollection = mainCollection.plus(
-                variantDependencies.getArtifactFileCollection(
-                    configType, ArtifactScope.ALL, AndroidArtifacts.ArtifactType.SHARED_CLASSES
+        return if (globalScope.extension.aaptOptions.namespaced) {
+            internalServices.fileCollection().also { fileCollection ->
+                val namespacedRClassJar = artifacts.getFinalProduct(COMPILE_R_CLASS_JAR)
+                val fileTree = internalServices.fileTree(namespacedRClassJar).builtBy(namespacedRClassJar)
+                fileCollection.from(fileTree)
+                fileCollection.from(
+                    variantDependencies.getArtifactFileCollection(
+                        configType, ArtifactScope.ALL, AndroidArtifacts.ArtifactType.SHARED_CLASSES
+                    )
                 )
-            )
-            testedConfig?.let {
-                mainCollection = project.files(
-                    mainCollection,
-                    it.artifacts.getFinalProduct(COMPILE_R_CLASS_JAR).get()
-                )
+                testedConfig?.let {
+                    fileCollection.from(it.artifacts.getFinalProduct(COMPILE_R_CLASS_JAR).get())
+                }
             }
         } else {
             val variantType = variantDslInfo.variantType
 
             if (testedConfig == null) {
                 // TODO(b/138780301): Also use it in android tests.
-                val useCompileRClassInApp = (variantPropertiesApiServices
+                val useCompileRClassInApp = (internalServices
                     .projectOptions[BooleanOption
                     .ENABLE_APP_COMPILE_TIME_R_CLASS]
                         && !variantType.isForTesting)
                 if (variantType.isAar || useCompileRClassInApp) {
                     if (buildFeatures.androidResources) {
-                        val rJar =
-                            artifacts.getFinalProduct(
-                                COMPILE_R_CLASS_JAR
-                            )
-                        mainCollection = project.files(rJar)
+                        internalServices.fileCollection(
+                            artifacts.getFinalProduct(COMPILE_R_CLASS_JAR)
+                        )
+                    } else {
+                        internalServices.fileCollection()
                     }
                 } else {
                     Preconditions.checkState(
                         variantType.isApk,
                         "Expected APK type but found: $variantType"
                     )
-                    val rJar =
+
+                    internalServices.fileCollection(
                         artifacts.getFinalProductAsFileCollection(
                             COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                         )
-                    mainCollection = project.files(rJar)
+                    )
                 }
             } else { // Android test or unit test
-                val rJar: Provider<RegularFile>
                 if (variantType === VariantTypeImpl.ANDROID_TEST) {
-                    rJar =
-                        artifacts.getFinalProduct(
-                            COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-                        )
+                    internalServices.fileCollection(
+                        artifacts.getFinalProduct(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
+                    )
                 } else {
-                    rJar = variantScope.rJarForUnitTests
+                    internalServices.fileCollection(variantScope.rJarForUnitTests)
                 }
-                mainCollection = project.files(rJar)
             }
         }
-        return mainCollection
     }
 
     fun handleMissingDimensionStrategy(dimension: String, alternatedValues: ImmutableList<String>) {
@@ -503,7 +494,7 @@ abstract class ComponentPropertiesImpl(
                 dimension,
                 ProductFlavorAttr::class.java
             )
-        val attributeValue: ProductFlavorAttr = variantPropertiesApiServices.named(
+        val attributeValue: ProductFlavorAttr = internalServices.named(
             ProductFlavorAttr::class.java, requestedValue
         )
 

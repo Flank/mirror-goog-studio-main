@@ -200,9 +200,9 @@ public abstract class AbstractAppTaskManager<
         // create a lighter weight version for usage inside the same module (unit tests basically)
         ConfigurableFileCollection files =
                 componentProperties
-                        .getGlobalScope()
-                        .getProject()
-                        .files(javacOutput, preJavacGeneratedBytecode, postJavacGeneratedBytecode);
+                        .getServices()
+                        .fileCollection(
+                                javacOutput, preJavacGeneratedBytecode, postJavacGeneratedBytecode);
         componentProperties.getArtifacts().appendToAllClasses(files);
     }
 
