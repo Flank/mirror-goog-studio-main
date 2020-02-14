@@ -69,6 +69,6 @@ public class MlGeneratedClassTest {
         project.executor().with(BooleanOption.ENABLE_MLKIT, true).run(":assembleDebug");
 
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
-        assertThatApk(apk).containsClass("Lcom/android/app/mlkit/auto/Model;");
+        assertThatApk(apk).containsClass("Lcom/android/app/ml/Model;");
     }
 }

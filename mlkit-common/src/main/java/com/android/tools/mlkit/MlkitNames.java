@@ -17,9 +17,9 @@ package com.android.tools.mlkit;
 
 /** Store names that used by both light class and gradle task. */
 public class MlkitNames {
-    public static String INPUTS = "Inputs";
-    public static String OUTPUTS = "Outputs";
-    public static String LABEL = "Label";
+    public static final String INPUTS = "Inputs";
+    public static final String OUTPUTS = "Outputs";
+    public static final String LABEL = "Label";
 
-    public static String PACKAGE_SUFFIX = ".mlkit.auto";
+    public static final String PACKAGE_SUFFIX = ".ml";
 }
