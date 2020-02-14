@@ -82,12 +82,36 @@ void PerfettoManager::Shutdown() {
   }
 }
 
-perfetto::protos::TraceConfig PerfettoManager::BuildConfig(
-    string app_pkg_name, int buffer_size_in_kb) {
+perfetto::protos::TraceConfig PerfettoManager::BuildCommonTraceConfig() {
   perfetto::protos::TraceConfig config;
   config.set_write_into_file(true);
   config.set_file_write_period_ms(1000);
+  return config;
+}
 
+perfetto::protos::TraceConfig PerfettoManager::BuildHeapprofdConfig(
+    std::string app_pkg_name_or_pid, int sampling_interval_bytes,
+    int continuous_dump_interval_ms, int shared_memory_buffer_bytes) {
+  perfetto::protos::TraceConfig config = BuildCommonTraceConfig();
+  auto* buffer = config.add_buffers();
+  // Set an arbitrary buffer size that is not unreasonable to request, and
+  // allows us a reasonable size  to not overflow.
+  buffer->set_size_kb(8192);
+  auto* source = config.add_data_sources();
+  auto* data_config = source->mutable_config();
+  data_config->set_name("android.heapprofd");
+  auto* heap_config = data_config->mutable_heapprofd_config();
+  heap_config->set_sampling_interval_bytes(sampling_interval_bytes);
+  heap_config->add_process_cmdline(app_pkg_name_or_pid.c_str());
+  heap_config->set_shmem_size_bytes(shared_memory_buffer_bytes);
+  heap_config->mutable_continuous_dump_config()->set_dump_interval_ms(
+      continuous_dump_interval_ms);
+  return config;
+}
+
+perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
+    string app_pkg_name, int buffer_size_in_kb) {
+  perfetto::protos::TraceConfig config = BuildCommonTraceConfig();
   auto* buffer = config.add_buffers();
   buffer->set_size_kb(buffer_size_in_kb);
   auto* source = config.add_data_sources();

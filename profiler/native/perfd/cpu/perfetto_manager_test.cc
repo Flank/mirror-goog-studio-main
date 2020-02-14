@@ -42,7 +42,7 @@ TEST(PerfettoManagerTest, ValidateRunArgs) {
   PerfettoManager manager{perfetto};
   const char* app_name = "App Name";
   perfetto::protos::TraceConfig config =
-      PerfettoManager::BuildConfig(app_name, 32000);
+      PerfettoManager::BuildFtraceConfig(app_name, 32000);
   string trace_path;
   string error;
   const char* abi_arch = "armv8";
@@ -81,7 +81,7 @@ TEST(PerfettoManagerTest, ValidateConfig) {
   const char* app_name = "App Name";
   const int buffer_size_kb = 32000;
   perfetto::protos::TraceConfig config =
-      PerfettoManager::BuildConfig(app_name, buffer_size_kb);
+      PerfettoManager::BuildFtraceConfig(app_name, buffer_size_kb);
   // Assume the format of the config, perfetto doesn't care about the order but
   // for the test we assume its order so we don't need to search for data.
   const auto& ftrace_config = config.data_sources()[0].config().ftrace_config();
@@ -167,4 +167,23 @@ TEST(PerfettoManagerTest, ValidateErrorsToRun) {
   EXPECT_EQ(error, "Perfetto is already running unable to start new trace.");
 }
 
+TEST(PerfettoManagerTest, ValidateHeapprofdConfig) {
+  const char* app_name = "App.Name";
+  int sample_bytes = 1234;
+  int shmem_size = 4567;
+  int dump_interval = 7890;
+  perfetto::protos::TraceConfig config =
+      PerfettoManager::BuildHeapprofdConfig(app_name, sample_bytes, dump_interval, shmem_size);
+  // Validate we write to file at some interval.
+  EXPECT_TRUE(config.write_into_file());
+  EXPECT_GT(config.file_write_period_ms(), 0);
+  // Validate we have 1 buffer.
+  EXPECT_EQ(config.buffers().size(), 1);
+  // Validate heap profd data source.
+  auto heap_config = config.data_sources()[0].config().heapprofd_config();
+  EXPECT_EQ(heap_config.sampling_interval_bytes(), sample_bytes);
+  EXPECT_EQ(heap_config.process_cmdline()[0], app_name);
+  EXPECT_EQ(heap_config.shmem_size_bytes(), shmem_size);
+  EXPECT_EQ(heap_config.continuous_dump_config().dump_interval_ms(), dump_interval);
+}
 }  // namespace profiler

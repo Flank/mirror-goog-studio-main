@@ -76,7 +76,7 @@ ProfilingApp* TraceManager::StartProfiling(
         // TODO: We may want to pass this in from studio for a more flexible
         // config.
         perfetto::protos::TraceConfig config =
-            PerfettoManager::BuildConfig(app_name, acquired_buffer_size_kb);
+            PerfettoManager::BuildFtraceConfig(app_name, acquired_buffer_size_kb);
         success = perfetto_manager_->StartProfiling(
             app_name, configuration.abi_cpu_arch(), config,
             configuration.temp_path(), &error_message);

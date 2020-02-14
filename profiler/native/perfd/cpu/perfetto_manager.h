@@ -42,8 +42,18 @@ class PerfettoManager {
   // length. The |app_pkg_name| is used to tell atrace to capture
   // tracing_mark_write events from the specified app. The
   // |acquired_buffer_size_size_kb| is to specify the
-  static perfetto::protos::TraceConfig BuildConfig(std::string app_pkg_name,
-                                                   int acquired_buffer_size_kb);
+  static perfetto::protos::TraceConfig BuildFtraceConfig(
+      std::string app_pkg_name, int acquired_buffer_size_kb);
+
+  // Builds a default heapprofd config for perfetto. The default config creates
+  // a fixed size memory buffer of 8MB. This buffer gets flushed to disk at
+  // regular intervals. This config does not specify a maximum recording size or
+  // time. Either |sampling_interval_bytes| or |continuous_dump_interval| are
+  // required for the config to capture any memory. For more information about
+  // the arguments see https://docs.perfetto.dev/#/heapprofd.
+  static perfetto::protos::TraceConfig BuildHeapprofdConfig(
+      std::string app_pkg_name_or_pid, int sampling_interval_bytes,
+      int continuous_dump_interval_ms, int shared_memory_buffer_bytes);
 
   // Returns true if profiling was started successfully.
   // |trace_path| is also set to where the trace file will be made available
@@ -69,6 +79,9 @@ class PerfettoManager {
 
  private:
   std::shared_ptr<Perfetto> perfetto_;
+
+  // Helper function to setup common variables between various perfetto configs.
+  static perfetto::protos::TraceConfig BuildCommonTraceConfig();
 };
 }  // namespace profiler
 
