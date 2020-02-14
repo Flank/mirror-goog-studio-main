@@ -54,7 +54,6 @@ class AssetPackTest {
                           |  packName = "assetPackTwo"
                           |  dynamicDelivery {
                           |    deliveryType = "fast-follow"
-                          |    instantDeliveryType = "on-demand"
                           |  }
                           |}""".trimMargin()
             )
