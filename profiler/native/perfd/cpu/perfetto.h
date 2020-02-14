@@ -83,6 +83,11 @@ class Perfetto {
   std::unique_ptr<NonBlockingCommandRunner> traced_;
   std::unique_ptr<NonBlockingCommandRunner> traced_probes_;
 
+  // Note: These values are only set on Q+ devices. They are used to work around
+  // a bug in Q that marks the perfetto-traces directory readonly by shell.
+  std::string expected_output_path_;
+  std::string perfetto_trace_path_;
+
   // Returns the path to the |executable| binary with the abi_arch appended.
   std::string GetPath(const char* executable,
                       const std::string& abi_arch) const;

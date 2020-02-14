@@ -24,6 +24,8 @@
 
 #include "utils/bash_command.h"
 #include "utils/current_process.h"
+#include "utils/device_info.h"
+#include "utils/fs/disk_file_system.h"
 #include "utils/log.h"
 #include "utils/tracing_utils.h"
 
@@ -32,8 +34,10 @@ using std::string;
 namespace profiler {
 
 const char *kPerfettoExecutable = "perfetto";
+const char *kSystemPerfettoExecutable = "/system/bin/perfetto";
 const char *kTracedExecutable = "traced";
 const char *kTracedProbesExecutable = "traced_probes";
+const char *kFixedPerfettoTracePath = "/data/misc/perfetto-traces/";
 const int kRetryCount = 20;
 const int kSleepMsPerRetry = 100;
 Perfetto::Perfetto() {}
@@ -62,29 +66,51 @@ Perfetto::LaunchStatus Perfetto::Run(const PerfettoArgs &run_args) {
       // Path to libperfetto.so
       lib_path.c_str(), NULL};
   LaunchStatus launch_status = LAUNCH_STATUS_SUCCESS;
-  // Run traced before running the probes as this is the server
-  // and traced_probes is the cilent. The server host the data and
-  // the client collects the data.
-  if (traced_.get() == nullptr || !traced_->IsRunning()) {
-    traced_ =
-        LaunchProcessAndBlockTillStart(run_args, kTracedExecutable, env_args);
-    if (!traced_->IsRunning()) {
-      launch_status |= FAILED_LAUNCH_TRACED;
+  string perfettoPath;
+  expected_output_path_ = run_args.output_file_path;
+
+  // For older than Q we sideload perfetto.
+  bool run_sideload_perfetto = DeviceInfo::feature_level() < DeviceInfo::Q;
+  if (run_sideload_perfetto) {
+    // Run traced before running the probes as this is the server
+    // and traced_probes is the client. The server host the data and
+    // the client collects the data.
+    if (traced_.get() == nullptr || !traced_->IsRunning()) {
+      traced_ =
+          LaunchProcessAndBlockTillStart(run_args, kTracedExecutable, env_args);
+      if (!traced_->IsRunning()) {
+        launch_status |= FAILED_LAUNCH_TRACED;
+      }
+    }
+
+    if (traced_probes_.get() == nullptr || !traced_probes_->IsRunning()) {
+      traced_probes_ = LaunchProcessAndBlockTillStart(
+          run_args, kTracedProbesExecutable, env_args);
+      if (!traced_probes_->IsRunning()) {
+        launch_status |= FAILED_LAUNCH_TRACED_PROBES;
+      }
+    }
+
+    // Run perfetto as the interface to configure the traced and traced_probes
+    // Perfetto allows us to turn on and off tracing as well as configure
+    // what gets traced, how, and where it gets saved to.
+    perfettoPath = GetPath(kPerfettoExecutable, run_args.abi_arch);
+    perfetto_trace_path_ = run_args.output_file_path;
+  } else {
+    // Perfetto only has write access to the |kFixedPerfettoTracePath| folder.
+    // As such we take the expected file name and tell perfetto to write to a
+    // file with that name in the |kFixedPerfettoTracePath| folder. For Q this
+    // folder is readonly by shell, for R+ this folder is read/write.
+    perfettoPath = string(kSystemPerfettoExecutable);
+    perfetto_trace_path_ = string(kFixedPerfettoTracePath);
+    // Find the filename of the expected output file and use that
+    // for the filename of the /data/misc/perfetto-traces/ file.
+    size_t last_slash = run_args.output_file_path.find_last_of("/");
+    if (last_slash != std::string::npos) {
+      perfetto_trace_path_.append(run_args.output_file_path.substr(last_slash));
     }
   }
 
-  if (traced_probes_.get() == nullptr || !traced_probes_->IsRunning()) {
-    traced_probes_ = LaunchProcessAndBlockTillStart(
-        run_args, kTracedProbesExecutable, env_args);
-    if (!traced_probes_->IsRunning()) {
-      launch_status |= FAILED_LAUNCH_TRACED_PROBES;
-    }
-  }
-
-  // Run perfetto as the interface to configure the traced and traced_probes
-  // Perfetto allows us to turn on and off tracing as well as configure
-  // what gets traced, how, and where it gets saved to.
-  string perfettoPath = GetPath(kPerfettoExecutable, run_args.abi_arch);
   command_ = std::unique_ptr<NonBlockingCommandRunner>(
       new NonBlockingCommandRunner(perfettoPath, true));
   // Serialize the config as a binary proto.
@@ -100,20 +126,25 @@ Perfetto::LaunchStatus Perfetto::Run(const PerfettoArgs &run_args) {
                         "-c",
                         "-",
                         "-o",
-                        run_args.output_file_path.c_str(),
+                        perfetto_trace_path_.c_str(),
                         nullptr};
 
-  command_->Run(args, binary_config.str(), env_args);
-
+  // If we sideload perfetto we need to tell it how to connect to the probes
+  // socks if we are not sideloading perfetto passing this information will
+  // cause errors.
+  command_->Run(args, binary_config.str(),
+                run_sideload_perfetto ? env_args : nullptr);
   // A sleep is needed to block until perfetto can start tracer.
   // Sometimes this can fail in the event it fails its better to
   // inform the user ASAP instead of when the trace is stopped.
-  WaitForTracerStatus(true);
+  if (run_sideload_perfetto) {
+    WaitForTracerStatus(true);
+  }
 
   if (!command_->IsRunning()) {
     launch_status |= FAILED_LAUNCH_PERFETTO;
   }
-  if (!IsTracerRunning()) {
+  if (run_sideload_perfetto && !IsTracerRunning()) {
     Stop();
     launch_status |= FAILED_LAUNCH_TRACER;
   }
@@ -124,6 +155,26 @@ void Perfetto::Stop() {
   if (IsPerfettoRunning()) {
     command_->Kill();
     command_.release();
+  }
+
+  // For Q+ we don't use the sideloaded perfetto we use the one built into the
+  // system.  In Q perfetto writes to a directory that is readonly by shell so
+  // we copy the file out, R+ shell can also write to that directory as such we
+  // move the file to the expected location.
+  if (DeviceInfo::feature_level() == DeviceInfo::Q) {
+    // The directory that perfetto copies traces to is readonly in Q as such
+    // we copy the file to the expected output path so the rest of the
+    // pipeline can continue normally.
+    // This primarily acts as a compatibility with the other cpu tracing.
+    DiskFileSystem disk;
+    if (disk.HasFile(perfetto_trace_path_)) {
+      disk.CopyFile(perfetto_trace_path_, expected_output_path_);
+    }
+  } else if (DeviceInfo::feature_level() > DeviceInfo::Q) {
+    DiskFileSystem disk;
+    if (disk.HasFile(perfetto_trace_path_)) {
+      disk.MoveFile(perfetto_trace_path_, expected_output_path_);
+    }
   }
 
   if (IsTracerRunning()) {
@@ -141,8 +192,8 @@ void Perfetto::Stop() {
 }
 
 void Perfetto::WaitForTracerStatus(bool expected_tracer_running) {
-  for (int i = 0; i < kRetryCount && expected_tracer_running != IsTracerRunning();
-       i++) {
+  for (int i = 0;
+       i < kRetryCount && expected_tracer_running != IsTracerRunning(); i++) {
     usleep(Clock::ms_to_us(kSleepMsPerRetry));
   }
 }
