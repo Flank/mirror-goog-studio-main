@@ -85,3 +85,24 @@ TEST(FileCache, CanAddStringsToCache) {
   EXPECT_NE(cache_id1, cache_id2);
   EXPECT_EQ(cache_id1, cache_id3);
 }
+
+TEST(FileCache, MoveFileToCache) {
+  const char* cache_id = "new_file_id";
+  MemoryFileSystem* fs = new MemoryFileSystem();
+  FileCache cache(unique_ptr<FileSystem>(fs), "/");
+  auto root = fs->NewDir("/mock/root");
+  auto file = root->NewFile("file1.txt");
+  file->OpenForWrite();
+  file->Append("TestData");
+  file->Close();
+  EXPECT_TRUE(file->Exists());
+
+  cache.MoveFileToCompleteCache(cache_id,file->path());
+  EXPECT_TRUE(fs->GetDir("cache")->Exists());
+  EXPECT_TRUE(fs->GetDir("cache/complete")->Exists());
+  EXPECT_TRUE(fs->GetFile("cache/complete/new_file_id")->Exists());
+  EXPECT_FALSE(fs->HasFile(file->path()));
+
+  auto cache_file = cache.GetFile(cache_id);
+  EXPECT_EQ(cache_file->Contents(), "TestData");
+}

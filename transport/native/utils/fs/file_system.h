@@ -149,6 +149,14 @@ class FileSystem {
   virtual bool MoveFile(const std::string &fpath_from,
                         const std::string &fpath_to) = 0;
 
+  // Duplicate the file from one path to the second path. The caller should
+  // ensure the first file is not in write mode and that the second file either
+  // doesn't exist or is also not in write mode. The caller should also not
+  // call this method with the same path for both arguments.
+  // Returns true on success.
+  virtual bool CopyFile(const std::string &fpath_from,
+                        const std::string &fpath_to) = 0;
+
  protected:
   virtual bool HasDir(const std::string &dpath) const = 0;
 

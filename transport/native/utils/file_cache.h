@@ -96,6 +96,11 @@ class FileCache final {
   // wasn't called first, or if the cleanup thread has since deleted the file.
   std::shared_ptr<File> GetFile(const std::string &cache_id);
 
+  // Move an existing file from the |original_file| location to the completed
+  // cache location and give it the name of the |cache_id|. This helper function
+  // is provided for moving heapprofd and cpu captures to the cache.
+  bool MoveFileToCompleteCache(const std::string &cache_id, const std::string &original_file);
+
  private:
   // While running, periodically walks the cache and removes old files
   void JanitorThread();

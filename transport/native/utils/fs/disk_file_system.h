@@ -46,6 +46,8 @@ class DiskFileSystem final : public FileSystem {
   std::string GetFileContents(const std::string &path) const override;
   bool MoveFile(const std::string &path_from,
                 const std::string &path_to) override;
+  bool CopyFile(const std::string &path_from,
+                const std::string &path_to) override;
   bool IsOpenForWrite(const std::string &path) const override;
   void OpenForWrite(const std::string &path) override;
   bool Append(const std::string &path, const std::string &str) override;
