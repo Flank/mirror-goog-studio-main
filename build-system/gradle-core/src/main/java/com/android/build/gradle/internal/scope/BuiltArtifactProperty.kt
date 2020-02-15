@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.scope
 
-package com.android.build.gradle.internal.scope;
-
-/** A namespace for storing {@link BuildOutput#getProperties()} keys values. */
-public class BuildOutputProperty {
-    public static final String PACKAGE_ID = "packageId";
-    public static final String SPLIT = "split";
+/** A namespace for storing [com.android.build.api.variant.BuiltArtifact.properties] keys values. */
+object BuiltArtifactProperty {
+    const val PACKAGE_ID = "packageId"
+    const val SPLIT = "split"
 }

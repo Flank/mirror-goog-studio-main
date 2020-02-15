@@ -37,7 +37,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.BuildOutputProperty;
+import com.android.build.gradle.internal.scope.BuiltArtifactProperty;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.internal.TestManifestGenerator;
@@ -122,7 +122,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             }
 
             BuiltArtifact mainSplit = manifestOutputs.getElements().iterator().next();
-            testedApplicationId = mainSplit.getProperties().get(BuildOutputProperty.PACKAGE_ID);
+            testedApplicationId = mainSplit.getProperties().get(BuiltArtifactProperty.PACKAGE_ID);
         }
         String dirName =
                 VariantOutputConfigurationImplKt.dirName(apkData.getVariantOutputConfiguration());

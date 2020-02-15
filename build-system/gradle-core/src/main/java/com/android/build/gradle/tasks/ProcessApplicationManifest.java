@@ -41,7 +41,7 @@ import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.BuildOutputProperty;
+import com.android.build.gradle.internal.scope.BuiltArtifactProperty;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -245,9 +245,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             ImmutableMap<String, String> properties =
                     mergedXmlDocument != null
                             ? ImmutableMap.of(
-                                    BuildOutputProperty.PACKAGE_ID,
+                                    BuiltArtifactProperty.PACKAGE_ID,
                                     mergedXmlDocument.getPackageName(),
-                                    BuildOutputProperty.SPLIT,
+                                    BuiltArtifactProperty.SPLIT,
                                     mergedXmlDocument.getSplitName(),
                                     SdkConstants.ATTR_MIN_SDK_VERSION,
                                     mergedXmlDocument.getMinSdkVersion())
