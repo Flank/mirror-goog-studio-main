@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.ide.common.process.ProcessInfo
 import com.android.ide.common.process.ProcessResult
@@ -81,18 +82,19 @@ class ExtractNativeDebugMetadataTaskTest {
     }
 
     @Test
-    fun basicTest() {
+    fun fullTest() {
         ExtractNativeDebugMetadataDelegate(
             workers,
             inputDir,
             outputDir,
             objcopyExecutableMap,
+            DebugSymbolLevel.FULL,
             processExecutor
         ).run()
 
         val processInfos = ArgumentCaptor.forClass(ProcessInfo::class.java)
-        verify(processExecutor, Mockito.times(4)).execute(processInfos.capture(), any())
-        assertThat(processInfos.allValues).hasSize(4)
+        verify(processExecutor, Mockito.times(2)).execute(processInfos.capture(), any())
+        assertThat(processInfos.allValues).hasSize(2)
         for (processInfo in processInfos.allValues) {
             assertThat(processInfo.executable).isEqualTo(fakeExe.absolutePath)
             val nativeLib = if (processInfo.args.contains(x86NativeLib.toString())) {
@@ -101,29 +103,52 @@ class ExtractNativeDebugMetadataTaskTest {
                 armeabiNativeLib
             }
             val path = FileUtils.relativePossiblyNonExistingPath(nativeLib, inputDir)
-            val debugInfoOutputFile = File(outputDir, "$path.dbg")
-            val symbolTableOutputFile = File(outputDir, "$path.sym")
-            if (processInfo.args.contains("--only-keep-debug")) {
-                assertThat(processInfo.args)
-                    .containsExactly(
-                        "--only-keep-debug",
-                        nativeLib.toString(),
-                        debugInfoOutputFile.toString()
-                    )
+            val outputFile = File(outputDir, "$path.dbg")
+            assertThat(processInfo.args)
+                .containsExactly(
+                    "--only-keep-debug",
+                    nativeLib.toString(),
+                    outputFile.toString()
+                )
+            // we don't expect the output file to exist because we're running a fake executable
+            assertThat(outputFile).doesNotExist()
+        }
+    }
+
+    @Test
+    fun symbolTableTest() {
+        ExtractNativeDebugMetadataDelegate(
+            workers,
+            inputDir,
+            outputDir,
+            objcopyExecutableMap,
+            DebugSymbolLevel.SYMBOL_TABLE,
+            processExecutor
+        ).run()
+
+        val processInfos = ArgumentCaptor.forClass(ProcessInfo::class.java)
+        verify(processExecutor, Mockito.times(2)).execute(processInfos.capture(), any())
+        assertThat(processInfos.allValues).hasSize(2)
+        for (processInfo in processInfos.allValues) {
+            assertThat(processInfo.executable).isEqualTo(fakeExe.absolutePath)
+            val nativeLib = if (processInfo.args.contains(x86NativeLib.toString())) {
+                x86NativeLib
             } else {
-                assertThat(processInfo.args)
-                    .containsExactly(
-                        "-j",
-                        "symtab",
-                        "-j",
-                        "dynsym",
-                        nativeLib.toString(),
-                        symbolTableOutputFile.toString()
-                    )
+                armeabiNativeLib
             }
+            val path = FileUtils.relativePossiblyNonExistingPath(nativeLib, inputDir)
+            val outputFile = File(outputDir, "$path.sym")
+            assertThat(processInfo.args)
+                .containsExactly(
+                    "-j",
+                    "symtab",
+                    "-j",
+                    "dynsym",
+                    nativeLib.toString(),
+                    outputFile.toString()
+                )
             // we don't expect the output files to exist because we're running a fake executable
-            assertThat(debugInfoOutputFile).doesNotExist()
-            assertThat(symbolTableOutputFile).doesNotExist()
+            assertThat(outputFile).doesNotExist()
         }
     }
 }

@@ -379,19 +379,36 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             task.debuggable = creationConfig.variantDslInfo.isDebuggable
 
             task.debugSymbolLevel = creationConfig.variantDslInfo.ndkConfig.debugSymbolLevelEnum
-            if (task.debugSymbolLevel != DebugSymbolLevel.NONE) {
-                task.nativeDebugMetadataDirs.from(
-                    creationConfig.artifacts.getFinalProduct(
-                        InternalArtifactType.NATIVE_DEBUG_METADATA
+            when (task.debugSymbolLevel) {
+                DebugSymbolLevel.FULL -> {
+                    task.nativeDebugMetadataDirs.from(
+                        creationConfig.artifacts.getFinalProduct(
+                            InternalArtifactType.NATIVE_DEBUG_METADATA
+                        )
                     )
-                )
-                task.nativeDebugMetadataDirs.from(
-                    creationConfig.variantDependencies.getArtifactFileCollection(
-                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
-                        AndroidArtifacts.ArtifactScope.PROJECT,
-                        AndroidArtifacts.ArtifactType.REVERSE_METADATA_NATIVE_DEBUG_METADATA
+                    task.nativeDebugMetadataDirs.from(
+                        creationConfig.variantDependencies.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
+                            AndroidArtifacts.ArtifactType.REVERSE_METADATA_NATIVE_DEBUG_METADATA
+                        )
                     )
-                )
+                }
+                DebugSymbolLevel.SYMBOL_TABLE -> {
+                    task.nativeDebugMetadataDirs.from(
+                        creationConfig.artifacts.getFinalProduct(
+                            InternalArtifactType.NATIVE_SYMBOL_TABLES
+                        )
+                    )
+                    task.nativeDebugMetadataDirs.from(
+                        creationConfig.variantDependencies.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
+                            AndroidArtifacts.ArtifactType.REVERSE_METADATA_NATIVE_SYMBOL_TABLES
+                        )
+                    )
+                }
+                DebugSymbolLevel.NONE -> {}
             }
             task.nativeDebugMetadataDirs.disallowChanges()
 

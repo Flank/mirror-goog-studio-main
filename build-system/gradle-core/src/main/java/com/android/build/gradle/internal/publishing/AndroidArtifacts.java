@@ -117,6 +117,8 @@ public class AndroidArtifacts {
             "android-reverse-metadata-java-res";
     private static final String TYPE_REVERSE_METADATA_NATIVE_DEBUG_METADATA =
             "android-reverse-metadata-native-debug-metadata";
+    private static final String TYPE_REVERSE_METADATA_NATIVE_SYMBOL_TABLES =
+            "android-reverse-metadata-native-symbol-tables";
 
     public static final String TYPE_MOCKABLE_JAR = "android-mockable-jar";
     public static final Attribute<Boolean> MOCKABLE_JAR_RETURN_DEFAULT_VALUES =
@@ -378,9 +380,10 @@ public class AndroidArtifacts {
         REVERSE_METADATA_FEATURE_MANIFEST(TYPE_REVERSE_METADATA_FEATURE_MANIFEST),
         REVERSE_METADATA_CLASSES(TYPE_REVERSE_METADATA_CLASSES),
         REVERSE_METADATA_JAVA_RES(TYPE_REVERSE_METADATA_JAVA_RES),
-        // The .so.dbg and .so.sym files containing the debug metadata from the corresponding .so
-        // files
+        // The .so.dbg files containing the debug metadata from the corresponding .so files
         REVERSE_METADATA_NATIVE_DEBUG_METADATA(TYPE_REVERSE_METADATA_NATIVE_DEBUG_METADATA),
+        // The .so.sym files containing the symbol tables from the corresponding .so files
+        REVERSE_METADATA_NATIVE_SYMBOL_TABLES(TYPE_REVERSE_METADATA_NATIVE_SYMBOL_TABLES),
 
         // types for querying only. Not publishable.
         AAR(TYPE_AAR),

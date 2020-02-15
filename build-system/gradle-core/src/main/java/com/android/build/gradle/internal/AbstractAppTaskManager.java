@@ -160,7 +160,9 @@ public abstract class AbstractAppTaskManager<
         taskFactory.register(new StripDebugSymbolsTask.CreationAction(appVariantProperties));
 
         taskFactory.register(
-                new ExtractNativeDebugMetadataTask.CreationAction(appVariantProperties));
+                new ExtractNativeDebugMetadataTask.FullCreationAction(appVariantProperties));
+        taskFactory.register(
+                new ExtractNativeDebugMetadataTask.SymbolTableCreationAction(appVariantProperties));
 
         createPackagingTask(apkCreationConfig);
 

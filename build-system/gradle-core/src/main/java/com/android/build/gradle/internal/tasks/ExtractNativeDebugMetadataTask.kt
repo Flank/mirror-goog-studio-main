@@ -20,9 +20,11 @@ import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.NATIVE_DEBUG_METADATA
+import com.android.build.gradle.internal.scope.InternalArtifactType.NATIVE_SYMBOL_TABLES
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.process.LoggedProcessOutputHandler
@@ -70,6 +72,10 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
     lateinit var ndkRevision: Provider<Revision>
         private set
 
+    @get:Input
+    lateinit var debugSymbolLevel: DebugSymbolLevel
+        private set
+
     // We need this inputFiles property because SkipWhenEmpty doesn't work for inputDir because it's
     // a DirectoryProperty
     @get:InputFiles
@@ -86,22 +92,42 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
                 inputDir.get().asFile,
                 outputDir.get().asFile,
                 objcopyExecutableMapProvider.get(),
+                debugSymbolLevel,
                 GradleProcessExecutor(execOperations::exec)
             ).run()
         }
     }
 
-    class CreationAction(
+    abstract class CreationAction(
         componentProperties: ComponentPropertiesImpl
     ) : VariantTaskCreationAction<ExtractNativeDebugMetadataTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
 
-        override val name: String
-            get() = computeTaskName("extract", "NativeDebugMetadata")
-
         override val type: Class<ExtractNativeDebugMetadataTask>
             get() = ExtractNativeDebugMetadataTask::class.java
+
+        override fun configure(task: ExtractNativeDebugMetadataTask) {
+            super.configure(task)
+
+            creationConfig.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
+            task.ndkRevision = creationConfig.globalScope.sdkComponents.ndkRevisionProvider
+            task.objcopyExecutableMapProvider =
+                creationConfig.globalScope.sdkComponents.objcopyExecutableMapProvider
+            task.inputFiles.setDisallowChanges(
+                creationConfig.globalScope.project.provider {
+                    creationConfig.globalScope.project.layout.files(task.inputDir).asFileTree
+                }
+            )
+        }
+    }
+
+    class FullCreationAction(
+        componentProperties: ComponentPropertiesImpl
+    ) : CreationAction(componentProperties) {
+
+        override val name: String
+            get() = computeTaskName("extract", "NativeDebugMetadata")
 
         override fun handleProvider(
             taskProvider: TaskProvider<out ExtractNativeDebugMetadataTask>
@@ -118,18 +144,36 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
 
         override fun configure(task: ExtractNativeDebugMetadataTask) {
             super.configure(task)
-
-            creationConfig.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
-            task.ndkRevision = creationConfig.globalScope.sdkComponents.ndkRevisionProvider
-            task.objcopyExecutableMapProvider =
-                creationConfig.globalScope.sdkComponents.objcopyExecutableMapProvider
-            task.inputFiles.setDisallowChanges(
-                creationConfig.globalScope.project.provider {
-                    creationConfig.globalScope.project.layout.files(task.inputDir).asFileTree
-                }
-            )
+            task.debugSymbolLevel = DebugSymbolLevel.FULL
         }
     }
+
+    class SymbolTableCreationAction(
+        componentProperties: ComponentPropertiesImpl
+    ) : CreationAction(componentProperties) {
+
+        override val name: String
+            get() = computeTaskName("extract", "NativeSymbolTables")
+
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ExtractNativeDebugMetadataTask>
+        ) {
+            super.handleProvider(taskProvider)
+
+            creationConfig.artifacts.producesDir(
+                NATIVE_SYMBOL_TABLES,
+                taskProvider,
+                ExtractNativeDebugMetadataTask::outputDir,
+                fileName = "out"
+            )
+        }
+
+        override fun configure(task: ExtractNativeDebugMetadataTask) {
+            super.configure(task)
+            task.debugSymbolLevel = DebugSymbolLevel.SYMBOL_TABLE
+        }
+    }
+
 }
 
 /**
@@ -141,6 +185,7 @@ class ExtractNativeDebugMetadataDelegate(
     val inputDir: File,
     val outputDir: File,
     private val objcopyExecutableMap: Map<Abi, File>,
+    private val debugSymbolLevel: DebugSymbolLevel,
     val processExecutor: ProcessExecutor
 ) {
     private val logger : LoggerWrapper
@@ -152,10 +197,24 @@ class ExtractNativeDebugMetadataDelegate(
             if (!inputFile.name.endsWith(SdkConstants.DOT_NATIVE_LIBS, ignoreCase = true)) {
                 continue
             }
-            val debugInfoOutputFile =
-                File(outputDir, "${FileUtils.relativePath(inputFile, inputDir)}.dbg")
-            val symbolTableOutputFile =
-                File(outputDir, "${FileUtils.relativePath(inputFile, inputDir)}.sym")
+            val outputFile: File
+            val objcopyArgs: List<String>
+            when (debugSymbolLevel) {
+                DebugSymbolLevel.FULL -> {
+                    outputFile =
+                        File(outputDir, "${FileUtils.relativePath(inputFile, inputDir)}.dbg")
+                    objcopyArgs = listOf("--only-keep-debug")
+                }
+                DebugSymbolLevel.SYMBOL_TABLE -> {
+                    outputFile =
+                        File(outputDir, "${FileUtils.relativePath(inputFile, inputDir)}.sym")
+                    objcopyArgs = listOf("-j", "symtab", "-j", "dynsym")
+                }
+                DebugSymbolLevel.NONE ->
+                    throw RuntimeException(
+                        "NativeDebugMetadataMode.NONE not supported in ${this.javaClass.name}"
+                    )
+            }
             val objcopyExecutable = objcopyExecutableMap[Abi.getByName(inputFile.parentFile.name)]
             if (objcopyExecutable == null) {
                 logger.warning(
@@ -169,9 +228,9 @@ class ExtractNativeDebugMetadataDelegate(
                 ExtractNativeDebugMetadataRunnable::class.java,
                 ExtractNativeDebugMetadataRunnable.Params(
                     inputFile,
-                    debugInfoOutputFile,
-                    symbolTableOutputFile,
+                    outputFile,
                     objcopyExecutable,
+                    objcopyArgs,
                     processExecutor
                 )
             )
@@ -189,52 +248,25 @@ private class ExtractNativeDebugMetadataRunnable @Inject constructor(val params:
         get() = LoggerWrapper(Logging.getLogger(ExtractNativeDebugMetadataTask::class.java))
 
     override fun run() {
-        FileUtils.mkdirs(params.fullOutputFile.parentFile)
-        FileUtils.mkdirs(params.symbolTableOutputFile.parentFile)
+        FileUtils.mkdirs(params.outputFile.parentFile)
 
-        // first run process to create the full result file (i.e., debug info *and* symbol table)
-        val fullBuilder = ProcessInfoBuilder()
-        fullBuilder.setExecutable(params.objcopyExecutable)
-        fullBuilder.addArgs(
-            "--only-keep-debug",
+        val builder = ProcessInfoBuilder()
+        builder.setExecutable(params.objcopyExecutable)
+        builder.addArgs(params.objcopyArgs)
+        builder.addArgs(
             params.inputFile.toString(),
-            params.fullOutputFile.toString()
+            params.outputFile.toString()
         )
-        val fullResult =
+        val result =
             params.processExecutor.execute(
-                fullBuilder.createProcess(),
+                builder.createProcess(),
                 LoggedProcessOutputHandler(
                     LoggerWrapper(Logging.getLogger(ExtractNativeDebugMetadataTask::class.java))
                 )
             )
-        if (fullResult.exitValue != 0) {
+        if (result.exitValue != 0) {
             logger.warning(
                 "Unable to extract native debug metadata from ${params.inputFile.absolutePath} " +
-                        "because of non-zero exit value from objcopy."
-            )
-        }
-
-        // then run process to create the symbol table file
-        val symbolTableBuilder = ProcessInfoBuilder()
-        symbolTableBuilder.setExecutable(params.objcopyExecutable)
-        symbolTableBuilder.addArgs(
-            "-j",
-            "symtab",
-            "-j",
-            "dynsym",
-            params.inputFile.toString(),
-            params.symbolTableOutputFile.toString()
-        )
-        val symbolTableResult =
-            params.processExecutor.execute(
-                symbolTableBuilder.createProcess(),
-                LoggedProcessOutputHandler(
-                    LoggerWrapper(Logging.getLogger(ExtractNativeDebugMetadataTask::class.java))
-                )
-            )
-        if (symbolTableResult.exitValue != 0) {
-            logger.warning(
-                "Unable to extract symbol table from ${params.inputFile.absolutePath} " +
                         "because of non-zero exit value from objcopy."
             )
         }
@@ -242,9 +274,9 @@ private class ExtractNativeDebugMetadataRunnable @Inject constructor(val params:
 
     data class Params(
         val inputFile: File,
-        val fullOutputFile: File,
-        val symbolTableOutputFile: File,
+        val outputFile: File,
         val objcopyExecutable: File,
+        val objcopyArgs: List<String>,
         val processExecutor: ProcessExecutor
     ): Serializable
 }

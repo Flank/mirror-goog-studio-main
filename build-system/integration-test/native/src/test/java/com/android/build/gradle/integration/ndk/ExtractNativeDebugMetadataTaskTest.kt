@@ -182,30 +182,31 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
                 listOf(
                     ":app:extractReleaseNativeDebugMetadata",
                     ":feature1:extractReleaseNativeDebugMetadata",
-                    ":feature2:extractReleaseNativeDebugMetadata"
+                    ":feature2:extractReleaseNativeDebugMetadata",
+                    ":app:extractReleaseNativeSymbolTables",
+                    ":feature1:extractReleaseNativeSymbolTables",
+                    ":feature2:extractReleaseNativeSymbolTables"
                 )
             )
             return
         }
         // otherwise, the task should be skipped in all modules
+        val taskName = if (debugSymbolLevel == FULL) {
+            "extractReleaseNativeDebugMetadata"
+        } else {
+            "extractReleaseNativeSymbolTables"
+        }
         assertThat(result1.skippedTasks).containsAtLeastElementsIn(
-            listOf(
-                ":app:extractReleaseNativeDebugMetadata",
-                ":feature1:extractReleaseNativeDebugMetadata",
-                ":feature2:extractReleaseNativeDebugMetadata"
-            )
+            listOf(":app:$taskName", ":feature1:$taskName", ":feature2:$taskName")
         )
         // then test that the task only does work for modules with native libraries.
         createAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "feature1.so")
         val result2 = project.executor().run("app:$bundleTaskName")
         assertThat(result2.skippedTasks).containsAtLeastElementsIn(
-            listOf(
-                ":app:extractReleaseNativeDebugMetadata",
-                ":feature2:extractReleaseNativeDebugMetadata"
-            )
+            listOf(":app:$taskName", ":feature2:$taskName")
         )
         assertThat(result2.didWorkTasks).containsAtLeastElementsIn(
-            listOf(":feature1:extractReleaseNativeDebugMetadata")
+            listOf(":feature1:$taskName")
         )
     }
 
