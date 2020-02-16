@@ -200,6 +200,9 @@ public class LibraryTaskManager
         // Add data binding tasks if enabled
         createDataBindingTasksIfNecessary(libVariantProperties);
 
+        // Add a task to auto-generate classes for ML model files.
+        createMlkitTask(libVariantProperties);
+
         // Add a compile task
         TaskProvider<? extends JavaCompile> javacTask = createJavacTask(libVariantProperties);
         addJavacClassesStream(libVariantProperties);
