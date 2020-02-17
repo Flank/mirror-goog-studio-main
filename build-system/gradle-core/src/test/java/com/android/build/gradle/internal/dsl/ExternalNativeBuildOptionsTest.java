@@ -26,7 +26,13 @@ public class ExternalNativeBuildOptionsTest {
         CopyOfTester.assertAllGettersCalled(
                 ExternalNativeBuildOptions.class,
                 new ExternalNativeBuildOptions(),
-                original -> new ExternalNativeBuildOptions()._initWith(original));
+                original -> {
+                    new ExternalNativeBuildOptions()._initWith(original);
+
+                    // ignore these getters since they're called by kotlin property access
+                    original.getCmake();
+                    original.getNdkBuild();
+                });
     }
 
 }

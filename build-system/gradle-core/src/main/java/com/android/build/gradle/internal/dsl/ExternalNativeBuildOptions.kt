@@ -14,87 +14,53 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.build.gradle.internal.dsl
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.services.DslServices;
-import com.google.common.annotations.VisibleForTesting;
-import javax.inject.Inject;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
-import org.gradle.api.Action;
+import com.android.build.gradle.internal.services.DslServices
+import com.google.common.annotations.VisibleForTesting
+import org.gradle.api.Action
+import javax.inject.Inject
 
-public class ExternalNativeBuildOptions
-        implements CoreExternalNativeBuildOptions,
-                com.android.build.api.dsl.ExternalNativeBuildOptions {
-    @NonNull
-    private ExternalNativeNdkBuildOptions ndkBuildOptions;
-    @NonNull
-    private ExternalNativeCmakeOptions cmakeOptions;
+open class ExternalNativeBuildOptions :
+    CoreExternalNativeBuildOptions,
+    com.android.build.api.dsl.ExternalNativeBuildOptions {
+    final override val ndkBuild: ExternalNativeNdkBuildOptions
+    final override val cmake: ExternalNativeCmakeOptions
 
     @VisibleForTesting
-    public ExternalNativeBuildOptions() {
-        ndkBuildOptions = new ExternalNativeNdkBuildOptions();
-        cmakeOptions = new ExternalNativeCmakeOptions();
+    constructor() {
+        ndkBuild = ExternalNativeNdkBuildOptions()
+        cmake = ExternalNativeCmakeOptions()
     }
 
     @Inject
-    public ExternalNativeBuildOptions(@NonNull DslServices dslServices) {
-        ndkBuildOptions = dslServices.newInstance(ExternalNativeNdkBuildOptions.class);
-        cmakeOptions = dslServices.newInstance(ExternalNativeCmakeOptions.class);
+    constructor(dslServices: DslServices) {
+        ndkBuild = dslServices.newInstance(ExternalNativeNdkBuildOptions::class.java)
+        cmake = dslServices.newInstance(ExternalNativeCmakeOptions::class.java)
     }
 
-    public void _initWith(ExternalNativeBuildOptions that) {
-        ndkBuildOptions._initWith(that.getExternalNativeNdkBuildOptions());
-        cmakeOptions._initWith(that.getExternalNativeCmakeOptions());
+    fun _initWith(that: ExternalNativeBuildOptions) {
+        ndkBuild._initWith(that.externalNativeNdkBuildOptions)
+        cmake._initWith(that.externalNativeCmakeOptions)
     }
 
-    @Nullable
-    @Override
-    public ExternalNativeNdkBuildOptions getExternalNativeNdkBuildOptions() {
-        return getNdkBuild();
+    override fun getExternalNativeNdkBuildOptions(): ExternalNativeNdkBuildOptions? = ndkBuild
+
+    override fun getExternalNativeCmakeOptions(): ExternalNativeCmakeOptions? = cmake
+
+    fun ndkBuild(action: Action<ExternalNativeNdkBuildOptions>) {
+        action.execute(ndkBuild)
     }
 
-    @NonNull
-    @Override
-    public ExternalNativeNdkBuildOptions getNdkBuild() {
-        return ndkBuildOptions;
+    fun cmake(action: Action<ExternalNativeCmakeOptions>) {
+        action.execute(cmake)
     }
 
-    public void ndkBuild(Action<ExternalNativeNdkBuildOptions> action) {
-        action.execute(ndkBuildOptions);
+    override fun ndkBuild(action: com.android.build.api.dsl.ExternalNativeNdkBuildOptions.() -> Unit) {
+        action.invoke(ndkBuild)
     }
 
-    @Nullable
-    @Override
-    public ExternalNativeCmakeOptions getExternalNativeCmakeOptions() {
-        return getCmake();
-    }
-
-    @NonNull
-    @Override
-    public ExternalNativeCmakeOptions getCmake() {
-        return cmakeOptions;
-    }
-
-    public void cmake(Action<ExternalNativeCmakeOptions> action) {
-        action.execute(cmakeOptions);
-    }
-
-    @Override
-    public void ndkBuild(
-            @NonNull
-                    Function1<? super com.android.build.api.dsl.ExternalNativeNdkBuildOptions, Unit>
-                            action) {
-        action.invoke(ndkBuildOptions);
-    }
-
-    @Override
-    public void cmake(
-            @NonNull
-                    Function1<? super com.android.build.api.dsl.ExternalNativeCmakeOptions, Unit>
-                            action) {
-        action.invoke(cmakeOptions);
+    override fun cmake(action: com.android.build.api.dsl.ExternalNativeCmakeOptions.() -> Unit) {
+        action.invoke(cmake)
     }
 }
