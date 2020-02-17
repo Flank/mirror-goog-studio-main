@@ -515,23 +515,14 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.handleProvider(taskProvider)
 
-            if (creationConfig.services.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
-                creationConfig.artifacts.producesDir(
-                    InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
+            creationConfig
+                .artifacts
+                .producesFile(
+                    InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                     taskProvider,
-                    LinkApplicationAndroidResourcesTask::sourceOutputDirProperty,
-                    fileName = SdkConstants.FD_RES_CLASS
+                    LinkApplicationAndroidResourcesTask::rClassOutputJar,
+                    FN_R_CLASS_JAR
                 )
-            } else {
-                creationConfig
-                    .artifacts
-                    .producesFile(
-                        InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
-                        taskProvider,
-                        LinkApplicationAndroidResourcesTask::rClassOutputJar,
-                        FN_R_CLASS_JAR
-                    )
-            }
 
             creationConfig.artifacts.producesFile(
                 InternalArtifactType.RUNTIME_SYMBOL_LIST,

@@ -148,13 +148,12 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                     task.rClassesJar
                 )
-            } else if (!globalScope.projectOptions.get(BooleanOption.GENERATE_R_JAVA)) {
+            } else {
                 creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                     task.rClassesJar
                 )
             }
-            task.rClassesJar.disallowChanges()
         }
     }
 }

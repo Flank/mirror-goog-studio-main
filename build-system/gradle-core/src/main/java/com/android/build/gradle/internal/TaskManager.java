@@ -1334,15 +1334,13 @@ public abstract class TaskManager<
             taskFactory.register(
                     new LinkAndroidResForBundleTask.CreationAction(componentProperties));
 
-            if (!projectOptions.get(BooleanOption.GENERATE_R_JAVA)) {
-                componentProperties
-                        .getArtifacts()
-                        .appendToAllClasses(
-                                project.files(
-                                        artifacts.getFinalProductAsFileCollection(
-                                                COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-                                                        .INSTANCE)));
-            }
+            componentProperties
+                    .getArtifacts()
+                    .appendToAllClasses(
+                            project.files(
+                                    artifacts.getFinalProductAsFileCollection(
+                                            COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
+                                                    .INSTANCE)));
         }
     }
 
@@ -1722,11 +1720,7 @@ public abstract class TaskManager<
 
     protected void registerRClassTransformStream(
             @NonNull ComponentPropertiesImpl componentProperties) {
-        if (globalScope.getExtension().getAaptOptions().getNamespaced()
-                || componentProperties
-                        .getServices()
-                        .getProjectOptions()
-                        .get(BooleanOption.GENERATE_R_JAVA)) {
+        if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
             return;
         }
 

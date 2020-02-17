@@ -765,8 +765,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                             .getAsFile());
         }
         // The separately compile R class, if applicable.
-        if (!globalScope.getExtension().getAaptOptions().getNamespaced()
-                && !globalScope.getProjectOptions().get(BooleanOption.GENERATE_R_JAVA)) {
+        if (!globalScope.getExtension().getAaptOptions().getNamespaced()) {
             additionalTestClasses.add(
                     componentProperties.getVariantScope().getRJarForUnitTests().get().getAsFile());
         }

@@ -21,27 +21,11 @@ import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.TEST_SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.FileSubject.assertThat
-import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
-@RunWith(Parameterized::class)
 class NonNamespacedApplicationLightRClassesTest {
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "generate_r_classes{0}")
-        fun data(): Iterable<Any> {
-            return listOf(true, false)
-        }
-    }
-
-    @JvmField
-    @Parameterized.Parameter
-    var generateSources: Boolean = false
 
     private val lib = MinimalSubProject.lib("com.example.lib")
         .appendToBuild(
@@ -147,8 +131,7 @@ class NonNamespacedApplicationLightRClassesTest {
 
     @Test
     fun testResourcesCompiled() {
-        project.executor()
-            .with(BooleanOption.GENERATE_R_JAVA, generateSources).run(":app:assembleDebug")
+        project.executor().run(":app:assembleDebug")
 
         // Check library resources
         val libFiles = project.getSubproject("lib")
@@ -197,92 +180,28 @@ class NonNamespacedApplicationLightRClassesTest {
                     "debug",
                     "R.txt")).containsAllOf("lib_string", "app_string")
 
-        assertThat(
-            FileUtils.join(
-                appFiles.generatedDir,
-                "not_namespaced_r_class_sources",
-                "debug",
-                "processDebugResources",
-                "r",
-                "com",
-                "example",
-                "app",
-                "R.java")).doesNotExist()
-
-        val rJava =
-            FileUtils.join(
-                appFiles.generatedDir,
-                "not_namespaced_r_class_sources",
-                "debug",
-                "r",
-                "com",
-                "example",
-                "app",
-                "R.java")
-
         val rJarFile = appFiles.getIntermediateFile(
             "compile_and_runtime_not_namespaced_r_class_jar",
             "debug",
             "R.jar"
         )
-        if (generateSources) {
-            assertThat(rJava).exists()
-            assertThat(rJarFile).doesNotExist()
-        } else {
-            assertThat(rJava).doesNotExist()
-            assertThat(rJarFile).exists()
-        }
+        assertThat(rJarFile).exists()
     }
 
     @Test
     fun testAndroidTestResourcesCompiled() {
         project.executor()
-            .with(BooleanOption.GENERATE_R_JAVA, generateSources)
             .run(":app:assembleDebugAndroidTest")
 
         // Application resources
         val appFiles = project.getSubproject("app")
 
-        // app resources java
-        val appRJava =
-            FileUtils.join(
-                appFiles.generatedDir,
-                "not_namespaced_r_class_sources",
-                "debug",
-                "r",
-                "com",
-                "example",
-                "app",
-                "R.java")
-        if (generateSources) {
-            assertThat(appRJava).exists()
-        } else {
-            assertThat(appRJava).doesNotExist()
-        }
-
         // app androidTest resources java
-        val testRJava =
-            FileUtils.join(
-                appFiles.generatedDir,
-                "not_namespaced_r_class_sources",
-                "debugAndroidTest",
-                "r",
-                "com",
-                "example",
-                "app",
-                "test",
-                "R.java")
         val rJarFile = appFiles.getIntermediateFile(
             "compile_and_runtime_not_namespaced_r_class_jar",
             "debugAndroidTest",
             "R.jar"
         )
-        if (generateSources) {
-            assertThat(testRJava).exists()
-            assertThat(rJarFile).doesNotExist()
-        } else {
-            assertThat(testRJava).doesNotExist()
-            assertThat(rJarFile).exists()
-        }
+        assertThat(rJarFile).exists()
     }
 }

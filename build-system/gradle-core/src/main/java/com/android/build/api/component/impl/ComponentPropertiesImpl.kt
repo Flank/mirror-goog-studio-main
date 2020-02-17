@@ -54,7 +54,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT
 import com.android.build.gradle.internal.scope.InternalArtifactType.MLKIT_SOURCE_OUT
-import com.android.build.gradle.internal.scope.InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -403,14 +402,6 @@ abstract class ComponentPropertiesImpl(
             sourceSets.addAll((provider as AndroidSourceSet).java.sourceDirectoryTrees)
         }
 
-        // then all the generated src folders.
-        if (variantPropertiesApiServices.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
-            val rClassSource = artifacts.getFinalProduct(NOT_NAMESPACED_R_CLASS_SOURCES)
-            if (rClassSource.isPresent) {
-                sourceSets.add(project.fileTree(rClassSource).builtBy(rClassSource))
-            }
-        }
-
         // for the other, there's no duplicate so no issue.
         taskContainer.generateBuildConfigTask?.let {
             sourceSets.add(project.fileTree(paths.buildConfigSourceOutputDir).builtBy(it.name))
@@ -505,19 +496,16 @@ abstract class ComponentPropertiesImpl(
                     mainCollection = project.files(rJar)
                 }
             } else { // Android test or unit test
-                if (!variantPropertiesApiServices.projectOptions[BooleanOption.GENERATE_R_JAVA]
-                ) {
-                    val rJar: Provider<RegularFile>
-                    if (variantType === VariantTypeImpl.ANDROID_TEST) {
-                        rJar =
-                            artifacts.getFinalProduct(
-                                COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-                            )
-                    } else {
-                        rJar = variantScope.rJarForUnitTests
-                    }
-                    mainCollection = project.files(rJar)
+                val rJar: Provider<RegularFile>
+                if (variantType === VariantTypeImpl.ANDROID_TEST) {
+                    rJar =
+                        artifacts.getFinalProduct(
+                            COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
+                        )
+                } else {
+                    rJar = variantScope.rJarForUnitTests
                 }
+                mainCollection = project.files(rJar)
             }
         }
         return mainCollection
