@@ -1111,7 +1111,7 @@ com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.setCppFlags: vo
 com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.setTargets: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.setcFlags: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions.targets: void (java.lang.String[])
-com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions implements com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions
+com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions implements com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions, com.android.build.api.dsl.ExternalNativeNdkBuildOptions
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.<init>: com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions ()
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions._initWith: void (com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions)
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.abiFilters: void (java.lang.String[])
@@ -1120,11 +1120,13 @@ com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.cFlags: void
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.cppFlags: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.getAbiFilters: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.getArguments: java.util.List<java.lang.String> ()
+com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.getCFlags: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.getCppFlags: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.getTargets: java.util.Set<java.lang.String> ()
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.getcFlags: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setAbiFilters: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setArguments: void (java.util.List<java.lang.String>)
+com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setCFlags: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setCppFlags: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setTargets: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.ExternalNativeNdkBuildOptions.setcFlags: void (java.util.List<java.lang.String>)
