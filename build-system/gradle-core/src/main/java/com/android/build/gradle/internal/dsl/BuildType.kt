@@ -132,9 +132,14 @@ open class BuildType @Inject constructor(
     }
 
     override val ndkConfig: NdkOptions = dslServices.newInstance(NdkOptions::class.java)
-    override val externalNativeBuildOptions: ExternalNativeBuildOptions = dslServices.newInstance(
-        ExternalNativeBuildOptions::class.java, dslServices
-    )
+
+    override val externalNativeBuild: ExternalNativeBuildOptions =
+        dslServices.newInstance(ExternalNativeBuildOptions::class.java, dslServices)
+
+    override val externalNativeBuildOptions: ExternalNativeBuildOptions
+        get() {
+            return this.externalNativeBuild
+        }
 
     private val _postProcessing: PostProcessingBlock = dslServices.newInstance(
         PostProcessingBlock::class.java,
@@ -543,6 +548,10 @@ open class BuildType @Inject constructor(
     fun externalNativeBuild(action: Action<ExternalNativeBuildOptions>): ExternalNativeBuildOptions {
         action.execute(externalNativeBuildOptions)
         return externalNativeBuildOptions
+    }
+
+    override fun externalNativeBuild(action: com.android.build.api.dsl.ExternalNativeBuildOptions.() -> Unit) {
+        action.invoke(externalNativeBuild)
     }
 
     /**
