@@ -17,7 +17,7 @@
 #ifndef PERFD_CPU_PERFETTO_MANAGER_H_
 #define PERFD_CPU_PERFETTO_MANAGER_H_
 
-#include "perfd/cpu/perfetto.h"
+#include "perfd/common/perfetto.h"
 #include "proto/cpu.grpc.pb.h"
 #include "protos/perfetto/config/perfetto_config.grpc.pb.h"
 #include "utils/fs/file_system.h"

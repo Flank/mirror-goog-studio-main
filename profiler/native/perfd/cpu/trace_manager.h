@@ -22,8 +22,8 @@
 #include <string>
 #include <vector>
 
+#include "perfd/common/perfetto_manager.h"
 #include "perfd/cpu/atrace_manager.h"
-#include "perfd/cpu/perfetto_manager.h"
 #include "perfd/cpu/profiling_app.h"
 #include "perfd/cpu/simpleperf.h"
 #include "perfd/cpu/simpleperf_manager.h"

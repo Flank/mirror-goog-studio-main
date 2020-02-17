@@ -19,8 +19,8 @@
 #include <gtest/gtest.h>
 #include "daemon/event_writer.h"
 #include "google/protobuf/util/message_differencer.h"
+#include "perfd/common/fake_perfetto.h"
 #include "perfd/cpu/fake_atrace.h"
-#include "perfd/cpu/fake_perfetto.h"
 #include "perfd/cpu/fake_simpleperf.h"
 #include "perfd/cpu/trace_manager.h"
 #include "perfd/sessions/sessions_manager.h"
