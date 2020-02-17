@@ -19,6 +19,8 @@ package profiler.perfetto.proto;
 option java_package = "com.android.tools.profiler.perfetto.proto";
 option java_outer_classname = "TraceProcessor";
 
+import "memory_data.proto";
+
 service TraceProcessorService {
 
   // Request to load a trace into the daemon.
@@ -67,6 +69,7 @@ message QueryParameters {
     ProcessMetadataParameters process_metadata = 101;
     ProcessTraceEventsParameters process_events = 102;
     CpuTraceEventsParameters cpu_events = 103;
+    AllocationDataRequest memory_request = 104;
   }
 
   // Returns metadata information for a set of processes.
@@ -101,6 +104,7 @@ message QueryResult {
     ProcessMetadataResult process_metadata = 101;
     ProcessTraceEventsResult process_events = 102;
     CpuTraceEventsResult cpu_events = 103;
+    NativeAllocationContext memory_events = 104;
   }
 
 }

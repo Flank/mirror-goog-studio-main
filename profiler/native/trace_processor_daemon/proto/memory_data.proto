@@ -1,0 +1,67 @@
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+ syntax = "proto3";
+
+ package profiler.perfetto.proto;
+ option java_package = "com.android.tools.profiler.perfetto.proto";
+ option java_outer_classname = "Memory";
+
+ // Empty request to get heap data.
+ // TODO(b/147099358): Add traceid to allow multiple traces.
+message AllocationDataRequest {
+}
+
+// Stack information.
+message StackPointer {
+    // The id of the current node in the stack.
+    int64 id = 1;
+    // Parent StackPointer id of this node.
+    int64 parent_id = 2;
+    // Frame id to allow mapping to name of function.
+    // An id is used to reduce overhead of string
+    // duplication.
+    int64 frame_id = 3;
+}
+
+// The name of each function collected.
+message StackFrame {
+    // Unique id of the frame.
+    int64 id = 1;
+    // Demangled name of the frame.
+    string name = 2;
+}
+
+// Allocation stats for each sampled StackPointer.
+message Allocation {
+    // Timestamp of aggregated sample.
+    int64 timestamp =  1;
+    // Number of allocations collected from this stack.
+    int64 count =  2;
+    // Total size of allocations. Eg, the sum of total
+    // allocations. The average allocation size can be
+    // computed from size/count.
+    int64 size = 3;
+    // StackPointer id that represents this callstack.
+    int64 stack_id = 4;
+}
+
+// Batched AllocationContexts to minimize number of grpc
+// calls compared to transferring them individually.
+message NativeAllocationContext {
+    repeated Allocation allocations = 1;
+    repeated StackPointer pointers = 2;
+    repeated StackFrame frames = 3;
+  }

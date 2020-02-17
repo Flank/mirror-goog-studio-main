@@ -19,11 +19,8 @@
 #include <grpc++/grpc++.h>
 
 #include "perfetto/trace_processor/trace_processor.h"
-#include "trace_processor_service.grpc.pb.h"
-#include "trace_processor_service.pb.h"
-
-using perfetto::trace_processor::TraceProcessor;
-using std::string;
+#include "proto/trace_processor_service.grpc.pb.h"
+#include "proto/trace_processor_service.pb.h"
 
 namespace profiler {
 namespace perfetto {
@@ -34,10 +31,12 @@ class TraceProcessorServiceImpl final
   grpc::Status LoadTrace(grpc::ServerContext* context,
                          const proto::LoadTraceRequest* request,
                          proto::LoadTraceResponse* response) override;
+  grpc::Status QueryBatch(grpc::ServerContext* context,
+                          const proto::QueryBatchRequest* request,
+                          proto::QueryBatchResponse* response) override;
 
  private:
-  int loaded_trace_id_ = 0;
-  TraceProcessor* tp_ = nullptr;
+  std::unique_ptr<::perfetto::trace_processor::TraceProcessor> tp_;
 
   void LoadAllProcessMetadata(proto::ProcessMetadataResult* metadata);
 };
