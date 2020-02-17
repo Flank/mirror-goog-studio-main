@@ -23,14 +23,15 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.immutableMapBuilder
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.errors.EvalIssueException
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.ProjectLayout
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -41,9 +42,7 @@ import java.util.function.Consumer
 import javax.inject.Inject
 
 @CacheableTask
-abstract class ExportConsumerProguardFilesTask @Inject constructor(
-    private val projectLayout: ProjectLayout
-) : NonIncrementalTask() {
+abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
 
     @get:Input
     var isBaseModule: Boolean = false
@@ -60,6 +59,9 @@ abstract class ExportConsumerProguardFilesTask @Inject constructor(
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputFiles: ConfigurableFileCollection
 
+    @get:Internal("only for task execution")
+    abstract val buildDirectory: DirectoryProperty
+
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -67,7 +69,7 @@ abstract class ExportConsumerProguardFilesTask @Inject constructor(
         // We check for default files unless it's a base feature, which can include default files.
         if (!isBaseModule) {
             checkProguardFiles(
-                projectLayout.buildDirectory,
+                buildDirectory,
                 isDynamicFeature,
                 consumerProguardFiles.files,
                 Consumer { exception -> throw EvalIssueException(exception) }
@@ -132,6 +134,7 @@ abstract class ExportConsumerProguardFilesTask @Inject constructor(
                     )
                 )
             }
+            task.buildDirectory.setDisallowChanges(task.project.layout.buildDirectory)
         }
     }
 
