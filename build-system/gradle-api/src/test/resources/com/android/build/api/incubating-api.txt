@@ -357,6 +357,11 @@ com.android.build.api.dsl.ExternalNativeBuild.cmake: void (kotlin.jvm.functions.
 com.android.build.api.dsl.ExternalNativeBuild.getCmake: CMakeT ()
 com.android.build.api.dsl.ExternalNativeBuild.getNdkBuild: NdkBuildT ()
 com.android.build.api.dsl.ExternalNativeBuild.ndkBuild: void (kotlin.jvm.functions.Function1<? super NdkBuildT, kotlin.Unit>)
+com.android.build.api.dsl.ExternalNativeBuildOptions
+com.android.build.api.dsl.ExternalNativeBuildOptions.cmake: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeCmakeOptions, kotlin.Unit>)
+com.android.build.api.dsl.ExternalNativeBuildOptions.getCmake: com.android.build.api.dsl.ExternalNativeCmakeOptions ()
+com.android.build.api.dsl.ExternalNativeBuildOptions.getNdkBuild: com.android.build.api.dsl.ExternalNativeNdkBuildOptions ()
+com.android.build.api.dsl.ExternalNativeBuildOptions.ndkBuild: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ExternalNativeNdkBuildOptions, kotlin.Unit>)
 com.android.build.api.dsl.ExternalNativeCmakeOptions
 com.android.build.api.dsl.ExternalNativeCmakeOptions.abiFilters: void (java.lang.String[])
 com.android.build.api.dsl.ExternalNativeCmakeOptions.arguments: void (java.lang.String[])
