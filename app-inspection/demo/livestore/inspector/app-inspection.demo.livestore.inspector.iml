@@ -10,7 +10,7 @@
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="app-inspection" level="project" />
     <orderEntry type="library" name="Gson" level="project" />
-    <orderEntry type="module" module-name="app-inspection.demo.live-store.library" />
-    <orderEntry type="module" module-name="app-inspection.demo.live-store.protocol" />
+    <orderEntry type="module" module-name="app-inspection.demo.livestore.library" />
+    <orderEntry type="module" module-name="app-inspection.demo.livestore.protocol" />
   </component>
 </module>
