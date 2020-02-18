@@ -54,8 +54,8 @@ public class ModelDataTest {
         assertEquals(inputParam.getName(), "image1");
         MetadataExtractor.NormalizationParams inputNormalization =
                 inputParam.getNormalizationParams();
-        assertEquals(inputNormalization.getMean()[0], 0, DELTA);
-        assertEquals(inputNormalization.getStd()[0], 1, DELTA);
+        assertEquals(inputNormalization.getMean()[0], 127.5f, DELTA);
+        assertEquals(inputNormalization.getStd()[0], 127.5f, DELTA);
         MetadataExtractor.QuantizationParams inputQuantization = inputParam.getQuantizationParams();
         assertEquals(inputQuantization.getZeroPoint(), 128f, DELTA);
         assertEquals(inputQuantization.getScale(), 0.0078125f, DELTA);
