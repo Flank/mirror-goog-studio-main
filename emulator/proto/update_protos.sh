@@ -7,14 +7,19 @@ set -e
 
 if [ $# == 1 ]
 then
-build=$1
+  build=$1
 else
-	echo  Usage: $0 build
-	exit 1
+  echo Usage: $0 build
+  echo Find an Emulator build here: https://android-build.googleplex.com/builds/branches/aosp-emu-master-dev/grid?
+  exit 1
 fi
 
+dir="$(dirname "$0")"
 linux_zip="sdk-repo-linux-emulator-$build.zip"
 
+pushd "$dir"
+
+repo start emulator_$build
 echo Fetching Emulator build $build
 /google/data/ro/projects/android/fetch_artifact --bid $build --target sdk_tools_linux "$linux_zip"
 rm *.proto .fetch_*
@@ -29,3 +34,5 @@ set +e
 git commit -s -t commitmsg.tmp
 
 rm -f "commitmsg.tmp"
+
+popd
