@@ -18,8 +18,11 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.GradleException
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Internal
 import java.io.File
 
 /**
@@ -29,6 +32,9 @@ import java.io.File
 @CacheableTask
 abstract class TestPreBuildTask : ClasspathComparisonTask() {
 
+    @get:Internal("only for task execution")
+    abstract val projectPath: Property<String>
+
     override fun onDifferentVersionsFound(
         group: String,
         module: String,
@@ -36,7 +42,7 @@ abstract class TestPreBuildTask : ClasspathComparisonTask() {
         compileVersion: String
     ) {
         throw GradleException(
-            """Conflict with dependency '$group:$module' in project '${project.path}'.
+            """Conflict with dependency '$group:$module' in project '${projectPath.get()}'.
 Resolved versions for app ($compileVersion) and test app ($runtimeVersion) differ.
 See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details."""
         )
@@ -59,6 +65,7 @@ See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details
                 creationConfig.globalScope.intermediatesDir,
                 "prebuild/${creationConfig.dirName}"
             )
+            task.projectPath.setDisallowChanges(task.project.path)
         }
     }
 }

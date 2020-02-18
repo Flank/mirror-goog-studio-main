@@ -81,6 +81,7 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
@@ -151,11 +152,11 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                                         + "Recommendation: \n"
                                         + "   in  %5$s\n"
                                         + "   set android.buildTypes.%2$s.debuggable = %6$s",
-                                getProject().getPath(),
+                                getProjectPath().get(),
                                 buildTypeName,
                                 isDebuggable ? "is" : "is not",
                                 baseModuleDebuggable.get() ? "is" : "is not",
-                                getProject().getBuildFile(),
+                                getProjectBuildFile().get().getAsFile(),
                                 baseModuleDebuggable.get() ? "true" : "false");
                 throw new InvalidUserDataException(errorMessage);
             }
@@ -542,6 +543,12 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @Optional
     public abstract Property<String> getFeatureName();
 
+    @Internal("only for task execution")
+    public abstract Property<String> getProjectPath();
+
+    @Internal("only for task execution")
+    public abstract RegularFileProperty getProjectBuildFile();
+
     @Nested
     public abstract ListProperty<VariantOutputImpl> getVariantOutputs();
 
@@ -756,6 +763,10 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             task.manifestOverlays.disallowChanges();
             task.isFeatureSplitVariantType = creationConfig.getVariantType().isDynamicFeature();
             task.buildTypeName = creationConfig.getBuildType();
+            HasConfigurableValuesKt.setDisallowChanges(
+                    task.getProjectPath(), task.getProject().getPath());
+            task.getProjectBuildFile().set(task.getProject().getBuildFile());
+            task.getProjectBuildFile().disallowChanges();
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
 

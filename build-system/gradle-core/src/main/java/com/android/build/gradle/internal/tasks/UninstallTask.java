@@ -71,7 +71,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
                         logger.lifecycle(
                                 "Uninstalling {} (from {}:{}) from device '{}' ({}).",
                                 applicationId,
-                                getProject().getName(),
+                                getProjectName(),
                                 variantName,
                                 device.getName(),
                                 device.getSerialNumber());

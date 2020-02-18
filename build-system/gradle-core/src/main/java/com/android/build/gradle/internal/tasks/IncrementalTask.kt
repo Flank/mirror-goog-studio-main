@@ -20,6 +20,7 @@ import com.android.ide.common.resources.FileStatus.NEW
 import com.android.ide.common.resources.FileStatus.REMOVED
 import com.android.ide.common.resources.FileStatus
 import com.google.common.collect.Maps
+import org.apache.log4j.Logger
 import java.io.File
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
@@ -103,7 +104,8 @@ abstract class IncrementalTask : AndroidVariantTask() {
 
     private fun handleIncrementalInputs(inputs: IncrementalTaskInputs) {
         if (!incremental || !inputs.isIncremental) {
-            project.logger.info("Unable do incremental execution: full task run")
+            Logger.getLogger(IncrementalTask::class.java)
+                .info("Unable do incremental execution: full task run")
             doFullTaskAction()
             return
         }

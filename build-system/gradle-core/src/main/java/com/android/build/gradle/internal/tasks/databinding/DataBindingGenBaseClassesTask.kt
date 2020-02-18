@@ -27,9 +27,8 @@ import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
+import org.apache.log4j.Logger
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.logging.LogLevel
-import org.gradle.api.logging.Logger
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -105,7 +104,11 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             // invoked.
             // b/69652332
             val args = buildInputArgs(inputs)
-            CodeGenerator(args, sourceOutFolder.get().asFile, project.logger, encodeErrors).run()
+            CodeGenerator(
+                args,
+                sourceOutFolder.get().asFile,
+                Logger.getLogger(DataBindingGenBaseClassesTask::class.java),
+                encodeErrors).run()
         }
     }
 
@@ -223,17 +226,16 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
         private fun initLogger() {
             ScopedException.encodeOutput(encodeErrors)
             L.setClient { kind, message, _ ->
-                logger.log(
-                    kind.toLevel(),
-                    message
-                )
+                printMessage(kind, message)
             }
         }
 
-        private fun Diagnostic.Kind.toLevel() = when (this) {
-            Diagnostic.Kind.ERROR -> LogLevel.ERROR
-            Diagnostic.Kind.WARNING -> LogLevel.WARN
-            else -> LogLevel.INFO
+        private fun printMessage(kind: Diagnostic.Kind, message: String) {
+            when(kind) {
+                Diagnostic.Kind.ERROR -> logger.error(message)
+                Diagnostic.Kind.WARNING -> logger.warn(message)
+                else -> logger.info(message)
+            }
         }
 
         private fun clearLogger() {
