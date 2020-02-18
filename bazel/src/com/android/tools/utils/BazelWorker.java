@@ -113,7 +113,6 @@ public class BazelWorker {
                 realStdOut.flush();
 
                 fakeStdOutBuffer.reset();
-                System.gc(); // Try to consume less memory while idle.
             }
         } finally {
             System.setIn(realStdIn);
