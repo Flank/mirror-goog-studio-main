@@ -5,7 +5,7 @@ android_java_proto_library(
     srcs = [
         "emulator_controller.proto",
         "snapshot.proto",
-        "snapshot-service.proto",
+        "snapshot_service.proto",
     ],
     grpc_support = 1,
     java_deps = ["//tools/base/third_party:io.grpc_grpc-all"],
