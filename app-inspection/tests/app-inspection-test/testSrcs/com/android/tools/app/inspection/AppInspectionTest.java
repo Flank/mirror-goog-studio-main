@@ -389,6 +389,36 @@ public final class AppInspectionTest {
         assertThat(serviceLayer.hasEventToCollect()).isFalse();
     }
 
+    @Test
+    public void handleCancellationCommand() throws Exception {
+        String inspectorId = "test.cancellation.inspector";
+        assertResponseStatus(
+                serviceLayer.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+        byte[] commandBytes = new byte[] {1, 2, 127};
+        int firstCommandId =
+                serviceLayer.sendCommand(rawCommandInspector(inspectorId, commandBytes));
+        int secondCommand =
+                serviceLayer.sendCommand(rawCommandInspector(inspectorId, commandBytes));
+        assertInput(androidDriver, "command #1 arrived");
+        assertInput(androidDriver, "command #2 arrived");
+        serviceLayer.sendCommand(cancellationCommand(secondCommand));
+        assertInput(androidDriver, "first executor: cancellation #1 for command #2");
+        assertInput(androidDriver, "second executor: cancellation #2 for command #2");
+        assertInput(androidDriver, "post cancellation executor: cancellation #3 for command #2");
+        int thirdCommand = serviceLayer.sendCommand(rawCommandInspector(inspectorId, commandBytes));
+        serviceLayer.sendCommand(cancellationCommand(thirdCommand));
+        assertInput(androidDriver, "command #3 arrived");
+        assertInput(androidDriver, "first executor: cancellation #1 for command #3");
+        assertInput(androidDriver, "second executor: cancellation #2 for command #3");
+        assertInput(androidDriver, "post cancellation executor: cancellation #3 for command #3");
+        serviceLayer.sendCommand(cancellationCommand(firstCommandId));
+        assertInput(androidDriver, "first executor: cancellation #1 for command #1");
+        assertInput(androidDriver, "second executor: cancellation #2 for command #1");
+        assertInput(androidDriver, "post cancellation executor: cancellation #3 for command #1");
+    }
+
     @NonNull
     private static AppInspectionCommand rawCommandInspector(
             @NonNull String inspectorId, @NonNull byte[] commandData) {
@@ -397,6 +427,16 @@ public final class AppInspectionTest {
                 .setRawInspectorCommand(
                         RawCommand.newBuilder()
                                 .setContent(ByteString.copyFrom(commandData))
+                                .build())
+                .build();
+    }
+
+    @NonNull
+    private static AppInspectionCommand cancellationCommand(int cancelledCommandId) {
+        return AppInspectionCommand.newBuilder()
+                .setCancellationCommand(
+                        AppInspection.CancellationCommand.newBuilder()
+                                .setCancelledCommandId(cancelledCommandId)
                                 .build())
                 .build();
     }

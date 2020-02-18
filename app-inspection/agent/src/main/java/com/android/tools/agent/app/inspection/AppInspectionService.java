@@ -20,12 +20,15 @@ import static com.android.tools.agent.app.inspection.NativeTransport.sendCrashEv
 import static com.android.tools.agent.app.inspection.NativeTransport.sendServiceResponseError;
 import static com.android.tools.agent.app.inspection.NativeTransport.sendServiceResponseSuccess;
 
+import android.util.Pair;
 import androidx.inspection.Inspector;
 import androidx.inspection.InspectorEnvironment;
 import androidx.inspection.InspectorFactory;
 import dalvik.system.DexClassLoader;
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 
 /** This service controls all app inspectors */
 @SuppressWarnings("unused") // invoked via jni
@@ -52,6 +55,10 @@ public class AppInspectionService {
             new HashMap<String, InspectorEnvironment.ExitHook>();
     Map<String, InspectorEnvironment.EntryHook> mEntryTransforms =
             new HashMap<String, InspectorEnvironment.EntryHook>();
+
+    // it keeps reference only to pending commands.
+    private ConcurrentHashMap<Integer, CommandCallbackImpl> mIdToCommandCallback =
+            new ConcurrentHashMap<Integer, CommandCallbackImpl>();
 
     /**
      * Construct an instance referencing some native (JVMTI) resources.
@@ -141,7 +148,9 @@ public class AppInspectionService {
             return;
         }
         try {
-            inspector.onReceiveCommand(rawCommand, new CommandCallbackImpl(commandId));
+            CommandCallbackImpl callback = new CommandCallbackImpl(commandId);
+            mIdToCommandCallback.put(commandId, callback);
+            inspector.onReceiveCommand(rawCommand, callback);
         } catch (Throwable t) {
             t.printStackTrace();
             sendCrashEvent(
@@ -151,6 +160,14 @@ public class AppInspectionService {
                             + " crashed during sendCommand due to: "
                             + t.getMessage());
             doDispose(inspectorId);
+        }
+    }
+
+    @SuppressWarnings("unused") // invoked via jni
+    public void cancelCommand(int cancelledCommandId) {
+        CommandCallbackImpl callback = mIdToCommandCallback.get(cancelledCommandId);
+        if (callback != null) {
+            callback.cancelCommand();
         }
     }
 
@@ -170,6 +187,62 @@ public class AppInspectionService {
             sendServiceResponseError(commandId, "Argument " + name + " must not be null");
         }
         return result;
+    }
+
+    enum Status {
+        PENDING,
+        REPLIED,
+        CANCELLED
+    }
+
+    class CommandCallbackImpl implements Inspector.CommandCallback {
+        private final Object mLock = new Object();
+        private volatile Status mStatus = Status.PENDING;
+        private final int mCommandId;
+        private final List<Pair<Executor, Runnable>> mCancellationListeners =
+                new ArrayList<Pair<Executor, Runnable>>();
+
+        CommandCallbackImpl(int commandId) {
+            mCommandId = commandId;
+        }
+
+        @Override
+        public void reply(byte[] bytes) {
+            synchronized (mLock) {
+                if (mStatus == Status.PENDING) {
+                    mStatus = Status.REPLIED;
+                    mIdToCommandCallback.remove(mCommandId);
+                    NativeTransport.sendRawResponseSuccess(mCommandId, bytes, bytes.length);
+                }
+            }
+        }
+
+        @Override
+        public void addCancellationListener(Executor executor, Runnable runnable) {
+            synchronized (mLock) {
+                if (mStatus == Status.CANCELLED) {
+                    executor.execute(runnable);
+                } else {
+                    mCancellationListeners.add(new Pair<Executor, Runnable>(executor, runnable));
+                }
+            }
+        }
+
+        void cancelCommand() {
+            List<Pair<Executor, Runnable>> listeners = null;
+            synchronized (mLock) {
+                if (mStatus == Status.PENDING) {
+                    mStatus = Status.CANCELLED;
+                    mIdToCommandCallback.remove(mCommandId);
+                    listeners = new ArrayList<Pair<Executor, Runnable>>(mCancellationListeners);
+                }
+            }
+            if (listeners != null) {
+                for (Pair<Executor, Runnable> p : listeners) {
+                    p.first.execute(p.second);
+                }
+            }
+        }
     }
 
     /**

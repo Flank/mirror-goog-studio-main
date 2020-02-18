@@ -35,6 +35,7 @@ message AppInspectionCommand {
     CreateInspectorCommand create_inspector_command = 3;
     DisposeInspectorCommand dispose_inspector_command = 4;
     RawCommand raw_inspector_command = 5;
+    CancellationCommand cancellation_command = 6;
   }
 }
 
@@ -56,6 +57,11 @@ message DisposeInspectorCommand {}
 // Opaque command to an inspector.
 message RawCommand {
   bytes content = 1;
+}
+
+// a command to cancel long-running operation
+message CancellationCommand {
+    uint32 cancelled_command_id = 1;
 }
 
 // A response is sent from the device to answer a command.

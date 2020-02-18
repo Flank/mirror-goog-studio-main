@@ -77,6 +77,14 @@ void AppInspectionAgentCommand::RegisterAppInspectionCommandHandler(
           jni_env->CallVoidMethod(service, raw_inspector_method, inspector_id,
                                   command_id, raw_command);
           jni_env->DeleteLocalRef(raw_command);
+        } else if (app_command.has_cancellation_command()) {
+          auto& cancellation_command = app_command.cancellation_command();
+          int32_t cancelled_command_id =
+              cancellation_command.cancelled_command_id();
+          jmethodID cancel_command_method =
+              jni_env->GetMethodID(service_class, "cancelCommand", "(I)V");
+          jni_env->CallVoidMethod(service, cancel_command_method,
+                                  cancelled_command_id);
         }
       });
 }
