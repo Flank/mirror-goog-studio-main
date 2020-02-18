@@ -73,7 +73,8 @@ public abstract class Source {
         return compressionFlag;
     }
 
-    // Guaranteed to be called before writeTo
+    // Guaranteed to be called before writeTo. After this method has been called, every fields
+    // in an entry must be known (csize, size, crc32, and compressionFlag).
     abstract void prepare() throws IOException;
 
     // Return the number of bytes written.
