@@ -211,7 +211,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             creationConfig.taskContainer.processAndroidResTask = taskProvider
 
             creationConfig.artifacts.producesFile(
-                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
+                InternalArtifactType.COMPILE_R_CLASS_JAR,
                 taskProvider,
                 GenerateLibraryRFileTask::rClassOutputJar,
                 fileName = "R.jar"

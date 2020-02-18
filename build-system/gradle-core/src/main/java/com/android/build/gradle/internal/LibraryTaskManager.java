@@ -352,16 +352,11 @@ public class LibraryTaskManager
 
     private void registerLibraryRClassTransformStream(
             @NonNull VariantPropertiesImpl variantProperties) {
-        InternalArtifactType<RegularFile> rClassJar;
 
-        if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
-            rClassJar = InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR.INSTANCE;
-        } else {
-            if (!variantProperties.getBuildFeatures().getAndroidResources()) {
-                return;
-            }
-            rClassJar = InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE;
+        if (!variantProperties.getBuildFeatures().getAndroidResources()) {
+            return;
         }
+
         QualifiedContent.ScopeType scopeType;
         if (variantProperties.getVariantScope().getCodeShrinker() != null) {
             // Add the R class classes as production classes. They are then removed by the library
@@ -373,7 +368,7 @@ public class LibraryTaskManager
         }
 
         FileCollection compileRClass =
-                project.files(variantProperties.getArtifacts().getFinalProduct(rClassJar));
+                project.files(variantProperties.getArtifacts().getFinalProduct(InternalArtifactType.COMPILE_R_CLASS_JAR.INSTANCE));
         variantProperties
                 .getTransformManager()
                 .addStream(

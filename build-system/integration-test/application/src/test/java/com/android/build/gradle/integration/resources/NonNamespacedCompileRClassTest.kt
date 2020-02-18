@@ -112,7 +112,7 @@ class NonNamespacedCompileRClassTest {
 
         // Check that the compile R class was generated
         val compileR =
-            app.getIntermediateFile("compile_only_not_namespaced_r_class_jar", "debug", "R.jar")
+            app.getIntermediateFile("compile_r_class_jar", "debug", "R.jar")
         FileSubject.assertThat(compileR).exists()
 
         // Check that the compile R.txt contains symbols from the app, lib and transitive

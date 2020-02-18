@@ -118,7 +118,7 @@ class NonTransitiveCompileRClassFlowTest {
         )
 
         val lib2RJar = project.getSubproject("lib2")
-            .getIntermediateFile("compile_only_not_namespaced_r_class_jar", "debug", "R.jar")
+            .getIntermediateFile("compile_r_class_jar", "debug", "R.jar")
 
         project.executor()
             .with(BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES, true)

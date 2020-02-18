@@ -137,7 +137,7 @@ class NonNamespacedApplicationLightRClassesTest {
         val libFiles = project.getSubproject("lib")
         assertThat(
             libFiles.getIntermediateFile(
-                    "compile_only_not_namespaced_r_class_jar",
+                    "compile_r_class_jar",
                     "debug",
                     "R.jar")).exists()
 

@@ -145,7 +145,7 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.producesFile(
-                InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
+                InternalArtifactType.COMPILE_R_CLASS_JAR,
                 taskProvider,
                 GenerateNamespacedLibraryRFilesTask::rJarFile,
                 fileName = "R.jar"

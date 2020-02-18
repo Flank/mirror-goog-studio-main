@@ -50,8 +50,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR
+import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT
 import com.android.build.gradle.internal.scope.InternalArtifactType.MLKIT_SOURCE_OUT
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
@@ -449,10 +448,7 @@ abstract class ComponentPropertiesImpl(
         val project = globalScope.project
         var mainCollection: FileCollection = variantPropertiesApiServices.fileCollection()
         if (globalScope.extension.aaptOptions.namespaced) {
-            val namespacedRClassJar =
-                artifacts.getFinalProduct(
-                    COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
-                )
+            val namespacedRClassJar = artifacts.getFinalProduct(COMPILE_R_CLASS_JAR)
             val fileTree =
                 project.fileTree(namespacedRClassJar).builtBy(namespacedRClassJar)
             mainCollection = mainCollection.plus(fileTree)
@@ -464,7 +460,7 @@ abstract class ComponentPropertiesImpl(
             testedConfig?.let {
                 mainCollection = project.files(
                     mainCollection,
-                    it.artifacts.getFinalProduct(COMPILE_ONLY_NAMESPACED_R_CLASS_JAR).get()
+                    it.artifacts.getFinalProduct(COMPILE_R_CLASS_JAR).get()
                 )
             }
         } else {
@@ -480,7 +476,7 @@ abstract class ComponentPropertiesImpl(
                     if (buildFeatures.androidResources) {
                         val rJar =
                             artifacts.getFinalProduct(
-                                COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR
+                                COMPILE_R_CLASS_JAR
                             )
                         mainCollection = project.files(rJar)
                     }

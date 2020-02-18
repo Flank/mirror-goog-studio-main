@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.BASE_MODULE_
 import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILED_LOCAL_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_SYMBOL_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.CONSUMER_PROGUARD_DIR
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
