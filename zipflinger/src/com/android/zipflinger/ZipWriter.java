@@ -21,12 +21,18 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
 
-class ZipWriter implements Closeable {
+class ZipWriter implements Closeable, WritableByteChannel {
     private final FileChannel channel;
 
     public ZipWriter(FileChannel channel) {
         this.channel = channel;
+    }
+
+    @Override
+    public boolean isOpen() {
+        return channel.isOpen();
     }
 
     @Override
@@ -50,6 +56,7 @@ class ZipWriter implements Closeable {
         return channel.write(buffer, position);
     }
 
+    @Override
     public int write(@NonNull ByteBuffer buffer) throws IOException {
         return channel.write(buffer);
     }
