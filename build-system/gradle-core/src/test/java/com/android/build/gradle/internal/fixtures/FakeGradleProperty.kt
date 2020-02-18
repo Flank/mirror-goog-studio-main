@@ -56,7 +56,7 @@ class FakeGradleProperty<T>(private var value: T? = null): Property<T> {
         this.valueProvider = provider
     }
 
-    override fun convention(convention: T): Property<T> {
+    override fun convention(convention: T?): Property<T> {
         this.convention = convention
         return this
     }
