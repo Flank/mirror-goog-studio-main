@@ -33,7 +33,12 @@ fun <T : Task> TaskContainer.registerTask(
     secondaryAction: TaskConfigAction<in T>? = null,
     secondaryProviderCallback: TaskProviderCallback<T>? = null
 ): TaskProvider<T> {
-    val actionWrapper = TaskAction(creationAction, secondaryPreConfigAction, secondaryAction, secondaryProviderCallback)
+    val actionWrapper = TaskAction(
+        creationAction,
+        secondaryPreConfigAction,
+        secondaryAction,
+        secondaryProviderCallback
+    )
     return this.register(creationAction.name, creationAction.type, actionWrapper)
         .also { provider ->
             actionWrapper.postRegisterHook(provider)
@@ -51,7 +56,11 @@ fun <T : Task> TaskContainer.registerTask(
     action: TaskConfigAction<in T>? = null,
     providerCallback: TaskProviderCallback<T>? = null
 ): TaskProvider<T> {
-    val actionWrapper = TaskAction2(preConfigAction, action, providerCallback)
+    val actionWrapper = TaskAction(
+        preConfigAction = preConfigAction,
+        configureAction = action,
+        providerHandler = providerCallback
+    )
     return this.register(taskName, taskType, actionWrapper)
         .also { provider ->
             actionWrapper.postRegisterHook(provider)
@@ -68,76 +77,43 @@ fun <T : Task> TaskContainer.registerTask(
  * After register, if it has not been called then it is called,
  * alongside [VariantTaskCreationAction.handleProvider]
  */
-private class TaskAction<T: Task>(
-    val creationAction: TaskCreationAction<T>,
-    val secondaryPreConfigAction: PreConfigAction? = null,
-    val secondaryAction: TaskConfigAction<in T>? = null,
-    val secondaryProviderCallback: TaskProviderCallback<T>? = null
+internal class TaskAction<T: Task>(
+    private val creationAction: TaskCreationAction<T>? = null,
+    private val preConfigAction: PreConfigAction? = null,
+    private val configureAction: TaskConfigAction<in T>? = null,
+    private val providerHandler: TaskProviderCallback<T>? = null
 ) : Action<T> {
 
-    var hasRunPreConfig = false
+    var hasRunTaskProviderHandler = false
+    var delayedTask: T? = null
 
     override fun execute(task: T) {
-        doPreConfig(task.name)
-
-        creationAction.configure(task)
-        secondaryAction?.configure(task)
-    }
-
-    fun postRegisterHook(taskProvider: TaskProvider<out T>) {
-        doPreConfig(taskProvider.name)
-
-        creationAction.handleProvider(taskProvider)
-        secondaryProviderCallback?.handleProvider(taskProvider)
-    }
-
-    private fun doPreConfig(taskName: String) {
-        if (!hasRunPreConfig) {
-            creationAction.preConfigure(taskName)
-            secondaryPreConfigAction?.preConfigure(taskName)
-            hasRunPreConfig = true
+        // if we have not yet processed the task provider handle, then we delay this
+        // to the post register hook
+        if (hasRunTaskProviderHandler) {
+            creationAction?.configure(task)
+            configureAction?.configure(task)
+        } else {
+            delayedTask = task
         }
     }
 
-}
-
-/**
- * Wrapper for separate [TaskConfigAction], [PreConfigAction], and [TaskProviderCallback] as a
- * simple [Action] that is passed to [TaskContainer.register].
- *
- * If the task is configured during the register then [PreConfigAction.preConfigure] is called
- * right away.
- *
- * After register, if it has not been called then it is called,
- * alongside [TaskProviderCallback.handleProvider]
- */
-private class TaskAction2<T: Task>(
-    val preConfigAction: PreConfigAction? = null,
-    val action: TaskConfigAction<in T>? = null,
-    val taskProviderCallback: TaskProviderCallback<T>? = null
-) : Action<T> {
-
-    var hasRunPreConfig = false
-
-    override fun execute(task: T) {
-        doPreConfig(task.name)
-
-        action?.configure(task)
-    }
-
     fun postRegisterHook(taskProvider: TaskProvider<out T>) {
-        doPreConfig(taskProvider.name)
+        creationAction?.preConfigure(taskProvider.name)
+        preConfigAction?.preConfigure(taskProvider.name)
 
-        taskProviderCallback?.handleProvider(taskProvider)
-    }
+        creationAction?.handleProvider(taskProvider)
+        providerHandler?.handleProvider(taskProvider)
 
-    private fun doPreConfig(taskName: String) {
-        if (!hasRunPreConfig) {
-            preConfigAction?.preConfigure(taskName)
-            hasRunPreConfig = true
+        delayedTask?.let {
+            creationAction?.configure(it)
+            configureAction?.configure(it)
         }
+
+        hasRunTaskProviderHandler = true
     }
 }
+
 
 /**
  * Sets dependency between 2 [TaskProvider], as an extension method on [TaskProvider].

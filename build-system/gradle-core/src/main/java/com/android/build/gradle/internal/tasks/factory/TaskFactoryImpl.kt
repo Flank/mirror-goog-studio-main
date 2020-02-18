@@ -52,15 +52,6 @@ class TaskFactoryImpl(private val taskContainer: TaskContainer):
     ): TaskProvider<T> =
         taskContainer.registerTask(creationAction, secondaryPreConfigAction, secondaryAction, secondaryProviderCallback)
 
-    override fun <T: Task> register(
-        taskName: String,
-        taskType: Class<T>,
-        preConfigAction: PreConfigAction?,
-        action: TaskConfigAction<in T>?,
-        providerCallback: TaskProviderCallback<T>?
-    ): TaskProvider<T> =
-        taskContainer.registerTask(taskName, taskType, preConfigAction, action, providerCallback)
-
     override fun register(
         taskName: String,
         preConfigAction: PreConfigAction?,
