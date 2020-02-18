@@ -33,6 +33,7 @@ import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.enumParameter
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
@@ -74,12 +75,7 @@ val watchFaceServiceTemplate
       help = "Whether or not to include code for interactive touch handling"
     }
 
-    val packageName = stringParameter {
-      name = "Package name"
-      default = "com.mycompany.myapp"
-      suggest = { packageName }
-      constraints = listOf(PACKAGE)
-    }
+    val packageName = defaultPackageNameParameter
 
     widgets(
       TextFieldWidget(serviceClass),

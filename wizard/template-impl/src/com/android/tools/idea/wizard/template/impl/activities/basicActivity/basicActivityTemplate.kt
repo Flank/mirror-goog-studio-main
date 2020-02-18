@@ -32,6 +32,7 @@ import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.classToResource
 import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.template
 import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
@@ -113,13 +114,7 @@ val basicActivityTemplate get() = template {
     help = "The name of the layout of the Fragment as the second destination in Navigation"
   }
 
-  val packageName: StringParameter = stringParameter {
-    name = "Package name"
-    visible = { !isNewModule }
-    constraints = listOf(PACKAGE)
-    default = "com.mycompany.myapp"
-    suggest = { packageName }
-  }
+  val packageName = defaultPackageNameParameter
 
   widgets(
     TextFieldWidget(activityClass),

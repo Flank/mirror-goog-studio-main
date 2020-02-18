@@ -32,6 +32,7 @@ import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.booleanParameter
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
@@ -63,12 +64,7 @@ val composeActivityTemplate
       constraints = listOf(NONEMPTY)
     }
 
-    val packageName = stringParameter {
-      name = "Package name"
-      default = "com.mycompany.myapp"
-      constraints = listOf(PACKAGE)
-      suggest = { packageName }
-    }
+    val packageName = defaultPackageNameParameter
 
     val isLauncher = booleanParameter {
       name = "Launcher Activity"

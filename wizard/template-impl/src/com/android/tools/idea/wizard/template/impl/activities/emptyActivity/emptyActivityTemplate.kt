@@ -33,6 +33,7 @@ import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
@@ -80,13 +81,8 @@ val emptyActivityTemplate get() = template {
     default = false
     help = "If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher"
   }
-  val packageName: StringParameter = stringParameter {
-    name = "Package name"
-    visible = { !isNewModule }
-    constraints = listOf(PACKAGE)
-    default = "com.mycompany.myapp"
-    suggest = { packageName }
-  }
+  val packageName = defaultPackageNameParameter
+
   val cppSupport: BooleanParameter = booleanParameter {
     name = "C++ support"
     visible = { false }

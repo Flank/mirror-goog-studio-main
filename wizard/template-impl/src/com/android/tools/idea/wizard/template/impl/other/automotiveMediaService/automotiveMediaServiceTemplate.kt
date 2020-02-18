@@ -30,6 +30,7 @@ import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.booleanParameter
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
@@ -52,13 +53,7 @@ val automotiveMediaServiceTemplate
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 
-    val packageName = stringParameter {
-      name = "Package name"
-      default = "com.mycompany.myapp"
-      help = "The package where the media service will be created"
-      suggest = { packageName }
-      constraints = listOf(PACKAGE)
-    }
+    val packageName = defaultPackageNameParameter
 
     val useCustomTheme = booleanParameter {
       name = "Use a custom theme for Android Auto colors?"
