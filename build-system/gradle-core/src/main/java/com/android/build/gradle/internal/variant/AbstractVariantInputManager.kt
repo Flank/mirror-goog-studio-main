@@ -37,7 +37,7 @@ import com.google.common.collect.Maps
  *
  * This gets filled by the DSL/API execution.
  */
-class VariantInputModelImpl(
+class AbstractVariantInputManager(
     private val globalScope: GlobalScope,
     private val extension: BaseExtension,
     private val variantFactory: VariantFactory<*, *>,

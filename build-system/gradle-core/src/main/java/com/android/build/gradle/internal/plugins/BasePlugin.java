@@ -77,7 +77,7 @@ import com.android.build.gradle.internal.utils.GradlePluginUtils;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.internal.variant.VariantInputModel;
-import com.android.build.gradle.internal.variant.VariantInputModelImpl;
+import com.android.build.gradle.internal.variant.AbstractVariantInputManager;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.internal.variant.VariantModelImpl;
 import com.android.build.gradle.options.BooleanOption;
@@ -137,7 +137,7 @@ public abstract class BasePlugin<
     private BaseExtension extension;
 
     private VariantManager<VariantT, VariantPropertiesT> variantManager;
-    private VariantInputModelImpl variantInputModel;
+    private AbstractVariantInputManager variantInputModel;
 
     protected Project project;
 
@@ -441,7 +441,7 @@ public abstract class BasePlugin<
         variantFactory = createVariantFactory(projectServices, globalScope);
 
         variantInputModel =
-                new VariantInputModelImpl(globalScope, extension, variantFactory, sourceSetManager);
+                new AbstractVariantInputManager(globalScope, extension, variantFactory, sourceSetManager);
         variantManager =
                 new VariantManager<>(
                         globalScope,
