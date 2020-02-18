@@ -56,9 +56,9 @@ class ZipWriter implements Closeable {
 
     public void transferFrom(@NonNull FileChannel src, long position, long count)
             throws IOException {
-        long transfered = 0;
-        while (transfered != count) {
-            transfered += src.transferTo(position + transfered, count - transfered, channel);
+        long copied = 0;
+        while (copied != count) {
+            copied += src.transferTo(position + copied, count - copied, channel);
         }
     }
 }
