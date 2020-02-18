@@ -20,7 +20,6 @@ import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
-import com.android.tools.idea.wizard.template.Constraint.PACKAGE
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.EnumWidget
 import com.android.tools.idea.wizard.template.FormFactor
@@ -33,6 +32,7 @@ import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.enumParameter
 import com.android.tools.idea.wizard.template.extractLetters
 import com.android.tools.idea.wizard.template.fragmentToLayout
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import listFragmentRecipe
@@ -58,12 +58,7 @@ val listFragmentTemplate
     formFactor = FormFactor.Mobile
     screens = listOf(WizardUiContext.FragmentGallery, WizardUiContext.MenuEntry)
 
-    val packageName = stringParameter {
-      name = "Package name"
-      default = "com.mycompany.myapp"
-      constraints = listOf(PACKAGE)
-    }
-
+    val packageName = defaultPackageNameParameter
     val objectKind = stringParameter {
       name = "Object Kind"
       default = "Item"

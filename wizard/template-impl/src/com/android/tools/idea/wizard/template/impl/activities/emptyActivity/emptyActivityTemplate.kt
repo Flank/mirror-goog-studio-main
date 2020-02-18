@@ -21,7 +21,6 @@ import com.android.tools.idea.wizard.template.CheckBoxWidget
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
-import com.android.tools.idea.wizard.template.Constraint.PACKAGE
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.FormFactor
 import com.android.tools.idea.wizard.template.LanguageWidget
@@ -32,6 +31,7 @@ import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
@@ -79,13 +79,7 @@ val emptyActivityTemplate get() = template {
     default = false
     help = "If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher"
   }
-  val packageName: StringParameter = stringParameter {
-    name = "Package name"
-    visible = { !isNewModule }
-    constraints = listOf(PACKAGE)
-    default = "com.mycompany.myapp"
-    suggest = { packageName }
-  }
+  val packageName = defaultPackageNameParameter
 
   widgets(
     TextFieldWidget(activityClass),
