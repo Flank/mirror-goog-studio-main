@@ -20,13 +20,13 @@ import com.android.annotations.NonNull;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class ZipSourceEntryInflater extends Source {
+class ZipSourceEntryInflater extends Source {
 
     private final Location loc;
     private final ZipSource zipSource;
     private ByteBuffer buffer;
 
-    public ZipSourceEntryInflater(String newName, Entry entry, ZipSource zipSource) {
+    ZipSourceEntryInflater(String newName, Entry entry, ZipSource zipSource) {
         super(newName);
         loc = entry.getPayloadLocation();
         this.zipSource = zipSource;

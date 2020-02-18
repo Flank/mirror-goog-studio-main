@@ -19,7 +19,7 @@ package com.android.zipflinger;
 import com.android.annotations.NonNull;
 import java.io.IOException;
 
-public class ZipSourceEntry extends Source {
+class ZipSourceEntry extends Source {
     // Location of the payload in the zipsource.
     private Location payloadLoc;
     private final ZipSource zipSource;
