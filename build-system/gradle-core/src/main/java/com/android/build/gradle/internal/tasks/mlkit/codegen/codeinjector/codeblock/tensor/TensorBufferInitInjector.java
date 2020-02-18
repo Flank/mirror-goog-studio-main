@@ -19,24 +19,24 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeb
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector;
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 import com.squareup.javapoet.MethodSpec;
 
 /**
- * Injector to init a {@code TensorBuffer} by {@link Param}. It will create code like:
+ * Injector to init a {@code TensorBuffer} by {@link TensorInfo}. It will create code like:
  *
  * <pre>tensorBuffer = TensorBuffer.createFixedSize(int[] shape, DataType datatype)</pre>
  */
 public class TensorBufferInitInjector extends CodeBlockInjector {
 
     @Override
-    public void inject(MethodSpec.Builder methodBuilder, Param param) {
+    public void inject(MethodSpec.Builder methodBuilder, TensorInfo tensorInfo) {
         methodBuilder.addStatement(
                 "$L = $T.createFixedSize($L, $T.$L)",
-                param.getName(),
+                tensorInfo.getName(),
                 ClassNames.TENSOR_BUFFER,
-                CodeUtils.getIntArrayString(param.getShape()),
+                CodeUtils.getIntArrayString(tensorInfo.getShape()),
                 ClassNames.DATA_TYPE,
-                CodeUtils.getDataType(param.getDataType()));
+                CodeUtils.getDataType(tensorInfo.getDataType()));
     }
 }

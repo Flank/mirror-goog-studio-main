@@ -19,23 +19,23 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeb
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector;
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 import com.squareup.javapoet.MethodSpec;
 
 /**
- * Injector to init a {@code TensorImage} by {@link Param}. It will create code like:
+ * Injector to init a {@code TensorImage} by {@link TensorInfo}. It will create code like:
  *
  * <pre>tensorImage = new TensorImage(DataType)</pre>
  */
 public class TensorImageInitInjector extends CodeBlockInjector {
 
     @Override
-    public void inject(MethodSpec.Builder methodBuilder, Param param) {
+    public void inject(MethodSpec.Builder methodBuilder, TensorInfo tensorInfo) {
         methodBuilder.addStatement(
                 "$L = new $T($T.$L)",
-                param.getName(),
+                tensorInfo.getName(),
                 ClassNames.TENSOR_IMAGE,
                 ClassNames.DATA_TYPE,
-                CodeUtils.getDataType(param.getDataType()));
+                CodeUtils.getDataType(tensorInfo.getDataType()));
     }
 }

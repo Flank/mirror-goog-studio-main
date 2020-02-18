@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector;
 import com.android.tools.mlkit.MetadataExtractor;
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 import com.squareup.javapoet.MethodSpec;
 
 /**
@@ -29,21 +29,23 @@ import com.squareup.javapoet.MethodSpec;
 public class DefaultPreprocessorInitInjector extends CodeBlockInjector {
 
     @Override
-    public void inject(MethodSpec.Builder methodBuilder, Param param) {
+    public void inject(MethodSpec.Builder methodBuilder, TensorInfo tensorInfo) {
         methodBuilder.addCode(
                 "$T.Builder $L = new $T.Builder()\n",
                 ClassNames.TENSOR_PROCESSOR,
-                CodeUtils.getProcessorBuilderName(param),
+                CodeUtils.getProcessorBuilderName(tensorInfo),
                 ClassNames.TENSOR_PROCESSOR);
 
-        MetadataExtractor.NormalizationParams normalizationParams = param.getNormalizationParams();
+        MetadataExtractor.NormalizationParams normalizationParams =
+                tensorInfo.getNormalizationParams();
         methodBuilder.addCode(
                 "  .add(new $T($L, $L))\n",
                 ClassNames.NORMALIZE_OP,
                 CodeUtils.getFloatArrayString(normalizationParams.getMean()),
                 CodeUtils.getFloatArrayString(normalizationParams.getStd()));
 
-        MetadataExtractor.QuantizationParams quantizationParams = param.getQuantizationParams();
+        MetadataExtractor.QuantizationParams quantizationParams =
+                tensorInfo.getQuantizationParams();
         methodBuilder.addCode(
                 "  .add(new $T($Lf, $Lf));\n",
                 ClassNames.QUANTIZE_OP,
@@ -52,7 +54,7 @@ public class DefaultPreprocessorInitInjector extends CodeBlockInjector {
 
         methodBuilder.addStatement(
                 "$L = $L.build()",
-                CodeUtils.getProcessorName(param),
-                CodeUtils.getProcessorBuilderName(param));
+                CodeUtils.getProcessorName(tensorInfo),
+                CodeUtils.getProcessorBuilderName(tensorInfo));
     }
 }

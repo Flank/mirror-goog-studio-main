@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.mlkit.codegen;
 
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 import com.google.common.base.CaseFormat;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
@@ -27,18 +27,18 @@ import java.util.Map;
 /** Utility methods to generate code. */
 public class CodeUtils {
 
-    private static final Map<Param.DataType, TypeName> typeToNameMap = new HashMap<>();
+    private static final Map<TensorInfo.DataType, TypeName> typeToNameMap = new HashMap<>();
 
     static {
-        typeToNameMap.put(Param.DataType.UINT8, TypeName.BYTE);
-        typeToNameMap.put(Param.DataType.FLOAT32, TypeName.FLOAT);
-        typeToNameMap.put(Param.DataType.INT64, TypeName.LONG);
-        typeToNameMap.put(Param.DataType.INT32, TypeName.INT);
+        typeToNameMap.put(TensorInfo.DataType.UINT8, TypeName.BYTE);
+        typeToNameMap.put(TensorInfo.DataType.FLOAT32, TypeName.FLOAT);
+        typeToNameMap.put(TensorInfo.DataType.INT64, TypeName.LONG);
+        typeToNameMap.put(TensorInfo.DataType.INT32, TypeName.INT);
     }
 
-    public static TypeName getParameterType(Param param) {
-        if (param.getSource() == Param.Source.INPUT) {
-            if (param.getContentType() == Param.ContentType.IMAGE) {
+    public static TypeName getParameterType(TensorInfo tensorInfo) {
+        if (tensorInfo.getSource() == TensorInfo.Source.INPUT) {
+            if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
                 return ClassNames.TENSOR_IMAGE;
             } else {
                 return ClassNames.TENSOR_BUFFER;
@@ -52,16 +52,16 @@ public class CodeUtils {
         return name.replaceAll("\\..*", "") + "Data";
     }
 
-    public static String getProcessorName(Param param) {
-        if (param.getSource() == Param.Source.INPUT) {
-            return param.getName() + "Processor";
+    public static String getProcessorName(TensorInfo tensorInfo) {
+        if (tensorInfo.getSource() == TensorInfo.Source.INPUT) {
+            return tensorInfo.getName() + "Processor";
         } else {
-            return param.getName() + "PostProcessor";
+            return tensorInfo.getName() + "PostProcessor";
         }
     }
 
-    public static String getProcessorBuilderName(Param param) {
-        return getProcessorName(param) + "Builder";
+    public static String getProcessorBuilderName(TensorInfo tensorInfo) {
+        return getProcessorName(tensorInfo) + "Builder";
     }
 
     public static String getFloatArrayString(float[] array) {
@@ -93,12 +93,12 @@ public class CodeUtils {
         return builder.toString();
     }
 
-    public static String getDataType(Param.DataType type) {
+    public static String getDataType(TensorInfo.DataType type) {
         return type.toString();
     }
 
-    public static TypeName getOutputParameterType(Param param) {
-        if (param.getFileType() == Param.FileType.TENSOR_AXIS_LABELS) {
+    public static TypeName getOutputParameterType(TensorInfo tensorInfo) {
+        if (tensorInfo.getFileType() == TensorInfo.FileType.TENSOR_AXIS_LABELS) {
             return ParameterizedTypeName.get(ClassNames.MAP, ClassNames.STRING, ClassNames.FLOAT);
         } else {
             return ClassNames.BYTE_BUFFER;

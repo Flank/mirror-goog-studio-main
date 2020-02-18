@@ -20,9 +20,9 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.Inject
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector;
 import com.android.tools.mlkit.MetadataExtractor;
 import com.android.tools.mlkit.MlkitNames;
-import com.android.tools.mlkit.ModelData;
+import com.android.tools.mlkit.ModelInfo;
 import com.android.tools.mlkit.ModelParsingException;
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 import com.google.common.base.CaseFormat;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
@@ -48,7 +48,7 @@ public class TfliteModelGenerator implements ModelGenerator {
     private final Logger logger;
     private final String localModelPath;
     private final MetadataExtractor extractor;
-    private final ModelData modelData;
+    private final ModelInfo modelInfo;
     private final String className;
     private final String packageName;
 
@@ -56,7 +56,7 @@ public class TfliteModelGenerator implements ModelGenerator {
             throws ModelParsingException {
         this.extractor = ModelUtils.createMetadataExtractor(modelFile);
         this.localModelPath = localModelPath;
-        this.modelData = ModelData.buildFrom(extractor);
+        this.modelInfo = ModelInfo.buildFrom(extractor);
         this.packageName = packageName;
         this.logger = Logging.getLogger(this.getClass());
         className =
@@ -69,7 +69,7 @@ public class TfliteModelGenerator implements ModelGenerator {
         TypeSpec.Builder classBuilder =
                 TypeSpec.classBuilder(className).addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
-        classBuilder.addJavadoc(modelData.getModelDescription());
+        classBuilder.addJavadoc(modelInfo.getModelDescription());
         buildFields(classBuilder);
         buildConstructor(classBuilder);
         buildCreateInputsMethod(classBuilder);
@@ -87,12 +87,12 @@ public class TfliteModelGenerator implements ModelGenerator {
     }
 
     private void buildFields(TypeSpec.Builder classBuilder) {
-        for (Param param : modelData.getInputs()) {
-            InjectorUtils.getFieldInjector().inject(classBuilder, param);
+        for (TensorInfo tensorInfo : modelInfo.getInputs()) {
+            InjectorUtils.getFieldInjector().inject(classBuilder, tensorInfo);
         }
 
-        for (Param param : modelData.getOutputs()) {
-            InjectorUtils.getFieldInjector().inject(classBuilder, param);
+        for (TensorInfo tensorInfo : modelInfo.getOutputs()) {
+            InjectorUtils.getFieldInjector().inject(classBuilder, tensorInfo);
         }
 
         FieldSpec model =
@@ -127,8 +127,8 @@ public class TfliteModelGenerator implements ModelGenerator {
     }
 
     private void buildInnerClass(TypeSpec.Builder classBuilder) {
-        InjectorUtils.getOutputsClassInjector().inject(classBuilder, modelData.getOutputs());
-        InjectorUtils.getInputsClassInjector().inject(classBuilder, modelData.getInputs());
+        InjectorUtils.getOutputsClassInjector().inject(classBuilder, modelInfo.getOutputs());
+        InjectorUtils.getInputsClassInjector().inject(classBuilder, modelInfo.getInputs());
     }
 
     private void buildConstructor(TypeSpec.Builder classBuilder) {
@@ -144,19 +144,20 @@ public class TfliteModelGenerator implements ModelGenerator {
                                 localModelPath);
 
         // Init preprocessor
-        for (Param param : modelData.getInputs()) {
-            CodeBlockInjector preprocessorInjector = InjectorUtils.getInputProcessorInjector(param);
-            preprocessorInjector.inject(constructorBuilder, param);
+        for (TensorInfo tensorInfo : modelInfo.getInputs()) {
+            CodeBlockInjector preprocessorInjector =
+                    InjectorUtils.getInputProcessorInjector(tensorInfo);
+            preprocessorInjector.inject(constructorBuilder, tensorInfo);
         }
 
         // Init associated file and postprocessor
-        for (Param param : modelData.getOutputs()) {
+        for (TensorInfo tensorInfo : modelInfo.getOutputs()) {
             CodeBlockInjector postprocessorInjector =
-                    InjectorUtils.getOutputProcessorInjector(param);
-            postprocessorInjector.inject(constructorBuilder, param);
+                    InjectorUtils.getOutputProcessorInjector(tensorInfo);
+            postprocessorInjector.inject(constructorBuilder, tensorInfo);
 
             CodeBlockInjector codeBlockInjector = InjectorUtils.getAssociatedFileInjector();
-            codeBlockInjector.inject(constructorBuilder, param);
+            codeBlockInjector.inject(constructorBuilder, tensorInfo);
         }
 
         classBuilder.addMethod(constructorBuilder.build());

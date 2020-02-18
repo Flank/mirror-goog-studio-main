@@ -30,9 +30,9 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.method
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.ImageLoadMethodInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.LabelGetMethodInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.MethodInjector;
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 
-/** Utils to select injector based on {@link Param} */
+/** Utils to select injector based on {@link TensorInfo} */
 public class InjectorUtils {
 
     public static FieldInjector getFieldInjector() {
@@ -51,39 +51,39 @@ public class InjectorUtils {
         return new AssociatedFileInjector();
     }
 
-    public static MethodInjector getGetterMethodInjector(Param param) {
-        if (param.getFileType() == Param.FileType.TENSOR_AXIS_LABELS) {
+    public static MethodInjector getGetterMethodInjector(TensorInfo tensorInfo) {
+        if (tensorInfo.getFileType() == TensorInfo.FileType.TENSOR_AXIS_LABELS) {
             return new LabelGetMethodInjector();
         } else {
             return new DefaultGetMethodInjector();
         }
     }
 
-    public static MethodInjector getLoadMethodInjector(Param param) {
-        if (param.getContentType() == Param.ContentType.IMAGE) {
+    public static MethodInjector getLoadMethodInjector(TensorInfo tensorInfo) {
+        if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
             return new ImageLoadMethodInjector();
         } else {
             return new DefaultLoadMethodInjector();
         }
     }
 
-    public static CodeBlockInjector getTensorInitInjector(Param param) {
-        if (param.getContentType() == Param.ContentType.IMAGE) {
+    public static CodeBlockInjector getTensorInitInjector(TensorInfo tensorInfo) {
+        if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
             return new TensorImageInitInjector();
         } else {
             return new TensorBufferInitInjector();
         }
     }
 
-    public static CodeBlockInjector getInputProcessorInjector(Param param) {
-        if (param.getContentType() == Param.ContentType.IMAGE) {
+    public static CodeBlockInjector getInputProcessorInjector(TensorInfo tensorInfo) {
+        if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
             return new ImagePreprocessorInitInjector();
         } else {
             return new DefaultPreprocessorInitInjector();
         }
     }
 
-    public static CodeBlockInjector getOutputProcessorInjector(Param param) {
+    public static CodeBlockInjector getOutputProcessorInjector(TensorInfo tensorInfo) {
         return new DefaultPostprocessorInitInjector();
     }
 }

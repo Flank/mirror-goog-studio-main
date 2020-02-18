@@ -20,21 +20,22 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector;
 import com.android.tools.mlkit.MetadataExtractor;
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 import com.squareup.javapoet.MethodSpec;
 
 /** Injector to init a default postprocessor, which does data de-quantization. */
 public class DefaultPostprocessorInitInjector extends CodeBlockInjector {
 
     @Override
-    public void inject(MethodSpec.Builder methodBuilder, Param param) {
+    public void inject(MethodSpec.Builder methodBuilder, TensorInfo tensorInfo) {
         methodBuilder.addCode(
                 "$T.Builder $L = new $T.Builder()\n",
                 ClassNames.TENSOR_PROCESSOR,
-                CodeUtils.getProcessorBuilderName(param),
+                CodeUtils.getProcessorBuilderName(tensorInfo),
                 ClassNames.TENSOR_PROCESSOR);
 
-        MetadataExtractor.QuantizationParams quantizationParams = param.getQuantizationParams();
+        MetadataExtractor.QuantizationParams quantizationParams =
+                tensorInfo.getQuantizationParams();
         methodBuilder.addCode(
                 "  .add(new $T((float)$L, (float)$L));\n",
                 ClassNames.DEQUANTIZE_OP,
@@ -43,7 +44,7 @@ public class DefaultPostprocessorInitInjector extends CodeBlockInjector {
 
         methodBuilder.addStatement(
                 "$L = $L.build()",
-                CodeUtils.getProcessorName(param),
-                CodeUtils.getProcessorBuilderName(param));
+                CodeUtils.getProcessorName(tensorInfo),
+                CodeUtils.getProcessorBuilderName(tensorInfo));
     }
 }

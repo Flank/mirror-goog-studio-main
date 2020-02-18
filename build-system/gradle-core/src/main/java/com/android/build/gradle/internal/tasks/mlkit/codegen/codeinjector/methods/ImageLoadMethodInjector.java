@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.metho
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import javax.lang.model.element.Modifier;
@@ -27,17 +27,17 @@ import javax.lang.model.element.Modifier;
 public class ImageLoadMethodInjector extends MethodInjector {
 
     @Override
-    public void inject(TypeSpec.Builder classBuilder, Param param) {
+    public void inject(TypeSpec.Builder classBuilder, TensorInfo tensorInfo) {
         MethodSpec methodSpec =
-                MethodSpec.methodBuilder("load" + CodeUtils.getUpperCamelName(param.getName()))
+                MethodSpec.methodBuilder("load" + CodeUtils.getUpperCamelName(tensorInfo.getName()))
                         .addModifiers(Modifier.PUBLIC)
                         .addParameter(ClassNames.BITMAP, "bitmap")
-                        .addStatement("$L.load(bitmap)", param.getName())
+                        .addStatement("$L.load(bitmap)", tensorInfo.getName())
                         .addStatement(
                                 "$L = $L.process($L)",
-                                param.getName(),
-                                CodeUtils.getProcessorName(param),
-                                param.getName())
+                                tensorInfo.getName(),
+                                CodeUtils.getProcessorName(tensorInfo),
+                                tensorInfo.getName())
                         .build();
         classBuilder.addMethod(methodSpec);
     }

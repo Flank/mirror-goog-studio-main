@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.metho
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import javax.lang.model.element.Modifier;
@@ -27,17 +27,17 @@ import javax.lang.model.element.Modifier;
 public class LabelGetMethodInjector extends MethodInjector {
 
     @Override
-    public void inject(TypeSpec.Builder classBuilder, Param param) {
+    public void inject(TypeSpec.Builder classBuilder, TensorInfo tensorInfo) {
         MethodSpec methodSpec =
-                MethodSpec.methodBuilder("get" + CodeUtils.getUpperCamelName(param.getName()))
+                MethodSpec.methodBuilder("get" + CodeUtils.getUpperCamelName(tensorInfo.getName()))
                         .addModifiers(Modifier.PUBLIC)
-                        .returns(CodeUtils.getOutputParameterType(param))
+                        .returns(CodeUtils.getOutputParameterType(tensorInfo))
                         .addStatement(
                                 "return new $T($L, $L.process($L)).getMapWithFloatValue()",
                                 ClassNames.TENSOR_LABEL,
-                                CodeUtils.getFileName(param.getFileName()),
-                                CodeUtils.getProcessorName(param),
-                                param.getName())
+                                CodeUtils.getFileName(tensorInfo.getFileName()),
+                                CodeUtils.getProcessorName(tensorInfo),
+                                tensorInfo.getName())
                         .build();
         classBuilder.addMethod(methodSpec);
     }

@@ -18,37 +18,40 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector;
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeSpec;
 import javax.lang.model.element.Modifier;
 
-/** Inject fields based on {@link Param} */
-public class FieldInjector implements CodeInjector<TypeSpec.Builder, Param> {
+/** Inject fields based on {@link TensorInfo} */
+public class FieldInjector implements CodeInjector<TypeSpec.Builder, TensorInfo> {
 
     @Override
-    public void inject(TypeSpec.Builder classBuilder, Param param) {
-        if (param.getFileName() != null) {
+    public void inject(TypeSpec.Builder classBuilder, TensorInfo tensorInfo) {
+        if (tensorInfo.getFileName() != null) {
             FieldSpec fieldName =
                     FieldSpec.builder(
                                     ClassNames.LIST_OF_STRING,
-                                    CodeUtils.getFileName(param.getFileName()))
+                                    CodeUtils.getFileName(tensorInfo.getFileName()))
                             .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                             .build();
             classBuilder.addField(fieldName);
         }
 
         // Add preprocessor and postprocessor fields.
-        if (param.getContentType() == Param.ContentType.IMAGE) {
+        if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
             FieldSpec fieldName =
-                    FieldSpec.builder(ClassNames.IMAGE_PROCESSOR, CodeUtils.getProcessorName(param))
+                    FieldSpec.builder(
+                                    ClassNames.IMAGE_PROCESSOR,
+                                    CodeUtils.getProcessorName(tensorInfo))
                             .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                             .build();
             classBuilder.addField(fieldName);
         } else {
             FieldSpec fieldName =
                     FieldSpec.builder(
-                                    ClassNames.TENSOR_PROCESSOR, CodeUtils.getProcessorName(param))
+                                    ClassNames.TENSOR_PROCESSOR,
+                                    CodeUtils.getProcessorName(tensorInfo))
                             .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                             .build();
             classBuilder.addField(fieldName);

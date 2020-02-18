@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.CodeInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.InjectorUtils;
 import com.android.tools.mlkit.MlkitNames;
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -29,17 +29,17 @@ import java.util.List;
 import javax.lang.model.element.Modifier;
 
 /** Injector to inject input inner class */
-public class InputsClassInjector implements CodeInjector<TypeSpec.Builder, List<Param>> {
+public class InputsClassInjector implements CodeInjector<TypeSpec.Builder, List<TensorInfo>> {
 
     @Override
-    public void inject(TypeSpec.Builder classBuilder, List<Param> params) {
+    public void inject(TypeSpec.Builder classBuilder, List<TensorInfo> tensorInfos) {
         TypeSpec.Builder builder = TypeSpec.classBuilder(MlkitNames.INPUTS);
         builder.addModifiers(Modifier.PUBLIC);
 
         // Add necessary fields
-        for (Param param : params) {
+        for (TensorInfo tensorInfo : tensorInfos) {
             FieldSpec fieldSpec =
-                    FieldSpec.builder(CodeUtils.getParameterType(param), param.getName())
+                    FieldSpec.builder(CodeUtils.getParameterType(tensorInfo), tensorInfo.getName())
                             .addModifiers(Modifier.PRIVATE)
                             .build();
             builder.addField(fieldSpec);
@@ -48,26 +48,26 @@ public class InputsClassInjector implements CodeInjector<TypeSpec.Builder, List<
         // Add constructor
         MethodSpec.Builder constructorBuilder =
                 MethodSpec.constructorBuilder().addModifiers(Modifier.PUBLIC);
-        for (Param param : params) {
-            InjectorUtils.getTensorInitInjector(param).inject(constructorBuilder, param);
+        for (TensorInfo tensorInfo : tensorInfos) {
+            InjectorUtils.getTensorInitInjector(tensorInfo).inject(constructorBuilder, tensorInfo);
         }
         builder.addMethod(constructorBuilder.build());
 
         // Add load methods for params
-        for (Param param : params) {
-            InjectorUtils.getLoadMethodInjector(param).inject(builder, param);
+        for (TensorInfo tensorInfo : tensorInfos) {
+            InjectorUtils.getLoadMethodInjector(tensorInfo).inject(builder, tensorInfo);
         }
 
         // Add a getBuffer method
-        buildGetMethod(builder, params);
+        buildGetMethod(builder, tensorInfos);
 
         classBuilder.addType(builder.build());
     }
 
-    private void buildGetMethod(TypeSpec.Builder classBuilder, List<Param> params) {
-        String[] array = new String[params.size()];
-        for (int i = 0; i < params.size(); i++) {
-            array[i] = params.get(i).getName() + ".getBuffer()";
+    private void buildGetMethod(TypeSpec.Builder classBuilder, List<TensorInfo> tensorInfos) {
+        String[] array = new String[tensorInfos.size()];
+        for (int i = 0; i < tensorInfos.size(); i++) {
+            array[i] = tensorInfos.get(i).getName() + ".getBuffer()";
         }
 
         MethodSpec.Builder getterBuilder =

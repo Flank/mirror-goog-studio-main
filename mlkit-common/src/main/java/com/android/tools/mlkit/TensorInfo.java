@@ -25,7 +25,7 @@ import tflite.Tensor;
  * Stores necessary data for each single input or output. For tflite model, this class stores
  * necessary data for input or output tensor.
  */
-public class Param {
+public class TensorInfo {
     public enum DataType {
         FLOAT32(0),
         INT32(2),
@@ -210,25 +210,25 @@ public class Param {
             return this;
         }
 
-        public Param build() {
-            Param param = new Param();
-            param.name = name;
-            param.shape = shape;
-            param.dataType = dataType;
-            param.fileName = fileName;
-            param.fileType = fileType;
-            param.source = source;
-            param.contentType = contentType;
-            param.description = description;
-            param.normalizationParams = normalizationParams;
-            param.quantizationParams = quantizationParams;
+        public TensorInfo build() {
+            TensorInfo tensorInfo = new TensorInfo();
+            tensorInfo.name = name;
+            tensorInfo.shape = shape;
+            tensorInfo.dataType = dataType;
+            tensorInfo.fileName = fileName;
+            tensorInfo.fileType = fileType;
+            tensorInfo.source = source;
+            tensorInfo.contentType = contentType;
+            tensorInfo.description = description;
+            tensorInfo.normalizationParams = normalizationParams;
+            tensorInfo.quantizationParams = quantizationParams;
 
-            return param;
+            return tensorInfo;
         }
     }
 
-    public static Param parseFrom(MetadataExtractor extractor, Source source, int index) {
-        Param.Builder builder = new Param.Builder();
+    public static TensorInfo parseFrom(MetadataExtractor extractor, Source source, int index) {
+        TensorInfo.Builder builder = new TensorInfo.Builder();
         if (source == Source.INPUT) {
             builder.setShape(extractor.getInputTensorShape(0, index));
             builder.setDataType(DataType.fromByte(extractor.getInputTensorType(0, index)));

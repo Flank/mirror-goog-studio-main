@@ -40,10 +40,10 @@ public class ModelVerifier {
         int inputCount = extractor.getInputTensorCount(0);
         Set<String> inputNameSet = new HashSet<>();
         for (int i = 0; i < inputCount; i++) {
-            verifyDataType(extractor.getInputTensorType(0, i), i, Param.Source.INPUT);
+            verifyDataType(extractor.getInputTensorType(0, i), i, TensorInfo.Source.INPUT);
 
             TensorMetadata tensorMetadata = metadata.subgraphMetadata(0).inputTensorMetadata(i);
-            verifyTensorMetadata(tensorMetadata, i, Param.Source.INPUT);
+            verifyTensorMetadata(tensorMetadata, i, TensorInfo.Source.INPUT);
 
             if (inputNameSet.contains(tensorMetadata.name())) {
                 throw new ModelParsingException(
@@ -52,7 +52,8 @@ public class ModelVerifier {
             }
             inputNameSet.add(tensorMetadata.name());
 
-            if (Param.ContentType.fromByte(tensorMetadata.contentType()) == Param.ContentType.IMAGE
+            if (TensorInfo.ContentType.fromByte(tensorMetadata.contentType())
+                            == TensorInfo.ContentType.IMAGE
                     && extractor.getInputTensorShape(0, i).length != 4) {
                 throw new ModelParsingException(
                         ErrorType.INVALID_IMAGE_TENSOR,
@@ -63,10 +64,10 @@ public class ModelVerifier {
         Set<String> outputNameSet = new HashSet<>();
         int outputCount = extractor.getOutputTensorCount(0);
         for (int i = 0; i < outputCount; i++) {
-            verifyDataType(extractor.getOutputTensorType(0, i), i, Param.Source.OUTPUT);
+            verifyDataType(extractor.getOutputTensorType(0, i), i, TensorInfo.Source.OUTPUT);
 
             TensorMetadata tensorMetadata = metadata.subgraphMetadata(0).outputTensorMetadata(i);
-            verifyTensorMetadata(tensorMetadata, i, Param.Source.OUTPUT);
+            verifyTensorMetadata(tensorMetadata, i, TensorInfo.Source.OUTPUT);
             if (outputNameSet.contains(tensorMetadata.name())) {
                 throw new ModelParsingException(
                         ErrorType.PARAM_NAME_CONFLICT,
@@ -77,25 +78,25 @@ public class ModelVerifier {
     }
 
     private static void verifyTensorMetadata(
-            TensorMetadata tensorMetadata, int index, Param.Source source)
+            TensorMetadata tensorMetadata, int index, TensorInfo.Source source)
             throws ModelParsingException {
         if (tensorMetadata.name() == null) {
             throw new ModelParsingException(
                     ErrorType.INVALID_PARAM_NAME,
                     String.format(
                             "%s tensor %d doesn't have valid name",
-                            source == Param.Source.INPUT ? "Input" : "Output", index));
+                            source == TensorInfo.Source.INPUT ? "Input" : "Output", index));
         }
     }
 
-    private static void verifyDataType(byte dataType, int index, Param.Source source)
+    private static void verifyDataType(byte dataType, int index, TensorInfo.Source source)
             throws ModelParsingException {
-        if (Param.DataType.fromByte(dataType) == null) {
+        if (TensorInfo.DataType.fromByte(dataType) == null) {
             throw new ModelParsingException(
                     ErrorType.UNSUPPORTED_DATA_TYPE,
                     String.format(
                             "Datatype of %s tensor %d is not supported",
-                            source == Param.Source.INPUT ? "input" : "output", index));
+                            source == TensorInfo.Source.INPUT ? "input" : "output", index));
         }
     }
 }

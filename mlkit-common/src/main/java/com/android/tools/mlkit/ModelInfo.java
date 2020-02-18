@@ -20,12 +20,12 @@ import java.util.List;
 import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
 
 /** Stores necessary data for one model. */
-public class ModelData {
+public class ModelInfo {
     /** stores necessary data for model input */
-    private List<Param> inputs;
+    private List<TensorInfo> inputs;
 
     /** stores necessary data for model output */
-    private List<Param> outputs;
+    private List<TensorInfo> outputs;
 
     private String modelName;
     private String modelDescription;
@@ -33,16 +33,16 @@ public class ModelData {
     private String modelAuthor;
     private String modelLicense;
 
-    private ModelData() {
+    private ModelInfo() {
         inputs = new ArrayList<>();
         outputs = new ArrayList<>();
     }
 
-    public List<Param> getInputs() {
+    public List<TensorInfo> getInputs() {
         return inputs;
     }
 
-    public List<Param> getOutputs() {
+    public List<TensorInfo> getOutputs() {
         return outputs;
     }
 
@@ -66,27 +66,27 @@ public class ModelData {
         return modelLicense;
     }
 
-    public static ModelData buildFrom(MetadataExtractor extractor) throws ModelParsingException {
+    public static ModelInfo buildFrom(MetadataExtractor extractor) throws ModelParsingException {
         ModelVerifier.verifyModel(extractor);
 
-        ModelData modelData = new ModelData();
+        ModelInfo modelInfo = new ModelInfo();
         int inputLength = extractor.getInputTensorCount(0);
         for (int i = 0; i < inputLength; i++) {
-            modelData.inputs.add(Param.parseFrom(extractor, Param.Source.INPUT, i));
+            modelInfo.inputs.add(TensorInfo.parseFrom(extractor, TensorInfo.Source.INPUT, i));
         }
 
         int outputLength = extractor.getOutputTensorCount(0);
         for (int i = 0; i < outputLength; i++) {
-            modelData.outputs.add(Param.parseFrom(extractor, Param.Source.OUTPUT, i));
+            modelInfo.outputs.add(TensorInfo.parseFrom(extractor, TensorInfo.Source.OUTPUT, i));
         }
 
         ModelMetadata modelMetadata = extractor.getModelMetaData();
-        modelData.modelName = modelMetadata.name();
-        modelData.modelDescription = modelMetadata.description();
-        modelData.modelVersion = modelMetadata.version();
-        modelData.modelAuthor = modelMetadata.author();
-        modelData.modelLicense = modelMetadata.license();
+        modelInfo.modelName = modelMetadata.name();
+        modelInfo.modelDescription = modelMetadata.description();
+        modelInfo.modelVersion = modelMetadata.version();
+        modelInfo.modelAuthor = modelMetadata.author();
+        modelInfo.modelLicense = modelMetadata.license();
 
-        return modelData;
+        return modelInfo;
     }
 }

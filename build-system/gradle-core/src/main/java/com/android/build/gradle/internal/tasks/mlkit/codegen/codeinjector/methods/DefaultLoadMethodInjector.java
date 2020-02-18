@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.metho
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import javax.lang.model.element.Modifier;
@@ -30,12 +30,12 @@ import javax.lang.model.element.Modifier;
 public class DefaultLoadMethodInjector extends MethodInjector {
 
     @Override
-    public void inject(TypeSpec.Builder classBuilder, Param param) {
+    public void inject(TypeSpec.Builder classBuilder, TensorInfo tensorInfo) {
         MethodSpec methodSpec =
-                MethodSpec.methodBuilder("load" + CodeUtils.getUpperCamelName(param.getName()))
+                MethodSpec.methodBuilder("load" + CodeUtils.getUpperCamelName(tensorInfo.getName()))
                         .addModifiers(Modifier.PUBLIC)
                         .addParameter(ClassNames.BYTE_BUFFER, "bytebuffer")
-                        .addStatement("$L.loadBuffer(bytebuffer)", param.getName())
+                        .addStatement("$L.loadBuffer(bytebuffer)", tensorInfo.getName())
                         .build();
         classBuilder.addMethod(methodSpec);
     }

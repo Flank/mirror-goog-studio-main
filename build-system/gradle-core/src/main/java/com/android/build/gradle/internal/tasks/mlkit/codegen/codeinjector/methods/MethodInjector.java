@@ -17,12 +17,12 @@
 package com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods;
 
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.CodeInjector;
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 import com.squareup.javapoet.TypeSpec;
 
 /** Inject a method for a class */
-public abstract class MethodInjector implements CodeInjector<TypeSpec.Builder, Param> {
+public abstract class MethodInjector implements CodeInjector<TypeSpec.Builder, TensorInfo> {
 
     @Override
-    public abstract void inject(TypeSpec.Builder classBuilder, Param param);
+    public abstract void inject(TypeSpec.Builder classBuilder, TensorInfo tensorInfo);
 }

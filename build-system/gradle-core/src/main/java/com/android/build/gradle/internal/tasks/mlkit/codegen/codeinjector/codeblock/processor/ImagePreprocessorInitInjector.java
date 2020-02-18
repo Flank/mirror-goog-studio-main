@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.ClassNames;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.CodeUtils;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector;
 import com.android.tools.mlkit.MetadataExtractor;
-import com.android.tools.mlkit.Param;
+import com.android.tools.mlkit.TensorInfo;
 import com.squareup.javapoet.MethodSpec;
 
 /**
@@ -30,28 +30,30 @@ import com.squareup.javapoet.MethodSpec;
 public class ImagePreprocessorInitInjector extends CodeBlockInjector {
 
     @Override
-    public void inject(MethodSpec.Builder methodBuilder, Param param) {
+    public void inject(MethodSpec.Builder methodBuilder, TensorInfo tensorInfo) {
         methodBuilder.addCode(
                 "$T.Builder $L = new $T.Builder()\n",
                 ClassNames.IMAGE_PROCESSOR,
-                CodeUtils.getProcessorBuilderName(param),
+                CodeUtils.getProcessorBuilderName(tensorInfo),
                 ClassNames.IMAGE_PROCESSOR);
 
         methodBuilder.addCode(
                 "  .add(new $T($L, $L, $T.NEAREST_NEIGHBOR))\n",
                 ClassNames.RESIZE_OP,
-                param.getShape()[1],
-                param.getShape()[2],
+                tensorInfo.getShape()[1],
+                tensorInfo.getShape()[2],
                 ClassNames.RESIZE_METHOD);
 
-        MetadataExtractor.NormalizationParams normalizationParams = param.getNormalizationParams();
+        MetadataExtractor.NormalizationParams normalizationParams =
+                tensorInfo.getNormalizationParams();
         methodBuilder.addCode(
                 "  .add(new $T($L, $L))\n",
                 ClassNames.NORMALIZE_OP,
                 CodeUtils.getFloatArrayString(normalizationParams.getMean()),
                 CodeUtils.getFloatArrayString(normalizationParams.getStd()));
 
-        MetadataExtractor.QuantizationParams quantizationParams = param.getQuantizationParams();
+        MetadataExtractor.QuantizationParams quantizationParams =
+                tensorInfo.getQuantizationParams();
         methodBuilder.addCode(
                 "  .add(new $T($Lf, $Lf))\n",
                 ClassNames.QUANTIZE_OP,
@@ -62,11 +64,11 @@ public class ImagePreprocessorInitInjector extends CodeBlockInjector {
                 "  .add(new $T($T.$L));\n",
                 ClassNames.CAST_OP,
                 ClassNames.DATA_TYPE,
-                CodeUtils.getDataType(param.getDataType()));
+                CodeUtils.getDataType(tensorInfo.getDataType()));
 
         methodBuilder.addStatement(
                 "$L = $L.build()",
-                CodeUtils.getProcessorName(param),
-                CodeUtils.getProcessorBuilderName(param));
+                CodeUtils.getProcessorName(tensorInfo),
+                CodeUtils.getProcessorBuilderName(tensorInfo));
     }
 }
