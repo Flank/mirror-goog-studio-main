@@ -221,6 +221,9 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object NATIVE_DEBUG_METADATA: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // symbol tables extracted from native libs, saved as files with *.so.sym extension
     object NATIVE_SYMBOL_TABLES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // a zip containing all of the NATIVE_DEBUG_METADATA or NATIVE_DEBUG_TABLES, to be published in
+    // the outputs folder if creating an APK instead of an app bundle.
+    object MERGED_NATIVE_DEBUG_METADATA: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS, "native-debug-symbols"), Replaceable
 
     // Assets created by compiling shader
     object SHADER_ASSETS: InternalArtifactType<Directory>(DIRECTORY), Replaceable

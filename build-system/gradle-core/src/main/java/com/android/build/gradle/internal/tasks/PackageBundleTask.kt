@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
-import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -91,10 +90,6 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     abstract val nativeDebugMetadataDirs: ConfigurableFileCollection
 
     @get:Input
-    lateinit var debugSymbolLevel: DebugSymbolLevel
-        private set
-
-    @get:Input
     lateinit var aaptOptionsNoCompress: Collection<String>
         private set
 
@@ -145,8 +140,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     // do not compress the bundle in debug builds where it will be only used as an
                     // intermediate artifact
                     uncompressBundle = debuggable,
-                    bundleNeedsFusedStandaloneConfig = bundleNeedsFusedStandaloneConfig,
-                    debugSymbolLevel = debugSymbolLevel
+                    bundleNeedsFusedStandaloneConfig = bundleNeedsFusedStandaloneConfig
                 )
             )
         }
@@ -166,8 +160,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val bundleFile: File,
         val bundleDeps: File?,
         val uncompressBundle: Boolean,
-        val bundleNeedsFusedStandaloneConfig: Boolean,
-        val debugSymbolLevel: DebugSymbolLevel
+        val bundleNeedsFusedStandaloneConfig: Boolean
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params) : Runnable {
@@ -268,18 +261,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 }
             }
 
-            val nativeDebugMetadataPredicate = { file: File ->
-                when (params.debugSymbolLevel) {
-                    DebugSymbolLevel.NONE -> false
-                    DebugSymbolLevel.SYMBOL_TABLE ->
-                        file.name.endsWith(".so.sym", ignoreCase = true)
-                    DebugSymbolLevel.FULL ->
-                        file.name.endsWith(".so.dbg", ignoreCase = true)
-                }
-            }
-
             params.nativeDebugMetadataDirs.forEach { dir ->
-                FileUtils.getAllFiles(dir).filter(nativeDebugMetadataPredicate).forEach { file ->
+                FileUtils.getAllFiles(dir).forEach { file ->
                     command.addMetadataFile(
                         "com.android.tools.build.debugsymbols",
                         "${file.parentFile.name}/${file.name}",
@@ -378,38 +361,9 @@ abstract class PackageBundleTask : NonIncrementalTask() {
 
             task.debuggable = creationConfig.variantDslInfo.isDebuggable
 
-            task.debugSymbolLevel = creationConfig.variantDslInfo.ndkConfig.debugSymbolLevelEnum
-            when (task.debugSymbolLevel) {
-                DebugSymbolLevel.FULL -> {
-                    task.nativeDebugMetadataDirs.from(
-                        creationConfig.artifacts.getFinalProduct(
-                            InternalArtifactType.NATIVE_DEBUG_METADATA
-                        )
-                    )
-                    task.nativeDebugMetadataDirs.from(
-                        creationConfig.variantDependencies.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
-                            AndroidArtifacts.ArtifactScope.PROJECT,
-                            AndroidArtifacts.ArtifactType.REVERSE_METADATA_NATIVE_DEBUG_METADATA
-                        )
-                    )
-                }
-                DebugSymbolLevel.SYMBOL_TABLE -> {
-                    task.nativeDebugMetadataDirs.from(
-                        creationConfig.artifacts.getFinalProduct(
-                            InternalArtifactType.NATIVE_SYMBOL_TABLES
-                        )
-                    )
-                    task.nativeDebugMetadataDirs.from(
-                        creationConfig.variantDependencies.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
-                            AndroidArtifacts.ArtifactScope.PROJECT,
-                            AndroidArtifacts.ArtifactType.REVERSE_METADATA_NATIVE_SYMBOL_TABLES
-                        )
-                    )
-                }
-                DebugSymbolLevel.NONE -> {}
-            }
+            task.nativeDebugMetadataDirs.from(
+                MergeNativeDebugMetadataTask.getNativeDebugMetadataDirs(creationConfig)
+            )
             task.nativeDebugMetadataDirs.disallowChanges()
 
             task.aaptOptionsNoCompress =

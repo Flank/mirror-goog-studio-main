@@ -20,7 +20,6 @@ import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
-import com.android.build.api.variant.impl.MutableDependenciesInfoImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
 import com.android.build.gradle.internal.TaskManager
@@ -284,6 +283,9 @@ class ApplicationTaskManager(
             taskFactory.register(BundleToApkTask.CreationAction(variantProperties))
             taskFactory.register(BundleToStandaloneApkTask.CreationAction(variantProperties))
             taskFactory.register(ExtractApksTask.CreationAction(variantProperties))
+            val mergeNativeDebugMetadataTask =
+                taskFactory.register(MergeNativeDebugMetadataTask.CreationAction(variantProperties))
+            variantProperties.taskContainer.assembleTask.dependsOn(mergeNativeDebugMetadataTask)
         }
     }
 

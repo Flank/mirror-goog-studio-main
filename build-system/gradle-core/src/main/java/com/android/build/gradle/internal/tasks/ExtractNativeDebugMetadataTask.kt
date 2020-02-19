@@ -202,12 +202,12 @@ class ExtractNativeDebugMetadataDelegate(
             when (debugSymbolLevel) {
                 DebugSymbolLevel.FULL -> {
                     outputFile =
-                        File(outputDir, "${FileUtils.relativePath(inputFile, inputDir)}.dbg")
+                        File(outputDir, "${inputFile.parentFile.name}/${inputFile.name}.dbg")
                     objcopyArgs = listOf("--only-keep-debug")
                 }
                 DebugSymbolLevel.SYMBOL_TABLE -> {
                     outputFile =
-                        File(outputDir, "${FileUtils.relativePath(inputFile, inputDir)}.sym")
+                        File(outputDir, "${inputFile.parentFile.name}/${inputFile.name}.sym")
                     objcopyArgs = listOf("-j", "symtab", "-j", "dynsym")
                 }
                 DebugSymbolLevel.NONE ->
