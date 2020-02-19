@@ -222,9 +222,6 @@ class UastEnvironment private constructor(
         for (extension in CompilerConfigurationExtension.getInstances(project)) {
             extension.updateConfiguration(configuration)
         }
-
-        registerAppExtensionPoints()
-        registerAppExtensions(disposable)
     }
 
     val project: Project
@@ -302,6 +299,8 @@ class UastEnvironment private constructor(
                         configuration,
                         unitTestMode = false
                     )
+                    registerAppExtensionPoints()
+                    registerAppExtensions(disposable)
                     if (DEBUGGING && ourCreator == null) {
                         ourCreator = Throwable()
                     }
