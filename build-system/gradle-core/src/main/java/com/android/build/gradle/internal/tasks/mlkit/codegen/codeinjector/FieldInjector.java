@@ -28,6 +28,10 @@ public class FieldInjector implements CodeInjector<TypeSpec.Builder, TensorInfo>
 
     @Override
     public void inject(TypeSpec.Builder classBuilder, TensorInfo tensorInfo) {
+        if (!tensorInfo.isMetadataExisted()) {
+            return;
+        }
+
         if (tensorInfo.getFileName() != null) {
             FieldSpec fieldName =
                     FieldSpec.builder(

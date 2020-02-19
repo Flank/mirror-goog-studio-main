@@ -23,31 +23,22 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import org.junit.Before;
 import org.junit.Test;
 
 public class ModelInfoTest {
     private static final double DELTA = 10e-6;
 
-    private MetadataExtractor metadataExtractor;
-
-    @Before
-    public void setUp() throws IOException {
-        File modelFile =
-                TestUtils.getWorkspaceFile("prebuilts/tools/common/mlkit/testData/model.tflite");
-        RandomAccessFile f = new RandomAccessFile(modelFile, "r");
-        byte[] data = new byte[(int) f.length()];
-        f.readFully(data);
-        f.close();
-        metadataExtractor = new MetadataExtractor(ByteBuffer.wrap(data));
-    }
-
     @Test
-    public void testModelExtractedCorrectly() throws ModelParsingException {
-        ModelInfo modelInfo = ModelInfo.buildFrom(metadataExtractor);
+    public void testQuantMetadataModelExtractedCorrectly()
+            throws ModelParsingException, IOException {
+        ModelInfo modelInfo =
+                ModelInfo.buildFrom(
+                        createExtractorFromModel(
+                                "prebuilts/tools/common/mlkit/testData/mobilenet_quant_metadata.tflite"));
 
         assertEquals(modelInfo.getInputs().size(), 1);
         assertEquals(modelInfo.getOutputs().size(), 1);
+        assertEquals(modelInfo.isMetadataExisted(), true);
 
         TensorInfo inputTensorInfo = modelInfo.getInputs().get(0);
         assertEquals(inputTensorInfo.getContentType(), TensorInfo.ContentType.IMAGE);
@@ -68,5 +59,28 @@ public class ModelInfoTest {
                 outputTensorInfo.getQuantizationParams();
         assertEquals(outputQuantization.getZeroPoint(), 0, DELTA);
         assertEquals(outputQuantization.getScale(), 0.00390625, DELTA);
+    }
+
+    @Test
+    public void testQuantModelExtractedCorrectly() throws ModelParsingException, IOException {
+        ModelInfo modelInfo =
+                ModelInfo.buildFrom(
+                        createExtractorFromModel(
+                                "prebuilts/tools/common/mlkit/testData/mobilenet_quant_no_metadata.tflite"));
+
+        assertEquals(modelInfo.getInputs().size(), 1);
+        assertEquals(modelInfo.getOutputs().size(), 1);
+        assertEquals(modelInfo.isMetadataExisted(), false);
+        assertEquals(modelInfo.getInputs().get(0).getName(), "inputFeature0");
+        assertEquals(modelInfo.getOutputs().get(0).getName(), "outputFeature0");
+    }
+
+    private MetadataExtractor createExtractorFromModel(String filePath) throws IOException {
+        File modelFile = TestUtils.getWorkspaceFile(filePath);
+        RandomAccessFile f = new RandomAccessFile(modelFile, "r");
+        byte[] data = new byte[(int) f.length()];
+        f.readFully(data);
+        f.close();
+        return new MetadataExtractor(ByteBuffer.wrap(data));
     }
 }

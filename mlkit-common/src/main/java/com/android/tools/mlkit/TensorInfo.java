@@ -26,6 +26,9 @@ import tflite.Tensor;
  * necessary data for input or output tensor.
  */
 public class TensorInfo {
+    private static final String DEFAULT_INPUT_NAME = "inputFeature";
+    private static final String DEFAULT_OUTPUT_NAME = "outputFeature";
+
     public enum DataType {
         FLOAT32(0),
         INT32(2),
@@ -103,6 +106,7 @@ public class TensorInfo {
     private Source source;
     private ContentType contentType;
     private String description;
+    private boolean metadataExisted;
     private MetadataExtractor.NormalizationParams normalizationParams;
     private MetadataExtractor.QuantizationParams quantizationParams;
 
@@ -138,6 +142,10 @@ public class TensorInfo {
         return description;
     }
 
+    public boolean isMetadataExisted() {
+        return metadataExisted;
+    }
+
     public MetadataExtractor.NormalizationParams getNormalizationParams() {
         return normalizationParams;
     }
@@ -155,6 +163,7 @@ public class TensorInfo {
         private Source source;
         private ContentType contentType = ContentType.UNKNOWN;
         private String description;
+        private boolean metadataExisted;
         private MetadataExtractor.NormalizationParams normalizationParams;
         private MetadataExtractor.QuantizationParams quantizationParams;
 
@@ -193,6 +202,11 @@ public class TensorInfo {
             return this;
         }
 
+        public Builder setMetadataExisted(boolean metadataExisted) {
+            this.metadataExisted = metadataExisted;
+            return this;
+        }
+
         public Builder setNormalizationParams(
                 MetadataExtractor.NormalizationParams normalizationParams) {
             this.normalizationParams = normalizationParams;
@@ -220,6 +234,7 @@ public class TensorInfo {
             tensorInfo.source = source;
             tensorInfo.contentType = contentType;
             tensorInfo.description = description;
+            tensorInfo.metadataExisted = metadataExisted;
             tensorInfo.normalizationParams = normalizationParams;
             tensorInfo.quantizationParams = quantizationParams;
 
@@ -229,6 +244,8 @@ public class TensorInfo {
 
     public static TensorInfo parseFrom(MetadataExtractor extractor, Source source, int index) {
         TensorInfo.Builder builder = new TensorInfo.Builder();
+
+        // Deal with data from original model
         if (source == Source.INPUT) {
             builder.setShape(extractor.getInputTensorShape(0, index));
             builder.setDataType(DataType.fromByte(extractor.getInputTensorType(0, index)));
@@ -236,36 +253,51 @@ public class TensorInfo {
             builder.setShape(extractor.getOutputTensorShape(0, index));
             builder.setDataType(DataType.fromByte(extractor.getOutputTensorType(0, index)));
         }
-
-        ModelMetadata metadata = extractor.getModelMetaData();
-        TensorMetadata tensorMetadata =
-                source == Source.INPUT
-                        ? metadata.subgraphMetadata(0).inputTensorMetadata(index)
-                        : metadata.subgraphMetadata(0).outputTensorMetadata(index);
-        Tensor tensor =
-                source == Source.INPUT
-                        ? extractor.getInputTensor(0, index)
-                        : extractor.getOutputTensor(0, index);
-
-        AssociatedFile file = tensorMetadata.associatedFiles(0);
-        if (file != null) {
-            builder.setFileName(file.name());
-            builder.setFileType(FileType.fromByte(file.type()));
-        }
-
-        builder.setContentType(ContentType.fromByte(tensorMetadata.contentType()));
-        builder.setName(tensorMetadata.name() == null ? "data" + index : tensorMetadata.name());
-        builder.setDescription(tensorMetadata.description());
-        builder.setQuantizationParams(extractor.getQuantizationParams(tensor));
         builder.setSource(source);
 
-        if (tensorMetadata.stats() != null && tensorMetadata.stats().meanAsByteBuffer() != null) {
-            builder.setNormalizationParams(
-                    new MetadataExtractor.NormalizationParams(
-                            tensorMetadata.stats().meanAsByteBuffer().asFloatBuffer(),
-                            tensorMetadata.stats().stdAsByteBuffer().asFloatBuffer()));
+        // Deal with data from extra metadata
+        ModelMetadata metadata = extractor.getModelMetaData();
+        if (metadata == null) {
+            builder.setMetadataExisted(false);
+            builder.setName(getDefaultName(source, index));
+        } else {
+            builder.setMetadataExisted(true);
+            TensorMetadata tensorMetadata =
+                    source == Source.INPUT
+                            ? metadata.subgraphMetadata(0).inputTensorMetadata(index)
+                            : metadata.subgraphMetadata(0).outputTensorMetadata(index);
+            Tensor tensor =
+                    source == Source.INPUT
+                            ? extractor.getInputTensor(0, index)
+                            : extractor.getOutputTensor(0, index);
+
+            AssociatedFile file = tensorMetadata.associatedFiles(0);
+            if (file != null) {
+                builder.setFileName(file.name());
+                builder.setFileType(FileType.fromByte(file.type()));
+            }
+
+            builder.setContentType(ContentType.fromByte(tensorMetadata.contentType()));
+            builder.setName(
+                    tensorMetadata.name() == null
+                            ? getDefaultName(source, index)
+                            : tensorMetadata.name());
+            builder.setDescription(tensorMetadata.description());
+            builder.setQuantizationParams(extractor.getQuantizationParams(tensor));
+
+            if (tensorMetadata.stats() != null
+                    && tensorMetadata.stats().meanAsByteBuffer() != null) {
+                builder.setNormalizationParams(
+                        new MetadataExtractor.NormalizationParams(
+                                tensorMetadata.stats().meanAsByteBuffer().asFloatBuffer(),
+                                tensorMetadata.stats().stdAsByteBuffer().asFloatBuffer()));
+            }
         }
 
         return builder.build();
+    }
+
+    private static String getDefaultName(Source source, int index) {
+        return (source == Source.INPUT ? DEFAULT_INPUT_NAME : DEFAULT_OUTPUT_NAME) + index;
     }
 }

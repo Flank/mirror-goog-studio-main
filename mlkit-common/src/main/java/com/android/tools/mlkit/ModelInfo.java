@@ -32,6 +32,7 @@ public class ModelInfo {
     private String modelVersion;
     private String modelAuthor;
     private String modelLicense;
+    private boolean metaDataExisted;
 
     private ModelInfo() {
         inputs = new ArrayList<>();
@@ -66,6 +67,10 @@ public class ModelInfo {
         return modelLicense;
     }
 
+    public boolean isMetadataExisted() {
+        return metaDataExisted;
+    }
+
     public static ModelInfo buildFrom(MetadataExtractor extractor) throws ModelParsingException {
         ModelVerifier.verifyModel(extractor);
 
@@ -81,11 +86,16 @@ public class ModelInfo {
         }
 
         ModelMetadata modelMetadata = extractor.getModelMetaData();
-        modelInfo.modelName = modelMetadata.name();
-        modelInfo.modelDescription = modelMetadata.description();
-        modelInfo.modelVersion = modelMetadata.version();
-        modelInfo.modelAuthor = modelMetadata.author();
-        modelInfo.modelLicense = modelMetadata.license();
+
+        // TODO(jackqdyulei): consider to remove this check and make fields not null.
+        if (modelMetadata != null) {
+            modelInfo.modelName = modelMetadata.name();
+            modelInfo.modelDescription = modelMetadata.description();
+            modelInfo.modelVersion = modelMetadata.version();
+            modelInfo.modelAuthor = modelMetadata.author();
+            modelInfo.modelLicense = modelMetadata.license();
+            modelInfo.metaDataExisted = true;
+        }
 
         return modelInfo;
     }
