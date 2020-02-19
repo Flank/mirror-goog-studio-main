@@ -21,6 +21,7 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.variant.DependenciesInfo
+import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
@@ -48,12 +49,16 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
+import com.android.ide.common.build.GenericBuiltArtifact
+import com.android.ide.common.build.GenericBuiltArtifactsSplitOutputMatcher
+import com.android.ide.common.build.GenericFilterConfiguration
 import com.android.ide.common.build.SplitOutputMatcher
 import com.android.resources.Density
 import com.android.utils.Pair
 import com.google.common.base.Joiner
 import com.google.common.base.Strings
 import com.google.common.collect.ImmutableList
+import java.io.File
 import java.util.Arrays
 import java.util.Objects
 import java.util.function.Consumer
@@ -295,12 +300,22 @@ class ApplicationVariantFactory(
         val buildTargetDensity =
             projectOptions[StringOption.IDE_BUILD_TARGET_DENSITY]
         val density = Density.getEnum(buildTargetDensity)
-        val apkDataList = variantOutputs
-            .stream()
-            .map(VariantOutputImpl::apkData)
-            .collect(Collectors.toList())
-        val apksToGenerate = SplitOutputMatcher.computeBestOutput(
-            apkDataList,
+        val genericBuiltArtifacts = variantOutputs
+            .map { variantOutput ->
+                GenericBuiltArtifact(
+                    outputType = variantOutput.outputType.name,
+                    filters = variantOutput.filters.map { filter -> GenericFilterConfiguration(filter.filterType.name, filter.identifier) },
+                    // this is wrong, talk to xav@, we cannot continue supporting this.
+                    versionCode = variantOutput.versionCode.get(),
+                    versionName = variantOutput.versionName.get(),
+                    isEnabled = variantOutput.enabled.get(),
+                    outputFile = "not_provided",
+                    properties = mapOf()
+                ) to variantOutput
+            }
+            .toMap()
+        val computedBestArtifact = GenericBuiltArtifactsSplitOutputMatcher.computeBestArtifact(
+            genericBuiltArtifacts.keys,
             supportedAbis,
             density?.dpiValue ?: -1,
             Arrays.asList(
@@ -309,16 +324,12 @@ class ApplicationVariantFactory(
                 ).split(",".toRegex()).toTypedArray()
             )
         )
-        if (apksToGenerate.isEmpty()) {
-            val splits = apkDataList
-                .stream()
-                .map { obj: ApkData -> obj.filterName }
-                .filter { obj: String? ->
-                    Objects.nonNull(
-                        obj
-                    )
+        if (computedBestArtifact == null) {
+            val splits = variantOutputs
+                .map { obj: com.android.build.api.variant.VariantOutput -> obj.filters }
+                .map { filters: Collection<FilterConfiguration> ->
+                    filters.joinToString(",")
                 }
-                .collect(Collectors.toList())
             projectServices
                 .issueReporter
                 .reportWarning(
@@ -334,10 +345,8 @@ class ApplicationVariantFactory(
             // do not disable anything, build all and let the apk install figure it out.
             return
         }
-        variantOutputs.forEach {
-            if (!apksToGenerate.contains(it.apkData)) {
-                it.enabled.set(false)
-            }
+        genericBuiltArtifacts.forEach { key: GenericBuiltArtifact, value: VariantOutputImpl ->
+            if (key != computedBestArtifact) value.enabled.set(false)
         }
     }
 }

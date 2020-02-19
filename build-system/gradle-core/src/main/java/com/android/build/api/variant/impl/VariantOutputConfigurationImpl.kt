@@ -18,7 +18,7 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
-import com.android.build.api.variant.VariantOutputConfiguration.*
+import com.android.build.api.variant.VariantOutputConfiguration.OutputType
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.utils.appendCamelCase
 import java.io.File
@@ -58,7 +58,7 @@ fun VariantOutputConfiguration.baseName(variantDslInfo: VariantDslInfo): String 
 
 fun VariantOutputConfiguration.dirName(): String {
     return when (this.outputType) {
-        OutputType.UNIVERSAL -> outputType.name
+        OutputType.UNIVERSAL -> outputType.name.toLowerCase(Locale.US)
         OutputType.SINGLE -> ""
         OutputType.ONE_OF_MANY ->
             filters.map(FilterConfiguration::identifier).joinToString(File.separator)
@@ -66,16 +66,16 @@ fun VariantOutputConfiguration.dirName(): String {
     }
 }
 
-fun OutputType.fullName(
-    voc: VariantOutputConfiguration,  variantDslInfo: VariantDslInfo): String {
-    return when (this) {
+fun VariantOutputConfiguration.fullName(variantDslInfo: VariantDslInfo): String {
+    return when (this.outputType) {
         OutputType.UNIVERSAL ->
-            variantDslInfo.computeFullNameWithSplits(name.toLowerCase(Locale.US))
+            variantDslInfo.computeFullNameWithSplits(
+                OutputType.UNIVERSAL.name.toLowerCase(Locale.US))
         OutputType.SINGLE ->
             variantDslInfo.componentIdentity.name
         OutputType.ONE_OF_MANY -> {
-            val filterName = voc.filters.getFilterName()
-            return variantDslInfo.computeBaseNameWithSplits(filterName)
+            val filterName = filters.getFilterName()
+            return variantDslInfo.computeFullNameWithSplits(filterName)
         }
         else -> throw RuntimeException("Unhandled OutputType $this")
     }

@@ -29,6 +29,8 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
 import com.android.build.api.variant.impl.baseName
+import com.android.build.api.variant.impl.baseName
+import com.android.build.api.variant.impl.fullName
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
@@ -246,8 +248,8 @@ abstract class ComponentPropertiesImpl(
             versionNameProperty,
             variantPropertiesApiServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true, "$name::isEnabled"),
             variantOutputConfiguration,
-            apkData.baseName.orEmpty(),
-            apkData.fullName.orEmpty(),
+            variantOutputConfiguration.baseName(variantDslInfo),
+            variantOutputConfiguration.fullName(variantDslInfo),
             variantPropertiesApiServices.newPropertyBackingDeprecatedApi(
                 String::class.java,
                 outputFileName
@@ -255,8 +257,7 @@ abstract class ComponentPropertiesImpl(
                         globalScope.archivesBaseName,
                         variantOutputConfiguration.baseName(variantDslInfo)
                     ),
-                "$name::archivesBaseName"),
-            apkData
+                "$name::archivesBaseName")
         ).also {
             apkData.variantOutput = it
             variantOutputs.add(it)

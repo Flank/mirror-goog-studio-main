@@ -23,7 +23,6 @@ import com.android.annotations.Nullable;
 import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.api.LibraryVariantOutput;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.TaskContainer;
 import java.io.File;
 import javax.inject.Inject;
@@ -45,12 +44,6 @@ public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements L
         super(taskContainer, deprecationReporter, variantOutput);
     }
 
-    @Override
-    @NonNull
-    protected ApkData getApkData() {
-        return apkData;
-    }
-
     @Nullable
     @Override
     public Zip getPackageLibrary() {
@@ -69,7 +62,7 @@ public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements L
         if (packageTask != null) {
             return new File(
                     packageTask.getDestinationDirectory().get().getAsFile(),
-                    apkData.getOutputFileName());
+                    variantOutput.getOutputFileName().get());
         } else {
             return super.getOutputFile();
         }

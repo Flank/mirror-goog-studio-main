@@ -120,23 +120,6 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
         return getFilters().stream().map(FilterData::getFilterType).collect(Collectors.toList());
     }
 
-    // FIX-ME: we can have more than one value, especially for languages...
-    // so far, we will return things like "fr,fr-rCA" for a single value.
-    @Nullable
-    public FilterData getFilter(@NonNull VariantOutput.FilterType filterType) {
-        for (FilterData filter : getFilters()) {
-            if (VariantOutput.FilterType.valueOf(filter.getFilterType()) == filterType) {
-                return filter;
-            }
-        }
-        return null;
-    }
-
-    @Nullable
-    public String getFilter(String filterType) {
-        return ApkData.getFilter(getFilters(), VariantOutput.FilterType.valueOf(filterType));
-    }
-
     @NonNull
     @Input
     public abstract String getBaseName();

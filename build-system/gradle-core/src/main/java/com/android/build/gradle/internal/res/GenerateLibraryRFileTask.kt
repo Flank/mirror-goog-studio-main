@@ -284,7 +284,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
 
-            task.mainSplit = creationConfig.outputs.getMainSplit().apkData
+            task.mainSplit = creationConfig.outputs.getMainSplit()
 
             // This task can produce R classes with either constant IDs ("0") or sequential IDs
             // mimicking the way AAPT2 numbers IDs. If we're generating a compile time only R class
@@ -345,7 +345,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task.packageForR.setDisallowChanges(task.project.provider {
                 Strings.nullToEmpty(creationConfig.variantDslInfo.originalApplicationId)
             })
-            task.mainSplit = creationConfig.outputs.getMainSplit().apkData
+            task.mainSplit = creationConfig.outputs.getMainSplit()
             task.useConstantIds.setDisallowChanges(false)
 
             creationConfig.onTestedConfig {

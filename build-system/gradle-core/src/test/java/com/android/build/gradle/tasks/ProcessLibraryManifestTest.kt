@@ -61,18 +61,7 @@ class ProcessLibraryManifestTest {
                 variantOutputConfiguration = VariantOutputConfigurationImpl(),
                 baseName = "base_name",
                 fullName = "fooRelease",
-                outputFileName = project.objects.property(String::class.java).also { it.set("output_file_name") },
-                apkData = ApkData.of(
-                    VariantOutput.OutputType.MAIN,
-                    emptyList(),
-                    1,
-                    "",
-                    "",
-                    "",
-                    "fooRelease",
-                    "",
-                    ""
-                )
+                outputFileName = project.objects.property(String::class.java).also { it.set("output_file_name") }
         ))
     }
 

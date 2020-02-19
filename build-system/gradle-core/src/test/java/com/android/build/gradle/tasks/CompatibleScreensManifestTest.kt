@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.VariantOutput
 import com.android.build.api.component.impl.ComponentIdentityImpl
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
@@ -30,18 +29,14 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.createTaskCreationServices
-import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.sdklib.AndroidVersion
-import com.android.utils.Pair
 import com.google.common.base.Joiner
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
@@ -128,7 +123,6 @@ class CompatibleScreensManifestTest {
         val configAction = CompatibleScreensManifest.CreationAction(
                 variantProperties, setOf("xxhpi", "xxxhdpi")
         )
-        val outputFactory = OutputFactory(PROJECT, variantDslInfo)
         val variantOutputList = VariantOutputList(
             listOf(
                 VariantOutputImpl(
@@ -138,9 +132,7 @@ class CompatibleScreensManifestTest {
                     Mockito.mock(VariantOutputConfigurationImpl::class.java),
                     "base_name",
                     "main_full_name",
-                    FakeGradleProperty(value = "output_file_name"),
-                    outputFactory.addMainApk())
-            ))
+                    FakeGradleProperty(value = "output_file_name"))))
         `when`(variantProperties.outputs).thenReturn(variantOutputList)
 
         configAction.configure(task)
@@ -157,7 +149,6 @@ class CompatibleScreensManifestTest {
     @Test
     fun testNoSplit() {
 
-        val outputFactory = OutputFactory(PROJECT, variantDslInfo)
         task.variantOutputs.add(
             VariantOutputImpl(FakeGradleProperty(5),
             FakeGradleProperty("version_name"),
@@ -165,8 +156,7 @@ class CompatibleScreensManifestTest {
             VariantOutputConfigurationImpl(false, listOf()),
                 "base_name",
                 "main_full_name",
-                FakeGradleProperty(value = "output_file_name"),
-                outputFactory.addMainApk()))
+                FakeGradleProperty(value = "output_file_name")))
 
         task.variantName = "variant"
         task.minSdkVersion.set("22" )
@@ -184,7 +174,6 @@ class CompatibleScreensManifestTest {
     @Throws(IOException::class)
     fun testSingleSplitWithMinSdkVersion() {
 
-        val outputFactory = OutputFactory(PROJECT, variantDslInfo)
         task.variantOutputs.add(
             VariantOutputImpl(FakeGradleProperty(5),
                 FakeGradleProperty("version_name"),
@@ -194,16 +183,7 @@ class CompatibleScreensManifestTest {
                 "base_name",
 
                 "split_full_name",
-                FakeGradleProperty(value = "output_file_name"),
-                outputFactory.addFullSplit(
-                    ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
-                        Pair.of<VariantOutput.FilterType, String>(
-                                VariantOutput.FilterType.DENSITY,
-                                "xhdpi"
-                        )
-                ))
-            )
-        )
+                FakeGradleProperty(value = "output_file_name")))
 
         task.variantName = "variant"
         task.minSdkVersion.set("22")
@@ -228,7 +208,6 @@ class CompatibleScreensManifestTest {
     @Throws(IOException::class)
     fun testSingleSplitWithoutMinSdkVersion() {
 
-        val outputFactory = OutputFactory(PROJECT, variantDslInfo)
         task.variantOutputs.add(
             VariantOutputImpl(FakeGradleProperty(5),
                 FakeGradleProperty("version_name"),
@@ -237,16 +216,7 @@ class CompatibleScreensManifestTest {
                     listOf(FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xhdpi"))),
                 "base_name",
                 "split_full_name",
-                FakeGradleProperty(value = "output_file_name"),
-                outputFactory.addFullSplit(
-                    ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
-                        Pair.of<VariantOutput.FilterType, String>(
-                            VariantOutput.FilterType.DENSITY,
-                            "xhdpi"
-                        )
-                    ))
-            )
-        )
+                FakeGradleProperty(value = "output_file_name")))
 
         task.variantName = "variant"
         task.minSdkVersion.set(task.project.provider { null })
@@ -269,7 +239,6 @@ class CompatibleScreensManifestTest {
     @Throws(IOException::class)
     fun testMultipleSplitsWithMinSdkVersion() {
 
-        val outputFactory = OutputFactory(PROJECT, variantDslInfo)
         task.variantOutputs.add(
             VariantOutputImpl(FakeGradleProperty(5),
                 FakeGradleProperty("version_name"),
@@ -278,16 +247,7 @@ class CompatibleScreensManifestTest {
                     listOf(FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xhdpi"))),
                 "base_name",
                 "split_full_name",
-                FakeGradleProperty(value = "output_file_name"),
-                outputFactory.addFullSplit(
-                    ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
-                        Pair.of<VariantOutput.FilterType, String>(
-                            VariantOutput.FilterType.DENSITY,
-                            "xhdpi"
-                        )
-                    ))
-            )
-        )
+                FakeGradleProperty(value = "output_file_name")))
 
         task.variantOutputs.add(
             VariantOutputImpl(FakeGradleProperty(5),
@@ -298,16 +258,8 @@ class CompatibleScreensManifestTest {
                 "base_name",
 
                 "split_full_name",
-                FakeGradleProperty(value = "output_file_name"),
-                outputFactory.addFullSplit(
-                    ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
-                        Pair.of<VariantOutput.FilterType, String>(
-                            VariantOutput.FilterType.DENSITY,
-                            "xxhdpi"
-                        )
-                    ))
-            )
-        )
+                FakeGradleProperty(value = "output_file_name")))
+
 
         task.variantName = "variant"
         task.minSdkVersion.set("23")
@@ -337,8 +289,6 @@ class CompatibleScreensManifestTest {
     }
 
     companion object {
-        private const val PROJECT = "project"
-
         private fun findManifest(taskOutputDir: File, splitName: String): File {
             val splitDir = File(taskOutputDir, splitName)
             assertThat(splitDir.exists()).isTrue()

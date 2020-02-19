@@ -82,6 +82,7 @@ class VariantPropertiesImplTest {
         Mockito.`when`(variantDslInfo.componentIdentity).thenReturn(componentIdentity)
         Mockito.`when`(componentIdentity.name).thenReturn("test")
         Mockito.`when`(globalScope.archivesBaseName).thenReturn("archive_base")
+        Mockito.`when`(variantDslInfo.baseName).thenReturn("base_name")
 
         properties = FakeVariantProperties(
             componentIdentity,

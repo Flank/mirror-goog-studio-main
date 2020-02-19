@@ -750,7 +750,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .build()) {
             packager.updateFiles();
         }
-
         /*
          * Save all used zips in the cache.
          */

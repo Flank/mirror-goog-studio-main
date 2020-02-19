@@ -51,9 +51,7 @@ class BuiltArtifactsImplTest {
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
-                    isEnabled = true,
-                    baseName = "someBaseName",
-                    fullName = "someFullName"
+                    isEnabled = true
                 )
             )
         ).save(FakeGradleDirectory(outputFolder))
@@ -73,8 +71,6 @@ class BuiltArtifactsImplTest {
   "elements": [
     {
       "type": "SINGLE",
-      "baseName": "someBaseName",
-      "fullName": "someFullName",
       "filters": [],
       "properties": [],
       "versionCode": 123,
@@ -218,8 +214,6 @@ class BuiltArtifactsImplTest {
   "elements": [
     {
       "type": "ONE_OF_MANY",
-      "baseName": "someBaseName",
-      "fullName": "someFullName",
       "filters": [
         {
           "filterType": "DENSITY",
@@ -339,9 +333,7 @@ class BuiltArtifactsImplTest {
                 isUniversal = false,
                 filters = listOf(
                     FilterConfiguration(FilterConfiguration.FilterType.DENSITY, densityValue)
-                )),
-            baseName = "someBaseName",
-            fullName = "someFullName"
+                ))
         )
 
     private fun createBuiltArtifacts(vararg elements: BuiltArtifactImpl) =

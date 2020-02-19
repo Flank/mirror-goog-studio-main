@@ -30,16 +30,6 @@ data class DefaultApkData(
     private val _baseName: String,
     private val _dirName: String = ""
 ) : ApkData() {
-
-    override fun getFilter(filterType: VariantOutput.FilterType): FilterData? {
-        for (filter in filters) {
-            if (filter.filterType == filterType.name) {
-                return filter
-            }
-        }
-        return null
-    }
-
     override fun getVersionCode(): Int = _versionCode
     override fun getVersionName(): String? = _versionName
     override fun getOutputFileName(): String? = _outputFileName

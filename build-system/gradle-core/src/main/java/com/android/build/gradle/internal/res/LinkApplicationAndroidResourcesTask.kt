@@ -428,7 +428,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 )
             }
 
-            task.mainSplit = creationConfig.outputs.getMainSplitOrNull()?.apkData
+            task.mainSplit = creationConfig.outputs.getMainSplitOrNull()
             task.originalApplicationId.setDisallowChanges(project.provider { creationConfig.originalApplicationId })
 
             task.taskInputType = creationConfig.manifestArtifactType
@@ -876,48 +876,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @PathSensitive(PathSensitivity.RELATIVE)
     fun getCompiledDependenciesResources(): FileCollection? {
         return compiledDependenciesResources?.artifactFiles
-    }
-
-    private fun findPackagedResForSplit(outputFolder: File?, apkData: ApkData): File? {
-        val resourcePattern = Pattern.compile(
-            FN_RES_BASE + RES_QUALIFIER_SEP + apkData.fullName + ".ap__(.*)"
-        )
-
-        if (outputFolder == null) {
-            return null
-        }
-        val files = outputFolder.listFiles()
-        if (files != null) {
-            for (file in files) {
-                val match = resourcePattern.matcher(file.name)
-                // each time we match, we remove the associated filter from our copies.
-                if (match.matches()
-                    && !match.group(1).isEmpty()
-                    && isValidSplit(apkData, match.group(1))
-                ) {
-                    return file
-                }
-            }
-        }
-        return null
-    }
-
-    /**
-     * Returns true if the passed split identifier is a valid identifier (valid mean it is a
-     * requested split for this task). A density split identifier can be suffixed with characters
-     * added by aapt.
-     */
-    private fun isValidSplit(apkData: ApkData, splitWithOptionalSuffix: String): Boolean {
-
-        var splitFilter = apkData.getFilter(VariantOutput.FilterType.DENSITY)
-        if (splitFilter != null) {
-            if (splitWithOptionalSuffix.startsWith(splitFilter.identifier)) {
-                return true
-            }
-        }
-        val mangledName = unMangleSplitName(splitWithOptionalSuffix)
-        splitFilter = apkData.getFilter(VariantOutput.FilterType.LANGUAGE)
-        return splitFilter != null && mangledName == splitFilter.identifier
     }
 
     /**

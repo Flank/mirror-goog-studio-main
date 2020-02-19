@@ -18,8 +18,9 @@ package com.android.build.gradle.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.api.variant.impl.VariantOutputConfigurationImplKt;
+import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.internal.component.BaseCreationConfig;
-import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
@@ -34,7 +35,7 @@ import org.gradle.api.tasks.PathSensitivity;
 /** Base class for process resources / create R class task, to satisfy existing variants API. */
 public abstract class ProcessAndroidResources extends IncrementalTask {
 
-    protected ApkData mainSplit;
+    protected VariantOutputImpl mainSplit;
 
     @InputFiles
     @Optional
@@ -63,7 +64,9 @@ public abstract class ProcessAndroidResources extends IncrementalTask {
 
         Preconditions.checkNotNull(mainSplit);
         return FileUtils.join(
-                manifestDirectory, mainSplit.getDirName(), SdkConstants.ANDROID_MANIFEST_XML);
+                manifestDirectory,
+                VariantOutputConfigurationImplKt.dirName(mainSplit),
+                SdkConstants.ANDROID_MANIFEST_XML);
     }
 
     protected static boolean generatesProguardOutputFile(
