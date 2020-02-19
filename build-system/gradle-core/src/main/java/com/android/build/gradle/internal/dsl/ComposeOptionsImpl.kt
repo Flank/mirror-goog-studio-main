@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.dsl
 
-open class ComposeOptionsImpl: ComposeOptions {
+import com.android.build.api.dsl.ComposeOptions
+
+open class ComposeOptionsImpl : ComposeOptions {
     override var kotlinCompilerVersion: String? = null
     override var kotlinCompilerExtensionVersion: String? = null
 }

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
@@ -117,6 +118,13 @@ abstract class CommonExtensionImpl<
 
     override fun compileSdkVersion(apiLevel: Int) {
         compileSdkVersion("android-$apiLevel")
+    }
+
+    override val composeOptions: ComposeOptions =
+        dslServices.newInstance(ComposeOptionsImpl::class.java)
+
+    override fun composeOptions(action: ComposeOptions.() -> Unit) {
+        action.invoke(composeOptions)
     }
 
     override fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>) {

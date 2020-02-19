@@ -457,4 +457,8 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [Splits].
      */
     fun splits(action: SplitsT.() -> Unit)
+
+    val composeOptions: ComposeOptions
+
+    fun composeOptions(action: ComposeOptions.() -> Unit)
 }
