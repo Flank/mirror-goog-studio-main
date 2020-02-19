@@ -30,6 +30,7 @@ class ZipSourceEntryInflater extends Source {
         super(newName);
         loc = entry.getPayloadLocation();
         this.zipSource = zipSource;
+        crc = entry.getCrc();
     }
 
     @Override
@@ -38,7 +39,6 @@ class ZipSourceEntryInflater extends Source {
         zipSource.getChannel().read(compressedBytes, loc.first);
 
         buffer = Compressor.inflate(compressedBytes.array());
-        crc = Crc32.crc32(buffer.array(), 0, buffer.limit());
         compressedSize = buffer.limit();
         uncompressedSize = buffer.limit();
         compressionFlag = LocalFileHeader.COMPRESSION_NONE;

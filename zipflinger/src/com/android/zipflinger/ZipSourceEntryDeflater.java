@@ -32,6 +32,7 @@ class ZipSourceEntryDeflater extends Source {
         loc = entry.getPayloadLocation();
         this.zipSource = zipSource;
         this.compressionLevel = compressionLevel;
+        crc = entry.getCrc();
     }
 
     @Override
@@ -40,7 +41,6 @@ class ZipSourceEntryDeflater extends Source {
         zipSource.getChannel().read(uncompressedBytes, loc.first);
 
         compressedByteBuffer = Compressor.deflate(uncompressedBytes.array(), compressionLevel);
-        crc = Crc32.crc32(uncompressedBytes.array());
         compressedSize = compressedByteBuffer.limit();
         uncompressedSize = uncompressedBytes.limit();
         compressionFlag = LocalFileHeader.COMPRESSION_DEFLATE;
