@@ -151,66 +151,6 @@ public class ApkSwapper {
         return true;
     }
 
-    /**
-     * Performs a swap with hopeful optimism.
-     *
-     * @param dump the application dump
-     * @param sessionId the installation session
-     * @param toSwap the actual dex classes to swap.
-     */
-    public boolean optimisticSwap(
-            String packageId,
-            List<Integer> pids,
-            Deploy.Arch arch,
-            DexComparator.ChangedClasses changedClasses,
-            OverlayId expectedOid,
-            OverlayId oid)
-            throws DeployerException {
-        Deploy.OverlaySwapRequest swapRequest =
-                buildOverlaySwapRequest(packageId, pids, arch, changedClasses, expectedOid, oid);
-        sendSwapRequest(swapRequest, new InstallerBasedClassRedefiner(installer));
-        return true;
-    }
-
-    private Deploy.OverlaySwapRequest buildOverlaySwapRequest(
-            String packageId,
-            List<Integer> pids,
-            Deploy.Arch arch,
-            DexComparator.ChangedClasses changedClasses,
-            OverlayId oldIds,
-            OverlayId newIds)
-            throws DeployerException {
-        Deploy.OverlaySwapRequest.Builder request =
-                Deploy.OverlaySwapRequest.newBuilder()
-                        .setPackageName(packageId)
-                        .setRestartActivity(restart)
-                        .addAllProcessIds(pids)
-                        .setArch(arch)
-                        .setOverlayId("")
-                        .setExpectedOverlayId("");
-
-        request.setExpectedOverlayId(oldIds.getSha());
-        request.setOverlayId(newIds.getSha());
-
-        for (DexClass clazz : changedClasses.newClasses) {
-            request.addNewClasses(
-                    Deploy.ClassDef.newBuilder()
-                            .setName(clazz.name)
-                            .setDex(ByteString.copyFrom(clazz.code)));
-        }
-
-        for (DexClass clazz : changedClasses.modifiedClasses) {
-            request.addModifiedClasses(
-                    Deploy.ClassDef.newBuilder()
-                            .setName(clazz.name)
-                            .setDex(ByteString.copyFrom(clazz.code)));
-        }
-
-        // TODO: Debugger stuff. Given that this will be R+ we don't need the complicated workaround
-        // the JDI bug in O.
-        return request.build();
-    }
-
     private Deploy.SwapRequest buildSwapRequest(
             ApplicationDumper.Dump dump,
             String sessionId,
@@ -287,12 +227,6 @@ public class ApkSwapper {
     }
 
     private static void sendSwapRequest(Deploy.SwapRequest request, ClassRedefiner redefiner)
-            throws DeployerException {
-        Deploy.SwapResponse swapResponse = redefiner.redefine(request);
-        new InstallerResponseHandler().handle(swapResponse);
-    }
-
-    private static void sendSwapRequest(Deploy.OverlaySwapRequest request, ClassRedefiner redefiner)
             throws DeployerException {
         Deploy.SwapResponse swapResponse = redefiner.redefine(request);
         new InstallerResponseHandler().handle(swapResponse);

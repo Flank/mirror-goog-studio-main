@@ -99,6 +99,18 @@ public class DeployerException extends Exception {
                 "Reinstall and restart app",
                 ResolutionAction.RUN_APP),
 
+        ENTRY_NOT_FOUND(
+                "Apply Changes could not find an expected file in the APK.",
+                "'%s' was not found in APK '%s'",
+                "Retry",
+                ResolutionAction.APPLY_CHANGES),
+
+        ENTRY_UNZIP_FAILED(
+                "Apply Changes failed to extract a file from the APK.",
+                "Exception occurred: %s",
+                "Retry",
+                ResolutionAction.APPLY_CHANGES),
+
         // Errors pertaining to un-swappable changes.
 
         CLASS_NOT_FOUND(
@@ -344,6 +356,14 @@ public class DeployerException extends Exception {
     // TODO: We can add tests for this: b/147743908
     public static DeployerException processTerminated(String pid) {
         return new DeployerException(Error.PROCESS_TERMINATED, NO_ARGS, pid);
+    }
+
+    public static DeployerException entryNotFound(String fileName, String apkName) {
+        return new DeployerException(Error.ENTRY_NOT_FOUND, NO_ARGS, fileName, apkName);
+    }
+
+    public static DeployerException entryUnzipFailed(Throwable exception) {
+        return new DeployerException(Error.ENTRY_UNZIP_FAILED, NO_ARGS, exception.getMessage());
     }
 
     public static DeployerException changedSharedObject(String filePath) {

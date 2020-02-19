@@ -47,7 +47,7 @@ iml_module(
         "//tools/base/perf-logger:studio.perf-logger[module, test]",
         "//tools/base/deploy/installer/tests:fake_device_proto[test]",
         "//tools/idea/.idea/libraries:studio-grpc[test]",
-        "//tools/base/zipflinger:studio.android.sdktools.zipflinger[module, test]",
+        "//tools/base/zipflinger:studio.android.sdktools.zipflinger[module]",
     ],
 )
 
@@ -77,6 +77,7 @@ java_library(
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/tracer:tools.tracer",
+        "//tools/base/zipflinger:studio.android.sdktools.zipflinger",
         "//tools/idea/.idea/libraries:sqlite",
         "//tools/idea/.idea/libraries:studio-proto",
     ],
