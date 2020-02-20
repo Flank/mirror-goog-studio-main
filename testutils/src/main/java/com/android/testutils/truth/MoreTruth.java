@@ -17,9 +17,6 @@
 package com.android.testutils.truth;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.testutils.apk.Dex;
-import com.android.testutils.apk.Zip;
 import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
 import java.io.File;
@@ -27,37 +24,20 @@ import java.io.IOException;
 
 /**
  * Additional entry point to {@link Truth} framework for custom {@link Subject}.
+ *
+ * @deprecated Import the helpers from the subject classes themselves.
  */
+@Deprecated
 public class MoreTruth {
-
-    @NonNull
-    public static ZipFileSubject assertThat(@NonNull Zip zip) throws IOException {
-        return ZipFileSubject.assertThat(zip);
-    }
 
     /**
      * DO NOT USE this method as zip files will not be closed on Windows.
      *
-     * <p>Use this instead: Zip(zipFile).use { ZipFileSubject.assertThat(it)... }
+     * <p>Use this instead: Zip(zipFile).use { [ZipFileSubject.]assertThat(it)... }
      */
     @Deprecated
     @NonNull
     public static ZipFileSubject assertThatZip(@NonNull File file) throws IOException {
         return ZipFileSubject.assertThatZip(file);
-    }
-
-    @NonNull
-    public static ZipFileSubject assertThatZip(@NonNull Zip zip) throws IOException {
-        return assertThat(zip);
-    }
-
-    @NonNull
-    public static DexSubject assertThatDex(@Nullable File dex) {
-        return DexSubject.assertThatDex(dex);
-    }
-
-    @NonNull
-    public static DexSubject assertThat(@Nullable Dex dex) {
-        return DexSubject.assertThat(dex);
     }
 }

@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat;
+import static com.android.testutils.truth.DexSubject.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -35,7 +36,6 @@ import com.android.builder.dexing.DexerTool;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.apk.Zip;
-import com.android.testutils.truth.MoreTruth;
 import com.android.testutils.truth.PathSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
@@ -91,7 +91,7 @@ public class DexArchivesTest {
         assertThat(merged.list()).hasLength(1);
 
         Dex mainDex = project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get();
-        MoreTruth.assertThat(mainDex).containsExactlyClassesIn(getApkDexClasses());
+        assertThat(mainDex).containsExactlyClassesIn(getApkDexClasses());
     }
 
     @Test
@@ -110,8 +110,8 @@ public class DexArchivesTest {
                 .isGreaterThan(created);
 
         Dex mainDex = project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get();
-        MoreTruth.assertThat(mainDex).containsExactlyClassesIn(getApkDexClasses());
-        MoreTruth.assertThat(mainDex)
+        assertThat(mainDex).containsExactlyClassesIn(getApkDexClasses());
+        assertThat(mainDex)
                 .containsClass("Lcom/example/helloworld/HelloWorld;")
                 .that()
                 .hasMethod("addedMethod");
@@ -137,7 +137,7 @@ public class DexArchivesTest {
 
         List<String> dexClasses = Lists.newArrayList("Lcom/example/helloworld/NewClass;");
         dexClasses.addAll(getApkDexClasses());
-        MoreTruth.assertThat(project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get())
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get())
                 .containsExactlyClassesIn(dexClasses);
     }
 
@@ -155,7 +155,7 @@ public class DexArchivesTest {
         runTask("assembleDebug");
 
         checkIntermediaryDexArchives(getInitialFolderDexEntries(), getInitialJarDexClasses());
-        MoreTruth.assertThat(project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get())
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get())
                 .containsExactlyClassesIn(getApkDexClasses());
     }
 

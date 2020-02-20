@@ -16,8 +16,6 @@
 
 package com.android.testutils.apk;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
-
 import com.android.testutils.truth.DexSubject;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
@@ -104,6 +102,6 @@ public class DexSubjectTest {
 
         Dex dex = new Dex(dexPath);
 
-        return assertThat(dex);
+        return DexSubject.assertThat(dex);
     }
 }

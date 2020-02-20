@@ -27,7 +27,7 @@ import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.testutils.MockLog
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.MoreTruth.assertThat
+import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat

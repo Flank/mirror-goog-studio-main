@@ -25,7 +25,7 @@ import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.testutils.TestInputsGenerator
-import com.android.testutils.truth.MoreTruth.assertThatDex
+import com.android.testutils.truth.DexSubject.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.collect.ImmutableSet
 import org.junit.Rule

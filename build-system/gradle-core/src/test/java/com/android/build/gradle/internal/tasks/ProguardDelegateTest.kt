@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.MoreTruth.assertThat
+import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.google.common.collect.ImmutableList
 import org.junit.Before
 import org.junit.Rule

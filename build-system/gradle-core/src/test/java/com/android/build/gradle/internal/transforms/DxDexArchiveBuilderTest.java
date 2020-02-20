@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import static com.android.testutils.truth.DexSubject.assertThat;
+
 import com.android.annotations.NonNull;
 import com.android.builder.dexing.ClassFileEntry;
 import com.android.builder.dexing.ClassFileInput;
@@ -24,7 +26,6 @@ import com.android.builder.dexing.DexArchiveBuilderConfig;
 import com.android.builder.dexing.DexerTool;
 import com.android.dx.command.dexer.DxContext;
 import com.android.testutils.apk.Dex;
-import com.android.testutils.truth.MoreTruth;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
@@ -73,7 +74,7 @@ public class DxDexArchiveBuilderTest {
         }
         String descriptor = name.substring(0, name.length() - ".class".length());
         Path dexedClass = outputArchive.resolve(descriptor + ".dex");
-        MoreTruth.assertThat(new Dex(dexedClass)).containsClass("L" + descriptor + ";");
+        assertThat(new Dex(dexedClass)).containsClass("L" + descriptor + ";");
     }
 
     private static class TestClassFileEntry implements ClassFileEntry {

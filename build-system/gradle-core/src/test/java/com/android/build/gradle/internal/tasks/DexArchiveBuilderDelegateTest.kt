@@ -30,7 +30,7 @@ import com.android.testutils.TestInputsGenerator.dirWithEmptyClasses
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.FileSubject.assertThat
-import com.android.testutils.truth.MoreTruth.assertThat
+import com.android.testutils.truth.DexSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables

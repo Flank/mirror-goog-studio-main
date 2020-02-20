@@ -25,8 +25,8 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.testutils.apk.Apk
-import com.android.testutils.truth.MoreTruth.assertThat
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Files

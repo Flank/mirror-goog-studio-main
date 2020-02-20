@@ -17,8 +17,9 @@
 package com.android.build.gradle.integration.api;
 
 import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR;
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.DexSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
+import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;

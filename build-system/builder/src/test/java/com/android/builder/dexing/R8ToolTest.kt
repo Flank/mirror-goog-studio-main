@@ -20,9 +20,9 @@ import com.android.ide.common.blame.MessageReceiver
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
-import com.android.testutils.truth.MoreTruth.assertThat
-import com.android.testutils.truth.MoreTruth.assertThatDex
-import com.android.testutils.truth.MoreTruth.assertThatZip
+import com.android.testutils.truth.DexSubject.assertThat
+import com.android.testutils.truth.DexSubject.assertThatDex
+import com.android.testutils.truth.ZipFileSubject.assertThatZip
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule

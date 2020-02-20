@@ -28,7 +28,6 @@ import com.android.annotations.NonNull;
 import com.android.testutils.TestClassesGenerator;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.apk.Dex;
-import com.android.testutils.truth.MoreTruth;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -458,7 +457,7 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.mergeMonoDex(
                 ImmutableList.of(fstArchive, sndArchive), output, dexMerger);
         Dex dex = new Dex(output.resolve("classes.dex"));
-        MoreTruth.assertThat(dex).containsString(crcHexMatcher);
+        assertThat(dex).containsString(crcHexMatcher);
     }
 
     @NonNull

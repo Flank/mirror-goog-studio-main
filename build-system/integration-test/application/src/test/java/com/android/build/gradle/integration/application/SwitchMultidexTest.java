@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.DexSubject.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 

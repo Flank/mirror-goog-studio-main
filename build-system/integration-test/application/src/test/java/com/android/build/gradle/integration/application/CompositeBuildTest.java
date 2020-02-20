@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;

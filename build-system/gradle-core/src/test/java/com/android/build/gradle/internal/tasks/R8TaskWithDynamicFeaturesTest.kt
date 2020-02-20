@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.builder.dexing.DexingType
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.apk.Dex
-import com.android.testutils.truth.MoreTruth.assertThat
+import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.PathSubject.assertThat
 import org.gradle.api.file.RegularFile
 import org.junit.Before
