@@ -263,7 +263,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                                 getAapt2DaemonBuildService().get())) {
 
             Blocks.recordSpan(
-                    getProject().getName(),
+                    getProjectName(),
                     getPath(),
                     GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_1,
                     () -> {
@@ -290,13 +290,13 @@ public abstract class MergeResources extends ResourceAwareTask {
                             getCrunchPng());
 
             Blocks.recordSpan(
-                    getProject().getName(),
+                    getProjectName(),
                     getPath(),
                     GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_2,
                     () -> merger.mergeData(writer, false /*doCleanUp*/));
 
             Blocks.recordSpan(
-                    getProject().getName(),
+                    getProjectName(),
                     getPath(),
                     GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_3,
                     () -> {
@@ -307,7 +307,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             // No exception? Write the known state.
             Blocks.recordSpan(
-                    getProject().getName(),
+                    getProjectName(),
                     getPath(),
                     GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_PHASE_4,
                     () -> merger.writeBlobTo(getIncrementalFolder(), writer, false));
@@ -746,7 +746,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.crunchPng = variantScope.isCrunchPngs();
 
             VectorDrawablesOptions vectorDrawablesOptions =
-                    variantData.getVariantDslInfo().getVectorDrawables();
+                    creationConfig.getVariantDslInfo().getVectorDrawables();
             task.generatedDensities = vectorDrawablesOptions.getGeneratedDensities();
             if (task.generatedDensities == null) {
                 task.generatedDensities = Collections.emptySet();
@@ -767,7 +767,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                 task.generatedPngsOutputDir = paths.getGeneratedPngsOutputDir();
             }
 
-            final BuildFeatureValues features = globalScope.getBuildFeatures();
+            final BuildFeatureValues features = creationConfig.getBuildFeatures();
             final boolean isDataBindingEnabled = features.getDataBinding();
             boolean isViewBindingEnabled = features.getViewBinding();
             if (isDataBindingEnabled || isViewBindingEnabled) {
@@ -880,7 +880,9 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.pseudoLocalesEnabled = creationConfig.getVariantDslInfo().isPseudoLocalesEnabled();
             task.flags = flags;
 
-            task.errorFormatMode = SyncOptions.getErrorFormatMode(globalScope.getProjectOptions());
+            task.errorFormatMode =
+                    SyncOptions.getErrorFormatMode(
+                            creationConfig.getServices().getProjectOptions());
 
             task.precompileDependenciesResources =
                     mergeType.equals(MERGE)
@@ -927,7 +929,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             task.useJvmResourceCompiler =
                     creationConfig
-                            .getGlobalScope()
+                            .getServices()
                             .getProjectOptions()
                             .get(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER);
             task.getAapt2WorkersBuildService()

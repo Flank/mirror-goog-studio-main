@@ -21,8 +21,18 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.build.gradle.internal.tasks.mlkit.codegen.TfliteModelGenerator;
+import com.android.tools.mlkit.MlkitNames;
+import com.android.tools.mlkit.ModelParsingException;
+import java.io.File;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.FileTree;
+import org.gradle.api.file.FileVisitDetails;
+import org.gradle.api.file.FileVisitor;
+import org.gradle.api.logging.Logging;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
@@ -38,10 +48,36 @@ public abstract class GenerateMlModelClass extends NonIncrementalTask {
     @OutputDirectory
     public abstract DirectoryProperty getSourceOutDir();
 
+    @Input
+    public abstract Property<String> getPackageName();
+
     @Override
     protected void doTaskAction() {
-        // TODO(b/146015231): generate model classes to #getSourceOutDir for model files in
-        //  #getModelFileDir.
+        FileTree modelFileTree = getModelFileDir().getAsFileTree();
+        modelFileTree.visit(
+                new FileVisitor() {
+                    @Override
+                    public void visitDir(FileVisitDetails fileVisitDetails) {
+                        // Do nothing
+                    }
+
+                    @Override
+                    public void visitFile(FileVisitDetails fileVisitDetails) {
+                        File modelFile = fileVisitDetails.getFile();
+                        if (modelFile.getName().endsWith(".tflite")) {
+                            try {
+                                TfliteModelGenerator modelGenerator =
+                                        new TfliteModelGenerator(
+                                                modelFile,
+                                                getPackageName().get() + MlkitNames.PACKAGE_SUFFIX,
+                                                fileVisitDetails.getRelativePath().getPathString());
+                                modelGenerator.generateBuildClass(getSourceOutDir());
+                            } catch (ModelParsingException e) {
+                                Logging.getLogger(this.getClass()).warn(e.getMessage());
+                            }
+                        }
+                    }
+                });
     }
 
     public static class CreationAction
@@ -66,12 +102,13 @@ public abstract class GenerateMlModelClass extends NonIncrementalTask {
         @Override
         public void configure(@NonNull GenerateMlModelClass task) {
             super.configure(task);
-
             // TODO(b/146015231): consider to use a new type here, rather than MERGED_ASSETS.
             creationConfig
                     .getArtifacts()
                     .setTaskInputToFinalProduct(
                             InternalArtifactType.MERGED_ASSETS.INSTANCE, task.getModelFileDir());
+            task.getPackageName()
+                    .set(creationConfig.getVariantDslInfo().getOriginalApplicationId());
         }
 
         @NonNull

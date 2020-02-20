@@ -242,6 +242,7 @@
       <w>nullable</w>
       <w>nulling</w>
       <w>nullness</w>
+      <w>objcopy</w>
       <w>objectweb</w>
       <w>opcode</w>
       <w>opcodes</w>
@@ -335,6 +336,7 @@
       <w>testcase</w>
       <w>testroot</w>
       <w>testsuite</w>
+      <w>tflite</w>
       <w>theming</w>
       <w>tmpdir</w>
       <w>traceview</w>

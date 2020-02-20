@@ -259,21 +259,20 @@ abstract class R8Task: ProguardConfigurableTask() {
             task.disableMinification.set(disableMinification)
             task.messageReceiver = creationConfig.globalScope.messageReceiver
             task.dexingType = creationConfig.dexingType
-            task.useFullR8.set(creationConfig.globalScope.projectOptions[BooleanOption.FULL_R8])
+            task.useFullR8.set(creationConfig.services.projectOptions[BooleanOption.FULL_R8])
 
             task.proguardConfigurations = proguardConfigurations
 
             task.duplicateClassesCheck.from(
                 artifacts
-                    .getFinalProductAsFileCollection(DUPLICATE_CLASSES_CHECK)
-                    .get())
+                    .getFinalProductAsFileCollection(DUPLICATE_CLASSES_CHECK))
 
             creationConfig.variantDslInfo.multiDexKeepProguard?.let { multiDexKeepProguard ->
                 task.mainDexRulesFiles.from(multiDexKeepProguard)
             }
 
-            if (artifacts.hasFinalProduct(
-                    InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES)) {
+            if (creationConfig.needsMainDexList
+                && !creationConfig.globalScope.extension.aaptOptions.namespaced) {
                 task.mainDexRulesFiles.from(
                     artifacts.getFinalProduct(
                         InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES

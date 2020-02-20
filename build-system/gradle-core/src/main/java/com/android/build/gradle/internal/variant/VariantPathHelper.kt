@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.variant
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.BuilderConstants
@@ -34,7 +34,7 @@ import java.util.Locale
 class VariantPathHelper(
     private val project: Project,
     private val variantDslInfo: VariantDslInfo,
-    private val dslScope: DslScope
+    private val dslServices: DslServices
 ) {
 
     // this is very inefficient as we re-instantiate intermediats/outputDir every time
@@ -124,9 +124,9 @@ class VariantPathHelper(
      */
     val apkLocation: File
         get() {
-            val override = dslScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
+            val override = dslServices.projectOptions.get(StringOption.IDE_APK_LOCATION)
             val baseDirectory =
-                if (override != null) dslScope.file(override) else getDefaultApkLocation()
+                if (override != null) dslServices.file(override) else getDefaultApkLocation()
             return File(baseDirectory, variantDslInfo.dirName)
         }
 

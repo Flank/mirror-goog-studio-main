@@ -32,7 +32,6 @@ import com.android.build.api.component.impl.TestComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -172,8 +171,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
         // populate the TestData from the tested variant build output.
         if (!testTargetManifests.isEmpty()) {
-            testData.loadFromMetadataFile(ExistingBuildElements.getMetadataFile(
-                    testTargetManifests.getSingleFile()));
+            testData.load(testTargetManifests.getSingleFile());
         }
 
         boolean success;
@@ -451,7 +449,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             boolean isAdditionalAndroidTestOutputEnabled =
                     creationConfig
-                            .getGlobalScope()
+                            .getServices()
                             .getProjectOptions()
                             .get(BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT);
 
@@ -514,7 +512,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             GlobalScope globalScope = creationConfig.getGlobalScope();
             Project project = globalScope.getProject();
-            ProjectOptions projectOptions = globalScope.getProjectOptions();
+            ProjectOptions projectOptions = creationConfig.getServices().getProjectOptions();
 
             // this can be null for test plugin
             VariantCreationConfig testedConfig = creationConfig.getTestedConfig();

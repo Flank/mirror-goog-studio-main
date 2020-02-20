@@ -16,22 +16,22 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.ExternalNativeBuild
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild
 import org.gradle.api.Action
 import javax.inject.Inject
 
 /** See [com.android.build.api.dsl.ExternalNativeBuild]  */
-open class ExternalNativeBuild @Inject constructor(dslScope: DslScope) :
+open class ExternalNativeBuild @Inject constructor(dslServices: DslServices) :
     CoreExternalNativeBuild,
     ExternalNativeBuild<CmakeOptions, NdkBuildOptions> {
     override val ndkBuild: NdkBuildOptions =
-        dslScope.objectFactory.newInstance(
-            NdkBuildOptions::class.java, dslScope
+        dslServices.newInstance(
+            NdkBuildOptions::class.java, dslServices
         )
     override val cmake: CmakeOptions  =
-        dslScope.objectFactory.newInstance(
-            CmakeOptions::class.java, dslScope
+        dslServices.newInstance(
+            CmakeOptions::class.java, dslServices
         )
 
     /* Not directly in interface as having a non-void return type is unconventional */

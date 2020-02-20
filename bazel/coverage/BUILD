@@ -23,6 +23,15 @@ py_library(
 # using py_binary as a tool in a genrule doesn't work
 # See https://github.com/bazelbuild/bazel/issues/1192.
 py_library(
+    name = "merge_tests",
+    srcs = ["merge_tests.py"],
+    visibility = ["//visibility:public"],
+)
+
+# This should be a py_binary, but due to a Bazel bug
+# using py_binary as a tool in a genrule doesn't work
+# See https://github.com/bazelbuild/bazel/issues/1192.
+py_library(
     name = "filter_lcov",
     srcs = ["filter_lcov.py"],
 )
@@ -211,6 +220,16 @@ coverage_report(
 )
 
 coverage_report(
+    name = "navigationsafeargs",
+    srcpath_include = [
+        "tools/adt/idea/nav/safeargs",
+    ],
+    tests = [
+        "//tools/adt/idea/nav/safeargs:intellij.android.nav.safeargs.tests_tests",
+    ],
+)
+
+coverage_report(
     name = "profilers",
     srcpath_include = [
         "tools/adt/idea/android-transport/src/com/android/tools/idea/transport",
@@ -365,6 +384,7 @@ combine_report_definitions(
         "motioneditor",
         "navigationeditor",
         "navigationpropertyinspector",
+        "navigationsafeargs",
         "profilers",
         "projectsystem",
         "r8-editing",
@@ -382,13 +402,13 @@ coverage_report(
     tests = [
         "//tools/adt/idea/adt-ui:intellij.android.adt.ui_tests",
         "//tools/adt/idea/adt-ui-model:intellij.android.adt.ui.model_tests",
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
         "//tools/adt/idea/android-adb:intellij.android.adb.tests_tests",
         "//tools/adt/idea/android-common:intellij.android.common_tests",
         "//tools/adt/idea/android-debuggers:intellij.android.debuggers.tests_tests",
-        "//tools/adt/idea/android:intellij.android.core.tests_tests",
         "//tools/adt/idea/android-kotlin:intellij.android.kotlin.tests_tests",
-        "//tools/adt/idea/android-lang-databinding:intellij.android.lang-databinding.tests_tests",
         "//tools/adt/idea/android-lang:intellij.android.lang.tests_tests",
+        "//tools/adt/idea/android-lang-databinding:intellij.android.lang-databinding.tests_tests",
         "//tools/adt/idea/android-layout-inspector:android-layout-inspector-test_tests",
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/android-test-framework:intellij.android.testFramework_tests",
@@ -401,18 +421,20 @@ coverage_report(
         "//tools/adt/idea/connection-assistant:connection-assistant-test_tests",
         "//tools/adt/idea/databinding:intellij.android.databinding.tests_tests",
         "//tools/adt/idea/deploy:intellij.android.deploy_tests",
-        "//tools/adt/idea/designer/customview:intellij.android.designer.customview.tests_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
-        "//tools/adt/idea/kotlin-integration:kotlin-integration-tests_tests",
+        "//tools/adt/idea/designer/customview:intellij.android.designer.customview.tests_tests",
+        #TODO(b/116407505) too flaky for coverage runs
+        #"//tools/adt/idea/kotlin-integration:kotlin-integration-tests_tests",
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
-        "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
         "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
+        "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
         "//tools/adt/idea/native-symbolizer:native-symbolizer_tests",
         "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
+        "//tools/adt/idea/nav/safeargs:intellij.android.nav.safeargs.tests_tests",
         "//tools/adt/idea/observable:intellij.android.observable_tests",
         "//tools/adt/idea/observable-ui:intellij.android.observable.ui_tests",
-        "//tools/adt/idea/profilers-android:intellij.android.profilersAndroid_tests",
         "//tools/adt/idea/profilers:intellij.android.profilers_tests",
+        "//tools/adt/idea/profilers-android:intellij.android.profilersAndroid_tests",
         "//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests",
         "//tools/adt/idea/project-system-gradle:intellij.android.projectSystem.gradle.tests_tests",
         "//tools/adt/idea/resources-base:intellij.android.resources-base.tests_tests",
@@ -433,28 +455,30 @@ coverage_report(
         "//tools/analytics-library/tracker:tools.analytics-tracker_tests.test",
         "//tools/apksig:all",
         "//tools/apkzlib:apkzlib_tests",
+        "//tools/base/apkparser:studio.android.sdktools.binary-resources_tests",
+        "//tools/base/apkparser:tools.tests",
         "//tools/base/apkparser/analyzer:studio.android.sdktools.analyzer_tests",
         "//tools/base/apkparser/analyzer:tools.tests",
         "//tools/base/apkparser/cli:tools.tests",
-        "//tools/base/apkparser:studio.android.sdktools.binary-resources_tests",
-        "//tools/base/apkparser:tools.tests",
         "//tools/base/aspects_agent:agent_tests",
         "//tools/base/aspects_agent:studio.android.sdktools.aspects-agent_tests",
         "//tools/base/bazel:bin2c_tests",
         "//tools/base/bazel:iml_to_build_tests",
         "//tools/base/bazel:third_party_up_to_date",
+        "//tools/base/build-system:studio.android.sdktools.manifest-merger_tests",
+        "//tools/base/build-system:tools.manifest-merger_tests.test",
+        "//tools/base/build-system/builder:tests.test",
         "//tools/base/build-system/builder-model:tests.test",
         "//tools/base/build-system/builder-test-api:studio.android.sdktools.builder-test-api_tests",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api_tests",
-        "//tools/base/build-system/builder:tests.test",
         "//tools/base/build-system/gradle-api:tests.test",
         "//tools/base/build-system/gradle-core:tests.test",
         "//tools/base/build-system/integration-test/application:automatic-tests",
+        "//tools/base/build-system/integration-test/application:tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/gradlecompat:GradleVersionCheckTest",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sanity:tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sdk:sdk_tests",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:tests",
-        "//tools/base/build-system/integration-test/application:tests",
         "//tools/base/build-system/integration-test/databinding:tests",
         "//tools/base/build-system/integration-test/framework:framework_tests.test",
         "//tools/base/build-system/integration-test/native:CmakeBasicProjectTest",
@@ -486,8 +510,6 @@ coverage_report(
         "//tools/base/build-system/integration-test/native:RsEnabledAnnotationTest",
         "//tools/base/build-system/integration-test/native:RsSupportModeTest",
         "//tools/base/build-system/integration-test/native:VulkanTest",
-        "//tools/base/build-system:studio.android.sdktools.manifest-merger_tests",
-        "//tools/base/build-system:tools.manifest-merger_tests.test",
         "//tools/base/common:studio.android.sdktools.common.tests_tests",
         "//tools/base/common:tools.tests.test",
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib_tests",
@@ -501,9 +523,9 @@ coverage_report(
         "//tools/base/flags:studio.android.sdktools.flags_tests",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api_tests",
         "//tools/base/layoutlib-api:tools.tests",
-        "//tools/base/lint/libs/lint-tests:tests.test",
         "//tools/base/lint:studio-checks-tests.test",
         "//tools/base/lint:tests.test",
+        "//tools/base/lint/libs/lint-tests:tests.test",
         "//tools/base/ninepatch:studio.android.sdktools.ninepatch_tests",
         "//tools/base/perflib:studio.android.sdktools.perflib_tests",
         "//tools/base/pixelprobe:studio.android.sdktools.pixelprobe_tests",
@@ -522,7 +544,6 @@ coverage_report(
         "//tools/data-binding:tools.compilerCommon_tests.test",
         "//tools/idea/updater:integration_test",
         "//tools/vendor/google/android-apk:android-apk_tests",
-        # TODO(b/140178289): too flaky for use in the coverage suite
-        #"//tools/vendor/google/android-ndk:android-ndk_tests",
+        "//tools/vendor/google/android-ndk:android-ndk_tests",
     ],
 )

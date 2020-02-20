@@ -23,8 +23,8 @@ import java.io.File;
 import java.util.List;
 
 /**
- * Subset of normal NativeBuildConfigValue that does not include potentially large structures like
- * files.
+ * Subset of normal {@link NativeLibraryValue} that does not include potentially large structures
+ * like files.
  *
  * <p>Note: This class is populated via {@link AndroidBuildGradleJsons::MiniConfigBuildingVisitor}.
  * If you add fields here you also need to update that class to read the fields.

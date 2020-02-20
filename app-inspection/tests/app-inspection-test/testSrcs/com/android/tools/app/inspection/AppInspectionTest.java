@@ -341,6 +341,84 @@ public final class AppInspectionTest {
         assertThat(serviceLayer.hasEventToCollect()).isFalse();
     }
 
+    @Test
+    public void enterHookCanAlsoCaptureParameters() throws Exception {
+        // Create a bunch of groups up front that we'll remove from in a little bit
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[0]
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[1]
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[2]
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[3]
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[4]
+
+        String inspectorId = "todo.inspector";
+        assertResponseStatus(
+                serviceLayer.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+
+        // Remove groups - each method we call below calls "removeGroup(idx)"
+        // indirectly, which triggers an event that includes the index.
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "removeNewestGroup");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "removeOldestGroup");
+        transportRule.getAndroidDriver().triggerMethod(TODO_ACTIVITY, "removeNewestGroup");
+
+        { // removeNewestGroup: Group[4] removed. Group[3] is now the last group
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_GROUP_REMOVING.toByteArrayWithArg(
+                                    (byte) 4));
+        }
+
+        { // removeOldestGroup: Group[0] removed. Group[2] is now the last group.
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_GROUP_REMOVING.toByteArrayWithArg(
+                                    (byte) 0));
+        }
+
+        { // removeNewestGroup: Group[2] removed.
+            AppInspectionEvent event = serviceLayer.consumeCollectedEvent();
+            assertThat(event.getRawEvent().getContent().toByteArray())
+                    .isEqualTo(
+                            TodoInspectorApi.Event.TODO_GROUP_REMOVING.toByteArrayWithArg(
+                                    (byte) 2));
+        }
+
+        assertThat(serviceLayer.hasEventToCollect()).isFalse();
+    }
+
+    @Test
+    public void handleCancellationCommand() throws Exception {
+        String inspectorId = "test.cancellation.inspector";
+        assertResponseStatus(
+                serviceLayer.sendCommandAndGetResponse(
+                        createInspector(inspectorId, injectInspectorDex())),
+                SUCCESS);
+        byte[] commandBytes = new byte[] {1, 2, 127};
+        int firstCommandId =
+                serviceLayer.sendCommand(rawCommandInspector(inspectorId, commandBytes));
+        int secondCommand =
+                serviceLayer.sendCommand(rawCommandInspector(inspectorId, commandBytes));
+        assertInput(androidDriver, "command #1 arrived");
+        assertInput(androidDriver, "command #2 arrived");
+        serviceLayer.sendCommand(cancellationCommand(secondCommand));
+        assertInput(androidDriver, "first executor: cancellation #1 for command #2");
+        assertInput(androidDriver, "second executor: cancellation #2 for command #2");
+        assertInput(androidDriver, "post cancellation executor: cancellation #3 for command #2");
+        int thirdCommand = serviceLayer.sendCommand(rawCommandInspector(inspectorId, commandBytes));
+        serviceLayer.sendCommand(cancellationCommand(thirdCommand));
+        assertInput(androidDriver, "command #3 arrived");
+        assertInput(androidDriver, "first executor: cancellation #1 for command #3");
+        assertInput(androidDriver, "second executor: cancellation #2 for command #3");
+        assertInput(androidDriver, "post cancellation executor: cancellation #3 for command #3");
+        serviceLayer.sendCommand(cancellationCommand(firstCommandId));
+        assertInput(androidDriver, "first executor: cancellation #1 for command #1");
+        assertInput(androidDriver, "second executor: cancellation #2 for command #1");
+        assertInput(androidDriver, "post cancellation executor: cancellation #3 for command #1");
+    }
+
     @NonNull
     private static AppInspectionCommand rawCommandInspector(
             @NonNull String inspectorId, @NonNull byte[] commandData) {
@@ -349,6 +427,16 @@ public final class AppInspectionTest {
                 .setRawInspectorCommand(
                         RawCommand.newBuilder()
                                 .setContent(ByteString.copyFrom(commandData))
+                                .build())
+                .build();
+    }
+
+    @NonNull
+    private static AppInspectionCommand cancellationCommand(int cancelledCommandId) {
+        return AppInspectionCommand.newBuilder()
+                .setCancellationCommand(
+                        AppInspection.CancellationCommand.newBuilder()
+                                .setCancelledCommandId(cancelledCommandId)
                                 .build())
                 .build();
     }

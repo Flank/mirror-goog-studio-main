@@ -114,40 +114,48 @@ class SvgLeafNode extends SvgNode {
     }
 
     /**
+     * Parses the SVG path's opacity attribute into fill and stroke.
+     */
+    private void parsePathOpacity() {
+        double opacity = getOpacityValueFromMap(SVG_OPACITY);
+        double fillOpacity = getOpacityValueFromMap(SVG_FILL_OPACITY);
+        double strokeOpacity = getOpacityValueFromMap(SVG_STROKE_OPACITY);
+        putOpacityValueToMap(SVG_FILL_OPACITY, fillOpacity * opacity);
+        putOpacityValueToMap(SVG_STROKE_OPACITY, strokeOpacity * opacity);
+        mVdAttributesMap.remove(SVG_OPACITY);
+    }
+
+    /**
      * A utility function to get the opacity value as a floating point number.
      *
-     * @param key The key of the opacity
-     * @return the clamped opacity value, return 1 if not found
+     * @param attributeName the name of the opacity attribute
+     * @return the clamped opacity value, or 1 if not found
      */
-    private double getOpacityValueFromMap(@NonNull String key) {
+    private double getOpacityValueFromMap(@NonNull String attributeName) {
         // Default opacity is 1.
         double result = 1;
-        String opacity = mVdAttributesMap.get(key);
+        String opacity = mVdAttributesMap.get(attributeName);
         if (opacity != null) {
             try {
-                result = Double.parseDouble(opacity);
+                if (opacity.endsWith("%")) {
+                    result = Double.parseDouble(opacity.substring(0, opacity.length() - 1)) / 100.;
+                } else {
+                    result = Double.parseDouble(opacity);
+                }
             } catch (NumberFormatException e) {
-                // Ignore here, invalid value is replaced as default value 1.
+                // Ignore here, an invalid value is replaced by the default value 1.
             }
         }
         return Math.min(Math.max(result, 0), 1);
     }
 
-    /**
-     * Parses the SVG path's opacity attribute into fill and stroke.
-     */
-    private void parsePathOpacity() {
-        double opacity = getOpacityValueFromMap(SVG_OPACITY);
-        // If opacity is 1, then nothing need to change.
-        if (opacity < 1) {
-            double fillOpacity = getOpacityValueFromMap(SVG_FILL_OPACITY);
-            double strokeOpacity = getOpacityValueFromMap(SVG_STROKE_OPACITY);
-            mVdAttributesMap.put(
-                    SVG_FILL_OPACITY, XmlUtils.formatFloatValue(fillOpacity * opacity));
-            mVdAttributesMap.put(
-                    SVG_STROKE_OPACITY, XmlUtils.formatFloatValue(strokeOpacity * opacity));
+    private void putOpacityValueToMap(@NonNull String attributeName, double opacity) {
+        String attributeValue = XmlUtils.formatFloatValue(opacity);
+        if (attributeValue.equals("1")) {
+            mVdAttributesMap.remove(attributeName);
+        } else {
+            mVdAttributesMap.put(attributeName, attributeValue);
         }
-        mVdAttributesMap.remove(SVG_OPACITY);
     }
 
     @Override

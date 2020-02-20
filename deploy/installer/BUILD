@@ -146,6 +146,8 @@ cc_library(
         "dump.h",
         "executor/executor_impl.cc",
         "executor/redirect_executor.cc",
+        "oid_push.cc",
+        "oid_push.h",
         "overlay/overlay.cc",
         "overlay_swap.cc",
         "patch_applier.cc",

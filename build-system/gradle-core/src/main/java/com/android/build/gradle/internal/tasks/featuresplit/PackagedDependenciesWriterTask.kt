@@ -85,10 +85,12 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             contentFilters.addAll(lines)
         }
 
+        val contentWithProject = content + "$projectPath::$variantName"
+
         // compute the overall content
         val filteredContent =
-            content.filter {
-                !apkFilters.contains(it) && !contentFilters.contains(it) && it != projectPath
+            contentWithProject.filter {
+                !apkFilters.contains(it) && !contentFilters.contains(it)
             }.sorted()
 
         val asFile = outputFile.get().asFile

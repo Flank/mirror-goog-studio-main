@@ -21,12 +21,15 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.ProguardFiles.ProguardFile;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.gradle.api.InvalidUserDataException;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
@@ -42,12 +45,12 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
         Map<File, ProguardFile> oldFiles = new HashMap<>();
         oldFiles.put(
                 ProguardFiles.getDefaultProguardFile(
-                                ProguardFile.OPTIMIZE.fileName, getProject().getLayout())
+                                ProguardFile.OPTIMIZE.fileName, getBuildDirectory())
                         .getAbsoluteFile(),
                 ProguardFile.OPTIMIZE);
         oldFiles.put(
                 ProguardFiles.getDefaultProguardFile(
-                                ProguardFile.DONT_OPTIMIZE.fileName, getProject().getLayout())
+                                ProguardFile.DONT_OPTIMIZE.fileName, getBuildDirectory())
                         .getAbsoluteFile(),
                 ProguardFile.DONT_OPTIMIZE);
 
@@ -68,6 +71,9 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
     public List<File> getProguardFiles() {
         return proguardFiles;
     }
+
+    @Internal("only for task execution")
+    public abstract DirectoryProperty getBuildDirectory();
 
     public static class CreationAction
             extends VariantTaskCreationAction<CheckProguardFiles, ComponentPropertiesImpl> {
@@ -93,6 +99,8 @@ public abstract class CheckProguardFiles extends NonIncrementalTask {
             super.configure(task);
 
             task.proguardFiles = creationConfig.getVariantScope().getProguardFiles();
+            HasConfigurableValuesKt.setDisallowChanges(
+                    task.getBuildDirectory(), task.getProject().getLayout().getBuildDirectory());
         }
     }
 }

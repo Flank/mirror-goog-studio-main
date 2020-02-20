@@ -19,14 +19,12 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
-import com.android.build.gradle.internal.workeractions.AgpWorkAction
-import com.android.build.gradle.internal.workeractions.WorkActionAdapter
+import com.android.build.api.variant.VariantOutput
+import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.ide.common.build.CommonBuiltArtifacts
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.gson.GsonBuilder
 import org.gradle.api.file.Directory
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkQueue
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Path
@@ -42,6 +40,8 @@ class BuiltArtifactsImpl(
     : CommonBuiltArtifacts, BuiltArtifacts, Serializable {
 
     companion object {
+        fun getMetadataFile(folder: File) = File(folder, METADATA_FILE_NAME)
+
         const val METADATA_FILE_NAME = "output.json"
     }
 
@@ -49,6 +49,15 @@ class BuiltArtifactsImpl(
         val outFile = File(out.asFile, METADATA_FILE_NAME)
         saveToFile(outFile)
     }
+
+    fun getBuiltArtifact(outputType: VariantOutputConfiguration.OutputType) =
+        elements.firstOrNull { it.outputType == outputType }
+
+
+    fun getBuiltArtifact(variantOutputConfiguration: VariantOutputConfiguration): BuiltArtifactImpl? =
+        elements.firstOrNull {
+            it.outputType == variantOutputConfiguration.outputType
+            it.filters == variantOutputConfiguration.filters }
 
     /**
      * Similar implementation of [BuiltArtifacts.transform] using the [WorkerExecutorFacade]
@@ -86,60 +95,11 @@ class BuiltArtifactsImpl(
         }
     }
 
-    /**
-     * Similar implementation of [BuiltArtifacts.transform] using a [WorkQueue]
-     *
-     * This version will provide profiling information and therefore should be used by all
-     * AGP tasks.
-     *
-     * The parameters are more convoluted than necessary due to Gradle's API that are using
-     * [Class] instances which makes interception very difficult without explicitly sub classing.
-     *
-     * @param newArtifactType the new [ArtifactType] that identifies the new produced files.
-     * @param workQueue a Gradle [WorkQueue] that can be used to submit work items.
-     * @param workAction piece of work implementation to submit to the [workQueue]
-     * @param actionAdapter [WorkActionAdapter] for this action implementation and action parameters.
-     * @param parametersFactory a factory lambda to create instances of [ParamT] provided with an
-     * input [BuiltArtifact].
-     */
-    internal fun <ParamT: BuiltArtifacts.TransformParams,
-            ParamAdapter: WorkActionAdapter.Parameters<ParamT>> transform(
-        newArtifactType: ArtifactType<Directory>,
-        workQueue: WorkQueue,
-        workAction: Class<out AgpWorkAction<ParamT>>,
-        actionAdapter: Class<out WorkActionAdapter<ParamT, ParamAdapter>>,
-        parametersFactory: (builtArtifact: BuiltArtifact) -> ParamT): Supplier<BuiltArtifacts> {
+    fun saveToDirectory(folder: File) =
+        saveToFile(File(folder, METADATA_FILE_NAME))
 
-        val parametersList = mutableMapOf<BuiltArtifact, ParamT>()
-        elements.forEach { builtArtifact ->
-            workQueue.submit(actionAdapter) { parameters ->
-                parameters.adaptedParameters = parametersFactory(builtArtifact).also {
-                    parametersList[builtArtifact] = it
-                }
-                parameters.adaptedAction = workAction
-            }
-        }
-
-        return Supplier {
-            workQueue.await()
-            BuiltArtifactsImpl(
-                version,
-                newArtifactType,
-                applicationId,
-                variantName,
-                elements.map { builtArtifact ->
-                    builtArtifact.newOutput(
-                        parametersList[builtArtifact]?.output?.toPath()
-                            ?: throw java.lang.RuntimeException("Cannot find BuiltArtifact")
-                    )
-                }
-            )
-        }
-    }
-
-    internal fun saveToFile(out: File) {
+    fun saveToFile(out: File) =
         out.writeText(persist(out.parentFile.toPath()), Charsets.UTF_8)
-    }
 
     private fun persist(projectPath: Path): String {
         val gsonBuilder = GsonBuilder()
@@ -159,15 +119,14 @@ class BuiltArtifactsImpl(
             elements
                 .asSequence()
                 .map { builtArtifact ->
-                    BuiltArtifactImpl(
+                    BuiltArtifactImpl.make(
                         outputFile = projectPath.relativize(
                             Paths.get(builtArtifact.outputFile)).toString(),
                         properties = builtArtifact.properties,
                         versionCode = builtArtifact.versionCode,
                         versionName = builtArtifact.versionName,
                         isEnabled = builtArtifact.isEnabled,
-                        outputType = builtArtifact.outputType,
-                        filters = builtArtifact.filters,
+                        variantOutputConfiguration = builtArtifact.variantOutputConfiguration,
                         baseName = builtArtifact.baseName,
                         fullName = builtArtifact.fullName
                     )

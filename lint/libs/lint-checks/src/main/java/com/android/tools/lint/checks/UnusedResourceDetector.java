@@ -23,6 +23,7 @@ import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_SHRINK_MODE;
 import static com.android.SdkConstants.ATTR_VIEW_BINDING_IGNORE;
 import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.TAG_DATA;
 import static com.android.SdkConstants.TAG_LAYOUT;
@@ -484,13 +485,21 @@ public class UnusedResourceDetector extends ResourceXmlDetector
             for (File file : files) {
                 if (file.isDirectory()) {
                     recordInactiveJavaReferences(file);
-                } else if (file.getName().endsWith(DOT_JAVA)) {
-                    try {
-                        String java = Files.asCharSource(file, UTF_8).read();
-                        model.tokenizeJavaCode(java);
-                    } catch (Throwable ignore) {
-                        // Tolerate parsing errors etc in these files; they're user
-                        // sources, and this is even for inactive source sets.
+                } else {
+                    String path = file.getPath();
+                    boolean isJava = path.endsWith(DOT_JAVA);
+                    if (isJava || path.endsWith(DOT_KT)) {
+                        try {
+                            String code = Files.asCharSource(file, UTF_8).read();
+                            if (isJava) {
+                                model.tokenizeJavaCode(code);
+                            } else {
+                                model.tokenizeKotlinCode(code);
+                            }
+                        } catch (Throwable ignore) {
+                            // Tolerate parsing errors etc in these files; they're user
+                            // sources, and this is even for inactive source sets.
+                        }
                     }
                 }
             }
@@ -814,7 +823,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                         Node attr = attributes.item(i);
                         String nodeName = attr.getNodeName();
                         if (!nodeName.startsWith(XMLNS_PREFIX)
-                                && !nodeName.startsWith(TOOLS_PREFIX)) {
+                                && !nodeName.startsWith(TOOLS_PREFIX)
+                                && !TOOLS_URI.equals(attr.getNamespaceURI())) {
                             return false;
                         } else if (nodeName.endsWith(ATTR_SHRINK_MODE)
                                 || nodeName.endsWith(ATTR_DISCARD)

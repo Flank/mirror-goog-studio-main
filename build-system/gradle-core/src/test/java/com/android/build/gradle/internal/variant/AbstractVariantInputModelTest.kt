@@ -16,8 +16,7 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.gradle.internal.api.dsl.DslScope
-import com.android.build.gradle.internal.variant2.createFakeDslScope
+import com.android.build.gradle.internal.services.createDslServices
 import com.android.builder.model.SyncIssue
 import com.android.testutils.AbstractReturnGivenReturnExpectTest
 import com.google.common.truth.Truth
@@ -25,7 +24,7 @@ import com.google.common.truth.Truth
 abstract class AbstractVariantInputModelTest<ResultT>:
     AbstractReturnGivenReturnExpectTest<TestVariantInputModel, ResultT>() {
 
-    protected val dslScope: DslScope = createFakeDslScope()
+    protected val dslServices = createDslServices()
     private var defaultBuildTypes = false
     private var issueChecker: ((List<SyncIssue>) -> Unit)? = {
         Truth.assertThat(it).named("SyncIssues").isEmpty()

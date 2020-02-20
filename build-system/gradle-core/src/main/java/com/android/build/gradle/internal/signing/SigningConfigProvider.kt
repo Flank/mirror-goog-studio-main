@@ -109,7 +109,7 @@ class SigningConfigProvider(
             } else {
                 // Get it from the injected properties passed from the IDE
                 val signingOptions =
-                    SigningOptions.readSigningOptions(creationConfig.globalScope.projectOptions)
+                    SigningOptions.readSigningOptions(creationConfig.services.projectOptions)
                 return if (signingOptions != null
                     && signingOptions.v1Enabled != null && signingOptions.v2Enabled != null
                 ) {

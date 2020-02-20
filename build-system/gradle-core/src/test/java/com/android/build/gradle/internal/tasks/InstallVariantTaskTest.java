@@ -27,9 +27,9 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.PublicArtifactType;
 import com.android.build.api.variant.BuiltArtifacts;
-import com.android.build.api.variant.VariantOutputConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.sdklib.AndroidVersion;
@@ -82,14 +82,14 @@ public class InstallVariantTaskTest {
                         "com.android.test",
                         "debug",
                         ImmutableList.of(
-                                new BuiltArtifactImpl(
+                                BuiltArtifactImpl.make(
                                         mainOutputFileApk.getAbsolutePath(),
                                         ImmutableMap.of(),
                                         123,
                                         "version_name",
                                         true,
-                                        VariantOutputConfiguration.OutputType.SINGLE,
-                                        ImmutableList.of(),
+                                        new VariantOutputConfigurationImpl(
+                                                false, ImmutableList.of()),
                                         "baseName",
                                         "fullName")));
         InstallVariantTask.install(

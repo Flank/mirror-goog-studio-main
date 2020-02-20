@@ -37,6 +37,7 @@ import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -87,7 +88,14 @@ private fun BundleLibraryClassesInputs.configure(
     classes.from(inputs)
     this.packageRClass.set(packageRClass)
     if (packageRClass) {
-        classes.from(component.artifacts.getFinalProduct(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
+
+        val artifactType: InternalArtifactType<RegularFile> =
+            if (component.globalScope.extension.aaptOptions.namespaced) {
+                InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
+            } else {
+                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR
+            }
+        classes.from(component.artifacts.getFinalProduct(artifactType))
     }
     // FIXME pass this as List<TextResources>
     this.toIgnoreRegExps.set(component.globalScope.project.provider(toIgnoreRegExps::get))
@@ -127,10 +135,12 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
     abstract override val classes: ConfigurableFileCollection
 
     override fun doTaskAction(inputChanges: InputChanges) {
-        getWorkerFacadeWithWorkers().submit(
-            BundleLibraryClassesRunnable::class.java,
-            getWorkerActionParams(inputChanges, output.asFile.get())
-        )
+        getWorkerFacadeWithWorkers().use {
+            it.submit(
+                BundleLibraryClassesRunnable::class.java,
+                getWorkerActionParams(inputChanges, output.asFile.get())
+            )
+        }
     }
 
     class CreationAction(
@@ -178,10 +188,12 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
     abstract val output: RegularFileProperty
 
     override fun doTaskAction() {
-        getWorkerFacadeWithWorkers().submit(
-            BundleLibraryClassesRunnable::class.java,
-            getWorkerActionParams(null, output.asFile.get())
-        )
+        getWorkerFacadeWithWorkers().use {
+            it.submit(
+                BundleLibraryClassesRunnable::class.java,
+                getWorkerActionParams(null, output.asFile.get())
+            )
+        }
     }
 
     class CreationAction(
@@ -242,10 +254,9 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
         override fun configure(task: BundleLibraryClassesJar) {
             super.configure(task)
             val packageRClass =
-                creationConfig.globalScope.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] &&
+                creationConfig.services.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] &&
                         publishedType == PublishedConfigType.API_ELEMENTS &&
-                        !creationConfig.globalScope.extension.aaptOptions.namespaced &&
-                        creationConfig.globalScope.buildFeatures.androidResources
+                        creationConfig.buildFeatures.androidResources
             task.configure(creationConfig, inputs, packageRClass, toIgnoreRegExps)
         }
     }

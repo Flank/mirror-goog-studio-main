@@ -23,8 +23,6 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SingleArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
-import com.android.build.gradle.internal.tasks.factory.dependsOn
-import com.android.build.gradle.options.BooleanOption
 import com.android.utils.appendCapitalized
 import org.gradle.api.file.Directory
 
@@ -46,8 +44,6 @@ class NamespacedResourcesTaskManager(
      *  final ids in apps are a vital feature.
      *  2. Links the app and its dependency to produce the final APK. This re-uses the same
      *  [LinkApplicationAndroidResourcesTask] task, as it needs to be split aware.
-     *  3. If rewriting non-namespaced dependencies is enabled, the [AutoNamespaceDependenciesTask]
-     *  will rewrite classes.jar files from these libraries to be fully namespaced.
      *
      * TODO: Test support, Synthesize non-namespaced output.
      */
@@ -56,20 +52,13 @@ class NamespacedResourcesTaskManager(
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
 
-        // Process dependencies making sure everything we consume will be fully namespaced.
-        if (globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-            val task = taskFactory.register(AutoNamespaceDependenciesTask.CreationAction(componentProperties))
-            // Needed for the IDE
-            componentProperties.taskContainer.sourceGenTask.dependsOn(task)
-        }
-
         // Compile
         createCompileResourcesTask()
         // We need to strip namespaces from the manifest to bundle, so that it's consumable by
         // non-namespaced projects.
         taskFactory.register(CreateNonNamespacedLibraryManifestTask.CreationAction(componentProperties))
         // TODO: If we want to read the namespaced manifest from the static library, we need to keep
-        // all the data in it, not just a skeleton with the package. See b/117869877
+        //       all the data in it, not just a skeleton with the package. See b/117869877
         taskFactory.register(StaticLibraryManifestTask.CreationAction(componentProperties))
         taskFactory.register(LinkLibraryAndroidResourcesTask.CreationAction(componentProperties))
         // TODO: also generate a private R.jar holding private resources.

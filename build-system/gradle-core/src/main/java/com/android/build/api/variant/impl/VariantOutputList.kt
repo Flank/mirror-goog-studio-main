@@ -18,12 +18,14 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.VariantOutputConfiguration
+import org.gradle.api.tasks.Nested
 
 /**
  * Implementation of [List] of [VariantOutput] with added private services for AGP.
  */
 class VariantOutputList(
-    private val variantOutputs: List<VariantOutputImpl>): List<VariantOutputImpl> by variantOutputs {
+    @get:Nested
+    val variantOutputs: List<VariantOutputImpl>): List<VariantOutputImpl> by variantOutputs {
 
     /**
      * Return a [List] of [VariantOutputImpl] for variant output which [VariantOutput.outputType]
@@ -39,7 +41,7 @@ class VariantOutputList(
      * Returns the list of enabled [VariantOutput]
      */
     fun getEnabledVariantOutputs(): List<VariantOutputImpl> =
-        variantOutputs.filter { it.isEnabled.get() }
+        variantOutputs.filter { it.enabled.get() }
 
     /**
      * Finds the main split in the current variant context or throws a [RuntimeException] if there
@@ -54,10 +56,20 @@ class VariantOutputList(
      */
     fun getMainSplitOrNull(): VariantOutputImpl? =
         variantOutputs.find { variantOutput ->
-            variantOutput.outputType == VariantOutputConfiguration.OutputType.SINGLE }
+            variantOutput.outputType == VariantOutputConfiguration.OutputType.SINGLE
+        }
             ?: variantOutputs.find {
-                it.outputType == VariantOutputConfiguration.OutputType.UNIVERSAL }
+                it.outputType == VariantOutputConfiguration.OutputType.UNIVERSAL
+            }
             ?: variantOutputs.find {
                 it.outputType == VariantOutputConfiguration.OutputType.ONE_OF_MANY
             }
 }
+/**
+ * Finds the [VariantOutputImpl] for the provided [VariantOutputConfiguration] or null if
+ * cannot be found.
+ */
+fun List<VariantOutputImpl>.getVariantOutput(variantConfiguration: VariantOutputConfiguration) =
+    firstOrNull { variantConfiguration.outputType == it.outputType
+            && variantConfiguration.filters == it.filters }
+

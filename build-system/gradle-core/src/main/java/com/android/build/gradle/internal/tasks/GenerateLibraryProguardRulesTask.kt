@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.gradle.internal.scope.ExistingBuildElements
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.tasks.getChangesInSerializableForm
@@ -43,6 +43,7 @@ import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
 import java.io.Serializable
+import java.lang.RuntimeException
 import java.nio.file.Files
 import javax.inject.Inject
 import javax.xml.parsers.DocumentBuilderFactory
@@ -72,9 +73,9 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
 
     override fun doTaskAction(inputChanges: InputChanges) {
         val isIncremental = inputChanges.isIncremental
-        val manifest = Iterables.getOnlyElement(
-          ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, manifestFiles))
-          .outputFile
+        val manifest =
+            BuiltArtifactsLoaderImpl().load(manifestFiles)?.elements?.first()?.outputFile
+                ?: throw RuntimeException("Cannot find manifest file")
         val changedResources = if (isIncremental) {
             inputChanges.getChangesInSerializableForm(inputResourcesDir).changes
         } else {
@@ -84,7 +85,7 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
             it.submit(
               GenerateProguardRulesRunnable::class.java,
               GenerateProguardRulesParams(
-                manifestFile = manifest,
+                manifestFile = File(manifest),
                 proguardOutputFile = proguardOutputFile.get().asFile,
                 inputResourcesDir = inputResourcesDir.get().asFile,
                 changedResources = changedResources,

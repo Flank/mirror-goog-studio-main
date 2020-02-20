@@ -15,27 +15,29 @@
  */
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.api.dsl.Ndk
+import com.android.build.api.dsl.Shaders
+import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultApiVersion
+import com.android.builder.core.DefaultVectorDrawablesOptions
 import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.ApiVersion
+import com.android.builder.model.BaseConfig
 import com.android.builder.model.ProductFlavor
 import com.google.common.base.Strings
 import org.gradle.api.Action
+import java.io.File
 
 /** Base DSL object used to configure product flavors.  */
-abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
-    AbstractProductFlavor(
-        name,
-        dslScope.objectFactory.newInstance(
-            VectorDrawablesOptions::class.java
-        )
-    ), CoreProductFlavor {
+abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
+    AbstractProductFlavor(name),
+    CoreProductFlavor,
+    com.android.build.api.dsl.BaseFlavor<AnnotationProcessorOptions> {
 
     /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
-    val ndk: NdkOptions = dslScope.objectFactory.newInstance(NdkOptions::class.java)
+    override val ndk: NdkOptions = dslServices.newInstance(NdkOptions::class.java)
 
     override val ndkConfig: CoreNdkOptions
         get() {
@@ -50,10 +52,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
      */
 
     val externalNativeBuild: ExternalNativeBuildOptions =
-        dslScope.objectFactory.newInstance(
-            ExternalNativeBuildOptions::class.java,
-            dslScope.objectFactory
-        )
+        dslServices.newInstance(ExternalNativeBuildOptions::class.java, dslServices)
 
     override val externalNativeBuildOptions: CoreExternalNativeBuildOptions
         get() {
@@ -184,7 +183,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         if (alreadyPresent != null) {
             val flavorName = getName()
             if (BuilderConstants.MAIN == flavorName) {
-                dslScope.logger
+                dslServices.logger
                     .info(
                         "DefaultConfig: buildConfigField '{}' value is being replaced: {} -> {}",
                         name,
@@ -192,7 +191,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
                         value
                     )
             } else {
-                dslScope.logger
+                dslServices.logger
                     .info(
                         "ProductFlavor({}): buildConfigField '{}' " +
                                 "value is being replaced: {} -> {}",
@@ -223,7 +222,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         if (alreadyPresent != null) {
             val flavorName = getName()
             if (BuilderConstants.MAIN == flavorName) {
-                dslScope.logger
+                dslServices.logger
                     .info(
                         "DefaultConfig: resValue '{}' value is being replaced: {} -> {}",
                         name,
@@ -231,7 +230,7 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
                         value
                     )
             } else {
-                dslScope.logger
+                dslServices.logger
                     .info(
                         "ProductFlavor({}): resValue '{}' value is being replaced: {} -> {}",
                         flavorName,
@@ -244,55 +243,23 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         addResValue(ClassFieldImpl(type, name, value))
     }
 
-    /**
-     * Specifies a ProGuard configuration file that the plugin should use.
-     *
-     * There are two ProGuard rules files that ship with the Android plugin and are used by
-     * default:
-     *
-     *  * proguard-android.txt
-     *  * proguard-android-optimize.txt
-     *
-     * `proguard-android-optimize.txt` is identical to `proguard-android.txt
-    ` * , exccept with optimizations enabled. You can use `
-     * getDefaultProguardFile(String filename)` to return the full path of each file.
-     */
-    fun proguardFile(proguardFile: Any) {
-        proguardFiles.add(dslScope.file(proguardFile))
+    override var proguardFiles: MutableList<File>
+        get() = super.proguardFiles
+        set(value) {
+            // Override to handle the proguardFiles = ['string'] case (see PluginDslTest.testProguardFiles_*)
+            setProguardFiles(value)
+        }
+
+    override fun proguardFile(proguardFile: Any) {
+        proguardFiles.add(dslServices.file(proguardFile))
     }
 
-    /**
-     * Specifies ProGuard configuration files that the plugin should use.
-     *
-     * There are two ProGuard rules files that ship with the Android plugin and are used by
-     * default:
-     *
-     *  * proguard-android.txt
-     *  * proguard-android-optimize.txt
-     *
-     * `proguard-android-optimize.txt` is identical to `proguard-android.txt
-    ` * , exccept with optimizations enabled. You can use `
-     * getDefaultProguardFile(String filename)` to return the full path of each file.
-     */
-    fun proguardFiles(vararg files: Any) {
+    override fun proguardFiles(vararg files: Any) {
         for (file in files) {
             proguardFile(file)
         }
     }
 
-    /**
-     * Sets the ProGuard configuration files.
-     *
-     * There are two ProGuard rules files that ship with the Android plugin and are used by
-     * default:
-     *
-     *  * proguard-android.txt
-     *  * proguard-android-optimize.txt
-     *
-     * `proguard-android-optimize.txt` is identical to `proguard-android.txt
-    ` * , exccept with optimizations enabled. You can use `
-     * getDefaultProguardFile(String filename)` to return the full path of the files.
-     */
     fun setProguardFiles(proguardFileIterable: Iterable<Any>) {
         proguardFiles.clear()
         for (file in proguardFileIterable) {
@@ -300,21 +267,18 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         }
     }
 
-    /**
-     * Adds a proguard rule file to be used when processing test code.
-     *
-     * Test code needs to be processed to apply the same obfuscation as was done to main code.
-     */
-    fun testProguardFile(proguardFile: Any) {
-        testProguardFiles.add(dslScope.file(proguardFile))
+    override var testProguardFiles: MutableList<File>
+        get() = super.testProguardFiles
+        set(value) {
+            // Override to handle the testProguardFiles = ['string'] case.
+            setTestProguardFiles(value)
+        }
+
+    override fun testProguardFile(proguardFile: Any) {
+        testProguardFiles.add(dslServices.file(proguardFile))
     }
 
-    /**
-     * Adds proguard rule files to be used when processing test code.
-     *
-     * Test code needs to be processed to apply the same obfuscation as was done to main code.
-     */
-    fun testProguardFiles(vararg proguardFiles: Any) {
+    override fun testProguardFiles(vararg proguardFiles: Any) {
         for (proguardFile in proguardFiles) {
             testProguardFile(proguardFile)
         }
@@ -332,31 +296,18 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         }
     }
 
-    /**
-     * Adds a proguard rule file to be included in the published AAR.
-     *
-     * This proguard rule file will then be used by any application project that consume the AAR
-     * (if proguard is enabled).
-     *
-     * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
-     * This is only valid for Library project. This is ignored in Application project.
-     */
-    fun consumerProguardFile(proguardFile: Any) {
-        consumerProguardFiles.add(dslScope.file(proguardFile))
+    override var consumerProguardFiles: MutableList<File>
+        get() = super.consumerProguardFiles
+        set(value) {
+            // Override to handle the consumerProguardFiles = ['string'] case.
+            setConsumerProguardFiles(value)
+        }
+
+    override fun consumerProguardFile(proguardFile: Any) {
+        consumerProguardFiles.add(dslServices.file(proguardFile))
     }
 
-    /**
-     * Adds proguard rule files to be included in the published AAR.
-     *
-     * This proguard rule file will then be used by any application project that consume the AAR
-     * (if proguard is enabled).
-     *
-     * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
-     * This is only valid for Library project. This is ignored in Application project.
-     */
-    fun consumerProguardFiles(vararg proguardFiles: Any) {
+    override fun consumerProguardFiles(vararg proguardFiles: Any) {
         for (proguardFile in proguardFiles) {
             consumerProguardFile(proguardFile)
         }
@@ -379,9 +330,12 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         }
     }
 
-    /** Encapsulates per-variant configurations for the NDK, such as ABI filters.  */
     fun ndk(action: Action<NdkOptions>) {
         action.execute(ndk)
+    }
+
+    override fun ndk(action: Ndk.() -> Unit) {
+        action.invoke(ndk)
     }
 
     /**
@@ -515,25 +469,27 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         addResourceConfigurations(config)
     }
 
-    /** Options for configuration Java compilation.  */
     override val javaCompileOptions: JavaCompileOptions =
-        dslScope.objectFactory.newInstance(
-            JavaCompileOptions::class.java,
-            dslScope.objectFactory,
-            dslScope.deprecationReporter
-        )
+        dslServices.newInstance(JavaCompileOptions::class.java, dslServices)
+
+    override fun javaCompileOptions(action: com.android.build.api.dsl.JavaCompileOptions<AnnotationProcessorOptions>.() -> Unit) {
+        action.invoke(javaCompileOptions)
+    }
 
     fun javaCompileOptions(action: Action<JavaCompileOptions>) {
         action.execute(javaCompileOptions)
     }
 
-    /** Options for configuring the shader compiler.  */
     override val shaders: ShaderOptions =
-        dslScope.objectFactory.newInstance(ShaderOptions::class.java)
+        dslServices.newInstance(ShaderOptions::class.java)
 
     /** Configure the shader compiler options for this product flavor.  */
     fun shaders(action: Action<ShaderOptions>) {
         action.execute(shaders)
+    }
+
+    override fun shaders(action: Shaders.() -> Unit) {
+        action.invoke(shaders)
     }
 
     /**
@@ -550,14 +506,20 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
         vectorDrawables.setGeneratedDensities(generatedDensities)
     }
 
+    private var _vectorDrawables: VectorDrawablesOptions =
+        dslServices.newInstance(VectorDrawablesOptions::class.java)
+
     /** Configures [VectorDrawablesOptions].  */
     fun vectorDrawables(action: Action<VectorDrawablesOptions>) {
         action.execute(vectorDrawables)
     }
 
-    /** Options to configure the build-time support for `vector` drawables.  */
+    override fun vectorDrawables(action: com.android.build.api.dsl.VectorDrawables.() -> Unit) {
+        action.invoke(vectorDrawables)
+    }
+
     override val vectorDrawables: VectorDrawablesOptions
-        get() = super.vectorDrawables as VectorDrawablesOptions
+        get() = _vectorDrawables
 
     /**
      * Sets whether to enable unbundling mode for embedded wear app.
@@ -580,5 +542,13 @@ abstract class BaseFlavor(name: String, private val dslScope: DslScope) :
                 }
             } else DefaultApiVersion(value)
         } else null
+    }
+
+    override fun _initWith(that: BaseConfig) {
+        super._initWith(that)
+        if (that is ProductFlavor) {
+            _vectorDrawables =
+                DefaultVectorDrawablesOptions.copyOf(that.vectorDrawables) as VectorDrawablesOptions
+        }
     }
 }

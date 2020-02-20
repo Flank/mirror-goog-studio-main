@@ -21,6 +21,7 @@ import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
@@ -28,7 +29,6 @@ import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
 import com.android.build.gradle.internal.dsl.CmakeOptions
-import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
@@ -148,8 +148,8 @@ open class BasicModuleModelMock {
         ExternalNativeBuildOptions::class.java,
         throwUnmocked
     )
-    val coreNdkOptions = mock(
-        CoreNdkOptions::class.java,
+    val mergedNdkConfig = mock(
+        MergedNdkConfig::class.java,
         throwUnmocked
     )
 
@@ -255,7 +255,7 @@ open class BasicModuleModelMock {
         doReturn(emptyList<File>().iterator()).`when`(prefabFileCollection).iterator()
         doReturn(variantDslInfo).`when`(componentProperties).variantDslInfo
         doReturn(coreExternalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
-        doReturn(coreNdkOptions).`when`(variantDslInfo).ndkConfig
+        doReturn(mergedNdkConfig).`when`(variantDslInfo).ndkConfig
         doReturn(true).`when`(variantDslInfo).isDebuggable
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
@@ -299,7 +299,7 @@ open class BasicModuleModelMock {
         doReturn(null).`when`(ndkBuild).path
         doReturn(null).`when`(cmake).buildStagingDirectory
         doReturn(null).`when`(ndkBuild).buildStagingDirectory
-        doReturn(setOf<String>()).`when`(coreNdkOptions).abiFilters
+        doReturn(setOf<String>()).`when`(mergedNdkConfig).abiFilters
         doReturn("debug").`when`(componentProperties).name
 
         projectRootDir.mkdirs()

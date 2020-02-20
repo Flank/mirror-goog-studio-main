@@ -17,14 +17,16 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.gradle.internal.BuildTypeData
+import com.android.build.gradle.internal.DefaultConfigData
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.variant2.createFakeDslScope
+import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.services.createDslServices
 import com.android.builder.core.BuilderConstants
 import com.google.common.collect.ImmutableList
 import org.gradle.api.Named
@@ -58,10 +60,10 @@ interface Container<T: Named> {
  * After running the DSL, use [toModel]
  */
 class VariantInputModelBuilder(
-    private val dslScope: DslScope = createFakeDslScope()
+    private val dslServices: DslServices = createDslServices()
 ): VariantInputModelDsl {
-    val buildTypes: ContainerImpl<BuildType> = ContainerImpl { name -> BuildType(name, dslScope) }
-    val productFlavors: ContainerImpl<ProductFlavor> = ContainerImpl { name -> ProductFlavor(name, dslScope) }
+    val buildTypes: ContainerImpl<BuildType> = ContainerImpl { name -> BuildType(name, dslServices) }
+    val productFlavors: ContainerImpl<ProductFlavor> = ContainerImpl { name -> ProductFlavor(name, dslServices) }
 
     override fun buildTypes(action: Container<BuildType>.() -> Unit) {
         action(buildTypes)
@@ -89,8 +91,8 @@ class VariantInputModelBuilder(
         }.associateBy { it.productFlavor.name }
 
         // the default Config
-        val defaultConfig = ProductFlavorData(
-            DefaultConfig(BuilderConstants.MAIN, dslScope),
+        val defaultConfig = DefaultConfigData(
+            DefaultConfig(BuilderConstants.MAIN, dslServices),
             Mockito.mock(DefaultAndroidSourceSet::class.java),
             Mockito.mock(DefaultAndroidSourceSet::class.java),
             Mockito.mock(DefaultAndroidSourceSet::class.java)
@@ -149,8 +151,8 @@ class ContainerImpl<T: Named>(
  * Implementation of [VariantInputModel] adding an implicit flavor dimension list.
  */
 class TestVariantInputModel(
-    override val defaultConfig: ProductFlavorData<DefaultConfig>,
-    override val buildTypes: Map<String, BuildTypeData>,
+    override val defaultConfigData: DefaultConfigData<DefaultConfig>,
+    override val buildTypes: Map<String, BuildTypeData<BuildType>>,
     override val productFlavors: Map<String, ProductFlavorData<ProductFlavor>>,
     override val signingConfigs: Map<String, SigningConfig>,
     /**
@@ -158,6 +160,7 @@ class TestVariantInputModel(
      * they were added.
      * This allows not having to declare them during tests to simplify the fake DSL.
      */
-    val implicitFlavorDimensions: List<String>
-): VariantInputModel
+    val implicitFlavorDimensions: List<String>,
+    override val sourceSetManager: SourceSetManager = Mockito.mock(SourceSetManager::class.java)
+): VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 

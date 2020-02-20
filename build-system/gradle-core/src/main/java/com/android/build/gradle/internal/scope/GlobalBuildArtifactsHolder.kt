@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.scope
 
-import com.android.build.gradle.internal.api.dsl.DslScope
 import org.gradle.api.Project
 import java.io.File
 

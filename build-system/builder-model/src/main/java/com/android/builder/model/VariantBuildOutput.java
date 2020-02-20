@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import java.util.Collection;
 
 /** Model that represents a variant build output */
+@Deprecated
 public interface VariantBuildOutput extends BaseBuildOutput {
 
     /**

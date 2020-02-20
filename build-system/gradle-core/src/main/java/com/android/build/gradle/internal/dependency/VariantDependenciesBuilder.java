@@ -41,7 +41,6 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -180,7 +179,7 @@ public class VariantDependenciesBuilder {
         return this;
     }
 
-    public VariantDependencies build(@NonNull GlobalScope globalScope) {
+    public VariantDependencies build() {
         ObjectFactory factory = project.getObjects();
 
         final Usage apiUsage = factory.named(Usage.class, Usage.JAVA_API);
@@ -208,6 +207,8 @@ public class VariantDependenciesBuilder {
                             .getSourceSetImplementationConfigurations()) {
                 compileClasspath.extendsFrom(configuration);
             }
+
+            compileClasspath.getDependencies().add(project.getDependencies().create(project));
         }
         compileClasspath.setCanBeConsumed(false);
         compileClasspath
@@ -237,9 +238,9 @@ public class VariantDependenciesBuilder {
                 "Resolved configuration for runtime for variant: " + variantName);
         runtimeClasspath.setExtendsFrom(runtimeClasspaths);
         if (testedVariant != null) {
-            for (Configuration configuration :
-                    testedVariant.getVariantDependencies().getSourceSetRuntimeConfigurations()) {
-                runtimeClasspath.extendsFrom(configuration);
+            if (testedVariant.getVariantDslInfo().getVariantType().isAar()
+                    || !variantDslInfo.getVariantType().isApk()) {
+                runtimeClasspath.getDependencies().add(project.getDependencies().create(project));
             }
         }
         runtimeClasspath.setCanBeConsumed(false);

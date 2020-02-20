@@ -24,17 +24,23 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.google.common.collect.ImmutableList
+import org.gradle.api.Project
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.provider.Property
 import java.util.concurrent.Callable
 import javax.inject.Inject
 
 open class UnitTestPropertiesImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
+    buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
@@ -44,10 +50,12 @@ open class UnitTestPropertiesImpl @Inject constructor(
     variantData: BaseVariantData,
     testedVariant: VariantPropertiesImpl,
     transformManager: TransformManager,
-    variantApiScope: VariantPropertiesApiScope,
+    variantPropertiesApiServices: VariantPropertiesApiServices,
+    taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : TestComponentPropertiesImpl(
     componentIdentity,
+    buildFeatureValues,
     variantDslInfo,
     variantDependencies,
     variantSources,
@@ -57,7 +65,8 @@ open class UnitTestPropertiesImpl @Inject constructor(
     variantData,
     testedVariant,
     transformManager,
-    variantApiScope,
+    variantPropertiesApiServices,
+    taskCreationServices,
     globalScope
 ), UnitTestProperties {
 
@@ -70,5 +79,9 @@ open class UnitTestPropertiesImpl @Inject constructor(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    override val applicationId: Property<String> = variantApiScope.propertyOf(String::class.java, Callable{ variantDslInfo.testApplicationId })
+    override val applicationId: Property<String> = variantPropertiesApiServices.propertyOf(String::class.java, Callable{ variantDslInfo.testApplicationId })
+
+    override fun addDataBindingSources(
+        project: Project,
+        sourceSets: ImmutableList.Builder<ConfigurableFileTree>) {}
 }

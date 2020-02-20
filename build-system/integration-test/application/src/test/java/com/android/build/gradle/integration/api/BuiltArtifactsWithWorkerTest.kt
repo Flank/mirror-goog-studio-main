@@ -68,10 +68,11 @@ import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
-import com.android.build.api.artifact.WorkItemParameters
+import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.artifact.ArtifactTransformationRequest
 
 abstract class ProducerTask extends DefaultTask {
@@ -112,10 +113,10 @@ abstract class ProducerTask extends DefaultTask {
         123,
         "123",
         true,
-        VariantOutputConfiguration.OutputType.ONE_OF_MANY,
-        [
-          new FilterConfiguration(FilterConfiguration.FilterType.DENSITY, identifier)
-        ],
+        new VariantOutputConfigurationImpl(false,
+          [
+            new FilterConfiguration(FilterConfiguration.FilterType.DENSITY, identifier)
+          ]),
         identifier,
         identifier
       )
@@ -125,6 +126,7 @@ abstract class ProducerTask extends DefaultTask {
 
 abstract class ConsumerTask extends DefaultTask {
     private final WorkerExecutor workerExecutor
+    private final ObjectFactory objectFactory
 
     @InputFiles
     abstract DirectoryProperty getCompatibleManifests()
@@ -133,23 +135,21 @@ abstract class ConsumerTask extends DefaultTask {
     abstract DirectoryProperty getOutputDir()
 
     @Inject
-    public ConsumerTask(WorkerExecutor workerExecutor) {
+    public ConsumerTask(
+      ObjectFactory objectFactory,
+      WorkerExecutor workerExecutor) {
+      this.objectFactory = objectFactory
       this.workerExecutor = workerExecutor
     }
 
     @org.gradle.api.tasks.Internal
     ArtifactTransformationRequest replacementRequest
 
-    static class MyWorkItemParameters extends WorkItemParameters implements Serializable {
+    static class MyWorkItemParameters implements Serializable, WorkParameters {
       File outputFile
 
       File getOutputFile() {
        return outputFile
-      }
-
-      File initProperties(BuiltArtifact builtArtifact, Directory outputLocation) {
-        this.outputFile = outputLocation.file(new File(builtArtifact.outputFile).name).getAsFile()
-        return this.outputFile
       }
     }
 
@@ -168,13 +168,26 @@ abstract class ConsumerTask extends DefaultTask {
       }
     }
 
+    static class ConcreteParameters extends WorkActionAdapter.AdaptedWorkParameters<MyWorkItemParameters> {}
+
+    static class ConcreteClass extends WorkActionAdapter<MyWorkItemParameters, ConcreteParameters> {
+      @Inject
+      ConcreteClass(ObjectFactory objectFactory, ConcreteParameters parameters) {
+        super(objectFactory, parameters)
+      }
+    }
+
     @TaskAction
     void taskAction() {
       replacementRequest.submit(
+                this,
                 workerExecutor.noIsolation(),
-                MyWorkItemParameters.class,
-                WorkItem.class
-            ) { }
+                WorkItem.class,
+                MyWorkItemParameters.class
+            ) { BuiltArtifact builtArtifact, Directory outputLocation, MyWorkItemParameters parameters ->
+            parameters.outputFile = outputLocation.file(new File(builtArtifact.outputFile).name).getAsFile()
+            return parameters.outputFile
+            }
     }
 }
 

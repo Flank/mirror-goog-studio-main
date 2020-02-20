@@ -23,13 +23,13 @@ fun androidManifestXml(
   activityClass: String,
   isLauncher: Boolean,
   isLibrary: Boolean,
-  isNew: Boolean,
+  isNewModule: Boolean,
   packageName: String
 ): String {
-  val labelBlock = if (isNew) "android:label=\"@string/app_name\""
+  val labelBlock = if (isNewModule) "android:label=\"@string/app_name\""
   else "android:label=\"@string/title_${activityToLayout(activityClass)}\""
 
-  val intentFilterBlock = renderIf((isLauncher || isNew) && !isLibrary) {"""
+  val intentFilterBlock = renderIf((isLauncher || isNewModule) && !isLibrary) {"""
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

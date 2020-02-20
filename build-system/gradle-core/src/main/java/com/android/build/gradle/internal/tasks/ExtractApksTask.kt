@@ -17,11 +17,9 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
-import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -136,10 +134,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
                 applicationId = params.applicationId,
                 variantName = params.variantName,
                 elements = listOf(
-                    BuiltArtifactImpl(
-                        outputFile = params.outputDir.absolutePath,
-                        outputType = VariantOutputConfiguration.OutputType.SINGLE
-                    )
+                    BuiltArtifactImpl.make(outputFile = params.outputDir.absolutePath)
                 )
             ).saveToFile(params.apksFromBundleIdeModel)
         }
@@ -168,7 +163,7 @@ abstract class ExtractApksTask : NonIncrementalTask() {
                 InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL,
                 taskProvider,
                 ExtractApksTask::apksFromBundleIdeModel,
-                ExistingBuildElements.METADATA_FILE_NAME
+                BuiltArtifactsImpl.METADATA_FILE_NAME
             )
         }
 
@@ -180,12 +175,12 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             creationConfig.artifacts.setTaskInputToFinalProduct(InternalArtifactType.APKS_FROM_BUNDLE,
                 task.apkSetArchive)
 
-            val devicePath = creationConfig.globalScope.projectOptions.get(StringOption.IDE_APK_SELECT_CONFIG)
+            val devicePath = creationConfig.services.projectOptions.get(StringOption.IDE_APK_SELECT_CONFIG)
             if (devicePath != null) {
                 task.deviceConfig = File(devicePath)
             }
 
-            task.extractInstant = creationConfig.globalScope.projectOptions.get(BooleanOption.IDE_EXTRACT_INSTANT)
+            task.extractInstant = creationConfig.services.projectOptions.get(BooleanOption.IDE_EXTRACT_INSTANT)
             task.applicationId.setDisallowChanges(creationConfig.applicationId)
         }
     }

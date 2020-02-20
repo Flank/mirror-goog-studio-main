@@ -46,7 +46,7 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
 
     companion object {
         @JvmStatic
-        fun loadFromDirectory(folder: File): BuiltArtifacts? =
+        fun loadFromDirectory(folder: File): BuiltArtifactsImpl? =
             loadFromFile(File(folder, BuiltArtifactsImpl.METADATA_FILE_NAME), folder.toPath())
 
 
@@ -67,9 +67,9 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
             )
 
             val gson = gsonBuilder.create()
-            val reader = FileReader(metadataFile)
-            val buildOutputs =
-                gson.fromJson<BuiltArtifactsImpl>(reader, BuiltArtifactsImpl::class.java)
+            val buildOutputs = FileReader(metadataFile).use {
+                gson.fromJson<BuiltArtifactsImpl>(it, BuiltArtifactsImpl::class.java)
+            }
             // resolve the file path to the current project location.
             return BuiltArtifactsImpl(
                 artifactType = buildOutputs.artifactType,
@@ -79,15 +79,14 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
                 elements = buildOutputs.elements
                     .asSequence()
                     .map { builtArtifact ->
-                        BuiltArtifactImpl(
+                        BuiltArtifactImpl.make(
                             outputFile = relativePath.resolve(
                                 Paths.get(builtArtifact.outputFile)).toString(),
-                            properties = mapOf(),
+                            properties = builtArtifact.properties,
                             versionCode = builtArtifact.versionCode,
                             versionName = builtArtifact.versionName,
                             isEnabled = builtArtifact.isEnabled,
-                            outputType = builtArtifact.outputType,
-                            filters = builtArtifact.filters,
+                            variantOutputConfiguration = builtArtifact.variantOutputConfiguration,
                             baseName = builtArtifact.baseName,
                             fullName = builtArtifact.fullName
                         )

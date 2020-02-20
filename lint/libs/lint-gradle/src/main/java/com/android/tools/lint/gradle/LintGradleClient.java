@@ -225,8 +225,51 @@ public class LintGradleClient extends LintCliClient {
     protected LintRequest createLintRequest(@NonNull List<? extends File> files) {
         LintRequest lintRequest = new LintRequest(this, files);
         LintGradleProject.ProjectSearch search = new LintGradleProject.ProjectSearch();
-        Project project =
-                search.getProject(this, gradleProject, variant != null ? variant.getName() : null);
+        String variantName = variant != null ? variant.getName() : null;
+        Project project = search.getProject(this, gradleProject, variantName);
+
+        IdeAndroidProject projectModel = project.getGradleProjectModel();
+
+        // If an app project has dynamic feature modules, it doesn't depend on those
+        // modules; instead, the feature modules depend on the app. However, when analyzing
+        // the app we should consider the feature modules too; it's not easy to run lint
+        // on the set of all of them, so just make :gradlew :app:lintDebug imply including
+        // the feature modules themselves, similar to how app installation will also "depend"
+        // on them. We don't want to add them as dependent projects from the app project since
+        // that would be a circular dependency.
+        //
+        // One possibility here is to pass in the feature modules as additional roots
+        // in the lint request. However, that does not have the desired effect; each root
+        // is treated as an independent project, with its own set of detector instances.
+        //
+        // Another thing I tried was creating a "join" project; a non-reporting project
+        // which just depends on everything (the feature modules and the app module). But
+        // that still doesn't work quite right.
+        //
+        // Turns out the simplest thing to do is to just merge the source sets from
+        // the feature modules into the app project. This doesn't quite capture the right
+        // override semantics, but is a step in the right direction for reducing
+        // false positives around dynamic features.
+        if (projectModel != null && !projectModel.getDynamicFeatures().isEmpty()) {
+            for (String feature : projectModel.getDynamicFeatures()) {
+                org.gradle.api.Project rootProject = gradleProject.getRootProject();
+                org.gradle.api.Project featureProject = rootProject.findProject(feature);
+                if (featureProject != null) {
+                    Project p = search.getProject(this, featureProject, variantName);
+                    if (p != null) {
+                        project.getJavaSourceFolders().addAll(p.getJavaSourceFolders());
+                        project.getResourceFolders().addAll(p.getResourceFolders());
+                        project.getJavaLibraries(false).addAll(p.getJavaLibraries(false));
+                        project.getJavaLibraries(true).addAll(p.getJavaLibraries(true));
+                        project.getGeneratedResourceFolders()
+                                .addAll(p.getGeneratedResourceFolders());
+                        project.getTestSourceFolders().addAll(p.getTestSourceFolders());
+                        project.getTestLibraries().addAll(p.getTestLibraries());
+                    }
+                }
+            }
+        }
+
         lintRequest.setProjects(Collections.singletonList(project));
 
         registerProject(project.getDir(), project);

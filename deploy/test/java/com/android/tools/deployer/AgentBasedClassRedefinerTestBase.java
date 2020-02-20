@@ -88,13 +88,19 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         redefiner.stopServer();
     }
 
-    protected Deploy.SwapRequest createRequest(String name, String dex, boolean restart)
+    protected Deploy.SwapRequest createRequest(
+            String name, String dex, boolean restart, Deploy.ClassDef.FieldReInitState... states)
             throws IOException {
-        Deploy.ClassDef classDef =
+        Deploy.ClassDef.Builder classBuilder =
                 Deploy.ClassDef.newBuilder()
                         .setName(name)
-                        .setDex(ByteString.copyFrom(getSplittedDex(dex)))
-                        .build();
+                        .setDex(ByteString.copyFrom(getSplittedDex(dex)));
+        for (Deploy.ClassDef.FieldReInitState state : states) {
+            classBuilder.addFields(state);
+        }
+
+        Deploy.ClassDef classDef = classBuilder.build();
+
         Deploy.SwapRequest request =
                 Deploy.SwapRequest.newBuilder()
                         .addModifiedClasses(classDef)

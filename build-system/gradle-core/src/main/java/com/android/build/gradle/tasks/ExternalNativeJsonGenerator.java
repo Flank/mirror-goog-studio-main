@@ -468,8 +468,9 @@ public abstract class ExternalNativeJsonGenerator {
         // Gather all expected build outputs
         List<Path> expectedSoFiles = Lists.newArrayList();
         for (NativeLibraryValueMini library : config.libraries.values()) {
-            assert library.output != null;
-            expectedSoFiles.add(library.output.toPath());
+            File output = library.output;
+            if (output == null) continue;
+            expectedSoFiles.add(output.toPath());
         }
 
         try (Stream<Path> paths = Files.walk(expectedOutputFolder.toPath())) {

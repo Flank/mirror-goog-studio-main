@@ -1,0 +1,95 @@
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package deploy.service.proto;
+option java_package = "com.android.deploy.service.proto";
+
+/*
+ * Service for interacting with a DDMLIB Agent and Deployer. As features are required from external
+ * sources. This service API will be expanded to expose the functionality from DDMLIB. Using
+ * this service is preferred over interacting with ADB directly as it allows us to handle multiple
+ * programs interacting with the device and listening for "Clients" (Processes really) without
+ * fighting for ADB connections or jdwp-tracker connections.
+ */
+service DeployService {
+  /*
+   * Get a list of devices from the current ADB bridge. This API will return all known devices
+   * to DDMLIB at the time of the API call.
+   * TODO: Create a streaming RPC if we need to mirror the addDeviceListener API.
+   */
+  rpc GetDevices(DeviceRequest) returns (DeviceResponse) {
+  }
+  /*
+   * Get a list of clients for a given device. The list of clients is only those that are
+   * enumerated by DDMLIB. Currently this is restricted to clients that are returned via
+   * jdwp-track
+   */
+  rpc GetClients(ClientRequest) returns (ClientResponse) {
+  }
+  /*
+   * Attach debugger returns the debugging port setup by DDMLIB that is expecting a debugger
+   * connection. The debugger port is not returned in the initial client list because in the
+   * future the debugger port is not guaranteed to be active just because a client is created.
+   */
+  rpc AttachDebugger(AttachRequest) returns (AttachResponse) {
+  }
+}
+
+/*
+ * Properties of a device that are exposed to external clients.
+ * Note: This is not a complete list of device properties supported by DDMLIB.
+ */
+message Device {
+  string serial_number = 1;
+  string status = 2;
+  string product = 3;
+  string model = 4;
+  string device = 5;
+  string transport_id = 6;
+  repeated string abis = 7;
+  bool is_emulator = 8;
+  string avd = 9;
+}
+
+/*
+ * Properties of a client that are exposed to external clients.
+ * Note: This is not a complete list of properties supported by DDMLIB.
+ */
+message Client {
+  int32 pid = 1;
+}
+
+message DeviceRequest {
+}
+message DeviceResponse {
+  repeated Device devices = 1;
+}
+
+message ClientRequest {
+  string device_id = 1;
+}
+message ClientResponse {
+  repeated Client clients = 1;
+}
+
+message AttachRequest {
+  int32 pid = 1;
+  string device_id = 2;
+}
+message AttachResponse {
+  int32 port = 1;
+}

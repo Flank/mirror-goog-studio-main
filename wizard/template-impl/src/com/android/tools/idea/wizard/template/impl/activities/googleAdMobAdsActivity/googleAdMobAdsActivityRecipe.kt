@@ -47,10 +47,10 @@ fun RecipeExecutor.googleAdMobAdsActivityRecipe(
   addAllKotlinDependencies(moduleData)
 
   val isDynamicFeature = moduleData.baseFeature != null
-  generateManifestStrings(activityClass, activityTitle, resOut, resOut, moduleData.isNew, true, isDynamicFeature)
+  generateManifestStrings(activityClass, activityTitle, resOut, resOut, moduleData.isNewModule, true, isDynamicFeature)
   addDependency("com.google.android.gms:play-services-ads:+")
 
-  mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, moduleData.isNew, packageName),
+  mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, moduleData.isNewModule, packageName),
            manifestOut.resolve("AndroidManifest.xml"))
 
   save(mainXml(activityClass, packageName), resOut.resolve("menu/${menuName}.xml"))

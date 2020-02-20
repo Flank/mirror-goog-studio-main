@@ -150,9 +150,7 @@ public class BytecodeGenerationHooksTest {
                 result,
                 "BytecodeGeneratingTask(:app:generateBytecodeFordebugUnitTest): ",
                 false,
-                "app/build/intermediates/javac/debug/classes",
-                "app/build/generated/preJavacbytecode/debug",
-                "app/build/generated/postJavacBytecode/debug",
+                "app/build/intermediates/app_classes/debug/classes.jar",
                 "library/build/intermediates/"
                         + COMPILE_LIBRARY_CLASSES_JAR.INSTANCE.getFolderName()
                         + "/debug/classes.jar",

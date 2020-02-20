@@ -23,17 +23,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.android.build.FilterData;
-import com.android.build.OutputFile;
-import com.android.build.VariantOutput;
+import com.android.build.api.variant.BuiltArtifact;
+import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
-import com.android.builder.model.VariantBuildOutput;
+import com.android.builder.model.VariantBuildInformation;
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Locale;
@@ -46,7 +45,6 @@ import org.junit.Test;
 public class OutputRenamingTest {
 
     private static AndroidProject model;
-    private static ProjectBuildOutput outputModel;
 
     @ClassRule
     public static GradleTestProject project =
@@ -66,7 +64,7 @@ public class OutputRenamingTest {
                         + "    }\n"
                         + "  }\n"
                         + "}");
-        outputModel = project.executeAndReturnOutputModel("clean", "assemble");
+        project.execute("clean", "assemble");
         model =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
@@ -96,31 +94,28 @@ public class OutputRenamingTest {
     }
 
     private static void assertFileRenaming(String buildType) {
-        Collection<VariantBuildOutput> variantBuildOutputs = outputModel.getVariantsBuildOutput();
+        Collection<VariantBuildInformation> variantBuildOutputs =
+                model.getVariantsBuildInformation();
         assertThat(variantBuildOutputs).hasSize(2);
-        VariantBuildOutput buildOutput =
-                ProjectBuildOutputUtils.getVariantBuildOutput(outputModel, buildType);
+        VariantBuildInformation buildOutput =
+                ProjectBuildOutputUtils.getVariantBuildInformation(model, buildType);
 
         // get the outputs.
-        Collection<OutputFile> outputs = buildOutput.getOutputs();
+        Collection<String> outputs = ProjectBuildOutputUtils.getOutputFiles(buildOutput);
         assertNotNull(outputs);
         assertThat(outputs).hasSize(5);
 
-        for (OutputFile fileOutput : buildOutput.getOutputs()) {
+        for (BuiltArtifact builtArtifact :
+                ProjectBuildOutputUtils.getBuiltArtifacts(buildOutput).getElements()) {
             String filterValue =
-                    fileOutput
-                            .getFilters()
-                            .stream()
+                    builtArtifact.getFilters().stream()
                             .filter(
-                                    filterData ->
-                                            filterData
-                                                    .getFilterType()
-                                                    .equals(
-                                                            VariantOutput.FilterType.DENSITY
-                                                                    .name()))
-                            .map(FilterData::getIdentifier)
+                                    filter ->
+                                            filter.getFilterType()
+                                                    .equals(FilterConfiguration.FilterType.DENSITY))
+                            .map(FilterConfiguration::getIdentifier)
                             .findFirst()
-                            .orElse(VariantOutput.NO_FILTER);
+                            .orElse("null");
 
             String expectedFileName =
                     "project--12-"
@@ -129,8 +124,8 @@ public class OutputRenamingTest {
                             + filterValue
                             + "-signed.apk";
 
-            assertEquals(expectedFileName, fileOutput.getOutputFile().getName());
-            assertTrue(fileOutput.getOutputFile().exists());
+            assertEquals(expectedFileName, new File(builtArtifact.getOutputFile()).getName());
+            assertTrue(new File(builtArtifact.getOutputFile()).exists());
         }
     }
 }

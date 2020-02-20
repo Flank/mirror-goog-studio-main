@@ -15,8 +15,10 @@
  */
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.api.dsl.Ndk
+import com.android.build.api.dsl.Shaders
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractBuildType
 import com.android.builder.core.BuilderConstants
 import com.android.builder.errors.IssueReporter
@@ -25,17 +27,21 @@ import com.android.builder.model.BaseConfig
 import com.android.builder.model.CodeShrinker
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Iterables
-import java.io.Serializable
-import javax.inject.Inject
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
+import java.io.File
+import java.io.Serializable
+import javax.inject.Inject
 
 /** DSL object to configure build types.  */
-open class BuildType @Inject constructor(private val name: String, private val dslScope: DslScope) :
+open class BuildType @Inject constructor(
+    private val name: String,
+    private val dslServices: DslServices
+) :
     AbstractBuildType(), CoreBuildType, Serializable,
-    com.android.build.api.dsl.BuildType {
+    com.android.build.api.dsl.BuildType<AnnotationProcessorOptions> {
 
     /**
      * Name of this build type.
@@ -125,14 +131,14 @@ open class BuildType @Inject constructor(private val name: String, private val d
         POSTPROCESSING_BLOCK, OLD_DSL
     }
 
-    override val ndkConfig: NdkOptions = dslScope.objectFactory.newInstance(NdkOptions::class.java)
-    override val externalNativeBuildOptions: ExternalNativeBuildOptions = dslScope.objectFactory.newInstance(
-        ExternalNativeBuildOptions::class.java, dslScope.objectFactory
+    override val ndkConfig: NdkOptions = dslServices.newInstance(NdkOptions::class.java)
+    override val externalNativeBuildOptions: ExternalNativeBuildOptions = dslServices.newInstance(
+        ExternalNativeBuildOptions::class.java, dslServices
     )
 
-    private val _postProcessing: PostProcessingBlock = dslScope.objectFactory.newInstance(
+    private val _postProcessing: PostProcessingBlock = dslServices.newInstance(
         PostProcessingBlock::class.java,
-        dslScope
+        dslServices
     )
     private var _postProcessingConfiguration: PostProcessingConfiguration? = null
     private var postProcessingDslMethodUsed: String? = null
@@ -145,8 +151,10 @@ open class BuildType @Inject constructor(private val name: String, private val d
      */
     override var isCrunchPngsDefault = true
 
+    // FIXME remove: b/149431538
+    @Suppress("DEPRECATION")
     private val _isDefaultProperty: Property<Boolean> =
-        dslScope.objectFactory.property(Boolean::class.java).convention(false)
+        dslServices.property(Boolean::class.java).convention(false)
 
     var _matchingFallbacks: ImmutableList<String>? = null
 
@@ -204,7 +212,7 @@ open class BuildType @Inject constructor(private val name: String, private val d
      *
      * @return the names of product flavors to use, in descending priority order
      */
-    var matchingFallbacks: List<String>
+    override var matchingFallbacks: List<String>
         get() = _matchingFallbacks ?: ImmutableList.of()
         set(value) { _matchingFallbacks = ImmutableList.copyOf(value) }
 
@@ -217,14 +225,14 @@ open class BuildType @Inject constructor(private val name: String, private val d
         matchingFallbacks = ImmutableList.of(fallback)
     }
 
-    /** Options for configuration Java compilation.  */
-    override val javaCompileOptions: JavaCompileOptions = dslScope.objectFactory.newInstance(
-        JavaCompileOptions::class.java,
-        dslScope.objectFactory,
-        dslScope.deprecationReporter
-    )
+    override val javaCompileOptions: JavaCompileOptions =
+        dslServices.newInstance(JavaCompileOptions::class.java, dslServices)
 
-    override val shaders: ShaderOptions = dslScope.objectFactory.newInstance(ShaderOptions::class.java)
+    override fun javaCompileOptions(action: com.android.build.api.dsl.JavaCompileOptions<AnnotationProcessorOptions>.() -> Unit) {
+        action.invoke(javaCompileOptions)
+    }
+
+    override val shaders: ShaderOptions = dslServices.newInstance(ShaderOptions::class.java)
 
     /**
      * Initialize the DSL object with the debug signingConfig. Not meant to be used from the build
@@ -339,7 +347,7 @@ open class BuildType @Inject constructor(private val name: String, private val d
                 "BuildType(%s): buildConfigField '%s' value is being replaced: %s -> %s",
                 getName(), name, alreadyPresent.value, value
             )
-            dslScope.issueReporter.reportWarning(
+            dslServices.issueReporter.reportWarning(
                 IssueReporter.Type.GENERIC,
                 message
             )
@@ -371,7 +379,7 @@ open class BuildType @Inject constructor(private val name: String, private val d
                 "BuildType(%s): resValue '%s' value is being replaced: %s -> %s",
                 getName(), name, alreadyPresent.value, value
             )
-            dslScope.issueReporter.reportWarning(
+            dslServices.issueReporter.reportWarning(
                 IssueReporter.Type.GENERIC,
                 message
             )
@@ -379,42 +387,20 @@ open class BuildType @Inject constructor(private val name: String, private val d
         addResValue(ClassFieldImpl(type, name, value))
     }
 
-    /**
-     * Adds a new ProGuard configuration file.
-     *
-     *
-     * `proguardFile getDefaultProguardFile('proguard-android.txt')`
-     *
-     *
-     * There are 2 default rules files
-     *
-     *  * proguard-android.txt
-     *  * proguard-android-optimize.txt
-     *
-     *
-     * They are located in the SDK. Using `getDefaultProguardFile(String filename)` will return the
-     * full path to the files. They are identical except for enabling optimizations.
-     */
-    fun proguardFile(proguardFile: Any): BuildType {
+    override var proguardFiles: MutableList<File>
+        get() = super.proguardFiles
+        set(value) {
+            // Override to handle the proguardFiles = ['string'] case (see PluginDslTest.testProguardFiles_*)
+            setProguardFiles(value)
+        }
+
+    override fun proguardFile(proguardFile: Any): BuildType {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "proguardFile")
-        proguardFiles.add(dslScope.file(proguardFile))
+        proguardFiles.add(dslServices.file(proguardFile))
         return this
     }
 
-    /**
-     * Adds new ProGuard configuration files.
-     *
-     *
-     * There are 2 default rules files
-     *
-     *  * proguard-android.txt
-     *  * proguard-android-optimize.txt
-     *
-     *
-     * They are located in the SDK. Using `getDefaultProguardFile(String filename)` will return the
-     * full path to the files. They are identical except for enabling optimizations.
-     */
-    fun proguardFiles(vararg files: Any): BuildType {
+    override fun proguardFiles(vararg files: Any): BuildType {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "proguardFiles")
         for (file in files) {
             proguardFile(file)
@@ -447,25 +433,20 @@ open class BuildType @Inject constructor(private val name: String, private val d
         return this
     }
 
-    /**
-     * Adds a proguard rule file to be used when processing test code.
-     *
-     *
-     * Test code needs to be processed to apply the same obfuscation as was done to main code.
-     */
-    fun testProguardFile(proguardFile: Any): BuildType {
+    override var testProguardFiles: MutableList<File>
+        get() = super.testProguardFiles
+        set(value) {
+            // Override to handle the testProguardFiles = ['string'] case.
+            setTestProguardFiles(value)
+        }
+
+    override fun testProguardFile(proguardFile: Any): BuildType {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "testProguardFile")
-        testProguardFiles.add(dslScope.file(proguardFile))
+        testProguardFiles.add(dslServices.file(proguardFile))
         return this
     }
 
-    /**
-     * Adds proguard rule files to be used when processing test code.
-     *
-     *
-     * Test code needs to be processed to apply the same obfuscation as was done to main code.
-     */
-    fun testProguardFiles(vararg proguardFiles: Any): BuildType {
+    override fun testProguardFiles(vararg proguardFiles: Any): BuildType {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "testProguardFiles")
         for (proguardFile in proguardFiles) {
             testProguardFile(proguardFile)
@@ -493,41 +474,22 @@ open class BuildType @Inject constructor(private val name: String, private val d
         return this
     }
 
-    /**
-     * Adds a proguard rule file to be included in the published AAR.
-     *
-     *
-     * This proguard rule file will then be used by any application project that consume the AAR
-     * (if proguard is enabled).
-     *
-     *
-     * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
-     *
-     * This is only valid for Library project. This is ignored in Application project.
-     */
-    fun consumerProguardFile(proguardFile: Any): BuildType {
+    override var consumerProguardFiles: MutableList<File>
+        get() = super.consumerProguardFiles
+        set(value) {
+            // Override to handle the consumerProguardFiles = ['string'] case.
+            setConsumerProguardFiles(value)
+        }
+
+    override fun consumerProguardFile(proguardFile: Any): BuildType {
         checkPostProcessingConfiguration(
             PostProcessingConfiguration.OLD_DSL, "consumerProguardFile"
         )
-        consumerProguardFiles.add(dslScope.file(proguardFile))
+        consumerProguardFiles.add(dslServices.file(proguardFile))
         return this
     }
 
-    /**
-     * Adds proguard rule files to be included in the published AAR.
-     *
-     *
-     * This proguard rule file will then be used by any application project that consume the AAR
-     * (if proguard is enabled).
-     *
-     *
-     * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
-     *
-     * This is only valid for Library project. This is ignored in Application project.
-     */
-    fun consumerProguardFiles(vararg proguardFiles: Any): BuildType {
+    override fun consumerProguardFiles(vararg proguardFiles: Any): BuildType {
         checkPostProcessingConfiguration(
             PostProcessingConfiguration.OLD_DSL, "consumerProguardFiles"
         )
@@ -568,6 +530,13 @@ open class BuildType @Inject constructor(private val name: String, private val d
         action.execute(ndkConfig)
     }
 
+    override val ndk: Ndk
+        get() = ndkConfig
+
+    override fun ndk(action: Ndk.() -> Unit) {
+        action.invoke(ndk)
+    }
+
     /**
      * Configure native build options.
      */
@@ -581,6 +550,10 @@ open class BuildType @Inject constructor(private val name: String, private val d
      */
     fun shaders(action: Action<ShaderOptions>) {
         action.execute(shaders)
+    }
+
+    override fun shaders(action: Shaders.() -> Unit) {
+        action.invoke(shaders)
     }
 
     /**
@@ -646,7 +619,7 @@ open class BuildType @Inject constructor(private val name: String, private val d
         set(_: Boolean?) {
             checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setUseProguard")
             if (dslChecksEnabled.get()) {
-                dslScope.deprecationReporter
+                dslServices.deprecationReporter
                     .reportObsoleteUsage(
                         "useProguard", DeprecationReporter.DeprecationTarget.DSL_USE_PROGUARD
                     )
@@ -725,7 +698,7 @@ open class BuildType @Inject constructor(private val name: String, private val d
                     )
                 else -> throw AssertionError("Unknown value $used")
             }
-            dslScope.issueReporter.reportError(
+            dslServices.issueReporter.reportError(
                 IssueReporter.Type.GENERIC,
                 message,
                 methodName

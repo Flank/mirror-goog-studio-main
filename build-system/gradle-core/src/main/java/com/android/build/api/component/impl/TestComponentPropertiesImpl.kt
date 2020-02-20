@@ -26,15 +26,18 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import javax.inject.Inject
 
 abstract class TestComponentPropertiesImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
+    buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
@@ -44,10 +47,12 @@ abstract class TestComponentPropertiesImpl @Inject constructor(
     variantData: BaseVariantData,
     override val testedVariant: VariantPropertiesImpl,
     transformManager: TransformManager,
-    variantApiScope: VariantPropertiesApiScope,
+    variantPropertiesApiServices: VariantPropertiesApiServices,
+    taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : ComponentPropertiesImpl(
     componentIdentity,
+    buildFeatureValues,
     variantDslInfo,
     variantDependencies,
     variantSources,
@@ -56,7 +61,8 @@ abstract class TestComponentPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    variantApiScope,
+    variantPropertiesApiServices,
+    taskCreationServices,
     globalScope
 ), TestComponentProperties, TestComponentCreationConfig {
 

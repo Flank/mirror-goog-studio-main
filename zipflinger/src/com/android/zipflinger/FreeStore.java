@@ -100,6 +100,9 @@ class FreeStore {
     Location ualloc(long requestedSize) {
         Zone cursor;
         for (cursor = head.next; cursor != null; cursor = cursor.next) {
+            // We are searching for a block big enough to contain:
+            // - The requested size
+            // - Post-padding space for potentially needed virtual entry to fill holes.
             if (cursor.loc.size() >= requestedSize + LocalFileHeader.VIRTUAL_HEADER_SIZE) {
                 break;
             }
@@ -120,8 +123,8 @@ class FreeStore {
     // be consumed by an "extra" field.
     @NonNull
     Location alloc(long requestedSize, long payloadOffset, long alignment) {
-        Zone cursor = head.next;
-        while (cursor != null) {
+        Zone cursor;
+        for (cursor = head.next; cursor != null; cursor = cursor.next) {
             long padding = padFor(cursor.loc.first, payloadOffset, alignment);
             // We are searching for a block big enough to contain:
             // - The requested size
@@ -132,7 +135,6 @@ class FreeStore {
                 requestedSize += padding;
                 break;
             }
-            cursor = cursor.next;
         }
 
         if (cursor == null) {

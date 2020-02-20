@@ -16,15 +16,15 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
-import com.android.build.VariantOutput
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.variant.FilterConfiguration
+import com.android.build.api.variant.impl.BuiltArtifactImpl
+import com.android.build.api.variant.impl.BuiltArtifactsImpl
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
-import com.android.build.gradle.internal.scope.BuildElements
-import com.android.build.gradle.internal.scope.BuildOutput
-import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
@@ -107,9 +107,9 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
 
     @Throws(IOException::class)
     override fun doFullTaskAction() {
-        val manifest = chooseOutput(
-            ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, manifestFiles))
-            .outputFile
+        val manifestBuiltArtifacts = BuiltArtifactsLoaderImpl().load(manifestFiles)
+            ?: throw RuntimeException("Cannot load generated manifests, file a bug")
+        val manifest = File(chooseOutput(manifestBuiltArtifacts).outputFile)
 
         getWorkerFacadeWithWorkers().use {
             it.submit(
@@ -132,16 +132,10 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
         }
     }
 
-    private fun chooseOutput(manifestBuildElements: BuildElements): BuildOutput {
-        val nonDensity = manifestBuildElements
-            .stream()
-            .filter { output -> output.apkData.getFilter(VariantOutput.FilterType.DENSITY) == null }
-            .findFirst()
-        if (!nonDensity.isPresent) {
-            throw RuntimeException("No non-density apk found")
-        }
-        return nonDensity.get()
-    }
+    private fun chooseOutput(manifestBuiltArtifacts: BuiltArtifactsImpl): BuiltArtifactImpl =
+        manifestBuiltArtifacts.elements
+            .firstOrNull() { output -> output.getFilter(FilterConfiguration.FilterType.DENSITY) == null }
+            ?: throw RuntimeException("No non-density apk found")
 
     data class GenerateLibRFileParams(
         val localResourcesFile: File,

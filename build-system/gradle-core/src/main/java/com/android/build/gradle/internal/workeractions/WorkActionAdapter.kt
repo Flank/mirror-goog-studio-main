@@ -16,23 +16,50 @@
 
 package com.android.build.gradle.internal.workeractions
 
+import com.android.ide.common.workers.GradlePluginMBeans
 import org.gradle.api.model.ObjectFactory
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
+import java.io.Serializable
 import javax.inject.Inject
 
-abstract class WorkActionAdapter<T: WorkParameters, U: WorkActionAdapter.Parameters<T>>
-    @Inject constructor(val objectFactory: ObjectFactory)
-    : WorkAction<U> {
+/**
+ * Adapted version of the Gradle's [WorkAction] for handling BuiltArtifact instances.
+ *
+ *
+ */
+open class WorkActionAdapter<TargetTypeT, WorkItemParametersT> @Inject constructor(
+    val objectFactory: ObjectFactory,
+    val params: WorkItemParametersT)
+    : WorkAction<WorkItemParametersT>
+        where TargetTypeT: WorkParameters, TargetTypeT: Serializable,
+              WorkItemParametersT : WorkActionAdapter.AdaptedWorkParameters<TargetTypeT>, WorkItemParametersT: Serializable {
 
-    open class Parameters<T: WorkParameters>: WorkParameters {
-        lateinit var adaptedParameters: T
-        lateinit var adaptedAction: Class<out AgpWorkAction<T>>
+    open class AdaptedWorkParameters<WorkParametersT>: WorkParameters, Serializable
+            where WorkParametersT : WorkParameters, WorkParametersT: Serializable {
+        var projectName: String = ""
+        var tastName: String = ""
+        var workerKey: String = ""
+        lateinit var adaptedParameters: WorkParametersT
+        lateinit var adaptedAction: String
+    }
+
+    override fun getParameters(): WorkItemParametersT {
+        return params
     }
 
     override fun execute() {
-        val workAction = objectFactory.newInstance(parameters.adaptedAction)
-        workAction.params = parameters.adaptedParameters
+        if (params.projectName.isNotBlank()) {
+            GradlePluginMBeans.getProfileMBean(params.projectName)
+                ?.workerStarted(params.tastName, params.workerKey)
+        }
+        @Suppress("UNCHECKED_CAST")
+        val actionType = parameters.adaptedParameters.javaClass.classLoader.loadClass(parameters.adaptedAction) as Class<out WorkAction<*>>
+        val workAction = objectFactory.newInstance(actionType, parameters.adaptedParameters)
         workAction.execute()
+        if (params.projectName.isNotBlank()) {
+            GradlePluginMBeans.getProfileMBean(params.projectName)
+                ?.workerFinished(params.tastName, params.workerKey)
+        }
     }
 }

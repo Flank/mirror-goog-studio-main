@@ -182,6 +182,12 @@ internal val folderTemplates = listOf(
     "raw"
   ),
   getSourceSetFolderTemplate(
+    "Res Folder",
+    "Creates a source root for Android Resource files.",
+    SourceSetType.RES,
+    "res"
+  ),
+  getSourceSetFolderTemplate(
     "Java Resources Folder",
     "Creates a source root for Java Resource (NOT Android resource) files.",
     SourceSetType.RESOURCES,

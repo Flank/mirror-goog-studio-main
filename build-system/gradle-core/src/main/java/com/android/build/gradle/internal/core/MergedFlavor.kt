@@ -16,8 +16,11 @@
 
 package com.android.build.gradle.internal.core
 
+import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractProductFlavor
+import com.android.builder.core.DefaultVectorDrawablesOptions
 import com.android.builder.errors.IssueReporter
+import com.android.builder.model.BaseConfig
 import com.android.builder.model.ProductFlavor
 import com.google.common.collect.Lists
 
@@ -26,7 +29,7 @@ import com.google.common.collect.Lists
  */
 class MergedFlavor(
     name: String,
-    val issueReporter: IssueReporter
+    private val dslServices: DslServices
 ) : AbstractProductFlavor(name) {
 
     companion object {
@@ -38,8 +41,8 @@ class MergedFlavor(
          * @return a new MergedFlavor instance that is a clone of the flavor.
          */
         @JvmStatic
-        fun clone(productFlavor: ProductFlavor, issueReporter: IssueReporter): MergedFlavor {
-            val mergedFlavor = MergedFlavor(productFlavor.getName(), issueReporter)
+        fun clone(productFlavor: ProductFlavor, dslServices: DslServices): MergedFlavor {
+            val mergedFlavor = MergedFlavor(productFlavor.getName(), dslServices)
             mergedFlavor._initWith(productFlavor)
             return mergedFlavor
         }
@@ -61,9 +64,9 @@ class MergedFlavor(
         fun mergeFlavors(
             lowestPriority: ProductFlavor,
             flavors: List<ProductFlavor>,
-            issueReporter: IssueReporter
+            dslServices: DslServices
         ): MergedFlavor {
-            val mergedFlavor = clone(lowestPriority, issueReporter)
+            val mergedFlavor = clone(lowestPriority, dslServices)
             for (flavor in Lists.reverse(flavors)) {
                 mergedFlavor.mergeWithHigherPriorityFlavor(flavor)
             }
@@ -88,6 +91,18 @@ class MergedFlavor(
             mergedFlavor.versionNameSuffix = versionNameSuffix
 
             return mergedFlavor
+        }
+    }
+
+    private var _vectorDrawables: DefaultVectorDrawablesOptions = DefaultVectorDrawablesOptions()
+
+    override val vectorDrawables: DefaultVectorDrawablesOptions
+        get() = _vectorDrawables
+
+    override fun _initWith(that: BaseConfig) {
+        super._initWith(that)
+        if (that is ProductFlavor) {
+            _vectorDrawables = DefaultVectorDrawablesOptions.copyOf(that.vectorDrawables)
         }
     }
 
@@ -128,6 +143,6 @@ class MergedFlavor(
                 |    }
                 |}""".trimMargin()
 
-        issueReporter.reportError(IssueReporter.Type.GENERIC, message)
+        dslServices.issueReporter.reportError(IssueReporter.Type.GENERIC, message)
     }
 }

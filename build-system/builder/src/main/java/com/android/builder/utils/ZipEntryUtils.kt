@@ -36,3 +36,6 @@ fun isValidZipEntryName(entry: ZipEntry): Boolean {
 fun isValidZipEntryPath(filePath: File, outputDir: File): Boolean {
     return filePath.canonicalPath.startsWith(outputDir.canonicalPath + File.separator)
 }
+
+/** Creates a new zip entry with time set to zero. */
+fun zipEntry(name: String): ZipEntry = ZipEntry(name).apply { time = -1L }

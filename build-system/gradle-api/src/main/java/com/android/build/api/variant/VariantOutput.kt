@@ -47,5 +47,5 @@ interface VariantOutput: VariantOutputConfiguration {
      *
      * @return a [Property] to enable or disable this output.
      */
-    val isEnabled: Property<Boolean>
+    val enabled: Property<Boolean>
 }

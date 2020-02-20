@@ -167,7 +167,7 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
                     ParseLibraryResourcesTask::librarySymbolsFile,
                     SdkConstants.FN_R_DEF_TXT
             )
-            if (creationConfig.globalScope
+            if (creationConfig.services
                             .projectOptions[BooleanOption.ENABLE_PARTIAL_R_INCREMENTAL_BUILDS]) {
                 creationConfig.artifacts.producesDir(
                         InternalArtifactType.LOCAL_ONLY_PARTIAL_SYMBOL_DIRECTORY,
@@ -184,7 +184,7 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
             super.configure(task)
             task.platformAttrRTxt.set(creationConfig.globalScope.platformAttrs)
             task.enablePartialRIncrementalBuilds.setDisallowChanges(
-                creationConfig.globalScope
+                creationConfig.services
                     .projectOptions[BooleanOption.ENABLE_PARTIAL_R_INCREMENTAL_BUILDS])
 
             creationConfig.artifacts.setTaskInputToFinalProduct(

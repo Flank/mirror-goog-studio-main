@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.ndk
 
 import com.android.build.gradle.internal.core.Abi
-import com.google.common.base.Preconditions.checkArgument
-import com.google.common.base.Preconditions.checkState
 import java.io.File
 
 /**
@@ -27,5 +25,9 @@ import java.io.File
 class NdkR21Info(root: File) : NdkR19Info(root) {
     override fun getStripExecutable(abi: Abi) = rootDirectory.resolve(
         "toolchains/llvm/prebuilt/$hostTag/bin/llvm-strip"
+    )
+
+    override fun getObjcopyExecutable(abi: Abi) = rootDirectory.resolve(
+        "toolchains/llvm/prebuilt/$hostTag/bin/llvm-objcopy"
     )
 }

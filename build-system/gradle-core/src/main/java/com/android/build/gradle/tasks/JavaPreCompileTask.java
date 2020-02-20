@@ -22,7 +22,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
-import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -52,7 +51,7 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
 
     private ArtifactCollection annotationProcessorConfiguration;
 
-    private AnnotationProcessorOptions annotationProcessorOptions;
+    @NonNull private List<String> apOptionClassNames;
 
     @Inject
     public JavaPreCompileTask(ObjectFactory objectFactory) {
@@ -62,9 +61,9 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
     @VisibleForTesting
     void init(
             @NonNull ArtifactCollection annotationProcessorConfiguration,
-            @NonNull AnnotationProcessorOptions annotationProcessorOptions) {
+            @NonNull List<String> apOptionClassNames) {
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
-        this.annotationProcessorOptions = annotationProcessorOptions;
+        this.apOptionClassNames = ImmutableList.copyOf(apOptionClassNames);
     }
 
     @NonNull
@@ -86,7 +85,7 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
                     new PreCompileParams(
                             processorListFile.get().getAsFile(),
                             toSerializable(annotationProcessorConfiguration),
-                            annotationProcessorOptions.getClassNames()));
+                            apOptionClassNames));
         }
     }
 
@@ -176,7 +175,8 @@ public abstract class JavaPreCompileTask extends NonIncrementalTask {
                     creationConfig
                             .getVariantDslInfo()
                             .getJavaCompileOptions()
-                            .getAnnotationProcessorOptions());
+                            .getAnnotationProcessorOptions()
+                            .getClassNames());
         }
     }
 }

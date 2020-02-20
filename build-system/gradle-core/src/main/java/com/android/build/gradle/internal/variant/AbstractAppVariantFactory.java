@@ -30,16 +30,17 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.plugins.DslContainerProvider;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
-import com.android.build.gradle.internal.scope.VariantApiScope;
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope;
+import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
-import org.gradle.api.NamedDomainObjectContainer;
 
 /**
  * An implementation of VariantFactory for a project that generates APKs.
@@ -52,10 +53,8 @@ public abstract class AbstractAppVariantFactory<
         extends BaseVariantFactory<VariantT, VariantPropertiesT> {
 
     public AbstractAppVariantFactory(
-            @NonNull VariantApiScope variantApiScope,
-            @NonNull VariantPropertiesApiScope variantPropertiesApiScope,
-            @NonNull GlobalScope globalScope) {
-        super(variantApiScope, variantPropertiesApiScope, globalScope);
+            @NonNull ProjectServices projectServices, @NonNull GlobalScope globalScope) {
+        super(projectServices, globalScope);
     }
 
     @Override
@@ -67,6 +66,7 @@ public abstract class AbstractAppVariantFactory<
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
             @NonNull BuildArtifactsHolder artifacts,
+            @NonNull VariantPropertiesApiServices services,
             @NonNull GlobalScope globalScope,
             @NonNull MutableTaskContainer taskContainer) {
         return new ApplicationVariantData(
@@ -76,6 +76,7 @@ public abstract class AbstractAppVariantFactory<
                 variantSources,
                 paths,
                 artifacts,
+                services,
                 globalScope,
                 taskContainer);
     }
@@ -88,12 +89,10 @@ public abstract class AbstractAppVariantFactory<
     }
 
     @Override
-    public boolean hasTestScope() {
-        return true;
-    }
-
-    @Override
-    public void validateModel(@NonNull VariantInputModel model) {
+    public void validateModel(
+            @NonNull
+                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+                            model) {
         super.validateModel(model);
 
         validateVersionCodes(model);
@@ -104,8 +103,8 @@ public abstract class AbstractAppVariantFactory<
 
         // below is for dynamic-features only.
 
-        IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
-        for (BuildTypeData buildType : model.getBuildTypes().values()) {
+        IssueReporter issueReporter = projectServices.getIssueReporter();
+        for (BuildTypeData<BuildType> buildType : model.getBuildTypes().values()) {
             if (buildType.getBuildType().isMinifyEnabled()) {
                 issueReporter.reportError(
                         Type.GENERIC,
@@ -122,7 +121,7 @@ public abstract class AbstractAppVariantFactory<
                 "Signing configuration should not be declared in build types of "
                         + "dynamic-feature. Dynamic-features use the signing configuration "
                         + "declared in the application module.";
-        for (BuildTypeData buildType : model.getBuildTypes().values()) {
+        for (BuildTypeData<BuildType> buildType : model.getBuildTypes().values()) {
             if (buildType.getBuildType().getSigningConfig() != null) {
                 issueReporter.reportWarning(
                         Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE, message);
@@ -145,12 +144,12 @@ public abstract class AbstractAppVariantFactory<
         message =
                 "abiFilters should not be declared in dynamic-features. Dynamic-features use the "
                         + "abiFilters declared in the application module.";
-        if (model.getDefaultConfig().getProductFlavor().getNdkConfig() != null
-                && model.getDefaultConfig().getProductFlavor().getNdkConfig().getAbiFilters()
+        if (model.getDefaultConfigData().getDefaultConfig().getNdkConfig() != null
+                && model.getDefaultConfigData().getDefaultConfig().getNdkConfig().getAbiFilters()
                         != null) {
             issueReporter.reportWarning(Type.GENERIC, message);
         }
-        for (BuildTypeData buildType : model.getBuildTypes().values()) {
+        for (BuildTypeData<BuildType> buildType : model.getBuildTypes().values()) {
             if (buildType.getBuildType().getNdkConfig().getAbiFilters() != null) {
                 issueReporter.reportWarning(Type.GENERIC, message);
             }
@@ -165,20 +164,23 @@ public abstract class AbstractAppVariantFactory<
 
     @Override
     public void createDefaultComponents(
-            @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
-            @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
-            @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs) {
+            @NonNull
+                    DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+                            dslContainers) {
         // must create signing config first so that build type 'debug' can be initialized
         // with the debug signing config.
-        signingConfigs.create(DEBUG);
-        buildTypes.create(DEBUG);
-        buildTypes.create(RELEASE);
+        dslContainers.getSigningConfigContainer().create(DEBUG);
+        dslContainers.getBuildTypeContainer().create(DEBUG);
+        dslContainers.getBuildTypeContainer().create(RELEASE);
     }
 
-    private void validateVersionCodes(@NonNull VariantInputModel model) {
-        IssueReporter issueReporter = globalScope.getDslScope().getIssueReporter();
+    private void validateVersionCodes(
+            @NonNull
+                    VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
+                            model) {
+        IssueReporter issueReporter = projectServices.getIssueReporter();
 
-        Integer versionCode = model.getDefaultConfig().getProductFlavor().getVersionCode();
+        Integer versionCode = model.getDefaultConfigData().getDefaultConfig().getVersionCode();
         if (versionCode != null && versionCode < 1) {
             issueReporter.reportError(
                     Type.GENERIC,
@@ -190,7 +192,7 @@ public abstract class AbstractAppVariantFactory<
             return;
         }
 
-        for (ProductFlavorData flavorData : model.getProductFlavors().values()) {
+        for (ProductFlavorData<ProductFlavor> flavorData : model.getProductFlavors().values()) {
             Integer flavorVersionCode = flavorData.getProductFlavor().getVersionCode();
             if (flavorVersionCode == null || flavorVersionCode > 0) {
                 return;

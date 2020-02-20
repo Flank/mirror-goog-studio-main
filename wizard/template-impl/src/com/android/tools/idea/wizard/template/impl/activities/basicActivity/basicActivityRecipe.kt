@@ -63,8 +63,8 @@ fun RecipeExecutor.generateBasicActivity(
 
   addDependency("com.android.support:appcompat-v7:$buildApi.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
-  save(fragmentSimpleXml(useAndroidX, moduleData.isNew), moduleData.resDir.resolve("layout/$simpleLayoutName.xml"))
-  if (moduleData.isNew) {
+  save(fragmentSimpleXml(useAndroidX, moduleData.isNewModule), moduleData.resDir.resolve("layout/$simpleLayoutName.xml"))
+  if (moduleData.isNewModule) {
     generateSimpleMenu(packageName, activityClass, moduleData.resDir, menuName)
   }
 
@@ -75,11 +75,11 @@ fun RecipeExecutor.generateBasicActivity(
   val simpleActivity = when (projectData.language) {
     Language.Java ->
       basicActivityJava(
-        moduleData.isNew, projectData.applicationPackage, packageName, useMaterial2, useAndroidX, activityClass, layoutName, menuName
+        moduleData.isNewModule, projectData.applicationPackage, packageName, useMaterial2, useAndroidX, activityClass, layoutName, menuName
       )
     Language.Kotlin ->
       basicActivityKt(
-        moduleData.isNew, projectData.applicationPackage, packageName, useMaterial2, useAndroidX, activityClass, layoutName, menuName
+        moduleData.isNewModule, projectData.applicationPackage, packageName, useMaterial2, useAndroidX, activityClass, layoutName, menuName
       )
   }
 

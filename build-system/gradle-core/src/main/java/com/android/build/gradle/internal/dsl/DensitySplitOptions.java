@@ -21,7 +21,6 @@ import com.android.resources.Density;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -71,7 +70,7 @@ public class DensitySplitOptions extends SplitOptions
     }
 
     @Override
-    public void setCompatibleScreens(@NonNull Collection<String> compatibleScreens) {
+    public void setCompatibleScreens(@NonNull Set<String> compatibleScreens) {
         this.compatibleScreens = Sets.newHashSet(compatibleScreens);
     }
 

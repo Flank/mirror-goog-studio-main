@@ -75,6 +75,10 @@ open class NdkR19Info(val root: File) : DefaultNdkInfo(root) {
         "toolchains/llvm/prebuilt/$hostTag/bin/${getToolchainAbi(abi).gccExecutablePrefix}-strip"
     )
 
+    override fun getObjcopyExecutable(abi: Abi) = rootDirectory.resolve(
+        "toolchains/llvm/prebuilt/$hostTag/bin/${getToolchainAbi(abi).gccExecutablePrefix}-objcopy"
+    )
+
     override fun validate(): String? {
         // Intentionally not calling super's validate. NDK r19 does not require many of the paths
         // required by prior NDKs.

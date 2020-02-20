@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.options.ProjectOptions
@@ -50,8 +51,7 @@ abstract class VariantBuilder protected constructor(
     private val buildTypeSourceProvider: SourceProvider? = null,
     protected val signingConfigOverride: SigningConfig?,
     protected val manifestAttributeSupplier: ManifestAttributeSupplier? = null,
-    protected val projectOptions: ProjectOptions,
-    protected val issueReporter: IssueReporter,
+    protected val dslServices: DslServices,
     protected val isInExecutionPhase: BooleanSupplier
 ) {
 
@@ -69,8 +69,7 @@ abstract class VariantBuilder protected constructor(
             buildTypeSourceSet: SourceProvider? = null,
             signingConfigOverride: SigningConfig? = null,
             manifestAttributeSupplier: ManifestAttributeSupplier? = null,
-            projectOptions: ProjectOptions,
-            issueReporter: IssueReporter,
+            dslServices: DslServices,
             isInExecutionPhase: BooleanSupplier
 
         ): VariantBuilder {
@@ -85,8 +84,7 @@ abstract class VariantBuilder protected constructor(
                     buildTypeSourceSet,
                     signingConfigOverride,
                     manifestAttributeSupplier,
-                    projectOptions,
-                    issueReporter,
+                    dslServices,
                     isInExecutionPhase
 
                 )
@@ -100,8 +98,7 @@ abstract class VariantBuilder protected constructor(
                     buildTypeSourceSet,
                     signingConfigOverride,
                     manifestAttributeSupplier,
-                    projectOptions,
-                    issueReporter,
+                    dslServices,
                     isInExecutionPhase
                 )
             }
@@ -324,8 +321,7 @@ private class VariantConfigurationBuilder(
     buildTypeSourceSet: SourceProvider? = null,
     signingConfigOverride: SigningConfig?,
     manifestAttributeSupplier: ManifestAttributeSupplier? = null,
-    projectOptions: ProjectOptions,
-    issueReporter: IssueReporter,
+    dslServices: DslServices,
     isInExecutionPhase: BooleanSupplier
 ) : VariantBuilder(
     dimensionCombination,
@@ -336,8 +332,7 @@ private class VariantConfigurationBuilder(
     buildTypeSourceSet,
     signingConfigOverride,
     manifestAttributeSupplier,
-    projectOptions,
-    issueReporter,
+    dslServices,
     isInExecutionPhase
 ) {
 
@@ -359,8 +354,7 @@ private class VariantConfigurationBuilder(
             signingConfigOverride,
             manifestAttributeSupplier,
             testedVariant,
-            projectOptions,
-            issueReporter,
+            dslServices,
             isInExecutionPhase
         )
     }
@@ -384,8 +378,7 @@ private class TestModuleConfigurationBuilder(
     buildTypeSourceSet: SourceProvider? = null,
     signingConfigOverride: SigningConfig?,
     manifestAttributeSupplier: ManifestAttributeSupplier? = null,
-    projectOptions: ProjectOptions,
-    issueReporter: IssueReporter,
+    dslServices: DslServices,
     isInExecutionPhase: BooleanSupplier
 ) : VariantBuilder(
     dimensionCombination,
@@ -396,8 +389,7 @@ private class TestModuleConfigurationBuilder(
     buildTypeSourceSet,
     signingConfigOverride,
     manifestAttributeSupplier,
-    projectOptions,
-    issueReporter,
+    dslServices,
     isInExecutionPhase
 ) {
 
@@ -418,8 +410,7 @@ private class TestModuleConfigurationBuilder(
             signingConfigOverride,
             manifestAttributeSupplier,
             testedVariant,
-            projectOptions,
-            issueReporter,
+            dslServices,
             isInExecutionPhase
         ) {
             override val applicationId: String

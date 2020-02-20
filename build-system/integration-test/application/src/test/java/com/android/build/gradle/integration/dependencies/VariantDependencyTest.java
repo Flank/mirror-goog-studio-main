@@ -35,7 +35,6 @@ import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
@@ -58,7 +57,7 @@ public class VariantDependencyTest {
 
     private static ModelContainer<AndroidProject> model;
     private static LibraryGraphHelper helper;
-    private static ProjectBuildOutput outputModel;
+    private static AndroidProject projectModel;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -104,7 +103,7 @@ public class VariantDependencyTest {
                         + "\"\n"
                         + "}\n");
 
-        outputModel = project.executeAndReturnOutputModel("clean", "assemble");
+        projectModel = project.executeAndReturnModel("clean", "assemble").getOnlyModel();
         model = project.model().fetchAndroidProjects();
         helper = new LibraryGraphHelper(model);
     }
@@ -220,7 +219,7 @@ public class VariantDependencyTest {
     private static void checkApkForContent(
             @NonNull String variantName, @NonNull String checkFilePath) throws Exception {
         // use the model to get the output APK!
-        File apk = ProjectBuildOutputUtils.findOutputFileByVariantName(outputModel, variantName);
+        File apk = ProjectBuildOutputUtils.findOutputFileByVariantName(projectModel, variantName);
         assertThat(apk).isFile();
         assertThatZip(apk).contains(checkFilePath);
     }
@@ -228,7 +227,7 @@ public class VariantDependencyTest {
     private static void checkApkForMissingContent(
             @NonNull String variantName, @NonNull Set<String> checkFilePath) throws Exception {
         // use the model to get the output APK!
-        File apk = ProjectBuildOutputUtils.findOutputFileByVariantName(outputModel, variantName);
+        File apk = ProjectBuildOutputUtils.findOutputFileByVariantName(projectModel, variantName);
         assertThat(apk).isFile();
         assertThatZip(apk).entries(".*").containsNoneIn(checkFilePath);
     }

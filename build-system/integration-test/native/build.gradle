@@ -19,6 +19,7 @@ dependencies {
     testCompile project(':base:testutils')
 
     testCompile libs.kotlin_stdlib
+    testCompile libs.kotlin_test
 
     testCompile gradleApi()
     testCompile libs.apache_commons_io

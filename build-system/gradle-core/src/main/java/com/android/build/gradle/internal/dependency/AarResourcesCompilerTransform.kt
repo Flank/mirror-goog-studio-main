@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.options.SyncOptions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.xml.AndroidManifestParser
+import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
@@ -33,6 +34,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import java.io.BufferedInputStream
@@ -40,9 +42,11 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 
+@CacheableTransform
 abstract class AarResourcesCompilerTransform :
     TransformAction<AarResourcesCompilerTransform.Parameters> {
 
+    @get:Classpath
     @get:InputArtifact
     abstract val primaryInput: Provider<FileSystemLocation>
 

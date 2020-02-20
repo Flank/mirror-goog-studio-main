@@ -25,13 +25,12 @@ import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
-import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.options.IntegerOption
-import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.DefaultApiVersion
@@ -57,6 +56,7 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 import java.io.File
 import java.util.ArrayList
 import java.util.function.BooleanSupplier
@@ -85,8 +85,7 @@ open class VariantDslInfoImpl internal constructor(
     private val signingConfigOverride: SigningConfig? = null,
     manifestAttributeSupplier: ManifestAttributeSupplier? = null,
     private val testedVariantImpl: VariantDslInfoImpl? = null,
-    private val projectOptions: ProjectOptions,
-    private val issueReporter: IssueReporter,
+    private val dslServices: DslServices,
     isInExecutionPhase: BooleanSupplier
 ): VariantDslInfo, DimensionCombination {
 
@@ -100,7 +99,7 @@ open class VariantDslInfoImpl internal constructor(
      *
      * Still, DO NOT USE. You should mostly use [VariantDslInfo] which does not give access to this.
      */
-    val mergedFlavor: MergedFlavor = mergeFlavors(defaultConfig, productFlavorList, issueReporter)
+    val mergedFlavor: MergedFlavor = mergeFlavors(defaultConfig, productFlavorList, dslServices)
 
     /** Variant-specific build Config fields.  */
     private val mBuildConfigFields: MutableMap<String, ClassField> = Maps.newTreeMap()
@@ -125,7 +124,7 @@ open class VariantDslInfoImpl internal constructor(
     private val mergedNdkConfig = MergedNdkConfig()
     private val mergedExternalNativeBuildOptions =
         MergedExternalNativeBuildOptions()
-    private val mergedJavaCompileOptions = MergedJavaCompileOptions()
+    private val mergedJavaCompileOptions = MergedJavaCompileOptions(dslServices)
 
     init {
         val manifestParser =
@@ -134,7 +133,7 @@ open class VariantDslInfoImpl internal constructor(
                     manifestFile,
                     isInExecutionPhase,
                     variantType.requiresManifest,
-                    issueReporter
+                    dslServices.issueReporter
                 )
         mVariantAttributesProvider = VariantAttributesProvider(
             mergedFlavor,
@@ -343,9 +342,8 @@ open class VariantDslInfoImpl internal constructor(
      */
     override val versionName: String?
         get() {
-            val override =
-                projectOptions[StringOption.IDE_VERSION_NAME_OVERRIDE]
-            return override ?: getVersionName(false)
+            return dslServices.projectOptions[StringOption.IDE_VERSION_NAME_OVERRIDE]
+                ?: getVersionName(false)
         }
 
     /**
@@ -368,9 +366,8 @@ open class VariantDslInfoImpl internal constructor(
      */
     override val versionCode: Int
         get() {
-            val override =
-                projectOptions[IntegerOption.IDE_VERSION_CODE_OVERRIDE]
-            return override ?: getVersionCode(false)
+            return dslServices.projectOptions[IntegerOption.IDE_VERSION_CODE_OVERRIDE]
+                ?: getVersionCode(false)
         }
 
     /**
@@ -776,7 +773,7 @@ open class VariantDslInfoImpl internal constructor(
             if (buildTypeObj.multiDexEnabled != null ||
                 mergedFlavor.multiDexEnabled != null
             ) {
-                issueReporter
+                dslServices.issueReporter
                     .reportWarning(
                         IssueReporter.Type.GENERIC,
                         "Native multidex is always used for dynamic features. Please " +
@@ -819,10 +816,10 @@ open class VariantDslInfoImpl internal constructor(
      */
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() {
-            val targetApiLevel =
-                projectOptions[IntegerOption.IDE_TARGET_DEVICE_API]
-            return if (targetApiLevel != null && isMultiDexEnabled && buildTypeObj.isDebuggable) { // Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
-// debuggable.
+            val targetApiLevel = dslServices.projectOptions[IntegerOption.IDE_TARGET_DEVICE_API]
+            return if (targetApiLevel != null && isMultiDexEnabled && buildTypeObj.isDebuggable) {
+                // Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
+                // debuggable.
                 val minVersion: Int =
                     if (targetSdkVersion.apiLevel > 1) Integer.min(
                         targetSdkVersion.apiLevel,
@@ -855,7 +852,7 @@ open class VariantDslInfoImpl internal constructor(
         )
     }
 
-    override val ndkConfig: CoreNdkOptions
+    override val ndkConfig: MergedNdkConfig
         get() = mergedNdkConfig
 
     override val externalNativeBuildOptions: CoreExternalNativeBuildOptions
@@ -923,7 +920,7 @@ open class VariantDslInfoImpl internal constructor(
     override val javaCompileOptions: JavaCompileOptions
         get() = mergedJavaCompileOptions
 
-    override fun createPostProcessingOptions(project: Project) : PostProcessingOptions {
+    override fun createPostProcessingOptions(buildDirectory: DirectoryProperty) : PostProcessingOptions {
         return if (buildTypeObj.postProcessingConfiguration == PostProcessingConfiguration.POSTPROCESSING_BLOCK) {
             PostProcessingBlockOptions(
                 buildTypeObj.postprocessing, variantType.isTestComponent
@@ -936,7 +933,7 @@ open class VariantDslInfoImpl internal constructor(
                 listOf(
                     ProguardFiles.getDefaultProguardFile(
                         ProguardFiles.ProguardFile.DONT_OPTIMIZE.fileName,
-                        project.layout
+                        buildDirectory
                     )
                 )
 

@@ -23,6 +23,7 @@
 #include "utils/fs/disk_file_system.h"
 #include "utils/stopwatch.h"
 #include "utils/thread_name.h"
+#include "utils/log.h"
 
 namespace {
 using profiler::Clock;
@@ -115,6 +116,13 @@ std::string FileCache::AddString(const std::string &value) {
 
 shared_ptr<File> FileCache::GetFile(const std::string &cache_id) {
   return cache_complete_->GetFile(cache_id);
+}
+
+bool FileCache::MoveFileToCompleteCache(const std::string &cache_id, const std::string &original_file) {
+  std::ostringstream oss;
+  oss << cache_complete_->path() << "/" << cache_id;
+  string to_file_name = oss.str();
+  return fs_->MoveFile(original_file, to_file_name);
 }
 
 void FileCache::JanitorThread() {

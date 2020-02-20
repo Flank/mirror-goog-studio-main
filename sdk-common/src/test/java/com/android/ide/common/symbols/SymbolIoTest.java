@@ -36,6 +36,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
+import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -1015,8 +1016,11 @@ public class SymbolIoTest {
                         "styleable myStyleable"),
                 StandardCharsets.UTF_8);
 
-        SymbolTable table = SymbolIo.readFromPublicTxtFile(publicTxt, "foo.bar.com");
-
+        SymbolTable table;
+        try (BufferedInputStream is =
+                new BufferedInputStream(java.nio.file.Files.newInputStream(publicTxt.toPath()))) {
+            table = SymbolIo.readFromPublicTxtFile(is, publicTxt.getName(), "foo.bar.com");
+        }
         // Sanity check for the package.
         assertThat(table.getTablePackage()).isEqualTo("foo.bar.com");
         //Check the size.

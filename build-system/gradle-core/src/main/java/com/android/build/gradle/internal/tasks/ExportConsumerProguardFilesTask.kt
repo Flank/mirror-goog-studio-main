@@ -23,14 +23,15 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.immutableMapBuilder
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.errors.EvalIssueException
 import com.android.utils.FileUtils
-import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -58,6 +59,9 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputFiles: ConfigurableFileCollection
 
+    @get:Internal("only for task execution")
+    abstract val buildDirectory: DirectoryProperty
+
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -65,7 +69,7 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
         // We check for default files unless it's a base feature, which can include default files.
         if (!isBaseModule) {
             checkProguardFiles(
-                project,
+                buildDirectory,
                 isDynamicFeature,
                 consumerProguardFiles.files,
                 Consumer { exception -> throw EvalIssueException(exception) }
@@ -130,20 +134,21 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
                     )
                 )
             }
+            task.buildDirectory.setDisallowChanges(task.project.layout.buildDirectory)
         }
     }
 
     companion object {
         @JvmStatic
         fun checkProguardFiles(
-            project: Project,
+            buildDirectory: DirectoryProperty,
             isDynamicFeature: Boolean,
             consumerProguardFiles: Collection<File>,
             exceptionHandler: Consumer<String>
         ) {
             val defaultFiles = immutableMapBuilder<File, String> {
                 for (knownFileName in ProguardFiles.KNOWN_FILE_NAMES) {
-                    this.put(ProguardFiles.getDefaultProguardFile(knownFileName, project.layout),
+                    this.put(ProguardFiles.getDefaultProguardFile(knownFileName, buildDirectory),
                         knownFileName)
                 }
             }

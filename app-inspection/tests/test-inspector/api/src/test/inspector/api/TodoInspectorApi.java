@@ -37,11 +37,19 @@ public final class TodoInspectorApi {
         TODO_GROUP_CREATING,
         TODO_GROUP_CREATED,
         TODO_ITEM_CREATING,
-        TODO_ITEM_CREATED;
+        TODO_ITEM_CREATED,
+
+        /** Should be sent with the index of the group being removed. */
+        TODO_GROUP_REMOVING;
 
         @NonNull
         public byte[] toByteArray() {
             return new byte[] {(byte) ordinal()};
+        }
+
+        @NonNull
+        public byte[] toByteArrayWithArg(byte arg) {
+            return new byte[] {(byte) ordinal(), arg};
         }
     }
 }

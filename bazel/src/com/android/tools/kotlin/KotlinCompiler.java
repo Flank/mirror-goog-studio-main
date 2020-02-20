@@ -18,14 +18,13 @@ package com.android.tools.kotlin;
 
 import static org.jetbrains.kotlin.cli.common.messages.PlainTextMessageRenderer.KOTLIN_COLORS_ENABLED_PROPERTY;
 
+import com.android.tools.utils.BazelWorker;
 import com.android.tools.utils.JarOutputCompiler;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +32,6 @@ import java.util.stream.Collectors;
 import org.jetbrains.kotlin.cli.common.CLICompiler;
 import org.jetbrains.kotlin.cli.common.ExitCode;
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler;
-
 
 /**
  * A wrapper for the Kotlin compiler.
@@ -50,8 +48,8 @@ public class KotlinCompiler extends JarOutputCompiler {
         moduleName = "dummy";
     }
 
-    public static void main(String[] args) throws IOException {
-        System.exit(new KotlinCompiler().run(Arrays.asList(args)));
+    public static void main(String[] args) throws Exception {
+        BazelWorker.run(args, compilerArgs -> new KotlinCompiler().run(compilerArgs));
     }
 
     @Override
@@ -112,8 +110,12 @@ public class KotlinCompiler extends JarOutputCompiler {
         args.addAll(files);
 
         ExitCode exit = CLICompiler.doMainNoExit(new K2JVMCompiler(), args.toArray(new String[0]));
+        if (exit.equals(ExitCode.INTERNAL_ERROR)) {
+            // The Kotlin compiler could be in a bad state, e.g. out of memory.
+            // Throw an exception to kill the Bazel persistent worker.
+            throw new RuntimeException("the Kotlin compiler encountered an internal error");
+        }
         ensureManifestFile(outDir);
-
         return exit == ExitCode.OK;
     }
 

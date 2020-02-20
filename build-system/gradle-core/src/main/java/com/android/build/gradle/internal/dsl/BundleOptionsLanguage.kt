@@ -16,9 +16,10 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.BundleLanguage
 import javax.inject.Inject
 
-open class BundleOptionsLanguage @Inject constructor() {
+open class BundleOptionsLanguage @Inject constructor() : BundleLanguage {
 
-    var enableSplit: Boolean? = null
+    override var enableSplit: Boolean? = null
 }

@@ -21,9 +21,12 @@ import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.dependency.SourceSetManager
+import com.android.build.gradle.internal.fixtures.ProjectFactory
+import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.variant2.createFakeDslScope
-import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.internal.services.createDslServices
+import com.android.build.gradle.internal.variant.LegacyVariantInputManager
+import com.android.builder.core.VariantTypeImpl
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.junit.Before
@@ -34,30 +37,33 @@ import org.mockito.Mockito
  * Tests for [BaseAppModuleExtension]
  */
 class BaseAppModuleExtensionTest {
-    lateinit var appExtension: BaseAppModuleExtension
+    private lateinit var appExtension: BaseAppModuleExtension
     @Suppress("UNCHECKED_CAST")
     @Before
     fun setUp() {
-        val dslScope = createFakeDslScope()
+        val dslServices = createDslServices()
 
-        val defaultConfig = Mockito.mock(DefaultConfig::class.java)
-        val vectorDrawablesOptions = Mockito.mock(VectorDrawablesOptions::class.java)
-        Mockito.`when`(defaultConfig.vectorDrawables).thenReturn(vectorDrawablesOptions)
-        Mockito.`when`(defaultConfig.name).thenReturn("default")
+        val variantInputModel = LegacyVariantInputManager(
+            dslServices,
+            VariantTypeImpl.BASE_APK,
+            SourceSetManager(
+                ProjectFactory.project,
+                false,
+                dslServices,
+                DelayedActionsExecutor()
+            )
+        )
+
         val extension = ApplicationExtensionImpl(
-            dslScope = dslScope,
-            buildTypes = Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BuildType>,
-            defaultConfig = defaultConfig,
-            productFlavors = Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<ProductFlavor>,
-            signingConfigs = Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<SigningConfig>
+            dslServices = dslServices,
+            dslContainers = variantInputModel
         )
 
         appExtension = BaseAppModuleExtension(
-            dslScope,
-            Mockito.mock(ProjectOptions::class.java),
+            dslServices,
             Mockito.mock(GlobalScope::class.java),
             Mockito.mock(NamedDomainObjectContainer::class.java) as NamedDomainObjectContainer<BaseVariantOutput>,
-            Mockito.mock(SourceSetManager::class.java),
+            variantInputModel.sourceSetManager,
             Mockito.mock(ExtraModelInfo::class.java),
             extension)
     }

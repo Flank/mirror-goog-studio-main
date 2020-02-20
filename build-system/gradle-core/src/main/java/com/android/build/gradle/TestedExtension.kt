@@ -4,11 +4,9 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.api.UnitTestVariant
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.core.VariantType
+import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.FileCollection
@@ -21,16 +19,14 @@ import org.gradle.api.file.FileCollection
  * [Test your app](https://developer.android.com/studio/test/index.html)
  */
 abstract class TestedExtension(
-    dslScope: DslScope,
-    projectOptions: ProjectOptions,
+    dslServices: DslServices,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
     isBaseModule: Boolean
 ) : BaseExtension(
-    dslScope,
-    projectOptions,
+    dslServices,
     globalScope,
     buildOutputs,
     sourceSetManager,
@@ -39,15 +35,10 @@ abstract class TestedExtension(
 ), TestedAndroidConfig, com.android.build.api.dsl.TestedExtension {
 
     private val testVariantList: DomainObjectSet<TestVariant> =
-        dslScope.objectFactory.domainObjectSet(TestVariant::class.java)
+        dslServices.domainObjectSet(TestVariant::class.java)
 
     private val unitTestVariantList: DomainObjectSet<UnitTestVariant> =
-        dslScope.objectFactory.domainObjectSet(UnitTestVariant::class.java)
-
-    init {
-        sourceSetManager.setUpTestSourceSet(VariantType.ANDROID_TEST_PREFIX)
-        sourceSetManager.setUpTestSourceSet(VariantType.UNIT_TEST_PREFIX)
-    }
+        dslServices.domainObjectSet(UnitTestVariant::class.java)
 
     /**
      * A collection of Android test

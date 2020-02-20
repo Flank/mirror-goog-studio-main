@@ -58,11 +58,25 @@ message OverlaySwapRequest {
 }
 
 message ClassDef {
+  message FieldReInitState {
+    enum VariableState {
+      UNKNOWN = 0;
+      CONSTANT = 1;
+    }
+    string name = 1;
+    string type = 2;
+    bool staticVar = 3;
+    VariableState state = 4;
+    string value = 5;
+  }
+
   // JVM class name for the class that is to be swapped.
   string name = 1;
 
   // Dex code of the class to be swapped.
   bytes dex = 2;
+
+  repeated FieldReInitState fields = 3;
 }
 
 message JvmtiError {
@@ -168,6 +182,7 @@ message InstallerResponse {
     DumpResponse dump_response = 4;
     DeltaPreinstallResponse deltapreinstall_response = 5;
     DeltaInstallResponse deltainstall_response = 6;
+    OverlayIdPushResponse overlayidpush_response = 7;
   }
 }
 
@@ -299,6 +314,16 @@ message OverlayUpdateResponse {
 
   Status status = 1;
   string error_message = 2;
+}
+
+message OverlayIdPushResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    ID_MISMATCH = 2;
+  }
+
+  Status status = 1;
 }
 
 message InstallServerRequest {

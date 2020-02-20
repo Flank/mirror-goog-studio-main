@@ -23,19 +23,17 @@ import com.android.build.api.dsl.TestExtension
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.TestVariantProperties
 import com.android.build.gradle.internal.CompileOptions
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
-import org.gradle.api.NamedDomainObjectContainer
+import com.android.build.gradle.internal.plugins.DslContainerProvider
+import com.android.build.gradle.internal.services.DslServices
 
 /** Internal implementation of the 'new' DSL interface */
 class TestExtensionImpl(
-    dslScope: DslScope,
-    buildTypes: NamedDomainObjectContainer<BuildType>,
-    defaultConfig: DefaultConfig,
-    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
-    signingConfigs: NamedDomainObjectContainer<SigningConfig>
+    dslServices: DslServices,
+    dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) :
     CommonExtensionImpl<
+            AnnotationProcessorOptions,
             TestBuildFeatures,
             BuildType,
             DefaultConfig,
@@ -43,16 +41,14 @@ class TestExtensionImpl(
             SigningConfig,
             TestVariant<TestVariantProperties>,
             TestVariantProperties>(
-        dslScope,
-        buildTypes,
-        defaultConfig,
-        productFlavors,
-        signingConfigs
+        dslServices,
+        dslContainers
     ),
     TestExtension<
             AaptOptions,
             AbiSplitOptions,
             AdbOptions,
+            AnnotationProcessorOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,
@@ -61,7 +57,9 @@ class TestExtensionImpl(
             DensitySplitOptions,
             ExternalNativeBuild,
             JacocoOptions,
+            LintOptions,
             NdkBuildOptions,
+            PackagingOptions,
             ProductFlavor,
             SigningConfig,
             Splits,
@@ -69,21 +67,21 @@ class TestExtensionImpl(
             TestOptions.UnitTestOptions> {
 
     override val buildFeatures: TestBuildFeatures =
-        dslScope.objectFactory.newInstance(TestBuildFeaturesImpl::class.java)
+        dslServices.newInstance(TestBuildFeaturesImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
     override val onVariants: GenericFilteredComponentActionRegistrar<TestVariant<TestVariantProperties>>
-        get() = dslScope.objectFactory.newInstance(
+        get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
-            dslScope,
+            dslServices,
             variantOperations,
             TestVariant::class.java
         ) as GenericFilteredComponentActionRegistrar<TestVariant<TestVariantProperties>>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<TestVariantProperties>
-        get() = dslScope.objectFactory.newInstance(
+        get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
-            dslScope,
+            dslServices,
             variantPropertiesOperations,
             TestVariantProperties::class.java
         ) as GenericFilteredComponentActionRegistrar<TestVariantProperties>

@@ -20,13 +20,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.api.variant.impl.BuiltArtifactImpl;
+import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.scope.BuildElements;
-import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.testing.TestData;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.utils.ILogger;
@@ -60,13 +58,13 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
     }
 
     @Override
-    public void loadFromMetadataFile(File metadataFile) {
-        BuildElements testedManifests =
-                ExistingBuildElements.from(
-                        InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-                        metadataFile.getParentFile());
+    public void load(File metadataFile) {
+        BuiltArtifactsImpl testedManifests =
+                BuiltArtifactsLoaderImpl.loadFromDirectory(metadataFile);
+
         // all published manifests have the same package so first one will do.
-        Optional<BuildOutput> splitOutput = testedManifests.stream().findFirst();
+        Optional<BuiltArtifactImpl> splitOutput =
+                testedManifests.getElements().stream().findFirst();
 
         if (splitOutput.isPresent()) {
             testedProperties.putAll(splitOutput.get().getProperties());

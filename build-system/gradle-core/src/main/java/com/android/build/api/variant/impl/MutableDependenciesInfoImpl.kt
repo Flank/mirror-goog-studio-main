@@ -17,7 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.dsl.DependenciesInfo
-import com.android.build.gradle.internal.scope.VariantApiScope
+import com.android.build.gradle.internal.services.VariantApiServices
 import javax.inject.Inject
 
 /**
@@ -25,12 +25,18 @@ import javax.inject.Inject
  */
 open class MutableDependenciesInfoImpl @Inject constructor(
     dslDependencyInfo: DependenciesInfo,
-    variantApiScope: VariantApiScope): DependenciesInfo,
+    variantApiServices: VariantApiServices
+): DependenciesInfo,
     com.android.build.api.variant.DependenciesInfo {
 
-    private val includeInApkValue = variantApiScope.valueOf(dslDependencyInfo.includeInApk)
+    private val includeInApkValue = variantApiServices.valueOf(dslDependencyInfo.includeInApk)
+    private val includeInBundleValue = variantApiServices.valueOf(dslDependencyInfo.includeInBundle)
 
     override var includeInApk: Boolean
         set(value) = includeInApkValue.set(value)
         get() = includeInApkValue.get()
+
+    override var includeInBundle: Boolean
+        set(value) = includeInBundleValue.set(value)
+        get() = includeInBundleValue.get()
 }

@@ -73,7 +73,8 @@ class AppModelBuilder(
         for (component in variantModel.variants) {
             val artifacts = component.artifacts
 
-            if (component.variantType.isBaseModule) {
+            // TODO(b/111168382): Remove the namespaced check check once bundle pipeline works with namespaces.
+            if (component.variantType.isBaseModule && !component.globalScope.extension.aaptOptions.namespaced) {
                 val bundleFile = artifacts.getFinalProduct(InternalArtifactType.BUNDLE)
                 val apkFolder = artifacts.getFinalProduct(InternalArtifactType.EXTRACTED_APKS)
                 variantsOutput.add(

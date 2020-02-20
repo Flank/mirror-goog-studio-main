@@ -93,5 +93,6 @@ kotlin_test(
 java_proto_library(
     name = "am-instrumentation-data-proto",
     srcs = glob(["src/main/proto/**/*.proto"]),
+    protoc_version = "3.4.0",
     visibility = ["//visibility:public"],
 )

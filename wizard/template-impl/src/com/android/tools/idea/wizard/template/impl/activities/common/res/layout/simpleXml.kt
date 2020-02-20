@@ -19,7 +19,12 @@ import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.renderIf
 
 fun simpleLayoutXml(
-  isNew: Boolean, includeCppSupport: Boolean, useAndroidX: Boolean, packageName: String, activityClass: String, appBarLayoutName: String?
+  isNewModule: Boolean,
+  includeCppSupport: Boolean,
+  useAndroidX: Boolean,
+  packageName: String,
+  activityClass: String,
+  appBarLayoutName: String?
 ): String {
   val layout = getMaterialComponentName("android.support.constraint.ConstraintLayout", useAndroidX)
   val appBarLayoutNameBlock = renderIf(appBarLayoutName != null) {
@@ -31,7 +36,7 @@ fun simpleLayoutXml(
 
   val includeCppSupportBlock = renderIf(includeCppSupport) { """android:id="@+id/sample_text"""" }
 
-  val isNewBlock = renderIf(isNew) {
+  val isNewBlock = renderIf(isNewModule) {
     """<TextView
       $includeCppSupportBlock
       android:layout_width="wrap_content"

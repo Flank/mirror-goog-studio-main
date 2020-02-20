@@ -22,6 +22,13 @@ import org.gradle.api.Incubating
  * Shared properties between DSL objects [ProductFlavor] and [DefaultConfig]
  */
 @Incubating
-interface BaseFlavor : BaseConfig {
+interface BaseFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions> :
+    BaseConfig<AnnotationProcessorOptionsT> {
     // TODO(b/140406102)
+
+    /** Options to configure the build-time support for `vector` drawables. */
+    val vectorDrawables: VectorDrawables
+
+    /** Configures [VectorDrawables]. */
+    fun vectorDrawables(action: VectorDrawables.() -> Unit)
 }

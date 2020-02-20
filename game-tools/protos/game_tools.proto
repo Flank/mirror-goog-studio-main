@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.android.tools.game.protos";
+
+package game_tools;
+
+service GameTools {
+  rpc CreateProject(CreateProjectRequest) returns (Project) {}
+  rpc CreateWindow(CreateWindowRequest) returns (Window) {}
+  rpc StartProfiling(StartProfilingRequest) returns (StartProfilingResponse) {}
+}
+
+message CreateProjectRequest {
+  // The project to be created. The client must set `name` and `path` field.
+  Project project = 1;
+}
+
+message Project {
+  // Readonly. Set by server.
+  string project_id = 1;
+  // A human readable name of the project. This is only for display purpose.
+  string name = 2;
+  // The absolute path of the project in the file system.
+  string path = 3;
+}
+
+message CreateWindowRequest {
+  // The project that the created window should belong to.
+  string project_id = 1;
+  // The window to be created. The given window should set `type` field.
+  Window window = 2;
+}
+
+message Window {
+  // Readonly. Set by server.
+  string window_id = 1;
+  // The type of window to create.
+  WindowType type = 2;
+
+  enum WindowType {
+    UNSPECIFIED_GAME_TOOLS_WINDOW_TYPE = 0;
+    PROFILER = 1;
+  }
+}
+
+message StartProfilingRequest {
+  // Which profiler window to use to start this profiling session.
+  // though.
+  string window_id = 1;
+  // The unique ID identifying this connected device. For example "emulator-5554".
+  string serial_number = 2;
+  // The application ID of the Android app to profile.
+  string application_id = 3;
+  // The timestamp in millisecond to filter processes based on start timestamp
+  int64 start_later_than_ms = 4;
+}
+
+message StartProfilingResponse {}

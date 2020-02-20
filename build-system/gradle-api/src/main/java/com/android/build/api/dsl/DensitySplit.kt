@@ -34,7 +34,7 @@ interface DensitySplit : SplitOptions {
      * This will inject a matching `<compatible-screens><screen ...>` node in the manifest.
      * This is optional.
      */
-    var compatibleScreens: Collection<String>
+    var compatibleScreens: MutableSet<String>
 
     /** Adds a new compatible screen. */
     fun compatibleScreens(vararg sizes: String)

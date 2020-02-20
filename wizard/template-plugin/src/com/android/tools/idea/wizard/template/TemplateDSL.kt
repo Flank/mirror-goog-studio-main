@@ -39,7 +39,6 @@ annotation class TemplateDSL
 
 fun template(block: TemplateBuilder.() -> Unit): Template = TemplateBuilder().apply(block).build()
 
-// TODO(qumeric): use Kotlin DSL annotations to limit visibility scope
 @TemplateDSL
 class TemplateBuilder {
   var revision: Int? = null
@@ -51,6 +50,7 @@ class TemplateBuilder {
   var formFactor: FormFactor? = null
   @Suppress("RedundantCompanionReference")
   var thumb: () -> Thumb = { Thumb.NoThumb }
+  // TODO(qumeric): make it a high order function for consistency and @TemplateDSL scope protection
   var recipe: Recipe? = null
   var screens: Collection<WizardUiContext> = listOf()
   var widgets = listOf<Widget<*>>()

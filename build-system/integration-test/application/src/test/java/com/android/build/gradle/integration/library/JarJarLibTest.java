@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
-import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
@@ -26,12 +25,10 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.model.VariantBuildOutput;
+import com.android.builder.model.VariantBuildInformation;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import com.google.common.truth.Truth8;
 import java.io.File;
 import java.io.IOException;
@@ -78,16 +75,15 @@ public class JarJarLibTest {
                         + "    registerTransform(new com.android.test.jarjar.JarJarTransform(false /*broken transform*/))\n"
                         + "}\n");
 
-        ProjectBuildOutput outputModel =
-                project.executeAndReturnOutputModel("clean", "assembleDebug");
+        AndroidProject outputModel =
+                project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
 
-        VariantBuildOutput debugBuildOutput =
+        VariantBuildInformation debugBuildOutput =
                 ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
-        assertEquals(1, debugBuildOutput.getOutputs().size());
+        assertEquals(1, ProjectBuildOutputUtils.getOutputFiles(debugBuildOutput).size());
 
         // make sure the Gson library has been renamed and the original one is not present.
-        File outputFile =
-                Iterators.getOnlyElement(debugBuildOutput.getOutputs().iterator()).getOutputFile();
+        File outputFile = new File(ProjectBuildOutputUtils.getSingleOutputFile(debugBuildOutput));
         assertThatAar(outputFile).containsClass("Lcom/android/tests/basic/Main;");
 
         // libraries do not include their dependencies unless they are local (which is not

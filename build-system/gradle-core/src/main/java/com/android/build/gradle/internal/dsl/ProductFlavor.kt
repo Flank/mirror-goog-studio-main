@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.gradle.internal.VariantManager
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.model.BaseConfig
 import com.google.common.collect.ImmutableList
 import javax.inject.Inject
@@ -54,11 +54,14 @@ import org.gradle.api.provider.Property
  * If the plugin creates certain build variants that you don't want, you can
  * [filter variants using `android.variantFilter`](https://developer.android.com/studio/build/build-variants.html#filter-variants).
  */
-open class ProductFlavor @Inject constructor(name: String, dslScope: DslScope) :
-    BaseFlavor(name, dslScope), com.android.build.api.dsl.ProductFlavor {
+open class ProductFlavor @Inject constructor(name: String, dslServices: DslServices) :
+    BaseFlavor(name, dslServices),
+    com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptions> {
 
+    // FIXME remove: b/149431538
+    @Suppress("DEPRECATION")
     private val _isDefaultProperty =
-        dslScope.objectFactory.property(Boolean::class.java).convention(false)
+        dslServices.property(Boolean::class.java).convention(false)
 
     /** Whether this product flavor should be selected in Studio by default  */
     override var isDefault: Boolean
@@ -124,7 +127,7 @@ open class ProductFlavor @Inject constructor(name: String, dslScope: DslScope) :
      * If instead you are trying to resolve an issue in which **a library dependency includes a
      * flavor dimension that your app does not**, use [missingDimensionStrategy].
      */
-    var matchingFallbacks: List<String>
+    override var matchingFallbacks: List<String>
         get() = _matchingFallbacks
         set(value) {
             _matchingFallbacks = ImmutableList.copyOf(value)

@@ -91,11 +91,16 @@ public class DensitySplitTest {
 
         assertEquals(5, debugOutputs.size());
         for (BuiltArtifact output : debugOutputs) {
-            assertEquals(VariantOutputConfiguration.OutputType.ONE_OF_MANY, output.getOutputType());
-            assertNotNull(output.getOutputFile());
-
             String densityFilter =
                     VariantOutputUtils.getFilter(output, FilterConfiguration.FilterType.DENSITY);
+
+            assertEquals(
+                    densityFilter == null
+                            ? VariantOutputConfiguration.OutputType.UNIVERSAL
+                            : VariantOutputConfiguration.OutputType.ONE_OF_MANY,
+                    output.getOutputType());
+            assertNotNull(output.getOutputFile());
+
             Integer value = expected.get(densityFilter);
             // this checks we're not getting an unexpected output.
             assertNotNull(

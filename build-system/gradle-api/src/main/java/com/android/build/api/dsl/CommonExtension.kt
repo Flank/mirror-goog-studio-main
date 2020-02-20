@@ -31,24 +31,27 @@ import org.gradle.api.NamedDomainObjectContainer
  */
 @Incubating
 interface CommonExtension<
-        AaptOptionsT: AaptOptions,
+        AaptOptionsT : AaptOptions,
         AbiSplitT : AbiSplit,
         AdbOptionsT : AdbOptions,
-        BuildFeaturesT: BuildFeatures,
-        BuildTypeT : BuildType,
-        CMakeT: Cmake,
+        AnnotationProcessorOptionsT : AnnotationProcessorOptions,
+        BuildFeaturesT : BuildFeatures,
+        BuildTypeT : BuildType<AnnotationProcessorOptionsT>,
+        CMakeT : Cmake,
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,
-        DefaultConfigT : DefaultConfig,
+        DefaultConfigT : DefaultConfig<AnnotationProcessorOptionsT>,
         DensitySplitT : DensitySplit,
-        ExternalNativeBuildT: ExternalNativeBuild<CMakeT, NdkBuildT>,
+        ExternalNativeBuildT : ExternalNativeBuild<CMakeT, NdkBuildT>,
         JacocoOptionsT : JacocoOptions,
-        NdkBuildT: NdkBuild,
-        ProductFlavorT : ProductFlavor,
+        LintOptionsT : LintOptions,
+        NdkBuildT : NdkBuild,
+        PackagingOptionsT : PackagingOptions,
+        ProductFlavorT : ProductFlavor<AnnotationProcessorOptionsT>,
         SigningConfigT : SigningConfig,
         SplitsT : Splits<AbiSplitT, DensitySplitT>,
-        TestOptionsT: TestOptions<UnitTestOptionsT>,
-        UnitTestOptionsT: UnitTestOptions,
+        TestOptionsT : TestOptions<UnitTestOptionsT>,
+        UnitTestOptionsT : UnitTestOptions,
         VariantT : Variant<VariantPropertiesT>,
         VariantPropertiesT : VariantProperties> {
     // TODO(b/140406102)
@@ -205,6 +208,36 @@ interface CommonExtension<
      * ```
      */
     fun jacoco(action: JacocoOptionsT.() -> Unit)
+
+    /**
+     * Specifies options for the lint tool.
+     *
+     * For more information about the properties you can configure in this block, see [LintOptions].
+     */
+    val lintOptions: LintOptionsT
+
+    /**
+     * Specifies options for the lint tool.
+     *
+     * For more information about the properties you can configure in this block, see [LintOptions].
+     */
+    fun lintOptions(action: LintOptionsT.() -> Unit)
+
+    /**
+     * Specifies options and rules that determine which files the Android plugin packages into your
+     * APK.
+     *
+     * For more information about the properties you can configure in this block, see [PackagingOptions].
+     */
+    val packagingOptions: PackagingOptionsT
+
+    /**
+     * Specifies options and rules that determine which files the Android plugin packages into your
+     * APK.
+     *
+     * For more information about the properties you can configure in this block, see [PackagingOptions].
+     */
+    fun packagingOptions(action: PackagingOptionsT.() -> Unit)
 
     /**
      * Encapsulates all product flavors configurations for this project.

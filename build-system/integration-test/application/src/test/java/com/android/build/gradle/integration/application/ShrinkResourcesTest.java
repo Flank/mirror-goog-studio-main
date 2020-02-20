@@ -134,7 +134,7 @@ public class ShrinkResourcesTest {
         switch (apkPipeline) {
             case NO_BUNDLE:
                 return project.getIntermediateFile(
-                        "shrunk_processed_res", "release", "out", "resources-release-stripped.ap_");
+                        "shrunk_processed_res", "release", "resources-release-stripped.ap_");
             case BUNDLE:
                 return project.getIntermediateFile(
                         "shrunk_linked_res_for_bundle",
@@ -256,7 +256,7 @@ public class ShrinkResourcesTest {
         assertFalse(
                 FileUtils.join(
                                 intermediates,
-                                "shrunk_processed_res/debug/out"
+                                "shrunk_processed_res/debug"
                                         + separator
                                         + "resources-debug-stripped.ap_")
                         .exists());
@@ -271,7 +271,7 @@ public class ShrinkResourcesTest {
         assertFalse(
                 new File(
                                 intermediates,
-                                "shrunk_processed_res/minifyDontShrink/out"
+                                "shrunk_processed_res/minifyDontShrink"
                                         + separator
                                         + "resources-minifyDontShrink-stripped.ap_")
                         .exists());
@@ -556,7 +556,7 @@ public class ShrinkResourcesTest {
             //noinspection SpellCheckingInspection
             compressed =
                     project.file(
-                            "abisplits/build/intermediates/shrunk_processed_res/release/out/resources-arm64-v8a-release-stripped.ap_");
+                            "abisplits/build/intermediates/shrunk_processed_res/release/resources-arm64-v8a-release-stripped.ap_");
             //noinspection SpellCheckingInspection
             uncompressed =
                     project.file(

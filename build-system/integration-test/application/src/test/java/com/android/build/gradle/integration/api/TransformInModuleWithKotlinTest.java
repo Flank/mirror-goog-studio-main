@@ -19,17 +19,19 @@ package com.android.build.gradle.integration.api;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.builder.model.ProjectBuildOutput;
-import com.android.builder.model.VariantBuildOutput;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.VariantBuildInformation;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.Rule;
@@ -49,21 +51,23 @@ public class TransformInModuleWithKotlinTest {
                 project.getSubproject("lib").getBuildFile(),
                 Charsets.UTF_8);
 
-        Map<String, ProjectBuildOutput> multi =
-                project.executeAndReturnOutputMultiModel("clean", "assembleDebug");
-        ProjectBuildOutput appBuildOutput = multi.get(":app");
-        assertThat(appBuildOutput).isNotNull();
-        Collection<VariantBuildOutput> buildOutputs = appBuildOutput.getVariantsBuildOutput();
-        assertThat(buildOutputs).hasSize(2);
-        Optional<VariantBuildOutput> debug =
-                buildOutputs
-                        .stream()
-                        .filter(variantBuildOutput -> variantBuildOutput.getName().equals("debug"))
+        project.execute("clean", "assembleDebug");
+        Map<String, AndroidProject> multi =
+                project.model().fetchAndroidProjects().getOnlyModelMap();
+
+        Collection<VariantBuildInformation> variantsBuildInformation =
+                multi.get(":app").getVariantsBuildInformation();
+        assertThat(variantsBuildInformation).hasSize(2);
+        Optional<VariantBuildInformation> debug =
+                variantsBuildInformation.stream()
+                        .filter(
+                                variantBuildOutput ->
+                                        variantBuildOutput.getVariantName().equals("debug"))
                         .findFirst();
         assertThat(debug.isPresent()).isTrue();
-        Collection<OutputFile> debugOutputs = debug.get().getOutputs();
+        List<String> debugOutputs = ProjectBuildOutputUtils.getOutputFiles(debug.get());
         assertThat(debugOutputs).hasSize(1);
-        assertThatApk(new Apk(Iterables.getOnlyElement(debugOutputs).getOutputFile()))
+        assertThatApk(new Apk(new File(Iterables.getOnlyElement(debugOutputs))))
                 .hasClass("LHello;");
     }
 }

@@ -112,3 +112,16 @@ test:remote --jvmopt='-Dandroid.remote.run=true'
 # Stop downloading of build outputs to the local machine and
 # removes a possibility of network/disk bottlenecks when using RBE.
 build:remote --remote_download_toplevel
+
+# Persistent workers
+build --worker_verbose  # Increases visibility in case there are issues.
+
+build:dynamic --config=remote
+
+# Enable dynamic scheduling. This will run some actions locally
+# # as well as remotely, choosing whichever finishes first.
+build:dynamic --internal_spawn_scheduler
+build:dyanmic --strategy=Javac=dynamic
+build:dynamic --dynamic_local_strategy=Javac=worker,sandboxed,local
+build:dynamic --strategy=kotlinc=dynamic
+build:dynamic --dynamic_local_strategy=kotlinc=worker,sandboxed,local

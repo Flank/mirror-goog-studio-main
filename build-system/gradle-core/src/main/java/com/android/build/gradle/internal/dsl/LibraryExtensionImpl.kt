@@ -23,19 +23,17 @@ import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.LibraryVariantProperties
 import com.android.build.gradle.internal.CompileOptions
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
-import org.gradle.api.NamedDomainObjectContainer
+import com.android.build.gradle.internal.plugins.DslContainerProvider
 
 /** Internal implementation of the 'new' DSL interface */
 class LibraryExtensionImpl(
-    dslScope: DslScope,
-    buildTypes: NamedDomainObjectContainer<BuildType>,
-    defaultConfig: DefaultConfig,
-    productFlavors: NamedDomainObjectContainer<ProductFlavor>,
-    signingConfigs: NamedDomainObjectContainer<SigningConfig>
+    dslServices: DslServices,
+    dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) :
     CommonExtensionImpl<
+            AnnotationProcessorOptions,
             LibraryBuildFeatures,
             BuildType,
             DefaultConfig,
@@ -43,16 +41,14 @@ class LibraryExtensionImpl(
             SigningConfig,
             LibraryVariant<LibraryVariantProperties>,
             LibraryVariantProperties>(
-        dslScope,
-        buildTypes,
-        defaultConfig,
-        productFlavors,
-        signingConfigs
+        dslServices,
+        dslContainers
     ),
     LibraryExtension<
             AaptOptions,
             AbiSplitOptions,
             AdbOptions,
+            AnnotationProcessorOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,
@@ -61,7 +57,9 @@ class LibraryExtensionImpl(
             DensitySplitOptions,
             ExternalNativeBuild,
             JacocoOptions,
+            LintOptions,
             NdkBuildOptions,
+            PackagingOptions,
             ProductFlavor,
             SigningConfig,
             Splits,
@@ -69,21 +67,21 @@ class LibraryExtensionImpl(
             TestOptions.UnitTestOptions> {
 
     override val buildFeatures: LibraryBuildFeatures =
-        dslScope.objectFactory.newInstance(LibraryBuildFeaturesImpl::class.java)
+        dslServices.newInstance(LibraryBuildFeaturesImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
     override val onVariants: GenericFilteredComponentActionRegistrar<LibraryVariant<LibraryVariantProperties>>
-        get() = dslScope.objectFactory.newInstance(
+        get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
-            dslScope,
+            dslServices,
             variantOperations,
             LibraryVariant::class.java
         ) as GenericFilteredComponentActionRegistrar<LibraryVariant<LibraryVariantProperties>>
     @Suppress("UNCHECKED_CAST")
     override val onVariantProperties: GenericFilteredComponentActionRegistrar<LibraryVariantProperties>
-        get() = dslScope.objectFactory.newInstance(
+        get() = dslServices.newInstance(
             GenericFilteredComponentActionRegistrarImpl::class.java,
-            dslScope,
+            dslServices,
             variantPropertiesOperations,
             LibraryVariantProperties::class.java
         ) as GenericFilteredComponentActionRegistrar<LibraryVariantProperties>

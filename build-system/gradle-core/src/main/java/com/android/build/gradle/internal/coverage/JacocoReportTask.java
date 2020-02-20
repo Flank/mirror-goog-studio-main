@@ -223,10 +223,9 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
 
             task.sourceFolders =
                     creationConfig
-                            .getGlobalScope()
-                            .getProject()
-                            .files(
-                                    (Callable)
+                            .getServices()
+                            .fileCollection(
+                                    (Callable<Iterable<File>>)
                                             () ->
                                                     testedVariant
                                                             .getVariantData()

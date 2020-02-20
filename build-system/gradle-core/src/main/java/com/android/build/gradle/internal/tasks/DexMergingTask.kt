@@ -204,12 +204,12 @@ abstract class DexMergingTask : NonIncrementalTask() {
             }
 
             task.errorFormatMode =
-                SyncOptions.getErrorFormatMode(creationConfig.globalScope.projectOptions)
+                SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions)
             task.dexMerger = creationConfig.variantScope.dexMerger
             task.minSdkVersion = creationConfig.variantDslInfo.minSdkVersionWithTargetDeviceApi.featureLevel
             task.debuggable
                 .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
-            if (creationConfig.globalScope.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
+            if (creationConfig.services.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
                 creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DUPLICATE_CLASSES_CHECK,
                     task.duplicateClassesCheck
@@ -249,8 +249,8 @@ abstract class DexMergingTask : NonIncrementalTask() {
                             )
                         } else {
                             component.globalScope.project.files(
-                                component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE).get(),
-                                component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE_WITH_ARTIFACT_TRANSFORMS).get()
+                                component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE),
+                                component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE_WITH_ARTIFACT_TRANSFORMS)
                             )
                         }
                     }
@@ -263,7 +263,8 @@ abstract class DexMergingTask : NonIncrementalTask() {
                                 attributes
                             )
                         } else {
-                            component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE).get()
+                            component.globalScope.project.files(
+                                component.artifacts.getFinalProductAsFileCollection(InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE));
                         }
                     }
                     DexMergingAction.MERGE_PROJECT -> {
@@ -295,25 +296,19 @@ abstract class DexMergingTask : NonIncrementalTask() {
                         // technically, the Provider<> may not be needed, but the code would
                         // then assume that EXTERNAL_LIBS_DEX has already been registered by a
                         // Producer. Better to execute as late as possible.
-                        val external = component.globalScope.project.provider {
+                        return component.globalScope.project.files(
+                            forAction(DexMergingAction.MERGE_PROJECT),
+                            forAction(DexMergingAction.MERGE_LIBRARY_PROJECTS),
                             if (dexingType == DexingType.LEGACY_MULTIDEX) {
                                 // we have to dex it
                                 forAction(DexMergingAction.MERGE_EXTERNAL_LIBS)
                             } else {
                                 // we merge external dex in a separate task
-                                if (component.artifacts.hasFinalProducts(MultipleArtifactType.EXTERNAL_LIBS_DEX)) {
-                                    component.globalScope.project.files(
-                                        component.artifacts.getOperations().getAll(
-                                            MultipleArtifactType.EXTERNAL_LIBS_DEX
-                                        )
-                                    )
-                                } else component.globalScope.project.files()
-                            }
-                        }
-                        return component.globalScope.project.files(
-                            forAction(DexMergingAction.MERGE_PROJECT),
-                            forAction(DexMergingAction.MERGE_LIBRARY_PROJECTS),
-                            external)
+                                component.artifacts.getOperations().getAll(
+                                    MultipleArtifactType.EXTERNAL_LIBS_DEX)
+                                    .map { component.globalScope.project.files(it) }
+                                    .orElse(component.globalScope.project.files())
+                            })
                     }
                 }
             }

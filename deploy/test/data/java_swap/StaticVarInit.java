@@ -19,8 +19,15 @@ import java.util.concurrent.CountDownLatch;
 
 // TODO: These redefinition only works on final class right now.
 public final class StaticVarInit {
-    public static class AddStaticFinalInt {
-        public static final int X = 99; // Will be added in swap.
+    public static class AddStaticFinalPrimitives {
+        public static final int X_INT = 99; // Added.
+        public static final byte X_BYTE = 100; // Added.
+        public static final char X_CHAR = '!'; // Added.
+        public static final long X_LONG = 1000l; // Added.
+        public static final short X_SHORT = 7; // Added.
+        public static final float X_FLOAT = 3.14f; // Added.
+        public static final double X_DOUBLE = 3e-100d; // Added.
+        public static final boolean X_BOOLEAN = true; // Added.
     }
 
     public static int Y = 89;

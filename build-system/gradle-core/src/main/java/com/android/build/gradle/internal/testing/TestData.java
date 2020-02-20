@@ -34,17 +34,15 @@ import org.xml.sax.SAXException;
  */
 public interface TestData {
 
-
     /**
      * load the tested variant build output metadata file.
      *
-     * @param metadataFile the metadata file of the tested variant.
+     * @param folder folder containing the metadata file of the tested variant.
      * @throws ParserConfigurationException xml configuration error
      * @throws SAXException xml parsing error
      * @throws IOException cannot load the xml file.
      */
-    void loadFromMetadataFile(File metadataFile)
-            throws ParserConfigurationException, SAXException, IOException;
+    void load(File folder) throws ParserConfigurationException, SAXException, IOException;
 
     /**
      * Returns the application id.

@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
+import com.android.build.gradle.internal.tasks.ExtractNativeDebugMetadataTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
@@ -158,6 +159,11 @@ public abstract class AbstractAppTaskManager<
 
         taskFactory.register(new StripDebugSymbolsTask.CreationAction(appVariantProperties));
 
+        taskFactory.register(
+                new ExtractNativeDebugMetadataTask.FullCreationAction(appVariantProperties));
+        taskFactory.register(
+                new ExtractNativeDebugMetadataTask.SymbolTableCreationAction(appVariantProperties));
+
         createPackagingTask(apkCreationConfig);
 
         maybeCreateLintVitalTask(appVariantProperties, allComponentsWithLint);
@@ -207,7 +213,7 @@ public abstract class AbstractAppTaskManager<
         if (variantType.isApk()) {
             boolean useDependencyConstraints =
                     componentProperties
-                            .getGlobalScope()
+                            .getServices()
                             .getProjectOptions()
                             .get(BooleanOption.USE_DEPENDENCY_CONSTRAINTS);
 
@@ -286,7 +292,10 @@ public abstract class AbstractAppTaskManager<
                 Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
 
         // TODO(b/138780301): Also use it in android tests.
-        if (projectOptions.get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
+        if (variantProperties
+                        .getServices()
+                        .getProjectOptions()
+                        .get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
                 && !variantProperties.getVariantType().isForTesting()
                 && !variantProperties
                         .getGlobalScope()

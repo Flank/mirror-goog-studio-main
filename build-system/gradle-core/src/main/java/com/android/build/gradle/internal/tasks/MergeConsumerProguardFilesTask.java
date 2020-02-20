@@ -24,13 +24,16 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.builder.errors.EvalIssueException;
 import java.io.IOException;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
@@ -56,14 +59,15 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract ConfigurableFileCollection getConsumerProguardFiles();
 
+    @Internal("only for task execution")
+    public abstract DirectoryProperty getBuildDirectory();
+
     @Override
     public void doTaskAction() throws IOException {
-        final Project project = getProject();
-
         // We check for default files unless it's a base feature, which can include default files.
         if (!isBaseModule) {
             ExportConsumerProguardFilesTask.checkProguardFiles(
-                    project,
+                    getBuildDirectory(),
                     isDynamicFeature,
                     getConsumerProguardFiles().getFiles(),
                     errorMessage -> {
@@ -127,6 +131,8 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
                                     .getArtifacts()
                                     .getFinalProduct(GENERATED_PROGUARD_FILE.INSTANCE));
             task.setInputFiles(inputFiles);
+            HasConfigurableValuesKt.setDisallowChanges(
+                    task.getBuildDirectory(), task.getProject().getLayout().getBuildDirectory());
         }
     }
 }

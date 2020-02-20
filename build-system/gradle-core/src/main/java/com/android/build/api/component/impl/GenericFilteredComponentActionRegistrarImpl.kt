@@ -20,15 +20,15 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.FilteredComponentActionRegistrar
 import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.variant.impl.VariantOperations
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
 import javax.inject.Inject
 
 internal open class GenericFilteredComponentActionRegistrarImpl<BaseT> @Inject constructor(
-    private val dslScope: DslScope,
+    private val dslServices: DslServices,
     private val operations: VariantOperations<BaseT>,
     baseType: Class<BaseT>
-) : FilteredComponentActionRegistrarImpl<BaseT>(dslScope, operations, baseType),
+) : FilteredComponentActionRegistrarImpl<BaseT>(dslServices, operations, baseType),
     GenericFilteredComponentActionRegistrar<BaseT>
         where BaseT: ActionableComponentObject,
               BaseT: ComponentIdentity {
@@ -37,9 +37,9 @@ internal open class GenericFilteredComponentActionRegistrarImpl<BaseT> @Inject c
         newType: Class<NewTypeT>
     ) : FilteredComponentActionRegistrar<NewTypeT> {
         @Suppress("UNCHECKED_CAST")
-        return dslScope.objectFactory.newInstance(
+        return dslServices.newInstance(
             FilteredComponentActionRegistrarImpl::class.java,
-            dslScope,
+            dslServices,
             operations,
             newType
         ) as FilteredComponentActionRegistrar<NewTypeT>

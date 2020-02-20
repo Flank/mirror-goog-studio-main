@@ -29,6 +29,7 @@ import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
+import static com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 
 import com.android.annotations.NonNull;
@@ -55,13 +56,13 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
     private final String variant;
     @NonNull private final File bundle;
     @NonNull private final File folder;
-    @Nullable private final File resStaticLibrary;
     @NonNull
     private final List<AndroidLibrary> androidLibraries;
     @NonNull
     private final Collection<JavaLibrary> javaLibraries;
     @NonNull
     private final Collection<File> localJars;
+    @Nullable private final File lintJar;
 
     private final int hashcode;
 
@@ -71,21 +72,21 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
             @Nullable String projectPath,
             @NonNull File bundle,
             @NonNull File extractedFolder,
-            @Nullable File resStaticLibrary,
             @Nullable String variant,
             boolean isProvided,
             boolean isSkipped,
             @NonNull List<AndroidLibrary> androidLibraries,
             @NonNull Collection<JavaLibrary> javaLibraries,
-            @NonNull Collection<File> localJavaLibraries) {
+            @NonNull Collection<File> localJavaLibraries,
+            @Nullable File lintJar) {
         super(buildId, projectPath, null, coordinates, isSkipped, isProvided);
-        this.resStaticLibrary = resStaticLibrary;
         this.androidLibraries = ImmutableList.copyOf(androidLibraries);
         this.javaLibraries = ImmutableList.copyOf(javaLibraries);
         this.localJars = ImmutableList.copyOf(localJavaLibraries);
         this.variant = variant;
         this.bundle = bundle;
         this.folder = extractedFolder;
+        this.lintJar = lintJar;
         hashcode = computeHashCode();
     }
 
@@ -152,10 +153,10 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
         return new File(folder, FD_RES);
     }
 
-    @Nullable
+    @NonNull
     @Override
     public File getResStaticLibrary() {
-        return resStaticLibrary;
+        return new File(folder, FN_RESOURCE_STATIC_LIBRARY);
     }
 
     @NonNull
@@ -192,7 +193,11 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
     @NonNull
     @Override
     public File getLintJar() {
-        return new File(getJarFile().getParentFile(), FN_LINT_JAR);
+        if (lintJar == null) {
+            return new File(getJarFile().getParentFile(), FN_LINT_JAR);
+        } else {
+            return lintJar;
+        }
     }
 
 
@@ -242,10 +247,10 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
         return Objects.equal(variant, that.variant)
                 && Objects.equal(bundle, that.bundle)
                 && Objects.equal(folder, that.folder)
-                && Objects.equal(resStaticLibrary, that.resStaticLibrary)
                 && Objects.equal(androidLibraries, that.androidLibraries)
                 && Objects.equal(javaLibraries, that.javaLibraries)
-                && Objects.equal(localJars, that.localJars);
+                && Objects.equal(localJars, that.localJars)
+                && Objects.equal(lintJar, that.lintJar);
     }
 
     @Override
@@ -259,10 +264,10 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
                 variant,
                 bundle,
                 folder,
-                resStaticLibrary,
                 androidLibraries,
                 javaLibraries,
-                localJars);
+                localJars,
+                lintJar);
     }
 
     @Override
@@ -273,10 +278,10 @@ public final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibr
                 .add("variant", variant)
                 .add("bundle", bundle)
                 .add("folder", folder)
-                .add("resStaticLibrary", resStaticLibrary)
                 .add("androidLibraries", androidLibraries)
                 .add("javaLibraries", javaLibraries)
                 .add("localJars", localJars)
+                .add("lintJar", lintJar)
                 .add("super", super.toString())
                 .toString();
     }

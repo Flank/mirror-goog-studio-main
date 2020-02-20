@@ -25,9 +25,11 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import org.gradle.api.provider.Property
@@ -36,6 +38,7 @@ import javax.inject.Inject
 
 open class AndroidTestPropertiesImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
+    buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
@@ -45,10 +48,12 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     variantData: BaseVariantData,
     testedVariant: VariantPropertiesImpl,
     transformManager: TransformManager,
-    variantApiScope: VariantPropertiesApiScope,
+    variantPropertiesApiServices: VariantPropertiesApiServices,
+    taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : TestComponentPropertiesImpl(
     componentIdentity,
+    buildFeatureValues,
     variantDslInfo,
     variantDependencies,
     variantSources,
@@ -58,7 +63,8 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     variantData,
     testedVariant,
     transformManager,
-    variantApiScope,
+    variantPropertiesApiServices,
+    taskCreationServices,
     globalScope
 ), AndroidTestProperties, ApkCreationConfig {
 
@@ -69,7 +75,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> = variantApiScope.propertyOf(
+    override val applicationId: Property<String> = variantPropertiesApiServices.propertyOf(
         String::class.java,
         Callable { variantDslInfo.testApplicationId })
 

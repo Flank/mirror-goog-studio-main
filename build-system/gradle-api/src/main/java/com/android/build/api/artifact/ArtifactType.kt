@@ -109,7 +109,7 @@ abstract class ArtifactType<T: FileSystemLocation>(val kind: ArtifactKind<T>): S
      * written using the [com.android.build.api.variant.BuiltArtifacts.save] methods.
      */
     @Incubating
-    interface Many
+    interface ContainsMany
 
     /**
      * Denotes an artifact type that can be appended to.

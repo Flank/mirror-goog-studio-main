@@ -23,10 +23,10 @@ import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
+import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.model.ObjectFactory;
 
 /**
  * implementation of the {@link ApplicationVariant} interface around an
@@ -50,10 +50,10 @@ public class ApplicationVariantImpl extends ApkVariantImpl implements Applicatio
     public ApplicationVariantImpl(
             @NonNull ApplicationVariantData variantData,
             @NonNull ComponentPropertiesImpl componentProperties,
-            @NonNull ObjectFactory objectFactory,
+            @NonNull BaseServices services,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(componentProperties, objectFactory, readOnlyObjectProvider, outputs);
+        super(componentProperties, services, readOnlyObjectProvider, outputs);
         this.variantData = variantData;
     }
 

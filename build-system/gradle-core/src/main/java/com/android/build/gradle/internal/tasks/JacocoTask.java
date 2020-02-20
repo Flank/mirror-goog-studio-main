@@ -139,7 +139,7 @@ public abstract class JacocoTask extends AndroidVariantTask {
                             getJacocoVersion(creationConfig));
             task.isolationMode =
                     creationConfig
-                                    .getGlobalScope()
+                                    .getServices()
                                     .getProjectOptions()
                                     .get(BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS)
                             ? WorkerExecutorFacade.IsolationMode.PROCESS

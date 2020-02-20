@@ -82,5 +82,15 @@
     <orderEntry type="library" scope="PROVIDED" name="kotlin-gradle-plugin" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="kotlin-gradle-plugin-api" level="project" />
     <orderEntry type="module" module-name="android.sdktools.mlkit-common" />
+    <orderEntry type="library" name="tink" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MAVEN_REPOSITORY$/com/squareup/javapoet/1.10.0/javapoet-1.10.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

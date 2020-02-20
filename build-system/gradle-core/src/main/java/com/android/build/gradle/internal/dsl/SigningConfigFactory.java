@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.services.DslServices;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.signing.DefaultSigningConfig;
 import java.io.File;
@@ -25,19 +26,19 @@ import org.gradle.api.model.ObjectFactory;
 
 /** Factory to create SigningConfig object using an {@link ObjectFactory} to add the DSL methods. */
 public class SigningConfigFactory implements NamedDomainObjectFactory<SigningConfig> {
-
-    private final ObjectFactory objectFactory;
+    @NonNull private final DslServices dslServices;
     private final File defaultDebugKeystoreLocation;
 
-    public SigningConfigFactory(ObjectFactory objectFactory, File defaultDebugKeystoreLocation) {
-        this.objectFactory = objectFactory;
+    public SigningConfigFactory(
+            @NonNull DslServices dslServices, File defaultDebugKeystoreLocation) {
+        this.dslServices = dslServices;
         this.defaultDebugKeystoreLocation = defaultDebugKeystoreLocation;
     }
 
     @Override
     @NonNull
     public SigningConfig create(@NonNull String name) {
-        SigningConfig signingConfig = objectFactory.newInstance(SigningConfig.class, name);
+        SigningConfig signingConfig = dslServices.newInstance(SigningConfig.class, name);
         if (BuilderConstants.DEBUG.equals(name)) {
             signingConfig.initWith(
                     DefaultSigningConfig.debugSigningConfig(defaultDebugKeystoreLocation));

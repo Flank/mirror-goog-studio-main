@@ -25,8 +25,17 @@ interface RecipeExecutor {
    */
   fun copy(from: File, to: File)
 
-  /** Writes text into the given output file. */
-  fun save(source: String, to: File, trimVertical: Boolean = true, squishEmptyLines: Boolean = true)
+  /**
+   * Writes text into the given output file.
+   * @param source the source of the text
+   * @param to the location of the output file
+   * @param trimVertical trim the leading and trailing white spaces if set to true
+   * @param squishEmptyLines squish the empty lines if set to true
+   * @param commitDocument commit the saved file if set to true. This can be usually false. This is useful when the saved file needs to be
+   *                       modified in the same recipe file. E.g. in a case where a build.gradle file is saved and a dependency is added to
+   *                       the build.gradle file
+   */
+  fun save(source: String, to: File, trimVertical: Boolean = true, squishEmptyLines: Boolean = true, commitDocument: Boolean = false)
 
   /** Merges the given XML source into the given destination file (or just writes it if the destination file does not exist). */
   fun mergeXml(source: String, to: File)
@@ -59,8 +68,9 @@ interface RecipeExecutor {
    * @param mavenCoordinate coordinate of dependency to be added in Maven format (e.g androidx.appcompat:appcompat:1.1.0).
    * @param configuration Gradle configuration to use.
    * @param minRev If [minRev] is present, [minRev] or a higher number is used as the version of the dependency.
+   * @param moduleDir determines a module to add the dependency. The current module will be used if it is null.
    */
-  fun addDependency(mavenCoordinate: String, configuration: String = "compile", minRev: String? = null)
+  fun addDependency(mavenCoordinate: String, configuration: String = "compile", minRev: String? = null, moduleDir: File? = null)
 
   /**
    * Records a module dependency.

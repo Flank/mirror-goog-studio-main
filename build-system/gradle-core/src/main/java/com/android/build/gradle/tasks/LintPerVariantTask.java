@@ -129,7 +129,8 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
                             "Runs lint on the ", lint.getVariantName(), " build."));
             lint.getEnableGradleWorkers()
                     .set(
-                            getGlobalScope()
+                            variantProperties
+                                    .getServices()
                                     .getProjectOptions()
                                     .get(BooleanOption.ENABLE_GRADLE_WORKERS));
         }
@@ -181,7 +182,8 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
                             + " build.");
             task.getEnableGradleWorkers()
                     .set(
-                            getGlobalScope()
+                            componentProperties
+                                    .getServices()
                                     .getProjectOptions()
                                     .get(BooleanOption.ENABLE_GRADLE_WORKERS));
         }

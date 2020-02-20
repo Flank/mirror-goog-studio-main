@@ -27,9 +27,11 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.tasks.ModuleMetadata
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -40,6 +42,7 @@ import javax.inject.Inject
 
 open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
+    buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
@@ -48,10 +51,12 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    variantApiScope: VariantPropertiesApiScope,
+    variantApiServices: VariantPropertiesApiServices,
+    taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
     componentIdentity,
+    buildFeatureValues,
     variantDslInfo,
     variantDependencies,
     variantSources,
@@ -60,7 +65,8 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    variantApiScope,
+    variantApiServices,
+    taskCreationServices,
     globalScope
 ), DynamicFeatureVariantProperties, DynamicFeatureCreationConfig {
 
@@ -78,7 +84,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
         get() = variantDslInfo.isDebuggable
 
     override val applicationId: Property<String> =
-        variantApiScope.propertyOf(String::class.java, baseModuleMetadata.map { it.applicationId })
+        variantApiServices.propertyOf(String::class.java, baseModuleMetadata.map { it.applicationId })
 
     override val manifestPlaceholders: Map<String, Any>
         get() = variantDslInfo.manifestPlaceholders
@@ -94,20 +100,20 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     override val testOnlyApk: Boolean
         get() = variantScope.isTestOnly
 
-    override val baseModuleDebuggable: Provider<Boolean> = variantApiScope.providerOf(
+    override val baseModuleDebuggable: Provider<Boolean> = variantApiServices.providerOf(
         Boolean::class.java,
         baseModuleMetadata.map { it.debuggable })
 
-    override val baseModuleVersionCode: Provider<Int> = variantApiScope.providerOf(
+    override val baseModuleVersionCode: Provider<Int> = variantApiServices.providerOf(
         Int::class.java,
         baseModuleMetadata.map { Integer.parseInt(it.versionCode) })
 
-    override val baseModuleVersionName: Provider<String> = variantApiScope.providerOf(
+    override val baseModuleVersionName: Provider<String> = variantApiServices.providerOf(
         String::class.java,
         baseModuleMetadata.map { it.versionName ?: "" })
 
     override val featureName: Provider<String> =
-        variantApiScope.providerOf(String::class.java, featureSetMetadata.map {
+        variantApiServices.providerOf(String::class.java, featureSetMetadata.map {
             val path = globalScope.project.path
             it.getFeatureNameFor(path)
                 ?: throw RuntimeException("Failed to find feature name for $path in ${it.sourceFile}")
@@ -117,7 +123,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
      * resource offset for resource compilation of a feature.
      * This is computed by the base module and consumed by the features. */
     override val resOffset: Provider<Int> =
-        variantApiScope.providerOf(Int::class.java, featureSetMetadata.map {
+        variantApiServices.providerOf(Int::class.java, featureSetMetadata.map {
             val path = globalScope.project.path
             it.getResOffsetFor(path)
                 ?: throw RuntimeException("Failed to find resource offset for $path in ${it.sourceFile}")
@@ -140,7 +146,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
 
         // Have to wrap the return of artifact.elements.map because we cannot call
         // finalizeValueOnRead directly on Provider
-        return variantApiScope.providerOf(
+        return variantPropertiesApiServices.providerOf(
             ModuleMetadata::class.java,
             artifact.elements.map { ModuleMetadata.load(it.single().asFile) })
     }
@@ -157,7 +163,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
 
         // Have to wrap the return of artifact.elements.map because we cannot call
         // finalizeValueOnRead directly on Provider
-        return variantApiScope.providerOf(
+        return variantPropertiesApiServices.providerOf(
             FeatureSetMetadata::class.java,
             artifact.elements.map { FeatureSetMetadata.load(it.single().asFile) })
     }

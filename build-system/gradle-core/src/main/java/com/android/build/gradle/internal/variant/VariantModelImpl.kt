@@ -19,6 +19,10 @@ package com.android.build.gradle.internal.variant
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
 import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.gradle.internal.dsl.DefaultConfig
+import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.builder.errors.IssueReporter
 import com.google.common.base.Joiner
 import com.google.common.collect.ArrayListMultimap
@@ -27,7 +31,7 @@ import java.util.ArrayList
 import java.util.Comparator
 
 class VariantModelImpl(
-    override val inputs: VariantInputModel,
+    override val inputs: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
     private val testBuilderTypeProvider: () -> String?,
     private val variantProvider: () -> List<VariantPropertiesImpl>,
     private val testComponentProvider: () -> List<TestComponentPropertiesImpl>,
@@ -61,13 +65,13 @@ class VariantModelImpl(
      *  - The alphabetically sorted default product flavors, left to right
      *
      *
-     * @param syncIssueHandler any arising user configuration issues will be reported here.
      * @return the name of a variant that exists under the presence of the variant filter. Only
      * returns null if all variants are removed.
      */
     private fun computeDefaultVariant(): String? {
         // Finalize the DSL we are about to read.
         finalizeDefaultVariantDsl()
+
         // Exit early if all variants were filtered out, this is not a valid project
         if (variants.isEmpty()) {
             return null
@@ -99,6 +103,7 @@ class VariantModelImpl(
             productFlavorData.productFlavor.getIsDefault().finalizeValue()
         }
     }
+
 
     /**
      * Computes explicit build-author default build type.
@@ -150,7 +155,7 @@ class VariantModelImpl(
 
         for (flavor in inputs.productFlavors.values) {
             val productFlavor = flavor.productFlavor
-            val dimension = productFlavor.dimension!!
+            val dimension = productFlavor.dimension
 
             @Suppress("DEPRECATION")
             if (productFlavor.getIsDefault().get()) {

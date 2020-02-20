@@ -22,6 +22,7 @@ import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -135,10 +136,10 @@ class BuiltArtifactsLoaderImplTest {
             variantName = builtArtifacts.variantName,
             elements = builtArtifacts.elements.map {
                 assertThat(File(it.outputFile).readText(Charsets.UTF_8)).isEqualTo(
-                    it.filters.joinToString { filter -> filter.identifier })
+                    it.filters.joinToString())
                 (it as BuiltArtifactImpl).newOutput(
                     outFolder.newFile("${File(it.outputFile).name}.new").also { file ->
-                        file.writeText("updated APK : ${it.filters.joinToString { filter -> filter.identifier }}")
+                        file.writeText("updated APK : ${it.filters.joinToString()}")
                     }.toPath())
             }
         )
@@ -178,7 +179,8 @@ class BuiltArtifactsLoaderImplTest {
         assertThat(builtArtifacts.variantName).isEqualTo("debug")
         assertThat(builtArtifacts.elements).hasSize(1)
         val builtArtifact = builtArtifacts.elements.first()
-        assertThat(builtArtifact.outputFile).isEqualTo(File(tmpFolder.root, "file1.xml").absolutePath)
+        assertThat(builtArtifact.outputFile).isEqualTo(
+            FileUtils.toSystemIndependentPath(File(tmpFolder.root, "file1.xml").absolutePath))
         assertThat(builtArtifact.isEnabled).isTrue()
         assertThat(builtArtifact.versionCode).isEqualTo(123)
         assertThat(builtArtifact.versionName).isEqualTo("version_name")

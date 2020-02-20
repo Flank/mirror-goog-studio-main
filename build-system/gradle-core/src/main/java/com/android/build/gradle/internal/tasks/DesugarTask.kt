@@ -33,6 +33,7 @@ import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
 import com.android.utils.PathUtils
 import com.google.common.collect.ArrayListMultimap
+import org.apache.log4j.Logger
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -86,22 +87,24 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
     val enableBugFixForJacoco: Property<Boolean> = objectFactory.property(Boolean::class.java)
 
     override fun doTaskAction() {
-        val libs = externaLibsClasses.asFile.get().listFiles()!!.toList().sortedBy { it.name }
-        DesugarTaskDelegate(
-            projectClasses = projectClasses.files,
-            subProjectClasses = subProjectClasses.files,
-            externaLibsClasses = libs,
-            desugaringClasspath = desugaringClasspath.files,
-            projectOutput = projectOutput.asFile.get(),
-            subProjectOutput = subProjectOutput.asFile.get(),
-            externalLibsOutput = externalLibsOutput.asFile.get(),
-            tmpDir = tmpDir.asFile.get(),
-            bootClasspath = bootClasspath.files,
-            minSdk = minSdk.get(),
-            enableBugFixForJacoco = enableBugFixForJacoco.get(),
-            verbose = project.logger.isDebugEnabled,
-            executorFacade = getWorkerFacadeWithWorkers()
-        ).doProcess()
+        getWorkerFacadeWithWorkers().use { executorFacade ->
+            val libs = externaLibsClasses.asFile.get().listFiles()!!.toList().sortedBy { it.name }
+            DesugarTaskDelegate(
+                projectClasses = projectClasses.files,
+                subProjectClasses = subProjectClasses.files,
+                externaLibsClasses = libs,
+                desugaringClasspath = desugaringClasspath.files,
+                projectOutput = projectOutput.asFile.get(),
+                subProjectOutput = subProjectOutput.asFile.get(),
+                externalLibsOutput = externalLibsOutput.asFile.get(),
+                tmpDir = tmpDir.asFile.get(),
+                bootClasspath = bootClasspath.files,
+                minSdk = minSdk.get(),
+                enableBugFixForJacoco = enableBugFixForJacoco.get(),
+                verbose = Logger.getLogger(DesugarTask::class.java).isDebugEnabled,
+                executorFacade = executorFacade
+            ).doProcess()
+        }
     }
 
     class CreationAction(componentProperties: ComponentPropertiesImpl) :
@@ -217,12 +220,6 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
             task.bootClasspath.from(variantScope.bootClasspath)
 
             creationConfig.onTestedConfig {
-                task.desugaringClasspath.from(
-                    creationConfig.artifacts.getFinalProduct(
-                        InternalArtifactType.TESTED_CODE_CLASSES
-                    )
-                )
-
                 task.desugaringClasspath.from(
                     it.variantDependencies.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

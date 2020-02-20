@@ -28,7 +28,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.io.Serializable
 
 /**
  * Unit tests for [MergeClassesTask].
@@ -42,22 +41,7 @@ class MergeClassesTaskTest {
 
     @Before
     fun setUp() {
-        workers = object: WorkerExecutorFacade {
-            override fun submit(actionClass: Class<out Runnable>, parameter: Serializable) {
-                val configuration =
-                    WorkerExecutorFacade.Configuration(
-                        parameter, WorkerExecutorFacade.IsolationMode.NONE, listOf()
-                    )
-                val action =
-                    actionClass.getConstructor(configuration.parameter.javaClass)
-                        .newInstance(configuration.parameter)
-                action.run()
-            }
-
-            override fun await() {}
-
-            override fun close() {}
-        }
+        workers = testWorkers
     }
 
     @Test

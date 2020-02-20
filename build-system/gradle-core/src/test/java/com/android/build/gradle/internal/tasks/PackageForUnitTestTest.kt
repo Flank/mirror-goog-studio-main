@@ -16,11 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.VariantOutput
-import com.android.build.gradle.internal.ide.FilterDataImpl
-import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.BuildElements
-import com.android.build.gradle.internal.scope.BuildOutput
+import com.android.build.api.variant.FilterConfiguration
+import com.android.build.api.variant.FilterConfiguration.FilterType
+import com.android.build.api.variant.VariantOutputConfiguration
+import com.android.build.api.variant.impl.BuiltArtifactImpl
+import com.android.build.api.variant.impl.BuiltArtifactsImpl
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.DirectoryProperty
@@ -64,20 +65,10 @@ class PackageForUnitTestTest {
     @Test
     fun testNoSplits() {
         val outputFolder = directoryProperty.get().asFile
-        val buildOutput = BuildOutput(
-            InternalArtifactType.PROCESSED_RES,
-            ApkData.of(
-                VariantOutput.OutputType.MAIN,
-                listOf(),
-                1
-            ),
-            File(outputFolder,"the_right_file")
-        )
-        val buildElements = BuildElements(
-            applicationId = "com.app.example",
-            variantType = "debug",
-            elements = listOf(buildOutput))
-        buildElements.save(outputFolder)
+
+        createBuiltArtifacts(listOf(
+            createBuiltArtifact(File(outputFolder,"the_right_file").absolutePath)
+        )).saveToDirectory(outputFolder)
 
         assertThat(task.apkFrom(directoryProperty).name).isEqualTo("the_right_file")
     }
@@ -85,19 +76,12 @@ class PackageForUnitTestTest {
     @Test
     fun testWithABI() {
         val outputFolder = directoryProperty.get().asFile
-        val buildOutput = BuildOutput(
-            InternalArtifactType.PROCESSED_RES,
-            ApkData.of(
-                VariantOutput.OutputType.FULL_SPLIT,
-                listOf(FilterDataImpl(VariantOutput.FilterType.ABI, "x86")), 1
-            ),
-            File(outputFolder,"the_right_file")
-        )
-        val buildElements = BuildElements(
-            applicationId = "com.app.example",
-            variantType = "debug",
-            elements = listOf(buildOutput))
-        buildElements.save(outputFolder)
+
+        createBuiltArtifacts(listOf(
+            createBuiltArtifact(File(outputFolder,"the_right_file").absolutePath,
+                VariantOutputConfigurationImpl(false,
+                    listOf(FilterConfiguration(FilterType.ABI, "x86"))))
+        )).saveToDirectory(outputFolder)
 
         assertThat(task.apkFrom(directoryProperty).name).isEqualTo("the_right_file")
     }
@@ -105,28 +89,15 @@ class PackageForUnitTestTest {
     @Test
     fun testWithMultipleABIs() {
         val outputFolder = directoryProperty.get().asFile
-        val buildElements = BuildElements(
-            applicationId = "com.app.example",
-            variantType = "debug",
-            elements = listOf(
-                BuildOutput(
-                    InternalArtifactType.PROCESSED_RES,
-                    ApkData.of(
-                        VariantOutput.OutputType.FULL_SPLIT,
-                        listOf(FilterDataImpl(VariantOutput.FilterType.ABI, "x86")), 1
-                    ),
-                    File(outputFolder,"the_right_file_1")
-                ),
-                BuildOutput(
-                    InternalArtifactType.PROCESSED_RES,
-                    ApkData.of(
-                        VariantOutput.OutputType.FULL_SPLIT,
-                        listOf(FilterDataImpl(VariantOutput.FilterType.ABI, "arm")), 1
-                    ),
-                    File(outputFolder,"the_right_file_2")
-                )
-        ))
-        buildElements.save(outputFolder)
+
+        createBuiltArtifacts(listOf(
+            createBuiltArtifact(File(outputFolder,"the_right_file_1").absolutePath,
+                VariantOutputConfigurationImpl(false,
+                    listOf(FilterConfiguration(FilterType.ABI, "x86")))),
+            createBuiltArtifact(File(outputFolder,"the_right_file_2").absolutePath,
+                VariantOutputConfigurationImpl(false,
+                    listOf(FilterConfiguration(FilterType.ABI, "arm"))))
+        )).saveToDirectory(outputFolder)
 
         assertThat(task.apkFrom(directoryProperty).name).startsWith("the_right_file")
     }
@@ -134,27 +105,15 @@ class PackageForUnitTestTest {
     @Test
     fun testWithOnlyDensity() {
         val outputFolder = directoryProperty.get().asFile
-        val buildElements = BuildElements(
-            applicationId = "com.app.example",
-            variantType = "debug",
-            elements = listOf(
-                BuildOutput(
-                    InternalArtifactType.PROCESSED_RES,
-                    ApkData.of(
-                        VariantOutput.OutputType.FULL_SPLIT,
-                        listOf(FilterDataImpl(VariantOutput.FilterType.DENSITY, "xhdpi")), 1
-                    ),
-                    File(outputFolder,"the_wrong_file")
-                ),
-                BuildOutput(
-                    InternalArtifactType.PROCESSED_RES,
-                    ApkData.of(
-                        VariantOutput.OutputType.FULL_SPLIT,
-                        listOf(FilterDataImpl(VariantOutput.FilterType.DENSITY, "xhdpi")), 1
-                    ),
-                    File(outputFolder,"the_wrong_file")
-                )))
-        buildElements.save(outputFolder)
+
+        createBuiltArtifacts(listOf(
+            createBuiltArtifact(File(outputFolder,"the_wrong_file").absolutePath,
+                VariantOutputConfigurationImpl(false,
+                    listOf(FilterConfiguration(FilterType.DENSITY, "xhdpi")))),
+            createBuiltArtifact(File(outputFolder,"the_wrong_file").absolutePath,
+                VariantOutputConfigurationImpl(false,
+                    listOf(FilterConfiguration(FilterType.DENSITY, "xxhdpi"))))
+        )).saveToDirectory(outputFolder)
 
         try {
             task.apkFrom(directoryProperty)
@@ -168,52 +127,27 @@ class PackageForUnitTestTest {
     @Test
     fun testWithCombinedButNoUniversal() {
         val outputFolder = directoryProperty.get().asFile
-        val buildElements = BuildElements(
-            applicationId = "com.app.example",
-            variantType = "debug",
-            elements = listOf(
-                BuildOutput(
-                    InternalArtifactType.PROCESSED_RES,
-                    ApkData.of(
-                        VariantOutput.OutputType.FULL_SPLIT,
-                        listOf(
-                            FilterDataImpl(VariantOutput.FilterType.ABI, "x86"),
-                            FilterDataImpl(VariantOutput.FilterType.DENSITY, "xxhdpi")),
-                        1
-                    ),
-                    File(outputFolder,"the_wrong_file_1")
-                ),
-                BuildOutput(
-                    InternalArtifactType.PROCESSED_RES,
-                    ApkData.of(
-                        VariantOutput.OutputType.FULL_SPLIT,
-                        listOf(FilterDataImpl(VariantOutput.FilterType.ABI, "x86")),
-                        1
-                    ),
-                    File(outputFolder,"the_right_file_1")
-                ),
-                BuildOutput(
-                    InternalArtifactType.PROCESSED_RES,
-                    ApkData.of(
-                        VariantOutput.OutputType.FULL_SPLIT,
-                        listOf(FilterDataImpl(VariantOutput.FilterType.ABI, "arm")),
-                        1
-                    ),
-                    File(outputFolder,"the_right_file_2")
-                ),
-                BuildOutput(
-                    InternalArtifactType.PROCESSED_RES,
-                    ApkData.of(
-                        VariantOutput.OutputType.FULL_SPLIT,
-                        listOf(
-                            FilterDataImpl(VariantOutput.FilterType.ABI, "arm"),
-                            FilterDataImpl(VariantOutput.FilterType.DENSITY, "xxhdpi")),
-                        1
-                    ),
-                    File(outputFolder,"the_wrong_file_2")
-                )
-        ))
-        buildElements.save(outputFolder)
+
+        createBuiltArtifacts(listOf(
+            createBuiltArtifact(File(outputFolder,"the_wrong_file_1").absolutePath,
+                VariantOutputConfigurationImpl(false,
+                    listOf(
+                        FilterConfiguration(FilterType.DENSITY, "xhdpi"),
+                        FilterConfiguration(FilterType.ABI, "x86")
+                    ))),
+            createBuiltArtifact(File(outputFolder,"the_right_file_1").absolutePath,
+                VariantOutputConfigurationImpl(false,
+                    listOf(FilterConfiguration(FilterType.ABI, "x86")))),
+            createBuiltArtifact(File(outputFolder,"the_wrong_file_2").absolutePath,
+                VariantOutputConfigurationImpl(false,
+                    listOf(
+                        FilterConfiguration(FilterType.DENSITY, "xxhdpi"),
+                        FilterConfiguration(FilterType.ABI, "arm")
+                    ))),
+            createBuiltArtifact(File(outputFolder,"the_right_file_2").absolutePath,
+                VariantOutputConfigurationImpl(false,
+                    listOf(FilterConfiguration(FilterType.ABI, "arm"))))
+        )).saveToDirectory(outputFolder)
 
         assertThat(task.apkFrom(directoryProperty).name).startsWith("the_right_file")
     }
@@ -221,42 +155,37 @@ class PackageForUnitTestTest {
     @Test
     fun testDensitySplitsWithUniversal() {
         val outputFolder = directoryProperty.get().asFile
-        val buildElements = BuildElements(
-            applicationId = "com.app.example",
-            variantType = "debug",
-            elements = listOf(
-                BuildOutput(
-                    InternalArtifactType.PROCESSED_RES,
-                    ApkData.of(
-                        VariantOutput.OutputType.FULL_SPLIT,
-                        listOf(
-                            FilterDataImpl(VariantOutput.FilterType.DENSITY, "hdpi")),
-                        1
-                    ),
-                    File(outputFolder,"the_wrong_file_1")
-                ),
-                BuildOutput(
-                    InternalArtifactType.PROCESSED_RES,
-                    ApkData.of(
-                        VariantOutput.OutputType.FULL_SPLIT,
-                        listOf(
-                            FilterDataImpl(VariantOutput.FilterType.DENSITY, "xhdpi")),
-                        1
-                    ),
-                    File(outputFolder,"the_wrong_file_2")
-                ),
-                BuildOutput(
-                    InternalArtifactType.PROCESSED_RES,
-                    ApkData.of(
-                        VariantOutput.OutputType.FULL_SPLIT,
-                        listOf(),
-                        1
-                    ),
-                    File(outputFolder,"the_right_file")
-                )
-        ))
-        buildElements.save(outputFolder)
+
+        createBuiltArtifacts(listOf(
+
+            createBuiltArtifact(File(outputFolder,"the_wrong_file_1").absolutePath,
+                VariantOutputConfigurationImpl(false,
+                    listOf(
+                        FilterConfiguration(FilterType.DENSITY, "hdpi")
+                    ))),
+
+            createBuiltArtifact(File(outputFolder,"the_wrong_file_2").absolutePath,
+                VariantOutputConfigurationImpl(false,
+                    listOf(FilterConfiguration(FilterType.DENSITY, "xhdpi")))),
+
+            createBuiltArtifact(File(outputFolder,"the_right_file").absolutePath,
+                VariantOutputConfigurationImpl(true,
+                    listOf()))
+        )).saveToDirectory(outputFolder)
 
         assertThat(task.apkFrom(directoryProperty).name).isEqualTo("the_right_file")
     }
+
+    private fun createBuiltArtifact(
+        outputFile: String,
+        variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl()
+    ) = BuiltArtifactImpl.make(
+        outputFile = outputFile,
+        variantOutputConfiguration = variantOutputConfiguration)
+
+    private fun createBuiltArtifacts(artifacts: Collection<BuiltArtifactImpl>) = BuiltArtifactsImpl(
+        artifactType = InternalArtifactType.PROCESSED_RES,
+        applicationId = "com.app.example",
+        variantName = "debug",
+        elements = artifacts)
 }

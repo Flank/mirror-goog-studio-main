@@ -63,7 +63,7 @@ abstract class AndroidVariantTask : DefaultTask(), VariantAwareTask {
      */
     protected inline fun recordTaskAction(crossinline block: () -> Unit) {
         Blocks.recordSpan<Unit, Exception>(
-            project.name,
+            projectName,
             path,
             GradleBuildProfileSpan.ExecutionType.TASK_EXECUTION_ALL_PHASES
         ) { block() }

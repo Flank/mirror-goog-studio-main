@@ -31,6 +31,7 @@ import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.fragmentToLayout
 import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
@@ -62,11 +63,7 @@ val loginFragmentTemplate
       suggest = { fragmentToLayout(fragmentClass.value) }
     }
 
-    val packageName = stringParameter {
-      name = "Package name"
-      default = "com.mycompany.myapp"
-      constraints = listOf(PACKAGE)
-    }
+    val packageName = defaultPackageNameParameter
 
     widgets(
       TextFieldWidget(fragmentClass),

@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.core;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
+import com.android.build.gradle.internal.dsl.NdkOptions;
+import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.List;
@@ -33,6 +35,7 @@ public class MergedNdkConfig implements CoreNdkOptions, MergedOptions<CoreNdkOpt
     private Set<String> abiFilters;
     private String stl;
     private Integer jobs;
+    private String debugSymbolLevel;
 
     @Override
     public void reset() {
@@ -40,6 +43,7 @@ public class MergedNdkConfig implements CoreNdkOptions, MergedOptions<CoreNdkOpt
         cFlags = null;
         ldLibs = null;
         abiFilters = null;
+        debugSymbolLevel = null;
     }
 
     @Override
@@ -79,6 +83,19 @@ public class MergedNdkConfig implements CoreNdkOptions, MergedOptions<CoreNdkOpt
     }
 
     @Override
+    @Nullable
+    public String getDebugSymbolLevel() {
+        return debugSymbolLevel;
+    }
+
+    @NonNull
+    public DebugSymbolLevel getDebugSymbolLevelEnum() {
+        final DebugSymbolLevel debugSymbolLevelOrNull =
+                NdkOptions.DEBUG_SYMBOL_LEVEL_CONVERTER.convert(debugSymbolLevel);
+        return debugSymbolLevelOrNull == null ? DebugSymbolLevel.NONE : debugSymbolLevelOrNull;
+    }
+
+    @Override
     public void append(@NonNull CoreNdkOptions ndkConfig) {
         // override
         if (ndkConfig.getModuleName() != null) {
@@ -91,6 +108,10 @@ public class MergedNdkConfig implements CoreNdkOptions, MergedOptions<CoreNdkOpt
 
         if (ndkConfig.getJobs() != null) {
             jobs = ndkConfig.getJobs();
+        }
+
+        if (ndkConfig.getDebugSymbolLevel() != null) {
+            debugSymbolLevel = ndkConfig.getDebugSymbolLevel();
         }
 
         // append

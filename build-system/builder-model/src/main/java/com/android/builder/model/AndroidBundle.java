@@ -101,10 +101,8 @@ public interface AndroidBundle extends Library {
     /**
      * Returns the location of the namespaced resources static library (res.apk).
      *
-     * <p>TODO(b/109854607): When rewriting dependencies, this should be populated with the
-     * rewritten artifact, which will not be in the exploded AAR directory.
-     *
-     * @return the static library apk. Null if the library is not namespaced.
+     * @return the static library apk. Does not exist if the library is not namespaced. May be null
+     *     in Android Gradle Plugin < 4.1.0, where namespace support is experimental anyway.
      */
     @Nullable
     File getResStaticLibrary();

@@ -190,6 +190,16 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                             COMPILE_CLASSPATH,
                             dependencyFailureHandler,
                             buildMapping);
+
+            Set<ResolvedArtifactResult> dependenciesLintJars =
+                    componentProperties
+                            .getVariantDependencies()
+                            .getArtifactCollectionForToolingModel(
+                                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                                    AndroidArtifacts.ArtifactScope.ALL,
+                                    AndroidArtifacts.ArtifactType.LINT)
+                            .getArtifacts();
+
             for (ResolvedArtifact artifact : artifacts) {
                 ComponentIdentifier id = artifact.getComponentIdentifier();
 
@@ -236,6 +246,17 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                         extractedFolder = artifact.getArtifactFile();
                     }
 
+                    File lintJar = null;
+
+                    if (isSubproject) {
+                        lintJar =
+                                dependenciesLintJars.stream()
+                                        .filter(it -> it.getId().getComponentIdentifier() == id)
+                                        .map(ResolvedArtifactResult::getFile)
+                                        .findAny()
+                                        .orElse(null);
+                    }
+
                     androidLibraries.add(
                             new com.android.build.gradle.internal.ide.AndroidLibraryImpl(
                                     MavenCoordinatesUtils.getMavenCoordinates(artifact),
@@ -243,14 +264,13 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                                     projectPath,
                                     artifact.getArtifactFile(),
                                     extractedFolder,
-                                    LibraryUtils.findResStaticLibrary(
-                                            componentProperties, artifact),
                                     artifact.getVariantName(),
                                     isProvided,
                                     false, /* dependencyItem.isSkipped() */
                                     ImmutableList.of(), /* androidLibraries */
                                     ImmutableList.of(), /* javaLibraries */
-                                    LibraryUtils.getLocalJarCache().get(extractedFolder)));
+                                    LibraryUtils.getLocalJarCache().get(extractedFolder),
+                                    lintJar));
                 }
             }
 

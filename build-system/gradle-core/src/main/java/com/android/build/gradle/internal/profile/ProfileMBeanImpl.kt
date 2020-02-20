@@ -28,6 +28,10 @@ import java.time.Instant
 class ProfileMBeanImpl(private val buildListener: RecordingBuildListener):
     ProfileMBean {
 
+    override fun workerAdded(taskPath: String, workerKey: String) {
+        buildListener.getTaskRecord(taskPath)?.addWorker(workerKey)
+    }
+
     override fun workerStarted(taskPath: String, workerKey: String) {
         val workerRecord = buildListener.getWorkerRecord(taskPath, workerKey)
         workerRecord?.executionStarted()

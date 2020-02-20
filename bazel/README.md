@@ -67,20 +67,21 @@ bazel build //tools/adt/idea/...
 To run a single test:
 
 ```
-bazel test //tools/adt/idea/android/... --test_filter=AndroidLayoutDomTest --test_output=streamed
+# when test splitting is used, specify the $moduleName_tests__all target
+bazel test //tools/adt/idea/android:intellij.android.core.tests_tests__all --test_filter=AndroidLayoutDomTest --test_output=streamed
 ```
 
 To debug a single test, which will open remote debugging:
 
 ```
-bazel test //tools/adt/idea/android/... --test_filter=AndroidLayoutDomTest --java_debug
+bazel test //tools/adt/idea/android:intellij.android.core.tests_tests__all --test_filter=AndroidLayoutDomTest --java_debug
 ```
 
 ## Useful Bazel options
 
  * `--nocache_test_results` may be required if you are trying to re-run a test without changing
    anything.
- * `--test_filter=<TestName>` to run a specific test
+ * `--test_filter=<TestName>` to run a specific test (when test splits are not already in use)
 
 ## Running with coverage
 

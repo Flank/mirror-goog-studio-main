@@ -26,9 +26,6 @@ import com.android.annotations.Nullable;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
-import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.SingleArtifactType;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantType;
@@ -51,7 +48,6 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.specs.Spec;
 
 /**
@@ -218,9 +214,7 @@ public class VariantDependencies {
 
         FileCollection fileCollection;
 
-        if (configType == RUNTIME_CLASSPATH
-                && variantType.isDynamicFeature()
-                && artifactType != AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES) {
+        if (configType == RUNTIME_CLASSPATH && isArtifactTypeExcluded(artifactType)) {
 
             FileCollection excludedDirectories =
                     computeArtifactCollection(
@@ -258,9 +252,7 @@ public class VariantDependencies {
         ArtifactCollection artifacts =
                 computeArtifactCollection(configType, scope, artifactType, attributeMap);
 
-        if (configType == RUNTIME_CLASSPATH
-                && variantType.isDynamicFeature()
-                && artifactType != AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES) {
+        if (configType == RUNTIME_CLASSPATH && isArtifactTypeExcluded(artifactType)) {
 
             FileCollection excludedDirectories =
                     computeArtifactCollection(
@@ -283,39 +275,6 @@ public class VariantDependencies {
             return artifacts;
         }
 
-        // we only add the tested component to the PROJECT | ALL scopes.
-        if (scope == AndroidArtifacts.ArtifactScope.PROJECT || scope == ALL) {
-            PublishingSpecs.VariantSpec testedSpec =
-                    testedVariant.getVariantScope().getPublishingSpec().getTestingSpec(variantType);
-
-            // get the OutputPublishingSpec from the ArtifactType for this particular variant
-            // spec
-            PublishingSpecs.OutputSpec taskOutputSpec =
-                    testedSpec.getSpec(artifactType, configType.getPublishedTo());
-
-            if (taskOutputSpec != null) {
-                Collection<PublishedConfigType> publishedConfigs =
-                        taskOutputSpec.getPublishedConfigTypes();
-
-                // check that we are querying for a config type that the tested artifact
-                // was published to.
-                if (publishedConfigs.contains(configType.getPublishedTo())) {
-                    // if it's the case then we add the tested artifact.
-                    final SingleArtifactType<? extends FileSystemLocation> taskOutputType =
-                            taskOutputSpec.getOutputType();
-                    BuildArtifactsHolder testedArtifacts = testedVariant.getArtifacts();
-                    artifacts =
-                            ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
-                                    artifacts,
-                                    testedArtifacts
-                                            .getFinalProductAsFileCollection(taskOutputType)
-                                            .get(),
-                                    project.getPath(),
-                                    testedVariant.getName());
-                }
-            }
-        }
-
         // We remove the transitive dependencies coming from the
         // tested app to avoid having the same artifact on each app and tested app.
         // This applies only to the package scope since we do want these in the compile
@@ -325,15 +284,9 @@ public class VariantDependencies {
         if (testedVariant.getVariantType() == VariantTypeImpl.BASE_APK
                 && configType == RUNTIME_CLASSPATH
                 && variantType.isApk()) {
-            if (artifactType == AndroidArtifacts.ArtifactType.ANDROID_RES
-                    || artifactType
-                            == AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES) {
-                artifacts =
-                        new AndroidTestResourceArtifactCollection(
-                                artifacts,
-                                getIncomingRuntimeDependencies(),
-                                getRuntimeClasspath().getIncoming());
-            } else {
+            if (artifactType != AndroidArtifacts.ArtifactType.ANDROID_RES
+                    && artifactType
+                            != AndroidArtifacts.ArtifactType.COMPILED_DEPENDENCIES_RESOURCES) {
                 ArtifactCollection testedArtifactCollection =
                         testedVariant
                                 .getVariantDependencies()
@@ -344,6 +297,13 @@ public class VariantDependencies {
         }
 
         return artifacts;
+    }
+
+    private boolean isArtifactTypeExcluded(@NonNull AndroidArtifacts.ArtifactType artifactType) {
+        return variantType.isDynamicFeature()
+                && artifactType != AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES
+                && artifactType != AndroidArtifacts.ArtifactType.FEATURE_DEX
+                && artifactType != AndroidArtifacts.ArtifactType.FEATURE_NAME;
     }
 
     @NonNull

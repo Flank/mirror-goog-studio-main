@@ -6,9 +6,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.ProjectBuildOutput;
-import com.android.builder.model.VariantBuildOutput;
-import com.google.common.collect.Iterables;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.VariantBuildInformation;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -29,8 +28,9 @@ public class ApplicationIdInLibsTest {
 
     @Test
     public void testLibPlaceholderSubstitutionInFinalApk() throws Exception {
-        Map<String, ProjectBuildOutput> outputModels =
-                project.executeAndReturnOutputMultiModel("clean", "app:assembleDebug");
+        project.execute("clean", "app:assembleDebug");
+        Map<String, AndroidProject> outputModels =
+                project.model().fetchAndroidProjects().getOnlyModelMap();
         assertThat(
                         checkPermissionPresent(
                                 outputModels,
@@ -42,7 +42,8 @@ public class ApplicationIdInLibsTest {
                 "manifest_merger_example.flavor",
                 "manifest_merger_example.change");
 
-        outputModels = project.executeAndReturnOutputMultiModel("clean", "app:assembleDebug");
+        project.execute("clean", "app:assembleDebug");
+        outputModels = project.model().fetchAndroidProjects().getOnlyModelMap();
         assertThat(
                         checkPermissionPresent(
                                 outputModels,
@@ -56,22 +57,19 @@ public class ApplicationIdInLibsTest {
     }
 
     private static boolean checkPermissionPresent(
-            Map<String, ProjectBuildOutput> outputModels, String permission) {
-        assertThat(outputModels).containsKey(":app");
-        final ProjectBuildOutput projectBuildOutput = outputModels.get(":app");
-        assertThat(projectBuildOutput).isNotNull();
+            Map<String, AndroidProject> models, String permission) {
+        assertThat(models).containsKey(":app");
+        final AndroidProject projectModel = models.get(":app");
+        assertThat(projectModel).isNotNull();
 
-        Collection<VariantBuildOutput> variantBuildOutputs =
-                projectBuildOutput.getVariantsBuildOutput();
+        Collection<VariantBuildInformation> variantBuildOutputs =
+                projectModel.getVariantsBuildInformation();
         assertThat(variantBuildOutputs).hasSize(2);
 
         // select the debug variant
-        VariantBuildOutput debugBuildOutput =
-                ProjectBuildOutputUtils.getVariantBuildOutput(projectBuildOutput, "flavorDebug");
-        assertThat(debugBuildOutput.getOutputs()).hasSize(1);
-
-        File apk = Iterables.getOnlyElement(debugBuildOutput.getOutputs()).getOutputFile();
-
+        VariantBuildInformation debugBuildOutput =
+                ProjectBuildOutputUtils.getVariantBuildInformation(projectModel, "flavorDebug");
+        File apk = new File(ProjectBuildOutputUtils.getSingleOutputFile(debugBuildOutput));
         List<String> apkBadging = ApkSubject.getBadging(apk.toPath());
 
         for (String line : apkBadging) {

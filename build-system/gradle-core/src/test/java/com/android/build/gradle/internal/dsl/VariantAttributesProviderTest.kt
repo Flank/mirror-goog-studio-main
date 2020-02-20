@@ -18,7 +18,8 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
-import com.android.build.gradle.internal.variant2.createFakeDslScope
+import com.android.build.gradle.internal.services.DslServicesImpl
+import com.android.build.gradle.internal.services.createProjectServices
 import com.android.builder.core.ManifestAttributeSupplier
 import com.android.builder.core.VariantAttributesProvider
 import com.android.testutils.TestResources
@@ -52,9 +53,17 @@ class VariantAttributesProviderTest {
 
     private var isTestVariant: Boolean = false
 
+    private var dslServices = run {
+        val projectServices = createProjectServices(
+            issueReporter = FakeSyncIssueReporter(throwOnError = true)
+        )
+        DslServicesImpl(projectServices, DslVariableFactory(projectServices.issueReporter))
+    }
+
+
     private val provider: VariantAttributesProvider
         get() = VariantAttributesProvider(
-            MergedFlavor.mergeFlavors(defaultConfig, listOf(), FakeSyncIssueReporter(true)),
+            MergedFlavor.mergeFlavors(defaultConfig, listOf(), dslServices),
             buildType,
             isTestVariant,
             manifestSupplier,
@@ -65,8 +74,14 @@ class VariantAttributesProviderTest {
     @Before
     @Throws(Exception::class)
     fun before() {
-        defaultConfig = DefaultConfig("main", createFakeDslScope())
-        buildType = BuildType("debug", createFakeDslScope())
+        val projectServices = createProjectServices()
+        defaultConfig = DefaultConfig("main",
+            DslServicesImpl(projectServices, DslVariableFactory(projectServices.issueReporter))
+        )
+        val projectServices1 = createProjectServices()
+        buildType = BuildType("debug",
+            DslServicesImpl(projectServices1, DslVariableFactory(projectServices1.issueReporter))
+        )
         `when`(manifestSupplier.`package`).thenReturn(PACKAGE_NAME)
         manifestFile = TestResources.getFile(this.javaClass,"AndroidManifest.xml")
     }

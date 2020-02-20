@@ -25,12 +25,12 @@ fun androidManifestXml(
   detailNameLayout: String,
   isLauncher: Boolean,
   isLibrary: Boolean,
-  isNew: Boolean,
+  isNewModule: Boolean,
   packageName: String,
   themeNameNoActionBar: String
 ): String {
-  val labelBlock = if (isNew) {"android:label=\"@string/app_name\""} else {"android:label=\"@string/title_${collection_name}\""}
-  val activityBody = commonActivityBody(isLauncher || isNew, isLibrary)
+  val labelBlock = if (isNewModule) {"android:label=\"@string/app_name\""} else {"android:label=\"@string/title_${collection_name}\""}
+  val activityBody = commonActivityBody(isLauncher || isNewModule, isLibrary)
   return """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 

@@ -107,11 +107,17 @@ string MemoryFileSystem::GetFileContents(const string &fpath) const {
 
 bool MemoryFileSystem::MoveFile(const string &fpath_from,
                                 const string &fpath_to) {
+  CopyFile(fpath_from, fpath_to);
+  DeleteFile(fpath_from);
+  return true;
+}
+
+bool MemoryFileSystem::CopyFile(const string &fpath_from,
+                                const string &fpath_to) {
   NewFile(fpath_to);
   OpenForWrite(fpath_to);
   Append(fpath_to, GetFileContents(fpath_from));
   Close(fpath_to);
-  DeleteFile(fpath_from);
   return true;
 }
 

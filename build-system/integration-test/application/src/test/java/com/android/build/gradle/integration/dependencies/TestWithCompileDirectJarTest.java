@@ -84,6 +84,7 @@ public class TestWithCompileDirectJarTest {
         AndroidArtifact testArtifact = VariantUtils.getAndroidTestArtifact(variant);
 
         DependencyGraphs graph = testArtifact.getDependencyGraphs();
-        assertThat(helper.on(graph).withType(MODULE).mapTo(GRADLE_PATH)).containsExactly(":jar");
+        assertThat(helper.on(graph).withType(MODULE).mapTo(GRADLE_PATH))
+                .containsExactly(":app", ":jar");
     }
 }

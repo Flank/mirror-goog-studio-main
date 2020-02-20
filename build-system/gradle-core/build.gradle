@@ -60,8 +60,10 @@ dependencies {
     compile libs.bundle_tool
     compile libs.jetifier_core
     compile libs.jetifier_processor
+    compile libs.javapoet
     compile libs.protobuf
     compile libs.protobuf_util
+    compile libs.tink
 
     compileOnly libs.kotlin_gradle_plugin
 

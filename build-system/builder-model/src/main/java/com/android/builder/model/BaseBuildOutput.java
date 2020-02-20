@@ -21,6 +21,7 @@ import com.android.build.OutputFile;
 import java.util.Collection;
 
 /** Base model to represents a variant or a test variant build output. */
+@Deprecated
 public interface BaseBuildOutput {
 
     /**

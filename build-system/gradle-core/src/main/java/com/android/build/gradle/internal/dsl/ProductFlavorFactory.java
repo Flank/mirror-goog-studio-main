@@ -17,22 +17,22 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.api.dsl.DslScope;
+import com.android.build.gradle.internal.services.DslServices;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.model.ObjectFactory;
 
 /** Factory to create ProductFlavor object using an {@link ObjectFactory} to add the DSL methods. */
 public class ProductFlavorFactory implements NamedDomainObjectFactory<ProductFlavor> {
 
-    @NonNull private DslScope dslScope;
+    @NonNull private DslServices dslServices;
 
-    public ProductFlavorFactory(@NonNull DslScope dslScope) {
-        this.dslScope = dslScope;
+    public ProductFlavorFactory(@NonNull DslServices dslServices) {
+        this.dslServices = dslServices;
     }
 
     @NonNull
     @Override
     public ProductFlavor create(@NonNull String name) {
-        return dslScope.getObjectFactory().newInstance(ProductFlavor.class, name, dslScope);
+        return dslServices.newInstance(ProductFlavor.class, name, dslServices);
     }
 }

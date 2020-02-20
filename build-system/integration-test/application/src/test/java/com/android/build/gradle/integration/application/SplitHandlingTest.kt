@@ -32,6 +32,7 @@ import org.mockito.Mockito
 import java.io.File
 import java.io.IOException
 import java.nio.file.Paths
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.test.assertNotNull
 
 /**
@@ -188,6 +189,7 @@ class SplitHandlingTest {
         project.execute("clean", "assembleDebug")
 
         val apkOutputFolder = File(project.outputDir, "apk/debug")
+        val foundUniversal = AtomicBoolean(false)
         loadBuiltArtifacts(apkOutputFolder).elements
                 .forEach { output ->
                     when(output.outputType) {
@@ -209,7 +211,10 @@ class SplitHandlingTest {
                             assertThat(manifestContent).contains("de")
                         }
                         VariantOutputConfiguration.OutputType.UNIVERSAL -> {
-                            fail("Universal output not expected.")
+                            if (foundUniversal.get()) {
+                                fail("Found more than one Universal output")
+                            }
+                            foundUniversal.set(true)
                         }
                     }
                 }

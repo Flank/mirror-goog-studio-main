@@ -10,7 +10,7 @@ proto_languages = struct(
     JAVA = 1,
 )
 
-PROTOC_VERSION = "3.4.0"
+PROTOC_VERSION = "3.10.0"
 
 ProtoPackageInfo = provider(fields = ["proto_src", "proto_path"])
 
@@ -143,6 +143,24 @@ def java_proto_library(
         protoc_grpc_version = None,
         proto_java_runtime_library = ["@//tools/base/third_party:com.google.protobuf_protobuf-java"],
         **kwargs):
+    """Compiles protobuf into a .jar file and optionally creates a maven artifact.
+
+    NOTE: Be cautious to use this rule. You may need to use android_java_proto_library instead.
+    See the comments in android_java_proto_library rule before using it.
+
+    Args:
+      name: Name of the rule.
+      srcs:  A list of file names of the protobuf definition to compile.
+      proto_deps: A list of dependent proto_library to compile the library.
+      java_deps: An additional java libraries to be packaged into the library.
+      pom: A label of maven_pom target. If present, the rule creates maven artifact of the library.
+      visibility: Visibility of the rule.
+      grpc_support: True if the proto library requires grpc protoc plugin.
+      protoc_version: The protoc version to use.
+      protoc_grpc_version: A version of the grpc protoc plugin to use.
+      proto_java_runtime_library: A label of java_library to be loaded at runtime.
+    """
+
     # Targets that require grpc support should specify the version of protoc-gen-grpc-java plugin.
     if grpc_support and not protoc_grpc_version:
         fail("grpc support was requested, but the version of grpc java protoc plugin was not specified")
@@ -191,6 +209,26 @@ def android_java_proto_library(
         protoc_grpc_version = None,
         java_deps = [],
         visibility = None):
+    """Compiles protobuf into a .jar file in Android Studio compatible runtime version.
+
+    Unlike java_proto_library rule defined above, android_java_proto_library
+    repackage com.google.protobuf.* dependencies to com.android.tools.idea.protobuf
+    by applying JarJar tool after the protobuf compilation. This repackaging is necessary
+    in order to avoid version incompatibility to IntelliJ platform runtime dependencies.
+
+    tl;dr; Use this rule if your proto library is linked to Android Studio, otherwise
+    use java_proto_library.
+
+    NOTE: The repackaged runtime is at //tools/base/bazel:studio-proto.
+
+    Args:
+      name: Name of the rule.
+      srcs:  A list of file names of the protobuf definition to compile.
+      grpc_support: True if the proto library requires grpc protoc plugin.
+      protoc_grpc_version: A version of the grpc protoc plugin to use.
+      java_deps: An additional java libraries to be packaged into the library.
+      visibility: Visibility of the rule.
+    """
     internal_name = "_" + name + "_internal"
     java_proto_library(name = internal_name, srcs = srcs, grpc_support = grpc_support, protoc_grpc_version = protoc_grpc_version, java_deps = java_deps)
     java_jarjar(

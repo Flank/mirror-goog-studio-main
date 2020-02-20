@@ -19,12 +19,12 @@ import com.android.build.api.component.ActionableComponentObject
 import com.android.build.api.component.BuildTypedComponentActionRegistrar
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.impl.VariantOperations
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
 import javax.inject.Inject
 
 internal open class BuildTypedComponentActionRegistrarImpl<ComponentT> @Inject constructor(
-    private val dslScope: DslScope,
+    private val dslServices: DslServices,
     private val operations: VariantOperations<ComponentT>,
     private val buildType: String,
     private val flavorToDimensionList: List<Pair<String, String>> = listOf(),
@@ -49,9 +49,9 @@ internal open class BuildTypedComponentActionRegistrarImpl<ComponentT> @Inject c
 
     override fun withFlavor(flavorToDimension: Pair<String, String>): BuildTypedComponentActionRegistrar<ComponentT> {
         @Suppress("UNCHECKED_CAST")
-        return dslScope.objectFactory.newInstance(
+        return dslServices.newInstance(
             BuildTypedComponentActionRegistrarImpl::class.java,
-            dslScope,
+            dslServices,
             operations,
             buildType,
             flavorToDimensionList + listOf(flavorToDimension),

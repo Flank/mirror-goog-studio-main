@@ -3,10 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/agent/app-inspection.agent.iml" filepath="$PROJECT_DIR$/../app-inspection/agent/app-inspection.agent.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../app-inspection/demo/live-store/app/app-inspection.demo.live-store.app.iml" filepath="$PROJECT_DIR$/../app-inspection/demo/live-store/app/app-inspection.demo.live-store.app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../app-inspection/demo/live-store/inspector/app-inspection.demo.live-store.inspector.iml" filepath="$PROJECT_DIR$/../app-inspection/demo/live-store/inspector/app-inspection.demo.live-store.inspector.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../app-inspection/demo/live-store/library/app-inspection.demo.live-store.library.iml" filepath="$PROJECT_DIR$/../app-inspection/demo/live-store/library/app-inspection.demo.live-store.library.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../app-inspection/demo/live-store/protocol/app-inspection.demo.live-store.protocol.iml" filepath="$PROJECT_DIR$/../app-inspection/demo/live-store/protocol/app-inspection.demo.live-store.protocol.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../app-inspection/demo/livestore/inspector/app-inspection.demo.livestore.inspector.iml" filepath="$PROJECT_DIR$/../app-inspection/demo/livestore/inspector/app-inspection.demo.livestore.inspector.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../app-inspection/demo/livestore/library/app-inspection.demo.livestore.library.iml" filepath="$PROJECT_DIR$/../app-inspection/demo/livestore/library/app-inspection.demo.livestore.library.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../app-inspection/demo/livestore/protocol/app-inspection.demo.livestore.protocol.iml" filepath="$PROJECT_DIR$/../app-inspection/demo/livestore/protocol/app-inspection.demo.livestore.protocol.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/test-app/app-inspection.test-app.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/test-app/app-inspection.test-app.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/test-inspector/app-inspection.test-inspector.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/test-inspector/app-inspection.test-inspector.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/test-inspector/api/app-inspection.test-inspector.api.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/test-inspector/api/app-inspection.test-inspector.api.iml" />

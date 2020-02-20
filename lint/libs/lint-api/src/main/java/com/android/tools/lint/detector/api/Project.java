@@ -48,11 +48,7 @@ import static java.io.File.separator;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.FilterData;
-import com.android.build.VariantOutput;
 import com.android.builder.model.AaptOptions;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
@@ -204,7 +200,6 @@ public class Project {
      *
      * @return true if this project is an Android project.
      */
-    @SuppressWarnings("MethodMayBeStatic")
     public boolean isAndroidProject() {
         return true;
     }

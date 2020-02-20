@@ -72,13 +72,13 @@ fun RecipeExecutor.loginActivityRecipe(
   val isDynamicFeature = moduleData.baseFeature != null
   val simpleName = activityToLayout(activityClass)
   generateThemeStyles(moduleData.themesData.main, isDynamicFeature, useMaterial2, resOut, baseFeatureResOut)
-  generateManifestStrings(activityClass, activityClass, resOut, baseFeatureResOut, moduleData.isNew, generateActivityTitle = true,
+  generateManifestStrings(activityClass, activityClass, resOut, baseFeatureResOut, moduleData.isNewModule, generateActivityTitle = true,
                           isDynamicFeature = isDynamicFeature)
   mergeXml(androidManifestXml(activityClass, simpleName,
-                              isLauncher = moduleData.isNew, isLibrary = moduleData.isLibrary, isNewModule = moduleData.isNew),
+                              isLauncher = moduleData.isNewModule, isLibrary = moduleData.isLibrary, isNewModule = moduleData.isNewModule),
            manifestOut.resolve("AndroidManifest.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
-  mergeXml(stringsXml(simpleName, activityTitle, moduleData.isNew), resOut.resolve("values/strings.xml"))
+  mergeXml(stringsXml(simpleName, activityTitle, moduleData.isNewModule), resOut.resolve("values/strings.xml"))
   save(activityLoginXml(activityClass, packageName, useAndroidX, apis.minApiLevel), resOut.resolve("layout/${layoutName}.xml"))
 
   val loginActivity = when (projectData.language) {

@@ -18,28 +18,24 @@ package com.android.build.gradle
 
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
 
 /**
  * AppExtension is used directly by build.gradle.kts when configuring project so adding generics
  * declaration is not possible.
  */
 abstract class AppExtension(
-        dslScope: DslScope,
-        projectOptions: ProjectOptions,
+        dslServices: DslServices,
         globalScope: GlobalScope,
         buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
         sourceSetManager: SourceSetManager,
         extraModelInfo: ExtraModelInfo,
         isBaseModule: Boolean
 ) : AbstractAppExtension(
-        dslScope,
-        projectOptions,
+        dslServices,
         globalScope,
         buildOutputs,
         sourceSetManager,

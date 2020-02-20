@@ -197,9 +197,10 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                     }
                 }
             }
-        } catch (e: IOException) {
-            error(e, null)
         } catch (e: XmlPullParserException) {
+            // Malformed XML. Most likely the file we received was not the XML file
+            // but some sort of network portal redirect HTML page. Gracefully degrade.
+        } catch (e: IOException) {
             error(e, null)
         }
 
@@ -240,6 +241,9 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                         }
                     }
                 }
+            } catch (e: XmlPullParserException) {
+                // Malformed XML. Most likely the file we received was not the XML file
+                // but some sort of network portal redirect HTML page. Gracefully degrade.
             } catch (e: Exception) {
                 error(e, null)
             }
@@ -263,6 +267,10 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                     }
                 }
                 dependencies
+            } catch (e: XmlPullParserException) {
+                // Malformed XML. Most likely the file we received was not the XML file
+                // but some sort of network portal redirect HTML page. Gracefully degrade.
+                emptyList()
             } catch (e: Exception) {
                 error(e, "Problem reading POM file: $file")
                 emptyList()

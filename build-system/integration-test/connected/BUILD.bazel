@@ -1,6 +1,6 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
-load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test")
+load("//tools/base/build-system/integration-test/connected:connected-test.bzl", "gradle_connected_test")
 load("//tools/base/bazel/avd:avd.bzl", "avd")
 
 kotlin_library(
@@ -71,53 +71,93 @@ TEST_MAVEN_REPOS = [
     "//tools/base/third_party/kotlin:kotlin-m2repository",
 ]
 
-# keep each gradle_integration_test to about 5 test classes. More than 1 test class is good because
-# the tests then have shared overhead, but too many test classes in a single gradle_integration_test
-# target causes a bottleneck when running all the presubmit or postsubmit tests.
-
-gradle_integration_test(
-    name = "connected_tests_1",
-    srcs = glob([
-        "src/test/java/**/AnnotationProcessorConnectedTest.kt",
-        "src/test/java/**/ApiConnectedTest.java",
-        "src/test/java/**/BasicConnectedTest.java",
-        "src/test/java/**/BasicConnectedTest2.java",
-        "src/test/java/**/ParentLibsConnectedTest.java",
-    ]),
-    data = TEST_DATA + [
-        #keep sorted
-        "//tools/base/build-system/integration-test:test-projects/api",
-        "//tools/base/build-system/integration-test:test-projects/basic",
-        "//tools/base/build-system/integration-test:test-projects/parentLibsTest",
-    ],
+gradle_connected_test(
+    name = "AndroidTestResourcesConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA,
     maven_repos = TEST_MAVEN_REPOS,
-    tags = [
-        "no_mac",
-        "no_windows",
-    ],
+    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 
-gradle_integration_test(
-    name = "connected_tests_2",
-    srcs = glob([
-        "src/test/java/**/AndroidTestResourcesConnectedTest.java",
-        "src/test/java/**/ComposeHelloWorldConnectedTest.kt",
-        "src/test/java/**/D8DesugaringConnectedTest.kt",
-        "src/test/java/**/DensitySplitConnectedTest.java",
-        "src/test/java/**/FlavoredConnectedTest.java",
-    ]),
-    data = TEST_DATA + [
-        #keep sorted
-        "//tools/base/build-system/integration-test:test-projects/composeHelloWorld",
-        "//tools/base/build-system/integration-test:test-projects/densitySplit",
-        "//tools/base/build-system/integration-test:test-projects/flavored",
-    ],
+gradle_connected_test(
+    name = "AnnotationProcessorConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA,
     maven_repos = TEST_MAVEN_REPOS,
-    tags = [
-        "no_mac",
-        "no_windows",
-    ],
+    tags = ["manual"],  # b/149226404
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "ApiConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/api"],
+    maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "BasicConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/basic"],
+    maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "BasicConnectedTest2",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/basic"],
+    maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "ComposeHelloWorldConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/composeHelloWorld"],
+    maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "D8DesugaringConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA,
+    maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "DensitySplitConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/densitySplit"],
+    maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "FlavoredConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/flavored"],
+    maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "ParentLibsConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/parentLibsTest"],
+    maven_repos = TEST_MAVEN_REPOS,
+    tags = ["manual"],  # b/149226404
     deps = TEST_DEPS,
 )
 

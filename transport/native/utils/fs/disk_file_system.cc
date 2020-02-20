@@ -24,6 +24,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <system_error>
+#include <fstream>
 
 namespace profiler {
 
@@ -162,6 +164,14 @@ string DiskFileSystem::GetFileContents(const string &fpath) const {
 bool DiskFileSystem::MoveFile(const string &fpath_from,
                               const string &fpath_to) {
   return rename(fpath_from.c_str(), fpath_to.c_str()) == 0;
+}
+
+bool DiskFileSystem::CopyFile(const string &fpath_from,
+                              const string &fpath_to) {
+  std::ifstream  src(fpath_from, std::ios::binary);
+  std::ofstream  dst(fpath_to,   std::ios::binary);
+  dst << src.rdbuf();
+  return true;
 }
 
 bool DiskFileSystem::IsOpenForWrite(const string &fpath) const {

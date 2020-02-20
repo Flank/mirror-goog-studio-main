@@ -81,7 +81,7 @@ class ApplicationTaskManager(
             createAssetPackTasks(variantProperties)
         }
 
-        if (globalScope.buildFeatures.dataBinding) {
+        if (variantProperties.buildFeatures.dataBinding) {
             // Create a task that will package the manifest ids(the R file packages) of all
             // features into a file. This file's path is passed into the Data Binding annotation
             // processor which uses it to known about all available features.
@@ -254,24 +254,26 @@ class ApplicationTaskManager(
         taskFactory.register(
             PerModuleBundleTask.CreationAction(
                 variantProperties,
-                TaskManager.packagesCustomClassDependencies(variantProperties, projectOptions)
+                TaskManager.packagesCustomClassDependencies(variantProperties)
             )
         )
 
-        val addDependenciesTask = addDependenciesTask(variant.variant)
-
-        if (addDependenciesTask) {
+        val debuggable = variant.variant.debuggable
+        val includeSdkInfoInApk = variant.variant.dependenciesInfo.includeInApk
+        val includeSdkInfoInBundle = variant.variant.dependenciesInfo.includeInBundle
+        if (!debuggable) {
             taskFactory.register(PerModuleReportDependenciesTask.CreationAction(variantProperties))
         }
         if (variantProperties.variantType.isBaseModule) {
             taskFactory.register(ParseIntegrityConfigTask.CreationAction(variantProperties))
             taskFactory.register(PackageBundleTask.CreationAction(variantProperties))
             taskFactory.register(FinalizeBundleTask.CreationAction(variantProperties))
-            if (addDependenciesTask) {
-                taskFactory.register(BundleReportDependenciesTask.CreationAction(variantProperties))
-                if (variantProperties.globalScope
-                        .projectOptions[BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS]
-                ) {
+            if (!debuggable) {
+                if (includeSdkInfoInBundle) {
+                    taskFactory.register(BundleReportDependenciesTask.CreationAction(variantProperties))
+                }
+                if (includeSdkInfoInApk && variantProperties.services
+                        .projectOptions[BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS]) {
                     taskFactory.register(SdkDependencyDataGeneratorTask.CreationAction(variantProperties))
                 }
             }
@@ -302,7 +304,4 @@ class ApplicationTaskManager(
         }
     }
 
-    private fun addDependenciesTask(variant: ApplicationVariantImpl): Boolean {
-        return !variant.debuggable && variant.dependenciesInfo.includeInApk
-    }
 }

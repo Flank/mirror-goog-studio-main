@@ -230,7 +230,7 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
             task.bootClasspath.from(creationConfig.variantScope.bootClasspath).disallowChanges()
             task.errorFormat
                 .setDisallowChanges(
-                    SyncOptions.getErrorFormatMode(creationConfig.globalScope.projectOptions))
+                    SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions))
         }
     }
 }

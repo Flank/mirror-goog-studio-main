@@ -44,12 +44,12 @@ fun RecipeExecutor.googleMapsWearActivityRecipe(
   addDependency("com.google.android.wearable:wearable:+", "provided")
   addDependency("com.android.support:wear:+")
 
-  mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, moduleData.isNew, packageName),
+  mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, moduleData.isNewModule, packageName),
            manifestOut.resolve("AndroidManifest.xml"))
   mergeXml(androidManifestPermissionsXml(), manifestOut.resolve("AndroidManifest.xml"))
 
   save(activityMapXml(activityClass, packageName, useAndroidX), resOut.resolve("layout/${layoutName}.xml"))
-  mergeXml(stringsXml(activityClass, moduleData.isNew), resOut.resolve("values/strings.xml"))
+  mergeXml(stringsXml(activityClass, moduleData.isNewModule), resOut.resolve("values/strings.xml"))
   save(activityMapXml(activityClass, packageName, useAndroidX), resOut.resolve("layout/${layoutName}.xml"))
 
   val mapActivity = when (projectData.language) {

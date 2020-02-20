@@ -22,8 +22,8 @@ import org.gradle.api.Transformer
 import org.gradle.api.internal.provider.HasConfigurableValueInternal
 import org.gradle.api.internal.provider.PropertyInternal
 import org.gradle.api.internal.provider.ProviderInternal
-import org.gradle.api.internal.provider.ScalarSupplier
 import org.gradle.api.internal.provider.ValueSanitizer
+import org.gradle.api.internal.provider.ValueSupplier
 import org.gradle.api.internal.tasks.TaskDependencyResolveContext
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -103,12 +103,22 @@ open class GradleProperty<T>(
         return property.set(p0)
     }
 
-    override fun convention(p0: T): Property<T> {
+    override fun convention(p0: T?): Property<T> {
         return property.convention(p0)
     }
 
     override fun convention(p0: Provider<out T>): Property<T> {
         return property.convention(p0)
+    }
+
+    override fun calculateValue(): ValueSupplier.Value<out T> {
+        @Suppress("UNCHECKED_CAST")
+        return (property as ProviderInternal<T>).calculateValue()
+    }
+
+    override fun withFinalValue(): ProviderInternal<T> {
+        @Suppress("UNCHECKED_CAST")
+        return (property as ProviderInternal<T>).withFinalValue()
     }
 
     override fun getType(): Class<T>? {
@@ -117,7 +127,6 @@ open class GradleProperty<T>(
     }
 
     override fun visitDependencies(p0: TaskDependencyResolveContext) {
-        @Suppress("UNCHECKED_CAST")
         return (property as ProviderInternal<T>).visitDependencies(p0)
     }
 
@@ -148,7 +157,7 @@ open class GradleProperty<T>(
         p0: DisplayName,
         p1: Class<in T>,
         p2: ValueSanitizer<in T>
-    ): ScalarSupplier<T> {
+    ): ProviderInternal<T> {
         @Suppress("UNCHECKED_CAST")
         return (property as ProviderInternal<T>).asSupplier(p0, p1, p2)
     }

@@ -21,14 +21,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.android.build.FilterData;
-import com.android.build.OutputFile;
+import com.android.build.api.variant.BuiltArtifact;
+import com.android.build.api.variant.FilterConfiguration;
+import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
-import com.android.builder.model.ProjectBuildOutput;
-import com.android.builder.model.VariantBuildOutput;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.VariantBuildInformation;
 import com.google.common.collect.Maps;
-import java.util.Collection;
 import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -46,17 +46,17 @@ public class NdkSanAngelesTest {
                     .fromTestProject("ndkSanAngeles")
                     .create();
 
-    public static ProjectBuildOutput outputModel;
+    public static AndroidProject model;
 
     @BeforeClass
     public static void setUp() throws Exception {
-        outputModel = project.executeAndReturnOutputModel("clean", "assembleDebug");
+        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        outputModel = null;
+        model = null;
     }
 
     @Test
@@ -66,28 +66,27 @@ public class NdkSanAngelesTest {
 
     @Test
     public void checkVersionCodeInModel() {
-        VariantBuildOutput debugOutput =
-                ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
+        VariantBuildInformation debugOutput =
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(model);
 
         // get the outputs.
-        Collection<OutputFile> debugOutputs = debugOutput.getOutputs();
-        assertEquals(2, debugOutputs.size());
+        BuiltArtifactsImpl builtArtifacts = ProjectBuildOutputUtils.getBuiltArtifacts(debugOutput);
+        assertEquals(2, builtArtifacts.getElements().size());
 
         // build a map of expected outputs and their versionCode
         Map<String, Integer> expected = Maps.newHashMapWithExpectedSize(2);
         expected.put("armeabi-v7a", 1000123);
         expected.put("x86", 2000123);
 
-        assertEquals(2, debugOutputs.size());
-        for (OutputFile output : debugOutputs) {
-            for (FilterData filterData : output.getFilters()) {
-                if (filterData.getFilterType().equals(OutputFile.ABI)) {
-                    String abiFilter = filterData.getIdentifier();
+        for (BuiltArtifact builtArtifact : builtArtifacts.getElements()) {
+            for (FilterConfiguration filter : builtArtifact.getFilters()) {
+                if (filter.getFilterType().equals(FilterConfiguration.FilterType.ABI)) {
+                    String abiFilter = filter.getIdentifier();
                     Integer value = expected.get(abiFilter);
-                    // this checks we're not getting an unexpected output.
-                    assertNotNull("Check Valid output: " + abiFilter, value);
+                    // this checks we're not getting an unexpected builtArtifact.
+                    assertNotNull("Check Valid builtArtifact: " + abiFilter, value);
 
-                    assertEquals(value.intValue(), output.getVersionCode());
+                    assertEquals(value.intValue(), builtArtifact.getVersionCode());
                     expected.remove(abiFilter);
                 }
             }

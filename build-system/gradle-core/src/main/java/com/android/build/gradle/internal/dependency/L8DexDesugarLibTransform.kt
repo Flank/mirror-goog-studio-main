@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.builder.dexing.KeepRulesConfig
 import com.android.builder.dexing.runL8
 import org.gradle.api.artifacts.dsl.DependencyHandler
+import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
@@ -39,6 +40,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
 
+@CacheableTransform
 abstract class L8DexDesugarLibTransform : TransformAction<L8DexDesugarLibTransform.Parameters> {
     interface Parameters: GenericTransformParameters {
         @get:Input

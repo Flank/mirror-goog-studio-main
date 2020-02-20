@@ -180,14 +180,16 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             ).isNotEmpty()
         ) {
             // If non-incremental run (with files), or any of the dex files changed, copy them again.
-            getWorkerFacadeWithWorkers().submit(
-                CopyDexOutput::class.java,
-                CopyDexOutput.Params(
-                    externalLibDexFiles.files,
-                    externalLibsFromAritfactTransformsDex.get().asFile,
-                    externalLibsFromAritfactTransformsKeepRules.asFile.orNull
+            getWorkerFacadeWithWorkers().use {
+                it.submit(
+                    CopyDexOutput::class.java,
+                    CopyDexOutput.Params(
+                        externalLibDexFiles.files,
+                        externalLibsFromAritfactTransformsDex.get().asFile,
+                        externalLibsFromAritfactTransformsKeepRules.asFile.orNull
+                    )
                 )
-            )
+            }
         }
 
         DexArchiveBuilderTaskDelegate(
@@ -332,7 +334,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     classesFilter
                 )
                 dexExternalLibsInArtifactTransform =
-                    componentProperties.globalScope.projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS]
+                    componentProperties.services.projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS]
                             && componentProperties.variantScope.dexer == DexerTool.D8
             }
 
@@ -345,6 +347,22 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     ).artifactFiles
                 } ?: componentProperties.globalScope.project.files()
 
+                // Before b/115334911 was fixed, provided classpath did not contain the tested project.
+                // Because we do not want tested variant classes in the desugaring classpath for
+                // external libraries, we explicitly remove it.
+                val testedProject = creationConfig.onTestedConfig {
+                    val artifactType =
+                        it.variantScope.publishingSpec.getSpec(
+                            AndroidArtifacts.ArtifactType.CLASSES_JAR,
+                            AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
+                        )!!.outputType
+                    componentProperties.globalScope.project.files(
+                        it.artifacts.getFinalProduct(
+                            artifactType
+                        )
+                    )
+                } ?: componentProperties.globalScope.project.files()
+
                 componentProperties.globalScope.project.files(
                     componentProperties.transformManager.getPipelineOutputAsFileCollection(
                         StreamFilter { _, scopes ->
@@ -352,7 +370,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                         },
                         classesFilter
                     ), testedExternalLibs, externalLibraryClasses
-                )
+                ).minus(testedProject)
             } else {
                 componentProperties.globalScope.project.files()
             }
@@ -444,7 +462,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         override fun configure(task: DexArchiveBuilderTask) {
             super.configure(task)
 
-            val projectOptions = creationConfig.globalScope.projectOptions
+            val projectOptions = creationConfig.services.projectOptions
 
             task.projectClasses.from(projectClasses)
             task.subProjectClasses.from(subProjectsClasses)

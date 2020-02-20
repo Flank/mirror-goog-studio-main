@@ -625,3 +625,14 @@ TEST(FileSystem, GetFileSize) {
   EXPECT_EQ(f1->Contents(), "Test contents");
   EXPECT_EQ(f1->size(), strlen("Test contents"));
 }
+
+TEST(FileSystem, CopyFile) {
+  MemoryFileSystem fs;
+  auto root = fs.NewDir("/mock/root");
+  root->NewFile("file1.txt");
+  EXPECT_TRUE(root->GetFile("file1.txt")->Exists());
+  EXPECT_FALSE(root->GetFile("file2.txt")->Exists());
+  fs.CopyFile(root->GetFile("file1.txt")->path(), root->GetFile("file2.txt")->path());
+  EXPECT_TRUE(root->GetFile("file1.txt")->Exists());
+  EXPECT_TRUE(root->GetFile("file2.txt")->Exists());
+}

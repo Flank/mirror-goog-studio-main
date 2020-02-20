@@ -51,7 +51,7 @@ fun RecipeExecutor.fullscreenActivityRecipe(
 
   val simpleName = activityToLayout(activityClass)
   val superClassFqcn = getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)
-  mergeXml(androidManifestXml(activityClass, packageName, simpleName, isLauncher, moduleData.isLibrary, moduleData.isNew),
+  mergeXml(androidManifestXml(activityClass, packageName, simpleName, isLauncher, moduleData.isLibrary, moduleData.isNewModule),
            manifestOut.resolve("AndroidManifest.xml"))
 
   val finalResOut = moduleData.baseFeature?.dir?.resolve("src/debug/res") ?: resOut
@@ -62,7 +62,7 @@ fun RecipeExecutor.fullscreenActivityRecipe(
   mergeXml(fullscreenStyles(moduleData.themesData.main.name), finalResOut.resolve("values/styles.xml"))
 
   save(activityFullscreenXml(activityClass, packageName), resOut.resolve("layout/${layoutName}.xml"))
-  mergeXml(stringsXml(activityTitle, moduleData.isNew, simpleName), finalResOut.resolve("values/strings.xml"))
+  mergeXml(stringsXml(activityTitle, moduleData.isNewModule, simpleName), finalResOut.resolve("values/strings.xml"))
 
   val actionBarClassFqcn = getMaterialComponentName("android.support.v7.app.ActionBar", useAndroidX)
   val fullscreenActivity = when (projectData.language) {

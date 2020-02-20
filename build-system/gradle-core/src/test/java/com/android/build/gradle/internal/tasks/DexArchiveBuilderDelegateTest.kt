@@ -105,24 +105,24 @@ class DexArchiveBuilderDelegateTest(
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
 
-        override fun processIsolation(p0: Action<ProcessWorkerSpec>?): WorkQueue {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        override fun processIsolation(p0: Action<in ProcessWorkerSpec>?): WorkQueue {
+            TODO("Not yet implemented")
         }
 
         override fun noIsolation(): WorkQueue {
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
 
-        override fun noIsolation(p0: Action<WorkerSpec>?): WorkQueue {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        override fun noIsolation(p0: Action<in WorkerSpec>?): WorkQueue {
+            TODO("Not yet implemented")
         }
 
         override fun classLoaderIsolation(): WorkQueue {
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
 
-        override fun classLoaderIsolation(p0: Action<ClassLoaderWorkerSpec>?): WorkQueue {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        override fun classLoaderIsolation(p0: Action<in ClassLoaderWorkerSpec>?): WorkQueue {
+            TODO("Not yet implemented")
         }
     }
 

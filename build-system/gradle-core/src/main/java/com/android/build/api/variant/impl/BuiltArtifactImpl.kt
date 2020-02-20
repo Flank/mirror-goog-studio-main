@@ -20,9 +20,11 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
+import com.android.build.api.variant.VariantOutputConfiguration.OutputType
 import com.android.build.gradle.internal.api.artifact.toArtifactType
 import com.android.ide.common.build.CommonBuiltArtifact
 import com.android.ide.common.build.CommonBuiltArtifactTypeAdapter
+import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
@@ -31,30 +33,55 @@ import java.io.IOException
 import java.io.Serializable
 import java.nio.file.Path
 
-data class BuiltArtifactImpl(
+@Suppress("DataClassPrivateConstructor")
+data class BuiltArtifactImpl private constructor(
     override val outputFile: String,
-    override val properties: Map<String, String> = mapOf(),
-    override val versionCode: Int = -1,
-    override val versionName: String = "",
-    override val isEnabled: Boolean = true,
-    override val outputType: VariantOutputConfiguration.OutputType,
-    override val filters: Collection<FilterConfiguration> = listOf(),
-    val baseName: String = "",
-    val fullName: String = ""
-) : BuiltArtifact, CommonBuiltArtifact, Serializable {
+    override val properties: Map<String, String>,
+    override val versionCode: Int,
+    override val versionName: String,
+    override val isEnabled: Boolean,
+    val variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl(),
+    val baseName: String,
+    val fullName: String
+) : BuiltArtifact, CommonBuiltArtifact, Serializable, VariantOutputConfiguration by variantOutputConfiguration {
 
     fun newOutput(newOutputFile: Path): BuiltArtifactImpl {
-        return BuiltArtifactImpl(
+        return make(
             outputFile = newOutputFile.toString(),
             properties = properties,
             versionCode = versionCode,
             versionName = versionName,
             isEnabled = isEnabled,
-            outputType = outputType,
-            filters = filters,
+            variantOutputConfiguration = variantOutputConfiguration,
             baseName = baseName,
             fullName = fullName
         )
+    }
+
+    fun getFilter(filterType: FilterConfiguration.FilterType): FilterConfiguration? =
+        filters.firstOrNull { it.filterType == filterType }
+
+    companion object {
+
+        @JvmStatic
+        fun make(
+            outputFile: String,
+            properties: Map<String, String> = mapOf(),
+            versionCode: Int = -1,
+            versionName: String = "",
+            isEnabled: Boolean = true,
+            variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl(),
+            baseName: String = "",
+            fullName: String = "") = BuiltArtifactImpl(FileUtils.toSystemIndependentPath(outputFile),
+                properties,
+                versionCode,
+                versionName,
+                isEnabled,
+                variantOutputConfiguration,
+                baseName,
+                fullName
+        )
+
     }
 }
 
@@ -85,7 +112,7 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
                 when(attributeName) {
                     "type" -> outputType = reader.nextString()
                     "baseName" -> baseName = reader.nextString()
-                    "fullName" -> baseName = reader.nextString()
+                    "fullName" -> fullName = reader.nextString()
                     "filters" -> readFilters(reader, filters)
                 }
             },
@@ -94,9 +121,11 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
                 versionCode: Int,
                 versionName: String,
                 isEnabled: Boolean ->
-                BuiltArtifactImpl(
-                    outputType = VariantOutputConfiguration.OutputType.valueOf(outputType!!),
-                    filters = filters.build(),
+                BuiltArtifactImpl.make(
+                    variantOutputConfiguration =
+                        VariantOutputConfigurationImpl(
+                            isUniversal = OutputType.UNIVERSAL.name == outputType,
+                            filters = filters.build()),
                     outputFile = outputFile,
                     properties = properties,
                     versionCode = versionCode,

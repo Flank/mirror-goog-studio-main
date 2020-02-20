@@ -21,6 +21,9 @@ import org.gradle.api.Named
 
 /** DSL object to configure build types. */
 @Incubating
-interface BuildType : Named, BaseConfig {
+interface BuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions> : Named,
+    BaseConfig<AnnotationProcessorOptionsT> {
     var isDefault: Boolean
+
+    var matchingFallbacks: List<String>
 }

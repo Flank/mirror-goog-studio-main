@@ -28,16 +28,20 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.variant.BuiltArtifact;
+import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.api.variant.impl.BuiltArtifactImpl;
+import com.android.build.api.variant.impl.BuiltArtifactsImpl;
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
+import com.android.build.api.variant.impl.VariantOutputConfigurationImplKt;
+import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig;
 import com.android.build.gradle.internal.core.VariantSources;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
-import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.BuildElements;
-import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.BuiltArtifactProperty;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -129,10 +133,12 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @Override
     protected void doFullTaskAction() throws IOException {
         // read the output of the compatible screen manifest.
-        BuildElements compatibleScreenManifests =
-                ExistingBuildElements.from(
-                        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
-                        getCompatibleScreensManifest().get().getAsFile());
+        BuiltArtifactsImpl compatibleScreenManifests =
+                new BuiltArtifactsLoaderImpl().load(getCompatibleScreensManifest());
+        if (compatibleScreenManifests == null) {
+            throw new RuntimeException(
+                    "Cannot find generated compatible screen manifests, file a bug");
+        }
 
         if (baseModuleDebuggable.isPresent()) {
             boolean isDebuggable = getOptionalFeatures().get().contains(Feature.DEBUGGABLE);
@@ -155,44 +161,46 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             }
         }
 
+        @Nullable BuiltArtifactImpl compatibleScreenManifestForSplit;
 
-        @Nullable BuildOutput compatibleScreenManifestForSplit;
-
-        ImmutableList.Builder<BuildOutput> mergedManifestOutputs = ImmutableList.builder();
-        ImmutableList.Builder<BuildOutput> metadataFeatureMergedManifestOutputs =
+        ImmutableList.Builder<BuiltArtifactImpl> mergedManifestOutputs = ImmutableList.builder();
+        ImmutableList.Builder<BuiltArtifactImpl> metadataFeatureMergedManifestOutputs =
                 ImmutableList.builder();
-        ImmutableList.Builder<BuildOutput> bundleManifestOutputs = ImmutableList.builder();
-        ImmutableList.Builder<BuildOutput> instantAppManifestOutputs = ImmutableList.builder();
+        ImmutableList.Builder<BuiltArtifactImpl> bundleManifestOutputs = ImmutableList.builder();
+        ImmutableList.Builder<BuiltArtifactImpl> instantAppManifestOutputs =
+                ImmutableList.builder();
 
         List<File> navJsons =
                 navigationJsons == null
                         ? Collections.emptyList()
                         : Lists.newArrayList(navigationJsons);
         // FIX ME : multi threading.
-        for (ApkData apkData : getApkDataList().get()) {
-            compatibleScreenManifestForSplit = compatibleScreenManifests.element(apkData);
+        for (VariantOutputImpl variantOutput : getVariantOutputs().get()) {
+            compatibleScreenManifestForSplit =
+                    compatibleScreenManifests.getBuiltArtifact(variantOutput);
+            String dirName = VariantOutputConfigurationImplKt.dirName(variantOutput);
             File manifestOutputFile =
                     new File(
                             getManifestOutputDirectory().get().getAsFile(),
-                            FileUtils.join(apkData.getDirName(), ANDROID_MANIFEST_XML));
+                            FileUtils.join(dirName, ANDROID_MANIFEST_XML));
 
             File metadataFeatureManifestOutputFile =
                     FileUtils.join(
                             getMetadataFeatureManifestOutputDirectory().get().getAsFile(),
-                            apkData.getDirName(),
+                            dirName,
                             ANDROID_MANIFEST_XML);
 
             File bundleManifestOutputFile =
                     FileUtils.join(
                             getBundleManifestOutputDirectory().get().getAsFile(),
-                            apkData.getDirName(),
+                            dirName,
                             ANDROID_MANIFEST_XML);
 
             File instantAppManifestOutputFile =
                     getInstantAppManifestOutputDirectory().isPresent()
                             ? FileUtils.join(
                                     getInstantAppManifestOutputDirectory().get().getAsFile(),
-                                    apkData.getDirName(),
+                                    dirName,
                                     ANDROID_MANIFEST_XML)
                             : null;
 
@@ -206,11 +214,11 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             packageOverride.get(),
                             baseModuleVersionCode.isPresent()
                                     ? baseModuleVersionCode.get()
-                                    : apkData.getVersionCode(),
+                                    : variantOutput.getVersionCode().get(),
                             baseModuleVersionName.isPresent()
                                             && !baseModuleVersionName.get().isEmpty()
                                     ? baseModuleVersionName.get()
-                                    : apkData.getVersionName(),
+                                    : variantOutput.getVersionName().get(),
                             getMinSdkVersion().getOrNull(),
                             getTargetSdkVersion().getOrNull(),
                             getMaxSdkVersion().getOrNull(),
@@ -237,67 +245,55 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             ImmutableMap<String, String> properties =
                     mergedXmlDocument != null
                             ? ImmutableMap.of(
-                                    "packageId",
+                                    BuiltArtifactProperty.PACKAGE_ID,
                                     mergedXmlDocument.getPackageName(),
-                                    "split",
+                                    BuiltArtifactProperty.SPLIT,
                                     mergedXmlDocument.getSplitName(),
                                     SdkConstants.ATTR_MIN_SDK_VERSION,
                                     mergedXmlDocument.getMinSdkVersion())
                             : ImmutableMap.of();
 
             mergedManifestOutputs.add(
-                    new BuildOutput(
-                            InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-                            apkData,
-                            manifestOutputFile,
-                            properties));
-
+                    variantOutput.toBuiltArtifact(manifestOutputFile, properties));
             metadataFeatureMergedManifestOutputs.add(
-                    new BuildOutput(
-                            InternalArtifactType.METADATA_FEATURE_MANIFEST.INSTANCE,
-                            apkData,
-                            metadataFeatureManifestOutputFile));
+                    variantOutput.toBuiltArtifact(metadataFeatureManifestOutputFile, properties));
             bundleManifestOutputs.add(
-                    new BuildOutput(
-                            InternalArtifactType.BUNDLE_MANIFEST.INSTANCE,
-                            apkData,
-                            bundleManifestOutputFile,
-                            properties));
+                    variantOutput.toBuiltArtifact(bundleManifestOutputFile, properties));
             if (instantAppManifestOutputFile != null) {
                 instantAppManifestOutputs.add(
-                        new BuildOutput(
-                                InternalArtifactType.INSTANT_APP_MANIFEST.INSTANCE,
-                                apkData,
-                                instantAppManifestOutputFile,
-                                properties));
+                        variantOutput.toBuiltArtifact(instantAppManifestOutputFile, properties));
             }
         }
-        new BuildElements(
-                        BuildElements.METADATA_FILE_VERSION,
+        new BuiltArtifactsImpl(
+                        BuiltArtifacts.METADATA_FILE_VERSION,
+                        InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
                         getApplicationId().get(),
-                        getVariantType().get(),
+                        getVariantName(),
                         mergedManifestOutputs.build())
-                .save(getManifestOutputDirectory());
-        new BuildElements(
-                        BuildElements.METADATA_FILE_VERSION,
+                .save(getManifestOutputDirectory().get());
+        new BuiltArtifactsImpl(
+                        BuiltArtifacts.METADATA_FILE_VERSION,
+                        InternalArtifactType.METADATA_FEATURE_MANIFEST.INSTANCE,
                         getApplicationId().get(),
-                        getVariantType().get(),
+                        getVariantName(),
                         metadataFeatureMergedManifestOutputs.build())
-                .save(getMetadataFeatureManifestOutputDirectory());
-        new BuildElements(
-                        BuildElements.METADATA_FILE_VERSION,
+                .save(getMetadataFeatureManifestOutputDirectory().get());
+        new BuiltArtifactsImpl(
+                        BuiltArtifacts.METADATA_FILE_VERSION,
+                        InternalArtifactType.BUNDLE_MANIFEST.INSTANCE,
                         getApplicationId().get(),
-                        getVariantType().get(),
+                        getVariantName(),
                         bundleManifestOutputs.build())
-                .save(getBundleManifestOutputDirectory());
+                .save(getBundleManifestOutputDirectory().get());
 
         if (getInstantAppManifestOutputDirectory().isPresent()) {
-            new BuildElements(
-                            BuildElements.METADATA_FILE_VERSION,
+            new BuiltArtifactsImpl(
+                            BuiltArtifacts.METADATA_FILE_VERSION,
+                            InternalArtifactType.INSTANT_APP_MANIFEST.INSTANCE,
                             getApplicationId().get(),
-                            getVariantType().get(),
+                            getVariantName(),
                             instantAppManifestOutputs.build())
-                    .save(getInstantAppManifestOutputDirectory());
+                    .save(getInstantAppManifestOutputDirectory().get());
         }
     }
 
@@ -341,15 +337,13 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size());
         for (ResolvedArtifactResult artifact : artifacts) {
             File directory = artifact.getFile();
-            BuildElements splitOutputs =
-                    ExistingBuildElements.from(
-                            InternalArtifactType.METADATA_FEATURE_MANIFEST.INSTANCE, directory);
-            if (splitOutputs.isEmpty()) {
+            BuiltArtifacts splitOutputs = BuiltArtifactsLoaderImpl.loadFromDirectory(directory);
+            if (splitOutputs == null || splitOutputs.getElements().isEmpty()) {
                 throw new GradleException("Could not load manifest from " + directory);
             }
             providers.add(
                     new CreationAction.ManifestProviderImpl(
-                            splitOutputs.iterator().next().getOutputFile(),
+                            new File(splitOutputs.getElements().iterator().next().getOutputFile()),
                             getArtifactName(artifact)));
         }
 
@@ -363,7 +357,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
      * @return the list of providers.
      */
     private List<ManifestProvider> computeFullProviderList(
-            @Nullable BuildOutput compatibleScreenManifestForSplit) {
+            @Nullable BuiltArtifact compatibleScreenManifestForSplit) {
         final Set<ResolvedArtifactResult> artifacts = manifests.getArtifacts();
         List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size() + 2);
 
@@ -388,25 +382,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         if (compatibleScreenManifestForSplit != null) {
             providers.add(
                     new CreationAction.ManifestProviderImpl(
-                            compatibleScreenManifestForSplit.getOutputFile(),
+                            new File(compatibleScreenManifestForSplit.getOutputFile()),
                             "Compatible-Screens sub-manifest"));
-
-        }
-
-        if (getAutoNamespacedManifests().isPresent()) {
-            // We do not have resolved artifact results here, we need to find the artifact name
-            // based on the file name.
-            File directory = getAutoNamespacedManifests().get().getAsFile();
-            Preconditions.checkState(
-                    directory.isDirectory(),
-                    "Auto namespaced manifests should be a directory.",
-                    directory);
-            for (File autoNamespacedManifest : Preconditions.checkNotNull(directory.listFiles())) {
-                providers.add(
-                        new CreationAction.ManifestProviderImpl(
-                                autoNamespacedManifest,
-                                getNameFromAutoNamespacedManifest(autoNamespacedManifest)));
-            }
         }
 
         if (featureManifests != null) {
@@ -565,13 +542,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @Optional
     public abstract Property<String> getFeatureName();
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @Optional
-    public abstract DirectoryProperty getAutoNamespacedManifests();
-
     @Nested
-    public abstract ListProperty<ApkData> getApkDataList();
+    public abstract ListProperty<VariantOutputImpl> getVariantOutputs();
 
     public static class CreationAction
             extends VariantTaskCreationAction<ProcessApplicationManifest, ApkCreationConfig> {
@@ -680,20 +652,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             .getVariantDependencies()
                             .getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
-            // Also include rewritten auto-namespaced manifests if there are any
-            if (variantType
-                            .isBaseModule() // TODO(b/112251836): Auto namespacing for dynamic features.
-                    && globalScope.getExtension().getAaptOptions().getNamespaced()
-                    && globalScope
-                            .getProjectOptions()
-                            .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-                creationConfig
-                        .getArtifacts()
-                        .setTaskInputToFinalProduct(
-                                InternalArtifactType.NAMESPACED_MANIFESTS.INSTANCE,
-                                task.getAutoNamespacedManifests());
-            }
-
             // optional manifest files too.
             if (creationConfig.getTaskContainer().getMicroApkTask() != null
                     && creationConfig.getEmbedsMicroApp()) {
@@ -740,9 +698,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             creationConfig
                     .getOutputs()
                     .getEnabledVariantOutputs()
-                    .forEach(
-                            variantOutput -> task.getApkDataList().add(variantOutput.getApkData()));
-            task.getApkDataList().disallowChanges();
+                    .forEach(task.getVariantOutputs()::add);
+            task.getVariantOutputs().disallowChanges();
 
             // set optional inputs per module type
             if (variantType.isBaseModule()) {
@@ -872,10 +829,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             }
         }
         if (creationConfig.getDexingType() == DexingType.LEGACY_MULTIDEX) {
-            if (creationConfig
-                    .getGlobalScope()
-                    .getProjectOptions()
-                    .get(BooleanOption.USE_ANDROID_X)) {
+            if (creationConfig.getServices().getProjectOptions().get(BooleanOption.USE_ANDROID_X)) {
                 features.add(Feature.ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME);
             } else {
                 features.add(Feature.ADD_SUPPORT_MULTIDEX_APPLICATION_IF_NO_NAME);
@@ -883,7 +837,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         }
 
         if (creationConfig
-                .getGlobalScope()
+                .getServices()
                 .getProjectOptions()
                 .get(BooleanOption.ENFORCE_UNIQUE_PACKAGE_NAMES)) {
             features.add(Feature.ENFORCE_UNIQUE_PACKAGE_NAME);

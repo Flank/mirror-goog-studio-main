@@ -18,11 +18,16 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.utils.appendCamelCase
+import java.io.File
+import java.io.Serializable
+import java.util.Locale
 
 data class VariantOutputConfigurationImpl(
-    private val isUniversal: Boolean,
-    override val filters: Collection<FilterConfiguration>
-) : VariantOutputConfiguration {
+    private val isUniversal: Boolean = false,
+    override val filters: Collection<FilterConfiguration> = listOf()
+) : VariantOutputConfiguration, Serializable {
 
     override val outputType: VariantOutputConfiguration.OutputType
         get() {
@@ -30,4 +35,52 @@ data class VariantOutputConfigurationImpl(
             return if (filters.isEmpty()) VariantOutputConfiguration.OutputType.SINGLE
             else VariantOutputConfiguration.OutputType.ONE_OF_MANY
         }
+
+    /**
+     * Returns the [FilterConfiguration] for a particular [FilterConfiguration.FilterType] or null
+     * if not such filter is configured on this variant output
+     */
+    fun getFilter(type: FilterConfiguration.FilterType)
+            : FilterConfiguration? = filters.firstOrNull { it.filterType == type }
+}
+
+fun VariantOutputConfiguration.dirName(): String {
+    return when (this.outputType) {
+        VariantOutputConfiguration.OutputType.UNIVERSAL -> outputType.name
+        VariantOutputConfiguration.OutputType.SINGLE -> ""
+        VariantOutputConfiguration.OutputType.ONE_OF_MANY ->
+            filters.map(FilterConfiguration::identifier).joinToString(File.separator)
+        else -> throw RuntimeException("Unhandled OutputType $this")
+    }
+}
+
+fun VariantOutputConfiguration.OutputType.fullName(
+    voc: VariantOutputConfiguration,  variantDslInfo: VariantDslInfo): String {
+    return when (this) {
+        VariantOutputConfiguration.OutputType.UNIVERSAL ->
+            variantDslInfo.computeFullNameWithSplits(name.toLowerCase(Locale.US))
+        VariantOutputConfiguration.OutputType.SINGLE ->
+            variantDslInfo.componentIdentity.name
+        VariantOutputConfiguration.OutputType.ONE_OF_MANY -> {
+            val filterName = voc.filters.getFilterName()
+            return variantDslInfo.computeBaseNameWithSplits(filterName)
+        }
+        else -> throw RuntimeException("Unhandled OutputType $this")
+    }
+}
+
+fun Collection<FilterConfiguration>.joinToString() =
+    this.joinToString { filter -> filter.identifier }
+
+fun Collection<FilterConfiguration>.getFilterName(): String {
+    val sb = StringBuilder()
+    val densityFilter = firstOrNull { it.filterType == FilterConfiguration.FilterType.DENSITY }?.identifier
+    if (densityFilter != null) {
+        sb.append(densityFilter)
+    }
+    val abiFilter = firstOrNull() { it.filterType == FilterConfiguration.FilterType.ABI }?.identifier
+    if (abiFilter != null) {
+        sb.appendCamelCase(abiFilter)
+    }
+    return sb.toString()
 }

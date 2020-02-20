@@ -19,11 +19,11 @@ package com.android.build.gradle.tasks;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
-import com.android.build.VariantOutput;
-import com.android.build.gradle.internal.ide.FilterDataImpl;
-import com.android.build.gradle.internal.scope.ApkData;
-import com.android.build.gradle.internal.scope.BuildElements;
-import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.api.variant.BuiltArtifacts;
+import com.android.build.api.variant.FilterConfiguration;
+import com.android.build.api.variant.impl.BuiltArtifactImpl;
+import com.android.build.api.variant.impl.BuiltArtifactsImpl;
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
@@ -109,44 +109,63 @@ public class PackageAndroidArtifactTest {
 
     @Test
     public void testFileNameUnique() {
-        ImmutableList<BuildOutput> outputFiles =
+        ImmutableList<BuiltArtifactImpl> outputFiles =
                 ImmutableList.of(
-                        new BuildOutput(
-                                InternalArtifactType.PROCESSED_RES.INSTANCE,
-                                ApkData.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), -1),
-                                new File("/tmp/file_main.out")),
-                        new BuildOutput(
-                                InternalArtifactType.PROCESSED_RES.INSTANCE,
-                                ApkData.of(
-                                        VariantOutput.OutputType.FULL_SPLIT,
+                        BuiltArtifactImpl.make(
+                                "/tmp/file_main.out",
+                                ImmutableMap.of(),
+                                -1,
+                                "version_name",
+                                true,
+                                new VariantOutputConfigurationImpl(false, ImmutableList.of()),
+                                "",
+                                ""),
+                        BuiltArtifactImpl.make(
+                                "/tmp/file_xxhdpi.out",
+                                ImmutableMap.of(),
+                                -1,
+                                "version_name",
+                                true,
+                                new VariantOutputConfigurationImpl(
+                                        false,
                                         ImmutableList.of(
-                                                new FilterDataImpl(
-                                                        VariantOutput.FilterType.DENSITY,
-                                                        "xxhdpi")),
-                                        -1),
-                                new File("/tmp/file_xxhdpi.out")),
-                        new BuildOutput(
-                                InternalArtifactType.PROCESSED_RES.INSTANCE,
-                                ApkData.of(
-                                        VariantOutput.OutputType.FULL_SPLIT,
+                                                new FilterConfiguration(
+                                                        FilterConfiguration.FilterType.DENSITY,
+                                                        "xxhdpi"))),
+                                "",
+                                ""),
+                        BuiltArtifactImpl.make(
+                                "/tmp/filefr.out",
+                                ImmutableMap.of(),
+                                -1,
+                                "version_name",
+                                true,
+                                new VariantOutputConfigurationImpl(
+                                        false,
                                         ImmutableList.of(
-                                                new FilterDataImpl(
-                                                        VariantOutput.FilterType.LANGUAGE, "fr")),
-                                        -1),
-                                new File("/tmp/filefr.out")),
-                        new BuildOutput(
-                                InternalArtifactType.PROCESSED_RES.INSTANCE,
-                                ApkData.of(
-                                        VariantOutput.OutputType.FULL_SPLIT,
+                                                new FilterConfiguration(
+                                                        FilterConfiguration.FilterType.LANGUAGE,
+                                                        "fr"))),
+                                "",
+                                ""),
+                        BuiltArtifactImpl.make(
+                                "/tmp/fileen.out",
+                                ImmutableMap.of(),
+                                -1,
+                                "version_name",
+                                true,
+                                new VariantOutputConfigurationImpl(
+                                        false,
                                         ImmutableList.of(
-                                                new FilterDataImpl(
-                                                        VariantOutput.FilterType.LANGUAGE, "en")),
-                                        -1),
-                                new File("/tmp/fileen.out")));
-
+                                                new FilterConfiguration(
+                                                        FilterConfiguration.FilterType.LANGUAGE,
+                                                        "en"))),
+                                "",
+                                ""));
         PackageAndroidArtifact.checkFileNameUniqueness(
-                new BuildElements(
-                        BuildElements.METADATA_FILE_VERSION,
+                new BuiltArtifactsImpl(
+                        BuiltArtifacts.METADATA_FILE_VERSION,
+                        InternalArtifactType.PROCESSED_RES.INSTANCE,
                         "com.app.example",
                         "debug",
                         outputFiles));
@@ -154,38 +173,50 @@ public class PackageAndroidArtifactTest {
 
     @Test
     public void testFileNameNotUnique() {
-        ImmutableList<BuildOutput> outputFiles =
+        ImmutableList<BuiltArtifactImpl> outputFiles =
                 ImmutableList.of(
-                        new BuildOutput(
-                                InternalArtifactType.APK.INSTANCE,
-                                ApkData.of(
-                                        VariantOutput.OutputType.FULL_SPLIT,
+                        BuiltArtifactImpl.make(
+                                "/tmp/file.out",
+                                ImmutableMap.of(),
+                                -1,
+                                "version_name",
+                                true,
+                                new VariantOutputConfigurationImpl(
+                                        false,
                                         ImmutableList.of(
-                                                new FilterDataImpl(
-                                                        VariantOutput.FilterType.LANGUAGE, "fr")),
-                                        -1),
-                                new File("/tmp/file.out")),
-                        new BuildOutput(
-                                InternalArtifactType.APK.INSTANCE,
-                                ApkData.of(
-                                        VariantOutput.OutputType.FULL_SPLIT,
+                                                new FilterConfiguration(
+                                                        FilterConfiguration.FilterType.LANGUAGE,
+                                                        "fr"))),
+                                "",
+                                ""),
+                        BuiltArtifactImpl.make(
+                                "/tmp/file.out",
+                                ImmutableMap.of(),
+                                -1,
+                                "version_name",
+                                true,
+                                new VariantOutputConfigurationImpl(
+                                        false,
                                         ImmutableList.of(
-                                                new FilterDataImpl(
-                                                        VariantOutput.FilterType.LANGUAGE, "en")),
-                                        -1),
-                                new File("/tmp/file.out")));
+                                                new FilterConfiguration(
+                                                        FilterConfiguration.FilterType.LANGUAGE,
+                                                        "en"))),
+                                "",
+                                ""));
+
         try {
             PackageAndroidArtifact.checkFileNameUniqueness(
-                    new BuildElements(
-                            BuildElements.METADATA_FILE_VERSION,
+                    new BuiltArtifactsImpl(
+                            BuiltArtifacts.METADATA_FILE_VERSION,
+                            InternalArtifactType.PROCESSED_RES.INSTANCE,
                             "com.app.example",
                             "debug",
                             outputFiles));
         } catch (Exception e) {
             assertThat(e.getMessage())
                     .contains(
-                            "\"file.out\", filters : FilterData{type=LANGUAGE, value=fr}"
-                                    + ":FilterData{type=LANGUAGE, value=en}");
+                            "\"file.out\", filters : FilterConfiguration(filterType=LANGUAGE, "
+                                    + "identifier=fr):FilterConfiguration(filterType=LANGUAGE, identifier=en)");
         }
     }
 

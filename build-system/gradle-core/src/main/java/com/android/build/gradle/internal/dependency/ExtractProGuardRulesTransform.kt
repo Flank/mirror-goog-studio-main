@@ -21,6 +21,7 @@ import com.android.builder.dexing.isToolsConfigurationFile
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.mkdirs
 import com.google.common.io.ByteStreams
+import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
@@ -43,6 +44,7 @@ fun isToolsConfigurationFile(entry: ZipEntry): Boolean {
     return !entry.isDirectory && isToolsConfigurationFile(entry.name)
 }
 
+@CacheableTransform
 abstract class ExtractProGuardRulesTransform @Inject constructor() :
     TransformAction<GenericTransformParameters> {
 

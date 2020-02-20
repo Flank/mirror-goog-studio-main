@@ -22,7 +22,6 @@ abstract class BuildFeaturesImpl : BuildFeatures {
     override var aidl: Boolean? = null
     override var compose: Boolean? = null
     override var buildConfig: Boolean? = null
-    override var dataBinding: Boolean? = null
     override var renderScript: Boolean? = null
     override var resValues: Boolean? = null
     override var shaders: Boolean? = null

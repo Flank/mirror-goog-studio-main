@@ -43,6 +43,14 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
     )
 
     native.genrule(
+        name = "{}.lcov.notests".format(name),
+        srcs = ["{}.lcov".format(name)],
+        outs = ["{}/lcov.notests".format(name)],
+        tools = [":merge_tests"],
+        cmd = "python $(location :merge_tests) <$< >$@",
+    )
+
+    native.genrule(
         name = "{}.list".format(name),
         srcs = ["{}.lcov".format(name)],
         outs = ["{}/list".format(name)],

@@ -26,26 +26,23 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
 /** The `android` extension for base feature module (application plugin).  */
 open class BaseAppModuleExtension(
-    dslScope: DslScope,
-    projectOptions: ProjectOptions,
+    dslServices: DslServices,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
     private val publicExtensionImpl: ApplicationExtensionImpl
 ) : AppExtension(
-    dslScope,
-    projectOptions,
+    dslServices,
     globalScope,
     buildOutputs,
     sourceSetManager,
@@ -55,6 +52,7 @@ open class BaseAppModuleExtension(
         AaptOptions,
         AbiSplitOptions,
         AdbOptions,
+        AnnotationProcessorOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,
@@ -63,7 +61,9 @@ open class BaseAppModuleExtension(
         DensitySplitOptions,
         ExternalNativeBuild,
         JacocoOptions,
+        LintOptions,
         NdkBuildOptions,
+        PackagingOptions,
         ProductFlavor,
         SigningConfig,
         Splits,
@@ -72,11 +72,10 @@ open class BaseAppModuleExtension(
     ActionableVariantObjectOperationsExecutor<ApplicationVariant<ApplicationVariantProperties>, ApplicationVariantProperties> by publicExtensionImpl {
 
     override val viewBinding: ViewBindingOptions =
-        dslScope.objectFactory.newInstance(
+        dslServices.newInstance(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
-            projectOptions,
-            dslScope
+            dslServices
         )
 
     // this is needed because the impl class needs this but the interface does not,
@@ -97,12 +96,7 @@ open class BaseAppModuleExtension(
      */
     var assetPacks: MutableSet<String> = mutableSetOf()
 
-    val bundle: BundleOptions =
-        dslScope.objectFactory.newInstance(
-            BundleOptions::class.java,
-            dslScope.objectFactory,
-            dslScope.deprecationReporter
-        )
+    override val bundle: BundleOptions = publicExtensionImpl.bundle
 
     fun bundle(action: Action<BundleOptions>) {
         action.execute(bundle)

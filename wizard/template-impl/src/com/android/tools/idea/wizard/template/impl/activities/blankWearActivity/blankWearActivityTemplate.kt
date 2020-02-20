@@ -34,6 +34,7 @@ import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
@@ -50,7 +51,7 @@ val blankWearActivityTemplate
     constraints = listOf(TemplateConstraint.AndroidX)
     category = Category.Activity
     formFactor = FormFactor.Wear
-    screens = listOf(WizardUiContext.MenuEntry)
+    screens = listOf(WizardUiContext.MenuEntry, WizardUiContext.NewProject)
 
     lateinit var layoutName: StringParameter
     val activityClass = stringParameter {
@@ -75,11 +76,7 @@ val blankWearActivityTemplate
       help = "If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it the default launchable activity"
     }
 
-    val packageName = stringParameter {
-      name = "Package name"
-      default = "com.mycompany.myapp"
-      constraints = listOf(PACKAGE)
-    }
+    val packageName = defaultPackageNameParameter
 
     widgets(
       TextFieldWidget(activityClass),

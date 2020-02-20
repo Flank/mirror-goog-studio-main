@@ -43,6 +43,7 @@ import com.android.utils.FileUtils
 import com.google.common.io.Closer
 import com.google.common.io.Files
 import org.gradle.api.artifacts.dsl.DependencyHandler
+import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.InputArtifactDependencies
 import org.gradle.api.artifacts.transform.TransformAction
@@ -304,10 +305,12 @@ abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : Transfo
     }
 }
 
+@CacheableTransform
 abstract class DexingNoClasspathTransform : BaseDexingTransform<BaseDexingTransform.Parameters>() {
     override fun computeClasspathFiles() = listOf<Path>()
 }
 
+@CacheableTransform
 abstract class DexingWithClasspathTransform : BaseDexingTransform<BaseDexingTransform.Parameters>() {
     /**
      * Using compile classpath normalization is safe here due to the design of desugar:

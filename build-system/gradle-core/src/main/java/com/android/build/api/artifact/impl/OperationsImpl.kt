@@ -45,7 +45,7 @@ import java.io.File
  * specific services like setting initial AGP providers.
  */
 class OperationsImpl(
-    private val objects: ObjectFactory,
+    internal val objects: ObjectFactory,
     private val identifier: String,
     private val buildDirectory: DirectoryProperty): Operations {
 
@@ -83,8 +83,8 @@ class OperationsImpl(
         with: (TASK) -> FileSystemLocationProperty<FILE_TYPE>
     ): ReplaceRequest<FILE_TYPE> = ReplaceRequestImpl(this, taskProvider, with)
 
-    override fun <TASK : Task> use(taskProvider: TaskProvider<TASK>): TaskBasedOperations<TASK> {
-        return TaskBasedOperationsImpl<TASK>(this, taskProvider)
+    override fun <TASK : Task> use(taskProvider: TaskProvider<TASK>): TaskBasedOperationsImpl<TASK> {
+        return TaskBasedOperationsImpl(this, taskProvider)
     }
 
     // End of public API implementation, start of private AGP services.

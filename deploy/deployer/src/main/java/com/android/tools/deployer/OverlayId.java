@@ -54,16 +54,11 @@ public class OverlayId {
         sha = computeShaHex(getRepresentation());
     }
 
-    public OverlayId(List<Apk> installedApk) {
+    public OverlayId(List<Apk> installedApk) throws DeployerException {
         apks = new TreeMap<>();
         deltas = ImmutableSortedMap.of();
         installedApk.forEach(apk -> apks.put(apk.name, apk.checksum));
-
-        // TODO We are using empty SHA to represent first install for now.
-        // This is not correct as any fresh install would match. Fix this when we populate
-        // overlayid on installs.
-        // this.sha = computeShaHex(getRepresentation())
-        this.sha = "";
+        this.sha = computeShaHex(getRepresentation());
     }
 
     public String getRepresentation() {

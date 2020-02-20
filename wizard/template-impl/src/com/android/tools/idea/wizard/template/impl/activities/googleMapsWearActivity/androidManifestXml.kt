@@ -18,19 +18,18 @@ package com.android.tools.idea.wizard.template.impl.activities.googleMapsWearAct
 
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.impl.activities.common.commonActivityBody
-import com.android.tools.idea.wizard.template.renderIf
 
 
 fun androidManifestXml(
   activityClass: String,
   isLauncher: Boolean,
   isLibrary: Boolean,
-  isNew: Boolean,
+  isNewModule: Boolean,
   packageName: String
 ): String {
-  val labelBlock = if (isNew) "android:label=\"@string/app_name\""
+  val labelBlock = if (isNewModule) "android:label=\"@string/app_name\""
   else "android:label=\"@string/title_${activityToLayout(activityClass)}\""
-  val intentFilterBlock = commonActivityBody(isLauncher || isNew, isLibrary)
+  val intentFilterBlock = commonActivityBody(isLauncher || isNewModule, isLibrary)
 
   return """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">

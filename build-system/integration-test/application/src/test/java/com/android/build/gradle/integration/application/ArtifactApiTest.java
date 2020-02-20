@@ -100,17 +100,10 @@ public class ArtifactApiTest {
                             .map(SourceProviderContainer::getArtifactName)
                             .collect(Collectors.toSet());
 
-            if (buildTypeName.equals(testedBuildType)) {
-                assertThat(extraSourceProviderNames)
-                        .named(name)
-                        .containsExactly(
-                                CUSTOM_ARTIFACT_NAME, ARTIFACT_UNIT_TEST, ARTIFACT_ANDROID_TEST);
-
-            } else {
-                assertThat(extraSourceProviderNames)
-                        .named(name)
-                        .containsExactly(CUSTOM_ARTIFACT_NAME, ARTIFACT_UNIT_TEST);
-            }
+            assertThat(extraSourceProviderNames)
+                    .named(name)
+                    .containsExactly(
+                            CUSTOM_ARTIFACT_NAME, ARTIFACT_UNIT_TEST, ARTIFACT_ANDROID_TEST);
 
             SourceProviderContainer extraSourceProvideContainer =
                     SourceSetContainerUtils.getExtraSourceProviderContainer(

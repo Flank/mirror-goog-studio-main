@@ -60,7 +60,7 @@ fun RecipeExecutor.generateManifest(
   isLauncher: Boolean,
   hasNoActionBar: Boolean,
   noActionBarTheme: ThemeData = moduleData.themesData.noActionBar,
-  isNewModule: Boolean = moduleData.isNew,
+  isNewModule: Boolean = moduleData.isNewModule,
   isLibrary: Boolean = moduleData.isLibrary,
   mainTheme: ThemeData = moduleData.themesData.main,
   manifestOut: File = moduleData.manifestDir,
@@ -91,10 +91,10 @@ fun RecipeExecutor.generateManifest(
 
 fun RecipeExecutor.generateSimpleLayout(
   moduleData: ModuleTemplateData, activityClass: String, simpleLayoutName: String, excludeMenu: Boolean, packageName: PackageName,
-  menuName: String? = null, openLayout: Boolean = true
+  menuName: String? = null, openLayout: Boolean = true, includeCppSupport: Boolean = false
 ) {
   if (menuName == null) {
-    require(!moduleData.isNew || excludeMenu)
+    require(!moduleData.isNewModule || excludeMenu)
   }
   val projectData = moduleData.projectTemplateData
   val buildApi = moduleData.apis.buildApi
@@ -104,14 +104,14 @@ fun RecipeExecutor.generateSimpleLayout(
 
   // TODO(qumeric): check if we sometimes need to pass appBarLayoutName
   val simpleLayout = simpleLayoutXml(
-    moduleData.isNew, false, projectData.androidXSupport, moduleData.packageName, activityClass, null
+    moduleData.isNewModule, includeCppSupport, projectData.androidXSupport, moduleData.packageName, activityClass, null
   )
 
   val layoutFile = resOut.resolve("layout/$simpleLayoutName.xml")
 
   save(simpleLayout, layoutFile)
 
-  if (moduleData.isNew && !excludeMenu) {
+  if (moduleData.isNewModule && !excludeMenu) {
     generateSimpleMenu(packageName, activityClass, moduleData.resDir, menuName!!)
   }
 

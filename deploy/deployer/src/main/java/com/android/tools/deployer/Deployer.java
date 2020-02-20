@@ -87,7 +87,6 @@ public class Deployer {
         // New DDMLib
         GET_PIDS,
         GET_ARCH,
-        COMPUTE_FRESHINSTALL_OID,
         COMPUTE_ODS,
         COMPUTE_EXPECTED_IDS
     }
@@ -124,29 +123,32 @@ public class Deployer {
             Task<List<String>> paths = runner.create(apks);
             CachedDexSplitter splitter = new CachedDexSplitter(dexDb, new D8DexSplitter());
 
-            // Parse the apks
-            Task<List<Apk>> apkList =
-                    runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
-
-            // Update the database
-            runner.create(Tasks.CACHE, splitter::cache, apkList);
-
             if (supportsNewPipeline()) {
-                Task<String> deviceSerial = runner.create(adb.getSerial());
-                Task<String> appIds =
-                        runner.create(
-                                Tasks.PARSE_APP_IDS, ApplicationDumper::getPackageName, apkList);
+                List<Apk> apkList = new ApkParser().parsePaths(apks);
+                Task<List<Apk>> apkListTask = runner.create(apkList);
 
-                // TODO: Push overlayIds and cache the real one here.
-                Task<OverlayId> overlayIds =
-                        runner.create(Tasks.COMPUTE_FRESHINSTALL_OID, OverlayId::new, apkList);
+                // Update the database
+                runner.create(Tasks.CACHE, splitter::cache, apkListTask);
+
+                OverlayIdPusher oidPusher = new OverlayIdPusher(installer);
+                String appId = ApplicationDumper.getPackageName(apkList);
+                OverlayId oid = new OverlayId(apkList);
+                oidPusher.pushOverlayId(appId, oid);
+
                 runner.create(
                         Tasks.DEPLOY_CACHE_STORE,
                         deployCache::store,
-                        deviceSerial,
-                        appIds,
-                        apkList,
-                        overlayIds);
+                        runner.create(adb.getSerial()),
+                        runner.create(appId),
+                        apkListTask,
+                        runner.create(oid));
+            } else {
+                // Parse the apks
+                Task<List<Apk>> apkList =
+                        runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, paths);
+
+                // Update the database
+                runner.create(Tasks.CACHE, splitter::cache, apkList);
             }
 
             runner.runAsync();

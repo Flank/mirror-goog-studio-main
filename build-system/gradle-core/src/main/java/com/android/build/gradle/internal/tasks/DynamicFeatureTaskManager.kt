@@ -60,7 +60,7 @@ internal class DynamicFeatureTaskManager(
         // Non-base feature specific task.
         // Task will produce artifacts consumed by the base feature
         taskFactory.register(FeatureSplitDeclarationWriterTask.CreationAction(variantProperties))
-        if (globalScope.buildFeatures.dataBinding) {
+        if (variantProperties.buildFeatures.dataBinding) {
             // Create a task that will package necessary information about the feature into a
             // file which is passed into the Data Binding annotation processor.
             taskFactory.register(DataBindingExportFeatureInfoTask.CreationAction(variantProperties))
@@ -82,7 +82,7 @@ internal class DynamicFeatureTaskManager(
         taskFactory.register(
             PerModuleBundleTask.CreationAction(
                 variantProperties,
-                TaskManager.packagesCustomClassDependencies(variantProperties, projectOptions)
+                TaskManager.packagesCustomClassDependencies(variantProperties)
             )
         )
 

@@ -20,15 +20,14 @@ import com.android.annotations.NonNull;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class ZipSourceEntryDeflater extends Source {
+class ZipSourceEntryDeflater extends Source {
 
     private final Location loc;
     private final ZipSource zipSource;
     private final int compressionLevel;
     private ByteBuffer compressedByteBuffer;
 
-    public ZipSourceEntryDeflater(
-            String newName, Entry entry, ZipSource zipSource, int compressionLevel) {
+    ZipSourceEntryDeflater(String newName, Entry entry, ZipSource zipSource, int compressionLevel) {
         super(newName);
         loc = entry.getPayloadLocation();
         this.zipSource = zipSource;

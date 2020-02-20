@@ -25,7 +25,7 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -34,20 +34,21 @@ import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
 internal open class DynamicFeatureExtension(
-    dslScope: DslScope,
-    projectOptions: ProjectOptions,
+    dslServices: DslServices,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
     private val publicExtensionImpl: DynamicFeatureExtensionImpl
 ) : AppExtension(
-    dslScope, projectOptions, globalScope,
+    dslServices,
+     globalScope,
     buildOutputs, sourceSetManager, extraModelInfo, false
 ), DynamicFeatureExtension<
         AaptOptions,
         AbiSplitOptions,
         AdbOptions,
+        AnnotationProcessorOptions,
         BuildType,
         CmakeOptions,
         CompileOptions,
@@ -56,7 +57,9 @@ internal open class DynamicFeatureExtension(
         DensitySplitOptions,
         ExternalNativeBuild,
         JacocoOptions,
+        LintOptions,
         NdkBuildOptions,
+        PackagingOptions,
         ProductFlavor,
         SigningConfig,
         Splits,
@@ -65,11 +68,10 @@ internal open class DynamicFeatureExtension(
     ActionableVariantObjectOperationsExecutor<DynamicFeatureVariant<DynamicFeatureVariantProperties>, DynamicFeatureVariantProperties> by publicExtensionImpl {
 
     override val viewBinding: ViewBindingOptions =
-        dslScope.objectFactory.newInstance(
+        dslServices.newInstance(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
-            projectOptions,
-            dslScope
+            dslServices
         )
 
     // this is needed because the impl class needs this but the interface does not,

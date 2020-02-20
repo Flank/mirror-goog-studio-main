@@ -111,9 +111,10 @@ enum class BooleanOption(
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false, FeatureStage.Experimental),
     USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false, FeatureStage.Experimental),
     ENABLE_SIDE_BY_SIDE_NDK("android.enableSideBySideNdk", true, FeatureStage.Experimental),
-    ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", false, FeatureStage.Experimental),
+    ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", true, FeatureStage.Experimental),
     ENABLE_PARTIAL_R_INCREMENTAL_BUILDS("android.enablePartialRIncrementalBuilds", false, FeatureStage.Experimental),
     ENABLE_MLKIT("android.enableMlkit", false, FeatureStage.Experimental),
+    ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", false, FeatureStage.Experimental),
 
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
     ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", true, FeatureStage.Experimental),

@@ -28,9 +28,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.SdkComponents;
-import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.model.OptionalCompilationStep;
@@ -61,7 +61,7 @@ public class GlobalScope {
     @NonNull private final SoftwareComponentFactory componentFactory;
 
     @NonNull private final String createdBy;
-    @NonNull private final DslScope dslScope;
+    @NonNull private final DslServices dslServices;
 
     @NonNull private Configuration lintChecks;
     @NonNull private Configuration lintPublish;
@@ -75,7 +75,7 @@ public class GlobalScope {
     public GlobalScope(
             @NonNull Project project,
             @NonNull String createdBy,
-            @NonNull DslScope dslScope,
+            @NonNull DslServices dslServices,
             @NonNull SdkComponents sdkComponents,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull MessageReceiver messageReceiver,
@@ -84,11 +84,11 @@ public class GlobalScope {
         // have been fully configured yet (e.g. buildDir can still change).
         this.project = checkNotNull(project);
         this.createdBy = createdBy;
-        this.dslScope = checkNotNull(dslScope);
+        this.dslServices = checkNotNull(dslServices);
         this.sdkComponents = checkNotNull(sdkComponents);
         this.toolingRegistry = checkNotNull(toolingRegistry);
         this.optionalCompilationSteps =
-                checkNotNull(dslScope.getProjectOptions().getOptionalCompilationSteps());
+                checkNotNull(dslServices.getProjectOptions().getOptionalCompilationSteps());
         this.messageReceiver = messageReceiver;
         this.componentFactory = componentFactory;
         this.globalArtifacts = new GlobalBuildArtifactsHolder(project, this::getBuildDir);
@@ -98,17 +98,12 @@ public class GlobalScope {
 
         this.dataBindingBuilder = new DataBindingBuilder();
         dataBindingBuilder.setPrintMachineReadableOutput(
-                SyncOptions.getErrorFormatMode(dslScope.getProjectOptions())
+                SyncOptions.getErrorFormatMode(dslServices.getProjectOptions())
                         == SyncOptions.ErrorFormatMode.MACHINE_PARSABLE);
     }
 
     public void setExtension(@NonNull BaseExtension extension) {
         this.extension = checkNotNull(extension);
-    }
-
-    @NonNull
-    public BuildFeatureValues getBuildFeatures() {
-        return dslScope.getBuildFeatures();
     }
 
     @NonNull
@@ -200,7 +195,7 @@ public class GlobalScope {
 
     @NonNull
     public ProjectOptions getProjectOptions() {
-        return dslScope.getProjectOptions();
+        return dslServices.getProjectOptions();
     }
 
     public void setLintChecks(@NonNull Configuration lintChecks) {
@@ -251,9 +246,17 @@ public class GlobalScope {
                 .getArtifactFiles();
     }
 
+    /**
+     * Do not use unless you have to.
+     *
+     * <p>If the code has access to DslServices directly, use that. If the code has access to
+     * VariantPropertiesApiServices or VariantApiServices, use that. If the code has access to
+     * TaskCreationServices, use that
+     */
+    @Deprecated
     @NonNull
-    public DslScope getDslScope() {
-        return dslScope;
+    public DslServices getDslServices() {
+        return dslServices;
     }
 
     @NonNull
@@ -342,7 +345,7 @@ public class GlobalScope {
     public FileCollection getFilteredBootClasspath() {
         return BootClasspathBuilder.INSTANCE.computeClasspath(
                 project,
-                getDslScope().getIssueReporter(),
+                getDslServices().getIssueReporter(),
                 getSdkComponents().getTargetBootClasspathProvider(),
                 getSdkComponents().getTargetAndroidVersionProvider(),
                 getSdkComponents().getAdditionalLibrariesProvider(),
@@ -362,7 +365,7 @@ public class GlobalScope {
     public FileCollection getFullBootClasspath() {
         return BootClasspathBuilder.INSTANCE.computeClasspath(
                 project,
-                getDslScope().getIssueReporter(),
+                getDslServices().getIssueReporter(),
                 getSdkComponents().getTargetBootClasspathProvider(),
                 getSdkComponents().getTargetAndroidVersionProvider(),
                 getSdkComponents().getAdditionalLibrariesProvider(),

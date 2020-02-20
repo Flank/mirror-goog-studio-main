@@ -205,7 +205,8 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
                     // Only need to check existence of output files we expect to create
                     continue
                 }
-                val output = library.output!!
+                val output = library.output
+                if (output == null) continue
                 if (!output.exists()) {
                     throw GradleException(
                         "Expected output file at $output for target ${library.artifactName} but there was none")
@@ -239,7 +240,7 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
                     if (expectedOutputFile.parentFile.mkdirs()) {
                         infoln("created folder ${expectedOutputFile.parentFile}")
                     }
-                    infoln("copy file ${library.output} to $expectedOutputFile")
+                    infoln("copy file $output to $expectedOutputFile")
                     Files.copy(output, expectedOutputFile)
                 }
 
@@ -336,14 +337,15 @@ abstract class ExternalNativeBuildTask : NonIncrementalTask() {
             }
 
             if (targets.isEmpty()) {
-                if (libraryValue.output == null) {
+                val output = libraryValue.output
+                if (output == null) {
                     infoln(
                         "not building target ${libraryValue.artifactName!!} because no targets " +
                                 "are specified and library build output file is null")
                     continue
                 }
 
-                when (Files.getFileExtension(libraryValue.output!!.name)) {
+                when (Files.getFileExtension(output.name)) {
                     "so" -> infoln("building target library ${libraryValue.artifactName!!} because no targets are specified.")
                     "" -> infoln("building target executable ${libraryValue.artifactName!!} because no targets are specified.")
                     else -> {

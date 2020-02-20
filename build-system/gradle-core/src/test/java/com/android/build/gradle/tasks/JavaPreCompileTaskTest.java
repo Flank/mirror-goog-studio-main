@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions;
-import com.android.build.gradle.internal.dsl.NoOpDeprecationReporter;
+import com.android.build.gradle.internal.services.FakeServices;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
@@ -99,7 +99,7 @@ public class JavaPreCompileTaskTest {
         project.getDependencies().add("api", project.files(jar, nonJarFile, directory));
         task.init(
                 processorConfiguration.getIncoming().getArtifacts(),
-                new AnnotationProcessorOptions(new NoOpDeprecationReporter()));
+                new AnnotationProcessorOptions(FakeServices.createDslServices()).getClassNames());
 
         task.doTaskAction();
 
@@ -115,7 +115,7 @@ public class JavaPreCompileTaskTest {
                                 jarWithAnnotationProcessor, directoryWithAnnotationProcessor));
         task.init(
                 processorConfiguration.getIncoming().getArtifacts(),
-                new AnnotationProcessorOptions(new NoOpDeprecationReporter()));
+                new AnnotationProcessorOptions(FakeServices.createDslServices()).getClassNames());
 
         task.doTaskAction();
 
@@ -129,9 +129,9 @@ public class JavaPreCompileTaskTest {
     public void checkNoAnnotationProcessorsIncluded() {
         project.getDependencies().add("api", project.files(jarWithAnnotationProcessor));
         AnnotationProcessorOptions options =
-                new AnnotationProcessorOptions(new NoOpDeprecationReporter());
+                new AnnotationProcessorOptions(FakeServices.createDslServices());
         options.setIncludeCompileClasspath(true);
-        task.init(processorConfiguration.getIncoming().getArtifacts(), options);
+        task.init(processorConfiguration.getIncoming().getArtifacts(), options.getClassNames());
         task.doTaskAction();
         assertThat(getProcessorNames()).isEmpty();
     }
@@ -139,10 +139,10 @@ public class JavaPreCompileTaskTest {
     @Test
     public void checkProcessorConfigurationAddedForMetrics() throws IOException {
         AnnotationProcessorOptions options =
-                new AnnotationProcessorOptions(new NoOpDeprecationReporter());
+                new AnnotationProcessorOptions(FakeServices.createDslServices());
         project.getDependencies()
                 .add("annotationProcessor", project.files(jarWithAnnotationProcessor));
-        task.init(processorConfiguration.getIncoming().getArtifacts(), options);
+        task.init(processorConfiguration.getIncoming().getArtifacts(), options.getClassNames());
         task.doTaskAction();
 
         assertThat(getProcessorNames()).containsExactly(jarWithAnnotationProcessor.getName());
@@ -151,9 +151,9 @@ public class JavaPreCompileTaskTest {
     @Test
     public void checkExplicitProcessorAddedForMetrics() throws IOException {
         AnnotationProcessorOptions options =
-                new AnnotationProcessorOptions(new NoOpDeprecationReporter());
+                new AnnotationProcessorOptions(FakeServices.createDslServices());
         options.getClassNames().add(testProcessorName);
-        task.init(processorConfiguration.getIncoming().getArtifacts(), options);
+        task.init(processorConfiguration.getIncoming().getArtifacts(), options.getClassNames());
         task.doTaskAction();
 
         assertThat(getProcessorNames()).containsExactly(testProcessorName);
@@ -164,9 +164,9 @@ public class JavaPreCompileTaskTest {
         project.getDependencies()
                 .add("annotationProcessor", project.files(jarWithAnnotationProcessor));
         AnnotationProcessorOptions options =
-                new AnnotationProcessorOptions(new NoOpDeprecationReporter());
+                new AnnotationProcessorOptions(FakeServices.createDslServices());
 
-        task.init(processorConfiguration.getIncoming().getArtifacts(), options);
+        task.init(processorConfiguration.getIncoming().getArtifacts(), options.getClassNames());
         task.doTaskAction();
 
         // Since the processor names are not explicitly specified via

@@ -23,9 +23,11 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import org.gradle.api.provider.Property
@@ -34,6 +36,7 @@ import javax.inject.Inject
 
 open class LibraryVariantPropertiesImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
+    buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
@@ -42,10 +45,12 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    variantApiScope: VariantPropertiesApiScope,
+    variantPropertiesApiServices: VariantPropertiesApiServices,
+    taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
     componentIdentity,
+    buildFeatureValues,
     variantDslInfo,
     variantDependencies,
     variantSources,
@@ -54,7 +59,8 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    variantApiScope,
+    variantPropertiesApiServices,
+    taskCreationServices,
     globalScope
 ), LibraryVariantProperties, LibraryCreationConfig {
 
@@ -62,7 +68,7 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
 
-    override val applicationId: Property<String> = variantApiScope.propertyOf(
+    override val applicationId: Property<String> = variantPropertiesApiServices.propertyOf(
         String::class.java,
         Callable { variantDslInfo.packageFromManifest })
 

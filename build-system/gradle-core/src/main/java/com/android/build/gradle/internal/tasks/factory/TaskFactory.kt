@@ -55,14 +55,6 @@ interface TaskFactory {
         secondaryProviderCallback: TaskProviderCallback<T>? = null
     ): TaskProvider<T>
 
-    fun <T: Task> register(
-        taskName: String,
-        taskType: Class<T>,
-        preConfigAction: PreConfigAction? = null,
-        action: TaskConfigAction<in T>? = null,
-        providerCallback: TaskProviderCallback<T>? = null
-    ): TaskProvider<T>
-
     fun register(
         taskName: String,
         preConfigAction: PreConfigAction? = null,

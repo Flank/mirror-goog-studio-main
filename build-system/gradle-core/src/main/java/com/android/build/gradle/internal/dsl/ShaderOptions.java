@@ -24,10 +24,8 @@ import java.util.Arrays;
 import java.util.List;
 import javax.inject.Inject;
 
-/**
- * Implementation of CoreShaderOptions for usage in the non-model based Gradle plugin DSL.
- */
-public class ShaderOptions implements CoreShaderOptions {
+/** Implementation of CoreShaderOptions for usage in the non-model based Gradle plugin DSL. */
+public class ShaderOptions implements CoreShaderOptions, com.android.build.api.dsl.Shaders {
 
     List<String> args = Lists.newArrayListWithExpectedSize(2);
     ListMultimap<String, String> scopedArgs = ArrayListMultimap.create();
@@ -35,21 +33,25 @@ public class ShaderOptions implements CoreShaderOptions {
     @Inject
     public ShaderOptions() {}
 
+    @NonNull
     @Override
     public List<String> getGlslcArgs() {
         return args;
     }
 
+    @NonNull
     @Override
     public ListMultimap<String, String> getScopedGlslcArgs() {
         return scopedArgs;
     }
 
-    public void glslcArgs(String... options) {
+    @Override
+    public void glslcArgs(@NonNull String... options) {
         this.args.addAll(Arrays.asList(options));
     }
 
-    public void glslcScopedArgs(String key, String... options) {
+    @Override
+    public void glslcScopedArgs(@NonNull String key, @NonNull String... options) {
         this.scopedArgs.putAll(key, Arrays.asList(options));
     }
 

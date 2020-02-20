@@ -135,5 +135,14 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="jps-build-script-dependencies-bootstrap" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../bazel-bin/external/io_bazel_rules_kotlin/src/main/protobuf/libworker_protocol_proto-speed.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

@@ -79,18 +79,6 @@ class CentralDirectoryRecord {
         buf.put(nameBytes);
     }
 
-    int getCrc() {
-        return crc;
-    }
-
-    long getCompressedSize() {
-        return compressedSize;
-    }
-
-    long getUncompressedSize() {
-        return uncompressedSize;
-    }
-
     short getCompressionFlag() {
         return compressionFlag;
     }

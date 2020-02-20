@@ -18,4 +18,6 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 
-abstract class DynamicFeatureBuildFeaturesImpl: BuildFeaturesImpl(), DynamicFeatureBuildFeatures
+abstract class DynamicFeatureBuildFeaturesImpl: BuildFeaturesImpl(), DynamicFeatureBuildFeatures {
+    override var dataBinding: Boolean? = null
+}

@@ -31,16 +31,19 @@ interface ApplicationExtension<
         AaptOptionsT : AaptOptions,
         AbiSplitT : AbiSplit,
         AdbOptionsT : AdbOptions,
-        BuildTypeT : BuildType,
+        AnnotationProcessorOptionsT : AnnotationProcessorOptions,
+        BuildTypeT : BuildType<AnnotationProcessorOptionsT>,
         CMakeT : Cmake,
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,
-        DefaultConfigT : DefaultConfig,
+        DefaultConfigT : DefaultConfig<AnnotationProcessorOptionsT>,
         DensitySplitT : DensitySplit,
         ExternalNativeBuildT : ExternalNativeBuild<CMakeT, NdkBuildT>,
         JacocoOptionsT : JacocoOptions,
+        LintOptionsT : LintOptions,
         NdkBuildT : NdkBuild,
-        ProductFlavorT : ProductFlavor,
+        PackagingOptionsT : PackagingOptions,
+        ProductFlavorT : ProductFlavor<AnnotationProcessorOptionsT>,
         SigningConfigT : SigningConfig,
         SplitsT : Splits<AbiSplitT, DensitySplitT>,
         TestOptionsT : TestOptions<UnitTestOptionsT>,
@@ -49,6 +52,7 @@ interface ApplicationExtension<
             AaptOptionsT,
             AbiSplitT,
             AdbOptionsT,
+            AnnotationProcessorOptionsT,
             ApplicationBuildFeatures,
             BuildTypeT,
             CMakeT,
@@ -58,7 +62,9 @@ interface ApplicationExtension<
             DensitySplitT,
             ExternalNativeBuildT,
             JacocoOptionsT,
+            LintOptionsT,
             NdkBuildT,
+            PackagingOptionsT,
             ProductFlavorT,
             SigningConfigT,
             SplitsT,
@@ -70,9 +76,13 @@ interface ApplicationExtension<
     TestedExtension {
     // TODO(b/140406102)
 
-  /** Specify whether to include SDK dependency information in APKs and Bundles. */
-  val dependenciesInfo: DependenciesInfo
+    /** Specify whether to include SDK dependency information in APKs and Bundles. */
+    val dependenciesInfo: DependenciesInfo
 
-  /** Specify whether to include SDK dependency information in APKs and Bundles. */
-  fun dependenciesInfo(action: DependenciesInfo.() -> Unit)
+    /** Specify whether to include SDK dependency information in APKs and Bundles. */
+    fun dependenciesInfo(action: DependenciesInfo.() -> Unit)
+
+    val bundle: Bundle
+
+    fun bundle(action: Bundle.() -> Unit)
 }

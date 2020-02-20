@@ -298,7 +298,7 @@ abstract class RenderscriptCompile : NdkTask() {
             task.targetApi.disallowChanges()
 
             task.isSupportMode = variantDslInfo.renderscriptSupportModeEnabled
-            task.useAndroidX = globalScope.projectOptions.get(BooleanOption.USE_ANDROID_X)
+            task.useAndroidX = creationConfig.services.projectOptions.get(BooleanOption.USE_ANDROID_X)
             task.isNdkMode = ndkMode
             task.optimLevel = variantDslInfo.renderscriptOptimLevel
 

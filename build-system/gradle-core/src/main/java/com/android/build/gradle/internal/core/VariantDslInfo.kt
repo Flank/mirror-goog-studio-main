@@ -19,7 +19,6 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
-import com.android.build.gradle.internal.dsl.CoreNdkOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.builder.core.AbstractProductFlavor
@@ -32,6 +31,7 @@ import com.android.sdklib.AndroidVersion
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 import java.io.File
 import java.util.function.IntSupplier
 import java.util.function.Supplier
@@ -259,7 +259,6 @@ interface VariantDslInfo {
 
     val isWearAppUnbundled: Boolean?
 
-    @Suppress("DEPRECATION")
     val missingDimensionStrategies: ImmutableMap<String, AbstractProductFlavor.DimensionRequest>
 
     val resourceConfigurations: ImmutableSet<String>
@@ -376,7 +375,7 @@ interface VariantDslInfo {
      */
     val minSdkVersionWithTargetDeviceApi: AndroidVersion
 
-    val ndkConfig: CoreNdkOptions
+    val ndkConfig: MergedNdkConfig
 
     val externalNativeBuildOptions: CoreExternalNativeBuildOptions
 
@@ -393,7 +392,7 @@ interface VariantDslInfo {
 
     val javaCompileOptions: JavaCompileOptions
 
-    fun createPostProcessingOptions(project: Project) : PostProcessingOptions
+    fun createPostProcessingOptions(buildDirectory: DirectoryProperty) : PostProcessingOptions
 
     val defaultGlslcArgs: List<String>
 

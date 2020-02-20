@@ -31,13 +31,12 @@ import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.cxx.configure.NdkLocatorKt;
 import com.android.build.gradle.internal.plugins.VersionCheckPlugin;
-import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.Variant;
+import com.android.builder.model.VariantBuildInformation;
 import com.android.io.StreamException;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.internal.project.ProjectProperties;
@@ -310,7 +309,7 @@ public final class GradleTestProject implements TestRule {
      *
      * @param subProject name of the subProject, or the subProject's gradle project path
      * @param rootProject root GradleTestProject.
-     * @param heapSize
+     * @param heapSize heap size
      */
     private GradleTestProject(
             @NonNull String subProject,
@@ -1272,25 +1271,8 @@ public final class GradleTestProject implements TestRule {
      * failure.
      *
      * @param tasks Variadic list of tasks to execute.
-     * @return the output model for the project
-     */
-    @NonNull
-    public ProjectBuildOutput executeAndReturnOutputModel(String... tasks)
-            throws IOException, InterruptedException {
-        ModelContainer<ProjectBuildOutput> buildOutputContainer =
-                executor().withOutputModelQuery().run(tasks).getBuildOutputContainer();
-        Preconditions.checkNotNull(
-                buildOutputContainer, "Build output model not found after build.");
-        return buildOutputContainer.getOnlyModel();
-    }
-
-    /**
-     * Runs gradle on the project, and returns the (minimal) output model. Throws exception on
-     * failure.
-     *
-     * @param tasks Variadic list of tasks to execute.
      * @return the output models for the project as map of output model name (variant name +
-     *     artifact name) to the associated {@link BuildElements}
+     *     artifact name) to the associated {@link BuiltArtifacts}
      */
     @Nullable
     public Map<String, BuiltArtifacts> executeAndReturnOutputModels(String... tasks)
@@ -1356,22 +1338,14 @@ public final class GradleTestProject implements TestRule {
         return model().fetchMulti(modelClass);
     }
 
-    /**
-     * Runs gradle on the project, and returns the output model of the specified type for each
-     * sub-project. Throws exception on failure.
-     *
-     * @param tasks Variadic list of tasks to execute.
-     * @return map of project names to output models
-     */
-    @NonNull
-    public Map<String, ProjectBuildOutput> executeAndReturnOutputMultiModel(String... tasks)
-            throws IOException, InterruptedException {
-        ModelContainer<ProjectBuildOutput> buildOutputContainer =
-                executor().withOutputModelQuery().run(tasks).getBuildOutputContainer();
-        Preconditions.checkNotNull(
-                buildOutputContainer, "Build output model not found after build.");
-        return buildOutputContainer.getOnlyModelMap();
+    static class ProjectOutputModel {
+        final Map<String, VariantBuildInformation> buildInformationByVariantName;
+
+        ProjectOutputModel(Map<String, VariantBuildInformation> buildInformationByVariantName) {
+            this.buildInformationByVariantName = buildInformationByVariantName;
+        }
     }
+
 
     /** Returns the latest build result. */
     public GradleBuildResult getBuildResult() {

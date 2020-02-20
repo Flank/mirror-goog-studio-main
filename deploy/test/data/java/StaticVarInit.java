@@ -19,8 +19,8 @@ import java.util.concurrent.CountDownLatch;
 
 // TODO: These redefinition only works on final class right now.
 public final class StaticVarInit {
-    public static class AddStaticFinalInt {
-        // public static final int X = 99; // Will be added in swap.
+    public static class AddStaticFinalPrimitives {
+        // public static final int X_INT = 99; // Will be added in swap.
     }
 
     // Will be added in swap.

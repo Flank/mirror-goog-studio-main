@@ -58,9 +58,6 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
 
         @Input
         Property<Boolean> getSharedLibSupport();
-
-        @Input
-        Property<Boolean> getAutoNamespaceDependencies();
     }
 
     @Classpath
@@ -72,13 +69,11 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
         return new ArtifactType[] {
             // For CLASSES, this transform is ues for runtime, and AarCompileClassesTransform is
             // used for compile
-            ArtifactType.NON_NAMESPACED_CLASSES,
             ArtifactType.SHARED_CLASSES,
             ArtifactType.JAVA_RES,
             ArtifactType.SHARED_JAVA_RES,
             ArtifactType.PROCESSED_JAR,
             ArtifactType.MANIFEST,
-            ArtifactType.NON_NAMESPACED_MANIFEST,
             ArtifactType.ANDROID_RES,
             ArtifactType.ASSETS,
             ArtifactType.SHARED_ASSETS,
@@ -93,7 +88,6 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
             ArtifactType.COMPILE_SYMBOL_LIST,
             ArtifactType.DATA_BINDING_ARTIFACT,
             ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
-            ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
             ArtifactType.RES_STATIC_LIBRARY,
             ArtifactType.RES_SHARED_STATIC_LIBRARY,
             ArtifactType.PREFAB_PACKAGE,
@@ -103,20 +97,9 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
     @Override
     public void transform(@NonNull TransformOutputs transformOutputs) {
         File input = getInputArtifact().get().getAsFile();
-        boolean autoNamespaceDependencies = getParameters().getAutoNamespaceDependencies().get();
         ArtifactType targetType = getParameters().getTargetType().get();
         switch (targetType) {
             case CLASSES_JAR:
-                if (!AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)
-                        && !isShared(input)) {
-                    AarTransformUtil.getJars(input).forEach(transformOutputs::file);
-                }
-                break;
-            case NON_NAMESPACED_CLASSES:
-                if (AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)) {
-                    AarTransformUtil.getJars(input).forEach(transformOutputs::file);
-                }
-                break;
             case JAVA_RES:
             case PROCESSED_JAR:
                 // even though resources are supposed to only be in the main jar of the AAR, this
@@ -137,22 +120,12 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
                 outputIfExists(FileUtils.join(input, FD_JARS, FN_LINT_JAR), transformOutputs);
                 break;
             case MANIFEST:
-                if (AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)) {
-                    return;
-                }
                 // Return both the manifest and the extra snippet for the shared library.
                 outputIfExists(new File(input, FN_ANDROID_MANIFEST_XML), transformOutputs);
                 if (isShared(input)) {
                     outputIfExists(
                             new File(input, FN_SHARED_LIBRARY_ANDROID_MANIFEST_XML),
                             transformOutputs);
-                }
-                break;
-            case NON_NAMESPACED_MANIFEST:
-                // Non-namespaced libraries cannot be shared, so if it needs rewriting return only
-                // the manifest.
-                if (AarTransformUtil.shouldBeAutoNamespaced(input, autoNamespaceDependencies)) {
-                    outputIfExists(new File(input, FN_ANDROID_MANIFEST_XML), transformOutputs);
                 }
                 break;
             case ANDROID_RES:
@@ -196,9 +169,6 @@ public abstract class AarTransform implements TransformAction<AarTransform.Param
                             new File(input, SdkConstants.FN_RESOURCE_SHARED_STATIC_LIBRARY),
                             transformOutputs);
                 }
-                break;
-            case COMPILE_ONLY_NAMESPACED_R_CLASS_JAR:
-                outputIfExists(new File(input, FN_R_CLASS_JAR), transformOutputs);
                 break;
             case DATA_BINDING_ARTIFACT:
                 outputIfExists(

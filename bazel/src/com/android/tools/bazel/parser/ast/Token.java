@@ -38,6 +38,7 @@ public class Token {
         COLON,
         NUMBER,
         PERCENT,
+        DOT,
     }
 
     public final Kind kind;

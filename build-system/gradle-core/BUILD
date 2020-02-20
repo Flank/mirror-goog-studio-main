@@ -71,6 +71,7 @@ kotlin_library(
         # can be updated once https://github.com/google/bundletool/pull/76 is released.
         "//tools/base/third_party:com.google.auto.value_auto-value",
         "//tools/base/third_party:com.google.auto.value_auto-value-annotations",
+        "//tools/base/third_party:com.google.crypto.tink_tink",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-core",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-processor",
         "//tools/base/third_party:com.android.tools.build_bundletool",
@@ -78,6 +79,8 @@ kotlin_library(
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.protobuf_protobuf-java",
+        "//tools/base/third_party:com.google.protobuf_protobuf-java-util",
+        "//tools/base/third_party:com.squareup_javapoet",
         "//tools/base/third_party:com.sun.istack_istack-commons-runtime",
         "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
         "//tools/base/third_party:net.sf.jopt-simple_jopt-simple",
@@ -138,6 +141,7 @@ kotlin_test(
         "//prebuilts/studio/sdk:platforms/android-24",
         "//prebuilts/studio/sdk:platforms/android-27",
         "//prebuilts/studio/sdk:platforms/latest",
+        "//tools/base/build-system/aapt2:aapt2_for_tests",
     ],
     friends = [":gradle-core"],
     jvm_flags = [

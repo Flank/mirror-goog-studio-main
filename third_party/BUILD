@@ -59,7 +59,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_bundletool",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.12.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.13.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [
@@ -161,6 +161,17 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.8.5:jar",
     visibility = ["//visibility:public"],
     exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.google.crypto.tink_tink",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/crypto/tink/tink/1.3.0-rc2:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.protobuf_protobuf-java",
+        ":org.json_json",
+    ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -271,7 +282,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.protobuf_protobuf-java",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.10.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -279,10 +290,11 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.protobuf_protobuf-java-util",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.4.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.10.0:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.gson_gson",
+        ":com.google.errorprone_error_prone_annotations",
         ":com.google.guava_guava",
         ":com.google.protobuf_protobuf-java",
     ],
@@ -1181,10 +1193,9 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.gradle_gradle-tooling-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/6.1.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/6.2:jar",
     visibility = ["//visibility:public"],
-    exports = [],
-    runtime_deps = [":org.slf4j_slf4j-api"],
+    exports = [":org.slf4j_slf4j-api"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -1540,6 +1551,14 @@ maven_java_library(
 maven_java_library(
     name = "org.jetbrains_annotations",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/annotations/13.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.json_json",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/json/json/20180813:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )

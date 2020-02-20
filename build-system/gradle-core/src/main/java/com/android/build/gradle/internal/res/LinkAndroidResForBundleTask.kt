@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.res
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.dsl.convert
@@ -24,8 +26,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
-import com.android.build.gradle.internal.scope.ApkData
-import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.getAapt2DaemonBuildService
@@ -114,7 +114,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
         private set
 
     @get:Nested
-    lateinit var mainSplit: ApkData
+    lateinit var mainSplit: VariantOutputImpl
         private set
 
     @get:Input
@@ -135,8 +135,8 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     override fun doTaskAction() {
 
         val manifestFile =
-            ExistingBuildElements.from(InternalArtifactType.BUNDLE_MANIFEST, manifestFiles)
-                .element(mainSplit)
+            BuiltArtifactsLoaderImpl().load(manifestFiles)
+                ?.getBuiltArtifact(mainSplit)
                 ?.outputFile
                 ?: throw RuntimeException("Cannot find merged manifest file")
 
@@ -145,13 +145,12 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
         val featurePackagesBuilder = ImmutableList.builder<File>()
         for (featurePackage in featureResourcePackages) {
-            val buildElements =
-                ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, featurePackage)
-            if (buildElements.size() != 1) {
+            val buildElements = BuiltArtifactsLoaderImpl.loadFromDirectory(featurePackage)
+            if (buildElements?.elements?.size != 1) {
                 throw IOException("Found more than one PROCESSED_RES output at $featurePackage")
             }
 
-            featurePackagesBuilder.add(buildElements.iterator().next().outputFile)
+            featurePackagesBuilder.add(File(buildElements.elements.first().outputFile))
         }
 
         val compiledDependenciesResourcesDirs =
@@ -160,7 +159,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
         val config = AaptPackageConfig(
             androidJarPath = androidJar.get().absolutePath,
             generateProtos = true,
-            manifestFile = manifestFile,
+            manifestFile = File(manifestFile),
             options = aaptOptions,
             resourceOutputApk = outputFile,
             variantType = VariantTypeImpl.BASE_APK,
@@ -266,7 +265,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.versionCode.setDisallowChanges(mainSplit.versionCode)
             task.versionName.setDisallowChanges(mainSplit.versionName)
 
-            task.mainSplit = mainSplit.apkData
+            task.mainSplit = mainSplit
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,

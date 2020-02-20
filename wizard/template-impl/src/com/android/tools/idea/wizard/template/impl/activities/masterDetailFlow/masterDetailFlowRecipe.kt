@@ -68,11 +68,11 @@ fun RecipeExecutor.masterDetailFlowRecipe(
   val baseFeatureResOut = moduleData.baseFeature?.resDir ?: resOut
   generateThemeStyles(moduleData.themesData.main, moduleData.isDynamic, useMaterial2, resOut, baseFeatureResOut)
   mergeXml(androidManifestXml(
-    collectionName, detailName, itemListLayout, detailNameLayout, isLauncher, moduleData.isLibrary, moduleData.isNew,
+    collectionName, detailName, itemListLayout, detailNameLayout, isLauncher, moduleData.isLibrary, moduleData.isNewModule,
     packageName, moduleData.themesData.noActionBar.name),
            manifestOut.resolve("AndroidManifest.xml"))
 
-  val stringsXml = stringsXml(itemListLayout, detailNameLayout, moduleData.isNew, objectKind, objectKindPlural)
+  val stringsXml = stringsXml(itemListLayout, detailNameLayout, moduleData.isNewModule, objectKind, objectKindPlural)
   if (moduleData.isDynamic) {
     mergeXml(stringsXml, moduleData.baseFeature?.resDir!!.resolve("values/strings.xml"))
   }
@@ -98,11 +98,9 @@ fun RecipeExecutor.masterDetailFlowRecipe(
 
   val contentDetailActivity = when (projectData.language) {
     Language.Java -> contentDetailActivityJava(collectionName, detailName, applicationPackage, detailNameLayout,
-                                               moduleData.apis.minApiLevel, objectKind, packageName,
-                                               useAndroidX, useMaterial2)
-    Language.Kotlin -> contentDetailActivityKt(collectionName, detailName, detailNameLayout, moduleData.apis.minApiLevel, objectKind,
-                                               packageName, useAndroidX,
-                                               useMaterial2)
+                                               objectKind, packageName, useAndroidX, useMaterial2)
+    Language.Kotlin -> contentDetailActivityKt(collectionName, detailName, detailNameLayout, objectKind,
+                                               packageName, useAndroidX, useMaterial2)
   }
   save(contentDetailActivity, srcOut.resolve("${detailName}Activity.${ktOrJavaExt}"))
 

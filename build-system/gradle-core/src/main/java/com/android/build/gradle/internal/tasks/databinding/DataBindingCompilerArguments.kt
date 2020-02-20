@@ -161,7 +161,7 @@ class DataBindingCompilerArguments constructor(
             val artifacts = componentProperties.artifacts
 
             return DataBindingCompilerArguments(
-                incremental = globalScope.projectOptions
+                incremental = componentProperties.services.projectOptions
                     .get(BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING),
                 artifactType = getModuleType(componentProperties),
                 modulePackageProvider = { variantDslInfo.originalApplicationId },

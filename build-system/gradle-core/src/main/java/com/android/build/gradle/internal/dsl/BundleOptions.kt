@@ -16,24 +16,25 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.api.dsl.Bundle
+import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
-import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.model.ObjectFactory
 import javax.inject.Inject
 
 /** Features that apply to distribution by the bundle  */
-open class BundleOptions @Inject constructor(
-    objectFactory: ObjectFactory,
-    deprecationReporter: DeprecationReporter
-) {
+abstract class BundleOptions @Inject constructor(
+    dslServices: DslServices
+) : Bundle {
 
-    val abi: BundleOptionsAbi = objectFactory.newInstance(BundleOptionsAbi::class.java)
-    val density: BundleOptionsDensity = objectFactory.newInstance(BundleOptionsDensity::class.java)
-    val language: BundleOptionsLanguage = objectFactory.newInstance(BundleOptionsLanguage::class.java)
-    val texture: BundleOptionsTexture = objectFactory.newInstance(BundleOptionsTexture::class.java)
-    val integrityConfigDir: DirectoryProperty = objectFactory.directoryProperty()
+    override val abi: BundleOptionsAbi = dslServices.newInstance(BundleOptionsAbi::class.java)
+    override val density: BundleOptionsDensity =
+        dslServices.newInstance(BundleOptionsDensity::class.java)
+    override val language: BundleOptionsLanguage =
+        dslServices.newInstance(BundleOptionsLanguage::class.java)
+    override val texture: BundleOptionsTexture =
+        dslServices.newInstance(BundleOptionsTexture::class.java)
+    abstract val integrityConfigDir: DirectoryProperty
 
     fun abi(action: Action<BundleOptionsAbi>) {
         action.execute(abi)
@@ -49,5 +50,21 @@ open class BundleOptions @Inject constructor(
 
     fun texture(action: Action<BundleOptionsTexture>) {
         action.execute(texture)
+    }
+
+    override fun abi(action: com.android.build.api.dsl.BundleAbi.() -> Unit) {
+        action.invoke(abi)
+    }
+
+    override fun density(action: com.android.build.api.dsl.BundleDensity.() -> Unit) {
+        action.invoke(density)
+    }
+
+    override fun language(action: com.android.build.api.dsl.BundleLanguage.() -> Unit) {
+        action.invoke(language)
+    }
+
+    override fun texture(action: com.android.build.api.dsl.BundleTexture.() -> Unit) {
+        action.invoke(texture)
     }
 }

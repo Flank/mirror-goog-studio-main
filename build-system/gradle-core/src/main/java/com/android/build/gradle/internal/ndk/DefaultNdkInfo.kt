@@ -16,23 +16,19 @@
 
 package com.android.build.gradle.internal.ndk
 
-import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.NdkAbiFile
 import com.android.build.gradle.internal.cxx.configure.PlatformConfigurator
 import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
 import com.android.repository.Revision
-import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions.checkState
 import com.google.common.collect.Maps
-import java.io.File
-import java.nio.file.Files
-import java.util.Locale
 import org.gradle.api.InvalidUserDataException
-import org.gradle.api.logging.Logging
-import java.io.FileFilter
+import java.io.File
+import java.util.Locale
 import kotlin.streams.toList
 
 /** Default NdkInfo. Used for r13 and earlier.  */
@@ -112,6 +108,14 @@ open class DefaultNdkInfo(protected val rootDirectory: File) : NdkInfo {
         val toolchainAbi = getToolchainAbi(abi)
         return FileUtils.join(
             getToolchainPath(toolchainAbi), "bin", toolchainAbi.gccExecutablePrefix + "-strip"
+        )
+    }
+
+    /** Return the executable for extracting debug metadata from a shared object.  */
+    override fun getObjcopyExecutable(abi: Abi): File {
+        val toolchainAbi = getToolchainAbi(abi)
+        return FileUtils.join(
+            getToolchainPath(toolchainAbi), "bin", toolchainAbi.gccExecutablePrefix + "-objcopy"
         )
     }
 

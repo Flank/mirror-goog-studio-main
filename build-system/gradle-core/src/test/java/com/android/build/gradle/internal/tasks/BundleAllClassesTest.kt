@@ -20,6 +20,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.feature.BundleAllClasses
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
@@ -27,13 +28,16 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.scope.createFakeVariantPropertiesApiScope
+import com.android.build.gradle.internal.services.createDslServices
+import com.android.build.gradle.internal.services.createProjectServices
+import com.android.build.gradle.internal.services.createTaskCreationServices
+import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.build.gradle.internal.variant2.createFakeDslScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.testutils.truth.FileSubject
 import com.google.common.collect.ImmutableMap
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.testfixtures.ProjectBuilder
@@ -53,8 +57,8 @@ class BundleAllClassesTest {
     @Mock private lateinit var fileTree: FileTree
     @Mock private lateinit var globalScope: GlobalScope
     @Mock private lateinit var variantData: BaseVariantData
-    @Mock private lateinit var preJavacClasses: FileCollection
-    @Mock private lateinit var postJavacClasses: FileCollection
+    @Mock private lateinit var preJavacClasses: ConfigurableFileCollection
+    @Mock private lateinit var postJavacClasses: ConfigurableFileCollection
     @Mock private lateinit var extension: BaseExtension
     @Mock private lateinit var aaptOptions: AaptOptions
     @Mock private lateinit var taskContainer: MutableTaskContainer
@@ -67,20 +71,17 @@ class BundleAllClassesTest {
 
     @Before
     fun setUp() {
-        val projectOptions = ProjectOptions(
-            ImmutableMap.of<String, Any>(
-                BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
-                false
+
+        val projectServices = createProjectServices(
+            projectOptions = ProjectOptions(
+                ImmutableMap.of<String, Any>(
+                    BooleanOption.ENABLE_GRADLE_WORKERS.propertyName,
+                    false
+                )
             )
         )
-
-        val dslScope = createFakeDslScope(
-            projectOptions = projectOptions
-        )
-
-        val variantApiScope = createFakeVariantPropertiesApiScope(
-            projectOptions = projectOptions
-        )
+        val dslServices = createDslServices(projectServices)
+        val services = createTaskCreationServices(projectServices)
 
         MockitoAnnotations.initMocks(this)
         Mockito.`when`(componentProperties.artifacts).thenReturn(artifacts)
@@ -89,12 +90,12 @@ class BundleAllClassesTest {
         Mockito.`when`(componentProperties.variantScope).thenReturn(scope)
         Mockito.`when`(componentProperties.taskContainer).thenReturn(taskContainer)
         Mockito.`when`(componentProperties.variantData).thenReturn(variantData)
-        Mockito.`when`(componentProperties.variantApiScope).thenReturn(variantApiScope)
+        Mockito.`when`(componentProperties.services).thenReturn(services)
         Mockito.`when`(variantData.allPostJavacGeneratedBytecode).thenReturn(postJavacClasses)
         Mockito.`when`(variantData.allPreJavacGeneratedBytecode).thenReturn(preJavacClasses)
         Mockito.`when`(globalScope.extension).thenReturn(extension)
-        Mockito.`when`(globalScope.dslScope).thenReturn(dslScope)
-        Mockito.`when`(globalScope.projectOptions).thenReturn(projectOptions)
+        Mockito.`when`(globalScope.dslServices).thenReturn(dslServices)
+        Mockito.`when`(globalScope.projectOptions).thenReturn(projectServices.projectOptions)
         Mockito.`when`(extension.aaptOptions).thenReturn(aaptOptions)
         Mockito.`when`(aaptOptions.namespaced).thenReturn(false)
         Mockito.`when`(preJavacClasses.asFileTree).thenReturn(fileTree)
@@ -112,7 +113,10 @@ class BundleAllClassesTest {
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(artifacts.getFinalProductAsFileCollection(InternalArtifactType
             .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)).thenReturn(
-            FakeGradleProvider(rClasses))
+            project.provider {
+                rClasses
+            }
+        )
 
         Mockito.`when`(scope.jarCreatorType).thenReturn(JarCreatorType.JAR_FLINGER)
 

@@ -48,6 +48,7 @@ import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.se
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.viewModelFragmentTemplate
 import com.android.tools.idea.wizard.template.impl.other.androidManifest.androidManifestTemplate
 import com.android.tools.idea.wizard.template.impl.other.appWidget.appWidgetTemplate
+import com.android.tools.idea.wizard.template.impl.other.automotiveMediaService.automotiveMediaServiceTemplate
 import com.android.tools.idea.wizard.template.impl.other.automotiveMessagingService.automotiveMessagingServiceTemplate
 import com.android.tools.idea.wizard.template.impl.other.broadcastReceiver.broadcastReceiverTemplate
 import com.android.tools.idea.wizard.template.impl.other.contentProvider.contentProviderTemplate
@@ -99,6 +100,7 @@ class WizardTemplateProviderImpl : WizardTemplateProvider() {
 
     androidManifestTemplate,
     appWidgetTemplate,
+    automotiveMediaServiceTemplate,
     automotiveMessagingServiceTemplate,
     broadcastReceiverTemplate,
     contentProviderTemplate,

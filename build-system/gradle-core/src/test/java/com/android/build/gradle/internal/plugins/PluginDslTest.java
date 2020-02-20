@@ -674,7 +674,7 @@ public class PluginDslTest {
                 .isEqualTo(ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION);
         // FIXME once we get rid of the component model, we can make this better.
         final SyncIssueReporter issueReporter =
-                (SyncIssueReporter) plugin.globalScope.getDslScope().getIssueReporter();
+                (SyncIssueReporter) plugin.dslServices.getIssueReporter();
         Collection<SyncIssue> syncIssues = issueReporter.getSyncIssues();
         assertThat(syncIssues).hasSize(1);
         SyncIssue issue = Iterables.getOnlyElement(syncIssues);

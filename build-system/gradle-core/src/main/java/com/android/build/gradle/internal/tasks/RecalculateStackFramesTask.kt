@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
@@ -96,14 +97,6 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
                     AndroidArtifacts.ArtifactScope.EXTERNAL,
                     AndroidArtifacts.ArtifactType.CLASSES_JAR))
 
-            if (globalScope.extension.aaptOptions.namespaced
-                && globalScope.projectOptions[BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES]) {
-                classesToFix.from(
-                    creationConfig
-                        .artifacts
-                        .getFinalProduct(InternalArtifactType.NAMESPACED_CLASSES_JAR))
-            }
-
             val referencedClasses =
                 globalScope.project.files(creationConfig.variantScope.providedOnlyClasspath)
 
@@ -125,12 +118,6 @@ abstract class RecalculateStackFramesTask  : IncrementalTask() {
             }
 
             creationConfig.onTestedConfig {
-                referencedClasses.from(
-                    creationConfig.artifacts.getFinalProduct(
-                        InternalArtifactType.TESTED_CODE_CLASSES
-                    )
-                )
-
                 referencedClasses.from(
                     it.variantDependencies.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

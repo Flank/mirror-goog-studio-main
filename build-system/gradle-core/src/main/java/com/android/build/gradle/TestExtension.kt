@@ -9,20 +9,23 @@ import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.ExtraModelInfo
-import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
 import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.AdbOptions
+import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.DensitySplitOptions
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
+import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
+import com.android.build.gradle.internal.dsl.PackagingOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.Splits
@@ -38,16 +41,14 @@ import org.gradle.api.internal.DefaultDomainObjectSet
 
 /** {@code android} extension for {@code com.android.test} projects. */
 open class TestExtension(
-    dslScope: DslScope,
-    projectOptions: ProjectOptions,
+    dslServices: DslServices,
     globalScope: GlobalScope,
     buildOutputs: NamedDomainObjectContainer<BaseVariantOutput>,
     sourceSetManager: SourceSetManager,
     extraModelInfo: ExtraModelInfo,
     private val publicExtensionImpl: TestExtensionImpl
 ) : BaseExtension(
-    dslScope,
-    projectOptions,
+    dslServices,
     globalScope,
     buildOutputs,
     sourceSetManager,
@@ -58,6 +59,7 @@ open class TestExtension(
             AaptOptions,
             AbiSplitOptions,
             AdbOptions,
+            AnnotationProcessorOptions,
             BuildType,
             CmakeOptions,
             CompileOptions,
@@ -66,7 +68,9 @@ open class TestExtension(
             DensitySplitOptions,
             ExternalNativeBuild,
             JacocoOptions,
+            LintOptions,
             NdkBuildOptions,
+            PackagingOptions,
             ProductFlavor,
             SigningConfig,
             Splits,
@@ -75,16 +79,15 @@ open class TestExtension(
     ActionableVariantObjectOperationsExecutor<TestVariant<TestVariantProperties>, TestVariantProperties> by publicExtensionImpl {
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =
-        dslScope.objectFactory.domainObjectSet(ApplicationVariant::class.java)
+        dslServices.domainObjectSet(ApplicationVariant::class.java)
 
     private var _targetProjectPath: String? = null
 
     override val viewBinding: ViewBindingOptions =
-        dslScope.objectFactory.newInstance(
+        dslServices.newInstance(
             ViewBindingOptionsImpl::class.java,
             publicExtensionImpl.buildFeatures,
-            projectOptions,
-            globalScope.dslScope
+            dslServices
         )
 
     // this is needed because the impl class needs this but the interface does not,

@@ -19,9 +19,8 @@ package com.android.build;
 import com.android.annotations.NonNull;
 import java.util.Collection;
 
-/**
- * basic variant output information
- */
+/** basic variant output information */
+@Deprecated
 public interface VariantOutput {
 
     /** An object representing the lack of filter. */

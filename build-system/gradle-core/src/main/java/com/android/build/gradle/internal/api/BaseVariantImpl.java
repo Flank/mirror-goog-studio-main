@@ -18,22 +18,18 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.SourceKind;
-import com.android.build.gradle.internal.DependencyConfigurator;
-import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.VariantDslInfoImpl;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
+import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.tasks.AidlCompile;
@@ -47,7 +43,6 @@ import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -57,12 +52,9 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.attributes.Attribute;
-import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
-import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResource;
 import org.gradle.api.tasks.AbstractCopyTask;
@@ -87,7 +79,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
             "https://d.android.com/r/tools/use-properties";
 
     @NonNull protected final ComponentPropertiesImpl componentProperties;
-    @NonNull private final ObjectFactory objectFactory;
+    @NonNull protected final BaseServices services;
 
     @NonNull protected final ReadOnlyObjectProvider readOnlyObjectProvider;
 
@@ -95,11 +87,11 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     BaseVariantImpl(
             @NonNull ComponentPropertiesImpl componentProperties,
-            @NonNull ObjectFactory objectFactory,
+            @NonNull BaseServices services,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
         this.componentProperties = componentProperties;
-        this.objectFactory = objectFactory;
+        this.services = services;
         this.readOnlyObjectProvider = readOnlyObjectProvider;
         this.outputs = outputs;
     }
@@ -192,11 +184,9 @@ public abstract class BaseVariantImpl implements BaseVariant {
     public List<ConfigurableFileTree> getSourceFolders(@NonNull SourceKind folderType) {
         switch (folderType) {
             case JAVA:
-                return getVariantData().getJavaSources();
+                return componentProperties.getJavaSources();
             default:
-                componentProperties
-                        .getVariantApiScope()
-                        .getIssueReporter()
+                services.getIssueReporter()
                         .reportError(
                                 IssueReporter.Type.GENERIC,
                                 "Unknown SourceKind value: " + folderType);
@@ -229,9 +219,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
         // this getter cannot work for dynamic features as the applicationId comes from somewhere
         // else and cannot be known at config time.
         if (componentProperties.getVariantType().isDynamicFeature()) {
-            componentProperties
-                    .getVariantApiScope()
-                    .getIssueReporter()
+            services.getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
                             "variant.getApplicationId() is not supported by dynamic-feature plugins as it cannot handle delayed setting of the application ID. Please use getApplicationIdTextResource() instead.");
@@ -243,9 +231,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public TextResource getApplicationIdTextResource() {
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "VariantProperties.applicationId",
                         "BaseVariant.getApplicationIdTextResource",
@@ -257,9 +243,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public Task getPreBuild() {
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getPreBuildProvider()",
                         "variant.getPreBuild()",
@@ -278,9 +262,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public Task getCheckManifest() {
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getCheckManifestProvider()",
                         "variant.getCheckManifest()",
@@ -301,19 +283,15 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @Nullable
     public AidlCompile getAidlCompile() {
-        if (!componentProperties.getGlobalScope().getBuildFeatures().getAidl()) {
-            componentProperties
-                    .getVariantApiScope()
-                    .getIssueReporter()
+        if (!componentProperties.getBuildFeatures().getAidl()) {
+            services.getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
                             "aidl support is disabled via buildFeatures.");
             return null;
         }
 
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getAidlCompileProvider()",
                         "variant.getAidlCompile()",
@@ -325,10 +303,8 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public TaskProvider<AidlCompile> getAidlCompileProvider() {
-        if (!componentProperties.getGlobalScope().getBuildFeatures().getAidl()) {
-            componentProperties
-                    .getVariantApiScope()
-                    .getIssueReporter()
+        if (!componentProperties.getBuildFeatures().getAidl()) {
+            services.getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
                             "aidl support is disabled via buildFeatures.");
@@ -343,19 +319,15 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @Nullable
     public RenderscriptCompile getRenderscriptCompile() {
-        if (!componentProperties.getGlobalScope().getBuildFeatures().getRenderScript()) {
-            componentProperties
-                    .getVariantApiScope()
-                    .getIssueReporter()
+        if (!componentProperties.getBuildFeatures().getRenderScript()) {
+            services.getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
                             "renderscript support is disabled via buildFeatures.");
             return null;
         }
 
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getRenderscriptCompileProvider()",
                         "variant.getRenderscriptCompile()",
@@ -367,11 +339,8 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider() {
-        final GlobalScope globalScope = getVariantData().getGlobalScope();
-        if (!globalScope.getBuildFeatures().getRenderScript()) {
-            componentProperties
-                    .getVariantApiScope()
-                    .getIssueReporter()
+        if (!componentProperties.getBuildFeatures().getRenderScript()) {
+            services.getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
                             "renderscript support is disabled via buildFeatures.");
@@ -385,9 +354,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     @Override
     public MergeResources getMergeResources() {
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getMergeResourcesProvider()",
                         "variant.getMergeResources()",
@@ -406,9 +373,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     @Override
     public MergeSourceSetFolders getMergeAssets() {
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getMergeAssetsProvider()",
                         "variant.getMergeAssets()",
@@ -427,9 +392,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     @Override
     public GenerateBuildConfig getGenerateBuildConfig() {
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getGenerateBuildConfigProvider()",
                         "variant.getGenerateBuildConfig()",
@@ -449,9 +412,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public JavaCompile getJavaCompile() {
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getJavaCompileProvider()",
                         "variant.getJavaCompile()",
@@ -470,9 +431,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     @Override
     public Task getJavaCompiler() {
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getJavaCompileProvider()",
                         "variant.getJavaCompiler()",
@@ -484,9 +443,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     @Override
     public Collection<ExternalNativeBuildTask> getExternalNativeBuildTasks() {
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getExternalNativeBuildProviders()",
                         "variant.getExternalNativeBuildTask()",
@@ -524,9 +481,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public File getMappingFile() {
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getMappingFileProvider()",
                         "variant.getMappingFile()",
@@ -551,9 +506,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @NonNull
     public Sync getProcessJavaResources() {
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getProcessJavaResourcesProvider()",
                         "variant.getProcessJavaResources()",
@@ -574,9 +527,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @Nullable
     public Task getAssemble() {
-        componentProperties
-                .getVariantApiScope()
-                .getDeprecationReporter()
+        services.getDeprecationReporter()
                 .reportDeprecatedApi(
                         "variant.getAssembleProvider()",
                         "variant.getAssemble()",
@@ -679,55 +630,25 @@ public abstract class BaseVariantImpl implements BaseVariant {
         componentProperties.getVariantDslInfo().addResValue(type, name, value);
     }
 
-
     @Override
     public void missingDimensionStrategy(
             @NonNull String dimension, @NonNull String requestedValue) {
-        _missingDimensionStrategy(dimension, ImmutableList.of(requestedValue));
+        componentProperties.handleMissingDimensionStrategy(
+                dimension, ImmutableList.of(requestedValue));
     }
 
     @Override
     public void missingDimensionStrategy(
             @NonNull String dimension, @NonNull String... requestedValues) {
-        _missingDimensionStrategy(dimension, ImmutableList.copyOf(requestedValues));
+        componentProperties.handleMissingDimensionStrategy(
+                dimension, ImmutableList.copyOf(requestedValues));
     }
 
     @Override
     public void missingDimensionStrategy(
             @NonNull String dimension, @NonNull List<String> requestedValues) {
-        _missingDimensionStrategy(dimension, ImmutableList.copyOf(requestedValues));
-    }
-
-    private void _missingDimensionStrategy(
-            @NonNull String dimension, @NonNull ImmutableList<String> alternatedValues) {
-
-        // First, setup the requested value, which isn't the actual requested value, but
-        // the variant name, modified
-        final String requestedValue = VariantManager.getModifiedName(getName());
-
-        final Attribute<ProductFlavorAttr> attributeKey =
-                Attribute.of(dimension, ProductFlavorAttr.class);
-        final ProductFlavorAttr attributeValue =
-                objectFactory.named(ProductFlavorAttr.class, requestedValue);
-
-        VariantDependencies dependencies = componentProperties.getVariantDependencies();
-        dependencies.getCompileClasspath().getAttributes().attribute(attributeKey, attributeValue);
-        dependencies.getRuntimeClasspath().getAttributes().attribute(attributeKey, attributeValue);
-        dependencies
-                .getAnnotationProcessorConfiguration()
-                .getAttributes()
-                .attribute(attributeKey, attributeValue);
-
-        // then add the fallbacks which contain the actual requested value
-        AttributesSchema schema =
-                componentProperties
-                        .getGlobalScope()
-                        .getProject()
-                        .getDependencies()
-                        .getAttributesSchema();
-
-        DependencyConfigurator.addFlavorStrategy(
-                schema, dimension, ImmutableMap.of(requestedValue, alternatedValues));
+        componentProperties.handleMissingDimensionStrategy(
+                dimension, ImmutableList.copyOf(requestedValues));
     }
 
     @Override

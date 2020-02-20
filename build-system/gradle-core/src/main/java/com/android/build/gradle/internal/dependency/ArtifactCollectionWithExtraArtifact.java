@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.dependency;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.api.TestedComponentIdentifier;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -37,6 +35,7 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.artifacts.result.ResolvedVariantResult;
 import org.gradle.api.component.Artifact;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 
 /**
  * Implementation of a {@link ArtifactCollection} on top of another ArtifactCollection and a {@link
@@ -48,18 +47,11 @@ public class ArtifactCollectionWithExtraArtifact implements ArtifactCollection {
 
     public interface ExtraComponentIdentifier extends ComponentIdentifier {}
 
-    private enum ExtraArtifactType {
-        TEST,
-        OTHER
-    }
-
     /** the parent artifact collection */
     @NonNull private final ArtifactCollection parentArtifacts;
 
     /** extra artifact */
-    @NonNull private final FileCollection extraArtifact;
-    /** extra artifact type */
-    @NonNull private final ExtraArtifactType extraArtifactType;
+    @NonNull private final Provider<FileCollection> extraArtifact;
 
     @NonNull private final String projectPath;
     @Nullable private final String variantName;
@@ -68,41 +60,27 @@ public class ArtifactCollectionWithExtraArtifact implements ArtifactCollection {
 
     private Set<ResolvedArtifactResult> artifactResults = null;
 
-    public static ArtifactCollectionWithExtraArtifact makeExtraCollectionForTest(
-            @NonNull ArtifactCollection parentArtifacts,
-            @NonNull FileCollection extraArtifact,
-            @NonNull String projectPath,
-            @Nullable String variantName) {
-
-        return new ArtifactCollectionWithExtraArtifact(
-                parentArtifacts, extraArtifact, ExtraArtifactType.TEST, projectPath, variantName);
-    }
-
     public static ArtifactCollectionWithExtraArtifact makeExtraCollection(
             @NonNull ArtifactCollection parentArtifacts,
-            @NonNull FileCollection extraArtifact,
+            @NonNull FileCollection combinedCollection,
+            @NonNull Provider<FileCollection> extraArtifact,
             @NonNull String projectPath) {
 
         return new ArtifactCollectionWithExtraArtifact(
-                parentArtifacts, extraArtifact, ExtraArtifactType.OTHER, projectPath, null);
+                parentArtifacts, combinedCollection, extraArtifact, projectPath, null);
     }
 
     private ArtifactCollectionWithExtraArtifact(
             @NonNull ArtifactCollection parentArtifacts,
-            @NonNull FileCollection extraArtifact,
-            @NonNull ExtraArtifactType extraArtifactType,
+            @NonNull FileCollection combinedCollection,
+            @NonNull Provider<FileCollection> extraArtifact,
             @NonNull String projectPath,
             @Nullable String variantName) {
-        Preconditions.checkState(
-                variantName != null || extraArtifactType != ExtraArtifactType.TEST,
-                "variant name should not be null for test extra type");
         this.parentArtifacts = parentArtifacts;
         this.extraArtifact = extraArtifact;
-        this.extraArtifactType = extraArtifactType;
         this.projectPath = projectPath;
         this.variantName = variantName;
-
-        combinedCollection = parentArtifacts.getArtifactFiles().plus(extraArtifact);
+        this.combinedCollection = combinedCollection;
     }
 
     @Override
@@ -151,15 +129,11 @@ public class ArtifactCollectionWithExtraArtifact implements ArtifactCollection {
 
     @NonNull
     private List<ResolvedArtifactResult> computeExtraArtifactResults() {
-        Set<File> testedFiles = extraArtifact.getFiles();
+        Set<File> testedFiles = extraArtifact.get().getFiles();
         List<ResolvedArtifactResult> list = Lists.newArrayListWithCapacity(testedFiles.size());
 
-        //noinspection ConstantConditions
         ExtraComponentArtifactIdentifier artifactId =
-                new ExtraComponentArtifactIdentifier(
-                        extraArtifactType == ExtraArtifactType.TEST
-                                ? new TestedComponentIdentifierImpl(projectPath, variantName)
-                                : new ExtraComponentIdentifierImpl(projectPath));
+                new ExtraComponentArtifactIdentifier(new ExtraComponentIdentifierImpl(projectPath));
 
         for (File file : testedFiles) {
             list.add(new ExtraResolvedArtifactResult(file, artifactId));
@@ -219,48 +193,6 @@ public class ArtifactCollectionWithExtraArtifact implements ArtifactCollection {
         @Override
         public String getDisplayName() {
             return id.getDisplayName();
-        }
-    }
-
-    public static final class TestedComponentIdentifierImpl
-            implements TestedComponentIdentifier, ExtraComponentIdentifier {
-        // this should be here to disambiguate between different component identifier
-        private final String projectPath;
-        @NonNull private final String variantName;
-
-        public TestedComponentIdentifierImpl(
-                @NonNull String projectPath, @NonNull String variantName) {
-            this.projectPath = projectPath;
-            this.variantName = variantName;
-        }
-
-        @Override
-        @NonNull
-        public String getVariantName() {
-            return variantName;
-        }
-
-        @Override
-        public String getDisplayName() {
-            return "__tested_artifact__:" + projectPath;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            TestedComponentIdentifierImpl that = (TestedComponentIdentifierImpl) o;
-            return Objects.equals(projectPath, that.projectPath)
-                    && Objects.equals(variantName, that.variantName);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(projectPath, variantName);
         }
     }
 

@@ -351,7 +351,6 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
                     artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES)
-                        .get()
                 } else {
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection(
@@ -373,7 +372,6 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
                     artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_JAVA_RES)
-                        .get()
                 } else {
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection { contentTypes, scopes ->

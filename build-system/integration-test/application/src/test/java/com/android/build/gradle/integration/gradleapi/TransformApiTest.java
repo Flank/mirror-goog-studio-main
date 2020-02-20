@@ -21,15 +21,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.SdkConstants;
-import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ProjectBuildOutput;
-import com.android.builder.model.VariantBuildOutput;
+import com.android.builder.model.VariantBuildInformation;
 import com.android.testutils.apk.Apk;
-import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
+import java.io.File;
 import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
@@ -68,32 +66,28 @@ public class TransformApiTest {
                 .executor()
                 .withFailOnWarning(false)
                 .run("assembleDebug");
-        AndroidProject model =
+
+        // get the output model
+        AndroidProject projectModel =
                 wholeProject
                         .getSubproject("androidproject")
                         .model()
                         .withFailOnWarning(false)
                         .fetchAndroidProjects()
                         .getOnlyModel();
-
-        // get the output model
-        ProjectBuildOutput projectBuildOutput =
-                wholeProject
-                        .getSubproject("androidproject")
-                        .model()
-                        .withFailOnWarning(false)
-                        .fetch(ProjectBuildOutput.class);
-        VariantBuildOutput debugVariantOutput =
-                ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
+        VariantBuildInformation debugVariantOutput =
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectModel);
         assertNotNull("debug Variant null-check", debugVariantOutput);
 
         // get the outputs.
-        Collection<OutputFile> debugOutputs = debugVariantOutput.getOutputs();
+        Collection<String> debugOutputs =
+                ProjectBuildOutputUtils.getOutputFiles(debugVariantOutput);
         assertNotNull(debugOutputs);
         assertEquals(1, debugOutputs.size());
 
         // make sure the Gson library has been renamed and the original one is not present.
-        Apk outputFile = new Apk(Iterators.getOnlyElement(debugOutputs.iterator()).getOutputFile());
+        Apk outputFile =
+                new Apk(new File(ProjectBuildOutputUtils.getSingleOutputFile(debugVariantOutput)));
         assertThatApk(outputFile).containsClass("Lcom/google/repacked/gson/Gson;");
         assertThatApk(outputFile).doesNotContainClass("Lcom/google/gson/Gson;");
     }

@@ -69,7 +69,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
     }
 
     @Override
-    public void loadFromMetadataFile(File metadataFile)
+    public void load(File metadataFile)
             throws ParserConfigurationException, SAXException, IOException {
         // do nothing, there is nothing in the metadata file we cannot get from the tested scope.
     }

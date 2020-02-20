@@ -53,10 +53,4 @@ class AarTransformUtil {
         return files;
     }
 
-    static boolean shouldBeAutoNamespaced(
-            @NonNull File explodedAar, boolean autoNamespaceDependencies) {
-        // Only rewrite dependencies if the flag is set and the library is not already namespaced.
-        return autoNamespaceDependencies
-                && !(new File(explodedAar, FN_RESOURCE_STATIC_LIBRARY).exists());
-    }
 }

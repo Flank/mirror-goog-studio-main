@@ -23,6 +23,8 @@ cc_binary(
         "swapper.h",
         "thread_suspend.cc",
         "thread_suspend.h",
+        "variable_reinit.cc",
+        "variable_reinit.h",
     ],
     copts = ANDROID_COPTS + [
         "-I$(GENDIR)/tools/base/deploy/proto",

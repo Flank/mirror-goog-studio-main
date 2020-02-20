@@ -77,10 +77,10 @@ open class BuildArtifactReportTask : DefaultTask() {
 
         override fun configure(task: BuildArtifactReportTask) {
             val outputFileName =
-                    componentProperties.globalScope.projectOptions.get(StringOption.BUILD_ARTIFACT_REPORT_FILE)
+                    componentProperties.services.projectOptions.get(StringOption.BUILD_ARTIFACT_REPORT_FILE)
             val outputFile : File? =
                     if (outputFileName == null) null
-                    else componentProperties.globalScope.project.file(outputFileName)
+                    else componentProperties.services.file(outputFileName)
 
             task.init(
                     report = componentProperties.artifacts::createReport,

@@ -24,13 +24,9 @@ import java.util.List;
 import java.util.Set;
 import javax.inject.Inject;
 
-/**
- * DSL object for per-variant ndk-build options, such as ndk-build arguments and compiler flags.
- *
- * <p>To learn more about the ndk-build toolchain, read the official NDK documentation about <a
- * href="https://developer.android.com/ndk/guides/build.html">Building Your Project</a>.
- */
-public class ExternalNativeNdkBuildOptions implements CoreExternalNativeNdkBuildOptions {
+public class ExternalNativeNdkBuildOptions
+        implements CoreExternalNativeNdkBuildOptions,
+                com.android.build.api.dsl.ExternalNativeNdkBuildOptions {
     @NonNull
     private final List<String> arguments = Lists.newArrayList();
     @NonNull
@@ -45,78 +41,93 @@ public class ExternalNativeNdkBuildOptions implements CoreExternalNativeNdkBuild
     @Inject
     public ExternalNativeNdkBuildOptions() {}
 
-    /** {@inheritDoc} */
     @NonNull
     @Override
     public List<String> getArguments() {
         return arguments;
     }
 
+    @Override
     public void setArguments(@NonNull List<String> arguments) {
         this.arguments.addAll(arguments);
     }
 
-    public void arguments(@NonNull String ...arguments) {
+    @Override
+    public void arguments(@NonNull String... arguments) {
         Collections.addAll(this.arguments, arguments);
     }
 
-    /** {@inheritDoc} */
     @NonNull
     @Override
-    public List<String> getcFlags() {
+    public List<String> getCFlags() {
         return cFlags;
     }
 
-    public void setcFlags(@NonNull List<String> flags) {
-        this.cFlags.addAll(flags);
+    @Override
+    public void setCFlags(@NonNull List<String> cFlags) {
+        this.cFlags.addAll(cFlags);
     }
 
-    public void cFlags(@NonNull String ...flags) {
+    @NonNull
+    @Override
+    public List<String> getcFlags() {
+        return getCFlags();
+    }
+
+    public void setcFlags(@NonNull List<String> flags) {
+        setCFlags(flags);
+    }
+
+    @Override
+    public void cFlags(@NonNull String... flags) {
         Collections.addAll(this.cFlags, flags);
     }
 
-    /** {@inheritDoc} */
     @NonNull
     @Override
     public List<String> getCppFlags() {
         return cppFlags;
     }
 
+    @Override
     public void setCppFlags(@NonNull List<String> flags) {
         this.cppFlags.addAll(flags);
     }
 
-    public void cppFlags(@NonNull String ...flags) {
+    @Override
+    public void cppFlags(@NonNull String... flags) {
         Collections.addAll(this.cppFlags, flags);
     }
 
-    /** {@inheritDoc} */
     @NonNull
     @Override
     public Set<String> getAbiFilters() {
         return abiFilters;
     }
 
+    @Override
     public void setAbiFilters(@NonNull Set<String> abiFilters) {
         this.abiFilters.addAll(abiFilters);
     }
 
-    public void abiFilters(@NonNull String ...abiFilters) {
+    @Override
+    public void abiFilters(@NonNull String... abiFilters) {
         Collections.addAll(this.abiFilters, abiFilters);
     }
 
-    /** {@inheritDoc} */
     @NonNull
     @Override
     public Set<String> getTargets() {
         return targets;
     }
 
+    @Override
     public void setTargets(@NonNull Set<String> targets) {
         this.targets.addAll(targets);
     }
 
-    public void targets(@NonNull String ...targets) {
+    @Override
+    public void targets(@NonNull String... targets) {
         Collections.addAll(this.targets, targets);
     }
 

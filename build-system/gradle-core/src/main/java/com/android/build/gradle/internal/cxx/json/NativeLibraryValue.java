@@ -33,6 +33,11 @@ public class NativeLibraryValue {
     @Nullable public Collection<NativeSourceFolderValue> folders;
     @Nullable public Collection<NativeSourceFileValue> files;
     @Nullable public Collection<NativeHeaderFileValue> headers;
+    /**
+     * A null output means the native library is an object library and does not output any artifacts
+     * that we care about. CMake will build it for us if needed. However, we need to collect such
+     * libraries to collect the compile flags in order for intellisense to work.
+     */
     @Nullable public File output;
     @Nullable public Collection<File> runtimeFiles;
 }

@@ -16,9 +16,8 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.gradle.AppExtension
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.plugins.AppPlugin
-import com.android.build.gradle.internal.variant2.createFakeDslScope
+import com.android.build.gradle.internal.services.createDslServices
 import com.android.builder.core.BuilderConstants
 import com.android.sdklib.SdkVersionInfo
 import com.android.testutils.internal.CopyOfTester
@@ -32,7 +31,7 @@ import org.junit.Test
 /** Tests that the build types are properly initialized.  */
 class BuildTypeTest {
     private lateinit var project: Project
-    private val dslScope: DslScope = createFakeDslScope()
+    private val dslServices = createDslServices()
 
     @Before
     @Throws(Exception::class)
@@ -65,11 +64,13 @@ class BuildTypeTest {
     fun testInitWith() {
         CopyOfTester.assertAllGettersCalled(
             BuildType::class.java,
-            BuildType("original", dslScope),
+            BuildType("original", dslServices),
             { original: BuildType ->
                 val copy =
-                    BuildType(original.name, dslScope)
+                    BuildType(original.name, dslServices)
                 copy.initWith(original)
+                // Ndk and ndkConfig refer to the same object
+                original.ndk
                 // Manually call getters that don't need to be copied.
                 original.postProcessingConfiguration
                 // Covered by original.isDefault
@@ -94,9 +95,9 @@ class BuildTypeTest {
             .compileSdkVersion(SdkVersionInfo.HIGHEST_KNOWN_STABLE_API)
         val buildTypeData =
             project.plugins
-            .getPlugin(AppPlugin::class.java)
-            .variantInputModel
-            .buildTypes[name] ?: error("Build type not found")
+                .getPlugin(AppPlugin::class.java)
+                .variantInputModel
+                .buildTypes[name] ?: error("Build type not found")
         return buildTypeData.buildType
     }
 }

@@ -206,7 +206,6 @@ class NativeAndroidProjectBuilder {
             checkNotNull(currentLibraryName);
             checkNotNull(currentLibraryToolchain);
             checkNotNull(currentLibrarySourceFiles);
-            checkNotNull(currentLibraryOutput);
             checkNotNull(currentLibraryRuntimeFiles);
             checkNotNull(currentLibraryAbi);
             checkNotNull(currentLibraryArtifactName);

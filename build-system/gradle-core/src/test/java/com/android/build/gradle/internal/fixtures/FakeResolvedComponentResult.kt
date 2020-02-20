@@ -40,7 +40,7 @@ class FakeResolvedComponentResult(
     override fun getVariant() = variant ?: error("value not set")
     override fun getModuleVersion() = moduleVersion ?: error("value not set")
     override fun getVariants(): List<ResolvedVariantResult> = variant?.let { listOf(it) } ?: error("value not set")
-    override fun getDependenciesForVariant(p0: ResolvedVariantResult): MutableList<DependencyResult> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun getDependenciesForVariant(p0: ResolvedVariantResult?): MutableList<out DependencyResult> {
+        return (dependencies ?: error("value not set")).toMutableList()
     }
 }

@@ -44,6 +44,9 @@ interface NdkInfo {
     /** Return the executable for removing debug symbols from a shared object.  */
     fun getStripExecutable(abi: Abi): File
 
+    /** Return the executable for extracting debug metadata from a shared object.  */
+    fun getObjcopyExecutable(abi: Abi): File
+
     /** Returns the default STL for the given build system. */
     fun getDefaultStl(buildSystem: NativeBuildSystem): Stl
 

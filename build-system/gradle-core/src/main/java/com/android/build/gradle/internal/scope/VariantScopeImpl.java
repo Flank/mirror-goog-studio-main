@@ -19,21 +19,17 @@ package com.android.build.gradle.internal.scope;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SHARED_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToDefaultVariant;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8_DESUGARING;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_R8_DESUGARING;
 import static com.android.build.gradle.options.BooleanOption.USE_NEW_APK_CREATOR;
 import static com.android.build.gradle.options.BooleanOption.USE_NEW_JAR_CREATOR;
 import static com.android.build.gradle.options.OptionalBooleanOption.ENABLE_R8;
-import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
 import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
 import static com.android.builder.model.CodeShrinker.PROGUARD;
 import static com.android.builder.model.CodeShrinker.R8;
@@ -54,7 +50,6 @@ import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
@@ -95,7 +90,6 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
@@ -160,7 +154,8 @@ public class VariantScopeImpl implements VariantScope {
                                                 "runtime-deps",
                                                 variantDslInfo.getDirName(),
                                                 "desugar_try_with_resources.jar")));
-        this.postProcessingOptions = variantDslInfo.createPostProcessingOptions(project);
+        this.postProcessingOptions =
+                variantDslInfo.createPostProcessingOptions(project.getLayout().getBuildDirectory());
 
         configureNdk();
     }
@@ -227,7 +222,7 @@ public class VariantScopeImpl implements VariantScope {
         // TODO: support resource shrinking for multi-apk applications http://b/78119690
         if (variantType.isDynamicFeature() || globalScope.hasDynamicFeatures()) {
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,
@@ -238,7 +233,7 @@ public class VariantScopeImpl implements VariantScope {
         if (variantType.isAar()) {
             if (!globalScope.getProject().getPlugins().hasPlugin("com.android.feature")) {
                 globalScope
-                        .getDslScope()
+                        .getDslServices()
                         .getIssueReporter()
                         .reportError(
                                 Type.GENERIC, "Resource shrinker cannot be used for libraries.");
@@ -248,7 +243,7 @@ public class VariantScopeImpl implements VariantScope {
 
         if (getCodeShrinker() == null) {
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,
@@ -472,7 +467,7 @@ public class VariantScopeImpl implements VariantScope {
 
         if (libDesugarEnabled && !langDesugarEnabled) {
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,
@@ -482,7 +477,7 @@ public class VariantScopeImpl implements VariantScope {
 
         if (libDesugarEnabled && !multidexEnabled) {
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,
@@ -511,104 +506,6 @@ public class VariantScopeImpl implements VariantScope {
     }
 
     // Precomputed file paths.
-
-    @Override
-    @NonNull
-    public FileCollection getCompiledRClasses(@NonNull ConsumedConfigType configType) {
-        Project project = globalScope.getProject();
-        FileCollection mainCollection = project.files();
-
-        if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
-            Provider<RegularFile> namespacedRClassJar =
-                    artifacts.getFinalProduct(
-                            InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR.INSTANCE);
-
-            ConfigurableFileTree fileTree =
-                    project.fileTree(namespacedRClassJar).builtBy(namespacedRClassJar);
-            mainCollection = mainCollection.plus(fileTree);
-            mainCollection =
-                    mainCollection.plus(
-                            variantDependencies.getArtifactFileCollection(
-                                    configType, ALL, COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
-            mainCollection =
-                    mainCollection.plus(
-                            variantDependencies.getArtifactFileCollection(
-                                    configType, ALL, SHARED_CLASSES));
-
-            if (globalScope
-                    .getProjectOptions()
-                    .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-                mainCollection =
-                        mainCollection.plus(
-                                artifacts
-                                        .getFinalProductAsFileCollection(
-                                                InternalArtifactType.NAMESPACED_CLASSES_JAR
-                                                        .INSTANCE)
-                                        .get());
-
-                mainCollection =
-                        mainCollection.plus(
-                                project.files(
-                                        artifacts.getFinalProduct(
-                                                InternalArtifactType
-                                                        .COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR
-                                                        .INSTANCE)));
-            }
-
-            if (testedVariantProperties != null) {
-                mainCollection =
-                        project.files(
-                                mainCollection,
-                                testedVariantProperties
-                                        .getArtifacts()
-                                        .getFinalProduct(
-                                                InternalArtifactType
-                                                        .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
-                                                        .INSTANCE)
-                                        .get());
-            }
-        } else {
-            //noinspection VariableNotUsedInsideIf
-            VariantType variantType = variantDslInfo.getVariantType();
-            if (testedVariantProperties == null) {
-                // TODO(b/138780301): Also use it in android tests.
-                boolean useCompileRClassInApp =
-                        globalScope
-                                        .getProjectOptions()
-                                        .get(BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS)
-                                && !variantType.isForTesting();
-
-                if (variantType.isAar() || useCompileRClassInApp) {
-                    if (globalScope.getBuildFeatures().getAndroidResources()) {
-                        Provider<RegularFile> rJar =
-                                artifacts.getFinalProduct(
-                                        COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-                        mainCollection = project.files(rJar);
-                    }
-                } else {
-                    checkState(variantType.isApk(), "Expected APK type but found: " + variantType);
-                    Provider<FileCollection> rJar =
-                            artifacts.getFinalProductAsFileCollection(
-                                    COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-                    mainCollection = project.files(rJar);
-                }
-            } else { // Android test or unit test
-                if (!globalScope.getProjectOptions().get(BooleanOption.GENERATE_R_JAVA)) {
-                    Provider<RegularFile> rJar;
-                    if (variantType == ANDROID_TEST) {
-                        rJar =
-                                artifacts.getFinalProduct(
-                                        COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
-                    } else {
-                        rJar = getRJarForUnitTests();
-                    }
-                    mainCollection = project.files(rJar);
-                }
-            }
-        }
-
-        return mainCollection;
-    }
 
     /**
      * Returns the packaged local Jars
@@ -732,7 +629,7 @@ public class VariantScopeImpl implements VariantScope {
 
         BooleanOption missingFlag = shrinker == R8 ? ENABLE_R8_DESUGARING : ENABLE_D8_DESUGARING;
         globalScope
-                .getDslScope()
+                .getDslServices()
                 .getIssueReporter()
                 .reportError(
                         Type.GENERIC,
@@ -765,7 +662,7 @@ public class VariantScopeImpl implements VariantScope {
                             + "gradle.properties file, is not supported when %s.";
             String msg = String.format(template, flag.getPropertyName(), String.join(",", invalid));
             globalScope
-                    .getDslScope()
+                    .getDslServices()
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC, msg, variantDslInfo.getComponentIdentity().getName());

@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.VariantOutput
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.dsl.ApplicationBuildFeatures
+import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
@@ -27,15 +29,21 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.OutputFactory
-import com.android.build.gradle.internal.scope.VariantApiScope
-import com.android.build.gradle.internal.scope.VariantPropertiesApiScope
+import com.android.build.gradle.internal.services.VariantApiServices
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
@@ -52,36 +60,35 @@ import java.util.function.Consumer
 import java.util.stream.Collectors
 
 class ApplicationVariantFactory(
-    variantApiScope: VariantApiScope,
-    variantApiPropertiesScope: VariantPropertiesApiScope,
+    projectServices: ProjectServices,
     globalScope: GlobalScope
 ) : AbstractAppVariantFactory<ApplicationVariantImpl, ApplicationVariantPropertiesImpl>(
-    variantApiScope,
-    variantApiPropertiesScope,
+    projectServices,
     globalScope
 ) {
 
     override fun createVariantObject(
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo
+        variantDslInfo: VariantDslInfo,
+        variantApiServices: VariantApiServices
     ): ApplicationVariantImpl {
         val extension = globalScope.extension as BaseAppModuleExtension
 
-        return globalScope
-            .dslScope
+        return projectServices
             .objectFactory
             .newInstance(
                 ApplicationVariantImpl::class.java,
                 variantDslInfo,
                 extension.dependenciesInfo,
                 componentIdentity,
-                variantApiScope
+                variantApiServices
             )
     }
 
     override fun createVariantPropertiesObject(
         variant: ApplicationVariantImpl,
         componentIdentity: ComponentIdentity,
+        buildFeatures: BuildFeatureValues,
         variantDslInfo: VariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
@@ -89,14 +96,16 @@ class ApplicationVariantFactory(
         artifacts: BuildArtifactsHolder,
         variantScope: VariantScope,
         variantData: BaseVariantData,
-        transformManager: TransformManager
+        transformManager: TransformManager,
+        variantPropertiesApiServices: VariantPropertiesApiServices,
+        taskCreationServices: TaskCreationServices
     ): ApplicationVariantPropertiesImpl {
-        val variantProperties = globalScope
-            .dslScope
+        val variantProperties = projectServices
             .objectFactory
             .newInstance(
                 ApplicationVariantPropertiesImpl::class.java,
                 componentIdentity,
+                buildFeatures,
                 variantDslInfo,
                 variantDependencies,
                 variantSources,
@@ -106,13 +115,43 @@ class ApplicationVariantFactory(
                 variantData,
                 variant.dependenciesInfo as DependenciesInfo,
                 transformManager,
-                variantPropertiesApiScope,
+                variantPropertiesApiServices,
+                taskCreationServices,
                 globalScope
             )
 
         computeOutputs(variantProperties, (variantData as ApplicationVariantData), true)
 
         return variantProperties
+    }
+
+    override fun createBuildFeatureValues(
+        buildFeatures: BuildFeatures,
+        projectOptions: ProjectOptions
+    ): BuildFeatureValues {
+        val features = buildFeatures as? ApplicationBuildFeatures
+            ?: throw RuntimeException("buildFeatures not of type ApplicationBuildFeatures")
+
+        return BuildFeatureValuesImpl(
+            buildFeatures,
+            dataBinding = features.dataBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING],
+            projectOptions = projectOptions)
+    }
+
+    override fun createTestBuildFeatureValues(
+        buildFeatures: BuildFeatures,
+        dataBindingOptions: DataBindingOptions,
+        projectOptions: ProjectOptions
+    ): BuildFeatureValues {
+        val features = buildFeatures as? ApplicationBuildFeatures
+            ?: throw RuntimeException("buildFeatures not of type ApplicationBuildFeatures")
+
+        val dataBinding =
+            features.dataBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING]
+        return BuildFeatureValuesImpl(
+            buildFeatures,
+            dataBinding = dataBinding && dataBindingOptions.isEnabledForTests,
+            projectOptions = projectOptions)
     }
 
     override fun getVariantType(): VariantType {
@@ -132,10 +171,8 @@ class ApplicationVariantFactory(
             variant.getFilters(VariantOutput.FilterType.ABI)
         checkSplitsConflicts(variantProperties.variantDslInfo, variant, abis)
         if (!densities.isEmpty()) {
-            variant.setCompatibleScreens(
-                extension.splits.density
-                    .compatibleScreens
-            )
+            variant.compatibleScreens = extension.splits.density
+                .compatibleScreens
         }
         val outputFactory = variant.outputFactory
         populateMultiApkOutputs(abis, densities, outputFactory, includeMainApk)
@@ -234,7 +271,7 @@ class ApplicationVariantFactory(
             return
         }
         // if we have any ABI splits, whether it's a full or pure ABI splits, it's an error.
-        val issueReporter = globalScope.dslScope.issueReporter
+        val issueReporter = projectServices.issueReporter
         issueReporter.reportError(
             IssueReporter.Type.GENERIC, String.format(
                 "Conflicting configuration : '%1\$s' in ndk abiFilters "
@@ -249,7 +286,7 @@ class ApplicationVariantFactory(
         variantDslInfo: VariantDslInfo, variantOutputs: VariantOutputList
     ) {
         val supportedAbis: Set<String?>? = variantDslInfo.supportedAbis
-        val projectOptions = globalScope.projectOptions
+        val projectOptions = projectServices.projectOptions
         val buildTargetAbi =
             (if (projectOptions[BooleanOption.BUILD_ONLY_TARGET_ABI]
                 || globalScope.extension.splits.abi.isEnable
@@ -282,8 +319,7 @@ class ApplicationVariantFactory(
                     )
                 }
                 .collect(Collectors.toList())
-            globalScope
-                .dslScope
+            projectServices
                 .issueReporter
                 .reportWarning(
                     IssueReporter.Type.GENERIC, String.format(
@@ -300,7 +336,7 @@ class ApplicationVariantFactory(
         }
         variantOutputs.forEach {
             if (!apksToGenerate.contains(it.apkData)) {
-                it.isEnabled.set(false)
+                it.enabled.set(false)
             }
         }
     }

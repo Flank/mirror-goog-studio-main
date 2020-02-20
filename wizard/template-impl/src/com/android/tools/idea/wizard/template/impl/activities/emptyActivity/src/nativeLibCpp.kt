@@ -16,7 +16,7 @@
 package com.android.tools.idea.wizard.template.impl.activities.emptyActivity.src
 
 fun nativeLibCpp(packageName: String, activityClass: String): String {
-  val pn = packageName.replaceFirst("_", "_1").replaceFirst('.', '_')
+  val pn = packageName.replace("_", "_1").replace('.', '_')
   return (
     """
 #include <jni.h>

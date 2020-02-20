@@ -71,9 +71,9 @@ fun RecipeExecutor.androidTVActivityRecipe(
   addDependency("com.android.support:leanback-v17:+")
   addDependency("com.github.bumptech.glide:glide:3.8.0")
 
-  mergeXml(androidManifestXml(activityClass, detailsActivityClass, moduleData.isLibrary, moduleData.isNew, packageName),
+  mergeXml(androidManifestXml(activityClass, detailsActivityClass, moduleData.isLibrary, moduleData.isNewModule, packageName),
            manifestOut.resolve("AndroidManifest.xml"))
-  mergeXml(stringsXml(activityClass, activityTitle, moduleData.isNew), resOut.resolve("values/strings.xml"))
+  mergeXml(stringsXml(activityClass, activityTitle, moduleData.isNewModule), resOut.resolve("values/strings.xml"))
   mergeXml(colorsXml(), resOut.resolve("values/colors.xml"))
   copy(File("app_icon_your_company.png"), resOut.resolve("drawable/app_icon_your_company.png"))
   copy(File("default_background.xml"), resOut.resolve("drawable/default_background.xml"))

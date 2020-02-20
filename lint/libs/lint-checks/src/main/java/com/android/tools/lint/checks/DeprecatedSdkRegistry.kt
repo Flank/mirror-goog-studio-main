@@ -23,6 +23,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.utils.XmlUtils.parseDocument
 import com.android.utils.iterator
 import org.w3c.dom.Element
+import org.xml.sax.SAXException
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
@@ -65,7 +66,13 @@ abstract class DeprecatedSdkRegistry(
         HashMap(100)
 
     fun initialize(stream: InputStream) {
-        val document = parseDocument(BufferedReader(InputStreamReader(stream, UTF_8)), false)
+        val document = try {
+            parseDocument(BufferedReader(InputStreamReader(stream, UTF_8)), false)
+        } catch (e: SAXException) {
+            // Malformed XML. Most likely the file we received was not the XML file
+            // but some sort of network portal redirect HTML page. Gracefully degrade.
+            return
+        }
         val root = document.documentElement
         assert(root.tagName == TAG_ROOT, { root.tagName })
         for (library in root) {

@@ -33,6 +33,7 @@ import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
@@ -80,12 +81,12 @@ val emptyActivityTemplate get() = template {
     default = false
     help = "If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher"
   }
-  val packageName: StringParameter = stringParameter {
-    name = "Package name"
-    visible = { !isNewModule }
-    constraints = listOf(PACKAGE)
-    default = "com.mycompany.myapp"
-    suggest = { packageName }
+  val packageName = defaultPackageNameParameter
+
+  val cppSupport: BooleanParameter = booleanParameter {
+    name = "C++ support"
+    visible = { false }
+    default = false
   }
 
   widgets(
@@ -94,7 +95,8 @@ val emptyActivityTemplate get() = template {
     TextFieldWidget(layoutName),
     CheckBoxWidget(isLauncher),
     PackageNameWidget(packageName),
-    LanguageWidget()
+    LanguageWidget(),
+    CheckBoxWidget(cppSupport)
   )
 
   thumb {
@@ -103,7 +105,7 @@ val emptyActivityTemplate get() = template {
 
   recipe = { data ->
     generateEmptyActivity(
-      data as ModuleTemplateData, activityClass.value, generateLayout.value, layoutName.value, isLauncher.value, packageName.value
+      data as ModuleTemplateData, activityClass.value, generateLayout.value, layoutName.value, isLauncher.value, packageName.value, cppSupport.value
     )
   }
 }

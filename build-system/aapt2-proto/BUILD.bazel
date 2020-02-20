@@ -13,14 +13,10 @@ maven_pom(
     visibility = ["//visibility:public"],
 )
 
-kotlin_library(
+maven_java_library(
     name = "aapt2-proto",
-    srcs = glob([
-        "src/main/java/**/*.kt",
-        "src/main/java/**/*.java",
-    ]),
-    bundled_deps = ["//prebuilts/tools/common/aapt/protos"],
     pom = ":pom",
+    resource_jars = ["//prebuilts/tools/common/aapt/protos"],
     resource_strip_prefix = "tools/base/build-system/aapt2-proto",
     visibility = ["//visibility:public"],
 )

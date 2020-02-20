@@ -68,16 +68,6 @@ class ArtifactCollections(
         AndroidArtifacts.ArtifactScope.ALL,
         AndroidArtifacts.ArtifactType.MANIFEST
     )
-    val nonNamespacedManifests: ArtifactCollection? =
-        if (componentProperties.globalScope.extension.aaptOptions.namespaced) {
-            componentProperties.variantDependencies.getArtifactCollectionForToolingModel(
-                consumedConfigType,
-                AndroidArtifacts.ArtifactScope.ALL,
-                AndroidArtifacts.ArtifactType.NON_NAMESPACED_MANIFEST
-            )
-        } else {
-            null
-        }
 
     // We still need to understand wrapped jars and aars. The former is difficult (TBD), but
     // the latter can be done by querying for EXPLODED_AAR. If a sub-project is in this list,
@@ -100,10 +90,9 @@ class ArtifactCollections(
     )
 
     val allCollections: Collection<ArtifactCollection>
-        get() = listOfNotNull(
+        get() = listOf(
             all,
             manifests,
-            nonNamespacedManifests,
             explodedAars,
             projectJars
         )
@@ -137,13 +126,7 @@ fun getAllArtifacts(
 
     // Then we can query for MANIFEST that will give us only the Android project so that we
     // can detect JAVA vs ANDROID.
-    val manifests = if (collections.nonNamespacedManifests != null) {
-        ImmutableMultimap.builder<ComponentIdentifier, ResolvedArtifactResult>()
-            .putAll(collections.manifests.asMultiMap())
-            .putAll(collections.nonNamespacedManifests.asMultiMap()).build()
-    } else {
-        collections.manifests.asMultiMap()
-    }
+    val manifests = collections.manifests.asMultiMap()
 
     val explodedAars = collections.explodedAars.asMultiMap()
 

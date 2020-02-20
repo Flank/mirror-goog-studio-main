@@ -46,12 +46,11 @@ final class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
      *
      * @param buildTypeData the build type data
      * @param sourceProviderContainers collection of extra source providers
-     *
      * @return a non-null BuildTypeContainer
      */
     @NonNull
     static BuildTypeContainer create(
-            @NonNull BuildTypeData buildTypeData,
+            @NonNull BuildTypeData<com.android.build.gradle.internal.dsl.BuildType> buildTypeData,
             @NonNull Collection<SourceProviderContainer> sourceProviderContainers) {
 
         List<SourceProviderContainer> clonedContainers =

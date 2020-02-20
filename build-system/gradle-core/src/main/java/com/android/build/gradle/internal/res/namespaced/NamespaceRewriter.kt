@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.google.common.annotations.VisibleForTesting
 import com.android.builder.symbols.exportToCompiledJava
+import com.android.builder.utils.zipEntry
 import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
@@ -25,6 +26,7 @@ import com.android.ide.common.symbols.canonicalizeValueResourceName
 import com.android.ide.common.xml.XmlFormatPreferences
 import com.android.ide.common.xml.XmlFormatStyle
 import com.android.ide.common.xml.XmlPrettyPrinter
+import com.android.io.nonClosing
 import com.android.resources.NamespaceReferenceRewriter
 import com.android.utils.forEach
 import com.android.resources.ResourceType
@@ -35,6 +37,7 @@ import com.android.utils.PathUtils
 import com.android.utils.PositionXmlParser
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
+import com.google.common.io.ByteStreams
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.objectweb.asm.ClassReader
@@ -49,10 +52,14 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.HashSet
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
 
 /**
  * Rewrites non-namespaced resource references to be namespace aware.
@@ -86,27 +93,22 @@ class NamespaceRewriter(
         return cw.toByteArray()
     }
 
-    /**
+     /**
      * Rewrites all classes from the input JAR file to be fully resource namespace aware and places
      * them in the output JAR; it will also filter out all non .class files, so that the output JAR
      * contains only the namespaced classes.
+     *
+     * Does not close either the input or output streams.
      */
-    fun rewriteJar(classesJar: File, outputJar: File) {
-        ZFile(classesJar, ZFileOptions(), true).use { classes ->
-            ZFile(outputJar, ZFileOptions(), false).use { output ->
-                classes.entries().forEach { entry ->
-                    val name = entry.centralDirectoryHeader.name
-                    if (entry.type == StoredEntryType.FILE && name.endsWith(".class")) {
-                        try {
-                            val outputBytes = rewriteClass(entry.read())
-                            output.add(name, outputBytes.inputStream())
-                        } catch (e: Exception) {
-                            throw IllegalStateException(
-                                "Failed rewriting class $name from ${classesJar.absolutePath}",
-                                e
-                            )
-                        }
-                    }
+    fun rewriteJar(inputJarStream: InputStream, outputJarStream: OutputStream) {
+        ZipInputStream(inputJarStream.nonClosing()).use { input ->
+            ZipOutputStream(outputJarStream.nonClosing()).use { output ->
+                while (true) {
+                    val entry = input.nextEntry ?: break
+                    val name = entry.name
+                    if (!name.endsWith(".class")) continue
+                    output.putNextEntry(zipEntry(name))
+                    output.write(rewriteClass(ByteStreams.toByteArray(input)))
                 }
             }
         }
@@ -116,38 +118,44 @@ class NamespaceRewriter(
      * Rewrites the input file to be fully namespaced using the provided method. Writes fully
      * namespaced document to the output.
      */
-    private inline fun rewriteFile(input: Path, output: Path, method: (node: Document) -> Unit) {
-        Files.newInputStream(input).buffered().use {
-            // Read the file.
-            val doc = try {
-                PositionXmlParser.parse(it)
-            } catch (e: Exception) {
-                throw IOException("Failed to parse $input", e)
-            }
+    private inline fun rewriteFile(
+        input: InputStream,
+        output: OutputStream,
+        displayInput: Any,
+        method: (node: Document) -> Unit
+    ) {
+        // Read the file.
+        val doc = try {
+            PositionXmlParser.parse(input.nonClosing())
+        } catch (e: Exception) {
+            throw IOException("Failed to parse $displayInput", e)
+        }
 
-            // Fix namespaces.
-            try {
-                method(doc)
-            } catch (e: Exception) {
-                throw IOException("Failed namespace $input", e)
-            }
+        // Fix namespaces.
+        try {
+            method(doc)
+        } catch (e: Exception) {
+            throw IOException("Failed namespace $displayInput", e)
+        }
 
-            // Write the new file. The PositionXmlParser uses UTF_8 when reading the file, so it
-            // should be fine to write as UTF_8 too.
-            Files.newOutputStream(output).bufferedWriter(Charsets.UTF_8).use {
-                it.write(
-                    XmlPrettyPrinter
-                        .prettyPrint(
-                            doc,
-                            XmlFormatPreferences.defaults(),
-                            XmlFormatStyle.get(doc),
-                            System.lineSeparator(),
-                            false
-                        )
-                )
-            }
+        // Write the new file. The PositionXmlParser uses UTF_8 when reading the file, so it
+        // should be fine to write as UTF_8 too.
+
+        output.nonClosing().writer(Charsets.UTF_8).use {
+            it.write(
+                XmlPrettyPrinter
+                    .prettyPrint(
+                        doc,
+                        XmlFormatPreferences.defaults(),
+                        XmlFormatStyle.get(doc),
+                        System.lineSeparator(),
+                        false
+                    )
+            )
         }
     }
+
+
 
     /**
      * Rewrites the AndroidManifest.xml file to be fully resource namespace aware. Finds all
@@ -156,8 +164,17 @@ class NamespaceRewriter(
      * This will also append the package to the references to resources from this library - it is
      * not necessary, but saves us from comparing the package names.
      */
-    fun rewriteManifest(inputManifest: Path, outputManifest: Path) {
-        rewriteFile(inputManifest, outputManifest, referenceRewriter::rewriteManifestNode)
+    fun rewriteManifest(
+        inputManifest: InputStream,
+        outputManifest: OutputStream,
+        displayInput: Any
+    ) {
+        rewriteFile(
+            inputManifest,
+            outputManifest,
+            displayInput,
+            referenceRewriter::rewriteManifestNode
+        )
     }
 
     /**
@@ -171,8 +188,8 @@ class NamespaceRewriter(
      * This will also append the package to the references to resources from this library - it is
      * not necessary, but saves us from comparing the package names.
      */
-    fun rewriteValuesFile(input: Path, output: Path) {
-        rewriteFile(input, output, this::rewriteValuesNode)
+    fun rewriteValuesFile(input: InputStream, output: OutputStream) {
+        rewriteFile(input, output, input, this::rewriteValuesNode)
     }
 
     private fun rewriteValuesNode(node: Node) {
@@ -342,8 +359,8 @@ class NamespaceRewriter(
      * This will also append the package to the references to resources from this library - it is
      * not necessary, but saves us from comparing the package names.
      */
-    fun rewriteXmlFile(input: Path, output: Path) {
-        rewriteFile(input, output, this::rewriteXmlDoc)
+    fun rewriteXmlFile(input: InputStream, output: OutputStream) {
+        rewriteFile(input, output, input, this::rewriteXmlDoc)
     }
 
     /**
@@ -354,45 +371,19 @@ class NamespaceRewriter(
      * * XML files not in raw (such as layouts) are processed with [#rewriteXmlFile]
      * * Everything else is copied as-is
      */
-    fun rewriteAarResources(input: Path, output: Path) {
-        if (!Files.isDirectory(input)) {
-            throw IOException("expected $input to be a directory")
-        }
-        PathUtils.deleteRecursivelyIfExists(output)
-        Files.createDirectories(output)
-        Files.list(input).use {
-            it.forEach { resSubdirectory ->
-                val name = resSubdirectory.fileName.toString()
-                val outputDir = output.resolve(name)
-                Files.createDirectory(outputDir)
-                if (name == "values" || name.startsWith("values-")) {
-                    resSubdirectory.forEachFile(outputDir) { from, to ->
-                        rewriteValuesFile(from, to)
-                    }
-                } else if (name == "raw" || name.startsWith("raw-")) {
-                    resSubdirectory.forEachFile(outputDir) { from, to ->
-                        Files.copy(from, to)
-                    }
-                } else {
-                    resSubdirectory.forEachFile(outputDir) { from, to ->
-                        if (from.fileName.toString().endsWith(".xml")) {
-                            rewriteXmlFile(from, to)
-                        } else {
-                            Files.copy(from, to)
-                        }
-                    }
-                }
+    fun rewriteAarResource(name: String, input: InputStream, output: OutputStream) {
+        when {
+            name.startsWith("res/values/") || name.startsWith("res/values-") -> {
+                rewriteValuesFile(input, output)
             }
-        }
-
-    }
-
-    private inline fun Path.forEachFile(outdir: Path, crossinline action: (Path, Path) -> Unit) {
-        Files.list(this).use {
-            it.forEach { file ->
-                if (Files.isRegularFile(file)) {
-                    action.invoke(file, outdir.resolve(file.fileName))
-                }
+            name.startsWith("res/raw/") || name.startsWith("res/raw-") -> {
+                throw IllegalArgumentException("Raw resources do not need rewriting")
+            }
+            name.endsWith(".xml") -> {
+                rewriteXmlFile(input, output)
+            }
+            else -> {
+                throw IllegalArgumentException("Non-xml resources do not need rewriting")
             }
         }
     }
@@ -831,11 +822,15 @@ class NamespaceRewriter(
     /**
      * Generates a public.xml file containing public definitions for the resources from the current
      * package.
+     *
+     * @param publicTxt an input stream of the `public.txt` file from the AAR, or null if none present
+     * @param outputDirectory the directory to output the generated file in to.
+     * @return The generated file, inside the output directory
      */
     fun generatePublicFile(
-        publicTxt: File?,
+        publicTxt: InputStream?,
         outputDirectory: Path
-    ) {
+    ): Path {
         val symbols = symbolTables[0]
         val values = outputDirectory.resolve("values")
         Files.createDirectories(values)
@@ -849,44 +844,45 @@ class NamespaceRewriter(
         // the resources specified in the public.txt will be accessible to namespaced dependencies).
         // But if the public.txt does not exist, all of the Symbols in this package will be public.
         val publicSymbols: SymbolTable =
-            if (publicTxt != null && Files.exists(publicTxt.toPath()))
-                SymbolIo.readFromPublicTxtFile(publicTxt, symbols.tablePackage)
+            if (publicTxt != null)
+                SymbolIo.readFromPublicTxtFile(publicTxt, "", symbols.tablePackage)
             else
                 symbols
-
-        // If there are no public symbols (empty public.txt or no symbols present in this lib), don't
-        // waste time going through all symbols
-        if (publicSymbols.symbols.isEmpty) {
-            return
-        }
 
         Files.newBufferedWriter(publicXml).use {
             // If there was no public.txt file, 'symbols' and 'publicSymbols' will be the same.
             writePublicFile(it, symbols, publicSymbols)
         }
+        return publicXml
     }
+
 
     @VisibleForTesting
     internal fun writePublicFile(writer: Writer, symbols: SymbolTable, publicSymbols: SymbolTable) {
         writer.write("""<?xml version="1.0" encoding="utf-8"?>""")
-        writer.write("\n<resources>\n\n")
+        writer.write("\n<resources>\n")
 
-        // If everything is public, then there's no need to call the 'isPublic' method.
-        val allPublic = symbols == publicSymbols
+        // If there are no public symbols (empty public.txt or no symbols present in this lib), don't
+        // waste time going through all symbols
+        if (!publicSymbols.symbols.isEmpty) {
+            writer.write("\n")
+            // If everything is public, then there's no need to call the 'isPublic' method.
+            val allPublic = symbols == publicSymbols
 
-        // Sadly we cannot simply iterate through the public symbols table since the public.txt had
-        // the resource names already canonicalized.
-        symbols.resourceTypes.forEach { resourceType ->
-            symbols.getSymbolByResourceType(resourceType).forEach { symbol ->
-                if (allPublic || isPublic(symbol, publicSymbols)) {
-                    if (symbol.resourceType == ResourceType.ATTR) {
-                        maybeWriteAttribute(symbol, writer)
-                    } else {
-                        writer.write("    <public name=\"")
-                        writer.write(symbol.name)
-                        writer.write("\" type=\"")
-                        writer.write(resourceType.getName())
-                        writer.write("\" />\n")
+            // Sadly we cannot simply iterate through the public symbols table since the public.txt had
+            // the resource names already canonicalized.
+            symbols.resourceTypes.forEach { resourceType ->
+                symbols.getSymbolByResourceType(resourceType).forEach { symbol ->
+                    if (allPublic || isPublic(symbol, publicSymbols)) {
+                        if (symbol.resourceType == ResourceType.ATTR) {
+                            maybeWriteAttribute(symbol, writer)
+                        } else {
+                            writer.write("    <public name=\"")
+                            writer.write(symbol.name)
+                            writer.write("\" type=\"")
+                            writer.write(resourceType.getName())
+                            writer.write("\" />\n")
+                        }
                     }
                 }
             }

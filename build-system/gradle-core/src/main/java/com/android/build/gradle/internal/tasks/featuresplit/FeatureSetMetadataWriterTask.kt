@@ -140,7 +140,7 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
                 AndroidArtifacts.ArtifactScope.PROJECT,
                 AndroidArtifacts.ArtifactType.REVERSE_METADATA_FEATURE_DECLARATION
             )
-            val maxNumberOfFeaturesBeforeOreo = creationConfig.globalScope.projectOptions
+            val maxNumberOfFeaturesBeforeOreo = creationConfig.services.projectOptions
                 .get(IntegerOption.PRE_O_MAX_NUMBER_OF_FEATURES)
             if (maxNumberOfFeaturesBeforeOreo != null) {
                 task.maxNumberOfFeaturesBeforeOreo =

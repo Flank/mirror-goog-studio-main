@@ -41,11 +41,11 @@ fun RecipeExecutor.blankWearActivityRecipe(
 
   addDependency("com.google.android.wearable:wearable:+", "provided")
 
-  mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, moduleData.isNew, packageName),
+  mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, moduleData.isNewModule, packageName),
            manifestOut.resolve("AndroidManifest.xml"))
   mergeXml(androidManifestPermissionsXml(), manifestOut.resolve("AndroidManifest.xml"))
 
-  mergeXml(stringsXml(activityClass, moduleData.isNew), resOut.resolve("values/strings.xml"))
+  mergeXml(stringsXml(activityClass, moduleData.isNewModule), resOut.resolve("values/strings.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(stringsXmlRound(), resOut.resolve("values-round/strings.xml"))
   save(blankActivityXml(activityClass, packageName, useAndroidX), resOut.resolve("layout/${layoutName}.xml"))

@@ -30,4 +30,6 @@ public interface Installer {
     Deploy.DeltaPreinstallResponse deltaPreinstall(Deploy.InstallInfo info) throws IOException;
 
     Deploy.DeltaInstallResponse deltaInstall(Deploy.InstallInfo info) throws IOException;
+
+    Deploy.OverlayIdPushResponse pushOverlayId(String packageName, String oid) throws IOException;
 }

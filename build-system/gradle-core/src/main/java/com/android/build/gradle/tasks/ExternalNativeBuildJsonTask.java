@@ -117,9 +117,7 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
             task.generator = generator;
             VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
 
-            if (artifacts.hasFinalProduct(
-                            InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE)
-                    && variantDslInfo.getRenderscriptNdkModeEnabled()) {
+            if (variantDslInfo.getRenderscriptNdkModeEnabled()) {
                 artifacts.setTaskInputToFinalProduct(
                         InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR.INSTANCE,
                         task.getRenderscriptSources());

@@ -30,7 +30,6 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.api.TestedVariant;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.utils.StringHelper;
 import com.google.common.collect.Lists;
 import com.google.common.truth.Correspondence;
@@ -110,22 +109,18 @@ public class VariantCheckers {
     }
 
     /**
-     * Returns the variant data with the given name. Fails if there is no such variant.
+     * Returns the component with the given name. Fails if there is no such variant.
      *
      * @param components the item collection to search for a match
      * @param name the name of the item to return
      * @return the found variant
      */
-    public static BaseVariantData findVariantData(
+    public static ComponentPropertiesImpl findComponent(
             @NonNull Collection<ComponentPropertiesImpl> components, @NonNull String name) {
-        Optional<BaseVariantData> result =
-                components
-                        .stream()
-                        .filter(t -> t.getName().equals(name))
-                        .map(component -> component.getVariantData())
-                        .findAny();
+        Optional<ComponentPropertiesImpl> result =
+                components.stream().filter(t -> t.getName().equals(name)).findAny();
         return result.orElseThrow(
-                () -> new AssertionError("Variant data for " + name + " not found."));
+                () -> new AssertionError("Component for " + name + " not found."));
     }
 
     private static class AppVariantChecker implements VariantChecker {

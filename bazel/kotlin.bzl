@@ -24,21 +24,28 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
     """
     deps = depset(direct = jre, transitive = [deps])
     src_paths = [src.path for src in srcs]
-    args, option_files = \
+    option_flags, option_files = \
         create_java_compiler_args_srcs(ctx, src_paths, out, deps.to_list())
 
-    args += ["--module_name", name]
+    args = ctx.actions.args()
+    args.add_all(option_flags)
+    args.add("--module_name", name)
     for friend in friends:
-        args += ["--friend_dir", friend.path]
+        args.add("--friend_dir", friend.path)
     if jre:
-        args += ["--no-jdk"]
+        args.add("--no-jdk")
+
+    # To enable persistent Bazel workers, all arguments must come in an argfile.
+    args.use_param_file("@%s", use_always = True)
+    args.set_param_file_format("multiline")
 
     ctx.actions.run(
         inputs = depset(direct = srcs + option_files, transitive = [deps]),
         outputs = [out],
         mnemonic = "kotlinc",
-        arguments = args,
+        arguments = [args],
         executable = ctx.executable._kotlinc,
+        execution_requirements = {"supports-workers": "1"},
     )
 
 def _kotlin_jar_impl(ctx):
@@ -120,7 +127,7 @@ def kotlin_library(
     javas = [src for src in srcs if src.endswith(".java")]
 
     if not kotlins and not javas:
-        print("No sources found for kotlin_library " + name)
+        fail("No sources found for kotlin_library " + name)
 
     targets = []
     kdeps = []

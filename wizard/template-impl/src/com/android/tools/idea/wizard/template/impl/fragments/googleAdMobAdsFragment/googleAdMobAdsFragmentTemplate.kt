@@ -34,6 +34,7 @@ import com.android.tools.idea.wizard.template.WizardUiContext
 import com.android.tools.idea.wizard.template.enumParameter
 import com.android.tools.idea.wizard.template.fragmentToLayout
 import com.android.tools.idea.wizard.template.impl.activities.common.MIN_API
+import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
@@ -80,11 +81,7 @@ val googleAdMobAdsFragmentTemplate
       help = "Select Interstitial Ad or Banner Ad"
     }
 
-    val packageName = stringParameter {
-      name = "Package name"
-      default = "com.mycompany.myapp"
-      constraints = listOf(PACKAGE)
-    }
+    val packageName = defaultPackageNameParameter
 
     widgets(
       TextFieldWidget(fragmentClass),

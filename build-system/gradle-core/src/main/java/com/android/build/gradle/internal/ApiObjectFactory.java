@@ -35,16 +35,16 @@ import com.android.build.gradle.internal.api.UnitTestVariantImpl;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
 import com.android.build.gradle.internal.dsl.VariantOutputFactory;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.services.BaseServices;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
-import org.gradle.api.model.ObjectFactory;
 
 /**
  * Factory to create ApiObject from VariantData.
  */
 public class ApiObjectFactory {
     @NonNull private final BaseExtension extension;
-    @NonNull private final VariantFactory variantFactory;
+    @NonNull private final VariantFactory<?, ?> variantFactory;
     @NonNull private final GlobalScope globalScope;
 
     @NonNull
@@ -52,43 +52,37 @@ public class ApiObjectFactory {
 
     public ApiObjectFactory(
             @NonNull BaseExtension extension,
-            @NonNull VariantFactory variantFactory,
+            @NonNull VariantFactory<?, ?> variantFactory,
             @NonNull GlobalScope globalScope) {
         this.extension = extension;
         this.variantFactory = variantFactory;
         this.globalScope = globalScope;
     }
 
-    public BaseVariantImpl create(@NonNull ComponentPropertiesImpl componentProperties) {
-        BaseVariantData variantData = componentProperties.getVariantData();
-        if (componentProperties.getVariantType().isTestComponent()) {
-            // Testing variants are handled together with their "owners".
-            createVariantOutput(componentProperties, null);
-            return null;
-        }
+    public BaseVariantImpl create(@NonNull VariantPropertiesImpl variantProperties) {
+        BaseVariantData variantData = variantProperties.getVariantData();
 
         BaseVariantImpl variantApi =
                 variantFactory.createVariantApi(
-                        globalScope, componentProperties, variantData, readOnlyObjectProvider);
+                        globalScope, variantProperties, variantData, readOnlyObjectProvider);
         if (variantApi == null) {
             return null;
         }
 
-        ObjectFactory objectFactory = globalScope.getDslScope().getObjectFactory();
+        if (variantFactory.getVariantType().getHasTestComponents()) {
+            BaseServices services = variantFactory.getServicesForOldVariantObjectsOnly();
 
-        if (variantFactory.hasTestScope()) {
-            VariantPropertiesImpl variantProperties = (VariantPropertiesImpl) componentProperties;
             ComponentPropertiesImpl androidTestVariantProperties =
                     variantProperties.getTestComponents().get(ANDROID_TEST);
 
             if (androidTestVariantProperties != null) {
                 TestVariantImpl androidTestVariant =
-                        objectFactory.newInstance(
+                        services.newInstance(
                                 TestVariantImpl.class,
                                 androidTestVariantProperties.getVariantData(),
                                 androidTestVariantProperties,
                                 variantApi,
-                                objectFactory,
+                                services,
                                 readOnlyObjectProvider,
                                 globalScope.getProject().container(VariantOutput.class));
                 createVariantOutput(androidTestVariantProperties, androidTestVariant);
@@ -102,12 +96,12 @@ public class ApiObjectFactory {
 
             if (unitTestVariantProperties != null) {
                 UnitTestVariantImpl unitTestVariant =
-                        objectFactory.newInstance(
+                        services.newInstance(
                                 UnitTestVariantImpl.class,
                                 unitTestVariantProperties.getVariantData(),
                                 unitTestVariantProperties,
                                 variantApi,
-                                objectFactory,
+                                services,
                                 readOnlyObjectProvider,
                                 globalScope.getProject().container(VariantOutput.class));
 
@@ -116,7 +110,7 @@ public class ApiObjectFactory {
             }
         }
 
-        createVariantOutput(componentProperties, variantApi);
+        createVariantOutput(variantProperties, variantApi);
 
         try {
             // Only add the variant API object to the domain object set once it's been fully
@@ -133,28 +127,24 @@ public class ApiObjectFactory {
     private void createVariantOutput(
             @NonNull ComponentPropertiesImpl componentProperties,
             @NonNull BaseVariantImpl variantApi) {
-        ObjectFactory objectFactory = globalScope.getDslScope().getObjectFactory();
 
-        componentProperties.getVariantData().variantOutputFactory =
+        final BaseServices services = variantFactory.getServicesForOldVariantObjectsOnly();
+        VariantOutputFactory variantOutputFactory =
                 new VariantOutputFactory(
                         (componentProperties.getVariantType().isAar())
                                 ? LibraryVariantOutputImpl.class
                                 : ApkVariantOutputImpl.class,
-                        objectFactory,
+                        services,
                         extension,
                         variantApi,
                         componentProperties.getTaskContainer(),
-                        globalScope.getDslScope().getDeprecationReporter());
+                        services.getDeprecationReporter());
 
         componentProperties
                 .getOutputs()
                 .forEach(
-                        variantOutput ->
-                                // pass the new api variant output object so the override method can
-                                // delegate to the new location.
-                                componentProperties
-                                        .getVariantData()
-                                        .variantOutputFactory
-                                        .create(variantOutput));
+                        // pass the new api variant output object so the override method can
+                        // delegate to the new location.
+                        variantOutputFactory::create);
     }
 }

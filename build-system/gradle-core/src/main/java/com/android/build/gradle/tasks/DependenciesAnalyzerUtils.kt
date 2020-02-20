@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.utils.FileUtils
 import com.google.gson.GsonBuilder
+import com.google.gson.annotations.SerializedName
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ComponentIdentifier
@@ -159,6 +160,11 @@ class ClassFinder(private val externalArtifactCollection: ArtifactCollection) {
     }
 }
 
+data class DependenciesUsageReport (
+        @SerializedName("add") val add : List<String>,
+        @SerializedName("remove") val remove : List<String>
+)
+
 class DependencyUsageReporter(
     private val variantClasses: AnalyzeDependenciesTask.VariantClassesHolder,
     private val variantDependencies: AnalyzeDependenciesTask.VariantDependenciesHolder,
@@ -193,7 +199,10 @@ class DependencyUsageReporter(
             }
         }
 
-        val report = mapOf("remove" to toRemove.minus(dontReportTemp), "add" to toAdd)
+        val report = DependenciesUsageReport(
+                add = toAdd.toList(),
+                remove = toRemove.minus(dontReportTemp)
+        )
 
         writeToFile(report, destinationFile)
     }
