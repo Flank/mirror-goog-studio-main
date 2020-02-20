@@ -25,6 +25,7 @@ import com.google.common.base.Objects;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import java.util.List;
+import java.util.Locale;
 
 public class IssueSubject extends Subject<IssueSubject, SyncIssue> {
 
@@ -84,8 +85,12 @@ public class IssueSubject extends Subject<IssueSubject, SyncIssue> {
         SyncIssue issue = actual();
         String fullName =
                 String.format(
+                        Locale.US,
                         "%d|%d|%s|%s",
-                        issue.getSeverity(), issue.getType(), issue.getData(), issue.getMessage());
+                        issue.getSeverity(),
+                        issue.getType(),
+                        issue.getData(),
+                        issue.getMessage());
 
         return (internalCustomName() == null)
                 ? fullName
