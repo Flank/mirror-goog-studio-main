@@ -156,7 +156,7 @@ open class BuildType @Inject constructor(
     private val _isDefaultProperty: Property<Boolean> =
         dslServices.property(Boolean::class.java).convention(false)
 
-    var _matchingFallbacks: ImmutableList<String>? = null
+    private var _matchingFallbacks: ImmutableList<String>? = null
 
     /**
      * Specifies a sorted list of build types that the plugin should try to use when a direct
