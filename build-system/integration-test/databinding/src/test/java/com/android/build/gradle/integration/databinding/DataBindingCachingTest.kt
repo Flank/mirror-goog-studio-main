@@ -63,7 +63,6 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":prepareLintJarForPublish" to DID_WORK,
         ":generateDebugSources" to SKIPPED,
         ":dataBindingExportBuildInfoDebug" to FROM_CACHE,
-        ":dataBindingExportFeaturePackageIdsDebug" to FROM_CACHE,
         ":dataBindingMergeDependencyArtifactsDebug" to FROM_CACHE,
         ":dataBindingMergeGenClassesDebug" to FROM_CACHE,
         ":generateDebugResValues" to FROM_CACHE,

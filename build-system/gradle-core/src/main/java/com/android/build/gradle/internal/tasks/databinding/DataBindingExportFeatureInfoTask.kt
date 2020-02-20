@@ -112,11 +112,10 @@ abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
                     AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT)
-            if (creationConfig is DynamicFeatureCreationConfig) {
-                task.resOffset.set(creationConfig.resOffset)
-            } else {
-                task.resOffset.set(0)
+            check(creationConfig is DynamicFeatureCreationConfig) {
+                "Unexpected type: ${creationConfig.javaClass.name}"
             }
+            task.resOffset.set(creationConfig.resOffset)
             task.resOffset.disallowChanges()
         }
     }
