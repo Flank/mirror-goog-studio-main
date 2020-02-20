@@ -63,7 +63,7 @@ fun RecipeExecutor.generateNavigationDrawer(
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
 
   addAllKotlinDependencies(data)
-  addDependency("com.android.support:support-v4:${appCompatVersion}.+")
+  addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
 
   generateManifest(
     data,

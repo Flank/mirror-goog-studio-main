@@ -47,7 +47,7 @@ fun RecipeExecutor.fullscreenActivityRecipe(
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.android.support:support-v4:${appCompatVersion}.+")
+  addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
 
   val simpleName = activityToLayout(activityClass)
   val superClassFqcn = getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)

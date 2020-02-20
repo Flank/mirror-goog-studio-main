@@ -48,6 +48,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   val isLauncher = moduleData.isNewModule
   addAllKotlinDependencies(moduleData)
 
+  addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support:design:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 
