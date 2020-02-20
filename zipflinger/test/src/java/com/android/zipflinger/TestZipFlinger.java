@@ -763,4 +763,14 @@ public class TestZipFlinger extends TestBase {
         Assert.assertEquals("Bad time", CentralDirectoryRecord.DEFAULT_TIME, cd.getShort(12));
         Assert.assertEquals("Bad date", CentralDirectoryRecord.DEFAULT_DATE, cd.getShort(14));
     }
+
+    @Test
+    public void testEmptyArchive() throws Exception {
+        File dst = getTestFile("testEmptyArchive.zip");
+        try (ZipArchive archive = new ZipArchive(dst)) {}
+
+        verifyArchive(dst);
+        Assert.assertEquals(
+                "Archive size differ from ECOD", dst.length(), EndOfCentralDirectory.SIZE);
+    }
 }
