@@ -44,11 +44,11 @@ java_test(
     srcs = [
         "test/src/java/com/android/zipflinger/TestParsing.java",
     ],
-    data = glob([
+    data = [
+        "test/resource/stripped.ap_",
         "test/resource/zip_no_fd.zip",
         "test/resource/zip_with_fd.zip",
-        "test/resource/stripped.ap_",
-    ]),
+    ],
     jvm_flags = ["-Dtest.suite.jar=testParsing.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
@@ -65,10 +65,10 @@ java_test(
     srcs = [
         "test/src/java/com/android/zipflinger/TestFreeStore.java",
     ],
-    data = glob([
+    data = [
         "test/resource/zip_no_fd.zip",
         "test/resource/zip_with_fd.zip",
-    ]),
+    ],
     jvm_flags = ["-Dtest.suite.jar=testsFreeStore.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
@@ -85,7 +85,7 @@ java_test(
     srcs = [
         "test/src/java/com/android/zipflinger/TestZipFlinger.java",
     ],
-    data = glob([
+    data = [
         "test/resource/1-2-3files.zip",
         "test/resource/4-5files.zip",
         "test/resource/file1.txt",
@@ -93,9 +93,9 @@ java_test(
         "test/resource/file3.txt",
         "test/resource/file4.txt",
         "test/resource/text.txt",
-        "test/resource/zip_with_directories.zip",
         "test/resource/two_files.zip",
-    ]),
+        "test/resource/zip_with_directories.zip",
+    ],
     jvm_flags = ["-Dtest.suite.jar=testsZipFlinger.jar"],
     tags = ["no_test_mac"],
     test_class = "com.android.testutils.JarTestSuite",
@@ -113,9 +113,9 @@ java_test(
     srcs = [
         "test/src/java/com/android/zipflinger/TestCompressor.java",
     ],
-    data = glob([
+    data = [
         "test/resource/file4.txt",
-    ]),
+    ],
     jvm_flags = ["-Dtest.suite.jar=testsCompressor.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
@@ -132,10 +132,10 @@ java_test(
     srcs = [
         "test/src/java/com/android/zipflinger/TestZipMerge.java",
     ],
-    data = glob([
+    data = [
         "test/resource/1-2-3files.zip",
         "test/resource/4-5files.zip",
-    ]),
+    ],
     jvm_flags = ["-Dtest.suite.jar=testsMerge.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
@@ -163,9 +163,9 @@ java_test(
 
 java_binary(
     name = "verify",
-    srcs = glob([
+    srcs = [
         "tools/src/com/android/zipflinger/Verify.java",
-    ]),
+    ],
     main_class = "com.android.zipflinger.Verify",
     deps = [
         ":zipflinger",
@@ -174,9 +174,9 @@ java_binary(
 
 java_binary(
     name = "map",
-    srcs = glob([
+    srcs = [
         "tools/src/com/android/zipflinger/Mapper.java",
-    ]),
+    ],
     main_class = "com.android.zipflinger.Mapper",
     deps = [
         ":zipflinger",
@@ -186,9 +186,9 @@ java_binary(
 # Debug tool to create zip files directly with zipflinger
 java_binary(
     name = "zip",
-    srcs = glob([
+    srcs = [
         "tools/src/com/android/zipflinger/Zip.java",
-    ]),
+    ],
     main_class = "com.android.zipflinger.Zip",
     deps = [
         ":zipflinger",
