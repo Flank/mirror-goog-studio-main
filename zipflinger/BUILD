@@ -187,9 +187,9 @@ java_binary(
 java_binary(
     name = "zip",
     srcs = [
-        "tools/src/com/android/zipflinger/Zip.java",
+        "tools/src/com/android/zipflinger/ZipCreator.java",
     ],
-    main_class = "com.android.zipflinger.Zip",
+    main_class = "com.android.zipflinger.ZipCreator",
     deps = [
         ":zipflinger",
     ],

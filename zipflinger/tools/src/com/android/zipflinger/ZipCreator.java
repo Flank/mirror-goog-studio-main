@@ -19,7 +19,7 @@ package com.android.zipflinger;
 import java.io.File;
 import java.io.IOException;
 
-public class Zip {
+public class ZipCreator {
     public static void main(String[] args) throws IOException {
         if (args.length < 2) {
             System.out.println("Usage: Zip dest [files_to_zip]");
