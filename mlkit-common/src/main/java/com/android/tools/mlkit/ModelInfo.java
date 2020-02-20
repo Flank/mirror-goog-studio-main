@@ -21,11 +21,14 @@ import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
 
 /** Stores necessary data for one model. */
 public class ModelInfo {
-    /** stores necessary data for model input */
-    private List<TensorInfo> inputs;
+    /** Stores necessary data for model input. */
+    private final List<TensorInfo> inputs;
 
-    /** stores necessary data for model output */
-    private List<TensorInfo> outputs;
+    /** Stores necessary data for model output. */
+    private final List<TensorInfo> outputs;
+
+    /** Stores necessary data for subgraphs. */
+    private final List<SubGraphInfo> subGraphInfos;
 
     private String modelName;
     private String modelDescription;
@@ -37,6 +40,7 @@ public class ModelInfo {
     private ModelInfo() {
         inputs = new ArrayList<>();
         outputs = new ArrayList<>();
+        subGraphInfos = new ArrayList<>();
     }
 
     public List<TensorInfo> getInputs() {
@@ -45,6 +49,10 @@ public class ModelInfo {
 
     public List<TensorInfo> getOutputs() {
         return outputs;
+    }
+
+    public List<SubGraphInfo> getSubGraphInfos() {
+        return subGraphInfos;
     }
 
     public String getModelName() {
@@ -95,6 +103,12 @@ public class ModelInfo {
             modelInfo.modelAuthor = modelMetadata.author();
             modelInfo.modelLicense = modelMetadata.license();
             modelInfo.metaDataExisted = true;
+
+            int subgraphLength = modelMetadata.subgraphMetadataLength();
+            for (int i = 0; i < subgraphLength; i++) {
+                modelInfo.subGraphInfos.add(
+                        SubGraphInfo.buildFrom(modelMetadata.subgraphMetadata(i)));
+            }
         }
 
         return modelInfo;

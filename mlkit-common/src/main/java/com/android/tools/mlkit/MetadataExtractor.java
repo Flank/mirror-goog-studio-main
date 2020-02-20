@@ -212,13 +212,25 @@ public class MetadataExtractor {
     public static class NormalizationParams {
         private final float[] mean;
         private final float[] std;
+        private final float[] min;
+        private final float[] max;
 
-        public NormalizationParams(FloatBuffer meanBuffer, FloatBuffer stdBuffer) {
+        public NormalizationParams(
+                FloatBuffer meanBuffer,
+                FloatBuffer stdBuffer,
+                FloatBuffer minBuffer,
+                FloatBuffer maxBuffer) {
             mean = new float[meanBuffer.limit()];
             meanBuffer.get(mean);
 
             std = new float[stdBuffer.limit()];
             stdBuffer.get(std);
+
+            min = new float[minBuffer.limit()];
+            minBuffer.get(min);
+
+            max = new float[maxBuffer.limit()];
+            maxBuffer.get(max);
         }
 
         public float[] getMean() {
@@ -227,6 +239,14 @@ public class MetadataExtractor {
 
         public float[] getStd() {
             return std;
+        }
+
+        public float[] getMin() {
+            return min;
+        }
+
+        public float[] getMax() {
+            return max;
         }
     }
 }

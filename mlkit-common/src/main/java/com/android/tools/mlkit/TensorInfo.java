@@ -290,7 +290,9 @@ public class TensorInfo {
                 builder.setNormalizationParams(
                         new MetadataExtractor.NormalizationParams(
                                 tensorMetadata.stats().meanAsByteBuffer().asFloatBuffer(),
-                                tensorMetadata.stats().stdAsByteBuffer().asFloatBuffer()));
+                                tensorMetadata.stats().stdAsByteBuffer().asFloatBuffer(),
+                                tensorMetadata.stats().minAsByteBuffer().asFloatBuffer(),
+                                tensorMetadata.stats().maxAsByteBuffer().asFloatBuffer()));
             }
         }
 
