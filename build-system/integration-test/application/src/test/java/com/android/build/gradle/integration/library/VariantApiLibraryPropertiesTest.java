@@ -16,13 +16,11 @@
 
 package com.android.build.gradle.integration.library;
 
-import static com.android.build.gradle.integration.common.truth.AarSubject.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import java.io.IOException;
+import com.android.testutils.truth.AbstractZipSubject;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -35,7 +33,7 @@ public class VariantApiLibraryPropertiesTest {
                     .create();
 
     @Test
-    public void checkOutputFileName() throws IOException, InterruptedException {
+    public void checkOutputFileName() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android {\n"
@@ -51,7 +49,7 @@ public class VariantApiLibraryPropertiesTest {
                         + "}\n");
 
         project.executor().run("assembleDebug");
-        assertThat(project.getAar("debug").getFile()).doesNotExist();
-        assertThat(project.getAar("1.0", "debug")).exists();
+        project.testAar("debug", AbstractZipSubject::doesNotExist);
+        project.testAar("1.0", "debug", AbstractZipSubject::exists);
     }
 }

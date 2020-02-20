@@ -142,7 +142,7 @@ class NamespacedAarTest {
             assertThat(lib.resStaticLibrary).exists()
         }
 
-        project.getSubproject("publishedLib").getAar("release").use { aar ->
+        project.getSubproject("publishedLib").getAar("release") { aar ->
             assertThat(aar.entries.map { it.toString() })
                 .containsExactly(
                     "/res/values/values.xml",

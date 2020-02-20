@@ -18,11 +18,8 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.testutils.truth.FileSubject.assertThat;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.testutils.apk.Aar;
 import com.android.utils.FileUtils;
 import java.io.File;
 import org.junit.Rule;
@@ -107,13 +104,25 @@ public class LintCustomLocalAndPublishTest {
         project.executor().withFailOnWarning(false).run(":library-publish-only:assembleDebug");
         project.executor().withFailOnWarning(false).run(":library-local-only:assembleDebug");
 
-        Aar localAndPublish = project.getSubproject("library").getAar("debug");
-        assertNotNull(localAndPublish.getEntry(FN_LINT_JAR));
+        project.getSubproject("library")
+                .testAar(
+                        "debug",
+                        it -> {
+                            it.contains(FN_LINT_JAR);
+                        });
 
-        Aar publishOnly = project.getSubproject("library-publish-only").getAar("debug");
-        assertNotNull(publishOnly.getEntry(FN_LINT_JAR));
+        project.getSubproject("library-publish-only")
+                .testAar(
+                        "debug",
+                        it -> {
+                            it.contains(FN_LINT_JAR);
+                        });
 
-        Aar localOnly = project.getSubproject("library-local-only").getAar("debug");
-        assertNull(localOnly.getEntry(FN_LINT_JAR));
+        project.getSubproject("library-local-only")
+                .testAar(
+                        "debug",
+                        it -> {
+                            it.doesNotContain(FN_LINT_JAR);
+                        });
     }
 }

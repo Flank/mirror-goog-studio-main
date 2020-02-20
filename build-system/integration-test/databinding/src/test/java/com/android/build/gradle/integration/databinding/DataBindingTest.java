@@ -25,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.google.common.base.Joiner;
@@ -91,12 +90,15 @@ public class DataBindingTest {
         String implClass = "Landroid/databinding/testapp/databinding/ActivityMainBindingImpl;";
         final Apk apk;
         if (myLibrary) {
-            Aar aar = project.getAar("debug");
-            assertThat(aar).containsClass(bindingClass);
-            assertThat(aar).containsClass(implClass);
+            project.testAar(
+                    "debug",
+                    it -> {
+                        it.containsClass(bindingClass);
+                        it.containsClass(implClass);
 
-            assertThat(aar).doesNotContainClass(myDbPkg + "adapters/Converters;");
-            assertThat(aar).doesNotContainClass(myDbPkg + "DataBindingComponent;");
+                        it.doesNotContainClass(myDbPkg + "adapters/Converters;");
+                        it.doesNotContainClass(myDbPkg + "DataBindingComponent;");
+                    });
 
             // also builds the test app
             project.executor().run("assembleDebugAndroidTest");

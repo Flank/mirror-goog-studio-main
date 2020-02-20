@@ -76,8 +76,13 @@ public class LibWithProvidedDirectJarTest {
 
     @Test
     public void checkProvidedJarIsNotPackaged() throws Exception {
-        assertThat(project.getSubproject("library").getAar("debug"))
-                .doesNotContainClass("Lcom/example/android/multiproject/person/People;");
+        project.getSubproject("library")
+                .testAar(
+                        "debug",
+                        it -> {
+                            it.doesNotContainClass(
+                                    "Lcom/example/android/multiproject/person/People;");
+                        });
     }
 
     @Test

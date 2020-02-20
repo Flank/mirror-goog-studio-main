@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.integration.common.fixture;
 
+import static com.android.build.gradle.integration.common.truth.AarSubject.aars;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.truth.Truth.assertAbout;
 import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
@@ -27,6 +29,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
 import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
+import com.android.build.gradle.integration.common.truth.AarSubject;
 import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.cxx.configure.NdkLocatorKt;
@@ -79,6 +82,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -1151,17 +1155,83 @@ public final class GradleTestProject implements TestRule {
     }
 
     /**
-     * Return the output aar File from the library plugin for the given dimension.
+     * A version of {@link java.util.function.Consumer} where {@link Consumer#accept} throws {@link
+     * Exception}
+     *
+     * @param <T>
+     */
+    @FunctionalInterface
+    public interface Consumer<T> {
+        void accept(T t) throws Exception;
+    }
+
+    private void testAar(List<String> dimensions, @NonNull Consumer<AarSubject> action)
+            throws Exception {
+        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.size());
+        dimensionList.add(getName());
+        dimensionList.addAll(dimensions);
+        try (Aar aar =
+                new Aar(
+                        getOutputFile(
+                                "aar",
+                                Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR))) {
+            AarSubject subject = assertAbout(aars()).that(aar);
+            action.accept(subject);
+        }
+    }
+
+    /**
+     * Allows testing the aar.
+     *
+     * <p>Testing happens in the callback that receives an {@link AarSubject}
      *
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public Aar getAar(String... dimensions) throws IOException {
-        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
+    public void testAar(String dimension1, @NonNull Consumer<AarSubject> action) throws Exception {
+        ArrayList<String> list = new ArrayList<>(1);
+        list.add(dimension1);
+        testAar(list, action);
+    }
+
+    /**
+     * Allows testing the aar.
+     *
+     * <p>Testing happens in the callback that receives an {@link AarSubject}
+     *
+     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * "unsigned", "aligned")
+     */
+    public void testAar(String dimension1, String dimension2, @NonNull Consumer<AarSubject> action)
+            throws Exception {
+        testAar(Arrays.asList(dimension1, dimension2), action);
+    }
+
+    private void getAar(List<String> dimensions, @NonNull Consumer<Aar> action) throws Exception {
+        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.size());
         dimensionList.add(getName());
-        dimensionList.addAll(Arrays.asList(dimensions));
-        return new Aar(
-                getOutputFile("aar", Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR));
+        dimensionList.addAll(dimensions);
+        try (Aar aar =
+                new Aar(
+                        getOutputFile(
+                                "aar",
+                                Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR))) {
+            action.accept(aar);
+        }
+    }
+
+    /**
+     * Allows testing the aar.
+     *
+     * <p>Testing happens in the callback that receives an {@link AarSubject}
+     *
+     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * "unsigned", "aligned")
+     */
+    public void getAar(String dimension1, @NonNull Consumer<Aar> action) throws Exception {
+        ArrayList<String> list = new ArrayList<>(1);
+        list.add(dimension1);
+        getAar(list, action);
     }
 
     /**

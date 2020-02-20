@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.truth.AarSubject.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static com.google.common.truth.Truth.assertThat;
@@ -76,7 +75,11 @@ public class LibWithProvidedLocalJarTest {
 
     @Test
     public void checkProvidedLocalJarIsNotPackaged() throws Exception {
-        assertThat(project.getAar("debug")).doesNotContain("libs/util-1.0.jar");
+        project.testAar(
+                "debug",
+                it -> {
+                    it.doesNotContain("libs/util-1.0.jar");
+                });
     }
 
     @Test

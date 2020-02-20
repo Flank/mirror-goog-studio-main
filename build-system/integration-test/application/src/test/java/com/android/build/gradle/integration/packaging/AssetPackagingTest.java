@@ -35,7 +35,6 @@ import java.util.Arrays;
 import java.util.zip.GZIPOutputStream;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -661,7 +660,7 @@ public class AssetPackagingTest {
     private static void checkAar(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(TruthHelper.assertThat(project.getAar("debug")), filename, content);
+        project.testAar("debug", it -> check(it, filename, content));
     }
 
     private static void check(

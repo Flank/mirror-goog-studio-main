@@ -37,6 +37,7 @@ import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.testutils.truth.DexSubject.assertThat
 
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.testutils.truth.ZipFileSubject
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.RegularFile
@@ -471,12 +472,12 @@ class R8Test(val r8OutputType: R8OutputType) {
 
         assertClassExists("test/A")
 
-        Zip(outputDir.resolve("java_res.jar")).use {
-            assertThat(it).containsFileWithContent("metadata1.txt", "")
-            assertThat(it).containsFileWithContent("metadata2.txt", "")
-            assertThat(it).containsFileWithContent("data/metadata.txt", "")
-            assertThat(it).containsFileWithContent("a/b/c//metadata.txt", "")
-            assertThat(it).doesNotContain("test/A.class")
+        assertThat(outputDir.resolve("java_res.jar")) {
+            it.containsFileWithContent("metadata1.txt", "")
+            it.containsFileWithContent("metadata2.txt", "")
+            it.containsFileWithContent("data/metadata.txt", "")
+            it.containsFileWithContent("a/b/c//metadata.txt", "")
+            it.doesNotContain("test/A.class")
         }
     }
 
@@ -489,8 +490,8 @@ class R8Test(val r8OutputType: R8OutputType) {
             val dex = getDex()
             assertThat(dex).containsClass("L$className;")
         } else {
-            Zip(outputDir.resolve("main.jar")).use {
-                assertThat(it).contains("$className.class")
+            assertThat(outputDir.resolve("main.jar")) {
+                it.contains("$className.class")
             }
         }
     }
@@ -504,8 +505,8 @@ class R8Test(val r8OutputType: R8OutputType) {
             val dex = getDex()
             assertThat(dex).doesNotContainClasses("L$className;")
         } else {
-            Zip(outputDir.resolve("main.jar")).use {
-                assertThat(it).doesNotContain("$className.class")
+            assertThat(outputDir.resolve("main.jar")) {
+                it.doesNotContain("$className.class")
             }
         }
     }
@@ -568,11 +569,11 @@ class R8Test(val r8OutputType: R8OutputType) {
         )
 
         assertThat(outputDir.resolve("main/classes.dex")).doesNotExist()
-        Zip(outputDir.resolve("java_res.jar")).use {
-            assertThat(it).contains("res.txt")
-            assertThat(it).contains("data.txt")
-            assertThat(it).doesNotContain("A.class")
-            assertThat(it).doesNotContain("B.class")
+        assertThat(outputDir.resolve("java_res.jar")) {
+            it.contains("res.txt")
+            it.contains("data.txt")
+            it.doesNotContain("A.class")
+            it.doesNotContain("B.class")
         }
     }
 

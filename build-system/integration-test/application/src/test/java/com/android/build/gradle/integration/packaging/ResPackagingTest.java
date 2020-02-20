@@ -681,7 +681,7 @@ public class ResPackagingTest {
     private static void checkAar(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(assertThat(project.getAar("debug")), filename, content);
+        project.testAar("debug", it -> check(it, filename, content));
     }
 
     private static void check(

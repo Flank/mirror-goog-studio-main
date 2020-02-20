@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.google.common.collect.ImmutableList
 import org.junit.Before
@@ -52,8 +51,11 @@ class ProguardDelegateTest {
         builder.build().run()
 
         val resultJar = resultJar()
-        assertThat(resultJar).contains("test/A.class")
-        assertThat(resultJar).doesNotContain("test/B.class")
+
+        assertThat(resultJar) {
+            it.contains("test/A.class")
+            it.doesNotContain("test/B.class")
+        }
     }
 
     @Test
@@ -70,8 +72,11 @@ class ProguardDelegateTest {
         builder.build().run()
 
         val resultJar = resultJar()
-        assertThat(resultJar).contains("test/A.class")
-        assertThat(resultJar).doesNotContain("test/B.class")
+
+        assertThat(resultJar) {
+            it.contains("test/A.class")
+            it.doesNotContain("test/B.class")
+        }
     }
 
     @Test
@@ -92,10 +97,12 @@ class ProguardDelegateTest {
         builder.build().run()
 
         val resultJar = resultJar()
-        assertThat(resultJar).contains("test/A.class")
-        assertThat(resultJar).contains("test/C.class")
-        assertThat(resultJar).doesNotContain("test/B.class")
-        assertThat(resultJar).doesNotContain("test/D.class")
+        assertThat(resultJar) {
+            it.contains("test/A.class")
+            it.contains("test/C.class")
+            it.doesNotContain("test/B.class")
+            it.doesNotContain("test/D.class")
+        }
     }
 
     @Test
@@ -112,14 +119,16 @@ class ProguardDelegateTest {
         builder.build().run()
 
         val resultJar = resultJar()
-        assertThat(resultJar).contains("test/A.class")
-        assertThat(resultJar).doesNotContain("test/B.class")
+        assertThat(resultJar) {
+            it.contains("test/A.class")
+            it.doesNotContain("test/B.class")
+        }
     }
 
-    private fun resultJar(): Zip {
-        return Zip(Files.walk(outputDir).filter {
+    private fun resultJar(): Path {
+        return Files.walk(outputDir).filter {
             it.toString().endsWith(".jar")
-        }.toList().single())
+        }.toList().single()
     }
 
     private fun newFile(withContent: String): File {

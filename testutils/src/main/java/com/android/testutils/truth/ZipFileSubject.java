@@ -23,12 +23,14 @@ import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Path;
+import java.util.function.Consumer;
 
 /** Truth support for zip files. */
 public class ZipFileSubject extends AbstractZipSubject<ZipFileSubject, Zip> {
 
-    public static Subject.Factory<ZipFileSubject, Zip> zips() {
+    @Deprecated
+    private static Subject.Factory<ZipFileSubject, Zip> zips() {
         return ZipFileSubject::new;
     }
 
@@ -36,6 +38,22 @@ public class ZipFileSubject extends AbstractZipSubject<ZipFileSubject, Zip> {
         super(failureMetadata, subject);
     }
 
+    public static void assertThat(@NonNull File file, @NonNull Consumer<ZipFileSubject> action)
+            throws Exception {
+        try (Zip it = new Zip(file)) {
+            action.accept(Truth.assertAbout(zips()).that(it));
+        }
+    }
+
+    public static void assertThat(@NonNull Path file, @NonNull Consumer<ZipFileSubject> action)
+            throws Exception {
+        try (Zip it = new Zip(file)) {
+            action.accept(Truth.assertAbout(zips()).that(it));
+        }
+    }
+
+    /** Use {@link ZipFileSubject#assertThat(File, Consumer)} */
+    @Deprecated
     public static ZipFileSubject assertThat(@NonNull Zip zip) {
         return Truth.assertAbout(zips()).that(zip);
     }

@@ -80,8 +80,11 @@ public class LibWithPackageLocalJarTest {
     @Test
     public void checkPackagedLocalJarIsPackaged() throws Exception {
         // search in secondary jars only.
-        assertThat(project.getAar("debug"))
-                .containsSecondaryClass("Lcom/example/android/multiproject/person/People;");
+        project.testAar(
+                "debug",
+                it -> {
+                    it.containsSecondaryClass("Lcom/example/android/multiproject/person/People;");
+                });
     }
 
     @Test

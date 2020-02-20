@@ -83,8 +83,10 @@ class AutoServiceTest(private val pluginName: String) {
             assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
                 .containsJavaResource("META-INF/services/com.example.helloworld.MyService")
         } else {
-            assertThat(project.getAar("debug"))
-                .containsJavaResource("META-INF/services/com.example.helloworld.MyService")
+
+            project.testAar("debug") {
+                it.containsJavaResource("META-INF/services/com.example.helloworld.MyService")
+            }
         }
     }
 

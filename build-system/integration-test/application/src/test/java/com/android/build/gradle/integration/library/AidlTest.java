@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.library;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.testutils.AssumeUtil.assumeNotWindows;
 import static com.android.testutils.truth.FileSubject.assertThat;
 
@@ -24,7 +23,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.truth.AarSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.utils.FileUtils;
@@ -193,7 +191,7 @@ public class AidlTest {
     }
 
     @Test
-    public void testAidl() throws IOException, InterruptedException {
+    public void testAidl() throws Exception {
         project.execute("assembleDebug");
         checkAar("ITest");
 
@@ -250,15 +248,18 @@ public class AidlTest {
         project.execute("clean", "assembleDebug");
     }
 
-    private void checkAar(String dontInclude) throws IOException {
+    private void checkAar(String dontInclude) throws Exception {
         if (!this.plugin.contains("library")) {
             return;
         }
 
-        AarSubject aar = assertThatAar(project.getAar("debug"));
-        aar.contains("aidl/com/example/helloworld/MyRect.aidl");
-        aar.contains("aidl/com/example/helloworld/WhiteListed.aidl");
-        aar.doesNotContain("aidl/com/example/helloworld/" + dontInclude + ".aidl");
+        project.testAar(
+                "debug",
+                it -> {
+                    it.contains("aidl/com/example/helloworld/MyRect.aidl");
+                    it.contains("aidl/com/example/helloworld/WhiteListed.aidl");
+                    it.doesNotContain("aidl/com/example/helloworld/" + dontInclude + ".aidl");
+                });
     }
 
     private static void changeEncoding(@NonNull List<File> files, @NonNull Charset newEncoding)
