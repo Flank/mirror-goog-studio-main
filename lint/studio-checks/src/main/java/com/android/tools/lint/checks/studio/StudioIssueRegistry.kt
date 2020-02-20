@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks.studio
 
 import com.android.tools.lint.checks.AssertDetector
+import com.android.tools.lint.checks.CheckResultDetector
 import com.android.tools.lint.checks.CommentDetector
 import com.android.tools.lint.checks.DateFormatDetector
 import com.android.tools.lint.checks.InteroperabilityDetector
@@ -52,6 +53,7 @@ class StudioIssueRegistry : IssueRegistry() {
     }
 
     override val issues = listOf(
+        CheckResultDetector.CHECK_RESULT,
         ExternalAnnotationsDetector.ISSUE,
         FileComparisonDetector.ISSUE,
         ForkJoinPoolDetector.COMMON_FJ_POOL,
