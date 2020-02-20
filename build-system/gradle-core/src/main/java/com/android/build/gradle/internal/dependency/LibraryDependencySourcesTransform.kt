@@ -2,6 +2,7 @@ package com.android.build.gradle.internal.dependency
 
 import com.android.SdkConstants
 import com.android.ide.common.resources.usage.ResourceUsageModel
+import com.android.ide.common.resources.usage.getResourcesFromExplodedAarToFile
 import com.android.resources.ResourceFolderType
 import com.android.utils.XmlUtils
 import org.gradle.api.artifacts.transform.InputArtifact
@@ -11,12 +12,10 @@ import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
 import java.io.File
-import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipInputStream
 import com.android.ide.common.symbols.SymbolIo
-import java.nio.charset.StandardCharsets
 
 /** This transform outputs a directory containing two files listing the contents of this AAR,
  *  classes.txt where each line is a java class name of the form 'com/example/MyClass.class'
@@ -44,30 +43,6 @@ abstract class LibraryDependencySourcesTransform : TransformAction<GenericTransf
                 getResourcesFromExplodedAarToFile(explodedAar)
         )
     }
-}
-
-fun getResourcesFromExplodedAarToFile(explodedAar: File) : List<String> {
-    val resourceDir = explodedAar.resolve(SdkConstants.FD_RESOURCES)
-    if (resourceDir.list() == null || resourceDir.listFiles()!!.none()) {
-        return emptyList()
-    }
-    val resourceUsageModel = ResourceUsageModel()
-    // Extract resource declarations and usages from exploded AAR into resourceUsageModel.
-    resourceDir
-            .walkTopDown()
-            .filter { it.isFile }
-            .sorted()
-            .forEach { file ->
-                val resFolderType = ResourceFolderType.getTypeByName(file.parentFile.name)
-                if (file.name.endsWith(SdkConstants.DOT_XML)) {
-                    val resourceString = file.readText(StandardCharsets.UTF_8).trim()
-                    val document = XmlUtils.parseDocument(resourceString, false)
-                    resourceUsageModel.visitXmlDocument(file, resFolderType, document)
-                } else {
-                    resourceUsageModel.visitBinaryResource(resFolderType, file)
-                }
-            }
-    return resourceUsageModel.resources.map { it.toString() }
 }
 
 /** Gets a list of .class filepaths from all JAR files stored within an exploded AAR File. */

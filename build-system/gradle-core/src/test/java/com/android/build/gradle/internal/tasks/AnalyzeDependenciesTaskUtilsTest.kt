@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.dependency.getClassesInJar
-import com.android.build.gradle.internal.dependency.getResourcesFromExplodedAarToFile
 import com.android.build.gradle.internal.dependency.writePathsToFile
 import com.android.build.gradle.internal.fixtures.FakeArtifactCollection
 import com.android.build.gradle.internal.fixtures.FakeComponentIdentifier
@@ -29,8 +28,8 @@ import com.android.build.gradle.tasks.AnalyzeDependenciesTask.VariantDependencie
 import com.android.build.gradle.tasks.ClassFinder
 import com.android.build.gradle.tasks.DependencyUsageFinder
 import com.android.build.gradle.tasks.ResourcesFinder
+import com.android.ide.common.resources.usage.getResourcesFromExplodedAarToFile
 import com.android.testutils.TestInputsGenerator
-import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Incubating
@@ -128,53 +127,99 @@ class AnalyzeDependenciesTaskUtilsTest {
 
     @Test
     fun testResourceFinder() {
-        val fooPackage = "foo"
-        val barPackage = "bar"
-        val fooProject = tmp.newFolder(fooPackage)
-        val barProject = tmp.newFolder(barPackage)
-        val fooDependencySources = tmp.newFolder("dependency-sources-foo")
+        /* Test resource dependencies diagram:
+                        :app
+                          ^
+                          |
+                        :bar  :baz
+                          ^
+                          |
+                        :foo               */
+        // Projects with resources used by another project
+        val fooProject = tmp.newFolder("foo")
+        val barProject = tmp.newFolder("bar")
+        // Projects with no resources used by another project
+        val bazProject = tmp.newFolder("baz")
+        // Application/Device module
+        val appProject = tmp.newFolder("app")
         addResourceTestDirectoryTo(fooProject)
         val barDependencySources = tmp.newFolder("dependency-sources-bar")
-        //Add bar resource which will depend on a resource from foo.
-        val barMainActivty = """
-            <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        val fooDependencySources = tmp.newFolder("dependency-sources-foo")
+        val bazDependencySources = tmp.newFolder("dependency-sources-baz")
+
+        // Add bar resource which will depend on a resource from foo.
+        val barLayoutView =
+                // language=XML
+                """<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                            xmlns:app="http://schemas.android.com/apk/res-auto">
+                <TextView
+                    android:id="@+id/bar_text_box"
+                    android:text="@string/desc"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"/>
+            </RelativeLayout>""".trimIndent()
+        val barValuesStrings =
+                // language=XML
+            """<resources>
+                <string name="app_name">pngDpiRepro</string>
+                <string name="test_string_from_bar">my test string from bar</string>
+            </resources>""".trimIndent()
+        val barRes = File(barProject, SdkConstants.FD_RES).also { it.mkdir() }
+        val barValues = File(barRes, SdkConstants.FD_RES_VALUES).also { it.mkdir() }
+        val barLayout = File(barRes, SdkConstants.FD_RES_LAYOUT).also { it.mkdir() }
+        File(barValues, "strings.xml").also { it.writeText(barValuesStrings) }
+        File(barLayout, "bar_view.xml").also { it.writeText(barLayoutView) }
+
+        // Add app resource which will depend on a resource from bar.
+        val appMainActivty =
+                // language=XML
+            """<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                             xmlns:app="http://schemas.android.com/apk/res-auto">
                 <TextView
                     android:id="@+id/text_box"
-                    android:text="@string/app_name"
+                    android:text="@string/test_string_from_bar"
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"/>
             </RelativeLayout>
         """.trimIndent()
-        val barRes = File(barProject, SdkConstants.FD_RES)
-        val barLayout = File(barRes, SdkConstants.FD_RES_LAYOUT)
-        barRes.mkdir()
-        barLayout.mkdir()
-        val barActivityFile = File(barLayout, "bar_activity.xml")
-        barActivityFile.writeText(barMainActivty)
+        val appRes = File(appProject, SdkConstants.FD_RES).also { it.mkdir() }
+        val appLayout = File(appRes, SdkConstants.FD_RES_LAYOUT).also { it.mkdir() }
+        File(appLayout, "main_activity.xml").also { it.writeText(appMainActivty) }
+
+        val bazRes = File(bazProject, SdkConstants.FD_RES).also { it.mkdir() }
+        val bazDrawable = File(bazRes, SdkConstants.FD_RES_LAYOUT).also { it.mkdir() }
+        File(bazDrawable, "baz.png").also { it.writeText("") }
 
         val fooResSymbols = getResourcesFromExplodedAarToFile(fooProject)
         val barResSymbols = getResourcesFromExplodedAarToFile(barProject)
+        val bazResSymbols = getResourcesFromExplodedAarToFile(bazProject)
         writePathsToFile(
                 File(fooDependencySources, "resources_symbols${SdkConstants.DOT_TXT}"),
                 fooResSymbols)
         writePathsToFile(
                 File(barDependencySources, "resources_symbols${SdkConstants.DOT_TXT}"),
                 barResSymbols)
+        writePathsToFile(
+                File(bazDependencySources, "resources_symbols${SdkConstants.DOT_TXT}"),
+                bazResSymbols)
 
         val artifacts = FakeArtifactCollection(mutableSetOf(
                 FakeResolvedArtifactResult(fooDependencySources,
-                        FakeComponentIdentifier(fooPackage)),
+                        FakeComponentIdentifier(fooProject.name)),
                 FakeResolvedArtifactResult(barDependencySources,
-                        FakeComponentIdentifier(barPackage))
+                        FakeComponentIdentifier(barProject.name)),
+                FakeResolvedArtifactResult(bazDependencySources,
+                        FakeComponentIdentifier(bazProject.name))
         ))
 
-        val finder = ResourcesFinder(artifacts)
+        val finder = ResourcesFinder(listOf(appRes), artifacts)
 
         assertThat(finder.findUsedDependencies())
-                .containsExactlyElementsIn(listOf(fooPackage, barPackage))
-        assertThat(finder.findUnUsedDependencies().size).isEqualTo(0)
+                .containsExactlyElementsIn(setOf(fooProject.name, barProject.name))
+        assertThat(finder.findUnUsedDependencies())
+                .containsExactlyElementsIn(setOf(bazProject.name))
         assertThat(finder.find("string:app_name:-1").size).isEqualTo(2)
+        assertThat(finder.find("string:test_string_from_bar:-1").size).isEqualTo(1)
     }
 
     @Test
