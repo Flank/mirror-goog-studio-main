@@ -2,11 +2,8 @@ load("//tools/base/bazel/avd:avd.bzl", "avd")
 
 # This test demonstrates running an emulator on RBE and using it for a Java
 # test.
-# Important attributes to note:
-#   - exec_properties = EMULATOR_MACHINE
-#     Emulator tests will only work on machines in the emulator-machines pool.
-#   - tags = ["no_mac", "no_windows"]
-#     Emulator tests only run on Linux.
+# Note the attribute: tags = ["no_mac", "no_windows"]. This is because emulator
+# tests only run on Linux.
 avd(name = "emulator_test_device")
 
 java_test(
