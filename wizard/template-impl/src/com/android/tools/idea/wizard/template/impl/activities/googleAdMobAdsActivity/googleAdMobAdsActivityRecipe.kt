@@ -48,7 +48,7 @@ fun RecipeExecutor.googleAdMobAdsActivityRecipe(
 
   val isDynamicFeature = moduleData.baseFeature != null
   generateManifestStrings(activityClass, activityTitle, resOut, resOut, moduleData.isNew, true, isDynamicFeature)
-  addDependency("com.google.android.gms:play-services-ads:+")
+  addDependency("com.google.android.gms:play-services-ads:+", toBase = moduleData.isDynamic)
 
   mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, moduleData.isNew, packageName),
            manifestOut.resolve("AndroidManifest.xml"))
