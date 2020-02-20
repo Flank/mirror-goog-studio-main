@@ -160,9 +160,17 @@ open class DefaultAndroidSourceSet @Inject constructor(
     get()
             = getName(CONFIG_NAME_ANNOTATION_PROCESSOR)
 
+    override fun manifest(action: com.android.build.api.dsl.AndroidSourceFile.() -> Unit) {
+        action.invoke(manifest)
+    }
+
     override fun manifest(configureClosure: Closure<*>): AndroidSourceSet {
         ConfigureUtil.configure(configureClosure, manifest)
         return this
+    }
+
+    override fun res(action: com.android.build.api.dsl.AndroidSourceDirectorySet.() -> Unit) {
+        action.invoke(res)
     }
 
     override fun res(configureClosure: Closure<*>): AndroidSourceSet {
@@ -170,38 +178,53 @@ open class DefaultAndroidSourceSet @Inject constructor(
         return this
     }
 
+    override fun assets(action: com.android.build.api.dsl.AndroidSourceDirectorySet.() -> Unit) {
+        action.invoke(assets)
+    }
 
     override fun assets(configureClosure: Closure<*>): AndroidSourceSet {
         ConfigureUtil.configure(configureClosure, assets)
         return this
     }
 
-
+    override fun aidl(action: com.android.build.api.dsl.AndroidSourceDirectorySet.() -> Unit) {
+        action.invoke(aidl)
+    }
 
     override fun aidl(configureClosure: Closure<*>): AndroidSourceSet {
         ConfigureUtil.configure(configureClosure, aidl)
         return this
     }
 
-
+    override fun renderscript(action: com.android.build.api.dsl.AndroidSourceDirectorySet.() -> Unit) {
+        action.invoke(renderscript)
+    }
 
     override fun renderscript(configureClosure: Closure<*>): AndroidSourceSet {
         ConfigureUtil.configure(configureClosure, renderscript)
         return this
     }
 
-
+    override fun jni(action: com.android.build.api.dsl.AndroidSourceDirectorySet.() -> Unit) {
+        action.invoke(jni)
+    }
 
     override fun jni(configureClosure: Closure<*>): AndroidSourceSet {
         ConfigureUtil.configure(configureClosure, jni)
         return this
     }
 
-
+    override fun jniLibs(action: com.android.build.api.dsl.AndroidSourceDirectorySet.() -> Unit) {
+        action.invoke(jniLibs)
+    }
 
     override fun jniLibs(configureClosure: Closure<*>): AndroidSourceSet {
         ConfigureUtil.configure(configureClosure, jniLibs)
         return this
+    }
+
+    override fun shaders(action: com.android.build.api.dsl.AndroidSourceDirectorySet.() -> Unit) {
+        action.invoke(shaders)
     }
 
     override fun shaders(configureClosure: Closure<*>): AndroidSourceSet {
@@ -209,11 +232,18 @@ open class DefaultAndroidSourceSet @Inject constructor(
         return this
     }
 
+    override fun java(action: com.android.build.api.dsl.AndroidSourceDirectorySet.() -> Unit) {
+        action.invoke(java)
+    }
+
     override fun java(configureClosure: Closure<*>): AndroidSourceSet {
         ConfigureUtil.configure(configureClosure, java)
         return this
     }
 
+    override fun resources(action: com.android.build.api.dsl.AndroidSourceDirectorySet.() -> Unit) {
+        action.invoke(resources)
+    }
 
     override fun resources(configureClosure: Closure<*>): AndroidSourceSet {
         ConfigureUtil.configure(configureClosure, resources)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.api
 
+package com.android.build.api.dsl
+
+import org.gradle.api.Incubating
+import org.gradle.api.Named
 import java.io.File
 
 /**
  * An AndroidSourceFile represents a single file input for an Android project.
  */
-@Deprecated("Use  com.android.build.api.dsl.AndroidSourceFile")
-interface AndroidSourceFile: com.android.build.api.dsl.AndroidSourceFile {
+@Incubating
+interface AndroidSourceFile: Named {
+
     /**
      * A concise name for the source directory (typically used to identify it in a collection).
      */
     override fun getName(): String
 
-    /** The source file */
-    val srcFile: File
-
-    override fun srcFile(srcPath: Any): AndroidSourceFile
+    /**
+     * Sets the location of the file.
+     *
+     * @param srcPath The source directory. This is evaluated as [org.gradle.api.Project.file]
+     *
+     * This method has a return value for legacy reasons.
+     */
+    fun srcFile(srcPath: Any): Any
 }

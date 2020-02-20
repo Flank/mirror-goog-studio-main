@@ -21,68 +21,31 @@ import groovy.lang.Closure
  * An AndroidSourceSet represents a logical group of Java, aidl and RenderScript sources
  * as well as Android and non-Android (Java-style) resources.
  */
-interface AndroidSourceSet {
-    /**
-     * Returns the name of this source set.
-     *
-     * @return The name. Never returns null.
-     */
-    fun getName(): String
+@Deprecated("Use  com.android.build.api.dsl.AndroidSourceSet")
+interface AndroidSourceSet: com.android.build.api.dsl.AndroidSourceSet {
 
-    /**
-     * Returns the Java resources which are to be copied into the javaResources output directory.
-     */
-    val resources: AndroidSourceDirectorySet
+    override fun getName(): String
 
-    /**
-     * Configures the Java resources for this set.
-     *
-     *
-     * The given closure is used to configure the [AndroidSourceDirectorySet] which
-     * contains the java resources.
-     *
-     * @param configureClosure The closure to use to configure the javaResources.
-     * @return this
-     */
+    override val resources: AndroidSourceDirectorySet
     fun resources(configureClosure: Closure<*>): AndroidSourceSet
 
-    /**
-     * Returns the Java source which is to be compiled by the Java compiler into the class output
-     * directory.
-     *
-     * @return the Java source. Never returns null.
-     */
-    val java: AndroidSourceDirectorySet
-
-    /**
-     * Configures the Java source for this set.
-     *
-     *
-     * The given closure is used to configure the [AndroidSourceDirectorySet] which
-     * contains the Java source.
-     *
-     * @param configureClosure The closure to use to configure the Java source.
-     * @return this
-     */
+    override val java: AndroidSourceDirectorySet
     fun java(configureClosure: Closure<*>): AndroidSourceSet
 
     /**
      * Returns the name of the compile configuration for this source set.
-     *
      */
     @get:Deprecated("use {@link #getImplementationConfigurationName()}")
     val compileConfigurationName: String
 
     /**
      * Returns the name of the runtime configuration for this source set.
-     *
      */
     @get:Deprecated("use {@link #getRuntimeOnlyConfigurationName()}")
     val packageConfigurationName: String
 
     /**
      * Returns the name of the compiled-only configuration for this source set.
-     *
      */
     @get:Deprecated("use {@link #getCompileOnlyConfigurationName()}")
     val providedConfigurationName: String
@@ -115,12 +78,7 @@ interface AndroidSourceSet {
      */
     val annotationProcessorConfigurationName: String
 
-    /**
-     * The Android Manifest file for this source set.
-     *
-     * @return the manifest. Never returns null.
-     */
-    val manifest: AndroidSourceFile
+    override val manifest: AndroidSourceFile
 
     /**
      * Configures the location of the Android Manifest for this set.
@@ -134,12 +92,7 @@ interface AndroidSourceSet {
      */
     fun manifest(configureClosure: Closure<*>): AndroidSourceSet
 
-    /**
-     * The Android Resources directory for this source set.
-     *
-     * @return the resources. Never returns null.
-     */
-    val res: AndroidSourceDirectorySet
+    override val res: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android Resources for this set.
@@ -153,12 +106,7 @@ interface AndroidSourceSet {
      */
     fun res(configureClosure: Closure<*>): AndroidSourceSet
 
-    /**
-     * The Android Assets directory for this source set.
-     *
-     * @return the assets. Never returns null.
-     */
-    val assets: AndroidSourceDirectorySet
+    override val assets: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android Assets for this set.
@@ -172,12 +120,7 @@ interface AndroidSourceSet {
      */
     fun assets(configureClosure: Closure<*>): AndroidSourceSet
 
-    /**
-     * The Android AIDL source directory for this source set.
-     *
-     * @return the source. Never returns null.
-     */
-    val aidl: AndroidSourceDirectorySet
+    override val aidl: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android AIDL source for this set.
@@ -191,12 +134,7 @@ interface AndroidSourceSet {
      */
     fun aidl(configureClosure: Closure<*>): AndroidSourceSet
 
-    /**
-     * The Android RenderScript source directory for this source set.
-     *
-     * @return the source. Never returns null.
-     */
-    val renderscript: AndroidSourceDirectorySet
+    override val renderscript: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android RenderScript source for this set.
@@ -210,12 +148,7 @@ interface AndroidSourceSet {
      */
     fun renderscript(configureClosure: Closure<*>): AndroidSourceSet
 
-    /**
-     * The Android JNI source directory for this source set.
-     *
-     * @return the source. Never returns null.
-     */
-    val jni: AndroidSourceDirectorySet
+    override val jni: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android JNI source for this set.
@@ -229,12 +162,7 @@ interface AndroidSourceSet {
      */
     fun jni(configureClosure: Closure<*>): AndroidSourceSet
 
-    /**
-     * The Android JNI libs directory for this source set.
-     *
-     * @return the libs. Never returns null.
-     */
-    val jniLibs: AndroidSourceDirectorySet
+    override val jniLibs: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android JNI libs for this set.
@@ -248,12 +176,7 @@ interface AndroidSourceSet {
      */
     fun jniLibs(configureClosure: Closure<*>): AndroidSourceSet
 
-    /**
-     * The Android shaders directory for this source set.
-     *
-     * @return the shaders. Never returns null.
-     */
-    val shaders: AndroidSourceDirectorySet
+    override val shaders: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android shaders for this set.
@@ -267,13 +190,5 @@ interface AndroidSourceSet {
      */
     fun shaders(configureClosure: Closure<*>): AndroidSourceSet
 
-    /**
-     * Sets the root of the source sets to a given path.
-     *
-     * All entries of the source set are located under this root directory.
-     *
-     * @param path the root directory.
-     * @return this
-     */
-    fun setRoot(path: String): AndroidSourceSet
+    override fun setRoot(path: String): AndroidSourceSet
 }

@@ -378,7 +378,7 @@ com.android.build.gradle.api.AndroidBasePlugin implements org.gradle.api.Plugin
 com.android.build.gradle.api.AndroidBasePlugin.<init>: com.android.build.gradle.api.AndroidBasePlugin ()
 com.android.build.gradle.api.AndroidBasePlugin.apply: void (java.lang.Object)
 com.android.build.gradle.api.AndroidBasePlugin.apply: void (org.gradle.api.Project)
-com.android.build.gradle.api.AndroidSourceDirectorySet implements org.gradle.api.tasks.util.PatternFilterable
+com.android.build.gradle.api.AndroidSourceDirectorySet implements org.gradle.api.tasks.util.PatternFilterable, com.android.build.api.dsl.AndroidSourceDirectorySet
 com.android.build.gradle.api.AndroidSourceDirectorySet.getBuildableArtifact: org.gradle.api.file.FileCollection ()
 com.android.build.gradle.api.AndroidSourceDirectorySet.getFilter: org.gradle.api.tasks.util.PatternFilterable ()
 com.android.build.gradle.api.AndroidSourceDirectorySet.getName: java.lang.String ()
@@ -388,11 +388,11 @@ com.android.build.gradle.api.AndroidSourceDirectorySet.getSrcDirs: java.util.Set
 com.android.build.gradle.api.AndroidSourceDirectorySet.setSrcDirs: com.android.build.gradle.api.AndroidSourceDirectorySet (java.lang.Iterable<?>)
 com.android.build.gradle.api.AndroidSourceDirectorySet.srcDir: com.android.build.gradle.api.AndroidSourceDirectorySet (java.lang.Object)
 com.android.build.gradle.api.AndroidSourceDirectorySet.srcDirs: com.android.build.gradle.api.AndroidSourceDirectorySet (java.lang.Object[])
-com.android.build.gradle.api.AndroidSourceFile
+com.android.build.gradle.api.AndroidSourceFile implements com.android.build.api.dsl.AndroidSourceFile
 com.android.build.gradle.api.AndroidSourceFile.getName: java.lang.String ()
 com.android.build.gradle.api.AndroidSourceFile.getSrcFile: java.io.File ()
 com.android.build.gradle.api.AndroidSourceFile.srcFile: com.android.build.gradle.api.AndroidSourceFile (java.lang.Object)
-com.android.build.gradle.api.AndroidSourceSet
+com.android.build.gradle.api.AndroidSourceSet implements com.android.build.api.dsl.AndroidSourceSet
 com.android.build.gradle.api.AndroidSourceSet.aidl: com.android.build.gradle.api.AndroidSourceSet (groovy.lang.Closure<?>)
 com.android.build.gradle.api.AndroidSourceSet.assets: com.android.build.gradle.api.AndroidSourceSet (groovy.lang.Closure<?>)
 com.android.build.gradle.api.AndroidSourceSet.getAidl: com.android.build.gradle.api.AndroidSourceDirectorySet ()

@@ -25,38 +25,16 @@ import java.io.File
 /**
  * An AndroidSourceDirectorySet represents a set of directory inputs for an Android project.
  */
-interface AndroidSourceDirectorySet : PatternFilterable {
-    /**
-     * A concise name for the source directory (typically used to identify it in a collection).
-     */
-    fun getName(): String
+@Deprecated("Use  com.android.build.api.dsl.AndroidSourceDirectorySet")
+interface AndroidSourceDirectorySet : PatternFilterable, com.android.build.api.dsl.AndroidSourceDirectorySet {
 
-    /**
-     * Adds the given source directory to this set.
-     *
-     * @param srcDir The source directory. This is evaluated as for
-     * [org.gradle.api.Project.file]
-     * @return this
-     */
-    fun srcDir(srcDir: Any): AndroidSourceDirectorySet
+    override fun getName(): String
 
-    /**
-     * Adds the given source directories to this set.
-     *
-     * @param srcDirs The source directories. These are evaluated as for
-     * [org.gradle.api.Project.files]
-     * @return this
-     */
-    fun srcDirs(vararg srcDirs: Any): AndroidSourceDirectorySet
+    override fun srcDir(srcDir: Any): AndroidSourceDirectorySet
 
-    /**
-     * Sets the source directories for this set.
-     *
-     * @param srcDirs The source directories. These are evaluated as for
-     * [org.gradle.api.Project.files]
-     * @return this
-     */
-    fun setSrcDirs(srcDirs: Iterable<*>): AndroidSourceDirectorySet
+    override fun srcDirs(vararg srcDirs: Any): AndroidSourceDirectorySet
+
+    override fun setSrcDirs(srcDirs: Iterable<*>): AndroidSourceDirectorySet
 
     /**
      * Returns the list of source files as a [org.gradle.api.file.FileTree]
