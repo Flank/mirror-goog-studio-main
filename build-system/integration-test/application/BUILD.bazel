@@ -209,6 +209,7 @@ gradle_integration_test(
         ],
     ),
     data = TEST_DATA,
+    lint_baseline = "lint_baseline.xml",
     #keep sorted
     maven_repos = [
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",

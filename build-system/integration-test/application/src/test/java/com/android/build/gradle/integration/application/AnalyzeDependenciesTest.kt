@@ -6,6 +6,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.tasks.DependenciesUsageReport
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.generateAarWithContent
+import com.android.utils.usLocaleCapitalize
 import com.google.common.io.Resources
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.Gson
@@ -109,8 +110,8 @@ class AnalyzeDependenciesTest {
     fun `Verify correct dependencies report is produced, only considering class references`() {
         val buildType = "debug"
         project.execute(
-                ":app:assemble${buildType.toUpperCase()}",
-                ":app:analyze${buildType.toUpperCase()}Dependencies"
+                ":app:assemble${buildType.usLocaleCapitalize()}",
+                ":app:analyze${buildType.usLocaleCapitalize()}Dependencies"
         )
 
         val dependencyAnalysisReport = project.getSubproject(":app").getIntermediateFile(

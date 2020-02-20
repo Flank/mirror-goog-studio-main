@@ -50,6 +50,7 @@ import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Locale
 import kotlin.test.fail
 
 private const val MAIN_DEX_LIST_PATH = "/BUNDLE-METADATA/com.android.tools.build.bundletool/mainDexList.txt"
@@ -927,8 +928,8 @@ class DynamicAppTest {
         Zip(bundleFile).use {
             val entries = it.entries.map { it.toString() }
             Truth.assertThat(entries).contains("/META-INF/MANIFEST.MF")
-            Truth.assertThat(entries).contains("/META-INF/${keyAlias.toUpperCase()}.RSA")
-            Truth.assertThat(entries).contains("/META-INF/${keyAlias.toUpperCase()}.SF")
+            Truth.assertThat(entries).contains("/META-INF/${keyAlias.toUpperCase(Locale.US)}.RSA")
+            Truth.assertThat(entries).contains("/META-INF/${keyAlias.toUpperCase(Locale.US)}.SF")
         }
 
         val result = ApkVerifier.Builder(bundleFile)

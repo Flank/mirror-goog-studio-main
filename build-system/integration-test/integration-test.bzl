@@ -22,12 +22,15 @@ def gradle_integration_test(
         shard_count = 1,
         tags = [],
         timeout = "eternal",
+        lint_baseline = None,
         **kwargs):
     lib_name = name + ".testlib"
     kotlin_library(
         name = lib_name,
         srcs = srcs,
         deps = deps,
+        lint_baseline = lint_baseline,
+        lint_is_test_sources = True,
     )
 
     # Stringy conversion of repo to its target and file name

@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Locale;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -72,6 +73,7 @@ public class DesugarLibraryWithDesugarToolTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 String.format(
+                        Locale.US,
                         "\n" + "android.defaultConfig.minSdkVersion %d\n",
                         MIN_SUPPORTED_API_TRY_WITH_RESOURCES - 1));
         project.executor()

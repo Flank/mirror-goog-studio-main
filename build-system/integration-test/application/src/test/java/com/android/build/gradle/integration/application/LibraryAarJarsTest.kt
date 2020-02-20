@@ -26,6 +26,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.nio.file.Path
+import java.util.Locale
 import java.util.function.Predicate
 import java.util.zip.Deflater
 
@@ -139,7 +140,7 @@ class LibraryAarJarsTest {
 
         // Exclude excludes from final jar
         val excludes = Predicate { archivePath: String ->
-            !archivePath.toLowerCase().startsWith("exclude")
+            !archivePath.toLowerCase(Locale.US).startsWith("exclude")
         }
 
         LibraryAarJarsTask.mergeInputs(
