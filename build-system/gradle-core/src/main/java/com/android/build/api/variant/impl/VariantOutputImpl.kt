@@ -43,7 +43,7 @@ data class VariantOutputImpl(
     @get:Input
     val fullName: String,
     @get:Input
-    val outputFileName: String,
+    val outputFileName: Property<String>,
     @get:Internal
     val apkData: ApkData /* remove once all tasks started using public API to load output.json */
 ) : VariantOutput, VariantOutputConfiguration by variantOutputConfiguration {
@@ -87,7 +87,7 @@ data class VariantOutputImpl(
         variantOutputConfiguration = variantOutputConfiguration,
         fullName = fullName,
         baseName = baseName,
-        outputFileName = outputFileName)
+        outputFileName = outputFileName.get())
 
     fun getFilter(filterType: FilterConfiguration.FilterType): FilterConfiguration? =
         filters.firstOrNull { it.filterType == filterType }

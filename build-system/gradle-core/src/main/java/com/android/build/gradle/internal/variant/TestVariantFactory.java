@@ -136,7 +136,7 @@ public class TestVariantFactory
                                 globalScope);
 
         // create default output
-        variantProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
+        variantProperties.addVariantOutput(variantData.getOutputFactory().addMainApk(), null);
 
         return variantProperties;
     }

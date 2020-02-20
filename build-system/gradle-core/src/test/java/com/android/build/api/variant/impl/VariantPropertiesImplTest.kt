@@ -79,6 +79,9 @@ class VariantPropertiesImplTest {
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(variantData.taskContainer).thenReturn(MutableTaskContainer())
+        Mockito.`when`(variantDslInfo.componentIdentity).thenReturn(componentIdentity)
+        Mockito.`when`(componentIdentity.name).thenReturn("test")
+        Mockito.`when`(globalScope.archivesBaseName).thenReturn("archive_base")
 
         properties = FakeVariantProperties(
             componentIdentity,
@@ -103,7 +106,7 @@ class VariantPropertiesImplTest {
         Mockito.`when`(variantDslInfo.manifestVersionNameSupplier)
             .thenReturn(Supplier<String?> { "foo" })
 
-        properties.addVariantOutput(apkData)
+        properties.addVariantOutput(apkData, "output_file")
         Truth.assertThat(properties.outputs).hasSize(1)
 
         Truth.assertThat(properties.outputs[0].versionCode.get()).isEqualTo(10)

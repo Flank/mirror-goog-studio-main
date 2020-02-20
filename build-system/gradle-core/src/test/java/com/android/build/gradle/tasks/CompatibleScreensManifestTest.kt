@@ -138,7 +138,7 @@ class CompatibleScreensManifestTest {
                     Mockito.mock(VariantOutputConfigurationImpl::class.java),
                     "base_name",
                     "main_full_name",
-                    "output_file_name",
+                    FakeGradleProperty(value = "output_file_name"),
                     outputFactory.addMainApk())
             ))
         `when`(variantProperties.outputs).thenReturn(variantOutputList)
@@ -165,7 +165,7 @@ class CompatibleScreensManifestTest {
             VariantOutputConfigurationImpl(false, listOf()),
                 "base_name",
                 "main_full_name",
-                "output_file_name",
+                FakeGradleProperty(value = "output_file_name"),
                 outputFactory.addMainApk()))
 
         task.variantName = "variant"
@@ -194,7 +194,7 @@ class CompatibleScreensManifestTest {
                 "base_name",
 
                 "split_full_name",
-                "output_file_name",
+                FakeGradleProperty(value = "output_file_name"),
                 outputFactory.addFullSplit(
                     ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
                         Pair.of<VariantOutput.FilterType, String>(
@@ -237,7 +237,7 @@ class CompatibleScreensManifestTest {
                     listOf(FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xhdpi"))),
                 "base_name",
                 "split_full_name",
-                "output_file_name",
+                FakeGradleProperty(value = "output_file_name"),
                 outputFactory.addFullSplit(
                     ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
                         Pair.of<VariantOutput.FilterType, String>(
@@ -278,7 +278,7 @@ class CompatibleScreensManifestTest {
                     listOf(FilterConfiguration(FilterConfiguration.FilterType.DENSITY, "xhdpi"))),
                 "base_name",
                 "split_full_name",
-                "output_file_name",
+                FakeGradleProperty(value = "output_file_name"),
                 outputFactory.addFullSplit(
                     ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
                         Pair.of<VariantOutput.FilterType, String>(
@@ -298,7 +298,7 @@ class CompatibleScreensManifestTest {
                 "base_name",
 
                 "split_full_name",
-                "output_file_name",
+                FakeGradleProperty(value = "output_file_name"),
                 outputFactory.addFullSplit(
                     ImmutableList.of<Pair<VariantOutput.FilterType, String>>(
                         Pair.of<VariantOutput.FilterType, String>(

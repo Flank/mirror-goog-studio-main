@@ -121,7 +121,8 @@ public class LibraryVariantFactory
                         + variantProperties.getBaseName()
                         + "."
                         + BuilderConstants.EXT_LIB_ARCHIVE;
-        variantProperties.addVariantOutput(variantData.getOutputFactory().addMainOutput(name));
+        variantProperties.addVariantOutput(
+                variantData.getOutputFactory().addMainOutput(name), name);
 
         return variantProperties;
     }

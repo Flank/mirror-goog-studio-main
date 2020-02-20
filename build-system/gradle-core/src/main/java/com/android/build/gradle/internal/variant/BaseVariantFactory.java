@@ -136,7 +136,7 @@ public abstract class BaseVariantFactory<
                                 taskCreationServices,
                                 globalScope);
 
-        unitTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
+        unitTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk(), null);
 
         return unitTestProperties;
     }
@@ -177,7 +177,7 @@ public abstract class BaseVariantFactory<
                                 taskCreationServices,
                                 globalScope);
 
-        androidTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
+        androidTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk(), null);
 
         return androidTestProperties;
     }

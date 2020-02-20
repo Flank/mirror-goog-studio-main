@@ -28,7 +28,7 @@ import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
-import com.android.build.api.variant.impl.fullName
+import com.android.build.api.variant.impl.baseName
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
@@ -205,7 +205,7 @@ abstract class ComponentPropertiesImpl(
         )
     }
 
-    fun addVariantOutput(apkData: ApkData): VariantOutputImpl {
+    fun addVariantOutput(apkData: ApkData, outputFileName: String? = null): VariantOutputImpl {
         // the DSL objects are now locked, if the versionCode is provided, use that
         // otherwise use the lazy manifest reader to extract the value from the manifest
         // file.
@@ -248,7 +248,14 @@ abstract class ComponentPropertiesImpl(
             variantOutputConfiguration,
             apkData.baseName.orEmpty(),
             apkData.fullName.orEmpty(),
-            apkData.outputFileName.orEmpty(),
+            variantPropertiesApiServices.newPropertyBackingDeprecatedApi(
+                String::class.java,
+                outputFileName
+                    ?: variantDslInfo.getOutputFileName(
+                        globalScope.archivesBaseName,
+                        variantOutputConfiguration.baseName(variantDslInfo)
+                    ),
+                "$name::archivesBaseName"),
             apkData
         ).also {
             apkData.variantOutput = it

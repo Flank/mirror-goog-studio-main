@@ -60,7 +60,7 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
                                     Comparator.nullsLast(String::compareTo)));
 
     // TODO : move it to a subclass, we cannot override versions for SPLIT
-    public transient com.android.build.api.variant.VariantOutput variantOutput;
+    public transient VariantOutputImpl variantOutput;
     private Integer versionCode = 0;
     private String versionName = null;
     private String outputFileName;
@@ -165,6 +165,9 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
     public abstract String getDirName();
 
     public void setOutputFileName(@NonNull String outputFileName) {
+        if (variantOutput != null) {
+            variantOutput.getOutputFileName().set(outputFileName);
+        }
         this.outputFileName = outputFileName;
     }
 
@@ -195,6 +198,9 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
     @Input
     @Optional
     public String getOutputFileName() {
+        if (variantOutput != null) {
+            return variantOutput.getOutputFileName().getOrNull();
+        }
         return outputFileName;
     }
 

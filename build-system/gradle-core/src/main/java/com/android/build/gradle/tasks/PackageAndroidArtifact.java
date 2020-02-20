@@ -362,9 +362,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     private static File computeBuildOutputFile(
             VariantOutputImpl variantOutput, File outputDirectory) {
-        return new File(
-                outputDirectory,
-                Objects.requireNonNull(variantOutput.getApkData().getOutputFileName()));
+        return new File(outputDirectory, variantOutput.getOutputFileName().get());
     }
 
     protected ApkCreatorType apkCreatorType;
@@ -1034,7 +1032,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .forEach(
                             variantOutput -> {
                                 packageAndroidArtifact.apkFileNames.add(
-                                        variantOutput.getApkData().getOutputFileName());
+                                        variantOutput.getOutputFileName().get());
                             });
             // sort strings by natural order to make it stable across executions.
             packageAndroidArtifact.apkFileNames.sort(String::compareTo);
