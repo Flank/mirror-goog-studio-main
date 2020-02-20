@@ -20,7 +20,7 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.REPLACE_DELETED_WITH_EMPTY;
 import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
 import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
-import static com.android.testutils.truth.MoreTruth.assertThatZip;
+import static com.android.testutils.truth.ZipFileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static java.io.File.separator;
 import static org.junit.Assert.assertEquals;
@@ -38,6 +38,7 @@ import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.CodeShrinker;
 import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -205,7 +206,7 @@ public class ShrinkResourcesTest {
     }
 
     @Test
-    public void checkShrinkResources() throws IOException, InterruptedException {
+    public void checkShrinkResources() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.buildTypes.release.useProguard = " + (shrinker == CodeShrinker.PROGUARD));
@@ -531,9 +532,11 @@ public class ShrinkResourcesTest {
 
         // Make sure force_remove was replaced with a small file if replacing rather than removing
         if (REPLACE_DELETED_WITH_EMPTY) {
-            assertThatZip(compressed)
-                    .containsFileWithContent(
-                            "res/drawable/force_remove.xml", getIntermediateCompressedXml());
+            try (Zip it = new Zip(compressed)) {
+                assertThat(it)
+                        .containsFileWithContent(
+                                "res/drawable/force_remove.xml", getIntermediateCompressedXml());
+            }
         }
 
         // Check the compressed .ap_:

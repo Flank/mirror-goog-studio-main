@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.MoreTruth.assertThatZip;
+import static com.android.testutils.truth.ZipFileSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -32,6 +32,7 @@ import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils
 import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.VariantBuildInformation;
+import com.android.testutils.apk.Zip;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Collection;
@@ -91,18 +92,23 @@ public class CombinedAbiDensitySplits {
                     builtArtifact.getOutputType());
 
             assertEquals(123, builtArtifact.getVersionCode());
-            assertThatZip(new File(builtArtifact.getOutputFile())).entries("/lib/.*").hasSize(1);
+            try (Zip it = new Zip(new File(builtArtifact.getOutputFile()))) {
+                assertThat(it).entries("/lib/.*").hasSize(1);
+            }
 
             if (densityFilter != null) {
                 expectedDensities.remove(densityFilter);
 
                 // ensure the .so file presence (and only one)
-                assertThatZip(new File(builtArtifact.getOutputFile()))
-                        .contains(
-                                "lib/"
-                                        + VariantOutputUtils.getFilter(
-                                                builtArtifact, FilterConfiguration.FilterType.ABI)
-                                        + "/libhello-jni.so");
+                try (Zip it = new Zip(new File(builtArtifact.getOutputFile()))) {
+                    assertThat(it)
+                            .contains(
+                                    "lib/"
+                                            + VariantOutputUtils.getFilter(
+                                                    builtArtifact,
+                                                    FilterConfiguration.FilterType.ABI)
+                                            + "/libhello-jni.so");
+                }
             }
         }
 

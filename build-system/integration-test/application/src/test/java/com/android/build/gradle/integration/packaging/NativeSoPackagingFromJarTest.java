@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.packaging;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.testutils.truth.MoreTruth.assertThatZip;
+import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -28,9 +28,11 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import com.google.common.truth.Truth;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -126,9 +128,12 @@ public class NativeSoPackagingFromJarTest {
         // first extract bar.jar from the apk.
         Aar aar = libProject.getAar("debug");
         File barJar = ZipHelper.extractFile(aar, "libs/bar.jar");
+        Truth.assertThat(barJar).named("bar.jar").isNotNull();
 
-        assertThatZip(barJar).contains(COM_FOO_FOO_CLASS);
-        assertThatZip(barJar).doesNotContain(LIB_X86_LIBHELLO_SO);
+        try (Zip it = new Zip(barJar)) {
+            assertThat(it).contains(COM_FOO_FOO_CLASS);
+            assertThat(it).doesNotContain(LIB_X86_LIBHELLO_SO);
+        }
     }
 
     /**

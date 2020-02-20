@@ -17,8 +17,11 @@
 package com.android.builder.internal.packaging
 
 import com.android.apksig.ApkVerifier
+import com.android.builder.packaging.JarFlinger
+import com.android.sdklib.SdkVersionInfo
 import com.android.testutils.TestResources
-import com.android.testutils.truth.ZipFileSubject.assertThatZip
+import com.android.testutils.apk.Zip
+import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.tools.build.apkzlib.sign.SigningOptions
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode.COMPRESSED
@@ -34,8 +37,6 @@ import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
-import com.android.builder.packaging.JarFlinger
-import com.android.sdklib.SdkVersionInfo
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.nio.file.Files
@@ -79,9 +80,11 @@ class ApkFlingerTest {
             }
         }
         ApkFlinger(creationData, Deflater.BEST_SPEED).use { it.writeZip(jarInput, null, null) }
-        assertThatZip(apkFile).exists()
-        fileInputMap.forEach { (path, content) ->
-            assertThatZip(apkFile).containsFileWithContent(path, content)
+        Zip(apkFile).use {
+            assertThat(it).exists()
+            fileInputMap.forEach { (path, content) ->
+                assertThat(it).containsFileWithContent(path, content)
+            }
         }
     }
 
@@ -96,9 +99,11 @@ class ApkFlingerTest {
                 apkFlinger.writeFile(fileInput, path)
             }
         }
-        assertThatZip(apkFile).exists()
-        fileInputMap.forEach { (path, content) ->
-            assertThatZip(apkFile).containsFileWithContent(path, content)
+        Zip(apkFile).use {
+            assertThat(it).exists()
+            fileInputMap.forEach { (path, content) ->
+                assertThat(it).containsFileWithContent(path, content)
+            }
         }
     }
 
@@ -113,15 +118,20 @@ class ApkFlingerTest {
                 apkFlinger.writeFile(fileInput, path)
             }
         }
-        assertThatZip(apkFile).exists()
-        fileInputMap.forEach { (path, content) ->
-            assertThatZip(apkFile).containsFileWithContent(path, content)
+        Zip(apkFile).use {
+            assertThat(it).exists()
+            fileInputMap.forEach { (path, content) ->
+                assertThat(it).containsFileWithContent(path, content)
+            }
         }
+
         ApkFlinger(creationData, Deflater.BEST_SPEED).use { it.deleteFile("bar.txt") }
-        assertThatZip(apkFile).exists()
-        assertThatZip(apkFile).doesNotContain("bar.txt")
-        assertThatZip(apkFile).containsFileWithContent("foo.txt", "foo")
-        assertThatZip(apkFile).containsFileWithContent("foo/bar.txt", "foobar")
+        Zip(apkFile).use {
+            assertThat(it).exists()
+            assertThat(it).doesNotContain("bar.txt")
+            assertThat(it).containsFileWithContent("foo.txt", "foo")
+            assertThat(it).containsFileWithContent("foo/bar.txt", "foobar")
+        }
     }
 
     @Test
@@ -130,7 +140,9 @@ class ApkFlingerTest {
         val bigFile = tmp.root.resolve("bigFile.txt")
         bigFile.writeText("foo".repeat(1000))
         ApkFlinger(creationData, Deflater.BEST_SPEED).use { it.writeFile(bigFile, "bigFile.txt") }
-        assertThatZip(apkFile).exists()
+        Zip(apkFile).use {
+            assertThat(it).exists()
+        }
         val compressedSize = apkFile.length()
 
         // then write uncompressed file
@@ -140,7 +152,9 @@ class ApkFlingerTest {
             it.deleteFile("bigFile.txt")
             it.writeFile(bigFile, "bigFile.txt")
         }
-        assertThatZip(apkFile).exists()
+        Zip(apkFile).use {
+            assertThat(it).exists()
+        }
         val uncompressedSize = apkFile.length()
 
         // check that the compressed file is smaller than the uncompressed file
@@ -159,9 +173,11 @@ class ApkFlingerTest {
                 it.deleteFile("META-INF/CERT.RSA")
                 it.deleteFile("META-INF/CERT.SF")
             }
-            assertThatZip(apkFile).doesNotContain("META-INF/MANIFEST.MF")
-            assertThatZip(apkFile).doesNotContain("META-INF/CERT.RSA")
-            assertThatZip(apkFile).doesNotContain("META-INF/CERT.SF")
+            Zip(apkFile).use {
+                assertThat(it).doesNotContain("META-INF/MANIFEST.MF")
+                assertThat(it).doesNotContain("META-INF/CERT.RSA")
+                assertThat(it).doesNotContain("META-INF/CERT.SF")
+            }
             // Then sign and verify apk
             val signingOptions =
                 SigningOptions.builder()
@@ -173,9 +189,11 @@ class ApkFlingerTest {
                     .build()
             Mockito.`when`(creationData.signingOptions).thenReturn(Optional.of(signingOptions))
             ApkFlinger(creationData, Deflater.BEST_SPEED).use {}
-            assertThatZip(apkFile).contains("META-INF/MANIFEST.MF")
-            assertThatZip(apkFile).contains("META-INF/CERT.RSA")
-            assertThatZip(apkFile).contains("META-INF/CERT.SF")
+            Zip(apkFile).use {
+                assertThat(it).contains("META-INF/MANIFEST.MF")
+                assertThat(it).contains("META-INF/CERT.RSA")
+                assertThat(it).contains("META-INF/CERT.SF")
+            }
             verifyApk(apkFile, minSdk)
         }
     }

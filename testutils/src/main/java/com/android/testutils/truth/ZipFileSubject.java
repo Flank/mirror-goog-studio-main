@@ -40,18 +40,6 @@ public class ZipFileSubject extends AbstractZipSubject<ZipFileSubject, Zip> {
         return Truth.assertAbout(zips()).that(zip);
     }
 
-    /**
-     * DO NOT USE this method as zip files will not be closed on Windows.
-     *
-     * <p>Use this instead: Zip(zipFile).use { ZipFileSubject.assertThat(it)... }
-     */
-    @Deprecated
-    @NonNull
-    public static ZipFileSubject assertThatZip(@NonNull File file) throws IOException {
-        Zip zip = new Zip(file.toPath());
-        return Truth.assertAbout(zips()).that(zip);
-    }
-
     @Override
     public void contains(@NonNull String path) {
         exists();

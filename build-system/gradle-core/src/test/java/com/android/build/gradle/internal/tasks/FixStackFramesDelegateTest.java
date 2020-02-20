@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks;
 
-import static com.android.testutils.truth.MoreTruth.assertThatZip;
+import static com.android.testutils.truth.ZipFileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
@@ -41,6 +41,7 @@ import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.testutils.Serialization;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.TestUtils;
+import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -191,7 +192,9 @@ public class FixStackFramesDelegateTest {
 
         delegate.doFullRun(executor);
 
-        assertThatZip(singleOutput()).doesNotContain("LICENSE");
+        try (Zip it = new Zip(singleOutput())) {
+            assertThat(it).doesNotContain("LICENSE");
+        }
     }
 
     @Test

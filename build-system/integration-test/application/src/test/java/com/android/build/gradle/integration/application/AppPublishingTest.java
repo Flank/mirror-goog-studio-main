@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.testutils.truth.ZipFileSubject.assertThat;
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.testutils.apk.Zip;
 import com.android.testutils.truth.FileSubject;
-import com.android.testutils.truth.ZipFileSubject;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -102,7 +104,10 @@ public class AppPublishingTest {
 
         File aabFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.zip");
         FileSubject.assertThat(aabFile).isFile();
-        ZipFileSubject.assertThatZip(aabFile).contains("mapping.txt");
+
+        try (Zip it = new Zip(aabFile)) {
+            assertThat(it).contains("mapping.txt");
+        }
 
         File pomFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.pom");
         FileSubject.assertThat(pomFile).isFile();
@@ -124,7 +129,9 @@ public class AppPublishingTest {
 
         File aabFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.zip");
         FileSubject.assertThat(aabFile).isFile();
-        ZipFileSubject.assertThatZip(aabFile).doesNotContain("mapping.txt");
+        try (Zip it = new Zip(aabFile)) {
+            assertThat(it).doesNotContain("mapping.txt");
+        }
 
         File pomFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.pom");
         FileSubject.assertThat(pomFile).isFile();

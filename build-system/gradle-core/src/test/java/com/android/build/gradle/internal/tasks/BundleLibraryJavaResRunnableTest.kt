@@ -19,7 +19,9 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.ide.common.workers.WorkerExecutorFacade
-import com.android.testutils.truth.MoreTruth.assertThatZip
+import com.android.testutils.apk.Zip
+import com.android.testutils.truth.ZipFileSubject
+import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.google.common.util.concurrent.MoreExecutors
 import org.junit.Before
 import org.junit.Rule
@@ -60,9 +62,12 @@ class BundleLibraryJavaResRunnableTest {
                 JarCreatorType.JAR_FLINGER,
                 Deflater.BEST_SPEED)
         ).run()
-        assertThatZip(output).contains("a.txt")
-        assertThatZip(output).contains("b.txt")
-        assertThatZip(output).contains("sub/c.txt")
+
+        Zip(output).use {
+            assertThat(it).contains("a.txt")
+            assertThat(it).contains("b.txt")
+            assertThat(it).contains("sub/c.txt")
+        }
     }
 
     @Test
@@ -81,8 +86,11 @@ class BundleLibraryJavaResRunnableTest {
                 JarCreatorType.JAR_FLINGER,
                 Deflater.BEST_SPEED)
         ).run()
-        assertThatZip(output).contains("a.txt")
-        assertThatZip(output).doesNotContain("A.class")
+
+        Zip(output).use {
+            assertThat(it).contains("a.txt")
+            assertThat(it).doesNotContain("A.class")
+        }
     }
 
     @Test
@@ -108,10 +116,13 @@ class BundleLibraryJavaResRunnableTest {
                 JarCreatorType.JAR_FLINGER,
                 Deflater.BEST_SPEED)
         ).run()
-        assertThatZip(output).contains("a.txt")
-        assertThatZip(output).contains("sub/a.txt")
-        assertThatZip(output).doesNotContain("A.class")
-        assertThatZip(output).doesNotContain("sub/B.class")
+
+        Zip(output).use {
+            assertThat(it).contains("a.txt")
+            assertThat(it).contains("sub/a.txt")
+            assertThat(it).doesNotContain("A.class")
+            assertThat(it).doesNotContain("sub/B.class")
+        }
     }
 
     @Test
@@ -132,7 +143,10 @@ class BundleLibraryJavaResRunnableTest {
                 JarCreatorType.JAR_FLINGER,
                 Deflater.BEST_SPEED)
         ).run()
-        assertThatZip(output).contains("subJar.jar")
-        assertThatZip(output).doesNotContain("A.class")
+
+        Zip(output).use {
+            assertThat(it).contains("subJar.jar")
+            assertThat(it).doesNotContain("A.class")
+        }
     }
 }
