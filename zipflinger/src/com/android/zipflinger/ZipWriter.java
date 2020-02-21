@@ -18,54 +18,75 @@ package com.android.zipflinger;
 
 import com.android.annotations.NonNull;
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.channels.WritableByteChannel;
+import java.nio.file.StandardOpenOption;
 
-class ZipWriter implements Closeable, WritableByteChannel {
-    private final FileChannel channel;
+class ZipWriter implements Closeable {
 
-    public ZipWriter(FileChannel channel) {
-        this.channel = channel;
-    }
+    private final File file;
+    private FileChannel channel;
+    private boolean isOpen;
 
-    @Override
-    public boolean isOpen() {
-        return channel.isOpen();
+    public ZipWriter(File file) {
+        this.file = file;
+        isOpen = false;
     }
 
     @Override
     public void close() throws IOException {
+        if (!isOpen) {
+            return;
+        }
         channel.close();
     }
 
     public void truncate(long size) throws IOException {
+        ensureOpen();
         channel.truncate(size);
     }
 
     public void position(long position) throws IOException {
+        ensureOpen();
         channel.position(position);
     }
 
     public long position() throws IOException {
+        ensureOpen();
         return channel.position();
     }
 
     public int write(@NonNull ByteBuffer buffer, long position) throws IOException {
+        ensureOpen();
         return channel.write(buffer, position);
     }
 
-    @Override
     public int write(@NonNull ByteBuffer buffer) throws IOException {
+        ensureOpen();
         return channel.write(buffer);
     }
 
     public void transferFrom(@NonNull FileChannel src, long position, long count)
             throws IOException {
+        ensureOpen();
         long copied = 0;
         while (copied != count) {
             copied += src.transferTo(position + copied, count - copied, channel);
         }
+    }
+
+    private void ensureOpen() throws IOException {
+        if (isOpen) {
+            return;
+        }
+        channel =
+                FileChannel.open(
+                        file.toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+        if (!channel.isOpen()) {
+            throw new IllegalStateException("Unable to open Channel to " + file.getAbsolutePath());
+        }
+        isOpen = true;
     }
 }

@@ -21,6 +21,10 @@ public class ZipInfo {
     public final Location cd;
     public final Location eocd;
 
+    public ZipInfo() {
+        this(Location.INVALID, Location.INVALID, Location.INVALID);
+    }
+
     public ZipInfo(Location payload, Location cd, Location eocd) {
         this.payload = payload;
         this.cd = cd;

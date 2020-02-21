@@ -19,9 +19,9 @@ package com.android.signflinger;
 import static org.junit.Assert.assertTrue;
 
 import com.android.zipflinger.BytesSource;
-import com.android.zipflinger.ZipArchive;
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -46,11 +46,11 @@ public class V2SigningTest {
         v2Sign(file);
     }
 
-    private void v2Sign(File file) throws Exception {
-
+    private void v2Sign(File src) throws Exception {
+        File file = new File(src.getAbsolutePath() + ".tmp");
         for (SignerConfig signerConfig : Signers.getAll(workspace)) {
-            // Remove signature
-            try (ZipArchive ignored = new ZipArchive(file)) {}
+            Files.copy(src.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
             // Sign
             V2Signer.sign(file, signerConfig);
             // Verify

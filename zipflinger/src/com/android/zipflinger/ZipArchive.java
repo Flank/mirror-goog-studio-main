@@ -22,9 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +36,8 @@ public class ZipArchive implements Archive {
     private final ZipWriter writer;
     private final ZipReader reader;
     private final Zip64.Policy policy;
+    private ZipInfo zipInfo;
+    private boolean modified;
 
     public ZipArchive(@NonNull File file) throws IOException {
         this(file, Zip64.Policy.ALLOW);
@@ -54,23 +54,20 @@ public class ZipArchive implements Archive {
         this.policy = policy;
         if (Files.exists(file.toPath())) {
             ZipMap map = ZipMap.from(file, true, policy);
+            zipInfo = new ZipInfo(map.getPayloadLocation(), map.getCdLoc(), map.getEocdLoc());
             cd = map.getCentralDirectory();
             freestore = new FreeStore(map.getEntries());
         } else {
+            zipInfo = new ZipInfo();
             HashMap<String, Entry> entries = new HashMap<>();
             cd = new CentralDirectory(ByteBuffer.allocate(0), entries);
             freestore = new FreeStore(entries);
         }
 
-        FileChannel channel =
-                FileChannel.open(
-                        file.toPath(),
-                        StandardOpenOption.WRITE,
-                        StandardOpenOption.READ,
-                        StandardOpenOption.CREATE);
-        writer = new ZipWriter(channel);
-        reader = new ZipReader(channel);
+        writer = new ZipWriter(file);
+        reader = new ZipReader(file);
         closed = false;
+        modified = false;
     }
 
     /**
@@ -146,6 +143,7 @@ public class ZipArchive implements Archive {
         Location loc = cd.delete(name);
         if (loc != Location.INVALID) {
             freestore.free(loc);
+            modified = true;
         }
     }
 
@@ -169,8 +167,9 @@ public class ZipArchive implements Archive {
         closed = true;
         try (ZipWriter w = writer;
                 ZipReader r = reader) {
-            return writeArchive(w);
+            writeArchive(w);
         }
+        return zipInfo;
     }
 
     @NonNull
@@ -182,8 +181,13 @@ public class ZipArchive implements Archive {
         return closed;
     }
 
-    @NonNull
-    private ZipInfo writeArchive(@NonNull ZipWriter writer) throws IOException {
+    private void writeArchive(@NonNull ZipWriter writer) throws IOException {
+        // There is no need to fill space and write footers if an already existing archive
+        // has not been modified.
+        if (zipInfo.eocd != Location.INVALID && !modified) {
+            return;
+        }
+
         // Fill all empty space with virtual entry (not the last one since it represent all of
         // the unused file space.
         List<Location> freeLocations = freestore.getFreeLocations();
@@ -208,7 +212,8 @@ public class ZipArchive implements Archive {
 
         // Build and return location map
         Location payLoadLocation = new Location(0, cdStart);
-        return new ZipInfo(payLoadLocation, cdLocation, eocdLocation);
+
+        zipInfo = new ZipInfo(payLoadLocation, cdLocation, eocdLocation);
     }
 
     private void writeZip64Footers(
@@ -261,6 +266,7 @@ public class ZipArchive implements Archive {
     }
 
     private void writeSource(@NonNull Source source) throws IOException {
+        modified = true;
         source.prepare();
         validateName(source);
 
