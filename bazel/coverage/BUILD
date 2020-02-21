@@ -122,6 +122,7 @@ coverage_report(
         "tools/adt/idea/android/src/com/android/tools/idea/rendering",
         "tools/adt/idea/android/src/com/android/tools/idea/sampledata",
         "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager",
+        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcechooser",
         "tools/adt/idea/compose-designer/src",
         "tools/adt/idea/designer/src/",
         "tools/adt/idea/layout-inspector/src/",
@@ -268,9 +269,9 @@ coverage_report(
     ],
 )
 
-# Coverage report for the Resource Manager and Resource Picker
+# Coverage report for the Resource Manager and Resource Picker classes
 coverage_report(
-    name = "resourcemanager",
+    name = "resources-ui",
     srcpath_exclude = [
         "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/model/DesignAssetListModel.kt",
         "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager/plugin/SketchImporter.kt",
@@ -279,6 +280,7 @@ coverage_report(
     ],
     srcpath_include = [
         "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcemanager",
+        "tools/adt/idea/android/src/com/android/tools/idea/ui/resourcechooser",
     ],
     tests = [
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
@@ -388,7 +390,7 @@ combine_report_definitions(
         "profilers",
         "projectsystem",
         "r8-editing",
-        "resourcemanager",
+        "resources-ui",
         "spliteditor",
         "systracev2",
         "templates",
