@@ -121,6 +121,7 @@ def kotlin_library(
         testonly = None,
         lint_baseline = None,
         lint_classpath = [],
+        lint_is_test_sources = False,
         module_name = None):
     """Compiles a library jar from Java and Kotlin sources"""
     kotlins = [src for src in srcs if src.endswith(".kt")]
@@ -192,9 +193,19 @@ def kotlin_library(
             deps = deps + bundled_deps + lint_classpath,
             custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"],
             tags = ["no_windows"],
+            is_test_sources = lint_is_test_sources,
         )
 
-def kotlin_test(name, srcs, deps = [], runtime_deps = [], friends = [], visibility = None, **kwargs):
+def kotlin_test(
+        name,
+        srcs,
+        deps = [],
+        runtime_deps = [],
+        friends = [],
+        visibility = None,
+        lint_baseline = None,
+        lint_classpath = [],
+        **kwargs):
     kotlin_library(
         name = name + ".testlib",
         srcs = srcs,
@@ -202,6 +213,9 @@ def kotlin_test(name, srcs, deps = [], runtime_deps = [], friends = [], visibili
         testonly = 1,
         runtime_deps = runtime_deps,
         jar_name = name + ".jar",
+        lint_baseline = lint_baseline,
+        lint_classpath = lint_classpath,
+        lint_is_test_sources = True,
         visibility = visibility,
         friends = friends,
     )
