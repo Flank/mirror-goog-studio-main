@@ -28,7 +28,7 @@ class Grpc(socket: String, port: Int) {
         val stashedContextClassLoader = Thread.currentThread().contextClassLoader
 
         Thread.currentThread().contextClassLoader = ManagedChannelBuilder::class.java.classLoader
-        val channel = ManagedChannelBuilder.forAddress(socket, port).usePlaintext(true).build()
+        val channel = ManagedChannelBuilder.forAddress(socket, port).usePlaintext().build()
 
         Thread.currentThread().contextClassLoader = stashedContextClassLoader
         return channel

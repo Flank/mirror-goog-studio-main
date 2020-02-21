@@ -19,7 +19,7 @@ import com.android.tools.profiler.proto.Agent
 import com.android.tools.profiler.proto.AgentServiceGrpc
 import com.android.tools.profiler.proto.Common
 import io.grpc.Server
-import io.grpc.ServerBuilder
+import io.grpc.netty.NettyServerBuilder
 import io.grpc.stub.StreamObserver
 import org.junit.rules.ExternalResource
 import java.net.ServerSocket
@@ -38,7 +38,7 @@ class AgentRule : ExternalResource() {
     override fun before() {
         socket = ServerSocket(0)
         socket.close()
-        server = ServerBuilder
+        server = NettyServerBuilder
             .forPort(socket.localPort)
             .addService(TestAgentServiceImpl(events))
             .build()

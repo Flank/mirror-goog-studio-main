@@ -25,7 +25,7 @@ import com.android.ddmlib.IDevice;
 import com.android.deploy.service.proto.Deploy;
 import com.android.deploy.service.proto.DeployServiceGrpc;
 import com.google.common.annotations.VisibleForTesting;
-import io.grpc.internal.ServerImpl;
+import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
@@ -36,7 +36,7 @@ public class DeployServer extends DeployServiceGrpc.DeployServiceImplBase {
 
     private static final long ATTACH_DEBUGGER_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(30);
     private AndroidDebugBridge myActiveBridge;
-    private ServerImpl myServer;
+    private Server myServer;
 
     /**
      * This function is responsible for starting a GRPC server and blocks until the server is
