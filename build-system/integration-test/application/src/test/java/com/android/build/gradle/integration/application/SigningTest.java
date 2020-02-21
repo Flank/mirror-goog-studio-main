@@ -41,6 +41,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.BuilderConstants;
@@ -467,6 +468,27 @@ public class SigningTest {
                 .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
                 .with(OptionalBooleanOption.SIGNING_V2_ENABLED, false)
                 .run("assembleRelease");
+        Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
+
+        assertThat(apk).contains("META-INF/" + certEntryName);
+        assertThat(apk).contains("META-INF/CERT.SF");
+        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion);
+        assertTrue(verificationResult.isVerifiedUsingV1Scheme());
+        assertFalse(verificationResult.isVerifiedUsingV2Scheme());
+    }
+
+    @Test
+    public void assembleWithInjectedV1ConfigDependencyInfoDisabled() throws Exception {
+        // add prop args for signing override.
+        project.executor()
+            .with(StringOption.IDE_SIGNING_STORE_FILE, keystore.getPath())
+            .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
+            .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
+            .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
+            .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
+            .with(OptionalBooleanOption.SIGNING_V2_ENABLED, false)
+            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+            .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
         assertThat(apk).contains("META-INF/" + certEntryName);
