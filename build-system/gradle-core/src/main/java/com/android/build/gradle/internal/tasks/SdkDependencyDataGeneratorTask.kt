@@ -51,9 +51,9 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
     init {
       HybridConfig.register()
     }
-  }
 
-  private val publicKey: ByteArray = byteArrayOf(8, -84, -65, -63, -105, 10, 18, -37, 1, 10, -50,
+    @JvmStatic
+    private val publicKey: ByteArray = byteArrayOf(8, -84, -65, -63, -105, 10, 18, -37, 1, 10, -50,
     1, 10, 61, 116, 121, 112, 101, 46, 103, 111, 111, 103, 108, 101, 97, 112, 105, 115, 46, 99, 111,
     109, 47, 103, 111, 111, 103, 108, 101, 46, 99, 114, 121, 112, 116, 111, 46, 116, 105, 110, 107,
     46, 69, 99, 105, 101, 115, 65, 101, 97, 100, 72, 107, 100, 102, 80, 117, 98, 108, 105, 99, 75,
@@ -65,6 +65,8 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
     78, -39, 34, 32, 51, 48, 123, 99, -84, -95, 126, 10, -70, -74, 47, -15, -28, 124, -83, 23, 78,
     -3, 59, -91, 38, -103, -90, 69, 67, -28, -20, -95, -90, -83, -115, -52, 24, 3, 16, 1, 24, -84,
     -65, -63, -105, 10, 32, 4)
+  }
+
 
   // Optional context. To ensure the correct decryption of a ciphertext the same value must be
   // provided for the decryption operation.
