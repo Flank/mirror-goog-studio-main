@@ -17,6 +17,7 @@
 package com.android.testutils.apk
 
 import java.io.File
+import javax.annotation.CheckReturnValue
 
 class Aab(file: File) : Zip(file) {
 
@@ -27,6 +28,7 @@ class Aab(file: File) : Zip(file) {
      * @param featureNameOrBase the name of the feature or "base" for the base module.
      * @param className the name of the class, following [Apk.CLASS_FORMAT] format.
      */
+    @CheckReturnValue
     fun containsMainClass(featureNameOrBase: String, className: String): Boolean {
         AndroidArchive.checkValidClassName(className)
         val mainDex = getEntry("$featureNameOrBase/dex/classes.dex")?.let { Dex(it) }
@@ -40,6 +42,7 @@ class Aab(file: File) : Zip(file) {
      * @param featureNameOrBase the name of the feature or "base" for the base module.
      * @param className the name of the class, following [Apk.CLASS_FORMAT] format.
      */
+    @CheckReturnValue
     fun containsSecondaryClass(featureNameOrBase: String, className: String): Boolean {
         AndroidArchive.checkValidClassName(className)
         var index = 2
@@ -60,6 +63,7 @@ class Aab(file: File) : Zip(file) {
      * @param featureNameOrBase the name of the feature or "base" for the base module.
      * @param className the name of the class, following [Apk.CLASS_FORMAT] format.
      */
+    @CheckReturnValue
     fun containsClass(featureNameOrBase: String, className: String): Boolean {
         return containsMainClass(featureNameOrBase, className)
                 || containsSecondaryClass(featureNameOrBase, className)

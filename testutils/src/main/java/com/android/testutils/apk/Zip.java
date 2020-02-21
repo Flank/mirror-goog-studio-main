@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.CheckReturnValue;
 
 @Immutable
 public class Zip implements AutoCloseable {
@@ -72,18 +73,21 @@ public class Zip implements AutoCloseable {
         this.innerZips = new HashMap<>();
     }
 
+    @CheckReturnValue
     @NonNull
     public Path getFile() {
         return file;
     }
 
     /* Returns a zip entry given a name, returns null if it does not exist */
+    @CheckReturnValue
     @Nullable
     public final Path getEntry(String name) {
         Path entry = zip.getPath(name);
         return Files.exists(entry) ? entry : null;
     }
 
+    @CheckReturnValue
     @NonNull
     public final List<Path> getEntries() throws IOException {
         try (Stream<Path> paths = Files.walk(zip.getPath("/"))) {
@@ -92,6 +96,7 @@ public class Zip implements AutoCloseable {
         }
     }
 
+    @CheckReturnValue
     @NonNull
     public final List<Path> getEntries(@NonNull Pattern pattern) throws IOException {
         try (Stream<Path> paths = Files.walk(zip.getPath("/"))) {
@@ -102,6 +107,7 @@ public class Zip implements AutoCloseable {
         }
     }
 
+    @CheckReturnValue
     @NonNull
     public final Zip getEntryAsZip(@NonNull String name) throws IOException {
         Zip cached = innerZips.get(name);
@@ -121,6 +127,7 @@ public class Zip implements AutoCloseable {
         return created;
     }
 
+    @CheckReturnValue
     public boolean exists() {
         return exists;
     }

@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import javax.annotation.CheckReturnValue;
 
 @Immutable
 public class Apk extends DexAndroidArchive {
@@ -37,6 +38,7 @@ public class Apk extends DexAndroidArchive {
         this(apk.toPath());
     }
 
+    @CheckReturnValue
     @Nullable
     @Override
     public Path getJavaResource(@NonNull String name) throws IOException {
@@ -49,6 +51,7 @@ public class Apk extends DexAndroidArchive {
      * comparing APK files where the file sizes have changed (probably due to changes in meta-data)
      * but the contents remain the same.
      */
+    @CheckReturnValue
     public long getContentsSize() throws IOException {
         long contentsSize = 0;
         try (ZipFile zipFile = new ZipFile(this.getFile().toFile())) {

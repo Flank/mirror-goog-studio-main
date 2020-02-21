@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.annotation.CheckReturnValue;
 
 @Immutable
 public final class Aar extends AndroidArchive {
@@ -43,11 +44,13 @@ public final class Aar extends AndroidArchive {
         this(file.toPath());
     }
 
+    @CheckReturnValue
     @Override
     public boolean containsMainClass(@NonNull String name) throws IOException {
         return getEntryAsZip("classes.jar").getEntry(toClassName(name)) != null;
     }
 
+    @CheckReturnValue
     @Override
     public boolean containsSecondaryClass(@NonNull String name) throws IOException {
         String className = toClassName(name);
@@ -59,6 +62,7 @@ public final class Aar extends AndroidArchive {
         return false;
     }
 
+    @CheckReturnValue
     @Nullable
     @Override
     public Path getJavaResource(@NonNull String name) throws IOException {
@@ -69,6 +73,7 @@ public final class Aar extends AndroidArchive {
      * Returns the contents of the AAR's AndroidManifest.xml entry as a String; returns null if the
      * AAR doesn't have an AndroidManifest.xml entry.
      */
+    @CheckReturnValue
     @Nullable
     public String getAndroidManifestContentsAsString() throws IOException {
         Path path = getEntry("AndroidManifest.xml");

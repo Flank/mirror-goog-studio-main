@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
+import javax.annotation.CheckReturnValue;
 
 public abstract class AndroidArchive extends Zip {
 
@@ -39,17 +40,22 @@ public abstract class AndroidArchive extends Zip {
         }
     }
 
+    @CheckReturnValue
     public abstract boolean containsMainClass(@NonNull String name) throws IOException;
 
+    @CheckReturnValue
     public abstract boolean containsSecondaryClass(@NonNull String name) throws IOException;
 
     @Nullable
+    @CheckReturnValue
     public abstract Path getJavaResource(@NonNull String name) throws IOException;
 
+    @CheckReturnValue
     public final boolean containsClass(@NonNull String name) throws IOException {
         return containsMainClass(name) || containsSecondaryClass(name);
     }
 
+    @CheckReturnValue
     @Nullable
     public final Path getResource(@NonNull String name) {
         return getEntry("res/" + name);
