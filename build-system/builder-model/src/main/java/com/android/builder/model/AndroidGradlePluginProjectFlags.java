@@ -60,7 +60,11 @@ public interface AndroidGradlePluginProjectFlags {
         TRANSITIVE_R_CLASS(true),
 
         /** Whether the jetpack Compose feature is enabled for this project. */
-        JETPACK_COMPOSE(false);
+        JETPACK_COMPOSE(false),
+
+        /** Whether the ML model binding feature is enabled for this project. */
+        ML_MODEL_BINDING(false),
+        ;
 
         private final boolean legacyDefault;
 

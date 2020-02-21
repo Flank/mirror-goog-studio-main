@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Apk;
@@ -48,6 +47,8 @@ public class MlGeneratedClassTest {
     public void setUp() throws IOException {
         File buildFile = project.getBuildFile();
         TestFileUtils.appendToFile(
+                project.getBuildFile(), "android.buildFeatures.mlModelBinding true");
+        TestFileUtils.appendToFile(
                 buildFile,
                 "dependencies {\n"
                         + "    implementation 'org.apache.commons:commons-compress:1.18'\n"
@@ -67,7 +68,7 @@ public class MlGeneratedClassTest {
                         "prebuilts/tools/common/mlkit/testData/mobilenet_quant_metadata.tflite"),
                 modelFile);
 
-        project.executor().with(BooleanOption.ENABLE_MLKIT, true).run(":assembleDebug");
+        project.executor().run(":assembleDebug");
 
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThatApk(apk).containsClass("Lcom/android/app/ml/Model;");
@@ -83,7 +84,7 @@ public class MlGeneratedClassTest {
                         "prebuilts/tools/common/mlkit/testData/mobilenet_quant_no_metadata.tflite"),
                 modelFile);
 
-        project.executor().with(BooleanOption.ENABLE_MLKIT, true).run(":assembleDebug");
+        project.executor().run(":assembleDebug");
 
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThatApk(apk).containsClass("Lcom/android/app/ml/Model;");

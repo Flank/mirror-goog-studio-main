@@ -133,6 +133,7 @@ class ApplicationVariantFactory(
         return BuildFeatureValuesImpl(
             buildFeatures,
             dataBinding = features.dataBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING],
+            mlModelBinding = features.mlModelBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_MLMODELBINDING],
             projectOptions = projectOptions)
     }
 

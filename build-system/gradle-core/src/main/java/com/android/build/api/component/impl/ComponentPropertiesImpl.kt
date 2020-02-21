@@ -421,7 +421,7 @@ abstract class ComponentPropertiesImpl(
             val rsFC = artifacts.getFinalProduct(RENDERSCRIPT_SOURCE_OUTPUT_DIR)
             sourceSets.add(project.fileTree(rsFC).builtBy(rsFC))
         }
-        if (variantPropertiesApiServices.projectOptions.get(BooleanOption.ENABLE_MLKIT)) {
+        if (buildFeatures.mlModelBinding) {
             val mlkitModelClassSourceOut: Provider<Directory> =
                 artifacts.getFinalProduct(MLKIT_SOURCE_OUT)
             sourceSets.add(

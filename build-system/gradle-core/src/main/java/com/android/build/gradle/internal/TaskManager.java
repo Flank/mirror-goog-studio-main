@@ -1152,7 +1152,7 @@ public abstract class TaskManager<
     }
 
     public void createMlkitTask(@NonNull ComponentPropertiesImpl componentProperties) {
-        if (componentProperties.getServices().getProjectOptions().get(BooleanOption.ENABLE_MLKIT)) {
+        if (componentProperties.getBuildFeatures().getMlModelBinding()) {
             taskFactory.register(
                     new MergeSourceSetFolders.MergeMlModelsSourceFoldersCreationAction(
                             componentProperties));
