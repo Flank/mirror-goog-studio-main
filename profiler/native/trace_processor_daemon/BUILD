@@ -8,8 +8,6 @@ cc_binary(
     copts = [
         "-I$(GENDIR)/tools/base/profiler/native/trace_processor_daemon",
     ],
-    # b/148211035
-    tags = ["no_windows"],
     deps = [
         ":trace_processor_service_impl",
     ],
@@ -28,8 +26,6 @@ cc_library(
     copts = [
         "-I$(GENDIR)/tools/base/profiler/native/trace_processor_daemon",
     ],
-    # b/148211035
-    tags = ["no_windows"],
     deps = [
         "//tools/base/profiler/native/trace_processor_daemon/proto:cc_trace_processor_service_proto",
         "@perfetto//:trace_processor",
@@ -52,8 +48,6 @@ cc_test(
         "testdata/unity.heapprofd",
     ],
     linkstatic = 1,
-    # b/148211035
-    tags = ["no_windows"],
     deps = [
         ":trace_processor_service_impl",
         "@googletest//:gtest_main",
