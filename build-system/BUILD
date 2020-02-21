@@ -129,6 +129,12 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+filegroup(
+    name = "gradle-distrib-6.3-custom-20200221142234+0000",
+    srcs = ["//tools/external/gradle:gradle-distrib-6.3-custom-20200221142234+0000"],
+    visibility = ["//visibility:public"],
+)
+
 java_library(
     name = "gradle-tooling-api",
     visibility = ["//tools/base/bazel:__subpackages__"],

@@ -83,7 +83,7 @@ fun JavaCompile.configureProperties(componentProperties: ComponentPropertiesImpl
  * @see [JavaCompile.configureProperties]
  */
 fun JavaCompile.configurePropertiesForAnnotationProcessing(
-    componentProperties: ComponentPropertiesImpl, sourcesOutputFolder: DirectoryProperty
+    componentProperties: ComponentPropertiesImpl, sourcesOutputFolder: File
 ) {
     val processorOptions = componentProperties.variantDslInfo.javaCompileOptions.annotationProcessorOptions
     val compileOptions = this.options
@@ -103,7 +103,7 @@ fun JavaCompile.configurePropertiesForAnnotationProcessing(
 
     compileOptions.compilerArgumentProviders.addAll(processorOptions.compilerArgumentProviders)
 
-    compileOptions.setAnnotationProcessorGeneratedSourcesDirectory(sourcesOutputFolder.asFile)
+    compileOptions.annotationProcessorGeneratedSourcesDirectory = sourcesOutputFolder
 }
 
 /**

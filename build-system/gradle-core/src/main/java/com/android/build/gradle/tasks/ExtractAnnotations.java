@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -100,6 +101,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
     @Nullable FileCollection lintClassPath;
 
     private final List<Object> sources = new ArrayList<>();
+    private FileTree sourcesFileTree;
 
     private FileCollection classpath;
 
@@ -115,7 +117,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
     @PathSensitive(PathSensitivity.NAME_ONLY)
     @InputFiles
     public FileTree getSource() {
-        return getProject().files(sources).getAsFileTree();
+        return sourcesFileTree;
     }
 
     @CompileClasspath
@@ -371,6 +373,10 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                             .getProject()
                             .getConfigurations()
                             .getByName(LintBaseTask.LINT_CLASS_PATH);
+            task.sourcesFileTree =
+                    task.getProject()
+                            .files((Callable<List<Object>>) () -> task.sources)
+                            .getAsFileTree();
         }
     }
 

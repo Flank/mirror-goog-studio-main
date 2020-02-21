@@ -415,7 +415,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             parameter
                     .getAndroidResourcesChanged()
                     .set(changedResourceFiles.contains(new File(builtArtifact.getOutputFile())));
-            parameter.getProjectPath().set(getProject().getPath());
+            parameter.getProjectPath().set(getProjectPath().get());
             parameter.getApkCreatorType().set(apkCreatorType);
             parameter.getOutputFile().set(outputFile);
             parameter.getIncrementalFolder().set(getIncrementalFolder());
