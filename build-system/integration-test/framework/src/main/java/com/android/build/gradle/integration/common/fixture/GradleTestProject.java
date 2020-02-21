@@ -788,6 +788,11 @@ public final class GradleTestProject implements TestRule {
         return FileUtils.join(getTestDir(), "src", "main", "resources");
     }
 
+    /** Return the path to the default main jniLibs dir. */
+    public File getMainJniLibsDir() {
+        return FileUtils.join(getTestDir(), "src", "main", "jniLibs");
+    }
+
     /** Return the build.gradle of the test project. */
     public File getSettingsFile() {
         return new File(getTestDir(), "settings.gradle");

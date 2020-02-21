@@ -136,7 +136,8 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
             } else {
                 val projectJavaRes = getProjectJavaRes(creationConfig)
                 task.unfilteredResources = projectJavaRes
-                task.resources = projectJavaRes.asFileTree.filter(MergeJavaResourceTask.spec)
+                task.resources =
+                    projectJavaRes.asFileTree.matching(MergeJavaResourceTask.patternSet)
             }
 
             task.jarCreatorType = creationConfig.variantScope.jarCreatorType
