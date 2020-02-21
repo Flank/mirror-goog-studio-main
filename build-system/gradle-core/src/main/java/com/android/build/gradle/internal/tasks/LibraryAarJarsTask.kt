@@ -319,9 +319,9 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             )
             task.excludeList.disallowChanges()
 
-            val artifacts = creationConfig.artifacts
+            val operations = creationConfig.operations
 
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                 InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE,
                 task.typedefRecipe
             )
@@ -349,7 +349,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
              */
             task.mainScopeClassFiles.from(
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
-                    artifacts
+                    creationConfig.artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES)
                 } else {
                     creationConfig.transformManager
@@ -370,7 +370,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
 
             task.mainScopeResourceFiles.from(
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8) {
-                    artifacts
+                    creationConfig.artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_JAVA_RES)
                 } else {
                     creationConfig.transformManager

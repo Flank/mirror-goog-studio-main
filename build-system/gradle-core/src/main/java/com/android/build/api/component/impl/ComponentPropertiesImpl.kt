@@ -19,6 +19,7 @@ package com.android.build.api.component.impl
 import android.databinding.tool.LayoutXmlProcessor
 import android.databinding.tool.LayoutXmlProcessor.OriginalFileLookup
 import com.android.build.api.artifact.Operations
+import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.ComponentProperties
@@ -108,7 +109,7 @@ abstract class ComponentPropertiesImpl(
     override val outputs: VariantOutputList
         get() = VariantOutputList(variantOutputs.toList())
 
-    override val operations: Operations
+    override val operations: OperationsImpl
         get() = artifacts.getOperations()
 
     // ---------------------------------------------------------------------------------------------

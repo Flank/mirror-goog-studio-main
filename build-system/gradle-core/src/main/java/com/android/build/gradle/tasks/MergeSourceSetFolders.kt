@@ -350,7 +350,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
             task.sourceFolderInputs.from(Callable { variantSources.getSourceFiles(assetDirFunction) })
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.SHADER_ASSETS,
                 task.shadersOutputDir
             )

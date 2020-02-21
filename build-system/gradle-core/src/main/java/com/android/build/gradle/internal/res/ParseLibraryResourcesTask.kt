@@ -187,7 +187,7 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
                 creationConfig.services
                     .projectOptions[BooleanOption.ENABLE_PARTIAL_R_INCREMENTAL_BUILDS])
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.PACKAGED_RES,
                     task.inputResourcesDir
             )

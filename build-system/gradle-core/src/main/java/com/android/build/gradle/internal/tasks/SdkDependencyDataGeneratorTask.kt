@@ -142,7 +142,7 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
       task: SdkDependencyDataGeneratorTask
     ) {
       super.configure(task)
-      creationConfig.artifacts.setTaskInputToFinalProduct(
+      creationConfig.operations.setTaskInputToFinalProduct(
           InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.dependencies)
     }
   }

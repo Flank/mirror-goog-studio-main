@@ -187,16 +187,16 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
         ) {
             super.configure(task)
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 DataBindingCompilerArguments.getLayoutInfoArtifactType(creationConfig),
                 task.layoutInfoDirectory)
-            val artifacts = creationConfig.artifacts
+            val operations = creationConfig.operations
             task.packageNameSupplier = { creationConfig.variantDslInfo.originalApplicationId }
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
                 task.mergedArtifactsFromDependencies
             )
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                     InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS, task.v1Artifacts)
             task.logOutFolder = creationConfig.paths.getIncrementalDir(task.name)
             task.useAndroidX = creationConfig.services.projectOptions[BooleanOption.USE_ANDROID_X]

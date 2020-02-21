@@ -281,7 +281,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             })
             task.packageForR.disallowChanges()
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
 
             task.mainSplit = creationConfig.outputs.getMainSplit().apkData
@@ -295,7 +295,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                 (projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS] && !isLibrary)
                         || projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES])
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
                 task.localResourcesFile)
         }
@@ -349,11 +349,11 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task.useConstantIds.setDisallowChanges(false)
 
             creationConfig.onTestedConfig {
-                it.artifacts.setTaskInputToFinalProduct(
+                it.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles
                 )
 
-                it.artifacts.setTaskInputToFinalProduct(
+                it.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
                     task.localResourcesFile
                 )

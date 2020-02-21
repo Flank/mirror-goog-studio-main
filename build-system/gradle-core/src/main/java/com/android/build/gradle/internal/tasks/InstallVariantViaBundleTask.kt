@@ -209,7 +209,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
                 task.installOptions.addAll(it)
             }
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.APKS_FROM_BUNDLE,
                 task.apkBundle
             )

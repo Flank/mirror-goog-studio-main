@@ -202,7 +202,7 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
                 task.aaptGeneratedRules
             )

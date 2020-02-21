@@ -267,11 +267,11 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.mainSplit = mainSplit
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,
                 task.manifestFiles)
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_RES,
                 task.getInputResourcesDir()
             )

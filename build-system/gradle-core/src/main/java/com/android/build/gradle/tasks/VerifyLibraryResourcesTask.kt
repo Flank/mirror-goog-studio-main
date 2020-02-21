@@ -225,13 +225,13 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
             task.aapt2FromMaven.fromDisallowChanges(aapt2FromMaven)
             task.aapt2Version = aapt2Version
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_RES,
                 task.inputDirectory
             )
 
             task.compiledDirectory = creationConfig.paths.compiledResourcesOutputDir
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
                 task.manifestFiles
             )

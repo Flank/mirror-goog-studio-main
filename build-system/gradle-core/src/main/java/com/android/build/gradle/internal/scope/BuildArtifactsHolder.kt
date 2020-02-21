@@ -299,34 +299,6 @@ abstract class BuildArtifactsHolder(
     }
 
     /**
-     * Sets a [Property] value to the final producer for the given artifact type.
-     *
-     * If there are more than one producer appending artifacts for the passed type, calling this
-     * method will generate an error and [setTaskInputToFinalProducts] should be used instead.
-     *
-     * The simplest way to use the mechanism is as follow :
-     * <pre>
-     *     abstract class MyTask: Task() {
-     *          @InputFile
-     *          abstract val inputFile: RegularFileProperty
-     *     }
-     *
-     *     val myTaskProvider = taskFactory.register("myTask", MyTask::class.java) {
-     *          scope.artifacts.setTaskInputToFinalProduct(InternalArtifactTYpe.SOME_ID, it.inputFile)
-     *     }
-     * </pre>
-     *
-     * @param artifactType requested artifact type
-     * @param taskInputProperty the [Property] to set the final producer on.
-     */
-    fun <T: FileSystemLocation, ARTIFACT_TYPE> setTaskInputToFinalProduct(
-        artifactType: ARTIFACT_TYPE, taskInputProperty: Property<T>)
-        where ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Single {
-        val finalProduct = getFinalProduct(artifactType)
-        taskInputProperty.setDisallowChanges(finalProduct)
-    }
-
-    /**
      * Appends a [FileCollection] to the [AnchorOutputType.ALL_CLASSES] artifact.
      *
      * @param files the [FileCollection] to add.

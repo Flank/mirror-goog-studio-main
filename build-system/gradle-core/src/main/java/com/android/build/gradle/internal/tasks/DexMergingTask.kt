@@ -198,7 +198,7 @@ abstract class DexMergingTask : NonIncrementalTask() {
 
             task.dexingType = dexingType
             if (DexMergingAction.MERGE_ALL == action && dexingType === DexingType.LEGACY_MULTIDEX) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
+                creationConfig.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST,
                     task.mainDexListFile)
             }
@@ -210,13 +210,13 @@ abstract class DexMergingTask : NonIncrementalTask() {
             task.debuggable
                 .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
             if (creationConfig.services.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
+                creationConfig.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.DUPLICATE_CLASSES_CHECK,
                     task.duplicateClassesCheck
                 )
             }
             if (separateFileDependenciesDexingTask) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
+                creationConfig.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES,
                     task.fileDependencyDexFiles
                 )

@@ -432,10 +432,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             task.originalApplicationId.setDisallowChanges(project.provider { creationConfig.originalApplicationId })
 
             task.taskInputType = creationConfig.manifestArtifactType
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS, task.aaptFriendlyManifestFiles
             )
-            creationConfig.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
+            creationConfig.operations.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
             task.setType(creationConfig.variantType)
             task.aaptOptions = creationConfig.globalScope.extension.aaptOptions.convert()
@@ -554,7 +554,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
                 )
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 sourceArtifactType.outputType,
                 task.inputResourcesDir
             )

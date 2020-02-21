@@ -196,7 +196,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.INTERMEDIARY_BUNDLE, task.bundle)
             val (aapt2FromMaven,aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
             task.aapt2FromMaven.from(aapt2FromMaven)

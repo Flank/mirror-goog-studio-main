@@ -131,7 +131,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
 
         override fun configure(task: BundleAllClasses) {
             super.configure(task)
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.JAVAC,
                 task.javacClasses
             )
@@ -141,12 +141,12 @@ abstract class BundleAllClasses : NonIncrementalTask() {
             task.modulePath = globalScope.project.path
             task.jarCreatorType = creationConfig.variantScope.jarCreatorType
             if (globalScope.extension.aaptOptions.namespaced) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
+                creationConfig.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_R_CLASS_JAR,
                     task.rClassesJar
                 )
             } else {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
+                creationConfig.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                     task.rClassesJar
                 )

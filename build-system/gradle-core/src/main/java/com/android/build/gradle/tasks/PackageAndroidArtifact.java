@@ -1113,7 +1113,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             .getProjectOptions()
                             .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
                 creationConfig
-                        .getArtifacts()
+                        .getOperations()
                         .setTaskInputToFinalProduct(
                                 InternalArtifactType.SDK_DEPENDENCY_DATA.INSTANCE,
                                 packageAndroidArtifact.getDependencyDataFile());

@@ -285,7 +285,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             }
 
             if (creationConfig.variantScope.consumesFeatureJars()) {
-                artifacts.setTaskInputToFinalProduct(
+                creationConfig.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
                     task.baseJar
                 )

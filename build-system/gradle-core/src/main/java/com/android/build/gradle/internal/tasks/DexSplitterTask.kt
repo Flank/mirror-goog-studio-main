@@ -123,25 +123,24 @@ abstract class DexSplitterTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val artifacts = creationConfig.artifacts
+            val operations = creationConfig.operations
 
             task.featureJars =
                 creationConfig.variantDependencies.getArtifactFileCollection(REVERSE_METADATA_VALUES, PROJECT, REVERSE_METADATA_CLASSES)
 
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                 InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
                 task.baseJar)
 
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                 InternalArtifactType.APK_MAPPING,
                 task.mappingFileSrc)
 
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                     InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
                     task.mainDexList)
 
-            task.inputDirs.from(
-                artifacts.getOperations().getAll(MultipleArtifactType.DEX)
+            task.inputDirs.from(operations.getAll(MultipleArtifactType.DEX)
             )
         }
     }

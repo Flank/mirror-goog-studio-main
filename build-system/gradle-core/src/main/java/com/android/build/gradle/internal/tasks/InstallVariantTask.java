@@ -233,7 +233,7 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
             task.setDescription("Installs the " + creationConfig.getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             creationConfig
-                    .getArtifacts()
+                    .getOperations()
                     .setTaskInputToFinalProduct(
                             InternalArtifactType.APK.INSTANCE, task.getApkDirectory());
             task.setTimeOutInMs(

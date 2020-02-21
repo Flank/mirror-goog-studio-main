@@ -89,7 +89,7 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.VALIDATE_SIGNING_CONFIG,
                 task.validatedSigningOutput
             )

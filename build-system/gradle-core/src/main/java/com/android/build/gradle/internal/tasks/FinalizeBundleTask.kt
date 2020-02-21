@@ -192,7 +192,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.INTERMEDIARY_BUNDLE,
                 task.intermediaryBundleFile)
 

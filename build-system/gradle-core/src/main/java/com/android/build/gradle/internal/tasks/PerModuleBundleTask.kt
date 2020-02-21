@@ -223,7 +223,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             }
             task.fileName.disallowChanges()
 
-            artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                  InternalArtifactType.MERGED_ASSETS, task.assetsFiles)
 
             task.resFiles.set(

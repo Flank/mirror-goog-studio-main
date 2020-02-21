@@ -164,7 +164,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
             task.manifestFileDirectory =
                 artifacts.getFinalProduct(creationConfig.manifestArtifactType)
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.RES_STATIC_LIBRARY,
                 task.thisSubProjectStaticLibrary
             )

@@ -665,10 +665,11 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                 task.microApkManifest =
                         project.files(creationConfig.getPaths().getMicroApkManifestFile());
             }
-            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
-            artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
-                    task.getCompatibleScreensManifest());
+            creationConfig
+                    .getOperations()
+                    .setTaskInputToFinalProduct(
+                            InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE,
+                            task.getCompatibleScreensManifest());
 
             task.getApplicationId().set(creationConfig.getApplicationId());
             task.getApplicationId().disallowChanges();

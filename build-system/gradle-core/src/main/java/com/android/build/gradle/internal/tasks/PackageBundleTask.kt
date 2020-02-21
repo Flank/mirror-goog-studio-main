@@ -351,7 +351,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.MODULE_BUNDLE, task.baseModuleZip)
 
             task.featureZips = creationConfig.variantDependencies.getArtifactFileCollection(
@@ -361,17 +361,17 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             )
 
             if (creationConfig.needAssetPackTasks.get()) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
+                creationConfig.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.ASSET_PACK_BUNDLE, task.assetPackZips
                 )
             }
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
                 task.bundleDeps
             )
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.APP_INTEGRITY_CONFIG,
                 task.integrityConfigFile
             )
@@ -423,7 +423,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             )
 
             if (creationConfig.variantScope.needsMainDexListForBundle) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
+                creationConfig.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
                     task.mainDexList)
                 // The dex files from this application are still processed for legacy multidex
@@ -431,7 +431,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 // not reprocess the dex files.
             }
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.APK_MAPPING,
                 task.obsfuscationMappingFile
             )

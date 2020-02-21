@@ -110,7 +110,7 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
         override fun configure(task: ExtractNativeDebugMetadataTask) {
             super.configure(task)
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
+            creationConfig.operations.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
             task.ndkRevision = creationConfig.globalScope.sdkComponents.ndkRevisionProvider
             task.objcopyExecutableMapProvider =
                 creationConfig.globalScope.sdkComponents.objcopyExecutableMapProvider

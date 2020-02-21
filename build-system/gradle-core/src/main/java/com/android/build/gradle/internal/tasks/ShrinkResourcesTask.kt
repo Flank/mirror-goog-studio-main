@@ -201,30 +201,30 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val artifacts = creationConfig.artifacts
+            val operations = creationConfig.operations
 
             if (creationConfig
                     .globalScope.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]) {
-                artifacts.setTaskInputToFinalProduct(
+                operations.setTaskInputToFinalProduct(
                     InternalArtifactType.RUNTIME_SYMBOL_LIST,
                     task.rTxtFile
                 )
             } else {
-                artifacts.setTaskInputToFinalProduct(
+                operations.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                     task.lightRClasses
                 )
             }
 
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES,
                 task.resourceDir
             )
 
-            artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_MAPPING,
+            operations.setTaskInputToFinalProduct(InternalArtifactType.APK_MAPPING,
                 task.mappingFileSrc)
 
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS,
                 task.mergedManifests
             )
@@ -250,9 +250,9 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
             task.classes.from(
                 if (creationConfig.variantScope.codeShrinker == CodeShrinker.R8
                     && creationConfig.variantType.isAar) {
-                    artifacts.getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES)
+                    creationConfig.artifacts.getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES)
                 } else {
-                    artifacts.getOperations().getAll(MultipleArtifactType.DEX)
+                    operations.getAll(MultipleArtifactType.DEX)
                         .map {
                             if (it.isEmpty()) { classes } else {
                                 creationConfig.globalScope.project.files(it)

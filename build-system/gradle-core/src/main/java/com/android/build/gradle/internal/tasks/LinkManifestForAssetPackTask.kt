@@ -135,9 +135,7 @@ abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val artifacts = creationConfig.artifacts
-
-            artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.ASSET_PACK_MANIFESTS, task.manifestsDirectory)
 
             val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(creationConfig.globalScope)
