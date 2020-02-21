@@ -17,7 +17,6 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.BuiltArtifactsLoader
 import com.google.gson.GsonBuilder
 import org.gradle.api.file.Directory
@@ -85,7 +84,6 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
                             properties = builtArtifact.properties,
                             versionCode = builtArtifact.versionCode,
                             versionName = builtArtifact.versionName,
-                            isEnabled = builtArtifact.isEnabled,
                             variantOutputConfiguration = builtArtifact.variantOutputConfiguration
                         )
                     }

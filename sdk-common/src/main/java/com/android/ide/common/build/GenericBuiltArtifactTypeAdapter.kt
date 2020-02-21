@@ -22,8 +22,6 @@ import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import java.io.IOException
-import java.nio.file.FileSystems
-import java.nio.file.Path
 
 /**
  * Common behaviors for loading and saving [T] to a json file.
@@ -59,8 +57,7 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
         out.endArray()
         out.name("versionCode").value(value.versionCode)
         out.name("versionName").value(value.versionName)
-        out.name("enabled").value(value.isEnabled)
-        out.name("outputFile").value(value.outputFile.toString())
+        out.name("outputFile").value(value.outputFile)
         out.endObject()
     }
 
@@ -77,21 +74,23 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
      * @param instantiate lambda to instantiate [T] with the parsed attributes.
      */
     @Throws(IOException::class)
-    fun read(reader: JsonReader,
+    fun read(
+        reader: JsonReader,
         handleAttribute: (attributeName: String) -> Unit,
-        instantiate: (outputFile: String,
+        instantiate: (
+            outputFile: String,
             properties: Map<String, String>,
             versionCode: Int,
-            versionName: String,
-            isEnabled: Boolean) -> T): T {
+            versionName: String
+        ) -> T
+    ): T {
 
         reader.beginObject()
         val properties =
             ImmutableMap.Builder<String, String>()
-        var versionCode= 0
+        var versionCode = 0
         var versionName: String? = null
         var outputFile: String? = null
-        var isEnabled = true
 
         while (reader.hasNext()) {
             when (val attributeName = reader.nextName()) {
@@ -99,7 +98,6 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
                 "versionCode" -> versionCode = reader.nextInt()
                 "versionName" -> versionName = reader.nextString()
                 "outputFile" -> outputFile = reader.nextString()
-                "enabled" -> isEnabled = reader.nextBoolean()
                 else -> handleAttribute(attributeName)
             }
         }
@@ -109,8 +107,7 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
             outputFile!!,
             properties.build(),
             versionCode,
-            versionName.orEmpty(),
-            isEnabled
+            versionName.orEmpty()
         )
 
     }
@@ -169,16 +166,15 @@ internal class GenericBuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<G
             { outputFile: String,
                 properties: Map<String, String>,
                 versionCode: Int,
-                versionName: String,
-                isEnabled: Boolean ->
+                versionName: String ->
                 GenericBuiltArtifact(
                     outputType = outputType.orEmpty(),
                     filters = filters.build(),
                     outputFile = outputFile,
                     properties = properties,
                     versionCode = versionCode,
-                    versionName = versionName,
-                    isEnabled = isEnabled)
+                    versionName = versionName
+                )
             })
     }
 

@@ -306,7 +306,6 @@ class ApplicationVariantFactory(
                     // this is wrong, talk to xav@, we cannot continue supporting this.
                     versionCode = variantOutput.versionCode.get(),
                     versionName = variantOutput.versionName.get(),
-                    isEnabled = variantOutput.enabled.get(),
                     outputFile = "not_provided",
                     properties = mapOf()
                 ) to variantOutput

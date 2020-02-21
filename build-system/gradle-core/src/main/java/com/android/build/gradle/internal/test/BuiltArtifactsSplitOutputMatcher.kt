@@ -60,7 +60,6 @@ object BuiltArtifactsSplitOutputMatcher {
                     },
                     versionCode = sourceBuiltArtifact.versionCode,
                     versionName = sourceBuiltArtifact.versionName,
-                    isEnabled = sourceBuiltArtifact.isEnabled,
                     outputFile = sourceBuiltArtifact.outputFile,
                     properties = sourceBuiltArtifact.properties
                 )

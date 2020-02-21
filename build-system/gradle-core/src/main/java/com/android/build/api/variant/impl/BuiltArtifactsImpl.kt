@@ -19,7 +19,6 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
-import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.ide.common.build.CommonBuiltArtifacts
 import com.android.ide.common.workers.WorkerExecutorFacade
@@ -125,7 +124,6 @@ class BuiltArtifactsImpl(
                         properties = builtArtifact.properties,
                         versionCode = builtArtifact.versionCode,
                         versionName = builtArtifact.versionName,
-                        isEnabled = builtArtifact.isEnabled,
                         variantOutputConfiguration = builtArtifact.variantOutputConfiguration
                     )
                 }

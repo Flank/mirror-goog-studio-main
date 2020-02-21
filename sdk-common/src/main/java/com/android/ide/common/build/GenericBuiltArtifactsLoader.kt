@@ -20,7 +20,6 @@ import com.android.utils.ILogger
 import com.google.gson.GsonBuilder
 import java.io.File
 import java.io.FileReader
-import java.lang.Exception
 
 /**
  * Singleton object to load metadata file returned by the model into a [GenericBuiltArtifacts]
@@ -70,7 +69,6 @@ object GenericBuiltArtifactsLoader {
                         properties = builtArtifact.properties,
                         versionCode = builtArtifact.versionCode,
                         versionName = builtArtifact.versionName,
-                        isEnabled = builtArtifact.isEnabled,
                         outputType = builtArtifact.outputType,
                         filters = builtArtifact.filters
                     )

@@ -37,7 +37,6 @@ data class GenericBuiltArtifact(
 
     override val versionCode: Int = -1,
     override val versionName: String = "",
-    override val isEnabled: Boolean = true,
     override val outputFile: String,
     override val properties: Map<String, String> = mapOf()
 ): CommonBuiltArtifact

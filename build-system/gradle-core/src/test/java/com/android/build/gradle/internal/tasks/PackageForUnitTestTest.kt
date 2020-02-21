@@ -31,7 +31,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.lang.RuntimeException
 import kotlin.test.fail
 
 /**
@@ -181,7 +180,8 @@ class PackageForUnitTestTest {
         variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl()
     ) = BuiltArtifactImpl.make(
         outputFile = outputFile,
-        variantOutputConfiguration = variantOutputConfiguration)
+        variantOutputConfiguration = variantOutputConfiguration
+    )
 
     private fun createBuiltArtifacts(artifacts: Collection<BuiltArtifactImpl>) = BuiltArtifactsImpl(
         artifactType = InternalArtifactType.PROCESSED_RES,

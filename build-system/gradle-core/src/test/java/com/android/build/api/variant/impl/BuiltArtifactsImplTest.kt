@@ -50,8 +50,7 @@ class BuiltArtifactsImplTest {
                     outputFile = File(outputFolder, "file1.apk").absolutePath,
                     properties = mapOf(),
                     versionCode = 123,
-                    versionName = "version_name",
-                    isEnabled = true
+                    versionName = "version_name"
                 )
             )
         ).save(FakeGradleDirectory(outputFolder))
@@ -75,7 +74,6 @@ class BuiltArtifactsImplTest {
       "properties": [],
       "versionCode": 123,
       "versionName": "version_name",
-      "enabled": true,
       "outputFile": "file1.apk"
     }
   ]
@@ -96,7 +94,6 @@ class BuiltArtifactsImplTest {
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
-                    isEnabled = true,
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
                         isUniversal = false,
                         filters = listOf(
@@ -108,7 +105,6 @@ class BuiltArtifactsImplTest {
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
-                    isEnabled = true,
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
                         isUniversal = false,
                         filters = listOf(
@@ -120,7 +116,6 @@ class BuiltArtifactsImplTest {
                     properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
-                    isEnabled = true,
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
                         isUniversal = false,
                         filters = listOf(
@@ -154,7 +149,6 @@ class BuiltArtifactsImplTest {
       "properties": [],
       "versionCode": 123,
       "versionName": "version_name",
-      "enabled": true,
       "outputFile": "file1.apk"
     },
     {
@@ -168,7 +162,6 @@ class BuiltArtifactsImplTest {
       "properties": [],
       "versionCode": 123,
       "versionName": "version_name",
-      "enabled": true,
       "outputFile": "file2.apk"
     },
     {
@@ -182,7 +175,6 @@ class BuiltArtifactsImplTest {
       "properties": [],
       "versionCode": 123,
       "versionName": "version_name",
-      "enabled": true,
       "outputFile": "file3.apk"
     }
   ]
@@ -232,7 +224,6 @@ class BuiltArtifactsImplTest {
       ],
       "versionCode": 123,
       "versionName": "123",
-      "enabled": true,
       "outputFile": "file1.apk"
     }
   ]
@@ -280,7 +271,6 @@ class BuiltArtifactsImplTest {
                 .isAnyOf("file1.apk", "file2.apk")
             Truth.assertThat(builtArtifact.versionCode).isAnyOf(123, 124)
             Truth.assertThat(builtArtifact.versionName).isAnyOf("123", "124")
-            Truth.assertThat(builtArtifact.isEnabled).isTrue()
             Truth.assertThat(builtArtifact.outputType).isEqualTo("ONE_OF_MANY")
             val filters = builtArtifact.filters
             Truth.assertThat(filters).hasSize(1)
@@ -328,7 +318,6 @@ class BuiltArtifactsImplTest {
             properties = mapOf("key1" to "value1", "key2" to "value2"),
             versionCode = versionCode,
             versionName = versionCode.toString(),
-            isEnabled = true,
             variantOutputConfiguration = VariantOutputConfigurationImpl(
                 isUniversal = false,
                 filters = listOf(

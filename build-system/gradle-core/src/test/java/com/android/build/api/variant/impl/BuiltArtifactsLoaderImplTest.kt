@@ -105,9 +105,9 @@ class BuiltArtifactsLoaderImplTest {
           "filterType": "DENSITY",
           "value": "xxxhdpi"
         }
-      ],      "versionCode": 123,
+      ],
+      "versionCode": 123,
       "versionName": "version_name",
-      "enabled": true,
       "outputFile": "file1.xml"
     },
     {
@@ -120,7 +120,6 @@ class BuiltArtifactsLoaderImplTest {
       ],
       "versionCode": 123,
       "versionName": "version_name",
-      "enabled": true,
       "outputFile": "file2.xml"
     }
   ]
@@ -181,7 +180,6 @@ class BuiltArtifactsLoaderImplTest {
         val builtArtifact = builtArtifacts.elements.first()
         assertThat(builtArtifact.outputFile).isEqualTo(
             FileUtils.toSystemIndependentPath(File(tmpFolder.root, "file1.xml").absolutePath))
-        assertThat(builtArtifact.isEnabled).isTrue()
         assertThat(builtArtifact.versionCode).isEqualTo(123)
         assertThat(builtArtifact.versionName).isEqualTo("version_name")
         assertThat(builtArtifact.outputType).isEqualTo(VariantOutputConfiguration.OutputType.SINGLE)
@@ -204,7 +202,6 @@ class BuiltArtifactsLoaderImplTest {
       "filters": [],
       "versionCode": 123,
       "versionName": "version_name",
-      "enabled": true,
       "outputFile": "file1.xml"
     }
   ]

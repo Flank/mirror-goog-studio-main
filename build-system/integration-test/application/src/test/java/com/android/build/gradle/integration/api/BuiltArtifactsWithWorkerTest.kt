@@ -112,7 +112,6 @@ abstract class ProducerTask extends DefaultTask {
         new HashMap<String, String>(),
         123,
         "123",
-        true,
         new VariantOutputConfigurationImpl(false,
           [
             new FilterConfiguration(FilterConfiguration.FilterType.DENSITY, identifier)

@@ -420,7 +420,6 @@ class TaskBasedOperationsImplTest {
             properties = mapOf("key1" to "value1", "key2" to "value2"),
             versionCode = 12,
             versionName = "12",
-            isEnabled = true,
             variantOutputConfiguration = VariantOutputConfigurationImpl(
                 isUniversal = false,
                 filters = listOf(

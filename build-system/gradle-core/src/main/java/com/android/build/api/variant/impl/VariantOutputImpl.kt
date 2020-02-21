@@ -59,23 +59,23 @@ data class VariantOutputImpl(
         val outputFileName: String): Serializable {
 
         fun toBuiltArtifact(outputFile: File, properties: Map<String, String>): BuiltArtifactImpl =
-            BuiltArtifactImpl.make(outputFile = outputFile.absolutePath,
+            BuiltArtifactImpl.make(
+                outputFile = outputFile.absolutePath,
                 properties = properties,
                 versionCode = versionCode,
                 versionName = versionName,
-                isEnabled = true,
                 variantOutputConfiguration = variantOutputConfiguration
             )
     }
 
     fun toBuiltArtifact(outputFile: File, properties: Map<String, String>): BuiltArtifactImpl =
-        BuiltArtifactImpl.make(outputFile = outputFile.absolutePath,
+        BuiltArtifactImpl.make(
+            outputFile = outputFile.absolutePath,
             properties = properties,
             versionCode = versionCode.get(),
             versionName = versionName.get(),
-            isEnabled = enabled.get(),
             variantOutputConfiguration = variantOutputConfiguration
-            )
+        )
 
     fun toSerializedForm() = SerializedForm(
         versionCode = versionCode.get(),

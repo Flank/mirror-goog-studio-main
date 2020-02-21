@@ -116,14 +116,12 @@ public class PackageAndroidArtifactTest {
                                 ImmutableMap.of(),
                                 -1,
                                 "version_name",
-                                true,
                                 new VariantOutputConfigurationImpl(false, ImmutableList.of())),
                         BuiltArtifactImpl.make(
                                 "/tmp/file_xxhdpi.out",
                                 ImmutableMap.of(),
                                 -1,
                                 "version_name",
-                                true,
                                 new VariantOutputConfigurationImpl(
                                         false,
                                         ImmutableList.of(
@@ -135,7 +133,6 @@ public class PackageAndroidArtifactTest {
                                 ImmutableMap.of(),
                                 -1,
                                 "version_name",
-                                true,
                                 new VariantOutputConfigurationImpl(
                                         false,
                                         ImmutableList.of(
@@ -147,7 +144,6 @@ public class PackageAndroidArtifactTest {
                                 ImmutableMap.of(),
                                 -1,
                                 "version_name",
-                                true,
                                 new VariantOutputConfigurationImpl(
                                         false,
                                         ImmutableList.of(
@@ -172,7 +168,6 @@ public class PackageAndroidArtifactTest {
                                 ImmutableMap.of(),
                                 -1,
                                 "version_name",
-                                true,
                                 new VariantOutputConfigurationImpl(
                                         false,
                                         ImmutableList.of(
@@ -184,7 +179,6 @@ public class PackageAndroidArtifactTest {
                                 ImmutableMap.of(),
                                 -1,
                                 "version_name",
-                                true,
                                 new VariantOutputConfigurationImpl(
                                         false,
                                         ImmutableList.of(

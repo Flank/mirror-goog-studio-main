@@ -39,13 +39,6 @@ interface BuiltArtifact: VariantOutputConfiguration {
     val versionName: String
 
     /**
-     * Returns a read-only value to indicate if this output is enabled.
-     *
-     * @return true if enabled, false otherwise.
-     */
-    val isEnabled: Boolean
-
-    /**
      * Absolute path to the built file
      *
      * @return the output file path.
