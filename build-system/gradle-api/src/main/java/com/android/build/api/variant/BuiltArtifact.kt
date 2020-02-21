@@ -16,9 +16,7 @@
 
 package com.android.build.api.variant
 
-import com.android.build.api.variant.VariantOutputConfiguration.OutputType
 import org.gradle.api.Incubating
-import java.nio.file.Path
 
 /**
  * Represents a built artifact that is present in the file system.

@@ -29,6 +29,7 @@ import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.dsl.TestBuildFeatures;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
@@ -51,6 +52,7 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.utils.StringHelper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import org.gradle.api.GradleException;
@@ -136,7 +138,8 @@ public class TestVariantFactory
                                 globalScope);
 
         // create default output
-        variantProperties.addVariantOutput(variantData.getOutputFactory().addMainApk(), null);
+        variantProperties.addVariantOutput(
+                new VariantOutputConfigurationImpl(false, ImmutableList.of()), null);
 
         return variantProperties;
     }

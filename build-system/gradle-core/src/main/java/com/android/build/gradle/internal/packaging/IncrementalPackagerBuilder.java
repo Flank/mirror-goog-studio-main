@@ -64,6 +64,7 @@ import java.util.function.Predicate;
 public class IncrementalPackagerBuilder {
     private static int NO_V1_SDK = 24;
 
+
     /** Enums for all the supported output format. */
     public enum ApkFormat {
         /** Usual APK format. */

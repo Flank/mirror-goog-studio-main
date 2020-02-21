@@ -24,6 +24,7 @@ import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -32,16 +33,14 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.OutputFactory
-import com.android.build.gradle.internal.services.VariantApiServices
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.VariantApiServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -52,17 +51,11 @@ import com.android.builder.errors.IssueReporter
 import com.android.ide.common.build.GenericBuiltArtifact
 import com.android.ide.common.build.GenericBuiltArtifactsSplitOutputMatcher
 import com.android.ide.common.build.GenericFilterConfiguration
-import com.android.ide.common.build.SplitOutputMatcher
 import com.android.resources.Density
-import com.android.utils.Pair
 import com.google.common.base.Joiner
 import com.google.common.base.Strings
-import com.google.common.collect.ImmutableList
-import java.io.File
 import java.util.Arrays
-import java.util.Objects
 import java.util.function.Consumer
-import java.util.stream.Collectors
 
 class ApplicationVariantFactory(
     projectServices: ProjectServices,
@@ -125,7 +118,7 @@ class ApplicationVariantFactory(
                 globalScope
             )
 
-        computeOutputs(variantProperties, (variantData as ApplicationVariantData), true)
+        computeOutputs(variantProperties, (variantData as ApplicationVariantData))
 
         return variantProperties
     }
@@ -165,8 +158,7 @@ class ApplicationVariantFactory(
 
     private fun computeOutputs(
         variantProperties: ApplicationVariantPropertiesImpl,
-        variant: ApplicationVariantData,
-        includeMainApk: Boolean
+        variant: ApplicationVariantData
     ) {
         val extension = globalScope.extension
         variant.calculateFilters(extension.splits)
@@ -179,48 +171,49 @@ class ApplicationVariantFactory(
             variant.compatibleScreens = extension.splits.density
                 .compatibleScreens
         }
-        val outputFactory = variant.outputFactory
-        populateMultiApkOutputs(abis, densities, outputFactory, includeMainApk)
-        outputFactory.finalizeApkDataList()
-            .forEach(Consumer { apkData: ApkData? ->
-                variantProperties.addVariantOutput(apkData!!)
-            })
+        val variantOutputs =
+            populateMultiApkOutputs(abis, densities)
+        variantOutputs.forEach { variantProperties.addVariantOutput(it) }
         restrictEnabledOutputs(
             variantProperties.variantDslInfo, variantProperties.outputs
         )
     }
 
     private fun populateMultiApkOutputs(
-        abis: Set<String?>,
-        densities: Set<String>,
-        outputFactory: OutputFactory,
-        includeMainApk: Boolean
-    ) {
-        if (densities.isEmpty() && abis.isEmpty()) { // If both are empty, we will have only the main Apk.
-            if (includeMainApk) {
-                outputFactory.addMainApk()
-            }
-            return
+        abis: Set<String>,
+        densities: Set<String>
+    ): List<VariantOutputConfigurationImpl> {
+
+        if (densities.isEmpty() && abis.isEmpty()) {
+            // If both are empty, we will have only the main Apk.
+            return listOf(VariantOutputConfigurationImpl())
         }
+        val variantOutputs = mutableListOf<VariantOutputConfigurationImpl>()
         val universalApkForAbi =
             (globalScope.extension.splits.abi.isEnable
                     && globalScope.extension.splits.abi.isUniversalApk)
         if (universalApkForAbi) {
-            outputFactory.addUniversalApk()
+            variantOutputs.add(
+                VariantOutputConfigurationImpl(isUniversal = true)
+            )
         } else {
-            if (abis.isEmpty() && includeMainApk) {
-                outputFactory.addUniversalApk()
+            if (abis.isEmpty()) {
+                variantOutputs.add(
+                    VariantOutputConfigurationImpl(isUniversal = true)
+                )
             }
         }
-        if (!abis.isEmpty()) { // TODO(b/117973371): Check if this is still needed/used, as BundleTool don't do this.
+        if (abis.isNotEmpty()) { // TODO(b/117973371): Check if this is still needed/used, as BundleTool don't do this.
             // for each ABI, create a specific split that will contain all densities.
             abis.forEach(
-                Consumer { abi: String? ->
-                    outputFactory.addFullSplit(
-                        ImmutableList.of(
-                            Pair.of(
-                                VariantOutput.FilterType.ABI,
-                                abi
+                Consumer { abi: String ->
+                    variantOutputs.add(
+                        VariantOutputConfigurationImpl(
+                            filters = listOf(
+                                FilterConfiguration(
+                                    filterType = FilterConfiguration.FilterType.ABI,
+                                    identifier = abi
+                                )
                             )
                         )
                     )
@@ -229,32 +222,37 @@ class ApplicationVariantFactory(
         }
         // create its outputs
         for (density in densities) {
-            if (!abis.isEmpty()) {
+            if (abis.isNotEmpty()) {
                 for (abi in abis) {
-                    outputFactory.addFullSplit(
-                        ImmutableList.of(
-                            Pair.of(
-                                VariantOutput.FilterType.ABI,
-                                abi
-                            ),
-                            Pair.of(
-                                VariantOutput.FilterType.DENSITY,
-                                density
+                    variantOutputs.add(
+                        VariantOutputConfigurationImpl(
+                            filters = listOf(
+                                FilterConfiguration(
+                                    filterType = FilterConfiguration.FilterType.ABI,
+                                    identifier = abi
+                                ),
+                                FilterConfiguration(
+                                    filterType = FilterConfiguration.FilterType.DENSITY,
+                                    identifier = density
+                                )
                             )
                         )
                     )
                 }
             } else {
-                outputFactory.addFullSplit(
-                    ImmutableList.of(
-                        Pair.of(
-                            VariantOutput.FilterType.DENSITY,
-                            density
+                variantOutputs.add(
+                    VariantOutputConfigurationImpl(
+                        filters = listOf(
+                            FilterConfiguration(
+                                filterType = FilterConfiguration.FilterType.DENSITY,
+                                identifier = density
+                            )
                         )
                     )
                 )
             }
         }
+        return variantOutputs
     }
 
     private fun checkSplitsConflicts(

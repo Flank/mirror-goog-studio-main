@@ -17,11 +17,11 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.build.gradle.options.ProjectOptions
 import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
@@ -58,13 +57,20 @@ class VariantPropertiesImplTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    @Mock lateinit var variantScope: VariantScope
-    @Mock lateinit var globalScope: GlobalScope
-    @Mock lateinit var variantDslInfo: VariantDslInfo
-    @Mock lateinit var apkData: ApkData
-    @Mock lateinit var variantData: BaseVariantData
-    @Mock lateinit var componentIdentity: ComponentIdentity
-    @Mock lateinit var artifacts: BuildArtifactsHolder
+    @Mock
+    lateinit var variantScope: VariantScope
+    @Mock
+    lateinit var globalScope: GlobalScope
+    @Mock
+    lateinit var variantDslInfo: VariantDslInfo
+    @Mock
+    lateinit var variantOutputConfig: VariantOutputConfigurationImpl
+    @Mock
+    lateinit var variantData: BaseVariantData
+    @Mock
+    lateinit var componentIdentity: ComponentIdentity
+    @Mock
+    lateinit var artifacts: BuildArtifactsHolder
     private val projectServices = createProjectServices()
     private val dslServices = createDslServices(projectServices)
     private val variantPropertiesApiServices = createVariantPropertiesApiServices(projectServices)
@@ -83,6 +89,8 @@ class VariantPropertiesImplTest {
         Mockito.`when`(componentIdentity.name).thenReturn("test")
         Mockito.`when`(globalScope.archivesBaseName).thenReturn("archive_base")
         Mockito.`when`(variantDslInfo.baseName).thenReturn("base_name")
+        Mockito.`when`(variantOutputConfig.outputType).thenReturn(
+            VariantOutputConfiguration.OutputType.SINGLE)
 
         properties = FakeVariantProperties(
             componentIdentity,
@@ -107,7 +115,7 @@ class VariantPropertiesImplTest {
         Mockito.`when`(variantDslInfo.manifestVersionNameSupplier)
             .thenReturn(Supplier<String?> { "foo" })
 
-        properties.addVariantOutput(apkData, "output_file")
+        properties.addVariantOutput(variantOutputConfig, "output_file")
         Truth.assertThat(properties.outputs).hasSize(1)
 
         Truth.assertThat(properties.outputs[0].versionCode.get()).isEqualTo(10)
@@ -136,7 +144,7 @@ class VariantPropertiesImplTest {
         Mockito.`when`(variantDslInfo.getVersionCode(true)).thenReturn(23)
         Mockito.`when`(variantDslInfo.getVersionName(true)).thenReturn("bar")
 
-        properties.addVariantOutput(apkData)
+        properties.addVariantOutput(variantOutputConfig)
         Truth.assertThat(properties.outputs).hasSize(1)
 
         Truth.assertThat(properties.outputs[0].versionCode.get()).isEqualTo(23)
@@ -152,7 +160,7 @@ class VariantPropertiesImplTest {
         Mockito.`when`(variantDslInfo.getVersionCode(true)).thenReturn(23)
         Mockito.`when`(variantDslInfo.getVersionName(true)).thenReturn("bar")
 
-        properties.addVariantOutput(apkData)
+        properties.addVariantOutput(variantOutputConfig)
         Truth.assertThat(properties.outputs).hasSize(1)
 
         // we expect the DSL-provided versions to trump the manifest-provided versions.

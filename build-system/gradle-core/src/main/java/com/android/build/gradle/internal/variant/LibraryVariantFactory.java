@@ -25,6 +25,7 @@ import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.dsl.LibraryBuildFeatures;
 import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.api.variant.impl.LibraryVariantPropertiesImpl;
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
@@ -55,6 +56,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
+import com.google.common.collect.ImmutableList;
 
 public class LibraryVariantFactory
         extends BaseVariantFactory<LibraryVariantImpl, LibraryVariantPropertiesImpl> {
@@ -122,7 +124,7 @@ public class LibraryVariantFactory
                         + "."
                         + BuilderConstants.EXT_LIB_ARCHIVE;
         variantProperties.addVariantOutput(
-                variantData.getOutputFactory().addMainOutput(name), name);
+                new VariantOutputConfigurationImpl(false, ImmutableList.of()), name);
 
         return variantProperties;
     }

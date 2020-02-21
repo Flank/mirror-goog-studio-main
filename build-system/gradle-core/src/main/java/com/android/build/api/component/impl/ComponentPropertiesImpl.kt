@@ -23,12 +23,10 @@ import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.ComponentProperties
-import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
-import com.android.build.api.variant.impl.baseName
 import com.android.build.api.variant.impl.baseName
 import com.android.build.api.variant.impl.fullName
 import com.android.build.gradle.api.AndroidSourceSet
@@ -46,7 +44,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
-import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -207,7 +204,11 @@ abstract class ComponentPropertiesImpl(
         )
     }
 
-    fun addVariantOutput(apkData: ApkData, outputFileName: String? = null): VariantOutputImpl {
+    fun addVariantOutput(
+        variantOutputConfiguration: VariantOutputConfigurationImpl,
+        outputFileName: String? = null
+    ): VariantOutputImpl {
+
         // the DSL objects are now locked, if the versionCode is provided, use that
         // otherwise use the lazy manifest reader to extract the value from the manifest
         // file.
@@ -235,14 +236,6 @@ abstract class ComponentPropertiesImpl(
             "$name::versionName"
         )
 
-        val variantOutputConfiguration = VariantOutputConfigurationImpl(
-            apkData.isUniversal,
-            apkData.filters.map { filterData ->
-                FilterConfiguration(
-                    FilterConfiguration.FilterType.valueOf(filterData.filterType),
-                    filterData.identifier)
-            }
-        )
         return VariantOutputImpl(
             versionCodeProperty,
             versionNameProperty,
@@ -259,7 +252,6 @@ abstract class ComponentPropertiesImpl(
                     ),
                 "$name::archivesBaseName")
         ).also {
-            apkData.variantOutput = it
             variantOutputs.add(it)
         }
     }

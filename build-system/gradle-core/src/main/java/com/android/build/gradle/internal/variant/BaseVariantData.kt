@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_SOURCE_
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.google.common.base.MoreObjects
@@ -82,7 +81,6 @@ abstract class BaseVariantData(
      */
     @JvmField
     var outputsAreSigned = false
-    val outputFactory: OutputFactory
     @JvmField
     var applicationIdTextResource: TextResource = globalScope.project.resources.text.fromString("")
 
@@ -104,7 +102,6 @@ abstract class BaseVariantData(
                     )
                 )
         }
-        outputFactory = OutputFactory(globalScope.projectBaseName, variantDslInfo)
     }
 
 
