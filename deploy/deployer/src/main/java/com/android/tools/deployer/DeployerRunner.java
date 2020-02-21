@@ -22,6 +22,7 @@ import com.android.tools.deployer.tasks.TaskRunner;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import java.io.*;
 import java.util.ArrayList;
@@ -51,13 +52,15 @@ public class DeployerRunner {
     }
 
     public static int tracedMain(String[] args, ILogger logger) {
-        final File file = new File(DB_PATH);
-        ApkFileDatabase dexDb = new SqlApkFileDatabase(file, null);
-        DeploymentCacheDatabase cacheDb = new DeploymentCacheDatabase();
-        DeployerRunner runner = new DeployerRunner(cacheDb, dexDb, new CommandLineService());
+        DeployerRunner runner = new DeployerRunner(new File(DB_PATH), new CommandLineService());
         return runner.run(args, logger);
     }
 
+    public DeployerRunner(File databaseFile, UIService service) {
+        this(new DeploymentCacheDatabase(), new SqlApkFileDatabase(databaseFile, null), service);
+    }
+
+    @VisibleForTesting
     public DeployerRunner(
             DeploymentCacheDatabase cacheDb, ApkFileDatabase dexDb, UIService service) {
         this.cacheDb = cacheDb;
@@ -69,13 +72,20 @@ public class DeployerRunner {
     public int run(String[] args, ILogger logger) {
         try {
             AndroidDebugBridge bridge = initDebugBridge();
-            return run(bridge, args, logger);
+            Trace.begin("getDevice()");
+            IDevice device = getDevice(bridge);
+            if (device == null) {
+                logger.error(null, "%s", "No device found.");
+                return -2;
+            }
+            Trace.end();
+            return run(device, args, logger);
         } finally {
             AndroidDebugBridge.terminate();
         }
     }
 
-    public int run(AndroidDebugBridge bridge, String[] args, ILogger logger) {
+    public int run(IDevice device, String[] args, ILogger logger) {
         // Check that we have the parameters we need to run.
         if (args.length < 2) {
             logger.info("Usage: DeployerRunner packageName [packageBase,packageSplit1,...]");
@@ -90,15 +100,6 @@ public class DeployerRunner {
             apks.add(parameters.get(i));
         }
 
-        Trace.begin("getDevice()");
-        IDevice device = getDevice(bridge);
-        if (device == null) {
-            logger.error(null, "%s", "No device found.");
-            return -2;
-        }
-        Trace.end();
-
-        // Run
         metrics.clear();
         AdbClient adb = new AdbClient(device, logger);
         Installer installer =
