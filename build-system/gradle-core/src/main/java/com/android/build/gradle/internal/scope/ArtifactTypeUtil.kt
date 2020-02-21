@@ -53,7 +53,7 @@ fun ArtifactType<*>.getOutputPath() =
     }
 
 /**
- * Returns a [File] representing the parent directory for an artifact type location.
+ * Returns a [File] representing the artifact type location (could be a directory or regular file).
  *
  * @param buildDirectory the parent build folder
  * @param identifier the unique scoping identifier
@@ -61,7 +61,7 @@ fun ArtifactType<*>.getOutputPath() =
  *
  * @return a [File] that can be safely use as task output.
  */
-fun ArtifactType<*>.getOutputDirectory(
+fun ArtifactType<*>.getOutputPath(
     buildDirectory: DirectoryProperty,
     vararg paths: String) = FileUtils.join(
         getOutputDir(buildDirectory.get().asFile),

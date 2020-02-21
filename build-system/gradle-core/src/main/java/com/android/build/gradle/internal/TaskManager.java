@@ -178,6 +178,7 @@ import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.build.gradle.tasks.JavaCompileCreationAction;
+import com.android.build.gradle.tasks.JavaCompileKt;
 import com.android.build.gradle.tasks.JavaPreCompileTask;
 import com.android.build.gradle.tasks.LintFixTask;
 import com.android.build.gradle.tasks.LintGlobalTask;
@@ -241,6 +242,7 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.BasePlugin;
@@ -3302,20 +3304,18 @@ public abstract class TaskManager<
                                     ComponentPropertiesImpl matchingComponent =
                                             kaptTaskLookup.get(kaptTask.getName());
                                     if (matchingComponent != null) {
-                                        configureKaptTaskInScope(matchingComponent, kaptTask);
+                                        configureKaptTaskInScopeForDataBinding(
+                                                matchingComponent, kaptTask);
                                     }
                                 });
     }
 
-    private static void configureKaptTaskInScope(
+    private static void configureKaptTaskInScopeForDataBinding(
             @NonNull ComponentPropertiesImpl componentProperties, @NonNull Task kaptTask) {
-        // The data binding artifact is created through annotation processing, which is invoked
-        // by the Kapt task (when the Kapt plugin is used). Therefore, we register Kapt as the
-        // generating task. (This will overwrite the registration of JavaCompile as the generating
-        // task that took place earlier before this method is called).
         DirectoryProperty databindingArtifact =
                 componentProperties.getGlobalScope().getProject().getObjects().directoryProperty();
-
+        RegularFileProperty exportClassListFile =
+                componentProperties.getGlobalScope().getProject().getObjects().fileProperty();
         TaskProvider<Task> kaptTaskProvider =
                 componentProperties
                         .getGlobalScope()
@@ -3323,14 +3323,19 @@ public abstract class TaskManager<
                         .getTasks()
                         .named(kaptTask.getName());
 
-        componentProperties
-                .getArtifacts()
-                .getOperations()
-                .replace(kaptTaskProvider, (Task task) -> databindingArtifact)
-                .on(InternalArtifactType.DATA_BINDING_ARTIFACT.INSTANCE);
+        // Data binding artifacts are part of the annotation processing outputs
+        JavaCompileKt.registerDataBindingOutputs(
+                databindingArtifact,
+                exportClassListFile,
+                componentProperties.getVariantType().isExportDataBindingClassList(),
+                false, // Set to false to replace the first registration done by JavaCompile earlier
+                kaptTaskProvider,
+                componentProperties.getArtifacts());
 
-        // manually add the output property as a task output so Gradle can wire providers correctly
+        // Manually declare these output providers as the task's outputs as they are not yet
+        // annotated as outputs (same with the code in JavaCompileCreationAction.configure).
         kaptTask.getOutputs().dir(databindingArtifact);
+        kaptTask.getOutputs().file(exportClassListFile).optional();
     }
 
     protected void configureTestData(

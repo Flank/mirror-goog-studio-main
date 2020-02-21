@@ -18,15 +18,19 @@ package com.android.build.gradle.tasks
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_EXPORT_CLASS_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.sdklib.AndroidTargetHash
 import org.gradle.api.JavaVersion
+import org.gradle.api.Task
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -47,15 +51,14 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
 
     private val globalScope = componentProperties.globalScope
 
-    private val classesOutputDirectory =
-        globalScope.project.objects.directoryProperty()
-    private val annotationProcessorOutputDirectory =
-        globalScope.project.objects.directoryProperty()
+    private val classesOutputDirectory = globalScope.project.objects.directoryProperty()
+    private val annotationProcessorOutputDirectory = globalScope.project.objects.directoryProperty()
     private val annotationProcessorOutputLocation =
         componentProperties.artifacts.getOperations()
-            .getOutputDirectory(AP_GENERATED_SOURCES, "out")
-    private val bundleArtifactFolderForDataBinding =
-        globalScope.project.objects.directoryProperty()
+            .getOutputPath(AP_GENERATED_SOURCES, "out")
+
+    private val dataBindingArtifactDir = globalScope.project.objects.directoryProperty()
+    private val dataBindingExportClassListFile = globalScope.project.objects.fileProperty()
 
     init {
         val compileSdkVersion = globalScope.extension.compileSdkVersion
@@ -80,7 +83,7 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
         val artifacts = componentProperties.artifacts
 
         classesOutputDirectory.set(
-            artifacts.getOperations().getOutputDirectory(JAVAC, "classes")
+            artifacts.getOperations().getOutputPath(JAVAC, "classes")
         )
         artifacts.producesDir(
             JAVAC,
@@ -94,16 +97,15 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
             .atLocation(annotationProcessorOutputLocation.path)
             .on(AP_GENERATED_SOURCES)
 
-        // Data binding artifact is one of the annotation processing outputs, only if kapt is not
-        // configured.
         if (componentProperties.buildFeatures.dataBinding) {
-            bundleArtifactFolderForDataBinding.set(
-                artifacts.getOperations().getOutputDirectory(DATA_BINDING_ARTIFACT)
-            )
-            artifacts.producesDir(
-                DATA_BINDING_ARTIFACT,
+            // Data binding artifacts are part of the annotation processing outputs
+            registerDataBindingOutputs(
+                dataBindingArtifactDir,
+                dataBindingExportClassListFile,
+                componentProperties.variantType.isExportDataBindingClassList,
+                true, /* firstRegistration */
                 taskProvider,
-                { bundleArtifactFolderForDataBinding }
+                artifacts
             )
         }
     }
@@ -136,16 +138,67 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
 
         task.setDestinationDir(classesOutputDirectory.asFile)
 
-        // Manually declare our output directory as a Task output since it's not annotated as
-        // an OutputDirectory on the task implementation.
+        // Manually declare these output providers as the task's outputs as they are not yet
+        // annotated as outputs.
         task.outputs.dir(classesOutputDirectory)
         task.outputs.dir(annotationProcessorOutputDirectory).optional()
-        task.outputs.dir(bundleArtifactFolderForDataBinding).optional()
+        // Also do that for data binding artifacts---even though the output providers are present
+        // in DataBindingCompilerArguments, it is not enough. (If we don't do this, these tests will
+        // fail: DataBindingMultiModuleTest, DataBindingExternalArtifactDependencyTest,
+        // DataBindingIncrementalityTest.)
+        task.outputs.dir(dataBindingArtifactDir).optional()
+        task.outputs.file(dataBindingExportClassListFile).optional()
 
         task.logger.info(
             "Configuring Java sources compilation with source level " +
                     "${task.sourceCompatibility} and target level ${task.targetCompatibility}."
         )
+    }
+}
+
+/**
+ * Registers data binding outputs as outputs of the JavaCompile task (or the Kapt task if Kapt is
+ * used).
+ */
+fun registerDataBindingOutputs(
+    dataBindingArtifactDir: DirectoryProperty,
+    dataBindingExportClassListFile: RegularFileProperty,
+    isExportDataBindingClassList: Boolean,
+    firstRegistration: Boolean,
+    taskProvider: TaskProvider<out Task>,
+    artifacts: BuildArtifactsHolder
+) {
+    if (firstRegistration) {
+        artifacts.getOperations()
+            .setInitialProvider(taskProvider) { dataBindingArtifactDir }
+            .atLocation(artifacts.getOperations().getOutputPath(DATA_BINDING_ARTIFACT).path)
+            .on(DATA_BINDING_ARTIFACT)
+        artifacts.producesDir(
+            DATA_BINDING_ARTIFACT,
+            taskProvider,
+            { dataBindingArtifactDir }
+        )
+    } else {
+        artifacts
+            .getOperations()
+            .replace(taskProvider) { dataBindingArtifactDir }
+            .on(DATA_BINDING_ARTIFACT)
+    }
+    if (isExportDataBindingClassList) {
+        if (firstRegistration) {
+            artifacts.getOperations()
+                .setInitialProvider(taskProvider) { dataBindingExportClassListFile }
+                .atLocation(
+                    artifacts.getOperations().getOutputPath(DATA_BINDING_EXPORT_CLASS_LIST, "out")
+                        .path
+                )
+                .on(DATA_BINDING_EXPORT_CLASS_LIST)
+        } else {
+            artifacts
+                .getOperations()
+                .replace(taskProvider) { dataBindingExportClassListFile }
+                .on(DATA_BINDING_EXPORT_CLASS_LIST)
+        }
     }
 }
 

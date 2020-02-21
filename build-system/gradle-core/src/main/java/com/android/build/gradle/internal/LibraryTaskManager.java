@@ -87,7 +87,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -538,12 +538,14 @@ public class LibraryTaskManager
         }
 
         return () -> {
-            File excludeFile =
-                    componentProperties.getVariantType().isExportDataBindingClassList()
-                            ? componentProperties
-                                    .getPaths()
-                                    .getGeneratedClassListOutputFileForDataBinding()
-                            : null;
+            FileSystemLocation exportClassListLocation =
+                    componentProperties
+                            .getArtifacts()
+                            .getFinalProduct(
+                                    InternalArtifactType.DATA_BINDING_EXPORT_CLASS_LIST.INSTANCE)
+                            .getOrNull();
+            File exportClassListFile =
+                    exportClassListLocation != null ? exportClassListLocation.getAsFile() : null;
             File dependencyArtifactsDir =
                     componentProperties
                             .getArtifacts()
@@ -555,7 +557,7 @@ public class LibraryTaskManager
                     .getDataBindingBuilder()
                     .getJarExcludeList(
                             componentProperties.getLayoutXmlProcessor(),
-                            excludeFile,
+                            exportClassListFile,
                             dependencyArtifactsDir);
         };
     }

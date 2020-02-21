@@ -281,6 +281,9 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
 
     // the data binding artifact for a library that gets published with the aar
     object DATA_BINDING_ARTIFACT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // the file into which data binding will output the list of classes that should be stripped in
+    // the packaging phase
+    object DATA_BINDING_EXPORT_CLASS_LIST: InternalArtifactType<RegularFile>(FILE), Replaceable
     // the merged data binding artifacts from all the dependencies
     object DATA_BINDING_DEPENDENCY_ARTIFACTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // directory containing layout info files for data binding when merge-resources type == MERGE
