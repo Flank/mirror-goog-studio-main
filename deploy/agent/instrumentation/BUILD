@@ -12,6 +12,8 @@ java_library(
 
 dex_library(
     name = "instrumentation",
+    dexer = "D8",
+    flags = ["--min-api 26"],
     jars = [":instrumentation_java"],
     visibility = ["//visibility:public"],
 )

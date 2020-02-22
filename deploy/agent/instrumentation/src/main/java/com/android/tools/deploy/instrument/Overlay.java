@@ -29,16 +29,22 @@ class Overlay {
     private static final String TAG = "studio.deploy";
     private static final String OVERLAY_PATH_FORMAT = "/data/data/%s/code_cache/.overlay/";
 
-    private final String overlayPath;
+    private final Path overlayPath;
+    private final Path libraryPath;
 
     public Overlay(String packageName) {
-        overlayPath = String.format(OVERLAY_PATH_FORMAT, packageName);
+        String pathString = String.format(OVERLAY_PATH_FORMAT, packageName);
+        overlayPath = Paths.get(pathString);
+        libraryPath = Paths.get(pathString, "lib");
+    }
+
+    public Path getOverlayRoot() {
+        return overlayPath;
     }
 
     public List<File> getDexFiles() {
         ArrayList<File> dexFiles = new ArrayList<>();
-        try (DirectoryStream<Path> dir =
-                Files.newDirectoryStream(Paths.get(overlayPath), "*.dex")) {
+        try (DirectoryStream<Path> dir = Files.newDirectoryStream(overlayPath, "*.dex")) {
             for (Path dex : dir) {
                 dexFiles.add(dex.toFile());
             }
@@ -46,5 +52,25 @@ class Overlay {
             Log.e(TAG, "Could not enumerate overlay dex files", io);
         }
         return dexFiles;
+    }
+
+    public List<File> getNativeLibraryDirs() {
+        ArrayList<File> nativeLibraryDirs = new ArrayList<>();
+
+        if (!Files.exists(libraryPath)) {
+            return nativeLibraryDirs;
+        }
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(libraryPath)) {
+            for (Path entry : stream) {
+                if (Files.isDirectory(entry)) {
+                    nativeLibraryDirs.add(entry.toFile());
+                }
+            }
+        } catch (IOException io) {
+            Log.e(TAG, "Could not enumerate overlay library files", io);
+        }
+
+        return nativeLibraryDirs;
     }
 }

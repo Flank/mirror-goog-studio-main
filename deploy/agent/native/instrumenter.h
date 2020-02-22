@@ -61,36 +61,57 @@ class JvmtiAllocator : public dex::Writer::Allocator {
   jvmtiEnv* jvmti_;
 };
 
+struct MethodHooks {
+  const std::string method_name;
+  const std::string method_signature;
+  const std::string entry_hook;
+  const std::string exit_hook;
+
+  static const std::string kNoHook;
+
+  MethodHooks(const std::string& method_name,
+              const std::string& method_signature,
+              const std::string& entry_hook, const std::string& exit_hook)
+      : method_name(method_name),
+        method_signature(method_signature),
+        entry_hook(entry_hook),
+        exit_hook(exit_hook) {}
+};
+
 class Transform {
  public:
   Transform(const std::string& class_name, const std::string& method_name,
             const std::string& method_signature, const std::string& entry_hook,
             const std::string& exit_hook)
-      : class_name_(class_name),
-        target_method_name_(method_name),
-        target_method_sig_(method_signature),
-        entry_hook_name_(entry_hook),
-        exit_hook_name_(exit_hook) {}
+      : class_name_(class_name) {
+    hooks_.emplace_back(method_name, method_signature, entry_hook, exit_hook);
+  }
+
+  Transform(const std::string& class_name,
+            const std::vector<MethodHooks>& hooks)
+      : class_name_(class_name), hooks_(hooks) {}
 
   std::string GetClassName() const { return class_name_; }
 
   void Apply(std::shared_ptr<ir::DexFile> dex_ir) const {
     slicer::MethodInstrumenter mi(dex_ir);
-    if (!entry_hook_name_.empty()) {
-      const ir::MethodId entry_hook(kHookClassName, entry_hook_name_.c_str());
-      mi.AddTransformation<slicer::EntryHook>(
-          entry_hook, slicer::EntryHook::Tweak::ThisAsObject);
-    }
-    if (!exit_hook_name_.empty()) {
-      const ir::MethodId exit_hook(kHookClassName, exit_hook_name_.c_str());
-      mi.AddTransformation<slicer::ExitHook>(exit_hook);
-    }
-    const std::string class_name = "L" + class_name_ + ";";
-    const ir::MethodId target_method(class_name.c_str(),
-                                     target_method_name_.c_str(),
-                                     target_method_sig_.c_str());
-    if (!mi.InstrumentMethod(target_method)) {
-      Log::E("Failed to instrument: %s", class_name_.c_str());
+    for (const MethodHooks& hook : hooks_) {
+      if (hook.entry_hook != MethodHooks::kNoHook) {
+        const ir::MethodId entry_hook(kHookClassName, hook.entry_hook.c_str());
+        mi.AddTransformation<slicer::EntryHook>(
+            entry_hook, slicer::EntryHook::Tweak::ThisAsObject);
+      }
+      if (hook.exit_hook != MethodHooks::kNoHook) {
+        const ir::MethodId exit_hook(kHookClassName, hook.exit_hook.c_str());
+        mi.AddTransformation<slicer::ExitHook>(exit_hook);
+      }
+      const std::string class_name = "L" + class_name_ + ";";
+      const ir::MethodId target_method(class_name.c_str(),
+                                       hook.method_name.c_str(),
+                                       hook.method_signature.c_str());
+      if (!mi.InstrumentMethod(target_method)) {
+        Log::E("Failed to instrument: %s", class_name_.c_str());
+      }
     }
   }
 
@@ -99,10 +120,7 @@ class Transform {
       "Lcom/android/tools/deploy/instrument/InstrumentationHooks;";
 
   std::string class_name_;
-  std::string target_method_name_;
-  std::string target_method_sig_;
-  std::string entry_hook_name_;
-  std::string exit_hook_name_;
+  std::vector<MethodHooks> hooks_;
 };
 
 }  // namespace deploy
