@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.Metric;
 import java.io.File;
+import java.util.Collections;
 
 /**
  * This is a simple benchmark performance stats collector that simply measures total build time. At
@@ -44,6 +45,9 @@ public class GradleInstantExecListener implements BenchmarkListener {
 
     @Override
     public void benchmarkDone() {
+        totalBuildTime.setAnalyzers(
+                benchmark,
+                Collections.singleton(ProfilerToBenchmarkAdapter.TOTAL_BUILD_TIME_ANALYZER));
         totalBuildTime.commit();
     }
 
