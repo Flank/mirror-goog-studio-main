@@ -630,15 +630,13 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     ProcessApplicationManifest::getBundleManifestOutputDirectory,
                     "bundle-manifest");
 
-            creationConfig
-                    .getArtifacts()
-                    .producesFile(
-                            InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE,
-                            taskProvider,
-                            ProcessApplicationManifest::getReportFile,
-                            FileUtils.join(creationConfig.getGlobalScope().getOutputsDir(), "logs")
-                                    .getAbsolutePath(),
-                            "manifest-merger-" + creationConfig.getBaseName() + "-report.txt");
+            creationConfig.getOperations().setInitialProvider(
+                    taskProvider,
+                    ProcessApplicationManifest::getReportFile)
+                    .atLocation(FileUtils.join(creationConfig.getGlobalScope().getOutputsDir(), "logs")
+                            .getAbsolutePath())
+                    .withName("manifest-merger-" + creationConfig.getBaseName() + "-report.txt")
+                    .on(InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE);
         }
 
         @Override

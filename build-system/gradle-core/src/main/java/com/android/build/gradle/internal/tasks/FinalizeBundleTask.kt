@@ -168,15 +168,14 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                     bundleName
                 )
             } else {
-                creationConfig.artifacts.producesFile(
-                    InternalArtifactType.BUNDLE,
+                creationConfig.operations.setInitialProvider(
                     taskProvider,
-                    FinalizeBundleTask::finalBundleFile,
-                    FileUtils.join(
+                    FinalizeBundleTask::finalBundleFile)
+                    .atLocation(FileUtils.join(
                         creationConfig.services.file(apkLocationOverride),
-                        creationConfig.dirName).absolutePath,
-                    bundleName
-                )
+                        creationConfig.dirName).absolutePath)
+                    .withName(bundleName)
+                    .on(InternalArtifactType.BUNDLE)
             }
 
             creationConfig.artifacts.producesFile(

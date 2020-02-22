@@ -102,86 +102,6 @@ abstract class BuildArtifactsHolder(
     }
 
     /**
-     * Registers a new [RegularFile] producer for a particular [ArtifactType]. The producer is
-     * identified by a [TaskProvider] to avoid configuring the task until the produced [RegularFile]
-     * is required by another [Task].
-     *
-     * The simplest way to use the mechanism is as follow :
-     * <pre>
-     *     open class MyTask(objectFactory: ObjectFactory): Task() {
-     *          val outputFile = objectFactory.fileProperty()
-     *     }
-     *
-     *     val myTaskProvider = taskFactory.register("myTask", MyTask::class.java)
-     *
-     *     scope.artifacts.producesFile(InternalArtifactType.SOME_ID,
-     *            OperationType.INITIAL,
-     *            myTaskProvider,
-     *            myTaskProvider.map { it -> it.outputFile }
-     *            "some_file_name")
-     *
-     * </pre>
-     *
-     * Consumers should use [getFinalProduct] or [OperationsImpl.getAll] to get a [Provider] instance
-     * for registered products which ensures that [Task]s don't get initialized until the
-     * [Provider.get] method is invoked during a consumer task configuration execution for instance.
-     *
-     * @param artifactType the produced artifact type
-     * @param taskProvider the [TaskProvider] for the task ultimately responsible for producing the
-     * artifact.
-     * @param productProvider the [Provider] of the artifact [RegularFile]
-     * @param buildDirectory the destination directory of the produced artifact or not provided if
-     * using the default location.
-     * @param fileName the desired file name, must be provided.
-     */
-    fun <T: Task, ARTIFACT_TYPE> producesFile(
-        artifactType: ARTIFACT_TYPE,
-        taskProvider: TaskProvider<out T>,
-        productProvider: (T) -> RegularFileProperty,
-        buildDirectory: String? = null,
-        fileName: String
-    ) where ARTIFACT_TYPE : ArtifactType<RegularFile>,
-            ARTIFACT_TYPE : ArtifactType.Single {
-
-        operations.setInitialProvider(
-            taskProvider,
-            productProvider)
-            .atLocation(buildDirectory)
-            .withName(fileName)
-            .on(artifactType)
-    }
-
-    /**
-     * Registers a new [RegularFile] producer for a particular [ArtifactType]. The producer is
-     * identified by a [TaskProvider] to avoid configuring the task until the produced [RegularFile]
-     * is required by another [Task].
-     *
-     * The passed [productProvider] returns a [Provider] which mean that the output location cannot
-     * be changed and will be set by the task itself or during its configuration.
-     */
-    fun <T: Task, ARTIFACT_TYPE> producesFile(
-        artifactType: ARTIFACT_TYPE,
-        taskProvider: TaskProvider<out T>,
-        productProvider: (T) -> Provider<RegularFile>
-    )
-            where ARTIFACT_TYPE : ArtifactType<RegularFile>,
-                  ARTIFACT_TYPE : ArtifactType.Single {
-
-        val propertyProvider = { task : T ->
-            val property = project.objects.fileProperty()
-            property.set(productProvider(task))
-            property
-        }
-        producesFile(
-            artifactType,
-            taskProvider,
-            propertyProvider,
-            "",
-            ""
-        )
-    }
-
-    /**
      * Registers a new [Directory] producer for a particular [ArtifactType]. The producer is
      * identified by a [TaskProvider] to avoid configuring the task until the produced [Directory]
      * is required by another [Task].
@@ -239,8 +159,11 @@ abstract class BuildArtifactsHolder(
     )
             where ARTIFACT_TYPE : ArtifactType<RegularFile>,
                   ARTIFACT_TYPE : ArtifactType.Single
-
-            = producesFile(artifactType, taskProvider, productProvider, null, fileName)
+            = operations.setInitialProvider(
+                taskProvider,
+                productProvider)
+                .withName(fileName)
+                .on(artifactType)
 
 
     fun <T: Task, ARTIFACT_TYPE> producesDir(
