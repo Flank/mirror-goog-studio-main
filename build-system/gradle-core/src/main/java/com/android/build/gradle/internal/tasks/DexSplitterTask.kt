@@ -102,20 +102,15 @@ abstract class DexSplitterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out DexSplitterTask>
         ) {
             super.handleProvider(taskProvider)
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                DexSplitterTask::featureDexDir
+            ).on(InternalArtifactType.FEATURE_DEX)
 
-            creationConfig.artifacts.producesDir(
-                artifactType = InternalArtifactType.FEATURE_DEX,
-                taskProvider = taskProvider,
-                productProvider = DexSplitterTask::featureDexDir,
-                fileName = ""
-            )
-
-            creationConfig.artifacts.producesDir(
-                artifactType = InternalArtifactType.BASE_DEX,
-                taskProvider = taskProvider,
-                productProvider = DexSplitterTask::baseDexDir,
-                fileName = ""
-            )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                DexSplitterTask::baseDexDir
+            ).on(InternalArtifactType.BASE_DEX)
         }
 
         override fun configure(

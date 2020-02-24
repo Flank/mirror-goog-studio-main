@@ -198,12 +198,12 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                artifactType = InternalArtifactType.ANALYZE_DEPENDENCIES_REPORT,
-                taskProvider = taskProvider,
-                productProvider = AnalyzeDependenciesTask::outputDirectory,
-                fileName = "analyzeDependencies"
-            )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                AnalyzeDependenciesTask::outputDirectory
+            ).withName("analyzeDependencies")
+                .on(InternalArtifactType.ANALYZE_DEPENDENCIES_REPORT)
+
         }
     }
 

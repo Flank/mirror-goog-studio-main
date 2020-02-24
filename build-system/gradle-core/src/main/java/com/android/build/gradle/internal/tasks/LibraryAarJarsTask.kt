@@ -299,12 +299,11 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                 fileName = SdkConstants.FN_CLASSES_JAR
             )
 
-            creationConfig.artifacts.producesDir(
-                artifactType = InternalArtifactType.AAR_LIBS_DIRECTORY,
-                taskProvider = taskProvider,
-                productProvider = LibraryAarJarsTask::localJarsLocation,
-                fileName = SdkConstants.LIBS_FOLDER
-            )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                LibraryAarJarsTask::localJarsLocation
+            ).withName(SdkConstants.LIBS_FOLDER)
+                .on(InternalArtifactType.AAR_LIBS_DIRECTORY)
         }
 
         override fun configure(

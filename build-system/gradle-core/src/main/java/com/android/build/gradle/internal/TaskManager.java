@@ -1082,29 +1082,23 @@ public abstract class TaskManager<
                         null,
                         taskProviderCallback);
 
-        componentProperties
-                .getArtifacts()
-                .producesDir(
-                        mergeType.getOutputType(),
-                        mergeResourcesTask,
-                        MergeResources::getOutputDir,
-                        MoreObjects.firstNonNull(
-                                        outputLocation,
-                                        componentProperties
-                                                .getPaths()
-                                                .getDefaultMergeResourcesOutputDir())
-                                .getAbsolutePath(),
-                        "");
+        componentProperties.getOperations().setInitialProvider(
+                mergeResourcesTask,
+                MergeResources::getOutputDir)
+                .atLocation(MoreObjects.firstNonNull(
+                        outputLocation,
+                        componentProperties
+                                .getPaths()
+                                .getDefaultMergeResourcesOutputDir())
+                        .getAbsolutePath())
+                .on(mergeType.getOutputType());
 
         if (alsoOutputNotCompiledResources) {
-            componentProperties
-                    .getArtifacts()
-                    .producesDir(
-                            MERGED_NOT_COMPILED_RES.INSTANCE,
-                            mergeResourcesTask,
-                            MergeResources::getMergedNotCompiledResourcesOutputDirectory,
-                            mergedNotCompiledDir.getAbsolutePath(),
-                            "");
+            componentProperties.getOperations().setInitialProvider(
+                    mergeResourcesTask,
+                    MergeResources::getMergedNotCompiledResourcesOutputDirectory)
+                    .atLocation(mergedNotCompiledDir.getAbsolutePath())
+                    .on(MERGED_NOT_COMPILED_RES.INSTANCE);
         }
 
         if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {

@@ -101,6 +101,21 @@ abstract class BuildArtifactsHolder(
         operations.copy(artifactType, artifactContainer)
     }
 
+    // TODO : remove these 2 APIs once all java tasks stopped using those after Kotlin translation.
+    fun <T: Task, ARTIFACT_TYPE> producesFile(
+        artifactType: ARTIFACT_TYPE,
+        taskProvider: TaskProvider<out T>,
+        productProvider: (T) -> RegularFileProperty,
+        fileName: String = "out"
+    )
+            where ARTIFACT_TYPE : ArtifactType<RegularFile>,
+                  ARTIFACT_TYPE : ArtifactType.Single
+            = operations.setInitialProvider(
+                taskProvider,
+                productProvider)
+                .withName(fileName)
+                .on(artifactType)
+
     /**
      * Registers a new [Directory] producer for a particular [ArtifactType]. The producer is
      * identified by a [TaskProvider] to avoid configuring the task until the produced [Directory]
@@ -138,42 +153,14 @@ abstract class BuildArtifactsHolder(
     fun <T: Task, ARTIFACT_TYPE> producesDir(
         artifactType: ARTIFACT_TYPE,
         taskProvider: TaskProvider<out T>,
-        productProvider: (T) -> DirectoryProperty,
-        buildDirectory: String? = null,
-        fileName: String = "out"
-    ) where ARTIFACT_TYPE : ArtifactType<Directory>,
-            ARTIFACT_TYPE : ArtifactType.Single {
-
-        operations.setInitialProvider(
-            taskProvider,
-            productProvider
-        ).atLocation(buildDirectory).withName(fileName).on(artifactType)
-    }
-
-    // TODO : remove these 2 APIs once all java tasks stopped using those after Kotlin translation.
-    fun <T: Task, ARTIFACT_TYPE> producesFile(
-        artifactType: ARTIFACT_TYPE,
-        taskProvider: TaskProvider<out T>,
-        productProvider: (T) -> RegularFileProperty,
-        fileName: String = "out"
-    )
-            where ARTIFACT_TYPE : ArtifactType<RegularFile>,
-                  ARTIFACT_TYPE : ArtifactType.Single
-            = operations.setInitialProvider(
-                taskProvider,
-                productProvider)
-                .withName(fileName)
-                .on(artifactType)
-
-
-    fun <T: Task, ARTIFACT_TYPE> producesDir(
-        artifactType: ARTIFACT_TYPE,
-        taskProvider: TaskProvider<out T>,
         propertyProvider: (T) -> DirectoryProperty,
         fileName: String = "out"
     ) where ARTIFACT_TYPE : ArtifactType<Directory>,
             ARTIFACT_TYPE : ArtifactType.Single
-            = producesDir(artifactType, taskProvider, propertyProvider, null, fileName)
+            =         operations.setInitialProvider(
+        taskProvider,
+        propertyProvider
+    ).withName(fileName).on(artifactType)
 
     /**
      * Returns a [Provider] of either a [Directory] or a [RegularFile] depending on the passed
