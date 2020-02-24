@@ -54,6 +54,8 @@ class UnusedNavigationDetector : ResourceXmlDetector() {
             priority = 2,
             severity = Severity.ERROR
         )
+
+        private const val CLASS_FRAGMENT_CONTAINER_VIEW = "androidx.fragment.app.FragmentContainerView"
     }
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean {
@@ -109,9 +111,10 @@ class UnusedNavigationDetector : ResourceXmlDetector() {
             val event = parser.next()
             if (event == XmlPullParser.START_TAG) {
                 val tag = parser.name ?: continue
-                if (tag == SdkConstants.VIEW_FRAGMENT) {
+                if (tag == SdkConstants.VIEW_FRAGMENT ||
+                        tag == CLASS_FRAGMENT_CONTAINER_VIEW) {
                     val navGraph: String? = parser.getAttributeValue(
-                        ResourceNamespace.TODO().xmlNamespaceUri,
+                        ResourceNamespace.RES_AUTO.xmlNamespaceUri,
                         SdkConstants.ATTR_NAV_GRAPH
                     ) ?: continue
                     if (navGraph == target) {
