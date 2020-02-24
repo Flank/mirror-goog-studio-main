@@ -49,7 +49,7 @@ fun RecipeExecutor.generateBasicActivity(
   secondFragmentLayoutName: String
 ) {
   val (projectData, srcOut, resOut) = moduleData
-  val buildApi = moduleData.apis.buildApi!!
+  val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   addAllKotlinDependencies(moduleData)
@@ -61,7 +61,7 @@ fun RecipeExecutor.generateBasicActivity(
     moduleData, activityClass, packageName, simpleLayoutName, layoutName, useAndroidX = useAndroidX, useMaterial2 = useMaterial2
   )
 
-  addDependency("com.android.support:appcompat-v7:$buildApi.+")
+  addDependency("com.android.support:appcompat-v7:$appCompatVersion.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
   save(fragmentSimpleXml(useAndroidX, moduleData.isNewModule), moduleData.resDir.resolve("layout/$simpleLayoutName.xml"))
   if (moduleData.isNewModule) {

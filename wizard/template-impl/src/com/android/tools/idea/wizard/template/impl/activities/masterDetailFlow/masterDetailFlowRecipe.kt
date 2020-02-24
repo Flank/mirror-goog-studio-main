@@ -48,7 +48,7 @@ fun RecipeExecutor.masterDetailFlowRecipe(
   packageName: String
 ) {
   val (projectData, srcOut, resOut, manifestOut) = moduleData
-  val buildApi = moduleData.apis.buildApi
+  val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
@@ -61,9 +61,9 @@ fun RecipeExecutor.masterDetailFlowRecipe(
   val applicationPackage = projectData.applicationPackage
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.android.support:support-v4:${buildApi}.+")
-  addDependency("com.android.support:recyclerview-v7:${buildApi}.+")
-  addDependency("com.android.support:design:${buildApi}.+")
+  addDependency("com.android.support:support-v4:${appCompatVersion}.+")
+  addDependency("com.android.support:recyclerview-v7:${appCompatVersion}.+")
+  addDependency("com.android.support:design:${appCompatVersion}.+")
 
   val baseFeatureResOut = moduleData.baseFeature?.resDir ?: resOut
   generateThemeStyles(moduleData.themesData.main, moduleData.isDynamic, useMaterial2, resOut, baseFeatureResOut)

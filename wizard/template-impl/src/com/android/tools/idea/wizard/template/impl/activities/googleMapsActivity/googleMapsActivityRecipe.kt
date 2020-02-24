@@ -38,14 +38,14 @@ fun RecipeExecutor.googleMapsActivityRecipe(
   packageName: String
 ) {
   val (projectData, srcOut, resOut, manifestOut) = moduleData
-  val buildApi = moduleData.apis.buildApi
+  val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   val simpleName = activityToLayout(activityClass)
   addAllKotlinDependencies(moduleData)
 
   addDependency("com.google.android.gms:play-services-maps:+")
-  addDependency("com.android.support:appcompat-v7:${buildApi}.+")
+  addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 
   mergeXml(androidManifestXml(activityClass, isLauncher, moduleData.isLibrary, packageName, simpleName, moduleData.isNewModule),

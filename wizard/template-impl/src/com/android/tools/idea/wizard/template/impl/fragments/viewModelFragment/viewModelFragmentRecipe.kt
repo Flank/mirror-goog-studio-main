@@ -32,14 +32,14 @@ fun RecipeExecutor.viewModelFragmentRecipe(
   viewModelName: String
 ) {
   val (projectData, srcOut, resOut, manifestOut) = moduleData
-  val buildApi = moduleData.apis.buildApi
+  val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
   val packageName = moduleData.packageName
   val applicationPackage = projectData.applicationPackage
 
-  addDependency("com.android.support:support-v4:${buildApi}.+")
+  addDependency("com.android.support:support-v4:${appCompatVersion}.+")
   addDependency("android.arch.lifecycle:extensions:+")
 
   if (projectData.language == Language.Kotlin && useAndroidX) {

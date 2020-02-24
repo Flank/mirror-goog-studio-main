@@ -56,15 +56,14 @@ fun RecipeExecutor.generateNavigationDrawer(
 
   val (projectTemplateData, srcOut, resOut, _, _, _, _, _, isNewModule) = data
   val apis = data.apis
-  val (_, minApiLevel, nullableBuildApi, targetApi) = apis
-  val buildApi = nullableBuildApi ?: 28
+  val (_, minApiLevel, appCompatVersion, targetApi) = apis
   val includeImageDrawables = minApiLevel < 21
   val language = projectTemplateData.language
   val useAndroidX = projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
 
   addAllKotlinDependencies(data)
-  addDependency("com.android.support:support-v4:${buildApi}.+")
+  addDependency("com.android.support:support-v4:${appCompatVersion}.+")
 
   generateManifest(
     data,
@@ -90,8 +89,8 @@ fun RecipeExecutor.generateNavigationDrawer(
     save(navigationDrawerDrawables(), resOut.resolve("values/drawables.xml"))
   }
 
-  addDependency("com.android.support:design:${buildApi}.+")
-  addDependency("com.android.support:appcompat-v7:${buildApi}.+")
+  addDependency("com.android.support:design:${appCompatVersion}.+")
+  addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 
   save(navigationContentMain(useAndroidX), resOut.resolve("layout/${contentLayoutName}.xml"))
@@ -107,7 +106,7 @@ fun RecipeExecutor.generateNavigationDrawer(
     requireJavaVersion("1.8", true)
   }
   val generateKotlin = language == Language.Kotlin
-  navigationDependencies(generateKotlin, useAndroidX, buildApi)
+  navigationDependencies(generateKotlin, useAndroidX, appCompatVersion)
 
   save(mobileNavigation(packageName), resOut.resolve("navigation/mobile_navigation.xml"))
   open(resOut.resolve("navigation/mobile_navigation.xml"))
@@ -129,7 +128,7 @@ fun RecipeExecutor.generateNavigationDrawer(
     resOut.resolve("layout/${layoutName}.xml")
   )
   save(
-    navigationHeaderXml(buildApi, targetApi, data.isLibrary),
+    navigationHeaderXml(appCompatVersion, targetApi, data.isLibrary),
     resOut.resolve("layout/${navHeaderLayoutName}.xml")
   )
   save(

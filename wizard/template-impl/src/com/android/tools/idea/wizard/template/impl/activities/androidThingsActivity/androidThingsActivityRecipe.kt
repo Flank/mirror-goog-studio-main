@@ -33,7 +33,7 @@ fun RecipeExecutor.androidThingsActivityRecipe(
   packageName: String
 ) {
   val (projectData, srcOut, resOut, manifestOut) = moduleData
-  val buildApi = moduleData.apis.buildApi
+  val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
@@ -46,7 +46,7 @@ fun RecipeExecutor.androidThingsActivityRecipe(
     generateSimpleLayout(moduleData, activityClass, layoutName, true, packageName)
     open(resOut.resolve("layout/${layoutName}.xml"))
   }
-  addDependency("com.android.support:appcompat-v7:${buildApi}.+")
+  addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
 
   val simpleActivity = when (projectData.language) {
     Language.Java -> simpleActivityJava(activityClass, generateLayout, layoutName, packageName, useMaterial2)

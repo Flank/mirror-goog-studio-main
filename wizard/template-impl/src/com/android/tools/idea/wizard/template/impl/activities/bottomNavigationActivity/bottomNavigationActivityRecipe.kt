@@ -40,7 +40,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   packageName: String
 ) {
   val (projectData, srcOut, resOut) = moduleData
-  val buildApi = moduleData.apis.buildApi
+  val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
@@ -48,11 +48,11 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   val isLauncher = moduleData.isNewModule
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.android.support:design:${buildApi}.+")
+  addDependency("com.android.support:design:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 
   if (moduleData.apis.minApiLevel < 21) {
-    addDependency("com.android.support:support-vector-drawable:${buildApi}.+")
+    addDependency("com.android.support:support-vector-drawable:${appCompatVersion}.+")
   }
 
   generateManifest(

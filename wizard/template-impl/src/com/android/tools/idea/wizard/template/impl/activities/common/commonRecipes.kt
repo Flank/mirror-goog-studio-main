@@ -97,9 +97,9 @@ fun RecipeExecutor.generateSimpleLayout(
     require(!moduleData.isNewModule || excludeMenu)
   }
   val projectData = moduleData.projectTemplateData
-  val buildApi = moduleData.apis.buildApi
+  val appCompatVersion = moduleData.apis.appCompatVersion
   val resOut = moduleData.resDir
-  addDependency("com.android.support:appcompat-v7:$buildApi.+")
+  addDependency("com.android.support:appcompat-v7:$appCompatVersion.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 
   // TODO(qumeric): check if we sometimes need to pass appBarLayoutName
@@ -181,7 +181,7 @@ fun RecipeExecutor.generateAppBar(
   packageName: String,
   simpleLayoutName: String,
   appBarLayoutName: String,
-  buildApi: Int = moduleData.apis.buildApi!!,
+  buildApi: Int = moduleData.apis.appCompatVersion,
   resDir: File = moduleData.resDir,
   baseFeatureResOut: File? = moduleData.baseFeature?.resDir,
   themesData: ThemesData = moduleData.themesData,

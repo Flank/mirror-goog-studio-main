@@ -34,7 +34,7 @@ fun RecipeExecutor.automotiveMediaServiceRecipe(
   customThemeName: String
 ) {
   val (projectData, srcOut, resOut, _) = moduleData
-  val buildApi = moduleData.apis.buildApi
+  val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
@@ -69,7 +69,7 @@ fun RecipeExecutor.automotiveMediaServiceRecipe(
       to = projectData.rootDir.resolve(sharedModule).resolve("build.gradle"),
       // Setting the commitDocument as true because the media dependency needs to be added to the build gradle in the following line
       commitDocument = true)
-    addDependency(mavenCoordinate = "com.android.support:support-media-compat:${buildApi}.+",
+    addDependency(mavenCoordinate = "com.android.support:support-media-compat:${appCompatVersion}.+",
                   moduleDir = projectData.rootDir.resolve(sharedModule))
     // TODO: It may be better to not rely on the hard-coded module name
     addModuleDependency("implementation", sharedModule, projectData.rootDir.resolve("mobile"))
@@ -80,7 +80,7 @@ fun RecipeExecutor.automotiveMediaServiceRecipe(
     serviceSrcOut = moduleData.srcDir
     serviceResOut = moduleData.resDir
     sharedPackageName = packageName
-    addDependency("com.android.support:support-media-compat:${buildApi}.+")
+    addDependency("com.android.support:support-media-compat:${appCompatVersion}.+")
   }
   /* Create media service */
   mergeXml(androidManifestXml(customThemeName, mediaBrowserServiceName, sharedPackageName, useCustomTheme),

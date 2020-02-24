@@ -41,14 +41,14 @@ fun RecipeExecutor.recyclerViewAdapterRecipe(
   adapterClassName: String
 ) {
   val (projectData, srcOut, resOut, _) = moduleData
-  val buildApi = moduleData.apis.buildApi
+  val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   val applicationPackage = projectData.applicationPackage
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.android.support:support-v4:${buildApi}.+")
-  addDependency("com.android.support:recyclerview-v7:${buildApi}.+")
+  addDependency("com.android.support:support-v4:${appCompatVersion}.+")
+  addDependency("com.android.support:recyclerview-v7:${appCompatVersion}.+")
 
   save(itemListContentXml(), resOut.resolve("layout/${fragmentLayout}.xml"))
 

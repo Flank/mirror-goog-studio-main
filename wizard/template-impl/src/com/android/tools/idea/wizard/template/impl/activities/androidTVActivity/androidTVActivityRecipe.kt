@@ -62,12 +62,12 @@ fun RecipeExecutor.androidTVActivityRecipe(
   packageName: String
 ) {
   val (projectData, srcOut, resOut, manifestOut) = moduleData
-  val buildApi = moduleData.apis.buildApi
+  val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.android.support:appcompat-v7:${buildApi}.+")
+  addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support:leanback-v17:+")
   addDependency("com.github.bumptech.glide:glide:3.8.0")
 

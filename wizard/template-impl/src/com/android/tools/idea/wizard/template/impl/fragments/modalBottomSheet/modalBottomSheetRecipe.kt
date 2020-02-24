@@ -36,16 +36,16 @@ fun RecipeExecutor.modalBottomSheetRecipe(
   listLayout: String
 ) {
   val (projectData, srcOut, resOut, _) = moduleData
-  val buildApi = moduleData.apis.buildApi
+  val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
   val applicationPackage = projectData.applicationPackage
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.android.support:support-v4:${buildApi}.+")
-  addDependency("com.android.support:design:${buildApi}.+")
-  addDependency("com.android.support:recyclerview-v7:${buildApi}.+")
+  addDependency("com.android.support:support-v4:${appCompatVersion}.+")
+  addDependency("com.android.support:design:${appCompatVersion}.+")
+  addDependency("com.android.support:recyclerview-v7:${appCompatVersion}.+")
 
   save(fragmentItemListDialogXml(fragmentClass, itemLayout, packageName, useAndroidX), resOut.resolve("layout/${listLayout}.xml"))
   save(fragmentItemListDialogItemXml(), resOut.resolve("layout/${itemLayout}.xml"))
