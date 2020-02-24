@@ -63,8 +63,8 @@ fun RecipeExecutor.automotiveMediaServiceRecipe(
         buildApiString = apis.buildApiString,
         generateKotlin = projectData.language == Language.Kotlin,
         kotlinVersion = projectData.kotlinVersion,
-        minApi = apis.minApiLevel,
-        targetApi = apis.targetApi,
+        minApi = apis.minApi,
+        targetApi = apis.targetApiString ?: apis.targetApi.toString(),
         useAndroidX = useAndroidX),
       to = projectData.rootDir.resolve(sharedModule).resolve("build.gradle"),
       // Setting the commitDocument as true because the media dependency needs to be added to the build gradle in the following line
