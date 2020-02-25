@@ -80,14 +80,17 @@ def define_env(env, var, value, msg=None):
   prev = os.environ.get(var)
   if prev:
     if not os.path.exists(value):
-      print '{} is set to {}, but it does not exist'.format(var, value)
+      print('{} is set to {}, but it does not exist'.format(var, value))
       sys.exit(1)
     env[var] = prev
   elif os.path.exists(value):
     env[var] = value
   else:
-    print 'Cannot find {} while trying to set "{}"'.format(value, var)
-    print msg if msg else 'Make sure {} exists, or set "{}" manually to the correct value.'.format(value, var)
+    print('Cannot find {} while trying to set "{}"'.format(value, var))
+    if msg:
+      print(msg)
+    else:
+      print('Make sure {} exists, or set "{}" manually to the correct value.'.format(value, var))
     sys.exit(1)
 
 
