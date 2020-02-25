@@ -20,14 +20,11 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codebl
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.CodeBlockInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultPostprocessorInitInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultPreprocessorInitInjector;
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultProcessInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.ImagePreprocessorInitInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.tensor.TensorBufferInitInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.tensor.TensorImageInitInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.innerclass.InputsClassInjector;
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.ImageProcessInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.innerclass.OutputsClassInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.DefaultGetMethodInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.DefaultLoadMethodInjector;
-import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.ImageLoadMethodInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.LabelGetMethodInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.methods.MethodInjector;
 import com.android.tools.mlkit.TensorInfo;
@@ -43,10 +40,6 @@ public class InjectorUtils {
         return new OutputsClassInjector();
     }
 
-    public static InputsClassInjector getInputsClassInjector() {
-        return new InputsClassInjector();
-    }
-
     public static AssociatedFileInjector getAssociatedFileInjector() {
         return new AssociatedFileInjector();
     }
@@ -59,27 +52,19 @@ public class InjectorUtils {
         }
     }
 
-    public static MethodInjector getLoadMethodInjector(TensorInfo tensorInfo) {
-        if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
-            return new ImageLoadMethodInjector();
-        } else {
-            return new DefaultLoadMethodInjector();
-        }
-    }
-
-    public static CodeBlockInjector getTensorInitInjector(TensorInfo tensorInfo) {
-        if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
-            return new TensorImageInitInjector();
-        } else {
-            return new TensorBufferInitInjector();
-        }
-    }
-
     public static CodeBlockInjector getInputProcessorInjector(TensorInfo tensorInfo) {
         if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
             return new ImagePreprocessorInitInjector();
         } else {
             return new DefaultPreprocessorInitInjector();
+        }
+    }
+
+    public static CodeBlockInjector getProcessInjector(TensorInfo tensorInfo) {
+        if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
+            return new ImageProcessInjector();
+        } else {
+            return new DefaultProcessInjector();
         }
     }
 

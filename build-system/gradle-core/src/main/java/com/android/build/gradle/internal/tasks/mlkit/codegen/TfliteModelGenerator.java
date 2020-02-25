@@ -33,6 +33,8 @@ import com.squareup.javapoet.TypeSpec;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import javax.lang.model.element.Modifier;
 import org.apache.commons.io.FilenameUtils;
 import org.gradle.api.file.DirectoryProperty;
@@ -77,9 +79,9 @@ public class TfliteModelGenerator implements ModelGenerator {
         }
         buildFields(classBuilder);
         buildConstructor(classBuilder);
-        buildCreateInputsMethod(classBuilder);
+        buildStaticNewInstanceMethod(classBuilder);
         buildGetAssociatedFileMethod(classBuilder);
-        buildRunMethod(classBuilder);
+        buildProcessMethod(classBuilder);
         buildInnerClass(classBuilder);
 
         // Final steps
@@ -133,13 +135,12 @@ public class TfliteModelGenerator implements ModelGenerator {
 
     private void buildInnerClass(TypeSpec.Builder classBuilder) {
         InjectorUtils.getOutputsClassInjector().inject(classBuilder, modelInfo.getOutputs());
-        InjectorUtils.getInputsClassInjector().inject(classBuilder, modelInfo.getInputs());
     }
 
     private void buildConstructor(TypeSpec.Builder classBuilder) {
         MethodSpec.Builder constructorBuilder =
                 MethodSpec.constructorBuilder()
-                        .addModifiers(Modifier.PUBLIC)
+                        .addModifiers(Modifier.PRIVATE)
                         .addParameter(ClassNames.CONTEXT, "context")
                         .addException(ClassNames.IO_EXCEPTION)
                         .addStatement(
@@ -172,33 +173,45 @@ public class TfliteModelGenerator implements ModelGenerator {
         classBuilder.addMethod(constructorBuilder.build());
     }
 
-    private void buildRunMethod(TypeSpec.Builder classBuilder) {
+    private void buildProcessMethod(TypeSpec.Builder classBuilder) {
         TypeName outputType = ClassName.get(packageName, className).nestedClass(MlkitNames.OUTPUTS);
-        TypeName inputType = ClassName.get(packageName, className).nestedClass(MlkitNames.INPUTS);
-        String localInputs = "inputs";
         String localOutputs = "outputs";
 
         MethodSpec.Builder methodBuilder =
-                MethodSpec.methodBuilder("run")
+                MethodSpec.methodBuilder("process")
                         .addModifiers(Modifier.PUBLIC)
-                        .addParameter(inputType, localInputs)
                         .returns(outputType);
+        List<String> byteBufferList = new ArrayList<>();
+        for (TensorInfo tensorInfo : modelInfo.getInputs()) {
+            String processedTypeName = CodeUtils.getProcessedTypeName(tensorInfo);
+            methodBuilder.addParameter(
+                    CodeUtils.getParameterType(tensorInfo), tensorInfo.getName());
+            byteBufferList.add(processedTypeName + ".getBuffer()");
+        }
 
+        for (TensorInfo tensorInfo : modelInfo.getInputs()) {
+            InjectorUtils.getProcessInjector(tensorInfo).inject(methodBuilder, tensorInfo);
+        }
         methodBuilder.addStatement("$T $L = new $T()", outputType, localOutputs, outputType);
         methodBuilder.addStatement(
-                "$L.run($L.getBuffer(), $L.getBuffer())", FIELD_MODEL, localInputs, localOutputs);
+                "$L.run($L, $L.getBuffer())",
+                FIELD_MODEL,
+                CodeUtils.getObjectArrayString(byteBufferList.toArray(new String[0])),
+                localOutputs);
         methodBuilder.addStatement("return $L", localOutputs);
 
         classBuilder.addMethod(methodBuilder.build());
     }
 
-    private void buildCreateInputsMethod(TypeSpec.Builder classBuilder) {
-        TypeName inputType = ClassName.get(packageName, className).nestedClass(MlkitNames.INPUTS);
+    private void buildStaticNewInstanceMethod(TypeSpec.Builder classBuilder) {
+        TypeName returnType = ClassName.get(packageName, className);
         MethodSpec.Builder methodBuilder =
-                MethodSpec.methodBuilder("createInputs")
-                        .addModifiers(Modifier.PUBLIC)
-                        .returns(inputType)
-                        .addStatement("return new $L()", MlkitNames.INPUTS);
+                MethodSpec.methodBuilder("newInstance")
+                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                        .addParameter(ClassNames.CONTEXT, "context")
+                        .addException(ClassNames.IO_EXCEPTION)
+                        .returns(returnType)
+                        .addStatement("return new $T(context)", returnType);
 
         classBuilder.addMethod(methodBuilder.build());
     }
