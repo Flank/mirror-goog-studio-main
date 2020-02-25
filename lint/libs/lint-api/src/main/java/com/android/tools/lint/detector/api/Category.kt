@@ -58,13 +58,12 @@ constructor(
      *
      * @return a full name for this category
      */
-    val fullName: String
-        get() =
-            if (parent != null) {
-                parent.fullName + ':' + name
-            } else {
-                name
-            }
+    val fullName: String =
+        if (parent != null) {
+            parent.fullName + ':' + name
+        } else {
+            name
+        }
 
     override fun toString(): String = fullName
 

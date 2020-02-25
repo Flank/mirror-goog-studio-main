@@ -66,6 +66,36 @@ class AnnotationHandlerTest {
                             KotlinApi().method1()
                             KotlinApi().method2()
                         }
+
+                        @Suppress("_AnnotationIssue")
+                        fun suppressedId1() {
+                            JavaApi().method1()
+                        }
+
+                        fun suppressedId2() {
+                            //noinspection _AnnotationIssue
+                            KotlinApi().method1()
+                        }
+
+                        @Suppress("Correctness:Test Category")
+                        fun suppressedCategory1() {
+                            JavaApi().method1()
+                        }
+
+                        fun suppressedCategory2() {
+                            //noinspection Correctness
+                            KotlinApi().method1()
+                        }
+
+                        @Suppress("Correctness")
+                        fun suppressedCategory3() {
+                            JavaApi().method1()
+                        }
+
+                        fun suppressedCategory4() {
+                            //noinspection Correctness:Test Category
+                            KotlinApi().method1()
+                        }
                     }
                     """
             ).indented(),
@@ -116,7 +146,7 @@ class AnnotationHandlerTest {
                 annotation class MyKotlinAnnotation {
                 }
                 """
-            )
+            ).indented()
         ).issues(MyAnnotationDetector.TEST_ISSUE).run().expect(
             """
             src/test/pkg/JavaUsage.java:7: Error: Forbidden annotation java.MyJavaAnnotation [_AnnotationIssue]
@@ -173,13 +203,16 @@ class AnnotationHandlerTest {
         }
 
         companion object {
+            @JvmField
+            val TEST_CATEGORY = Category.create(Category.CORRECTNESS, "Test Category", 0)
+
             @Suppress("SpellCheckingInspection")
             @JvmField
             val TEST_ISSUE = Issue.create(
                 id = "_AnnotationIssue",
-                briefDescription = "Forbid some annotations",
+                briefDescription = "Blahblah",
                 explanation = "Blahdiblah",
-                category = Category.CORRECTNESS,
+                category = TEST_CATEGORY,
                 priority = 10,
                 severity = Severity.ERROR,
                 implementation = Implementation(

@@ -1962,7 +1962,7 @@ class LintDriver
                 } else if (binaryChecks != null &&
                     (isBitmapFile(file) || type == ResourceFolderType.RAW)
                 ) {
-                    val context = object : ResourceContext(this, project, main, file, type, "") {
+                    val context = object : ResourceContext(this@LintDriver, project, main, file, type, "") {
                         override val resourceFolder: File?
                             // Like super, but for the parent folder instead of the context file
                             get() = if (resourceFolderType != null) file.parentFile else null
@@ -2982,7 +2982,7 @@ class LintDriver
         private const val SUPPRESS_LINT_VMSIG = "/$SUPPRESS_LINT;"
 
         /** Prefix used by the comment suppress mechanism in Studio/IntelliJ  */
-        private const val STUDIO_ID_PREFIX = "AndroidLint"
+        const val STUDIO_ID_PREFIX = "AndroidLint"
 
         private const val SUPPRESS_WARNINGS_FQCN = "java.lang.SuppressWarnings"
 
@@ -3282,9 +3282,28 @@ class LintDriver
                 ) {
                     return true
                 }
+
+                // Also allow suppressing by category or sub category
+                if (matchesCategory(issue.category, id)) {
+                    return true
+                }
             }
 
             return false
+        }
+
+        private fun matchesCategory(category: Category, id: String): Boolean {
+            if (id.equals(category.name, ignoreCase = true)) {
+                return true
+            }
+
+            val parent = category.parent ?: return false
+
+            if (id.equals(category.fullName, ignoreCase = true)) {
+                return true
+            }
+
+            return matchesCategory(parent, id)
         }
 
         /**

@@ -322,6 +322,11 @@ public class DefaultConfiguration extends Configuration {
                 return severity;
             }
 
+            severity = this.severity.get(category.getFullName());
+            if (severity != null) {
+                return severity;
+            }
+
             category = category.getParent();
             if (category != null) {
                 severity = this.severity.get(category.getName());
