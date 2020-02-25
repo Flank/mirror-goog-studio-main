@@ -18,8 +18,8 @@ package com.android.builder.internal.packaging;
 
 import static com.android.ide.common.resources.FileStatus.CHANGED;
 import static com.android.ide.common.resources.FileStatus.REMOVED;
-import static java.util.zip.Deflater.BEST_COMPRESSION;
 import static java.util.zip.Deflater.BEST_SPEED;
+import static java.util.zip.Deflater.DEFAULT_COMPRESSION;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -116,8 +116,9 @@ public class IncrementalPackager implements Closeable {
                     mApkCreator = mApkCreatorFactory.make(mCreationData);
                     break;
                 case APK_FLINGER:
-                    int compressionLevel = mIsDebuggableBuild ? BEST_SPEED : BEST_COMPRESSION;
-                    mApkCreator = new ApkFlinger(mCreationData, compressionLevel);
+                    int compressionLevel = mIsDebuggableBuild ? BEST_SPEED : DEFAULT_COMPRESSION;
+                    mApkCreator =
+                            new ApkFlinger(mCreationData, compressionLevel, !mIsDebuggableBuild);
                     break;
                 default:
                     throw new RuntimeException("unexpected apkCreatorType");
@@ -203,7 +204,7 @@ public class IncrementalPackager implements Closeable {
         mApkCreatorFactory = factory;
         mIsDebuggableBuild = debuggableBuild;
         mClosed = false;
-        if (!apkFormatIsFile || !debuggableBuild) {
+        if (!apkFormatIsFile) {
             mApkCreatorType = ApkCreatorType.APK_Z_FILE_CREATOR;
         } else {
             mApkCreatorType = apkCreatorType;
