@@ -18,7 +18,6 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.net.URL;
-import org.intellij.lang.annotations.MagicConstant;
 
 /**
  * Intermediary class implementing parts of both the old and new ProjectCallback from the LayoutLib
@@ -207,6 +206,16 @@ public abstract class LayoutlibCallback implements XmlParserFactory {
     @NonNull
     public Class<?> findClass(@NonNull String name) throws ClassNotFoundException {
         throw new ClassNotFoundException(name + " not found.");
+    }
+
+    /**
+     * Checks if the class was previously loaded in the project. Does not load the class.
+     *
+     * @param name className in binary format. (see {@link ClassLoader}.
+     * @return if class was loaded or not
+     */
+    public boolean isClassLoaded(@NonNull String name) {
+        return false;
     }
 
     /**
