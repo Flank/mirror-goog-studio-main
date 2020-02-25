@@ -241,7 +241,6 @@ internal fun getPlatformRules(): List<String> = listOf(
             + "  void onCreate(...);\n"
             + "  android.app.Application newApplication(...);\n"
             + "  void callApplicationOnCreate(android.app.Application);\n"
-            + "  Z onException(java.lang.Object, java.lang.Throwable);\n"
             + "}",
     "-keep public class * extends android.app.Application { "
             + "  <init>();\n"
