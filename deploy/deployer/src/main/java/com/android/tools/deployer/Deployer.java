@@ -37,7 +37,7 @@ public class Deployer {
     public static final String INSTALLER_DIRECTORY = BASE_DIRECTORY + "/bin";
 
     private final AdbClient adb;
-    private final ApkFileDatabase dexDb;
+    private final SqlApkFileDatabase dexDb;
     private final DeploymentCacheDatabase deployCache;
     private final Installer installer;
     private final TaskRunner runner;
@@ -52,7 +52,7 @@ public class Deployer {
     public Deployer(
             AdbClient adb,
             DeploymentCacheDatabase deployCache,
-            ApkFileDatabase dexDb,
+            SqlApkFileDatabase dexDb,
             TaskRunner runner,
             Installer installer,
             UIService service,

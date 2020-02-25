@@ -46,12 +46,14 @@ import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -89,7 +91,7 @@ public class DeployerRunnerTest {
 
     private static File dexDbFile;
     private DeploymentCacheDatabase cacheDb;
-    private ApkFileDatabase dexDB;
+    private SqlApkFileDatabase dexDB;
     private UIService service;
     private final FakeDevice device;
     private FakeAdbServer myAdbServer;
@@ -1494,6 +1496,16 @@ public class DeployerRunnerTest {
         } else {
             // TODO Add R+ tests.
         }
+
+        TestUtils.eventually(
+                () -> {
+                    if (dexDB.dump().size() == 0) {
+                        Assert.fail();
+                    }
+                },
+                Duration.ofSeconds(5));
+
+        assertFalse(dexDB.hasDuplicates());
     }
 
     @Test

@@ -64,6 +64,8 @@ public class ApkEntryDatabaseTest {
         assertDexClassEquals("ABCD", "01.dex", 1234, "A.1", 0xA1, dump.get(0));
         assertDexClassEquals("ABCD", "01.dex", 1234, "B.1", 0xB1, dump.get(1));
         assertDexClassEquals("ABCD", "02.dex", 1235, "B.2", 0xB2, dump.get(2));
+
+        Assert.assertFalse(db.hasDuplicates());
     }
 
     @Test
@@ -186,5 +188,37 @@ public class ApkEntryDatabaseTest {
         Assert.assertTrue(dexes.contains("02.dex"));
         Assert.assertTrue(dexes.contains("03.dex"));
         Assert.assertTrue(dexes.contains("04.dex"));
+
+        Assert.assertFalse(db.hasDuplicates());
+    }
+
+    @Test
+    public void testHasDuplicates() throws Exception {
+        SqlApkFileDatabase db = createTestDb("1.0", 10);
+
+        ApkEntry classes01 = new ApkEntry("01.dex", 1234, apk);
+        DexClass c1 = new DexClass("A.1", 0xA1, null, classes01);
+        DexClass c2 = new DexClass("A.1", 0xA1, null, classes01);
+
+        db.addClasses(ImmutableList.of(c1, c2));
+
+        List<DexClass> classes = db.getClasses(classes01);
+        Assert.assertEquals(2, classes.size());
+        DexClass clazz = classes.get(0);
+        Assert.assertEquals("A.1", clazz.name);
+        Assert.assertEquals(0xA1, clazz.checksum);
+        Assert.assertNull(clazz.code);
+
+        clazz = classes.get(1);
+        Assert.assertEquals("A.1", clazz.name);
+        Assert.assertEquals(0xA1, clazz.checksum);
+        Assert.assertNull(clazz.code);
+
+        List<DexClass> dump = db.dump();
+        Assert.assertEquals(2, dump.size());
+        assertDexClassEquals("ABCD", "01.dex", 1234, "A.1", 0xA1, dump.get(0));
+        assertDexClassEquals("ABCD", "01.dex", 1234, "A.1", 0xA1, dump.get(1));
+
+        Assert.assertTrue(db.hasDuplicates());
     }
 }

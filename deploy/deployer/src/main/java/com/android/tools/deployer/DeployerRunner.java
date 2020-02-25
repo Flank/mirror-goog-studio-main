@@ -34,7 +34,7 @@ public class DeployerRunner {
 
     private static final String DB_PATH = "/tmp/studio.db";
     private final DeploymentCacheDatabase cacheDb;
-    private final ApkFileDatabase dexDb;
+    private final SqlApkFileDatabase dexDb;
     private final ArrayList<DeployMetric> metrics;
     private final UIService service;
 
@@ -62,7 +62,7 @@ public class DeployerRunner {
 
     @VisibleForTesting
     public DeployerRunner(
-            DeploymentCacheDatabase cacheDb, ApkFileDatabase dexDb, UIService service) {
+            DeploymentCacheDatabase cacheDb, SqlApkFileDatabase dexDb, UIService service) {
         this.cacheDb = cacheDb;
         this.dexDb = dexDb;
         this.service = service;
