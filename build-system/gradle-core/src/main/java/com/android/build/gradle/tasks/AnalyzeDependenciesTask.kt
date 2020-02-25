@@ -67,6 +67,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
             apiDirectDependenciesConfiguration?.allDependencies)
         val variantClassHolder = VariantClassesHolder(variantArtifact.get())
         val classFinder = ClassFinder(externalArtifactCollection)
+        val resourcesFinder = ResourcesFinder(externalArtifactCollection)
 
         val depsUsageFinder =
             DependencyUsageFinder(classFinder, variantClassHolder, variantDepsHolder)
@@ -81,6 +82,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
                 variantClassHolder,
                 variantDepsHolder,
                 classFinder,
+                resourcesFinder,
                 depsUsageFinder,
                 graphAnalyzer)
 
