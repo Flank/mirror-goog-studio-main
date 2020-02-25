@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.testing;
 
+import static com.android.build.gradle.internal.testing.SimpleTestRunnable.FILE_COVERAGE_EC;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -38,6 +39,7 @@ import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.testutils.MockLog;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -51,6 +53,7 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 public class SimpleTestRunnableTest {
+
     private static final int TIMEOUT = 4000;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -214,6 +217,52 @@ public class SimpleTestRunnableTest {
                 .executeShellCommand(startsWith("content query"), any(), anyLong(), any());
         verify(deviceConnector, times(1))
                 .executeShellCommand(startsWith("ls"), any(), anyLong(), any());
+    }
+
+    @Test
+    public void instrumentationArgsCanOverridesCoverageFile() throws Exception {
+        String customCoverageFilePath = "path/to/custom/coverage/" + FILE_COVERAGE_EC;
+        testData.setInstrumentationRunnerArguments(
+                ImmutableMap.of("coverageFile", customCoverageFilePath));
+
+        File buddyApk = temporaryFolder.newFile();
+        File resultsDir = temporaryFolder.newFile();
+        File additionalTestOutputDir = temporaryFolder.newFolder();
+        File coverageDir = temporaryFolder.newFile();
+        List<String> installOptions = ImmutableList.of();
+        SimpleTestRunnable runnable =
+                getSimpleTestRunnable(
+                        buddyApk,
+                        resultsDir,
+                        false,
+                        additionalTestOutputDir,
+                        coverageDir,
+                        installOptions);
+
+        assertThat(runnable.getCoverageFile()).isEqualTo(customCoverageFilePath);
+    }
+
+    @Test
+    public void defaultCoverageFile() throws Exception {
+        File buddyApk = temporaryFolder.newFile();
+        File resultsDir = temporaryFolder.newFile();
+        File additionalTestOutputDir = temporaryFolder.newFolder();
+        File coverageDir = temporaryFolder.newFile();
+        List<String> installOptions = ImmutableList.of();
+        SimpleTestRunnable runnable =
+                getSimpleTestRunnable(
+                        buddyApk,
+                        resultsDir,
+                        false,
+                        additionalTestOutputDir,
+                        coverageDir,
+                        installOptions);
+
+        assertThat(runnable.getCoverageFile())
+                .isEqualTo(
+                        String.format(
+                                "/data/data/%s/%s",
+                                testData.getTestedApplicationId(), FILE_COVERAGE_EC));
     }
 
     private SimpleTestRunnable getSimpleTestRunnable(
