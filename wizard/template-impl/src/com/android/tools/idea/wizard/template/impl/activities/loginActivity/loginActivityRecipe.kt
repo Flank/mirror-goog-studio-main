@@ -79,7 +79,7 @@ fun RecipeExecutor.loginActivityRecipe(
            manifestOut.resolve("AndroidManifest.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(stringsXml(simpleName, activityTitle, moduleData.isNewModule), resOut.resolve("values/strings.xml"))
-  save(activityLoginXml(activityClass, packageName, useAndroidX, apis.minApiLevel), resOut.resolve("layout/${layoutName}.xml"))
+  save(activityLoginXml(activityClass, packageName, useAndroidX, apis.minApi.api), resOut.resolve("layout/${layoutName}.xml"))
 
   val loginActivity = when (projectData.language) {
     Language.Java -> loginActivityJava(layoutName, packageName, useAndroidX)

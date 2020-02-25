@@ -51,7 +51,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   addDependency("com.android.support:design:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
 
-  if (moduleData.apis.minApiLevel < 21) {
+  if (moduleData.apis.minApi.api < 21) {
     addDependency("com.android.support:support-vector-drawable:${appCompatVersion}.+")
   }
 

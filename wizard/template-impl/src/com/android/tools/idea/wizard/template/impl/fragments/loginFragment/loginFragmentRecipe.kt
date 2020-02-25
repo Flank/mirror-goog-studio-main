@@ -65,7 +65,7 @@ fun RecipeExecutor.loginFragmentRecipe(
 
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))
-  save(fragmentLoginXml(fragmentClass, moduleData.apis.minApiLevel, packageName, useAndroidX),
+  save(fragmentLoginXml(fragmentClass, moduleData.apis.minApi.api, packageName, useAndroidX),
        resOut.resolve("layout/${layoutName}.xml"))
 
   val loginFragment = when (projectData.language) {
