@@ -17,6 +17,7 @@ package com.android.build.gradle
 
 import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.api.variant.LibraryVariantProperties
+import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.LibraryVariant
@@ -47,7 +48,6 @@ import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.options.ProjectOptions
 import com.google.common.collect.Lists
 import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
@@ -81,6 +81,7 @@ open class LibraryExtension(
             AaptOptions,
             AbiSplitOptions,
             AdbOptions,
+            AndroidSourceSet,
             AnnotationProcessorOptions,
             BuildType,
             CmakeOptions,

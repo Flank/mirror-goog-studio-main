@@ -22,6 +22,7 @@ import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.DynamicFeatureVariantProperties
+import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
@@ -48,6 +49,7 @@ class DynamicFeatureExtensionImpl(
             AaptOptions,
             AbiSplitOptions,
             AdbOptions,
+            AndroidSourceSet,
             AnnotationProcessorOptions,
             BuildType,
             CmakeOptions,

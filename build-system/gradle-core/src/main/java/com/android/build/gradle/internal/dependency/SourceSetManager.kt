@@ -201,6 +201,10 @@ class SourceSetManager(
         action.execute(sourceSetsContainer)
     }
 
+    fun executeAction(action: NamedDomainObjectContainer<AndroidSourceSet>.() -> Unit) {
+        action.invoke(sourceSetsContainer)
+    }
+
     fun runBuildableArtifactsActions() {
         buildArtifactActions.runAll()
     }

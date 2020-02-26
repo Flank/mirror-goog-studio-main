@@ -298,6 +298,7 @@ com.android.build.api.dsl.CommonExtension.getOnVariants: com.android.build.api.c
 com.android.build.api.dsl.CommonExtension.getPackagingOptions: PackagingOptionsT ()
 com.android.build.api.dsl.CommonExtension.getProductFlavors: org.gradle.api.NamedDomainObjectContainer<ProductFlavorT> ()
 com.android.build.api.dsl.CommonExtension.getSigningConfigs: org.gradle.api.NamedDomainObjectContainer<SigningConfigT> ()
+com.android.build.api.dsl.CommonExtension.getSourceSets: org.gradle.api.NamedDomainObjectContainer<AndroidSourceSetT> ()
 com.android.build.api.dsl.CommonExtension.getSplits: SplitsT ()
 com.android.build.api.dsl.CommonExtension.getTestOptions: TestOptionsT ()
 com.android.build.api.dsl.CommonExtension.jacoco: void (kotlin.jvm.functions.Function1<? super JacocoOptionsT, kotlin.Unit>)
@@ -310,6 +311,7 @@ com.android.build.api.dsl.CommonExtension.packagingOptions: void (kotlin.jvm.fun
 com.android.build.api.dsl.CommonExtension.productFlavors: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<ProductFlavorT>>)
 com.android.build.api.dsl.CommonExtension.setCompileSdkVersion: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<SigningConfigT>>)
+com.android.build.api.dsl.CommonExtension.sourceSets: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<AndroidSourceSetT>, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.splits: void (kotlin.jvm.functions.Function1<? super SplitsT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.testOptions: void (kotlin.jvm.functions.Function1<? super TestOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.CompileOptions

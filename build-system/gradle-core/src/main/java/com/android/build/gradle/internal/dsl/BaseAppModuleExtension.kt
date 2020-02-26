@@ -23,6 +23,7 @@ import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.AppExtension
+import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
@@ -53,6 +54,7 @@ open class BaseAppModuleExtension(
         AaptOptions,
         AbiSplitOptions,
         AdbOptions,
+        AndroidSourceSet,
         AnnotationProcessorOptions,
         BuildType,
         CmakeOptions,

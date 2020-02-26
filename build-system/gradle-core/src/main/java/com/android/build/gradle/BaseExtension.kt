@@ -314,20 +314,10 @@ abstract class BaseExtension protected constructor(
         flavorDimensionList.addAll(dimensions)
     }
 
-    /**
-     * Encapsulates source set configurations for all variants.
-     *
-     * Note that the Android plugin uses its own implementation of source sets. For more
-     * information about the properties you can configure in this block, see [AndroidSourceSet].
-     */
     fun sourceSets(action: Action<NamedDomainObjectContainer<AndroidSourceSet>>) {
         checkWritability()
         sourceSetManager.executeAction(action)
     }
-
-    override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
-        get() = sourceSetManager.sourceSetsContainer
-
 
     fun aaptOptions(action: Action<AaptOptions>) {
         checkWritability()
@@ -628,6 +618,8 @@ abstract class BaseExtension protected constructor(
 
     abstract override val signingConfigs: NamedDomainObjectContainer<SigningConfig>
     abstract fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
+
+    abstract override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
 
     abstract override val splits: Splits
 

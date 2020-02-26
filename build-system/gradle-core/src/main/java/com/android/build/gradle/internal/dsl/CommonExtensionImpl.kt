@@ -23,6 +23,7 @@ import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantProperties
 import com.android.build.api.variant.impl.VariantOperations
+import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.plugins.DslContainerProvider
@@ -48,6 +49,7 @@ abstract class CommonExtensionImpl<
         AaptOptions,
         AbiSplitOptions,
         AdbOptions,
+        AndroidSourceSet,
         AnnotationProcessorOptionsT,
         BuildFeaturesT,
         BuildTypeT,
@@ -69,13 +71,18 @@ abstract class CommonExtensionImpl<
         VariantT,
         VariantPropertiesT>, ActionableVariantObjectOperationsExecutor<VariantT, VariantPropertiesT> {
 
-    override val buildTypes: NamedDomainObjectContainer<BuildTypeT> = dslContainers.buildTypeContainer
+    private val sourceSetManager = dslContainers.sourceSetManager
+
+    override val buildTypes: NamedDomainObjectContainer<BuildTypeT> =
+        dslContainers.buildTypeContainer
 
     override val defaultConfig: DefaultConfigT = dslContainers.defaultConfig
 
-    override val productFlavors: NamedDomainObjectContainer<ProductFlavorT> = dslContainers.productFlavorContainer
+    override val productFlavors: NamedDomainObjectContainer<ProductFlavorT> =
+        dslContainers.productFlavorContainer
 
-    override val signingConfigs: NamedDomainObjectContainer<SigningConfigT> = dslContainers.signingConfigContainer
+    override val signingConfigs: NamedDomainObjectContainer<SigningConfigT> =
+        dslContainers.signingConfigContainer
 
     override val aaptOptions: AaptOptions =
         dslServices.newInstance(
@@ -178,6 +185,13 @@ abstract class CommonExtensionImpl<
 
     override fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfigT>>) {
         action.execute(signingConfigs)
+    }
+
+    override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
+        get() = sourceSetManager.sourceSetsContainer
+
+    override fun sourceSets(action: NamedDomainObjectContainer<AndroidSourceSet>.() -> Unit) {
+        sourceSetManager.executeAction(action)
     }
 
     override val splits: Splits =

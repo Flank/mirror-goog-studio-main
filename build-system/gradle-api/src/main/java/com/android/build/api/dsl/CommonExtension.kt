@@ -34,6 +34,7 @@ interface CommonExtension<
         AaptOptionsT : AaptOptions,
         AbiSplitT : AbiSplit,
         AdbOptionsT : AdbOptions,
+        AndroidSourceSetT : AndroidSourceSet,
         AnnotationProcessorOptionsT : AnnotationProcessorOptions,
         BuildFeaturesT : BuildFeatures,
         BuildTypeT : BuildType<AnnotationProcessorOptionsT>,
@@ -461,4 +462,20 @@ interface CommonExtension<
     val composeOptions: ComposeOptions
 
     fun composeOptions(action: ComposeOptions.() -> Unit)
+
+    /**
+     * Encapsulates source set configurations for all variants.
+     *
+     * Note that the Android plugin uses its own implementation of source sets. For more
+     * information about the properties you can configure in this block, see [AndroidSourceSet].
+     */
+    val sourceSets: NamedDomainObjectContainer<AndroidSourceSetT>
+
+    /**
+     * Encapsulates source set configurations for all variants.
+     *
+     * Note that the Android plugin uses its own implementation of source sets. For more
+     * information about the properties you can configure in this block, see [AndroidSourceSet].
+     */
+    fun sourceSets(action: NamedDomainObjectContainer<AndroidSourceSetT>.() -> Unit)
 }

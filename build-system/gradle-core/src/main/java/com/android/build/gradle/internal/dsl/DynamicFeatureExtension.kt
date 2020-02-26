@@ -21,6 +21,7 @@ import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.DynamicFeatureVariantProperties
 import com.android.build.gradle.AppExtension
+import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
@@ -48,6 +49,7 @@ internal open class DynamicFeatureExtension(
         AaptOptions,
         AbiSplitOptions,
         AdbOptions,
+        AndroidSourceSet,
         AnnotationProcessorOptions,
         BuildType,
         CmakeOptions,
