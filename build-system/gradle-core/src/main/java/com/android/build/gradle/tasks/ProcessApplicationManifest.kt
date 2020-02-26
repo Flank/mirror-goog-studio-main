@@ -68,6 +68,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -86,6 +87,10 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
 
     private var manifests: ArtifactCollection? = null
     private var featureManifests: ArtifactCollection? = null
+
+    /** The merged Manifests files folder.  */
+    @get:OutputDirectory
+    abstract val mergedManifestOutputDirectory: DirectoryProperty
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
@@ -162,6 +167,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             }
         }
         var compatibleScreenManifestForSplit: BuiltArtifactImpl?
+        val packagedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val mergedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val metadataFeatureMergedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val bundleManifestOutputs = mutableListOf<BuiltArtifactImpl>()
@@ -173,8 +179,15 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             compatibleScreenManifestForSplit =
                 compatibleScreenManifests.getBuiltArtifact(variantOutput)
             val dirName = variantOutput.dirName()
-            val manifestOutputFile = File(
-                manifestOutputDirectory.get().asFile,
+            val mergedManifestOutputFile = File(
+                mergedManifestOutputDirectory.get().asFile,
+                FileUtils.join(
+                    dirName,
+                    SdkConstants.ANDROID_MANIFEST_XML
+                )
+            )
+            val packagedManifestOutputFile = File(
+                packagedManifestOutputDirectory.get().asFile,
                 FileUtils.join(
                     dirName,
                     SdkConstants.ANDROID_MANIFEST_XML
@@ -210,7 +223,8 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 minSdkVersion.orNull,
                 targetSdkVersion.orNull,
                 maxSdkVersion.orNull,
-                manifestOutputFile.absolutePath,  // no aapt friendly merged manifest file necessary for applications.
+                mergedManifestOutputFile.absolutePath,
+                packagedManifestOutputFile.absolutePath,  // no aapt friendly merged manifest file necessary for applications.
                 null /* aaptFriendlyManifestOutputFile */,
                 metadataFeatureManifestOutputFile.absolutePath,
                 bundleManifestOutputFile.absolutePath,
@@ -232,7 +246,10 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                     SdkConstants.ATTR_MIN_SDK_VERSION to mergedXmlDocument.minSdkVersion
                 ) else mapOf()
             mergedManifestOutputs.add(
-                variantOutput.toBuiltArtifact(manifestOutputFile, properties)
+                variantOutput.toBuiltArtifact(mergedManifestOutputFile, properties)
+            )
+            packagedManifestOutputs.add(
+                variantOutput.toBuiltArtifact(packagedManifestOutputFile, properties)
             )
             metadataFeatureMergedManifestOutputs.add(
                 variantOutput.toBuiltArtifact(metadataFeatureManifestOutputFile, properties)
@@ -248,12 +265,12 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         }
         BuiltArtifactsImpl(
             BuiltArtifacts.METADATA_FILE_VERSION,
-            InternalArtifactType.MERGED_MANIFESTS,
+            InternalArtifactType.PACKAGED_MANIFESTS,
             applicationId.get(),
             variantName,
-            mergedManifestOutputs.toList()
+            packagedManifestOutputs.toList()
         )
-            .save(manifestOutputDirectory.get())
+            .save(packagedManifestOutputDirectory.get())
         BuiltArtifactsImpl(
             BuiltArtifacts.METADATA_FILE_VERSION,
             InternalArtifactType.METADATA_FEATURE_MANIFEST,
@@ -435,7 +452,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             Preconditions.checkState(!variantType.isTestComponent)
             val operations = creationConfig.operations
             operations.republish(
-                InternalArtifactType.MERGED_MANIFESTS,
+                InternalArtifactType.PACKAGED_MANIFESTS,
                 InternalArtifactType.MANIFEST_METADATA
             )
         }
@@ -448,8 +465,12 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             val operations = creationConfig.operations
             operations.setInitialProvider(
                 taskProvider,
-                ManifestProcessorTask::manifestOutputDirectory
+                ProcessApplicationManifest::mergedManifestOutputDirectory
             ).on(InternalArtifactType.MERGED_MANIFESTS)
+            operations.setInitialProvider(
+                taskProvider,
+                ManifestProcessorTask::packagedManifestOutputDirectory
+            ).on(InternalArtifactType.PACKAGED_MANIFESTS)
             operations.setInitialProvider(
                 taskProvider,
                 ManifestProcessorTask::instantAppManifestOutputDirectory

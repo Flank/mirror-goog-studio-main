@@ -40,7 +40,7 @@ class WindowsSystemDependencyTest {
 
         project.execute("assembleDebug")
 
-        val buildElementsJson = project.file("build/intermediates/merged_manifests/debug/output.json")
+        val buildElementsJson = project.file("build/intermediates/packaged_manifests/debug/output.json")
 
         FileSubject.assertThat(buildElementsJson).doesNotContain("\\\\")
     }

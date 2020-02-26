@@ -34,7 +34,7 @@ abstract class ManifestProcessorTask : IncrementalTask() {
 
     /** The processed Manifests files folder.  */
     @get:OutputDirectory
-    abstract val manifestOutputDirectory: DirectoryProperty
+    abstract val packagedManifestOutputDirectory: DirectoryProperty
 
     /**
      * The aapt friendly processed Manifest. In case we are processing a library manifest, some

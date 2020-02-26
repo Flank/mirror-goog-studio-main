@@ -173,7 +173,7 @@ class BuiltArtifactsLoaderImplTest {
             FakeGradleDirectory(tmpFolder.root))
 
         assertThat(builtArtifacts).isNotNull()
-        assertThat(builtArtifacts!!.artifactType).isEqualTo(InternalArtifactType.MERGED_MANIFESTS)
+        assertThat(builtArtifacts!!.artifactType).isEqualTo(InternalArtifactType.PACKAGED_MANIFESTS)
         assertThat(builtArtifacts.applicationId).isEqualTo("com.android.test")
         assertThat(builtArtifacts.variantName).isEqualTo("debug")
         assertThat(builtArtifacts.elements).hasSize(1)
@@ -191,7 +191,7 @@ class BuiltArtifactsLoaderImplTest {
             """{
   "version": 1,
   "artifactType": {
-    "type": "MERGED_MANIFESTS",
+    "type": "PACKAGED_MANIFESTS",
     "kind": "Directory"
   },
   "applicationId": "com.android.test",

@@ -127,7 +127,7 @@ class TaskBasedOperationsImplTest {
                 replacementRequest = component.operations
                     .use(taskProvider)
                     .toRead(type = InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, at = SynchronousTask::inputDir)
-                    .andWrite(type = InternalArtifactType.MERGED_MANIFESTS, at = SynchronousTask::outputDir)
+                    .andWrite(type = InternalArtifactType.PACKAGED_MANIFESTS, at = SynchronousTask::outputDir)
             }
 
             override fun configure(task: SynchronousTask) {
@@ -151,7 +151,7 @@ class TaskBasedOperationsImplTest {
                 it.outputDir.set(outputFolder)
             }
         }
-        val mergedManifests = operations.get(InternalArtifactType.MERGED_MANIFESTS)
+        val mergedManifests = operations.get(InternalArtifactType.PACKAGED_MANIFESTS)
         mergedManifests.get()
         Truth.assertThat(taskInitialized.get()).isTrue()
 
@@ -240,7 +240,7 @@ class TaskBasedOperationsImplTest {
                 replacementRequest = component.operations
                     .use(taskProvider)
                     .toRead(type = InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, at = InternalApiTask::inputDir)
-                    .andWrite(type = InternalArtifactType.MERGED_MANIFESTS, at = InternalApiTask::outputDir)
+                    .andWrite(type = InternalArtifactType.PACKAGED_MANIFESTS, at = InternalApiTask::outputDir)
             }
 
             override fun configure(task: InternalApiTask) {
@@ -284,7 +284,7 @@ class TaskBasedOperationsImplTest {
         }
 
         // force lookup of the produced artifact, this should force task initialization.
-        val mergedManifests = operations.get(InternalArtifactType.MERGED_MANIFESTS)
+        val mergedManifests = operations.get(InternalArtifactType.PACKAGED_MANIFESTS)
         mergedManifests.get()
         Truth.assertThat(taskInitialized.get()).isTrue()
 

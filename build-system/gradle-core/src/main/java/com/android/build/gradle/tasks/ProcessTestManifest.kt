@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.scope.BuiltArtifactProperty
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
+import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.tasks.ProcessApplicationManifest.Companion.getArtifactName
 import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.ManifestProviderImpl
@@ -114,8 +114,8 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         }
         val dirName = apkData.get().variantOutputConfiguration.dirName()
         val manifestOutputFolder =
-            if (Strings.isNullOrEmpty(dirName)) manifestOutputDirectory.get().asFile
-            else manifestOutputDirectory.get().file(dirName).asFile
+            if (Strings.isNullOrEmpty(dirName)) packagedManifestOutputDirectory.get().asFile
+            else packagedManifestOutputDirectory.get().file(dirName).asFile
         FileUtils.mkdirs(manifestOutputFolder)
         val manifestOutputFile = File(manifestOutputFolder, SdkConstants.ANDROID_MANIFEST_XML)
         val navJsons = navigationJsons?.files ?: listOf<File>()
@@ -138,7 +138,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         )
         BuiltArtifactsImpl(
             BuiltArtifacts.METADATA_FILE_VERSION,
-            MERGED_MANIFESTS,
+            PACKAGED_MANIFESTS,
             testApplicationId.get(),
             variantName,
             listOf(
@@ -148,7 +148,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                 )
             )
         )
-            .saveToDirectory(manifestOutputDirectory.get().asFile)
+            .saveToDirectory(packagedManifestOutputDirectory.get().asFile)
     }
 
     /**
@@ -422,7 +422,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             creationConfig
                 .operations
                 .republish(
-                    MERGED_MANIFESTS,
+                    PACKAGED_MANIFESTS,
                     InternalArtifactType.MANIFEST_METADATA
                 )
         }
@@ -434,8 +434,8 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             creationConfig.taskContainer.processManifestTask = taskProvider
             creationConfig.operations.setInitialProvider(
                 taskProvider,
-                ManifestProcessorTask::manifestOutputDirectory
-            ).on(MERGED_MANIFESTS)
+                ManifestProcessorTask::packagedManifestOutputDirectory
+            ).on(PACKAGED_MANIFESTS)
             creationConfig.operations.setInitialProvider(
                 taskProvider,
                 ProcessTestManifest::mergeBlameFile

@@ -282,7 +282,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task.packageForR.disallowChanges()
 
             creationConfig.operations.setTaskInputToFinalProduct(
-                InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
+                InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles)
 
             task.mainSplit = creationConfig.outputs.getMainSplit()
 
@@ -350,7 +350,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
 
             creationConfig.onTestedConfig {
                 it.operations.setTaskInputToFinalProduct(
-                    InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles
+                    InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles
                 )
 
                 it.operations.setTaskInputToFinalProduct(

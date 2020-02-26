@@ -54,8 +54,7 @@ import javax.inject.Inject
 
 /** a Task that only merge a single manifest with its overlays.  */
 @CacheableTask
-abstract class ProcessLibraryManifest @Inject constructor(objectFactory: ObjectFactory) :
-    ManifestProcessorTask() {
+abstract class ProcessLibraryManifest : ManifestProcessorTask() {
 
     @get:OutputFile
     abstract val manifestOutputFile: RegularFileProperty
@@ -87,7 +86,7 @@ abstract class ProcessLibraryManifest @Inject constructor(objectFactory: ObjectF
 
     override fun doFullTaskAction() {
         getWorkerFacadeWithWorkers().use { workers ->
-            val manifestOutputDirectory = manifestOutputDirectory
+            val manifestOutputDirectory = packagedManifestOutputDirectory
             val aaptFriendlyManifestOutputDirectory =
                 aaptFriendlyManifestOutputDirectory
             workers.submit(
@@ -154,6 +153,7 @@ abstract class ProcessLibraryManifest @Inject constructor(objectFactory: ObjectF
                 params.minSdkVersion,
                 params.targetSdkVersion,
                 params.maxSdkVersion,
+                null,
                 params.manifestOutputFile.absolutePath,
                 if (params.aaptFriendlyManifestOutputFile != null) params.aaptFriendlyManifestOutputFile.absolutePath else null,
                 null /* outInstantRunManifestLocation */,
@@ -183,7 +183,7 @@ abstract class ProcessLibraryManifest @Inject constructor(objectFactory: ObjectF
             if (params.manifestOutputDirectory != null) {
                 BuiltArtifactsImpl(
                     BuiltArtifacts.METADATA_FILE_VERSION,
-                    InternalArtifactType.MERGED_MANIFESTS,
+                    InternalArtifactType.PACKAGED_MANIFESTS,
                     params.packageOverride,
                     params.variantName,
                     listOf(
@@ -259,8 +259,8 @@ abstract class ProcessLibraryManifest @Inject constructor(objectFactory: ObjectF
 
             operations.setInitialProvider(
                 taskProvider,
-                ManifestProcessorTask::manifestOutputDirectory
-            ).on(InternalArtifactType.MERGED_MANIFESTS)
+                ManifestProcessorTask::packagedManifestOutputDirectory
+            ).on(InternalArtifactType.PACKAGED_MANIFESTS)
 
             operations.setInitialProvider(
                 taskProvider
@@ -290,7 +290,7 @@ abstract class ProcessLibraryManifest @Inject constructor(objectFactory: ObjectF
             task: ProcessLibraryManifest
         ) {
             super.configure(task)
-            val variantDslInfo = creationConfig!!.variantDslInfo
+            val variantDslInfo = creationConfig.variantDslInfo
             val variantSources = creationConfig.variantSources
             val project = creationConfig.globalScope.project
             task.minSdkVersion
@@ -309,7 +309,7 @@ abstract class ProcessLibraryManifest @Inject constructor(objectFactory: ObjectF
                 )
             task.targetSdkVersion.disallowChanges()
             task.maxSdkVersion
-                .set(project.provider(creationConfig::maxSdkVersion!!))
+                .set(project.provider(creationConfig::maxSdkVersion))
             task.maxSdkVersion.disallowChanges()
             task.mainSplit.set(project.provider { creationConfig.outputs.getMainSplit() })
             task.mainSplit.disallowChanges()

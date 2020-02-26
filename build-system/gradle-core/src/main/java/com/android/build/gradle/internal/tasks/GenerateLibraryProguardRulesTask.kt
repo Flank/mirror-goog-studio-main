@@ -29,7 +29,6 @@ import com.android.ide.common.symbols.generateMinifyKeepRules
 import com.android.ide.common.symbols.parseManifest
 import com.android.ide.common.symbols.parseMinifiedKeepRules
 import com.android.resources.ResourceFolderType
-import com.google.common.collect.Iterables
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
@@ -153,7 +152,7 @@ abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
             )
 
              creationConfig.operations.setTaskInputToFinalProduct(
-                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
+                 InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles)
         }
     }
 }

@@ -41,8 +41,8 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
@@ -980,7 +980,7 @@ public abstract class TaskManager<
             @NonNull VariantPropertiesImpl testedVariant) {
 
         Provider<Directory> mergedManifest =
-                testedVariant.getArtifacts().getFinalProduct(MERGED_MANIFESTS.INSTANCE);
+                testedVariant.getArtifacts().getFinalProduct(PACKAGED_MANIFESTS.INSTANCE);
         taskFactory.register(
                 new ProcessTestManifest.CreationAction(
                         componentProperties, project.files(mergedManifest)));

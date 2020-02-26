@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -249,7 +248,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             if (creationConfig.variantType.isTestComponent) {
                 creationConfig.operations.setTaskInputToFinalProduct(
-                    InternalArtifactType.MERGED_MANIFESTS, task.mergedManifests
+                    InternalArtifactType.PACKAGED_MANIFESTS, task.mergedManifests
                 )
             }
 

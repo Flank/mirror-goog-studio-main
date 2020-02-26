@@ -24,10 +24,9 @@ import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_FOR_LOCAL_TEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
+import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
@@ -167,7 +166,7 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             )
             resourceApk = unitTestProperties.artifacts.getFinalProduct(APK_FOR_LOCAL_TEST)
             mergedAssets = testedVariant.artifacts.getFinalProduct(MERGED_ASSETS)
-            mergedManifest = testedVariant.artifacts.getFinalProduct(MERGED_MANIFESTS)
+            mergedManifest = testedVariant.artifacts.getFinalProduct(PACKAGED_MANIFESTS)
             mainVariantOutput = testedVariant.outputs.getMainSplit()
             packageNameOfFinalRClassProvider = {
                 testedVariant.variantDslInfo.originalApplicationId

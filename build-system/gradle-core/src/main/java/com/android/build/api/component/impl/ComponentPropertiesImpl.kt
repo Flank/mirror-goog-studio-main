@@ -18,7 +18,6 @@ package com.android.build.api.component.impl
 
 import android.databinding.tool.LayoutXmlProcessor
 import android.databinding.tool.LayoutXmlProcessor.OriginalFileLookup
-import com.android.build.api.artifact.Operations
 import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
@@ -327,7 +326,7 @@ abstract class ComponentPropertiesImpl(
         get() = if (variantPropertiesApiServices.projectOptions[BooleanOption.IDE_DEPLOY_AS_INSTANT_APP])
             InternalArtifactType.INSTANT_APP_MANIFEST
         else
-            InternalArtifactType.MERGED_MANIFESTS
+            InternalArtifactType.PACKAGED_MANIFESTS
 
     /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs.  */
     open fun publishBuildArtifacts() {
