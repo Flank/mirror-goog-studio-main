@@ -24,32 +24,37 @@ for(Entry entry : map.getEntries().values()) {
 ```
  ZipArchive zip = new ZipArchive("app.apk");
  zip.delete("classes18.dex"); // All deletes must be submitted first.
- zip.add(new FileSource("/path/to/classes18.dex", "classes18.dex", true)); // Compressed
- zip.add(new FileSource("/path/to/stuff.png", "image.png", false)); // Uncompressed
+ zip.add(new BytesSource(new File("classes18.dex"), "classes18.dex", Deflater.BEST_SPEED));
+ zip.add(new BytesSource(new File("img.png"), "image.png", Deflater.NO_COMPRESSION));
  zip.close();
 ```
 
 ## How to merge two zips into one
 ```
  ZipArchive zip = new ZipArchive("app.apk");
+
  ZipSource zipSource1 = ZipSource.selectAll(new File("/path/to/zip1.zip")):
- ZipSource zipSource2 = ZipSource.selectAll(new File("/path/to/zip2.zip")):
  zip.add(zipSource1);
+
+ ZipSource zipSource2 = ZipSource.selectAll(new File("/path/to/zip2.zip")):
  zip.add(zipSource2);
+
  zip.close();
 ```
 
 ## How to copy a zip entry from an other zip into an existing apk
 ```
  ZipArchive zip = new ZipArchive("app.apk");
+
  ZipSource zipSource = new ZipSource(new File("/path/to/zip1.zip")):
 
  zipSource.select("classes18.dex", "classes18NewName.dex"); // non-aligned (default)
 
  ZipSourceEntry alignedEntry = zipSource.select("lib.so", "lib.so"); // aligned
- alignedEntry.align();
+ alignedEntry.align(4);
 
  zip.addZipSource(zipSource);
+
  zip.close();
 ```
 
