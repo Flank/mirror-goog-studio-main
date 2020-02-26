@@ -1,0 +1,7 @@
+apply plugin: 'java'
+apply plugin: 'kotlin'
+
+dependencies {
+  compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.1"
+  compile libs.kotlin_stdlib
+}
