@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST_METADATA;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
@@ -96,15 +95,12 @@ public class TestApplicationTaskManager
                                 AndroidArtifacts.ArtifactScope.ALL,
                                 APK);
 
-        // same for the manifests.
-        FileCollection testedManifestMetadata = getTestedManifestMetadata(testVariantProperties);
-
         TestApplicationTestData testData =
                 new TestApplicationTestData(
                         testVariantProperties.getVariantDslInfo(),
                         testVariantProperties.getVariantSources(),
                         testVariantProperties.getApplicationId(),
-                        project.getObjects().property(String.class),
+                        testVariantProperties.getTestedApplicationId(),
                         testingApk,
                         testedApks);
 
@@ -125,8 +121,7 @@ public class TestApplicationTaskManager
                                         new LoggerWrapper(getLogger())),
                                 DeviceProviderInstrumentTestTask.CreationAction.Type
                                         .INTERNAL_CONNECTED_DEVICE_PROVIDER,
-                                testData,
-                                testedManifestMetadata) {
+                                testData) {
                             @NonNull
                             @Override
                             public String getName() {
@@ -183,27 +178,12 @@ public class TestApplicationTaskManager
         }
     }
 
-    /** Returns the manifest configuration of the tested application */
-    @NonNull
-    private static FileCollection getTestedManifestMetadata(
-            @NonNull ApkCreationConfig creationConfig) {
-        return creationConfig
-                .getVariantDependencies()
-                .getArtifactFileCollection(
-                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        MANIFEST_METADATA);
-    }
-
     /** Creates the merge manifests task. */
     @Override
     @NonNull
     protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTasks(
             @NonNull ApkCreationConfig creationConfig) {
-
-        return taskFactory.register(
-                new ProcessTestManifest.CreationAction(
-                        creationConfig, getTestedManifestMetadata(creationConfig)));
+        return taskFactory.register(new ProcessTestManifest.CreationAction(creationConfig));
     }
 
     @Override

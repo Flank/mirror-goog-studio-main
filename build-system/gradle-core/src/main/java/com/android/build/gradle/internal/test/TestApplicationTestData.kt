@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.test
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl.Companion.loadFromDirectory
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.builder.testing.api.DeviceConfigProvider
@@ -26,45 +25,19 @@ import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
-import java.util.HashMap
 import java.util.stream.Collectors
 
 /** Implementation of [TestData] for separate test modules.  */
-class TestApplicationTestData(
+class TestApplicationTestData constructor(
     variantDslInfo: VariantDslInfo,
     variantSources: VariantSources,
     override val applicationId: Provider<String>,
-    private val _testedApplicationIdProperty: Property<String>,
+    override val testedApplicationId: Provider<String>,
     testApkDir: Provider<Directory>,
     testedApksDir: FileCollection
 ) : AbstractTestDataImpl(variantDslInfo, variantSources, testApkDir, testedApksDir) {
-    private val testedProperties = mutableMapOf<String, String>()
-
-    override fun load(folder: File) {
-        val testedManifests =
-            loadFromDirectory(folder)
-
-        // all published manifests have the same package so first one will do.
-        val splitOutput =
-            testedManifests!!.elements.stream().findFirst()
-        if (splitOutput.isPresent) {
-            testedProperties.putAll(splitOutput.get().properties)
-        } else {
-            throw RuntimeException(
-                "No merged manifest metadata at ${folder.absolutePath}"
-            )
-        }
-        // TODO: Make this not be so terrible and get a real property instead of create a fake one
-        _testedApplicationIdProperty.set(testedProperties["packageId"])
-    }
-
-    override val testedApplicationId: Provider<String>
-        get() {
-            return _testedApplicationIdProperty
-        }
 
     override val isLibrary: Boolean
         get() = false

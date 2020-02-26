@@ -42,7 +42,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
@@ -982,14 +981,8 @@ public abstract class TaskManager<
     }
 
     protected void createProcessTestManifestTask(
-            @NonNull ComponentPropertiesImpl componentProperties,
-            @NonNull VariantPropertiesImpl testedVariant) {
-
-        Provider<Directory> mergedManifest =
-                testedVariant.getArtifacts().getFinalProduct(PACKAGED_MANIFESTS.INSTANCE);
-        taskFactory.register(
-                new ProcessTestManifest.CreationAction(
-                        componentProperties, project.files(mergedManifest)));
+            @NonNull ComponentPropertiesImpl componentProperties) {
+        taskFactory.register(new ProcessTestManifest.CreationAction(componentProperties));
     }
 
     public void createRenderscriptTask(@NonNull ComponentPropertiesImpl componentProperties) {
@@ -1615,7 +1608,7 @@ public abstract class TaskManager<
         if (includeAndroidResources) {
             if (testedVariant.getVariantType().isAar()) {
                 // Add a task to process the manifest
-                createProcessTestManifestTask(unitTestProperties, testedVariant);
+                createProcessTestManifestTask(unitTestProperties);
 
                 // Add a task to create the res values
                 createGenerateResValuesTask(unitTestProperties);
@@ -1752,8 +1745,7 @@ public abstract class TaskManager<
         createDependencyStreams(androidTestProperties);
 
         // Add a task to process the manifest
-        createProcessTestManifestTask(
-                androidTestProperties, androidTestProperties.getTestedVariant());
+        createProcessTestManifestTask(androidTestProperties);
 
         // Add a task to create the res values
         createGenerateResValuesTask(androidTestProperties);
@@ -2024,8 +2016,7 @@ public abstract class TaskManager<
                                         new LoggerWrapper(logger)),
                                 DeviceProviderInstrumentTestTask.CreationAction.Type
                                         .INTERNAL_CONNECTED_DEVICE_PROVIDER,
-                                testData,
-                                project.files() /* testTargetMetadata */));
+                                testData));
 
         taskFactory.configure(
                 CONNECTED_ANDROID_TEST,
@@ -2061,8 +2052,7 @@ public abstract class TaskManager<
                                     deviceProvider,
                                     DeviceProviderInstrumentTestTask.CreationAction.Type
                                             .CUSTOM_DEVICE_PROVIDER,
-                                    testData,
-                                    project.files() /* testTargetMetadata */));
+                                    testData));
 
             taskFactory.configure(
                     DEVICE_ANDROID_TEST,

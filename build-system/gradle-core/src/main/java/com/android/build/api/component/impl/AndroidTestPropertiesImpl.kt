@@ -19,6 +19,7 @@ package com.android.build.api.component.impl
 import com.android.build.api.component.AndroidTestProperties
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -66,7 +67,7 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     variantPropertiesApiServices,
     taskCreationServices,
     globalScope
-), AndroidTestProperties, ApkCreationConfig {
+), AndroidTestProperties, AndroidTestCreationConfig {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API

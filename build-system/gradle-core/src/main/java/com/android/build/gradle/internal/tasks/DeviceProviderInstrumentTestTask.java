@@ -110,7 +110,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     private final DirectoryProperty coverageDir;
     private File reportsDir;
     private FileCollection buddyApks;
-    private FileCollection testTargetManifests;
     private ProcessExecutor processExecutor;
     private String flavorName;
     private Provider<File> splitSelectExecProvider;
@@ -168,11 +167,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
         File coverageOutDir = getCoverageDir().get().getAsFile();
         FileUtils.cleanOutputDir(coverageOutDir);
-
-        // populate the TestData from the tested variant build output.
-        if (!testTargetManifests.isEmpty()) {
-            testData.load(testTargetManifests.getSingleFile());
-        }
 
         boolean success;
         // If there are tests to run, and the test runner returns with no results, we fail (since
@@ -364,18 +358,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         return testFailed;
     }
 
-    /**
-     * Indirectly used through the TestData, declare it as a dependency so the wiring is done
-     * correctly.
-     *
-     * @return tested variant metadata file.
-     */
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getTestTargetManifests() {
-        return testTargetManifests;
-    }
-
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getBuddyApks() {
@@ -410,7 +392,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         private final DeviceProvider deviceProvider;
         @NonNull private final Type type;
         @NonNull private final AbstractTestDataImpl testData;
-        @NonNull private final FileCollection testTargetManifests;
 
         public enum Type {
             INTERNAL_CONNECTED_DEVICE_PROVIDER,
@@ -421,13 +402,11 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 @NonNull ComponentPropertiesImpl componentProperties,
                 @NonNull DeviceProvider deviceProvider,
                 @NonNull Type type,
-                @NonNull AbstractTestDataImpl testData,
-                @NonNull FileCollection testTargetManifests) {
+                @NonNull AbstractTestDataImpl testData) {
             super(componentProperties);
             this.deviceProvider = deviceProvider;
             this.type = type;
             this.testData = testData;
-            this.testTargetManifests = testTargetManifests;
         }
 
         @NonNull
@@ -538,7 +517,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             task.setTestData(testData);
             task.setFlavorName(testData.getFlavorName());
             task.setDeviceProvider(deviceProvider);
-            task.testTargetManifests = testTargetManifests;
             task.setInstallOptions(globalScope.getExtension().getAdbOptions().getInstallOptions());
 
             boolean shardBetweenDevices = projectOptions.get(BooleanOption.ENABLE_TEST_SHARDING);

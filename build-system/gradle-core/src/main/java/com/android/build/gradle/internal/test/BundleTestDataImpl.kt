@@ -18,16 +18,13 @@ package com.android.build.gradle.internal.test
 
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl
 import com.android.build.gradle.internal.tasks.getApkFiles
-import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.TestData
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.builder.testing.api.DeviceConfigProvider
-import com.android.sdklib.AndroidVersion
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
 
@@ -54,10 +51,6 @@ internal class BundleTestDataImpl(
 
     override val testedApplicationId: Provider<String>
         get() = testVariantData.testedConfig.applicationId
-
-    override fun load(folder: File) {
-        // do nothing, there is nothing in the metadata file we cannot get from the tested scope.
-    }
 
     override val isLibrary: Boolean
         get() = testVariantData.testedVariant.variantType.isAar
