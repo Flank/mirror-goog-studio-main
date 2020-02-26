@@ -19,60 +19,70 @@ package com.android.tools.appinspection.livestore.inspector
 import androidx.inspection.Connection
 import androidx.inspection.Inspector
 import androidx.inspection.InspectorEnvironment
-import com.android.tools.appinspection.livestore.library.LiveStore
-import com.android.tools.appinspection.livestore.protocol.Command
-import com.android.tools.appinspection.livestore.protocol.Event
+import com.android.tools.appinspection.livestore.LiveStore
+import com.android.tools.appinspection.livestore.protocol.*
 import com.google.gson.Gson
 
-/**
- * The inspector that will run on device.
- *
- * It is responsible for two things:
- * 1) Receive UPDATE_VALUE command from studio, and modify store in memory.
- * 2) Send store updates to studio whenever there is an update.
- */
-class LiveStoreInspector(connection: Connection, environment: InspectorEnvironment) : Inspector(connection) {
-
+class LiveStoreInspector(
+    connection: Connection,
+    private val environment: InspectorEnvironment
+) : Inspector(connection) {
     private val gson = Gson()
 
-    private val instance: LiveStore = environment.findInstances(LiveStore::class.java).let { instances ->
-        assert(instances.size == 1) { "For now, we only support a singleton LiveStore instance" }
-        instances[0]
-    }
-
-    init {
-        // On initialization, send everything in the store to studio.
-        instance.forEach { sendUpdate(it.key, it.value) }
-
-        // Hook onto calls to [set]. Send value to studio.
-        environment.registerEntryHook(
-            LiveStore::class.java, "set(Ljava/lang/String;Ljava/lang/String)V"
-        ) { _, args ->
-            sendUpdate(args[0] as String, args[1] as String)
-        }
-    }
-
     override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
-        val json = String(data, Charsets.UTF_8)
-        val command = gson.fromJson(json, Command::class.java)
+        val command = gson.fromJson(String(data), LiveStoreCommand::class.java)
 
-        if (command.commandType == Command.CommandType.UPDATE_VALUE) {
-            command.updateValue?.let { updateValue(it.key, it.value) }
-            replyUpdateValueCommand(callback)
+        command.fetchAll?.let {
+            val enums = LiveStore.enumReferences.map { enumClass ->
+                val enumValues = enumClass.enumConstants.map { it.name }
+                EnumDefinition(enumClass.name, enumValues)
+            }
+            val stores = environment.findInstances(LiveStore::class.java).map { store ->
+                val keyValues = store.keyValues
+                    .map { (name, valueEntry) ->
+                        KeyValueDefinition(
+                            name,
+                            ValueDefinition(valueEntry.type, valueEntry.valueAsString, valueEntry.constraintAsString)
+                        )
+                    }
+                    .sortedBy { it.name }
+                    .toMutableList()
+
+                LiveStoreDefinition(store.name, keyValues)
+            }
+
+            val response = LiveStoreResponse(fetchAll = LiveStoreResponse.FetchAll(enums, stores))
+            callback.reply(response)
+        }
+
+        command.updateValue?.let { updateValue ->
+            val store = environment.findInstances(LiveStore::class.java).firstOrNull { it.name == updateValue.store }
+            val valueEntry = store?.keyValues?.get(updateValue.key)
+            if (store == null || valueEntry == null) {
+                val response = LiveStoreResponse(
+                    updateValue = LiveStoreResponse.UpdateValue(
+                        updateValue.store,
+                        updateValue.key,
+                        false
+                    )
+                )
+                callback.reply(response)
+                return@let
+            }
+
+            val updated = valueEntry.updateFromString(updateValue.newValue)
+            val response = LiveStoreResponse(
+                updateValue = LiveStoreResponse.UpdateValue(
+                    updateValue.store,
+                    updateValue.key,
+                    updated
+                )
+            )
+            callback.reply(response)
         }
     }
 
-    private fun updateValue(key: String, value: String) {
-        instance[key] = value
-    }
-
-    private fun replyUpdateValueCommand(callback: CommandCallback) {
-        callback.reply(gson.toJson(Command.UpdateValueResponse()).toByteArray())
-    }
-
-    private fun sendUpdate(key: String, value: String) {
-        connection.sendEvent(
-            gson.toJson(Event(Event.ValueUpdated(key, value))).toByteArray(Charsets.UTF_8)
-        )
+    private fun CommandCallback.reply(response: LiveStoreResponse) {
+        reply(gson.toJson(response).toByteArray())
     }
 }
