@@ -39,7 +39,6 @@ public class VariantOutputFactory {
     @Nullable private final BaseVariantImpl deprecatedVariantPublicApi;
     @NonNull private final TaskContainer taskContainer;
     @NonNull private final BaseExtension extension;
-    @NonNull private final DeprecationReporter deprecationReporter;
 
     public VariantOutputFactory(
             @NonNull Class<? extends BaseVariantOutput> targetClass,
@@ -53,12 +52,11 @@ public class VariantOutputFactory {
         this.deprecatedVariantPublicApi = deprecatedVariantPublicApi;
         this.taskContainer = taskContainer;
         this.extension = extension;
-        this.deprecationReporter = deprecationReporter;
     }
 
     public VariantOutput create(VariantOutputImpl variantApi) {
         BaseVariantOutput variantOutput =
-                services.newInstance(targetClass, taskContainer, deprecationReporter, variantApi);
+                services.newInstance(targetClass, taskContainer, services, variantApi);
         extension.getBuildOutputs().add(variantOutput);
         if (deprecatedVariantPublicApi != null) {
             deprecatedVariantPublicApi.addOutputs(ImmutableList.of(variantOutput));

@@ -35,9 +35,9 @@ class VariantPropertiesApiServicesImpl(
     // whether the properties have been locked already
     private var propertiesLockStatus = false
 
-    // flag to know whether to disable memoization of properties that back old API returning the
+    // flag to know whether to enable compatibility mode for properties that back old API returning the
     // direct value.
-    private val disableMemoization = projectServices.projectOptions[BooleanOption.DISABLE_MEMOIZATION]
+    private val compatibilityMode = projectServices.projectOptions[BooleanOption.ENABLE_LEGACY_API]
 
     override fun <T> propertyOf(type: Class<T>, value: T, id: String): Property<T> {
         return initializeProperty(type, id).also {
@@ -90,12 +90,12 @@ class VariantPropertiesApiServicesImpl(
     override fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: T, id: String): Property<T> {
         return initializeProperty(type, id).also {
             it.set(value)
-            if (!disableMemoization) {
+            if (!compatibilityMode) {
                 it.finalizeValueOnRead()
-            }
 
-            // FIXME when Gradle supports this
-            // it.preventGet()
+                // FIXME when Gradle supports this
+                // it.preventGet()
+            }
 
             delayedLock(it)
         }
@@ -104,12 +104,12 @@ class VariantPropertiesApiServicesImpl(
     override fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Callable<T>, id: String): Property<T> {
         return initializeProperty(type, id).also {
             it.set(projectServices.providerFactory.provider(value))
-            if (!disableMemoization) {
+            if (!compatibilityMode) {
                 it.finalizeValueOnRead()
-            }
 
-            // FIXME when Gradle supports this
-            // it.preventGet()
+                // FIXME when Gradle supports this
+                // it.preventGet()
+            }
 
             delayedLock(it)
         }
@@ -118,12 +118,13 @@ class VariantPropertiesApiServicesImpl(
     override fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T>, id: String): Property<T> {
         return initializeProperty(type, id).also {
             it.set(value)
-            if (!disableMemoization) {
+            if (!compatibilityMode) {
                 it.finalizeValueOnRead()
+
+                // FIXME when Gradle supports this
+                // it.preventGet()
             }
 
-            // FIXME when Gradle supports this
-            // it.preventGet()
 
             delayedLock(it)
         }
@@ -132,12 +133,12 @@ class VariantPropertiesApiServicesImpl(
     override fun <T> newNullablePropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T?>, id: String): Property<T?> {
         return initializeNullableProperty(type, id).also {
             it.set(value)
-            if (!disableMemoization) {
+            if (!compatibilityMode) {
                 it.finalizeValueOnRead()
-            }
 
-            // FIXME when Gradle supports this
-            // it.preventGet()
+                // FIXME when Gradle supports this
+                // it.preventGet()
+            }
 
             delayedLock(it)
         }
