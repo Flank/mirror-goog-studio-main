@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import java.util.concurrent.Callable
 import javax.inject.Inject
 
@@ -77,9 +78,9 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> = variantPropertiesApiServices.propertyOf(
+    override val applicationId: Property<String> = internalServices.propertyOf(
         String::class.java,
-        Callable { variantDslInfo.testApplicationId })
+        variantDslInfo.applicationId)
 
     override val manifestPlaceholders: Map<String, Any>
         get() = variantDslInfo.manifestPlaceholders
@@ -95,6 +96,18 @@ open class AndroidTestPropertiesImpl @Inject constructor(
         action.invoke(aaptOptions)
     }
 
+    override val instrumentationRunner: Property<String> =
+        internalServices.propertyOf(String::class.java, variantDslInfo.instrumentationRunner)
+
+    override val handleProfiling: Property<Boolean> =
+        internalServices.propertyOf(Boolean::class.java, variantDslInfo.handleProfiling)
+
+    override val functionalTest: Property<Boolean> =
+        internalServices.propertyOf(Boolean::class.java, variantDslInfo.functionalTest)
+
+    override val testLabel: Property<String?> =
+        internalServices.nullablePropertyOf(String::class.java, variantDslInfo.testLabel)
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
@@ -106,5 +119,20 @@ open class AndroidTestPropertiesImpl @Inject constructor(
     // always true for this kind
     override val testOnlyApk: Boolean
         get() = true
+
+    override val testedApplicationId: Provider<String>
+        get() = if (testedConfig.variantType.isAar) {
+            // if the tested variant is an AAR, the test is self contained and therefore
+            // testedAppID == appId
+            applicationId
+        } else {
+            testedConfig.applicationId
+        }
+
+    override val instrumentationRunnerArguments: Map<String, String>
+        get() = variantDslInfo.instrumentationRunnerArguments
+
+    override val isTestCoverageEnabled: Boolean
+        get() = variantDslInfo.isTestCoverageEnabled
 }
 

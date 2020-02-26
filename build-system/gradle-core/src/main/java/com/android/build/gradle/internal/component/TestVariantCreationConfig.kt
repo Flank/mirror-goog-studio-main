@@ -17,18 +17,8 @@
 package com.android.build.gradle.internal.component
 
 /**
- * Interface for properties common to all variant generating APKs
+ * Internal CreationConfig for test modules
  */
-interface ApkCreationConfig: BaseCreationConfig {
+interface TestVariantCreationConfig: ApkCreationConfig, TestCreationConfig, VariantCreationConfig {
 
-    // TODO: move the below properties to Property<X>
-
-    val manifestPlaceholders: Map<String, Any>
-
-    val embedsMicroApp: Boolean
-
-    val debuggable: Boolean
-
-    // TODO: move to a non variant object (GlobalTaskScope?)
-    val testOnlyApk: Boolean
 }

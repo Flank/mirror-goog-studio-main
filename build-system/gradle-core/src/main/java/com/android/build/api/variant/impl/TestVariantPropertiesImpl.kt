@@ -19,7 +19,7 @@ package com.android.build.api.variant.impl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.TestVariantProperties
-import com.android.build.gradle.internal.component.TestCreationConfig
+import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import java.util.concurrent.Callable
 import javax.inject.Inject
 
 open class TestVariantPropertiesImpl @Inject constructor(
@@ -49,7 +48,7 @@ open class TestVariantPropertiesImpl @Inject constructor(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    variantApiServices: VariantPropertiesApiServices,
+    internalServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
@@ -63,10 +62,10 @@ open class TestVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    variantApiServices,
+    internalServices,
     taskCreationServices,
     globalScope
-), TestVariantProperties, TestCreationConfig {
+), TestVariantProperties, TestVariantCreationConfig {
 
     /*
      * Provider of data coming from the tested modules. These are loaded just once and finalized.
@@ -80,10 +79,8 @@ open class TestVariantPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> = variantApiServices.propertyOf(
-        String::class.java,
-        Callable { variantDslInfo.applicationId }
-    )
+    override val applicationId: Property<String> =
+        internalServices.propertyOf(String::class.java, variantDslInfo.applicationId)
 
     override val manifestPlaceholders: Map<String, Any>
         get() = variantDslInfo.manifestPlaceholders
@@ -91,13 +88,27 @@ open class TestVariantPropertiesImpl @Inject constructor(
     override val aaptOptions: AaptOptions by lazy {
         initializeAaptOptionsFromDsl(
             globalScope.extension.aaptOptions,
-            variantApiServices
+            internalServices
         )
     }
 
     override fun aaptOptions(action: AaptOptions.() -> Unit) {
         action.invoke(aaptOptions)
     }
+
+    override val testedApplicationId: Provider<String> = testedProjectManifestMetadata.map { it.applicationId }
+
+    override val instrumentationRunner: Property<String> =
+        internalServices.propertyOf(String::class.java, variantDslInfo.instrumentationRunner)
+
+    override val handleProfiling: Property<Boolean> =
+        internalServices.propertyOf(Boolean::class.java, variantDslInfo.handleProfiling)
+
+    override val functionalTest: Property<Boolean> =
+        internalServices.propertyOf(Boolean::class.java, variantDslInfo.functionalTest)
+
+    override val testLabel: Property<String?> =
+        internalServices.nullablePropertyOf(String::class.java, variantDslInfo.testLabel)
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
@@ -111,8 +122,11 @@ open class TestVariantPropertiesImpl @Inject constructor(
     override val testOnlyApk: Boolean
         get() = true
 
-    // tested application Id
-    override val testedApplicationId: Provider<String> = testedProjectManifestMetadata.map { it.applicationId }
+    override val instrumentationRunnerArguments: Map<String, String>
+        get() = variantDslInfo.instrumentationRunnerArguments
+
+    override val isTestCoverageEnabled: Boolean
+        get() = variantDslInfo.isTestCoverageEnabled
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

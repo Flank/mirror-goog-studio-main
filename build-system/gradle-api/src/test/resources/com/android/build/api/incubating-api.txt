@@ -64,6 +64,11 @@ com.android.build.api.component.AndroidTestProperties implements com.android.bui
 com.android.build.api.component.AndroidTestProperties.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.AaptOptions, kotlin.Unit>)
 com.android.build.api.component.AndroidTestProperties.getAaptOptions: com.android.build.api.variant.AaptOptions ()
 com.android.build.api.component.AndroidTestProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.component.AndroidTestProperties.getFunctionalTest: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.component.AndroidTestProperties.getHandleProfiling: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.component.AndroidTestProperties.getInstrumentationRunner: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.component.AndroidTestProperties.getPackageName: org.gradle.api.provider.Provider<java.lang.String> ()
+com.android.build.api.component.AndroidTestProperties.getTestLabel: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.component.BuildTypedComponentActionRegistrar
 com.android.build.api.component.BuildTypedComponentActionRegistrar.withFlavor: com.android.build.api.component.BuildTypedComponentActionRegistrar<ComponentT> (kotlin.Pair<java.lang.String, java.lang.String>)
 com.android.build.api.component.BuildTypedComponentActionRegistrar.withFlavor: void (kotlin.Pair<java.lang.String, java.lang.String>, kotlin.jvm.functions.Function1<? super ComponentT, kotlin.Unit>)
@@ -746,6 +751,11 @@ com.android.build.api.variant.TestVariantProperties implements com.android.build
 com.android.build.api.variant.TestVariantProperties.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.AaptOptions, kotlin.Unit>)
 com.android.build.api.variant.TestVariantProperties.getAaptOptions: com.android.build.api.variant.AaptOptions ()
 com.android.build.api.variant.TestVariantProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.variant.TestVariantProperties.getFunctionalTest: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.TestVariantProperties.getHandleProfiling: org.gradle.api.provider.Property<java.lang.Boolean> ()
+com.android.build.api.variant.TestVariantProperties.getInstrumentationRunner: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.variant.TestVariantProperties.getTestLabel: org.gradle.api.provider.Property<java.lang.String> ()
+com.android.build.api.variant.TestVariantProperties.getTestedApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant implements com.android.build.api.component.Component, com.android.build.api.component.ActionableComponentObject
 com.android.build.api.variant.Variant.androidTest: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTest<com.android.build.api.component.AndroidTestProperties>, kotlin.Unit>)
 com.android.build.api.variant.Variant.androidTestProperties: void (kotlin.jvm.functions.Function1<? super com.android.build.api.component.AndroidTestProperties, kotlin.Unit>)
@@ -771,3 +781,4 @@ com.android.build.api.variant.VariantOutputConfiguration.getFilters: java.util.C
 com.android.build.api.variant.VariantOutputConfiguration.getOutputType: com.android.build.api.variant.VariantOutputConfiguration$OutputType ()
 com.android.build.api.variant.VariantProperties implements com.android.build.api.component.ComponentProperties
 com.android.build.api.variant.VariantProperties.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
+com.android.build.api.variant.VariantProperties.getPackageName: org.gradle.api.provider.Provider<java.lang.String> ()

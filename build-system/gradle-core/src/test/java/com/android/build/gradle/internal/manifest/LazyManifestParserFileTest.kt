@@ -16,13 +16,14 @@
 
 package com.android.build.gradle.internal.manifest
 
+import com.android.builder.model.SyncIssue
 import org.junit.Test
 import java.io.File
 
 /**
  * Basic tests for [LazyManifestParser]
  */
-open class LazyManifestParserFileTest : LazyManifestParserBaseTest() {
+internal class LazyManifestParserFileTest : LazyManifestParserBaseTest() {
 
     @Test
     fun `empty manifest`() {
@@ -34,7 +35,9 @@ open class LazyManifestParserFileTest : LazyManifestParserBaseTest() {
         }
 
         expect {
-            // all null values
+            data {
+                // all null values
+            }
         }
     }
 
@@ -46,22 +49,60 @@ open class LazyManifestParserFileTest : LazyManifestParserBaseTest() {
             manifestFile = missingFile
         }
 
-        exceptionRule.expect(RuntimeException::class.java)
-        exceptionRule.expectMessage("Manifest file does not exist: " + missingFile.absolutePath)
-
         expect {
-            // values aren't relevant here since it's going to throw
+            issue {
+                severity = SyncIssue.SEVERITY_ERROR
+                type = SyncIssue.TYPE_MISSING_ANDROID_MANIFEST
+                message = "Manifest file does not exist: ${missingFile.absolutePath}"
+            }
         }
     }
 
     @Test
     fun `missing manifest but not required`() {
+        val missingFile = File(temporaryFolder.newFolder("test"),"AndroidManifest.xml")
+
         given {
+            manifestFile = missingFile
             manifestFileIsRequired = false
         }
 
         expect {
-            // all null values
+            data {
+                // all null values
+            }
         }
     }
+
+    @Test
+    fun `early manifest parsing check`() {
+
+        given {
+            manifest = """
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" />
+""".trimIndent()
+            earlyManifestParsingCheck = true
+        }
+
+        expect {
+            issue {
+                severity = SyncIssue.SEVERITY_WARNING
+                type = SyncIssue.TYPE_MANIFEST_PARSED_DURING_CONFIGURATION
+                message =
+                    """
+                        The manifest is being parsed during configuration. Please either remove android.disableConfigurationManifestParsing from build.gradle or remove any build configuration rules that read the android manifest file.
+                        com.android.testutils.AbstractGivenExpectTest.runTest(AbstractGivenExpectTest.kt:58)
+                        com.android.testutils.AbstractBuildGivenBuildExpectTest.expect(AbstractBuildGivenBuildExpectTest.kt:67)
+                        sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+                        sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+                        sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+                        java.lang.reflect.Method.invoke(Method.java:498)
+                        org.junit.runners.model.FrameworkMethod${'$'}1.runReflectiveCall(FrameworkMethod.java:50)
+                        org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+                        org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)""".trimIndent()
+            }
+        }
+    }
+
 }

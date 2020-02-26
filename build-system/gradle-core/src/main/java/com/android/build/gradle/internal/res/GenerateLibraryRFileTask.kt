@@ -275,12 +275,8 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             }
 
             task.nonTransitiveRClass.set(nonTransitiveRClass)
-            task.compileClasspathLibraryRClasses.set(compileClasspathLibraryRClasses)
-
-            task.packageForR.set(task.project.provider {
-                Strings.nullToEmpty(creationConfig.variantDslInfo.originalApplicationId)
-            })
-            task.packageForR.disallowChanges()
+            task.compileClasspathLibraryRClasses.setDisallowChanges(compileClasspathLibraryRClasses)
+            task.packageForR.setDisallowChanges(creationConfig.packageName)
 
             creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles)
@@ -346,9 +342,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
 
             task.nonTransitiveRClass.setDisallowChanges(projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS])
             task.compileClasspathLibraryRClasses.setDisallowChanges(false)
-            task.packageForR.setDisallowChanges(task.project.provider {
-                Strings.nullToEmpty(creationConfig.variantDslInfo.originalApplicationId)
-            })
+            task.packageForR.setDisallowChanges(creationConfig.packageName)
             task.mainSplit = creationConfig.outputs.getMainSplit()
             task.useConstantIds.setDisallowChanges(false)
 

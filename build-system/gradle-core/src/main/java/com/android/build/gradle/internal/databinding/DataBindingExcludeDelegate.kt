@@ -85,7 +85,7 @@ fun Property<DataBindingExcludeDelegate>.configureFrom(creationConfig: BaseCreat
         creationConfig.services.newInstance(
             DataBindingExcludeDelegate::class.java,
             LayoutXmlProcessorDelegate(
-                creationConfig.variantDslInfo.originalApplicationId,
+                creationConfig.packageName,
                 creationConfig.services.projectOptions[BooleanOption.USE_ANDROID_X],
                 creationConfig.paths.resourceBlameLogDir
             ),

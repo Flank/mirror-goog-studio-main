@@ -55,10 +55,8 @@ class DataBindingCompilerArguments constructor(
     @get:Input
     val artifactType: CompilerArguments.Type,
 
-    // Use module package provider so that we can delay resolving the module package until execution
-    // time (for performance). The resolved module package is set as @Input (see getModulePackage()
-    // below), but the provider itself should be set as @Internal.
-    private val modulePackageProvider: () -> String,
+    @get:Input
+    val packageName: Provider<String>,
 
     @get:Input
     val minApi: Int,
@@ -120,14 +118,11 @@ class DataBindingCompilerArguments constructor(
     val isEnableV2: Boolean
 ) : CommandLineArgumentProvider {
 
-    @Input
-    fun getModulePackage() = modulePackageProvider()
-
     override fun asArguments(): Iterable<String> {
         val arguments = CompilerArguments(
             incremental = incremental,
             artifactType = artifactType,
-            modulePackage = getModulePackage(),
+            modulePackage = packageName.get(),
             minApi = minApi,
             sdkDir = sdkDir,
             dependencyArtifactsDir = dependencyArtifactsDir.get().asFile,
@@ -159,14 +154,13 @@ class DataBindingCompilerArguments constructor(
             printEncodedErrorLogs: Boolean
         ): DataBindingCompilerArguments {
             val globalScope = componentProperties.globalScope
-            val variantDslInfo = componentProperties.variantDslInfo
             val artifacts = componentProperties.artifacts
 
             return DataBindingCompilerArguments(
                 incremental = componentProperties.services.projectOptions
                     .get(BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING),
                 artifactType = getModuleType(componentProperties),
-                modulePackageProvider = { variantDslInfo.originalApplicationId },
+                packageName = componentProperties.packageName,
                 minApi = componentProperties.minSdkVersion.apiLevel,
                 sdkDir = globalScope.sdkComponents.getSdkDirectory(),
                 dependencyArtifactsDir =

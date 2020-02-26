@@ -39,6 +39,7 @@ import org.junit.rules.ExpectedException
 import org.mockito.Mockito
 import java.io.File
 import java.util.function.BooleanSupplier
+import kotlin.math.exp
 
 class VariantDslInfoTest2 :
     AbstractBuildGivenBuildExpectTest<
@@ -613,16 +614,13 @@ class VariantDslInfoTest2 :
             componentIdentity = componentIdentity,
             variantType = given.variantType,
             defaultConfig = given.defaultConfig,
-            manifestFile = File("/path/for/old/manifest"),
             buildTypeObj = given.buildType,
             productFlavorList = given.flavors,
             signingConfigOverride = null,
-            manifestAttributeSupplier = null,
             testedVariantImpl = null,
             dataProvider = DirectManifestDataProvider(given.manifestData, projectServices),
             dslServices = dslServices,
-            services = services,
-            isInExecutionPhase = BooleanSupplier { false }
+            services = services
         )
 
         return instantiateResult().also {
@@ -701,13 +699,41 @@ class VariantDslInfoTest2 :
         }
     }
 
-    data class ResultData(
+    class ResultData(
         var versionCode: Int? = null,
         var versionName: String? = null,
         var instrumentationRunner: String? = null,
         var handleProfiling: Boolean? = null,
         var functionalTest: Boolean? = null
-    )
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as ResultData
+
+            if (versionCode != other.versionCode) return false
+            if (versionName != other.versionName) return false
+            if (instrumentationRunner != other.instrumentationRunner) return false
+            if (handleProfiling != other.handleProfiling) return false
+            if (functionalTest != other.functionalTest) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = versionCode ?: 0
+            result = 31 * result + (versionName?.hashCode() ?: 0)
+            result = 31 * result + (instrumentationRunner?.hashCode() ?: 0)
+            result = 31 * result + (handleProfiling?.hashCode() ?: 0)
+            result = 31 * result + (functionalTest?.hashCode() ?: 0)
+            return result
+        }
+
+        override fun toString(): String {
+            return "ResultData(versionCode=$versionCode, versionName=$versionName, instrumentationRunner=$instrumentationRunner, handleProfiling=$handleProfiling, functionalTest=$functionalTest)"
+        }
+    }
 
     /**
      * Use the ManifestData provider in the given as a ManifestDataProvider in order to

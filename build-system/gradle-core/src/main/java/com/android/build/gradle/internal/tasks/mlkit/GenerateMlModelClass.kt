@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ML_MO
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.mlkit.codegen.TfliteModelGenerator
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.tools.mlkit.MlkitNames
 import com.android.tools.mlkit.ModelParsingException
 import org.gradle.api.file.DirectoryProperty
@@ -101,8 +102,7 @@ abstract class GenerateMlModelClass : NonIncrementalTask() {
                 .setTaskInputToFinalProduct(
                     MERGED_ML_MODELS, task.modelFileDir
                 )
-            task.packageName
-                .set(creationConfig.variantDslInfo.originalApplicationId)
+            task.packageName.setDisallowChanges(creationConfig.packageName)
         }
     }
 }

@@ -28,12 +28,10 @@ import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.DimensionCombination
-import com.android.builder.core.ManifestAttributeSupplier
 import com.android.builder.core.VariantType
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
-import java.util.function.BooleanSupplier
 
 /** Builder for [VariantDslInfo].
  *
@@ -42,19 +40,17 @@ import java.util.function.BooleanSupplier
  *
  * Use [getBuilder] as an entry point.
  */
-abstract class VariantBuilder protected constructor(
-    protected val dimensionCombination: DimensionCombination,
+class VariantBuilder private constructor(
+    private val dimensionCombination: DimensionCombination,
     val variantType: VariantType,
-    protected val defaultConfig: DefaultConfig,
-    protected val defaultSourceProvider: SourceProvider,
-    protected val buildType: BuildType,
+    private val defaultConfig: DefaultConfig,
+    private val defaultSourceProvider: SourceProvider,
+    private val buildType: BuildType,
     private val buildTypeSourceProvider: SourceProvider? = null,
-    protected val signingConfigOverride: SigningConfig?,
-    protected val manifestAttributeSupplier: ManifestAttributeSupplier? = null,
-    protected val manifestDataProvider: ManifestDataProvider,
-    protected val dslServices: DslServices,
-    protected val variantPropertiesApiServices: VariantPropertiesApiServices,
-    protected val isInExecutionPhase: BooleanSupplier
+    private val signingConfigOverride: SigningConfig?,
+    private val manifestDataProvider: ManifestDataProvider,
+    private val dslServices: DslServices,
+    private val variantPropertiesApiServices: VariantPropertiesApiServices
 ) {
 
     companion object {
@@ -70,46 +66,22 @@ abstract class VariantBuilder protected constructor(
             buildType: BuildType,
             buildTypeSourceSet: SourceProvider? = null,
             signingConfigOverride: SigningConfig? = null,
-            manifestAttributeSupplier: ManifestAttributeSupplier? = null,
             manifestDataProvider: ManifestDataProvider,
             dslServices: DslServices,
-            variantPropertiesApiServices: VariantPropertiesApiServices,
-            isInExecutionPhase: BooleanSupplier
-
+            variantPropertiesApiServices: VariantPropertiesApiServices
         ): VariantBuilder {
-            // if this is the test module, we have a slightly different builder
-            return if (variantType.isForTesting && !variantType.isTestComponent) {
-                TestModuleConfigurationBuilder(
-                    dimensionCombination,
-                    variantType,
-                    defaultConfig,
-                    defaultSourceSet,
-                    buildType,
-                    buildTypeSourceSet,
-                    signingConfigOverride,
-                    manifestAttributeSupplier,
-                    manifestDataProvider,
-                    dslServices,
-                    variantPropertiesApiServices,
-                    isInExecutionPhase
-
-                )
-            } else {
-                VariantConfigurationBuilder(
-                    dimensionCombination,
-                    variantType,
-                    defaultConfig,
-                    defaultSourceSet,
-                    buildType,
-                    buildTypeSourceSet,
-                    signingConfigOverride,
-                    manifestAttributeSupplier,
-                    manifestDataProvider,
-                    dslServices,
-                    variantPropertiesApiServices,
-                    isInExecutionPhase
-                )
-            }
+            return VariantBuilder(
+                dimensionCombination,
+                variantType,
+                defaultConfig,
+                defaultSourceSet,
+                buildType,
+                buildTypeSourceSet,
+                signingConfigOverride,
+                manifestDataProvider,
+                dslServices,
+                variantPropertiesApiServices
+            )
         }
 
         /**
@@ -278,7 +250,7 @@ abstract class VariantBuilder protected constructor(
 
         }
 
-    protected val flavors = mutableListOf<Pair<ProductFlavor, SourceProvider>>()
+    private val flavors = mutableListOf<Pair<ProductFlavor, SourceProvider>>()
 
     var variantSourceProvider: SourceProvider? = null
     var multiFlavorSourceProvider: SourceProvider? = null
@@ -295,7 +267,29 @@ abstract class VariantBuilder protected constructor(
     }
 
     /** Creates a variant configuration  */
-    abstract fun createVariantDslInfo(): VariantDslInfoImpl
+    fun createVariantDslInfo(): VariantDslInfoImpl {
+        val flavorList = flavors.map { it.first }
+
+        return VariantDslInfoImpl(
+            ComponentIdentityImpl(
+                name,
+                flavorName,
+                dimensionCombination.buildType,
+                dimensionCombination.productFlavors
+            ),
+            variantType,
+            defaultConfig,
+            buildType,
+            // this could be removed once the product flavor is internal only.
+            flavorList.toImmutableList(),
+            signingConfigOverride,
+            testedVariant,
+            manifestDataProvider,
+            dslServices,
+            variantPropertiesApiServices
+        )
+    }
+
 
     fun createVariantSources(): VariantSources {
         return VariantSources(
@@ -315,142 +309,6 @@ abstract class VariantBuilder protected constructor(
     private fun computeNames() {
         variantName = computeName(dimensionCombination, variantType) {
             multiFlavorName = it
-        }
-    }
-}
-
-/** Builder for non test plugin variant configurations  */
-private class VariantConfigurationBuilder(
-    dimensionCombination: DimensionCombination,
-    variantType: VariantType,
-    defaultConfig: DefaultConfig,
-    defaultSourceSet: SourceProvider,
-    buildType: BuildType,
-    buildTypeSourceSet: SourceProvider? = null,
-    signingConfigOverride: SigningConfig?,
-    manifestAttributeSupplier: ManifestAttributeSupplier? = null,
-    manifestDataProvider: ManifestDataProvider,
-    dslServices: DslServices,
-    variantPropertiesApiServices: VariantPropertiesApiServices,
-    isInExecutionPhase: BooleanSupplier
-) : VariantBuilder(
-    dimensionCombination,
-    variantType,
-    defaultConfig,
-    defaultSourceSet,
-    buildType,
-    buildTypeSourceSet,
-    signingConfigOverride,
-    manifestAttributeSupplier,
-    manifestDataProvider,
-    dslServices,
-    variantPropertiesApiServices,
-    isInExecutionPhase
-) {
-
-    override fun createVariantDslInfo(): VariantDslInfoImpl {
-        val flavorList = flavors.map { it.first }
-
-        return VariantDslInfoImpl(
-            ComponentIdentityImpl(
-                name,
-                flavorName,
-                dimensionCombination.buildType,
-                dimensionCombination.productFlavors
-            ),
-            variantType,
-            defaultConfig,
-            defaultSourceProvider.manifestFile,
-            buildType,
-            // this could be removed once the product flavor is internal only.
-            flavorList.toImmutableList(),
-            signingConfigOverride,
-            manifestAttributeSupplier,
-            testedVariant,
-            manifestDataProvider,
-            dslServices,
-            variantPropertiesApiServices,
-            isInExecutionPhase
-        )
-    }
-}
-
-/**
- * Creates a [VariantDslInfo] for a testing module variant.
- *
- *
- * The difference from the regular modules is how the original application id,
- * and application id are resolved. Our build process supports the absence of manifest
- * file for these modules, and that is why the value resolution for these attributes
- * is different.
- */
-private class TestModuleConfigurationBuilder(
-    dimensionCombination: DimensionCombination,
-    variantType: VariantType,
-    defaultConfig: DefaultConfig,
-    defaultSourceSet: SourceProvider,
-    buildType: BuildType,
-    buildTypeSourceSet: SourceProvider? = null,
-    signingConfigOverride: SigningConfig?,
-    manifestAttributeSupplier: ManifestAttributeSupplier? = null,
-    manifestDataProvider: ManifestDataProvider,
-    dslServices: DslServices,
-    variantPropertiesApiServices: VariantPropertiesApiServices,
-    isInExecutionPhase: BooleanSupplier
-) : VariantBuilder(
-    dimensionCombination,
-    variantType,
-    defaultConfig,
-    defaultSourceSet,
-    buildType,
-    buildTypeSourceSet,
-    signingConfigOverride,
-    manifestAttributeSupplier,
-    manifestDataProvider,
-    dslServices,
-    variantPropertiesApiServices,
-    isInExecutionPhase
-) {
-
-    override fun createVariantDslInfo(): VariantDslInfoImpl {
-        val flavorList = flavors.map { it.first }
-
-        return object: VariantDslInfoImpl(
-            ComponentIdentityImpl(
-                name,
-                flavorName,
-                dimensionCombination.buildType,
-                dimensionCombination.productFlavors
-            ),
-            variantType,
-            defaultConfig,
-            defaultSourceProvider.manifestFile,
-            buildType,
-            // this could be removed once the product flavor is internal only.
-            flavorList.toImmutableList(),
-            signingConfigOverride,
-            manifestAttributeSupplier,
-            testedVariant,
-            manifestDataProvider,
-            dslServices,
-            variantPropertiesApiServices,
-            isInExecutionPhase
-        ) {
-            override val applicationId: String
-                get() {
-                    val applicationId = mergedFlavor.testApplicationId
-                    if (applicationId != null && applicationId.isNotEmpty()) {
-                        return applicationId
-                    }
-
-                    return super.applicationId
-                }
-
-            override val originalApplicationId: String
-                get() = applicationId
-
-            override val testApplicationId: String
-                get() = applicationId
         }
     }
 }

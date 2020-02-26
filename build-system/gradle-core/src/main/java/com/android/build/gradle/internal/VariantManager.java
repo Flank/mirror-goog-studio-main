@@ -77,8 +77,6 @@ import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
-import com.android.builder.core.DefaultManifestParser;
-import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -91,6 +89,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -133,7 +132,6 @@ public class VariantManager<
     private final Map<File, LazyManifestParser> lazyManifestParserMap =
             Maps.newHashMapWithExpectedSize(3);
 
-    @NonNull private final Map<File, ManifestAttributeSupplier> manifestParserMap;
     @NonNull protected final GlobalScope globalScope;
     @Nullable private final SigningConfig signingOverride;
     // We cannot use gradle's state of executed as that returns true while inside afterEvalute.
@@ -161,7 +159,6 @@ public class VariantManager<
         this.recorder = recorder;
         this.signingOverride = createSigningOverride();
         this.variantFilter = new VariantFilter(new ReadOnlyObjectProvider());
-        this.manifestParserMap = Maps.newHashMap();
 
         variantApiServices = new VariantApiServicesImpl(projectServices);
         variantPropertiesApiServices = new VariantPropertiesApiServicesImpl(projectServices);
@@ -299,15 +296,12 @@ public class VariantManager<
                         buildTypeData.getBuildType(),
                         buildTypeData.getSourceSet(),
                         signingOverride,
-                        getParser(
-                                defaultConfigSourceProvider.getManifestFile(),
-                                variantType.getRequiresManifest()),
                         getLazyManifestParser(
                                 defaultConfigSourceProvider.getManifestFile(),
-                                variantType.getRequiresManifest()),
+                                variantType.getRequiresManifest(),
+                                this::canParseManifest),
                         dslServices,
-                        variantPropertiesApiServices,
-                        this::canParseManifest);
+                        variantPropertiesApiServices);
 
         // We must first add the flavors to the variant config, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
@@ -347,7 +341,8 @@ public class VariantManager<
         if (!buildTypeData.getBuildType().isDebuggable()
                 && variantType.isApk()
                 && !variantDslInfo.getVariantType().isForTesting()) {
-            ProcessProfileWriter.get().recordApplicationId(variantDslInfo::getApplicationId);
+            ProcessProfileWriter.get()
+                    .recordApplicationId(() -> variantDslInfo.getApplicationId().get());
         }
 
         // Add the container of dependencies.
@@ -520,16 +515,12 @@ public class VariantManager<
                         buildTypeData.getBuildType(),
                         buildTypeData.getTestSourceSet(variantType),
                         signingOverride,
-                        testSourceSet != null
-                                ? getParser(
-                                        testSourceSet.getManifestFile(),
-                                        variantType.getRequiresManifest())
-                                : null,
                         getLazyManifestParser(
-                                testSourceSet.getManifestFile(), variantType.getRequiresManifest()),
+                                testSourceSet.getManifestFile(),
+                                variantType.getRequiresManifest(),
+                                this::canParseManifest),
                         dslServices,
-                        variantPropertiesApiServices,
-                        this::canParseManifest);
+                        variantPropertiesApiServices);
 
         variantBuilder.setTestedVariant(
                 (VariantDslInfoImpl) testedVariantProperties.getVariantDslInfo());
@@ -958,28 +949,18 @@ public class VariantManager<
     }
 
     @NonNull
-    private ManifestAttributeSupplier getParser(
-            @NonNull File file, boolean isManifestFileRequired) {
-        return manifestParserMap.computeIfAbsent(
-                file,
-                f ->
-                        new DefaultManifestParser(
-                                f,
-                                this::canParseManifest,
-                                isManifestFileRequired,
-                                projectServices.getIssueReporter()));
-    }
-
-    @NonNull
     private LazyManifestParser getLazyManifestParser(
-            @NonNull File file, boolean isManifestFileRequired) {
+            @NonNull File file,
+            boolean isManifestFileRequired,
+            @NonNull BooleanSupplier isInExecutionPhase) {
         return lazyManifestParserMap.computeIfAbsent(
                 file,
                 f ->
                         new LazyManifestParser(
                                 projectServices.getObjectFactory().fileProperty().fileValue(f),
                                 isManifestFileRequired,
-                                projectServices));
+                                projectServices,
+                                isInExecutionPhase));
     }
 
     private boolean canParseManifest() {

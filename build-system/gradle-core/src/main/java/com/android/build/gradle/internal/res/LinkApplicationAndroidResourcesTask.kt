@@ -175,7 +175,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         private set
 
     @get:Input
-    abstract val originalApplicationId: Property<String>
+    abstract val packageName: Property<String>
 
     @get:Input
     @get:Optional
@@ -427,7 +427,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             }
 
             task.mainSplit = creationConfig.outputs.getMainSplitOrNull()
-            task.originalApplicationId.setDisallowChanges(project.provider { creationConfig.originalApplicationId })
+            task.packageName.setDisallowChanges(creationConfig.packageName)
 
             task.taskInputType = creationConfig.manifestArtifactType
             creationConfig.operations.setTaskInputToFinalProduct(
@@ -690,7 +690,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             var proguardOutputFile: File? = null
             var mainDexListProguardOutputFile: File? = null
             if (params.generateCode) {
-                packageForR = params.originalApplicationId
+                packageForR = params.packageName
 
                 // we have to clean the source folder output in case the package name changed.
                 srcOut = params.sourceOutputDir
@@ -821,7 +821,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val resourceConfigs: Set<String> = splitList.resourceConfigs
         val resPackageOutputFolder: File = task.resPackageOutputFolder.get().asFile
         val isNamespaced: Boolean = task.isNamespaced
-        val originalApplicationId: String? = task.originalApplicationId.get()
+        val packageName: String = task.packageName.get()
         val applicationId: String? = task.applicationId.get()
         val sourceOutputDir: File? = task.getSourceOutputDir()
         val textSymbolOutputFile: File? = task.textSymbolOutputFileProperty.orNull?.asFile

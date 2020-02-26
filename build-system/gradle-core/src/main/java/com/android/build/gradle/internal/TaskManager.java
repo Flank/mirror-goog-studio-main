@@ -227,7 +227,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -990,7 +989,7 @@ public abstract class TaskManager<
     }
 
     protected void createProcessTestManifestTask(
-            @NonNull ComponentPropertiesImpl componentProperties) {
+            @NonNull TestComponentPropertiesImpl componentProperties) {
         taskFactory.register(new ProcessTestManifest.CreationAction(componentProperties));
     }
 
@@ -1685,7 +1684,7 @@ public abstract class TaskManager<
                                 "mainVariantOutput", testConfigInputs.getMainVariantOutput());
                         taskInputs.property(
                                 "packageNameOfFinalRClassProvider",
-                                (Supplier<String>) testConfigInputs::getPackageNameOfFinalRClass);
+                                testConfigInputs.getPackageNameOfFinalRClass());
                     });
         } else {
             if (testedVariant.getVariantType().isAar()) {

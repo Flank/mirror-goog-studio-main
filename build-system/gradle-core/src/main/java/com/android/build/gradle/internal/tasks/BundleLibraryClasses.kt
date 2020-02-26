@@ -43,6 +43,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -88,7 +89,7 @@ private fun BundleLibraryClassesInputs.configure(
     inputs: FileCollection,
     packageRClass: Boolean
 ) {
-    packageName.setDisallowChanges(component.variantDslInfo.packageFromManifest)
+    packageName.setDisallowChanges(component.packageName)
     classes.from(inputs)
     this.packageRClass.set(packageRClass)
     if (packageRClass) {

@@ -47,7 +47,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     variantData: BaseVariantData,
     variantDependencyInfo: com.android.build.api.variant.DependenciesInfo,
     transformManager: TransformManager,
-    variantPropertiesApiServices: VariantPropertiesApiServices,
+    internalServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
@@ -61,7 +61,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    variantPropertiesApiServices,
+    internalServices,
     taskCreationServices,
     globalScope
 ), ApplicationVariantProperties, ApplicationCreationConfig {
@@ -73,7 +73,8 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> = variantPropertiesApiServices.propertyOf(String::class.java, Callable{variantDslInfo.applicationId})
+    override val applicationId: Property<String> =
+        internalServices.propertyOf(String::class.java, variantDslInfo.applicationId)
 
     override val embedsMicroApp: Boolean
         get() = variantDslInfo.isEmbedMicroApp
@@ -86,7 +87,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
     override val aaptOptions: AaptOptions by lazy {
         initializeAaptOptionsFromDsl(
             globalScope.extension.aaptOptions,
-            variantPropertiesApiServices
+            internalServices
         )
     }
 
@@ -102,7 +103,7 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
         get() = variantScope.isTestOnly
 
     override val needAssetPackTasks: Property<Boolean> =
-        variantPropertiesApiServices.propertyOf(Boolean::class.java, false)
+        internalServices.propertyOf(Boolean::class.java, false)
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

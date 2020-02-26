@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.component
 
-import android.databinding.tool.LayoutXmlProcessor
 import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.impl.TestComponentPropertiesImpl
@@ -33,7 +32,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
@@ -65,7 +63,7 @@ interface BaseCreationConfig : ComponentIdentity {
 
     // needed by resource compilation/link
     val applicationId: Provider<String>
-    val originalApplicationId: String
+    val packageName: Provider<String>
     val resourceConfigurations: ImmutableSet<String>
     val isPrecompileDependenciesResourcesEnabled: Boolean
 

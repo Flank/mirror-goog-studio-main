@@ -17,9 +17,10 @@ package com.android.build.api.variant
 
 import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 
 /**
- * [VariantProperties] for tests associated with a module.
+ * [VariantProperties] for test-only modules.
  */
 @Incubating
 interface TestVariantProperties: VariantProperties {
@@ -38,4 +39,26 @@ interface TestVariantProperties: VariantProperties {
      */
     fun aaptOptions(action: AaptOptions.() -> Unit)
 
+    /**
+     * The application of the app under tests.
+     */
+    val testedApplicationId: Provider<String>
+
+    /**
+     * The instrumentationRunner to use to run the tests.
+     */
+    val instrumentationRunner: Property<String>
+
+    /**
+     * The handleProfiling value to use to run the tests.
+     */
+    val handleProfiling: Property<Boolean>
+
+    /**
+     * The functionalTest value to use to run the tests.
+     */
+    val functionalTest: Property<Boolean>
+
+    /** the test label  */
+    val testLabel: Property<String?>
 }

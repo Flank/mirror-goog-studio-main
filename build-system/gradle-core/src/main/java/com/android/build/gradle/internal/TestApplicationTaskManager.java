@@ -26,6 +26,7 @@ import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.build.gradle.internal.component.TestCreationConfig;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -96,13 +97,7 @@ public class TestApplicationTaskManager
                                 APK);
 
         TestApplicationTestData testData =
-                new TestApplicationTestData(
-                        testVariantProperties.getVariantDslInfo(),
-                        testVariantProperties.getVariantSources(),
-                        testVariantProperties.getApplicationId(),
-                        testVariantProperties.getTestedApplicationId(),
-                        testingApk,
-                        testedApks);
+                new TestApplicationTestData(testVariantProperties, testingApk, testedApks);
 
         configureTestData(testVariantProperties, testData);
 
@@ -183,7 +178,8 @@ public class TestApplicationTaskManager
     @NonNull
     protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTasks(
             @NonNull ApkCreationConfig creationConfig) {
-        return taskFactory.register(new ProcessTestManifest.CreationAction(creationConfig));
+        return taskFactory.register(
+                new ProcessTestManifest.CreationAction((TestCreationConfig) creationConfig));
     }
 
     @Override

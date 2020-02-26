@@ -93,11 +93,7 @@ abstract class DataBindingTriggerTask : NonIncrementalTask() {
 
         override fun configure(task: DataBindingTriggerTask) {
             super.configure(task)
-            task.applicationId.setDisallowChanges(
-                creationConfig.globalScope.project.provider {
-                    componentProperties.variantDslInfo.originalApplicationId
-                }
-            )
+            task.applicationId.setDisallowChanges(componentProperties.packageName)
             task.useAndroidX.setDisallowChanges(
                 creationConfig.services.projectOptions[BooleanOption.USE_ANDROID_X]
             )

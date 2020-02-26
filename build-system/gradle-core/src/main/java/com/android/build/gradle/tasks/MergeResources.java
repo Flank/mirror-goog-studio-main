@@ -887,7 +887,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             if (isDataBindingEnabled || isViewBindingEnabled) {
                 task.xmlProcessorDelegate =
                         new LayoutXmlProcessorDelegate(
-                                creationConfig.getVariantDslInfo().getOriginalApplicationId(),
+                                creationConfig.getPackageName(),
                                 creationConfig
                                         .getServices()
                                         .getProjectOptions()

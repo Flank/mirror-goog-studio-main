@@ -69,6 +69,7 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  * <p>This is meant to be a quick parser to create the building model, and is thread-safe.
  */
+@Deprecated
 public class DefaultManifestParser implements ManifestAttributeSupplier {
 
     private static final SAXParserFactory PARSER_FACTORY = SAXParserFactory.newInstance();

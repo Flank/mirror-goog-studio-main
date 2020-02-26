@@ -36,9 +36,6 @@ import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.DefaultApiVersion
-import com.android.builder.core.DefaultManifestParser
-import com.android.builder.core.ManifestAttributeSupplier
-import com.android.builder.core.VariantAttributesProvider
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.errors.IssueReporter
@@ -62,7 +59,6 @@ import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.ArrayList
 import java.util.concurrent.Callable
-import java.util.function.BooleanSupplier
 
 /**
  * Represents a variant, initialized from the DSL object model (default config, build type, flavors)
@@ -76,7 +72,6 @@ open class VariantDslInfoImpl internal constructor(
     override val componentIdentity: ComponentIdentity,
     override val variantType: VariantType,
     private val defaultConfig: DefaultConfig,
-    manifestFile: File,
     /**
      * Public because this is needed by the old Variant API. Nothing else should touch this.
      */
@@ -84,13 +79,11 @@ open class VariantDslInfoImpl internal constructor(
     /** The list of product flavors. Items earlier in the list override later items.  */
     override val productFlavorList: List<ProductFlavor>,
     private val signingConfigOverride: SigningConfig? = null,
-    manifestAttributeSupplier: ManifestAttributeSupplier? = null,
     private val testedVariantImpl: VariantDslInfoImpl? = null,
     private val dataProvider: ManifestDataProvider,
     @Deprecated("Only used for merged flavor")
     private val dslServices: DslServices,
-    private val services: VariantPropertiesApiServices,
-    isInExecutionPhase: BooleanSupplier
+    private val services: VariantPropertiesApiServices
 ): VariantDslInfo, DimensionCombination {
 
     override val buildType: String?
@@ -120,34 +113,12 @@ open class VariantDslInfoImpl internal constructor(
     override val testedVariant: VariantDslInfo?
         get() = testedVariantImpl
 
-    /**
-     * For reading the attributes from the main manifest file in the default source set, combining
-     * the results with the current flavor.
-     */
-    private val mVariantAttributesProvider: VariantAttributesProvider
-
     private val mergedNdkConfig = MergedNdkConfig()
     private val mergedExternalNativeBuildOptions =
         MergedExternalNativeBuildOptions()
     private val mergedJavaCompileOptions = MergedJavaCompileOptions(dslServices)
 
     init {
-        val manifestParser =
-            manifestAttributeSupplier
-                ?: DefaultManifestParser(
-                    manifestFile,
-                    isInExecutionPhase,
-                    variantType.requiresManifest,
-                    dslServices.issueReporter
-                )
-        mVariantAttributesProvider = VariantAttributesProvider(
-            mergedFlavor,
-            buildTypeObj,
-            variantType.isTestComponent,
-            manifestParser,
-            manifestFile,
-            componentIdentity.name
-        )
         mergeOptions()
     }
 
@@ -291,18 +262,46 @@ open class VariantDslInfoImpl internal constructor(
         return productFlavorList.isNotEmpty()
     }
 
-    private val testedPackage: String
-        get() = testedVariant?.applicationId ?: ""
+    // use lazy mechanism as this is referenced by other properties, like applicationId or itself
+    override val packageName: Provider<String> by lazy {
+        when {
+            // -------------
+            // Special case for test components
+            // The package name is the tested component package name + .test
+            testedVariantImpl != null -> {
+                testedVariantImpl.packageName.map {
+                    "$it.test"
+                }
+            }
 
-    /**
-     * Returns the original application ID before any overrides from flavors. If the variant is a
-     * test variant, then the application ID is the one coming from the configuration of the tested
-     * variant, and this call is similar to [.getApplicationId]
-     *
-     * @return the original application ID
-     */
-    override val originalApplicationId: String
-        get() = mVariantAttributesProvider.getOriginalApplicationId(testedPackage)
+            // -------------
+            // Special case for separate test sub-projects
+            // if there is no manifest with no packageName but there is a testApplicationId
+            // then we use that. This allows the test project to not have a manifest if all
+            // is declared in the DSL.
+            variantType.isSeparateTestProject -> {
+                val testAppIdFromFlavors =
+                    productFlavorList.asSequence().map { it.testApplicationId }
+                        .firstOrNull { it != null }
+                        ?: defaultConfig.testApplicationId
+
+                dataProvider.manifestData.map {
+                    it.packageName
+                        ?: testAppIdFromFlavors
+                        ?: throw RuntimeException("Package Name not found in ${dataProvider.manifestLocation}")
+                }
+            }
+
+            // -------------
+            // All other types of projects, just read from the manifest.
+            else -> {
+                dataProvider.manifestData.map {
+                    it.packageName
+                        ?: throw RuntimeException("Package Name not found in ${dataProvider.manifestLocation}")
+                }
+            }
+        }
+    }
 
     /**
      * Returns the application ID for this variant. This could be coming from the manifest or could
@@ -310,24 +309,86 @@ open class VariantDslInfoImpl internal constructor(
      *
      * @return the application ID
      */
-    override val applicationId: String
-        get() = mVariantAttributesProvider.getApplicationId(testedPackage)
-
-    override val testApplicationId: String
-        get() = mVariantAttributesProvider.getTestApplicationId(testedPackage)
-
-    override val testedApplicationId: String?
+    override val applicationId: Provider<String>
         get() {
-            if (variantType.isTestComponent) {
-                val tested = testedVariant!!
-                return if (tested.variantType.isAar) {
-                    applicationId
+            // -------------
+            // Special case for test components and separate test sub-projects
+            if (variantType.isForTesting) {
+                // get first non null testAppId from flavors/default config
+                val testAppIdFromFlavors =
+                    productFlavorList.asSequence().map { it.testApplicationId }.firstOrNull { it != null }
+                        ?: defaultConfig.testApplicationId
+
+                return if (testAppIdFromFlavors == null) {
+                    packageName
                 } else {
-                    tested.applicationId
+                    // needed to make nullability work in kotlinc
+                    val finalTestAppIdFromFlavors: String = testAppIdFromFlavors
+                    services.provider(Callable{ finalTestAppIdFromFlavors })
                 }
             }
-            return null
+
+            // -------------
+            // All other project types
+
+            // get first non null appId from flavors/default config
+            val appIdFromFlavors =
+                productFlavorList.asSequence().map { it.applicationId }.firstOrNull { it != null }
+                    ?: defaultConfig.applicationId
+
+            return if (appIdFromFlavors == null) {
+                // No appId value set from DSL,  rely on package name value from manifest.
+                // using map will allow us to keep task dependency should the manifest be generated
+                // or transformed via a task.
+                dataProvider.manifestData.map {
+                    it.packageName?.let { pName ->
+                        "$pName${computeApplicationIdSuffix()}"
+                    } ?: throw RuntimeException("Package Name not found in ${dataProvider.manifestLocation}")
+                }
+            } else {
+                // use value from flavors/defaultConfig
+                // needed to make nullability work in kotlinc
+                val finalAppIdFromFlavors: String = appIdFromFlavors
+                services.provider(
+                    Callable { "$finalAppIdFromFlavors${computeApplicationIdSuffix()}" })
+            }
         }
+
+    /**
+     * Combines all the appId suffixes into a single one.
+     *
+     * The suffixes are separated by '.' whether their first char is a '.' or not.
+     */
+    private fun computeApplicationIdSuffix(): String {
+        // for the suffix we combine the suffix from all the flavors. However, we're going to
+        // want the higher priority one to be last.
+        val suffixes = mutableListOf<String>()
+        defaultConfig.applicationIdSuffix?.let {
+            suffixes.add(it.prependDot())
+        }
+
+        suffixes.addAll(productFlavorList.mapNotNull { it.applicationIdSuffix?.prependDot() })
+
+        // then we add the build type after.
+        buildTypeObj.applicationIdSuffix?.let {
+            suffixes.add(it.prependDot())
+        }
+
+        return if (suffixes.isNotEmpty()) {
+            suffixes.joinToString(separator = "")
+        } else {
+            ""
+        }
+    }
+
+    /**
+     * Returns the same string with a '.' at the start unless there is already one.
+     */
+    private fun String.prependDot(): String = if (this[0] == '.') {
+        this
+    } else {
+        ".$this"
+    }
 
     override val versionName: Provider<String?>
         get() {
@@ -355,16 +416,20 @@ open class VariantDslInfoImpl internal constructor(
                 // using map will allow us to keep task dependency should the manifest be generated or
                 // transformed via a task.
                 dataProvider.manifestData.map {
-                    it.versionName.appendNullable(computeVersionNameSuffix())
+                    if (it.versionName == null) {
+                        it.versionName
+                    } else {
+                        "${it.versionName}${computeVersionNameSuffix()}"
+                    }
                 }
             } else {
                 // use value from flavors
                 services.provider(
-                    Callable { versionNameFromFlavors.appendNullable(computeVersionNameSuffix()) })
+                    Callable { "$versionNameFromFlavors${computeVersionNameSuffix()}" })
             }
         }
 
-    private fun computeVersionNameSuffix(): String? {
+    private fun computeVersionNameSuffix(): String {
         // for the suffix we combine the suffix from all the flavors. However, we're going to
         // want the higher priority one to be last.
         val suffixes = mutableListOf<String>()
@@ -382,20 +447,8 @@ open class VariantDslInfoImpl internal constructor(
         return if (suffixes.isNotEmpty()) {
             suffixes.joinToString(separator = "")
         } else {
-            null
+            ""
         }
-    }
-
-    private fun String?.appendNullable(suffix: String?): String? {
-        if (this == null && suffix == null) {
-            return null
-        }
-
-        if (this == null) {
-            return suffix
-        }
-
-        return """$this${suffix ?: ""}"""
     }
 
     override val versionCode: Provider<Int?>
@@ -535,12 +588,6 @@ open class VariantDslInfoImpl internal constructor(
             // there is actually no DSL value for this, also we should add one
             // FIXME b/149770867
             return dataProvider.manifestData.map { it.useEmbeddedDex }
-        }
-
-    override val packageFromManifest: Provider<String>
-        get() = dataProvider.manifestData.map {
-            it.packageName
-                ?: throw RuntimeException("Package Name not found in $dataProvider.manifestLocation")
         }
 
     /**

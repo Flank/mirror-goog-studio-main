@@ -19,7 +19,6 @@ package com.android.build.api.component
 import com.android.build.api.artifact.Operations
 import com.android.build.api.variant.VariantOutput
 import org.gradle.api.Incubating
-import org.gradle.api.provider.Property
 
 @Incubating
 interface ComponentProperties: ComponentIdentity,

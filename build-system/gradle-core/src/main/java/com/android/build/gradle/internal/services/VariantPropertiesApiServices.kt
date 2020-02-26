@@ -67,6 +67,17 @@ interface VariantPropertiesApiServices:
      * The property will be marked as [Property.finalizeValueOnRead], and will be locked
      * with [Property.disallowChanges] after the variant API(s) have run.
      */
+    fun <T> nullablePropertyOf(type: Class<T>, value: Provider<T?>): Property<T?>
+
+    /**
+     * Creates a new property.
+     *
+     * This should be used for properties used in the new API. If the property is backing an
+     * old API that returns T, use [VariantPropertiesApiServices.newPropertyBackingDeprecatedApi]
+     *
+     * The property will be marked as [Property.finalizeValueOnRead], and will be locked
+     * with [Property.disallowChanges] after the variant API(s) have run.
+     */
     fun <T> propertyOf(type: Class<T>, value: () -> T, id: String = ""): Property<T>
 
     /**

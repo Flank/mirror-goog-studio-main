@@ -254,5 +254,7 @@ interface SyncIssue {
         // with the corresponding value in studio_stats.proto (e.g., it could be lower by 1), because of
         // an indexing issue in the past (see http://issuetracker.google.com/138278313).
 
+        /** Indicates that a manifest is missing  */
+        const val TYPE_MISSING_ANDROID_MANIFEST = 44
     }
 }

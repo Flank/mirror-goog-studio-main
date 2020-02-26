@@ -66,6 +66,18 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
+    override fun <T> nullablePropertyOf(type: Class<T>, value: Provider<T?>): Property<T?> {
+        return initializeNullableProperty(type, "").also {
+            it.set(value)
+            it.finalizeValueOnRead()
+
+            // FIXME when Gradle supports this
+            // it.preventGet()
+
+            delayedLock(it)
+        }
+    }
+
     override fun <T> propertyOf(type: Class<T>, value: () -> T, id: String): Property<T> {
         return initializeProperty(type, id).also {
             it.set(projectServices.providerFactory.provider(value))

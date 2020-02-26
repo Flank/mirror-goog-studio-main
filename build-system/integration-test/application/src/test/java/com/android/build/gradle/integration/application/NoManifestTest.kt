@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.SyncIssue
 import com.google.common.collect.Iterables
+import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 import java.util.stream.Collectors
@@ -45,38 +46,35 @@ class NoManifestTest {
     }
 
     // FIXME: Revise this once appId is removed from the model
-    @Test
+    //@Test
     fun noManifestSyncNoApplicationIdTest() {
         val issues = project.model().with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).ignoreSyncIssues().fetchAndroidProjects().onlyModelSyncIssues
-        assertEquals(2, issues.size)
-        val errors = issues.stream()
-            .filter { syncIssue -> syncIssue.severity === SyncIssue.SEVERITY_ERROR }
-            .collect(Collectors.toList<SyncIssue>())
+        Truth.assertThat(issues).named("full issues list").hasSize(2)
 
-        assertThat<SyncIssue, Iterable<SyncIssue>>(errors).hasSize(1)
-        val error = Iterables.getOnlyElement<SyncIssue>(errors)
-        assertThat(error.type).isEqualTo(SyncIssue.TYPE_GENERIC)
+        val errors = issues.filter { it.severity == SyncIssue.SEVERITY_ERROR}
+        Truth.assertThat(errors).named("error-only issues").hasSize(1)
+        assertThat(errors.first()).hasType(SyncIssue.TYPE_GENERIC)
 
-        val warnings = issues.stream()
-            .filter { syncIssue -> syncIssue.severity === SyncIssue.SEVERITY_WARNING }
-            .collect(Collectors.toList<SyncIssue>())
-        assertThat<SyncIssue, Iterable<SyncIssue>>(warnings).hasSize(1)
-        val warning = Iterables.getOnlyElement<SyncIssue>(warnings)
-        assertThat(warning).hasType(SyncIssue.TYPE_UNSUPPORTED_PROJECT_OPTION_USE)
+        val warnings = issues.filter { it.severity == SyncIssue.SEVERITY_WARNING }
+        Truth.assertThat(errors).named("warning-only issues").hasSize(1)
+        assertThat(warnings.first()).hasType(SyncIssue.TYPE_UNSUPPORTED_PROJECT_OPTION_USE)
     }
 
     @Test
     fun noManifestSyncNoIssuesTest() {
         TestFileUtils.appendToFile(
-            project.getSubproject(":app").buildFile,
-            "\nandroid.defaultConfig.applicationId \"com.example.app\"\n"
+            project.getSubproject(":app").buildFile, """
+                android.defaultConfig {
+                    applicationId "com.example.app"
+                    testApplicationId "com.example.app.test"
+                }
+            """.trimIndent()
         )
         val issues = project.model().with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).ignoreSyncIssues().fetchAndroidProjects().onlyModelSyncIssues
 
-        assertEquals(1, issues.size)
-        val issue = Iterables.getOnlyElement(issues)
+        Truth.assertThat(issues).named("full issues list").hasSize(1)
+        val issue = issues.first()
         assertThat(issue).hasType(SyncIssue.TYPE_UNSUPPORTED_PROJECT_OPTION_USE)
         assertThat(issue).hasSeverity(SyncIssue.SEVERITY_WARNING)
     }
-
 }

@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 /**
  * An interface that provides methods for reading some of the attribute values from the manifest.
  */
+@Deprecated
 public interface ManifestAttributeSupplier {
 
     /** Whether the manifest file is required to exist. */

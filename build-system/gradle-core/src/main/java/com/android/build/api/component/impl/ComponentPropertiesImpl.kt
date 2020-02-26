@@ -103,6 +103,9 @@ abstract class ComponentPropertiesImpl(
     override val operations: OperationsImpl
         get() = artifacts.getOperations()
 
+    override val packageName: Provider<String> =
+        internalServices.providerOf(String::class.java, variantDslInfo.packageName)
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
@@ -131,9 +134,6 @@ abstract class ComponentPropertiesImpl(
 
     override val baseName: String
         get() = variantDslInfo.baseName
-
-    override val originalApplicationId: String
-        get() = variantDslInfo.originalApplicationId
 
     override val resourceConfigurations: ImmutableSet<String>
         get() = variantDslInfo.resourceConfigurations

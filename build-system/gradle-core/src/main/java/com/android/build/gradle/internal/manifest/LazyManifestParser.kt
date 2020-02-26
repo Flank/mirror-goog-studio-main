@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.manifest
 import com.android.SdkConstants
 import com.android.build.gradle.internal.manifest.ManifestData.AndroidTarget
 import com.android.build.gradle.internal.services.ProjectServices
+import com.android.builder.errors.IssueReporter
 import com.android.utils.XmlUtils
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -26,6 +27,7 @@ import org.xml.sax.Attributes
 import org.xml.sax.SAXException
 import org.xml.sax.helpers.DefaultHandler
 import java.io.File
+import java.util.function.BooleanSupplier
 import javax.xml.parsers.SAXParserFactory
 
 /**
@@ -34,14 +36,20 @@ import javax.xml.parsers.SAXParserFactory
 class LazyManifestParser(
     private val manifestFile: Provider<RegularFile>,
     private val manifestFileRequired: Boolean,
-    private val projectServices: ProjectServices
+    private val projectServices: ProjectServices,
+    private val manifestParsingAllowed: BooleanSupplier
 ): ManifestDataProvider {
 
      override val manifestData: Provider<ManifestData> by lazy {
         // using map will allow us to keep task dependency should the manifest be generated or
         // transformed via a task
         val provider = manifestFile.map {
-            parseManifest(it.asFile, manifestFileRequired)
+            parseManifest(
+                it.asFile,
+                manifestFileRequired,
+                manifestParsingAllowed,
+                projectServices.issueReporter
+            )
         }
 
         // wrap the provider in a property to allow memoization
@@ -56,16 +64,39 @@ class LazyManifestParser(
         get() = manifestFile.get().asFile.absolutePath
 }
 
-private fun parseManifest(file: File, manifestFileRequired: Boolean): ManifestData {
+private fun parseManifest(
+    file: File,
+    manifestFileRequired: Boolean,
+    manifestParsingAllowed: BooleanSupplier,
+    issueReporter: IssueReporter
+): ManifestData {
+    if (!manifestParsingAllowed.asBoolean) {
+        // This is not an exception since we still want sync to succeed if this occurs.
+        // Instead print part of the relevant stack trace so that the developer will know
+        // how this occurred.
+        val stackTrace = Thread.currentThread().stackTrace.map { it.toString() }.filter {
+            !it.startsWith("com.android.build.gradle.internal.manifest.") && !it.startsWith("org.gradle.")
+        }.subList(1, 10)
+        val stackTraceString = stackTrace.joinToString(separator = "\n")
+        issueReporter.reportWarning(
+            IssueReporter.Type.MANIFEST_PARSED_DURING_CONFIGURATION,
+            "The manifest is being parsed during configuration. Please either remove android.disableConfigurationManifestParsing from build.gradle or remove any build configuration rules that read the android manifest file.\n$stackTraceString"
+        )
+    }
 
     val data = ManifestData()
 
     if (!file.exists()) {
         if (manifestFileRequired) {
-            throw java.lang.RuntimeException("Manifest file does not exist: ${file.absolutePath}")
-        } else {
-            return data
+            issueReporter.reportError(
+                IssueReporter.Type.MISSING_ANDROID_MANIFEST,
+                "Manifest file does not exist: ${file.absolutePath}"
+            )
+            // init data with dummy values to prevent code down the line to have to deal with NPE
+            data.packageName = "fake.package.name.for.sync"
         }
+
+        return data
     }
 
     val handler: DefaultHandler =

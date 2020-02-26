@@ -20,6 +20,7 @@ import android.databinding.tool.LayoutXmlProcessor
 import android.databinding.tool.writer.JavaFileWriter
 import com.android.ide.common.blame.MergingLog
 import com.android.ide.common.blame.SourceFile
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import java.io.File
@@ -31,7 +32,7 @@ import java.io.File
  */
 class LayoutXmlProcessorDelegate(
     @get:Input
-    val packageName: String,
+    val packageName: Provider<String>,
     @get:Input
     val useAndroidX: Boolean,
     // output is already handled by the task, but this should be clean-up (along with all VariantPathHelper)
@@ -41,7 +42,7 @@ class LayoutXmlProcessorDelegate(
     @get:Internal
     val layoutXmlProcessor: LayoutXmlProcessor by lazy {
         LayoutXmlProcessor(
-            packageName,
+            packageName.get(),
             CustomJavaFileWriter(),
             LayoutXmlProcessor.OriginalFileLookup { file: File ->
                 val input = SourceFile(file)

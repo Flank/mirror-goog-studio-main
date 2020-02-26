@@ -52,7 +52,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    variantApiServices: VariantPropertiesApiServices,
+    internalServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
@@ -66,7 +66,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    variantApiServices,
+    internalServices,
     taskCreationServices,
     globalScope
 ), DynamicFeatureVariantProperties, DynamicFeatureCreationConfig {
@@ -84,8 +84,8 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> =
-        variantApiServices.propertyOf(String::class.java, baseModuleMetadata.map { it.applicationId })
+    override val applicationId: Provider<String> =
+        internalServices.providerOf(String::class.java, baseModuleMetadata.map { it.applicationId })
 
     override val manifestPlaceholders: Map<String, Any>
         get() = variantDslInfo.manifestPlaceholders
@@ -93,7 +93,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     override val aaptOptions: AaptOptions by lazy {
         initializeAaptOptionsFromDsl(
             globalScope.extension.aaptOptions,
-            variantApiServices
+            internalServices
         )
     }
 
@@ -112,12 +112,12 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
     override val testOnlyApk: Boolean
         get() = variantScope.isTestOnly
 
-    override val baseModuleDebuggable: Provider<Boolean> = variantApiServices.providerOf(
+    override val baseModuleDebuggable: Provider<Boolean> = internalServices.providerOf(
         Boolean::class.java,
         baseModuleMetadata.map { it.debuggable })
 
     override val featureName: Provider<String> =
-        variantApiServices.providerOf(String::class.java, featureSetMetadata.map {
+        internalServices.providerOf(String::class.java, featureSetMetadata.map {
             val path = globalScope.project.path
             it.getFeatureNameFor(path)
                 ?: throw RuntimeException("Failed to find feature name for $path in ${it.sourceFile}")
@@ -127,7 +127,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
      * resource offset for resource compilation of a feature.
      * This is computed by the base module and consumed by the features. */
     override val resOffset: Provider<Int> =
-        variantApiServices.providerOf(Int::class.java, featureSetMetadata.map {
+        internalServices.providerOf(Int::class.java, featureSetMetadata.map {
             val path = globalScope.project.path
             it.getResOffsetFor(path)
                 ?: throw RuntimeException("Failed to find resource offset for $path in ${it.sourceFile}")

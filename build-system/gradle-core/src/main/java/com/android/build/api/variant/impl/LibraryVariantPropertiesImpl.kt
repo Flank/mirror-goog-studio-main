@@ -31,7 +31,7 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import org.gradle.api.provider.Property
-import java.util.concurrent.Callable
+import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class LibraryVariantPropertiesImpl @Inject constructor(
@@ -45,7 +45,7 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    variantPropertiesApiServices: VariantPropertiesApiServices,
+    internalServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
@@ -59,7 +59,7 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    variantPropertiesApiServices,
+    internalServices,
     taskCreationServices,
     globalScope
 ), LibraryVariantProperties, LibraryCreationConfig {
@@ -68,9 +68,8 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
 
-    override val applicationId: Property<String> = variantPropertiesApiServices.propertyOf(
-        String::class.java,
-        variantDslInfo.packageFromManifest)
+    override val applicationId: Provider<String> =
+        internalServices.providerOf(String::class.java, variantDslInfo.packageName)
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
