@@ -703,8 +703,7 @@ public class JavaResPackagingTest {
             @NonNull AbstractAndroidSubject subject,
             @NonNull String parentDirRelativePath,
             @NonNull String filename,
-            @Nullable String content)
-            throws Exception {
+            @Nullable String content) {
         if (content != null) {
             subject.containsJavaResourceWithContent(
                     parentDirRelativePath + "/" + filename, content);

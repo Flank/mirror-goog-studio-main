@@ -19,12 +19,12 @@ package com.android.build.gradle.integration.common.truth;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.android.annotations.NonNull;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.AndroidArchive;
 import com.android.testutils.truth.AbstractZipSubject;
 import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -45,41 +45,50 @@ public abstract class AbstractAndroidSubject<
         return AndroidArchive.CLASS_FORMAT.matcher(className).matches();
     }
 
-    public final void containsClass(@NonNull String className)
-            throws IOException, ProcessException {
-        if (!actual().containsClass(className)) {
-            failWithoutActual(
-                    Fact.simpleFact(
-                            String.format(
-                                    "'%s' does not contain class '%s'.\n",
-                                    actualAsString(), className)));
+    public final void containsClass(@NonNull String className) {
+        try {
+            if (!actual().containsClass(className)) {
+                failWithoutActual(
+                        Fact.simpleFact(
+                                String.format(
+                                        "'%s' does not contain class '%s'.\n",
+                                        actualAsString(), className)));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
-    public final void containsMainClass(@NonNull String className)
-            throws IOException, ProcessException {
-        if (!actual().containsMainClass(className)) {
-            failWithoutActual(
-                    Fact.simpleFact(
-                            String.format(
-                                    "'%s' does not contain main class '%s'",
-                                    actualAsString(), className)));
+    public final void containsMainClass(@NonNull String className) {
+        try {
+            if (!actual().containsMainClass(className)) {
+                failWithoutActual(
+                        Fact.simpleFact(
+                                String.format(
+                                        "'%s' does not contain main class '%s'",
+                                        actualAsString(), className)));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
-    public final void containsSecondaryClass(@NonNull String className)
-            throws IOException, ProcessException {
-        if (!actual().containsSecondaryClass(className)) {
-            failWithoutActual(
-                    Fact.simpleFact(
-                            String.format(
-                                    "'%s' does not contain secondary class '%s'",
-                                    actualAsString(), className)));
+    public final void containsSecondaryClass(@NonNull String className) {
+        try {
+            if (!actual().containsSecondaryClass(className)) {
+                failWithoutActual(
+                        Fact.simpleFact(
+                                String.format(
+                                        "'%s' does not contain secondary class '%s'",
+                                        actualAsString(), className)));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
     @Override
-    public final void contains(@NonNull String path) throws IOException {
+    public final void contains(@NonNull String path) {
         checkArgument(!isClassName(path), "Use containsClass to check for classes.");
         if (actual().getEntry(path) == null) {
             failWithoutActual(
@@ -88,7 +97,7 @@ public abstract class AbstractAndroidSubject<
     }
 
     @Override
-    public final void doesNotContain(@NonNull String path) throws IOException {
+    public final void doesNotContain(@NonNull String path) {
         checkArgument(!isClassName(path), "Use doesNotContainClass to check for classes.");
         if (actual().getEntry(path) != null) {
             failWithoutActual(
@@ -97,7 +106,7 @@ public abstract class AbstractAndroidSubject<
         }
     }
 
-    public final void containsFile(@NonNull String fileName) throws IOException {
+    public final void containsFile(@NonNull String fileName) {
         if (actual().getEntries(Pattern.compile("(.*/)?" + fileName)).isEmpty()) {
             failWithoutActual(
                     Fact.simpleFact(
@@ -105,7 +114,7 @@ public abstract class AbstractAndroidSubject<
         }
     }
 
-    public final void doesNotContainFile(@NonNull String fileName) throws IOException {
+    public final void doesNotContainFile(@NonNull String fileName) {
         if (!actual().getEntries(Pattern.compile("(.*/)?" + fileName)).isEmpty()) {
             failWithoutActual(
                     Fact.simpleFact(
@@ -114,41 +123,50 @@ public abstract class AbstractAndroidSubject<
         }
     }
 
-    public final void doesNotContainClass(@NonNull String className)
-            throws IOException, ProcessException {
-        if (actual().containsClass(className)) {
-            failWithoutActual(
-                    Fact.simpleFact(
-                            String.format(
-                                    "'%s' unexpectedly contains class '%s'",
-                                    actualAsString(), className)));
+    public final void doesNotContainClass(@NonNull String className) {
+        try {
+            if (actual().containsClass(className)) {
+                failWithoutActual(
+                        Fact.simpleFact(
+                                String.format(
+                                        "'%s' unexpectedly contains class '%s'",
+                                        actualAsString(), className)));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
-    public final void doesNotContainMainClass(@NonNull String className)
-            throws IOException, ProcessException {
-        if (actual().containsMainClass(className)) {
-            failWithoutActual(
-                    Fact.simpleFact(
-                            String.format(
-                                    "'%s' unexpectedly contains main class '%s'",
-                                    actualAsString(), className)));
+    public final void doesNotContainMainClass(@NonNull String className) {
+        try {
+            if (actual().containsMainClass(className)) {
+                failWithoutActual(
+                        Fact.simpleFact(
+                                String.format(
+                                        "'%s' unexpectedly contains main class '%s'",
+                                        actualAsString(), className)));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
-    public final void doesNotContainSecondaryClass(@NonNull String className)
-            throws IOException, ProcessException {
-        if (actual().containsSecondaryClass(className)) {
-            failWithoutActual(
-                    Fact.simpleFact(
-                            String.format(
-                                    "'%s' unexpectedly contains secondary class '%s'",
-                                    actualAsString(), className)));
+    public final void doesNotContainSecondaryClass(@NonNull String className) {
+        try {
+            if (actual().containsSecondaryClass(className)) {
+                failWithoutActual(
+                        Fact.simpleFact(
+                                String.format(
+                                        "'%s' unexpectedly contains secondary class '%s'",
+                                        actualAsString(), className)));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-    public final void containsResource(@NonNull String name) throws IOException, ProcessException {
+    public final void containsResource(@NonNull String name) {
         if (actual().getResource(name) == null) {
             failWithoutActual(
                     Fact.simpleFact(
@@ -158,8 +176,7 @@ public abstract class AbstractAndroidSubject<
         }
     }
 
-    public final void doesNotContainResource(@NonNull String name)
-            throws IOException, ProcessException {
+    public final void doesNotContainResource(@NonNull String name) {
         if (actual().getResource(name) != null) {
             failWithoutActual(
                     Fact.simpleFact(
@@ -170,25 +187,31 @@ public abstract class AbstractAndroidSubject<
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
-    public final void containsJavaResource(@NonNull String name)
-            throws IOException, ProcessException {
-        if (!(actual().getJavaResource(name) != null)) {
-            failWithoutActual(
-                    Fact.simpleFact(
-                            String.format(
-                                    "'%s' does not contain Java resource '%s'",
-                                    actualAsString(), name)));
+    public final void containsJavaResource(@NonNull String name) {
+        try {
+            if (actual().getJavaResource(name) == null) {
+                failWithoutActual(
+                        Fact.simpleFact(
+                                String.format(
+                                        "'%s' does not contain Java resource '%s'",
+                                        actualAsString(), name)));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
-    public final void doesNotContainJavaResource(@NonNull String name)
-            throws IOException, ProcessException {
-        if (actual().getJavaResource(name) != null) {
-            failWithoutActual(
-                    Fact.simpleFact(
-                            String.format(
-                                    "'%s' unexpectedly contains Java resource '%s'",
-                                    actualAsString(), name)));
+    public final void doesNotContainJavaResource(@NonNull String name) {
+        try {
+            if (actual().getJavaResource(name) != null) {
+                failWithoutActual(
+                        Fact.simpleFact(
+                                String.format(
+                                        "'%s' unexpectedly contains Java resource '%s'",
+                                        actualAsString(), name)));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -200,20 +223,24 @@ public abstract class AbstractAndroidSubject<
      */
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public final void containsJavaResourceWithContent(
-            @NonNull String path, @NonNull String expected) throws IOException, ProcessException {
-        Path resource = actual().getJavaResource(path);
-        if (resource == null) {
-            failWithoutActual(
-                    Fact.simpleFact("Resource " + path + " does not exist in " + actual()));
-            return;
-        }
-        String actual = Files.readAllLines(resource).stream().collect(Collectors.joining("\n"));
-        if (!expected.equals(actual)) {
-            failWithoutActual(
-                    Fact.simpleFact(
-                            String.format(
-                                    "Resource %s in %s does not have expected contents. Expected '%s' actual '%s'",
-                                    path, actual(), expected, actual)));
+            @NonNull String path, @NonNull String expected) {
+        try {
+            Path resource = actual().getJavaResource(path);
+            if (resource == null) {
+                failWithoutActual(
+                        Fact.simpleFact("Resource " + path + " does not exist in " + actual()));
+                return;
+            }
+            String actual = Files.readAllLines(resource).stream().collect(Collectors.joining("\n"));
+            if (!expected.equals(actual)) {
+                failWithoutActual(
+                        Fact.simpleFact(
+                                String.format(
+                                        "Resource %s in %s does not have expected contents. Expected '%s' actual '%s'",
+                                        path, actual(), expected, actual)));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -223,21 +250,25 @@ public abstract class AbstractAndroidSubject<
      */
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
     public final void containsJavaResourceWithContent(
-            @NonNull String path, @NonNull byte[] expected) throws IOException, ProcessException {
-        Path resource = actual().getJavaResource(path);
-        if (resource == null) {
-            failWithoutActual(
-                    Fact.simpleFact("Resource " + path + " does not exist in " + actual()));
-            return;
-        }
+            @NonNull String path, @NonNull byte[] expected) {
+        try {
+            Path resource = actual().getJavaResource(path);
+            if (resource == null) {
+                failWithoutActual(
+                        Fact.simpleFact("Resource " + path + " does not exist in " + actual()));
+                return;
+            }
 
-        byte[] actual = Files.readAllBytes(resource);
-        if (!Arrays.equals(expected, actual)) {
-            failWithBadResults(
-                    "[" + path + "] has contents",
-                    Arrays.toString(expected),
-                    "contains",
-                    Arrays.toString(actual));
+            byte[] actual = Files.readAllBytes(resource);
+            if (!Arrays.equals(expected, actual)) {
+                failWithBadResults(
+                        "[" + path + "] has contents",
+                        Arrays.toString(expected),
+                        "contains",
+                        Arrays.toString(actual));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 

@@ -52,8 +52,8 @@ class LibWithNavigationTest {
     @Test
     fun testAssembleReleaseWithNavGraphTagInManifest() {
         project.execute("clean", ":library:assembleRelease")
-        project.getSubproject("library").getAar("release") {
-            assertThat(it.androidManifestContentsAsString).contains(
+        project.getSubproject("library").withAar("release") {
+            assertThat(androidManifestContentsAsString).contains(
                 "<nav-graph android:value=\"@navigation/nav1\" />")
         }
     }

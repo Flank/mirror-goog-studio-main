@@ -687,8 +687,7 @@ public class ResPackagingTest {
     private static void check(
             @NonNull AbstractAndroidSubject subject,
             @NonNull String filename,
-            @Nullable String content)
-            throws Exception {
+            @Nullable String content) {
         if (content != null) {
             subject.containsFileWithContent("res/raw/" + filename, content);
         } else {

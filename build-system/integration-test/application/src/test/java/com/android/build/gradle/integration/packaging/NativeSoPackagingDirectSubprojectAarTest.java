@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import org.junit.Before;
@@ -52,14 +53,18 @@ public class NativeSoPackagingDirectSubprojectAarTest {
         lib.getAar(
                 "debug",
                 it -> {
-                    Files.write(
-                            buildFile.toPath(),
-                            ("configurations.create('default')\n"
-                                            + "artifacts.add('default', file('"
-                                            + FileUtils.toSystemIndependentPath(
-                                                    it.getFile().toString())
-                                            + "'))")
-                                    .getBytes(StandardCharsets.UTF_8));
+                    try {
+                        Files.write(
+                                buildFile.toPath(),
+                                ("configurations.create('default')\n"
+                                                + "artifacts.add('default', file('"
+                                                + FileUtils.toSystemIndependentPath(
+                                                        it.getFile().toString())
+                                                + "'))")
+                                        .getBytes(StandardCharsets.UTF_8));
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
                 });
         TestFileUtils.appendToFile(project.file("settings.gradle"), "include 'directLib'\n");
 

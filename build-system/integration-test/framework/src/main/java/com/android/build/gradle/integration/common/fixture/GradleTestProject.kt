@@ -13,727 +13,340 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.integration.common.fixture
 
-package com.android.build.gradle.integration.common.fixture;
-
-import static com.android.build.gradle.integration.common.truth.AarSubject.aars;
-import static com.android.testutils.truth.PathSubject.assertThat;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.truth.Truth.assertAbout;
-import static org.junit.Assert.assertTrue;
-
-import com.android.SdkConstants;
-import com.android.Version;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.variant.BuiltArtifacts;
-import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
-import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
-import com.android.build.gradle.integration.common.truth.AarSubject;
-import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.cxx.configure.NdkLocatorKt;
-import com.android.build.gradle.internal.plugins.VersionCheckPlugin;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.builder.core.ToolsRevisionUtils;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
-import com.android.builder.model.VariantBuildInformation;
-import com.android.io.StreamException;
-import com.android.sdklib.SdkVersionInfo;
-import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
-import com.android.testutils.MavenRepoGenerator;
-import com.android.testutils.OsType;
-import com.android.testutils.TestUtils;
-import com.android.testutils.apk.Aar;
-import com.android.testutils.apk.Apk;
-import com.android.testutils.apk.Zip;
-import com.android.utils.FileUtils;
-import com.android.utils.Pair;
-import com.android.utils.StringHelper;
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.hash.Hashing;
-import com.google.common.io.Files;
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import kotlin.Unit;
-import org.gradle.tooling.GradleConnectionException;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ProjectConnection;
-import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
-import org.gradle.util.GradleVersion;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import com.android.SdkConstants
+import com.android.Version
+import com.android.build.api.variant.BuiltArtifacts
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl.Companion.loadFromFile
+import com.android.build.gradle.integration.BazelIntegrationTestsSuite
+import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder.MemoryRequirement
+import com.android.build.gradle.integration.common.truth.AarSubject
+import com.android.build.gradle.integration.common.truth.forEachLine
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+import com.android.build.gradle.internal.plugins.VersionCheckPlugin
+import com.android.build.gradle.options.BooleanOption
+import com.android.builder.core.ToolsRevisionUtils
+import com.android.builder.model.AndroidProject
+import com.android.builder.model.VariantBuildInformation
+import com.android.sdklib.SdkVersionInfo
+import com.android.sdklib.internal.project.ProjectProperties
+import com.android.testutils.MavenRepoGenerator
+import com.android.testutils.OsType
+import com.android.testutils.TestUtils
+import com.android.testutils.apk.Aar
+import com.android.testutils.apk.Apk
+import com.android.testutils.apk.Zip
+import com.android.testutils.truth.PathSubject
+import com.android.utils.FileUtils
+import com.android.utils.Pair
+import com.android.utils.combineAsCamelCase
+import com.google.common.base.Charsets
+import com.google.common.base.Joiner
+import com.google.common.base.MoreObjects
+import com.google.common.base.Preconditions
+import com.google.common.base.Splitter
+import com.google.common.base.Strings
+import com.google.common.base.Throwables
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableMap
+import com.google.common.collect.Lists
+import com.google.common.hash.Hashing
+import com.google.common.truth.Truth
+import org.gradle.api.Action
+import org.gradle.tooling.GradleConnectionException
+import org.gradle.tooling.GradleConnector
+import org.gradle.tooling.ProjectConnection
+import org.gradle.tooling.internal.consumer.DefaultGradleConnector
+import org.gradle.util.GradleVersion
+import org.junit.Assert
+import org.junit.rules.TestRule
+import org.junit.runner.Description
+import org.junit.runners.model.Statement
+import java.io.File
+import java.net.URLClassLoader
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.Arrays
+import java.util.Comparator
+import java.util.Locale
+import java.util.Objects
+import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
+import java.util.regex.Pattern
+import java.util.stream.Collectors
 
 /**
  * JUnit4 test rule for integration test.
  *
- * <p>This rule create a gradle project in a temporary directory. It can be use with the @Rule
+ *
+ * This rule create a gradle project in a temporary directory. It can be use with the @Rule
  * or @ClassRule annotations. Using this class with @Rule will create a gradle project in separate
  * directories for each unit test, whereas using it with @ClassRule creates a single gradle project.
  *
- * <p>The test directory is always deleted if it already exists at the start of the test to ensure a
+ *
+ * The test directory is always deleted if it already exists at the start of the test to ensure a
  * clean environment.
  */
-public final class GradleTestProject implements TestRule {
-    public static final String ENV_CUSTOM_REPO = "CUSTOM_REPO";
-
-    // Limit daemon idle time for tests. 10 seconds is enough for another test
-    // to start and reuse the daemon.
-    public static final int GRADLE_DEAMON_IDLE_TIME_IN_SECONDS = 10;
-
-
-    public static final String DEFAULT_COMPILE_SDK_VERSION;
-
-    public static final String DEFAULT_BUILD_TOOL_VERSION;
-    public static final String DEFAULT_NDK_SIDE_BY_SIDE_VERSION =
-            NdkLocatorKt.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION;
-    public static final boolean APPLY_DEVICEPOOL_PLUGIN =
-            Boolean.parseBoolean(System.getenv().getOrDefault("APPLY_DEVICEPOOL_PLUGIN", "false"));
-
-    public static final boolean USE_LATEST_NIGHTLY_GRADLE_VERSION =
-            Boolean.parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"));
-    public static final String GRADLE_TEST_VERSION;
-
-    public static final String ANDROID_GRADLE_PLUGIN_VERSION;
-
-    public static final String DEVICE_TEST_TASK = "deviceCheck";
-
-    private static final int MAX_TEST_NAME_DIR_WINDOWS = 50;
-
-    public static final File BUILD_DIR;
-    public static final File OUT_DIR;
-    private static final Path GRADLE_USER_HOME;
-    public static final File ANDROID_SDK_HOME;
-
-    /**
-     * List of Apk file reference that should be closed and deleted once the TestRule is done. This
-     * is useful on Windows when Apk will lock the underlying file and most test code do not use
-     * try-with-resources nor explicitly call close().
-     */
-    private static final List<Apk> tmpApkFiles = new ArrayList<>();
-
-    static {
-        try {
-            if (System.getenv("TEST_TMPDIR") != null) {
-                BUILD_DIR = new File(System.getenv("TEST_TMPDIR"));
-            } else if (BuildSystem.get() == BuildSystem.IDEA) {
-                BUILD_DIR = new File(TestUtils.getWorkspaceRoot(), "out/gradle-integration-tests");
-            } else {
-                throw new IllegalStateException("unable to determine location for BUILD_DIR");
-            }
-
-            OUT_DIR = new File(BUILD_DIR, "tests");
-            ANDROID_SDK_HOME = new File(BUILD_DIR, "ANDROID_SDK_HOME");
-
-            GRADLE_USER_HOME = getGradleUserHome(BUILD_DIR);
-
-            if (USE_LATEST_NIGHTLY_GRADLE_VERSION) {
-                GRADLE_TEST_VERSION =
-                        Preconditions.checkNotNull(
-                                getLatestGradleCheckedIn(),
-                                "Failed to find latest nightly version.");
-            } else {
-                GRADLE_TEST_VERSION = VersionCheckPlugin.GRADLE_MIN_VERSION.toString();
-            }
-
-            // These are some properties that we use in the integration test projects, when generating
-            // build.gradle files. In case you would like to change any of the parameters, for instance
-            // when testing cross product of versions of buildtools, compile sdks, plugin versions,
-            // there are corresponding system environment variable that you are able to set.
-            String envBuildToolVersion = Strings.emptyToNull(System.getenv("CUSTOM_BUILDTOOLS"));
-            DEFAULT_BUILD_TOOL_VERSION =
-                    MoreObjects.firstNonNull(
-                            envBuildToolVersion,
-                            ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION.toString());
-
-            String envVersion = Strings.emptyToNull(System.getenv().get("CUSTOM_PLUGIN_VERSION"));
-            ANDROID_GRADLE_PLUGIN_VERSION =
-                    MoreObjects.firstNonNull(envVersion, Version.ANDROID_GRADLE_PLUGIN_VERSION);
-
-            String envCustomCompileSdk =
-                    Strings.emptyToNull(System.getenv().get("CUSTOM_COMPILE_SDK"));
-            DEFAULT_COMPILE_SDK_VERSION =
-                    MoreObjects.firstNonNull(
-                            envCustomCompileSdk,
-                            Integer.toString(SdkVersionInfo.HIGHEST_KNOWN_STABLE_API));
-        } catch (Throwable t) {
-            // Print something to stdout, to give us a chance to debug initialization problems.
-            System.out.println(Throwables.getStackTraceAsString(t));
-            throw Throwables.propagate(t);
-        }
-    }
-
-    private static final String COMMON_HEADER = "commonHeader.gradle";
-    private static final String COMMON_LOCAL_REPO = "commonLocalRepo.gradle";
-    private static final String COMMON_BUILD_SCRIPT = "commonBuildScript.gradle";
-    private static final String COMMON_VERSIONS = "commonVersions.gradle";
-    private static final String DEFAULT_TEST_PROJECT_NAME = "project";
-
-    private final String name;
-    private final boolean withDeviceProvider;
-    private final boolean withSdk;
-    private final boolean withAndroidGradlePlugin;
-    private final boolean withKotlinGradlePlugin;
-    @NonNull private final List<String> withIncludedBuilds;
-    @Nullable private File testDir;
-    private File buildFile;
-    private File localProp;
-    private final boolean withoutNdk;
-    private final boolean withDependencyChecker;
-    // Indicates if CMake's directory information needs to be saved in local.properties
-    private final boolean withCmakeDirInLocalProp;
-    private final String ndkSymlinkPath;
+class GradleTestProject @JvmOverloads internal constructor(
+    /** Return the name of the test project.  */
+    val name: String = DEFAULT_TEST_PROJECT_NAME,
+    private val testProject: TestProject? = null,
+    private val targetGradleVersion: String,
+    private val withoutNdk: Boolean,
+    private val withDependencyChecker: Boolean,
+    private val gradleProperties: Collection<String>,
+    val heapSize: MemoryRequirement,
+    private val compileSdkVersion: String = DEFAULT_COMPILE_SDK_VERSION,
+    val buildToolsVersion: String?,
+    private val profileDirectory: Path?,
     // CMake's version to be used
-    @NonNull private final String cmakeVersion;
+    private val cmakeVersion: String?,
+    // Indicates if CMake's directory information needs to be saved in local.properties
+    private val withCmakeDirInLocalProp: Boolean,
+    private val ndkSymlinkPath: String?,
+    private val withDeviceProvider: Boolean,
+    private val withSdk: Boolean,
+    private val withAndroidGradlePlugin: Boolean,
+    private val withKotlinGradlePlugin: Boolean,
+    private val withIncludedBuilds: List<String>,
+    var _testDir: File?,
+    private val repoDirectories: List<Path>?,
+    private val additionalMavenRepo: MavenRepoGenerator?,
+    val androidHome: File?,
+    val androidNdkHome: File,
+    private val gradleDistributionDirectory: File,
+    private val gradleBuildCacheDirectory: File?,
+    val kotlinVersion: String,
+    /** Whether or not to output the log of the last build result when a test fails.  */
+    private val outputLogOnFailure: Boolean,
+    private val openConnections: MutableList<ProjectConnection>? = mutableListOf(),
+    /** root project if one exist. This is null for the actual root */
+    private val _rootProject: GradleTestProject? = null
+) : TestRule {
+    companion object {
+        const val ENV_CUSTOM_REPO = "CUSTOM_REPO"
 
-    private final Collection<String> gradleProperties;
+        // Limit daemon idle time for tests. 10 seconds is enough for another test
+        // to start and reuse the daemon.
+        const val GRADLE_DEAMON_IDLE_TIME_IN_SECONDS = 10
+        @JvmField
+        var DEFAULT_COMPILE_SDK_VERSION: String
+        @JvmField
+        var DEFAULT_BUILD_TOOL_VERSION: String
+        const val DEFAULT_NDK_SIDE_BY_SIDE_VERSION: String = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+        @JvmField
+        val APPLY_DEVICEPOOL_PLUGIN = java.lang.Boolean.parseBoolean(
+            System.getenv().getOrDefault("APPLY_DEVICEPOOL_PLUGIN", "false")
+        )
+        val USE_LATEST_NIGHTLY_GRADLE_VERSION = java.lang.Boolean
+            .parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"))
+        @JvmField
+        var GRADLE_TEST_VERSION: String? = null
+        var ANDROID_GRADLE_PLUGIN_VERSION: String? = null
+        const val DEVICE_TEST_TASK = "deviceCheck"
+        private const val MAX_TEST_NAME_DIR_WINDOWS = 50
+        @JvmField
+        var BUILD_DIR: File? = null
+        var OUT_DIR: File? = null
+        private var GRADLE_USER_HOME: Path? = null
+        @JvmField
+        var ANDROID_SDK_HOME: File? = null
 
-    @Nullable private final TestProject testProject;
+        /**
+         * List of Apk file reference that should be closed and deleted once the TestRule is done. This
+         * is useful on Windows when Apk will lock the underlying file and most test code do not use
+         * try-with-resources nor explicitly call close().
+         */
+        private val tmpApkFiles: MutableList<Apk> = mutableListOf()
+        private const val COMMON_HEADER = "commonHeader.gradle"
+        private const val COMMON_LOCAL_REPO = "commonLocalRepo.gradle"
+        private const val COMMON_BUILD_SCRIPT = "commonBuildScript.gradle"
+        private const val COMMON_VERSIONS = "commonVersions.gradle"
+        const val DEFAULT_TEST_PROJECT_NAME = "project"
 
-    private final String targetGradleVersion;
-
-    @NonNull private final String compileSdkVersion;
-    @Nullable private final String buildToolsVersion;
-
-    @Nullable private final Path profileDirectory;
-
-    @NonNull private final GradleTestProjectBuilder.MemoryRequirement heapSize;
-    @Nullable private final List<Path> repoDirectories;
-    @Nullable private MavenRepoGenerator additionalMavenRepo;
-    @Nullable private Path additionalMavenRepoDir;
-
-    @NonNull private final File androidHome;
-    @NonNull private final File androidNdkHome;
-    @NonNull private final File gradleDistributionDirectory;
-    @Nullable private final File gradleBuildCacheDirectory;
-    @NonNull private final String kotlinVersion;
-
-    private GradleBuildResult lastBuildResult;
-    private ProjectConnection projectConnection;
-    private final GradleTestProject rootProject;
-    private final List<ProjectConnection> openConnections;
-
-    /** Whether or not to output the log of the last build result when a test fails. */
-    private boolean outputLogOnFailure;
-
-    GradleTestProject(
-            @Nullable String name,
-            @Nullable TestProject testProject,
-            @Nullable String targetGradleVersion,
-            boolean withoutNdk,
-            boolean withDependencyChecker,
-            @NonNull Collection<String> gradleProperties,
-            @NonNull GradleTestProjectBuilder.MemoryRequirement heapSize,
-            @Nullable String compileSdkVersion,
-            @Nullable String buildToolsVersion,
-            @Nullable Path profileDirectory,
-            @NonNull String cmakeVersion,
-            boolean withCmake,
-            @Nullable String ndkSymlinkPath,
-            boolean withDeviceProvider,
-            boolean withSdk,
-            boolean withAndroidGradlePlugin,
-            boolean withKotlinGradlePlugin,
-            @NonNull List<String> withIncludedBuilds,
-            @Nullable File testDir,
-            @Nullable List<Path> repoDirectories,
-            @Nullable MavenRepoGenerator additionalMavenRepo,
-            @NonNull File androidHome,
-            @NonNull File androidNdkHome,
-            @NonNull File gradleDistributionDirectory,
-            @Nullable File gradleBuildCacheDirectory,
-            @NonNull String kotlinVersion,
-            boolean outputLogOnFailure) {
-        this.withDeviceProvider = withDeviceProvider;
-        this.withSdk = withSdk;
-        this.withAndroidGradlePlugin = withAndroidGradlePlugin;
-        this.withKotlinGradlePlugin = withKotlinGradlePlugin;
-        this.withIncludedBuilds = withIncludedBuilds;
-        this.additionalMavenRepo = additionalMavenRepo;
-        this.buildFile = null;
-        this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
-        this.targetGradleVersion = targetGradleVersion;
-        this.testProject = testProject;
-        this.withoutNdk = withoutNdk;
-        this.withDependencyChecker = withDependencyChecker;
-        this.heapSize = heapSize;
-        this.gradleProperties = gradleProperties;
-        this.buildToolsVersion = buildToolsVersion;
-        this.compileSdkVersion =
-                compileSdkVersion != null ? compileSdkVersion : DEFAULT_COMPILE_SDK_VERSION;
-        this.openConnections = Lists.newArrayList();
-        this.rootProject = this;
-        this.profileDirectory = profileDirectory;
-        this.cmakeVersion = cmakeVersion;
-        this.withCmakeDirInLocalProp = withCmake;
-        this.ndkSymlinkPath = ndkSymlinkPath;
-        this.testDir = testDir;
-        this.repoDirectories = repoDirectories;
-        this.androidHome = androidHome;
-        this.androidNdkHome = androidNdkHome;
-        this.gradleDistributionDirectory = gradleDistributionDirectory;
-        this.gradleBuildCacheDirectory = gradleBuildCacheDirectory;
-        this.kotlinVersion = kotlinVersion;
-        this.outputLogOnFailure = outputLogOnFailure;
-    }
-
-    /**
-     * Create a GradleTestProject representing a subProject of another GradleTestProject.
-     *
-     * @param subProject name of the subProject, or the subProject's gradle project path
-     * @param rootProject root GradleTestProject.
-     * @param heapSize heap size
-     */
-    private GradleTestProject(
-            @NonNull String subProject,
-            @NonNull GradleTestProject rootProject,
-            @NonNull GradleTestProjectBuilder.MemoryRequirement heapSize) {
-        name = subProject.substring(subProject.lastIndexOf(':') + 1);
-
-        testDir = new File(rootProject.getTestDir(), subProject.replace(":", "/"));
-        assertTrue("No subproject dir at " + getTestDir().toString(), getTestDir().isDirectory());
-
-        buildFile = new File(getTestDir(), "build.gradle");
-        withoutNdk = rootProject.withoutNdk;
-        withDependencyChecker = rootProject.withDependencyChecker;
-        gradleProperties = ImmutableList.of();
-        testProject = null;
-        targetGradleVersion = rootProject.targetGradleVersion;
-        openConnections = null;
-        this.compileSdkVersion = rootProject.compileSdkVersion;
-        this.buildToolsVersion = rootProject.buildToolsVersion;
-        this.rootProject = rootProject;
-        this.profileDirectory = rootProject.profileDirectory;
-        this.cmakeVersion = rootProject.cmakeVersion;
-        this.withDeviceProvider = rootProject.withDeviceProvider;
-        this.withSdk = rootProject.withSdk;
-        this.withAndroidGradlePlugin = rootProject.withAndroidGradlePlugin;
-        this.withKotlinGradlePlugin = rootProject.withKotlinGradlePlugin;
-        this.withCmakeDirInLocalProp = rootProject.withCmakeDirInLocalProp;
-        this.ndkSymlinkPath = rootProject.ndkSymlinkPath;
-        this.withIncludedBuilds = ImmutableList.of();
-        this.repoDirectories = rootProject.repoDirectories;
-        this.androidHome = rootProject.androidHome;
-        this.androidNdkHome = rootProject.androidNdkHome;
-        this.gradleDistributionDirectory = rootProject.gradleDistributionDirectory;
-        this.gradleBuildCacheDirectory = rootProject.gradleBuildCacheDirectory;
-        this.kotlinVersion = rootProject.kotlinVersion;
-        this.outputLogOnFailure = rootProject.outputLogOnFailure;
-        this.heapSize = rootProject.getHeapSize();
-        this.additionalMavenRepo = rootProject.additionalMavenRepo;
-    }
-
-    public static Path getGradleUserHome(File buildDir) {
-        if (TestUtils.runningFromBazel()) {
-            return BazelIntegrationTestsSuite.GRADLE_USER_HOME;
-        }
-        // Use a temporary directory, so that shards don't share daemons. Gradle builds are not
-        // hermetic anyway and Gradle does not clean up test runfiles, so use the same home
-        // across invocations to save disk space.
-        Path gradle_user_home = buildDir.toPath().resolve("GRADLE_USER_HOME");
-        String worker = System.getProperty("org.gradle.test.worker");
-        if (worker != null) {
-            gradle_user_home = gradle_user_home.resolve(worker);
-        }
-        return gradle_user_home;
-    }
-
-    public static GradleTestProjectBuilder builder() {
-        return new GradleTestProjectBuilder();
-    }
-
-    @NonNull
-    public String getKotlinVersion() {
-        return kotlinVersion;
-    }
-
-    /** Crawls the tools/external/gradle dir, and gets the latest gradle binary. */
-    @Nullable
-    public static String getLatestGradleCheckedIn() {
-        File gradleDir = TestUtils.getWorkspaceFile("tools/external/gradle");
-
-        // should match gradle-3.4-201612071523+0000-bin.zip, and gradle-3.2-bin.zip
-        Pattern gradleVersion = Pattern.compile("^gradle-(\\d+.\\d+)(-.+)?-bin\\.zip$");
-
-        Comparator<Pair<String, String>> revisionsCmp =
-                Comparator.nullsFirst(
-                        Comparator.comparing(
-                                (Pair<String, String> versionTimestamp) ->
-                                        GradleVersion.version(versionTimestamp.getFirst()))
-                                .thenComparing(Pair::getSecond));
-
-        Pair<String, String> highestRevision = null;
-        //noinspection ConstantConditions
-        for (File f : gradleDir.listFiles()) {
-            Matcher matcher = gradleVersion.matcher(f.getName());
-            if (matcher.matches()) {
-                Pair<String, String> current =
-                        Pair.of(matcher.group(1), Strings.nullToEmpty(matcher.group(2)));
-
-                if (revisionsCmp.compare(highestRevision, current) < 0) {
-                    highestRevision = current;
-                }
+        fun getGradleUserHome(buildDir: File?): Path {
+            if (TestUtils.runningFromBazel()) {
+                return BazelIntegrationTestsSuite.GRADLE_USER_HOME
             }
+            // Use a temporary directory, so that shards don't share daemons. Gradle builds are not
+            // hermetic anyway and Gradle does not clean up test runfiles, so use the same home
+            // across invocations to save disk space.
+            var gradle_user_home = buildDir!!.toPath().resolve("GRADLE_USER_HOME")
+            val worker = System.getProperty("org.gradle.test.worker")
+            if (worker != null) {
+                gradle_user_home = gradle_user_home.resolve(worker)
+            }
+            return gradle_user_home
         }
 
-        if (highestRevision == null) {
-            return null;
-        } else {
-            return highestRevision.getFirst() + highestRevision.getSecond();
-        }
-    }
-
-    @Override
-    public Statement apply(final Statement base, final Description description) {
-        if (rootProject != this) {
-            return rootProject.apply(base, description);
+        @JvmStatic
+        fun builder(): GradleTestProjectBuilder {
+            return GradleTestProjectBuilder()
         }
 
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                if (testDir == null) {
-                    testDir =
-                            computeTestDir(
-                                    description.getTestClass(), description.getMethodName(), name);
-                }
-                populateTestDirectory();
+        /** Crawls the tools/external/gradle dir, and gets the latest gradle binary.  */
+        val latestGradleCheckedIn: String?
+            get() {
+                val gradleDir = TestUtils.getWorkspaceFile("tools/external/gradle")
 
-                boolean testFailed = false;
-                try {
-                    base.evaluate();
-                } catch (Throwable e) {
-                    testFailed = true;
-                    throw e;
-                } finally {
-                    for (Apk tmpApkFile : tmpApkFiles) {
-                        try {
-                            tmpApkFile.close();
-                        } catch (Exception e) {
-                            System.err.println("Error while closing APK file : " + e.getMessage());
+                // should match gradle-3.4-201612071523+0000-bin.zip, and gradle-3.2-bin.zip
+                val gradleVersion = Pattern.compile("^gradle-(\\d+.\\d+)(-.+)?-bin\\.zip$")
+                val revisionsCmp: Comparator<Pair<String, String>> =
+                    Comparator.nullsFirst(
+                        Comparator.comparing { it: Pair<String, String> ->
+                            GradleVersion.version(it.first)
                         }
-                        File tmpFile = tmpApkFile.getFile().toFile();
-                        if (tmpFile.exists() && !tmpFile.delete()) {
-                            System.err.println(
-                                    "Cannot delete temporary file " + tmpApkFile.getFile());
+                            .thenComparing { obj: Pair<String, String> -> obj.second }
+                    )
+                var highestRevision: Pair<String, String>? = null
+                gradleDir.listFiles()?.forEach { f ->
+                    val matcher = gradleVersion.matcher(f.name)
+                    if (matcher.matches()) {
+                        val current =
+                            Pair.of(matcher.group(1), Strings.nullToEmpty(matcher.group(2)))
+                        if (revisionsCmp.compare(highestRevision, current) < 0) {
+                            highestRevision = current
                         }
                     }
-                    openConnections.forEach(ProjectConnection::close);
-                    if (outputLogOnFailure && testFailed && lastBuildResult != null) {
-                        System.err.println("==============================================");
-                        System.err.println("= Test " + description + " failed. Last build:");
-                        System.err.println("==============================================");
-                        System.err.println("=================== Stderr ===================");
-                        // All output produced during build execution is written to the standard
-                        // output file handle since Gradle 4.7. This should be empty.
-                        ScannerSubjectUtils.forEachLine(
-                                lastBuildResult.getStderr(),
-                                it -> {
-                                    System.err.println(it);
-                                    return Unit.INSTANCE;
-                                });
-                        System.err.println("=================== Stdout ===================");
-                        ScannerSubjectUtils.forEachLine(
-                                lastBuildResult.getStdout(),
-                                it -> {
-                                    System.err.println(it);
-                                    return Unit.INSTANCE;
-                                });
-                        System.err.println("==============================================");
-                        System.err.println("=============== End last build ===============");
-                        System.err.println("==============================================");
-                    }
+                }
+
+                return if (highestRevision == null) {
+                    null
+                } else {
+                    highestRevision?.first + highestRevision?.second
                 }
             }
-        };
-    }
 
-    private static File computeTestDir(Class<?> testClass, String methodName, String projectName) {
+        private fun computeTestDir(
+            testClass: Class<*>,
+            methodName: String?,
+            projectName: String
+        ): File {
+            var testDir = OUT_DIR
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
+                && System.getenv("BUILDBOT_BUILDERNAME") == null
+            ) {
+                // On Windows machines, make sure the test directory's path is short enough to avoid
+                // running into path too long exceptions. Typically, on local Windows machines,
+                // OUT_DIR's path is long, whereas on Windows build bots, OUT_DIR's path is already
+                // short (see https://issuetracker.google.com/69271554).
+                // In the first case, let's move the test directory close to root (user home), and in
+                // the second case, let's use OUT_DIR directly.
+                var outDir = FileUtils.join(System.getProperty("user.home"), "android-tests")
 
-        File testDir = OUT_DIR;
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
-                && System.getenv("BUILDBOT_BUILDERNAME") == null) {
-            // On Windows machines, make sure the test directory's path is short enough to avoid
-            // running into path too long exceptions. Typically, on local Windows machines,
-            // OUT_DIR's path is long, whereas on Windows build bots, OUT_DIR's path is already
-            // short (see https://issuetracker.google.com/69271554).
-            // In the first case, let's move the test directory close to root (user home), and in
-            // the second case, let's use OUT_DIR directly.
-            String outDir = FileUtils.join(System.getProperty("user.home"), "android-tests");
-
-            // when sharding is on, use a private sharded folder as tests can be split along
-            // shards and files will get locked on Windows.
-            if (System.getenv("TEST_TOTAL_SHARDS") != null) {
-                outDir = FileUtils.join(outDir, System.getenv("TEST_SHARD_INDEX"));
+                // when sharding is on, use a private sharded folder as tests can be split along
+                // shards and files will get locked on Windows.
+                if (System.getenv("TEST_TOTAL_SHARDS") != null) {
+                    outDir = FileUtils.join(outDir, System.getenv("TEST_SHARD_INDEX"))
+                }
+                testDir = File(outDir)
             }
-            testDir = new File(outDir);
-        }
-        String classDir = testClass.getSimpleName();
-        String methodDir = null;
+            var classDir = testClass.simpleName
+            var methodDir: String? = null
 
-        // Create separate directory based on test method name if @Rule is used.
-        // getMethodName() is null if this rule is used as a @ClassRule.
-        if (methodName != null) {
-            methodDir = methodName.replaceAll("[^a-zA-Z0-9_]", "_");
-        }
-
-        // In Windows, make sure we do not exceed the limit for test class / name size.
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            int totalLen = classDir.length();
-            if (methodDir != null) {
-                totalLen += methodDir.length();
+            // Create separate directory based on test method name if @Rule is used.
+            // getMethodName() is null if this rule is used as a @ClassRule.
+            if (methodName != null) {
+                methodDir = methodName.replace("[^a-zA-Z0-9_]".toRegex(), "_")
             }
 
-            if (totalLen > MAX_TEST_NAME_DIR_WINDOWS) {
-                String hash =
-                        Hashing.sha1()
-                                .hashString(classDir + methodDir, Charsets.US_ASCII)
-                                .toString();
-                // take the first 10 characters of the method name, hopefully it will be enough
-                // to disambiguate tests, and hash the rest.
-                String testIdentifier = methodDir != null ? methodDir : classDir;
-                classDir =
-                        testIdentifier.substring(0, Math.min(testIdentifier.length(), 10))
+            // In Windows, make sure we do not exceed the limit for test class / name size.
+            if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
+            ) {
+                var totalLen = classDir.length
+                if (methodDir != null) {
+                    totalLen += methodDir.length
+                }
+                if (totalLen > MAX_TEST_NAME_DIR_WINDOWS) {
+                    val hash = Hashing.sha1()
+                        .hashString(classDir + methodDir, Charsets.US_ASCII)
+                        .toString()
+                    // take the first 10 characters of the method name, hopefully it will be enough
+                    // to disambiguate tests, and hash the rest.
+                    val testIdentifier = methodDir ?: classDir
+                    classDir =
+                        (testIdentifier.substring(0, Math.min(testIdentifier.length, 10))
                                 + hash.substring(
-                                        0, Math.min(hash.length(), MAX_TEST_NAME_DIR_WINDOWS - 10));
-                methodDir = null;
+                            0,
+                            Math.min(
+                                hash.length,
+                                MAX_TEST_NAME_DIR_WINDOWS - 10
+                            )
+                        ))
+                    methodDir = null
+                }
             }
-        }
-
-        testDir = new File(testDir, classDir);
-        if (methodDir != null) {
-            testDir = new File(testDir, methodDir);
-        }
-
-        return new File(testDir, projectName);
-    }
-
-    private void populateTestDirectory() throws IOException, StreamException {
-        if (testDir == null) {
-            throw new IllegalStateException(
-                    "populateTestDirectory() called while testDir is null, either set testDir in "
-                            + "GradleTestProjectBuilder.withTestDir or call "
-                            + "populateTestDirectory(Class<?>, String)");
-        }
-
-        buildFile = new File(testDir, "build.gradle");
-
-        FileUtils.deleteRecursivelyIfExists(testDir);
-        FileUtils.mkdirs(testDir);
-
-        Files.asCharSink(new File(testDir.getParent(), COMMON_VERSIONS), StandardCharsets.UTF_8)
-                .write(generateVersions());
-        Files.asCharSink(new File(testDir.getParent(), COMMON_LOCAL_REPO), StandardCharsets.UTF_8)
-                .write(generateProjectRepoScript());
-        Files.asCharSink(new File(testDir.getParent(), COMMON_HEADER), StandardCharsets.UTF_8)
-                .write(generateCommonHeader());
-        Files.asCharSink(new File(testDir.getParent(), COMMON_BUILD_SCRIPT), StandardCharsets.UTF_8)
-                .write(generateCommonBuildScript());
-
-        if (testProject != null) {
-            testProject.write(
-                    testDir, testProject.containsFullBuildScript() ? "" : getGradleBuildscript());
-        } else {
-            Files.asCharSink(buildFile, Charsets.UTF_8).write(getGradleBuildscript());
-        }
-
-        createSettingsFile();
-
-        localProp = createLocalProp();
-        createGradleProp();
-    }
-
-    @NonNull
-    public List<Path> getRepoDirectories() {
-        if (repoDirectories != null) {
-            return repoDirectories;
-        } else {
-            ImmutableList.Builder<Path> builder = ImmutableList.builder();
-            builder.addAll(getLocalRepositories());
-            Path additionalMavenRepo = getAdditionalMavenRepo();
-            if (additionalMavenRepo != null) {
-                builder.add(additionalMavenRepo);
+            testDir = File(testDir, classDir)
+            if (methodDir != null) {
+                testDir = File(testDir, methodDir)
             }
-            return builder.build();
-        }
-    }
-
-    public Map<BooleanOption, Boolean> getBooleanOptions() {
-        ImmutableMap.Builder<BooleanOption, Boolean> builder = ImmutableMap.builder();
-        builder.put(
-                BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION,
-                withDependencyChecker);
-        builder.put(BooleanOption.ENABLE_SDK_DOWNLOAD, false); // Not enabled in tests
-        return builder.build();
-    }
-
-    @NonNull
-    private String generateProjectRepoScript() {
-        return generateRepoScript(getRepoDirectories());
-    }
-
-    @Nullable
-    private Path getAdditionalMavenRepo() {
-        if (additionalMavenRepo == null) {
-            return null;
-        }
-        if (additionalMavenRepoDir == null) {
-            additionalMavenRepoDir =
-                    Objects.requireNonNull(testDir)
-                            .toPath()
-                            .getParent()
-                            .resolve("additional_maven_repo");
-            additionalMavenRepo.generate(additionalMavenRepoDir);
-        }
-        return additionalMavenRepoDir;
-    }
-
-    @NonNull
-    private String generateCommonHeader() {
-        String result =
-                String.format(
-                        "\n"
-                                + "ext {\n"
-                                + "    buildToolsVersion = '%1$s'\n"
-                                + "    latestCompileSdk = %2$s\n"
-                                + "    kotlinVersion = '%4$s'\n"
-                                + "}\n"
-                                + "allprojects {\n"
-                                + "    "
-                                + generateProjectRepoScript()
-                                + "\n"
-                                + "}\n"
-                                + "",
-                        DEFAULT_BUILD_TOOL_VERSION,
-                        compileSdkVersion,
-                        false,
-                        kotlinVersion);
-
-        if (APPLY_DEVICEPOOL_PLUGIN) {
-            result +=
-                    "\n"
-                            + "allprojects { proj ->\n"
-                            + "    proj.plugins.withId('com.android.application') {\n"
-                            + "        proj.apply plugin: 'devicepool'\n"
-                            + "    }\n"
-                            + "    proj.plugins.withId('com.android.library') {\n"
-                            + "        proj.apply plugin: 'devicepool'\n"
-                            + "    }\n"
-                            + "    proj.plugins.withId('com.android.model.application') {\n"
-                            + "        proj.apply plugin: 'devicepool'\n"
-                            + "    }\n"
-                            + "    proj.plugins.withId('com.android.model.library') {\n"
-                            + "        proj.apply plugin: 'devicepool'\n"
-                            + "    }\n"
-                            + "}\n";
+            return File(testDir, projectName)
         }
 
-        return result;
-    }
-
-    @NonNull
-    private static String generateRepoScript(List<Path> repositories) {
-        StringBuilder script = new StringBuilder();
-        script.append("repositories {\n");
-        for (Path repo : repositories) {
-            script.append(mavenSnippet(repo));
-        }
-        script.append("}\n");
-
-        return script.toString();
-    }
-
-    @NonNull
-    public static String mavenSnippet(@NonNull Path repo) {
-        return String.format(
-                ""
-                        + "maven {\n"
-                        + "  url '%s'\n"
-                        + "  metadataSources {\n"
-                        + "    mavenPom()\n"
-                        + "    artifact()\n"
-                        + "  }\n"
-                        + " }\n",
-                repo.toUri().toString());
-    }
-
-    @NonNull
-    public static List<Path> getLocalRepositories() {
-        return BuildSystem.get().getLocalRepositories();
-    }
-
-    /**
-     * Returns the prebuilts CMake folder for the requested version of CMake. Note: This function
-     * returns a path within the Android SDK which is expected to be used in cmake.dir.
-     */
-    @NonNull
-    public static File getCmakeVersionFolder(@NonNull String cmakeVersion) {
-        File cmakeVersionFolderInSdk =
-                new File(TestUtils.getSdk(), String.format("cmake/%s", cmakeVersion));
-        if (!cmakeVersionFolderInSdk.isDirectory()) {
-            throw new RuntimeException(
-                    String.format("Could not find CMake in %s", cmakeVersionFolderInSdk));
+        private fun generateRepoScript(repositories: List<Path>): String {
+            val script = StringBuilder()
+            script.append("repositories {\n")
+            for (repo in repositories) {
+                script.append(mavenSnippet(repo))
+            }
+            script.append("}\n")
+            return script.toString()
         }
 
-        return cmakeVersionFolderInSdk;
-    }
-
-
-    /**
-     * The ninja in 3.6 cmake folder does not support long file paths. This function returns the
-     * version that does handle them.
-     */
-    @NonNull
-    public static File getPreferredNinja() {
-        File cmakeFolder = getCmakeVersionFolder("3.10.4819442");
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return new File(cmakeFolder, "bin/ninja.exe");
-        } else {
-            return new File(cmakeFolder, "bin/ninja");
+        fun mavenSnippet(repo: Path): String {
+            return String.format(
+                """maven {
+  url '%s'
+  metadataSources {
+    mavenPom()
+    artifact()
+  }
+ }
+""",
+                repo.toUri().toString()
+            )
         }
-    }
 
-    public String generateCommonBuildScript() {
-        return BuildSystem.get()
-                .getCommonBuildScriptContent(
-                        withAndroidGradlePlugin, withKotlinGradlePlugin, withDeviceProvider);
-    }
+        @JvmStatic
+        val localRepositories: List<Path>
+            get() = BuildSystem.get().localRepositories
 
-    @NonNull
-    private static String generateVersions() {
-        return String.format(
+        /**
+         * Returns the prebuilts CMake folder for the requested version of CMake. Note: This function
+         * returns a path within the Android SDK which is expected to be used in cmake.dir.
+         */
+        @JvmStatic
+        fun getCmakeVersionFolder(cmakeVersion: String): File {
+            val cmakeVersionFolderInSdk = File(
+                TestUtils.getSdk(),
+                String.format("cmake/%s", cmakeVersion)
+            )
+            if (!cmakeVersionFolderInSdk.isDirectory) {
+                throw RuntimeException(
+                    String.format("Could not find CMake in %s", cmakeVersionFolderInSdk)
+                )
+            }
+            return cmakeVersionFolderInSdk
+        }
+
+        /**
+         * The ninja in 3.6 cmake folder does not support long file paths. This function returns the
+         * version that does handle them.
+         */
+        val preferredNinja: File
+            get() {
+                val cmakeFolder = getCmakeVersionFolder("3.10.4819442")
+                return if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+                    File(cmakeFolder, "bin/ninja.exe")
+                } else {
+                    File(cmakeFolder, "bin/ninja")
+                }
+            }
+
+        private fun generateVersions(): String {
+            return String.format(
                 Locale.US,
                 "// Generated by GradleTestProject::generateVersions%n"
                         + "buildVersion = '%s'%n"
@@ -746,12 +359,381 @@ public final class GradleTestProject implements TestRule {
                         + "constraintLayoutVersion = '%s'%n",
                 Version.ANDROID_GRADLE_PLUGIN_VERSION,
                 Version.ANDROID_TOOLS_BASE_VERSION,
-                TestVersions.SUPPORT_LIB_VERSION,
-                TestVersions.TEST_SUPPORT_LIB_VERSION,
-                TestVersions.PLAY_SERVICES_VERSION,
-                TestVersions.SUPPORT_LIB_MIN_SDK,
-                TestVersions.NDK_19_SUPPORT_LIB_MIN_SDK,
-                SdkConstants.LATEST_CONSTRAINT_LAYOUT_VERSION);
+                SUPPORT_LIB_VERSION,
+                TEST_SUPPORT_LIB_VERSION,
+                PLAY_SERVICES_VERSION,
+                SUPPORT_LIB_MIN_SDK,
+                NDK_19_SUPPORT_LIB_MIN_SDK,
+                SdkConstants.LATEST_CONSTRAINT_LAYOUT_VERSION
+            )
+        }
+
+        /** Returns a string that contains the gradle buildscript content  */
+        @JvmStatic
+        val gradleBuildscript: String
+            get() = """apply from: "../commonHeader.gradle"
+buildscript { apply from: "../commonBuildScript.gradle" }
+
+apply from: "../commonLocalRepo.gradle"
+"""
+
+        @JvmStatic
+        val compileSdkHash: String
+            get() {
+                var compileTarget = DEFAULT_COMPILE_SDK_VERSION.replace("[\"']".toRegex(), "")
+                if (!compileTarget.startsWith("android-")) {
+                    compileTarget = "android-$compileTarget"
+                }
+                return compileTarget
+            }
+
+        init {
+            try {
+                BUILD_DIR = when {
+                    System.getenv("TEST_TMPDIR") != null -> {
+                        File(System.getenv("TEST_TMPDIR"))
+                    }
+                    BuildSystem.get() === BuildSystem.IDEA -> {
+                        File(TestUtils.getWorkspaceRoot(), "out/gradle-integration-tests")
+                    }
+                    else -> {
+                        throw IllegalStateException("unable to determine location for BUILD_DIR")
+                    }
+                }
+                OUT_DIR = File(BUILD_DIR, "tests")
+                ANDROID_SDK_HOME = File(BUILD_DIR, "ANDROID_SDK_HOME")
+                GRADLE_USER_HOME = getGradleUserHome(BUILD_DIR)
+                GRADLE_TEST_VERSION = if (USE_LATEST_NIGHTLY_GRADLE_VERSION) {
+                    Preconditions.checkNotNull(
+                        latestGradleCheckedIn,
+                        "Failed to find latest nightly version."
+                    )
+                } else {
+                    VersionCheckPlugin.GRADLE_MIN_VERSION.toString()
+                }
+
+                // These are some properties that we use in the integration test projects, when generating
+                // build.gradle files. In case you would like to change any of the parameters, for instance
+                // when testing cross product of versions of buildtools, compile sdks, plugin versions,
+                // there are corresponding system environment variable that you are able to set.
+                val envBuildToolVersion = Strings.emptyToNull(System.getenv("CUSTOM_BUILDTOOLS"))
+                DEFAULT_BUILD_TOOL_VERSION =
+                    MoreObjects.firstNonNull(
+                        envBuildToolVersion,
+                        ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION.toString()
+                    )
+                val envVersion = Strings.emptyToNull(System.getenv("CUSTOM_PLUGIN_VERSION"))
+                ANDROID_GRADLE_PLUGIN_VERSION =
+                    MoreObjects.firstNonNull(
+                        envVersion,
+                        Version.ANDROID_GRADLE_PLUGIN_VERSION
+                    )
+                val envCustomCompileSdk = Strings.emptyToNull(System.getenv("CUSTOM_COMPILE_SDK"))
+                DEFAULT_COMPILE_SDK_VERSION =
+                    MoreObjects.firstNonNull(
+                        envCustomCompileSdk,
+                        SdkVersionInfo.HIGHEST_KNOWN_STABLE_API.toString()
+                    )
+            } catch (t: Throwable) {
+                // Print something to stdout, to give us a chance to debug initialization problems.
+                println(Throwables.getStackTraceAsString(t))
+                throw Throwables.propagate(t)
+            }
+        }
+    }
+
+    private var _buildFile: File
+
+    val buildFile: File
+        get() = _buildFile
+
+    lateinit var localProp: File
+        private set
+
+    val testDir: File
+        get() = _testDir ?: throw java.lang.RuntimeException("testDir called before the project was properly initialized.")
+
+    private var additionalMavenRepoDir: Path? = null
+
+    /** \Returns the latest build result.  */
+    private var _buildResult: GradleBuildResult? = null
+
+    /** Returns the latest build result.  */
+    val buildResult: GradleBuildResult
+        get() = _buildResult ?: throw RuntimeException("No result available. Run Gradle first.")
+
+    /** Returns a Gradle project Connection  */
+    private val projectConnection: ProjectConnection by lazy {
+        val connector = GradleConnector.newConnector()
+        (connector as DefaultGradleConnector)
+            .daemonMaxIdleTime(
+                GRADLE_DEAMON_IDLE_TIME_IN_SECONDS,
+                TimeUnit.SECONDS
+            )
+        val distributionName = String.format("gradle-%s-bin.zip", targetGradleVersion)
+        val distributionZip =
+            File(gradleDistributionDirectory, distributionName)
+        PathSubject.assertThat(distributionZip).isFile()
+        val connection = connector
+            .useDistribution(distributionZip.toURI())
+            .useGradleUserHomeDir(GRADLE_USER_HOME!!.toFile())
+            .forProjectDirectory(testDir)
+            .connect()
+        rootProject.openConnections?.add(connection)
+
+        connection
+    }
+
+    init {
+        /** Return the build.gradle of the test project.  */
+        _buildFile = if (_testDir != null) {
+            File(_testDir, "build.gradle")
+        } else {
+            File("")
+        }
+    }
+    /**
+     * Create a GradleTestProject representing a subProject of another GradleTestProject.
+     *
+     * @param subProject name of the subProject, or the subProject's gradle project path
+     * @param rootProject root GradleTestProject.
+     */
+    private constructor(
+        subProject: String,
+        rootProject: GradleTestProject
+    ) :
+        this(
+            name = subProject.substring(subProject.lastIndexOf(':') + 1),
+            testProject = null,
+            targetGradleVersion = rootProject.targetGradleVersion,
+            withoutNdk = rootProject.withoutNdk,
+            withDependencyChecker = rootProject.withDependencyChecker,
+            gradleProperties = ImmutableList.of(),
+            heapSize = rootProject.heapSize,
+            compileSdkVersion = rootProject.compileSdkVersion,
+            buildToolsVersion = rootProject.buildToolsVersion,
+            profileDirectory = rootProject.profileDirectory,
+            cmakeVersion = rootProject.cmakeVersion,
+            withCmakeDirInLocalProp = rootProject.withCmakeDirInLocalProp,
+            ndkSymlinkPath = rootProject.ndkSymlinkPath,
+            withDeviceProvider = rootProject.withDeviceProvider,
+            withSdk = rootProject.withSdk,
+            withAndroidGradlePlugin = rootProject.withAndroidGradlePlugin,
+            withKotlinGradlePlugin = rootProject.withKotlinGradlePlugin,
+            withIncludedBuilds = ImmutableList.of(),
+            _testDir = File(rootProject.testDir, subProject.replace(":", "/")),
+            repoDirectories = rootProject.repoDirectories,
+            additionalMavenRepo = rootProject.additionalMavenRepo,
+            androidHome = rootProject.androidHome,
+            androidNdkHome = rootProject.androidNdkHome,
+            gradleDistributionDirectory = rootProject.gradleDistributionDirectory,
+            gradleBuildCacheDirectory = rootProject.gradleBuildCacheDirectory,
+            kotlinVersion = rootProject.kotlinVersion,
+            outputLogOnFailure = rootProject.outputLogOnFailure,
+            openConnections = null,
+            _rootProject = rootProject
+        ) {
+
+        Assert.assertTrue(
+            "No subproject dir at $testDir",
+            testDir.isDirectory
+        )
+    }
+
+    /** returns the root project or this if there's no root */
+    val rootProject: GradleTestProject
+        get() = _rootProject ?: this
+
+    override fun apply(
+        base: Statement,
+        description: Description
+    ): Statement {
+        return if (rootProject != this) {
+            rootProject.apply(base, description)
+        } else object : Statement() {
+            override fun evaluate() {
+                if (_testDir == null) {
+                    _testDir = computeTestDir(
+                        description.testClass, description.methodName, name
+                    )
+                    _buildFile = File(_testDir, "build.gradle")
+                }
+                populateTestDirectory()
+                var testFailed = false
+                try {
+                    base.evaluate()
+                } catch (e: Throwable) {
+                    testFailed = true
+                    throw e
+                } finally {
+                    for (tmpApkFile in tmpApkFiles) {
+                        try {
+                            tmpApkFile.close()
+                        } catch (e: Exception) {
+                            System.err
+                                .println("Error while closing APK file : " + e.message)
+                        }
+                        val tmpFile = tmpApkFile.file.toFile()
+                        if (tmpFile.exists() && !tmpFile.delete()) {
+                            System.err.println(
+                                "Cannot delete temporary file " + tmpApkFile.file
+                            )
+                        }
+                    }
+                    openConnections?.forEach(ProjectConnection::close)
+
+                    if (outputLogOnFailure && testFailed) {
+                        _buildResult?.let {
+                            System.err
+                                .println("==============================================")
+                            System.err
+                                .println("= Test $description failed. Last build:")
+                            System.err
+                                .println("==============================================")
+                            System.err
+                                .println("=================== Stderr ===================")
+                            // All output produced during build execution is written to the standard
+                            // output file handle since Gradle 4.7. This should be empty.
+                            it.stderr.forEachLine { System.err.println(it) }
+                            System.err
+                                .println("=================== Stdout ===================")
+                            it.stdout.forEachLine { System.err.println(it) }
+                            System.err
+                                .println("==============================================")
+                            System.err
+                                .println("=============== End last build ===============")
+                            System.err
+                                .println("==============================================")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun populateTestDirectory() {
+        val testDir = this._testDir ?: throw RuntimeException(
+            "populateTestDirectory() called while testDir is null, either set testDir in "
+                    + "GradleTestProjectBuilder.withTestDir or call "
+                    + "populateTestDirectory(Class<?>, String)")
+
+        _buildFile = File(testDir, "build.gradle")
+        FileUtils.deleteRecursivelyIfExists(testDir)
+        FileUtils.mkdirs(testDir)
+
+        File(testDir.parent, COMMON_VERSIONS).writeText(generateVersions())
+        File(testDir.parent, COMMON_LOCAL_REPO).writeText(generateProjectRepoScript())
+        File(testDir.parent, COMMON_HEADER).writeText(generateCommonHeader())
+        File(testDir.parent, COMMON_BUILD_SCRIPT).writeText(generateCommonBuildScript())
+
+        if (testProject != null) {
+            testProject.write(
+                testDir,
+                if (testProject.containsFullBuildScript()) "" else gradleBuildscript
+            )
+        } else {
+            buildFile.writeText(gradleBuildscript)
+        }
+        createSettingsFile()
+        localProp = createLocalProp()
+        createGradleProp()
+    }
+
+    private fun getRepoDirectories(): List<Path> {
+        return if (repoDirectories != null) {
+            repoDirectories
+        } else {
+            val builder =
+                ImmutableList.builder<Path>()
+            builder.addAll(localRepositories)
+            val additionalMavenRepo = getAdditionalMavenRepo()
+            if (additionalMavenRepo != null) {
+                builder.add(additionalMavenRepo)
+            }
+            builder.build()
+        }
+    }
+
+    // Not enabled in tests
+    val booleanOptions: Map<BooleanOption, Boolean>
+        get() {
+            val builder =
+                ImmutableMap
+                    .builder<BooleanOption, Boolean>()
+            builder.put(
+                BooleanOption
+                    .DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION,
+                withDependencyChecker
+            )
+            builder.put(
+                BooleanOption.ENABLE_SDK_DOWNLOAD,
+                false
+            ) // Not enabled in tests
+            return builder.build()
+        }
+
+    private fun generateProjectRepoScript(): String {
+        return generateRepoScript(getRepoDirectories())
+    }
+
+    private fun getAdditionalMavenRepo(): Path? {
+        if (additionalMavenRepo == null) {
+            return null
+        }
+        if (additionalMavenRepoDir == null) {
+            val moreMavenRepoDir = testDir
+                .toPath()
+                .parent
+                .resolve("additional_maven_repo")
+            additionalMavenRepoDir = moreMavenRepoDir
+            additionalMavenRepo.generate(moreMavenRepoDir)
+        }
+        return additionalMavenRepoDir
+    }
+
+    private fun generateCommonHeader(): String {
+        var result = String.format(
+            """
+ext {
+    buildToolsVersion = '%1${"$"}s'
+    latestCompileSdk = %2${"$"}s
+    kotlinVersion = '%4${"$"}s'
+}
+allprojects {
+    ${generateProjectRepoScript()}
+}
+""",
+            DEFAULT_BUILD_TOOL_VERSION,
+            compileSdkVersion,
+            false,
+            kotlinVersion
+        )
+        if (APPLY_DEVICEPOOL_PLUGIN) {
+            result += """
+allprojects { proj ->
+    proj.plugins.withId('com.android.application') {
+        proj.apply plugin: 'devicepool'
+    }
+    proj.plugins.withId('com.android.library') {
+        proj.apply plugin: 'devicepool'
+    }
+    proj.plugins.withId('com.android.model.application') {
+        proj.apply plugin: 'devicepool'
+    }
+    proj.plugins.withId('com.android.model.library') {
+        proj.apply plugin: 'devicepool'
+    }
+}
+"""
+        }
+        return result
+    }
+
+    fun generateCommonBuildScript(): String {
+        return BuildSystem.get()
+            .getCommonBuildScriptContent(
+                withAndroidGradlePlugin, withKotlinGradlePlugin, withDeviceProvider
+            )
     }
 
     /**
@@ -759,147 +741,119 @@ public final class GradleTestProject implements TestRule {
      *
      * @param name name of the subProject, or the subProject's gradle project path
      */
-    @NonNull
-    public GradleTestProject getSubproject(String name) {
-        return new GradleTestProject(name, rootProject, heapSize);
+    fun getSubproject(name: String): GradleTestProject {
+        return GradleTestProject(name, rootProject)
     }
 
-    /** Return the name of the test project. */
-    public String getName() {
-        return name;
+    /** Return the path to the default Java main source dir.  */
+    val mainSrcDir: File
+        get() = getMainSrcDir("java")
+
+    /** Return the path to the default Java main source dir.  */
+    fun getMainSrcDir(language: String): File {
+        return FileUtils.join(testDir, "src", "main", language)
     }
 
-    /** Return the directory containing the test project. */
-    @NonNull
-    public File getTestDir() {
-        Preconditions.checkState(
-                testDir != null, "getTestDir called before the project was properly initialized.");
-        return testDir;
+    /** Return the path to the default Java main resources dir.  */
+    val mainJavaResDir: File
+        get() = FileUtils.join(testDir, "src", "main", "resources")
+
+    /** Return the path to the default main jniLibs dir.  */
+    val mainJniLibsDir: File
+        get() = FileUtils.join(testDir, "src", "main", "jniLibs")
+
+    /** Return the build.gradle of the test project.  */
+    val settingsFile: File
+        get() = File(testDir, "settings.gradle")
+
+    /** Return the gradle.properties file of the test project.  */
+    val gradlePropertiesFile: File
+        get() = File(testDir, "gradle.properties")
+
+    /** Change the build file used for execute. Should be run after @Before/@BeforeClass.  */
+    fun setBuildFile(buildFileName: String? = null) {
+        _buildFile = File(testDir, buildFileName ?: "build.gradle")
+        PathSubject.assertThat(_buildFile).exists()
     }
 
-    /** Return the path to the default Java main source dir. */
-    public File getMainSrcDir() {
-        return getMainSrcDir("java");
+    val buildDir: File
+        get() = FileUtils.join(testDir, "build")
+
+    /** Return the output directory from Android plugins.  */
+    val outputDir: File
+        get() = FileUtils.join(testDir, "build", AndroidProject.FD_OUTPUTS)
+
+    /** Return the output directory from Android plugins.  */
+    val intermediatesDir: File
+        get() = FileUtils
+            .join(testDir, "build", AndroidProject.FD_INTERMEDIATES)
+
+    /** Return a File under the output directory from Android plugins.  */
+    fun getOutputFile(vararg paths: String?): File {
+        return FileUtils.join(outputDir, *paths)
     }
 
-    /** Return the path to the default Java main source dir. */
-    public File getMainSrcDir(@NonNull String language) {
-        return FileUtils.join(getTestDir(), "src", "main", language);
+    /** Return a File under the intermediates directory from Android plugins.  */
+    fun getIntermediateFile(vararg paths: String?): File {
+        return FileUtils.join(intermediatesDir, *paths)
     }
 
-    /** Return the path to the default Java main resources dir. */
-    public File getMainJavaResDir() {
-        return FileUtils.join(getTestDir(), "src", "main", "resources");
+    /** Returns a File under the generated folder.  */
+    fun getGeneratedSourceFile(vararg paths: String?): File {
+        return FileUtils.join(generatedDir, *paths)
     }
 
-    /** Return the path to the default main jniLibs dir. */
-    public File getMainJniLibsDir() {
-        return FileUtils.join(getTestDir(), "src", "main", "jniLibs");
-    }
-
-    /** Return the build.gradle of the test project. */
-    public File getSettingsFile() {
-        return new File(getTestDir(), "settings.gradle");
-    }
-
-    /** Return the gradle.properties file of the test project. */
-    @NonNull
-    public File getGradlePropertiesFile() {
-        return new File(getTestDir(), "gradle.properties");
-    }
-
-    /** Return the build.gradle of the test project. */
-    public File getBuildFile() {
-        return buildFile;
-    }
-
-    /** Change the build file used for execute. Should be run after @Before/@BeforeClass. */
-    public void setBuildFile(@Nullable String buildFileName) {
-        checkNotNull(buildFile, "Cannot call selectBuildFile before test directory is created.");
-        if (buildFileName == null) {
-            buildFileName = "build.gradle";
-        }
-        buildFile = new File(getTestDir(), buildFileName);
-        assertThat(buildFile).exists();
-    }
-
-    public File getBuildDir() {
-        return FileUtils.join(getTestDir(), "build");
-    }
-
-    /** Return the output directory from Android plugins. */
-    public File getOutputDir() {
-        return FileUtils.join(getTestDir(), "build", AndroidProject.FD_OUTPUTS);
-    }
-
-    /** Return the output directory from Android plugins. */
-    public File getIntermediatesDir() {
-        return FileUtils.join(getTestDir(), "build", AndroidProject.FD_INTERMEDIATES);
-    }
-
-    /** Return a File under the output directory from Android plugins. */
-    public File getOutputFile(String... paths) {
-        return FileUtils.join(getOutputDir(), paths);
-    }
-
-    /** Return a File under the intermediates directory from Android plugins. */
-    public File getIntermediateFile(String... paths) {
-        return FileUtils.join(getIntermediatesDir(), paths);
-    }
-
-    /** Returns a File under the generated folder. */
-    public File getGeneratedSourceFile(String... paths) {
-        return FileUtils.join(getGeneratedDir(), paths);
-    }
-
-    public File getGeneratedDir() {
-        return FileUtils.join(getTestDir(), "build", AndroidProject.FD_GENERATED);
-    }
+    val generatedDir: File
+        get() = FileUtils.join(testDir, "build", AndroidProject.FD_GENERATED)
 
     /**
      * Returns the directory in which profiles will be generated. A null value indicates that
-     * profiles may not be generated, though setting {@link
-     * com.android.build.gradle.options.StringOption#PROFILE_OUTPUT_DIR} in gradle.properties will
+     * profiles may not be generated, though setting [ ][com.android.build.gradle.options.StringOption.PROFILE_OUTPUT_DIR] in gradle.properties will
      * induce profile generation without affecting this return value
      */
-    @Nullable
-    public Path getProfileDirectory() {
-        if (profileDirectory == null || profileDirectory.isAbsolute()) {
-            return profileDirectory;
+    fun getProfileDirectory(): Path? {
+        return if (profileDirectory == null || profileDirectory.isAbsolute) {
+            profileDirectory
         } else {
-            return rootProject.getTestDir().toPath().resolve(profileDirectory);
+            rootProject.testDir.toPath().resolve(profileDirectory)
         }
     }
 
     /**
      * Return the output apk File from the application plugin for the given dimension.
      *
-     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     *
+     * Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      *
-     * @deprecated Use {@link #getApk(ApkType, String...)} or {@link #getApk(String, ApkType,
-     *     String...)}
      */
-    @NonNull
-    @Deprecated
-    public Apk getApk(String... dimensions) throws IOException {
-        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
-        dimensionList.add(getName());
-        dimensionList.addAll(Arrays.asList(dimensions));
+    @Deprecated(
+        """Use {@link #getApk(ApkType, String...)} or {@link #getApk(String, ApkType,
+     *     String...)}"""
+    )
+    fun getApk(vararg dimensions: String?): Apk {
+        val dimensionList: MutableList<String?> =
+            Lists
+                .newArrayListWithExpectedSize(1 + dimensions.size)
+        dimensionList.add(name)
+        dimensionList.addAll(Arrays.asList(*dimensions))
         // FIX ME : "debug" should be an explicit variant name rather than mixed in dimensions.
-        List<String> flavorDimensionList =
-                Arrays.stream(dimensions)
-                        .filter(dimension -> !dimension.equals("unsigned"))
-                        .collect(Collectors.toList());
-        File apkFile =
-                getOutputFile(
-                        "apk"
-                                + File.separatorChar
-                                + Joiner.on(File.separatorChar).join(flavorDimensionList)
-                                + File.separatorChar
-                                + Joiner.on("-").join(dimensionList)
-                                + SdkConstants.DOT_ANDROID_PACKAGE);
-        return _getApk(apkFile);
+        val flavorDimensionList =
+            Arrays.stream(dimensions)
+                .filter { dimension: String? -> dimension != "unsigned" }
+                .collect(
+                    Collectors.toList()
+                )
+        val apkFile = getOutputFile(
+            "apk"
+                    + File.separatorChar
+                    + Joiner.on(File.separatorChar)
+                .join(flavorDimensionList)
+                    + File.separatorChar
+                    + Joiner.on("-").join(dimensionList)
+                    + SdkConstants.DOT_ANDROID_PACKAGE
+        )
+        return _getApk(apkFile)
     }
 
     /**
@@ -909,371 +863,387 @@ public final class GradleTestProject implements TestRule {
      * @param apkFile the file handle to create the APK from.
      * @return the Apk object.
      */
-    private Apk _getApk(File apkFile) throws IOException {
-        Apk apk;
+    private fun _getApk(apkFile: File): Apk {
+        val apk: Apk
         if (OsType.getHostOs() == OsType.WINDOWS && apkFile.exists()) {
-            File copy = File.createTempFile("tmp", ".apk");
-            FileUtils.copyFile(apkFile, copy);
-            apk = new Apk(copy) {
-                @NonNull
-                @Override
-                public Path getFile() {
-                    return apkFile.toPath();
+            val copy = File.createTempFile("tmp", ".apk")
+            FileUtils.copyFile(apkFile, copy)
+            apk = object : Apk(copy) {
+                override fun getFile(): Path {
+                    return apkFile.toPath()
                 }
-            };
-            tmpApkFiles.add(apk);
+            }
+            tmpApkFiles.add(apk)
         } else {
             // the IDE erroneously indicate to use try-with-resources because APK is a autocloseable
             // but nothing is opened here.
-            //noinspection resource
-            apk = new Apk(apkFile);
+            apk = Apk(apkFile)
         }
-        return apk;
+        return apk
     }
 
     public interface ApkType {
-        ApkType DEBUG = of("debug", true);
-        ApkType RELEASE = of("release", false);
-        ApkType RELEASE_SIGNED = of("release", true);
-        ApkType ANDROIDTEST_DEBUG = of("debug", "androidTest", true);
-        ApkType MIN_SIZE_REL = of("minSizeRel", false);
+        val buildType: String
+        val testName: String?
+        val isSigned: Boolean
 
-        @NonNull
-        String getBuildType();
+        companion object {
+            @JvmStatic
+            fun of(
+                name: String,
+                isSigned: Boolean
+            ): ApkType {
+                return object :
+                    ApkType {
+                    override val buildType: String
+                        get() = name
 
-        @Nullable
-        String getTestName();
+                    override val testName: String?
+                        get() = null
 
-        boolean isSigned();
+                    override val isSigned: Boolean
+                        get() = isSigned
 
-        static ApkType of(String name, boolean isSigned) {
-            return new ApkType() {
-
-                @NonNull
-                @Override
-                public String getBuildType() {
-                    return name;
+                    override fun toString(): String {
+                        return MoreObjects.toStringHelper(this)
+                            .add("getBuildType", buildType)
+                            .add("getTestName", testName)
+                            .add("isSigned", isSigned)
+                            .toString()
+                    }
                 }
+            }
 
-                @Override
-                public String getTestName() {
-                    return null;
-                }
+            @JvmStatic
+            fun of(
+                name: String,
+                testName: String?,
+                isSigned: Boolean
+            ): ApkType {
+                return object :
+                    ApkType {
+                    override val buildType: String
+                        get() = name
 
-                @Override
-                public boolean isSigned() {
-                    return isSigned;
-                }
+                    override val testName: String?
+                        get() = testName
 
-                @Override
-                public String toString() {
-                    return MoreObjects.toStringHelper(this)
-                            .add("getBuildType", getBuildType())
-                            .add("getTestName", getTestName())
-                            .add("isSigned", isSigned())
-                            .toString();
+                    override val isSigned: Boolean
+                        get() = isSigned
+
+                    override fun toString(): String {
+                        return MoreObjects.toStringHelper(this)
+                            .add("getBuildType", buildType)
+                            .add("getTestName", testName)
+                            .add("isSigned", isSigned)
+                            .toString()
+                    }
                 }
-            };
+            }
+
+            @JvmField
+            val DEBUG = of("debug", true)
+            @JvmField
+            val RELEASE = of("release", false)
+            @JvmField
+            val RELEASE_SIGNED = of("release", true)
+            @JvmField
+            val ANDROIDTEST_DEBUG = of("debug", "androidTest", true)
+            @JvmField
+            val MIN_SIZE_REL = of("minSizeRel", false)
         }
-
-        static ApkType of(String name, String testName, boolean isSigned) {
-            return new ApkType() {
-
-                @NonNull
-                @Override
-                public String getBuildType() {
-                    return name;
-                }
-
-                @Nullable
-                @Override
-                public String getTestName() {
-                    return testName;
-                }
-
-                @Override
-                public boolean isSigned() {
-                    return isSigned;
-                }
-
-                @Override
-                public String toString() {
-                    return MoreObjects.toStringHelper(this)
-                            .add("getBuildType", getBuildType())
-                            .add("getTestName", getTestName())
-                            .add("isSigned", isSigned())
-                            .toString();
-                }
-            };
-        }
-
-
     }
 
     /**
      * Return the output apk File from the application plugin for the given dimension.
      *
-     * <p>Expected dimensions orders are: - product flavors -
+     *
+     * Expected dimensions orders are: - product flavors -
      */
-    @NonNull
-    public Apk getApk(ApkType apk, String... dimensions) throws IOException {
-        return getApk(null /* filterName */, apk, dimensions);
+    fun getApk(apk: ApkType, vararg dimensions: String): Apk {
+        return getApk(null /* filterName */, apk, *dimensions)
     }
 
     /**
      * Return the bundle universal output apk File from the application plugin for the given
      * dimension.
      *
-     * <p>Expected dimensions orders are: - product flavors -
+     *
+     * Expected dimensions orders are: - product flavors -
      */
-    @NonNull
-    public Apk getBundleUniversalApk(@NonNull ApkType apk) throws IOException {
-        return getOutputApk("universal_apk", null, apk, ImmutableList.of(), "universal");
+    fun getBundleUniversalApk(apk: ApkType): Apk {
+        return getOutputApk(
+            "universal_apk",
+            null,
+            apk,
+            ImmutableList.of(),
+            "universal"
+        )
     }
 
     /**
      * Return the output full split apk File from the application plugin for the given dimension.
      *
-     * <p>Expected dimensions orders are: - product flavors -
-     */
-    @NonNull
-    public Apk getApk(@Nullable String filterName, ApkType apkType, String... dimensions)
-            throws IOException {
-        return getOutputApk("apk", filterName, apkType, ImmutableList.copyOf(dimensions), null);
-    }
-
-    @NonNull
-    private Apk getOutputApk(
-            @NonNull String pathPrefix,
-            @Nullable String filterName,
-            @NonNull ApkType apkType,
-            @NonNull ImmutableList<String> dimensions,
-            @Nullable String suffix)
-            throws IOException {
-        return _getApk(
-                getOutputFile(
-                        pathPrefix
-                                + (apkType.getTestName() != null
-                                        ? File.separatorChar + apkType.getTestName()
-                                        : "")
-                                + File.separatorChar
-                                + StringHelper.combineAsCamelCase(dimensions)
-                                + File.separatorChar
-                                + apkType.getBuildType()
-                                + File.separatorChar
-                                + mangleApkName(apkType, filterName, dimensions, suffix)
-                                + (apkType.isSigned()
-                                        ? SdkConstants.DOT_ANDROID_PACKAGE
-                                        : "-unsigned" + SdkConstants.DOT_ANDROID_PACKAGE)));
-    }
-
-    /** Returns the APK given its file name. */
-    @NonNull
-    public Apk getApkByFileName(@NonNull ApkType apkType, @NonNull String apkFileName)
-            throws IOException {
-        return _getApk(
-                getOutputFile(
-                        "apk"
-                                + (apkType.getTestName() != null
-                                        ? File.separatorChar + apkType.getTestName()
-                                        : "")
-                                + File.separatorChar
-                                + apkType.getBuildType()
-                                + File.separatorChar
-                                + apkFileName));
-    }
-
-    /**
-     * Return the output apk File from the feature plugin for the given dimension.
      *
-     * <p>Expected dimensions orders are: - product flavors -
+     * Expected dimensions orders are: - product flavors -
      */
-    @NonNull
-    public Apk getFeatureApk(ApkType apk, String... dimensions) throws IOException {
-        return getFeatureApk(null /* filterName */, apk, dimensions);
+    fun getApk(
+        filterName: String?,
+        apkType: ApkType,
+        vararg dimensions: String
+    ): Apk {
+        return getOutputApk(
+            "apk",
+            filterName,
+            apkType,
+            ImmutableList.copyOf(dimensions),
+            null
+        )
     }
 
-    /**
-     * Return the output full split apk File from the feature plugin for the given dimension.
-     *
-     * <p>Expected dimensions orders are: - product flavors -
-     */
-    @NonNull
-    public Apk getFeatureApk(@Nullable String filterName, ApkType apkType, String... dimensions)
-            throws IOException {
+    private fun getOutputApk(
+        pathPrefix: String,
+        filterName: String?,
+        apkType: ApkType,
+        dimensions: ImmutableList<String>,
+        suffix: String?
+    ): Apk {
         return _getApk(
-                getOutputFile(
-                        "apk"
-                                + (apkType.getTestName() != null
-                                        ? File.separatorChar + apkType.getTestName()
-                                        : "")
-                                + File.separatorChar
-                                + "feature"
-                                + File.separatorChar
-                                + StringHelper.combineAsCamelCase(ImmutableList.copyOf(dimensions))
-                                + File.separatorChar
-                                + apkType.getBuildType()
-                                + File.separatorChar
-                                + mangleApkName(
-                                        apkType, filterName, ImmutableList.copyOf(dimensions), null)
-                                + (apkType.isSigned()
-                                        ? SdkConstants.DOT_ANDROID_PACKAGE
-                                        : "-unsigned" + SdkConstants.DOT_ANDROID_PACKAGE)));
+            getOutputFile(
+                pathPrefix
+                        + (if (apkType.testName != null) File.separatorChar
+                    .toString() + apkType.testName else "")
+                        + File.separatorChar
+                        + dimensions.combineAsCamelCase()
+                        + File.separatorChar
+                        + apkType.buildType
+                        + File.separatorChar
+                        + mangleApkName(apkType, filterName, dimensions, suffix)
+                        + if (apkType.isSigned) SdkConstants
+                    .DOT_ANDROID_PACKAGE else "-unsigned" + SdkConstants
+                    .DOT_ANDROID_PACKAGE
+            )
+        )
     }
 
-    private String mangleApkName(
-            @NonNull ApkType apkType,
-            @Nullable String filterName,
-            List<String> dimensions,
-            @Nullable String suffix) {
-        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.size());
-        dimensionList.add(getName());
-        dimensionList.addAll(dimensions);
+    /** Returns the APK given its file name.  */
+    fun getApkByFileName(apkType: ApkType, apkFileName: String): Apk {
+        return _getApk(
+            getOutputFile(
+                "apk"
+                        + (if (apkType.testName != null) File.separatorChar.toString() + apkType.testName else "")
+                        + File.separatorChar
+                        + apkType.buildType
+                        + File.separatorChar
+                        + apkFileName
+            )
+        )
+    }
+
+    private fun mangleApkName(
+        apkType: ApkType,
+        filterName: String?,
+        dimensions: List<String?>,
+        suffix: String?
+    ): String {
+        val dimensionList: MutableList<String?> =
+            Lists
+                .newArrayListWithExpectedSize(1 + dimensions.size)
+        dimensionList.add(name)
+        dimensionList.addAll(dimensions)
         if (!Strings.isNullOrEmpty(filterName)) {
-            dimensionList.add(filterName);
+            dimensionList.add(filterName)
         }
-        if (!Strings.isNullOrEmpty(apkType.getBuildType())) {
-            dimensionList.add(apkType.getBuildType());
+        if (!Strings.isNullOrEmpty(apkType.buildType)) {
+            dimensionList.add(apkType.buildType)
         }
-        if (!Strings.isNullOrEmpty(apkType.getTestName())) {
-            dimensionList.add(apkType.getTestName());
+        if (!Strings.isNullOrEmpty(apkType.testName)) {
+            dimensionList.add(apkType.testName)
         }
         if (suffix != null) {
-            dimensionList.add(suffix);
+            dimensionList.add(suffix)
         }
-        return Joiner.on("-").join(dimensionList);
+        return Joiner.on("-").join(dimensionList)
     }
 
-    @NonNull
-    public Apk getTestApk() throws IOException {
-        return getApk(ApkType.ANDROIDTEST_DEBUG);
+    val testApk: Apk
+        get() = getApk(ApkType.ANDROIDTEST_DEBUG)
+
+    fun getTestApk(vararg dimensions: String): Apk {
+        return getApk(ApkType.ANDROIDTEST_DEBUG, *dimensions)
     }
 
-    @NonNull
-    public Apk getTestApk(String... dimensions) throws IOException {
-        return getApk(ApkType.ANDROIDTEST_DEBUG, dimensions);
-    }
-
-    /**
-     * A version of {@link java.util.function.Consumer} where {@link Consumer#accept} throws {@link
-     * Exception}
-     *
-     * @param <T>
-     */
-    @FunctionalInterface
-    public interface Consumer<T> {
-        void accept(T t) throws Exception;
-    }
-
-    private void testAar(List<String> dimensions, @NonNull Consumer<AarSubject> action)
-            throws Exception {
-        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.size());
-        dimensionList.add(getName());
-        dimensionList.addAll(dimensions);
-        try (Aar aar =
-                new Aar(
-                        getOutputFile(
-                                "aar",
-                                Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR))) {
-            AarSubject subject = assertAbout(aars()).that(aar);
-            action.accept(subject);
+    private fun testAar(
+        dimensions: List<String>,
+        action: AarSubject.() -> Unit
+    ) {
+        val dimensionList: MutableList<String?> =
+            Lists.newArrayListWithExpectedSize(1 + dimensions.size)
+        dimensionList.add(name)
+        dimensionList.addAll(dimensions)
+        Aar(
+            getOutputFile(
+                "aar",
+                Joiner.on("-").join(dimensionList) + SdkConstants
+                    .DOT_AAR
+            )
+        ).use { aar ->
+            val subject =
+                Truth.assertAbout(AarSubject.aars()).that(aar)
+            action(subject)
         }
     }
 
     /**
      * Allows testing the aar.
      *
-     * <p>Testing happens in the callback that receives an {@link AarSubject}
+     * Testing happens in the callback that receives an [AarSubject]
      *
-     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public void testAar(String dimension1, @NonNull Consumer<AarSubject> action) throws Exception {
-        ArrayList<String> list = new ArrayList<>(1);
-        list.add(dimension1);
-        testAar(list, action);
+    fun testAar(
+        dimension1: String,
+        action: Consumer<AarSubject>
+    ) {
+        testAar(listOf(dimension1)) { action.accept(this) }
     }
 
     /**
      * Allows testing the aar.
      *
-     * <p>Testing happens in the callback that receives an {@link AarSubject}
+     * Testing happens in the callback that receives an [AarSubject]
      *
-     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public void testAar(String dimension1, String dimension2, @NonNull Consumer<AarSubject> action)
-            throws Exception {
-        testAar(Arrays.asList(dimension1, dimension2), action);
-    }
-
-    private void getAar(List<String> dimensions, @NonNull Consumer<Aar> action) throws Exception {
-        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.size());
-        dimensionList.add(getName());
-        dimensionList.addAll(dimensions);
-        try (Aar aar =
-                new Aar(
-                        getOutputFile(
-                                "aar",
-                                Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR))) {
-            action.accept(aar);
-        }
+    fun testAar(
+        dimension1: String,
+        dimension2: String,
+        action: Consumer<AarSubject>
+    ) {
+        testAar(listOf(dimension1, dimension2)) { action.accept(this) }
     }
 
     /**
      * Allows testing the aar.
      *
-     * <p>Testing happens in the callback that receives an {@link AarSubject}
+     * Testing happens in the callback that receives an [AarSubject]
      *
-     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
      */
-    public void getAar(String dimension1, @NonNull Consumer<Aar> action) throws Exception {
-        ArrayList<String> list = new ArrayList<>(1);
-        list.add(dimension1);
-        getAar(list, action);
+    fun assertThatAar(
+        dimension1: String,
+        action: AarSubject.() -> Unit
+    ) {
+        testAar(listOf(dimension1), action)
+    }
+
+    /**
+     * Allows testing the aar.
+     *
+     * Testing happens in the callback that receives an [AarSubject]
+     *
+     * Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * "unsigned", "aligned")
+     */
+    fun assertThatAar(
+        dimension1: String,
+        dimension2: String,
+        action: AarSubject.() -> Unit
+    ) {
+        testAar(listOf(dimension1, dimension2), action)
+    }
+
+    private fun getAar(
+        dimensions: List<String>,
+        action: Aar.() -> Unit
+    ) {
+        val dimensionList: MutableList<String?> =
+            Lists.newArrayListWithExpectedSize(1 + dimensions.size)
+        dimensionList.add(name)
+        dimensionList.addAll(dimensions)
+        Aar(
+            getOutputFile(
+                "aar",
+                Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR
+            )
+        ).use { aar -> action(aar) }
+    }
+
+    /**
+     * Allows testing the aar.
+     *
+     * Testing happens in the callback that receives an [AarSubject]
+     *
+     * Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * "unsigned", "aligned")
+     */
+    fun getAar(
+        dimension1: String,
+        action: Consumer<Aar>
+    ) {
+        getAar(listOf(dimension1)) { action.accept(this) }
+    }
+
+    /**
+     * Allows testing the aar.
+     *
+     * Testing happens in the callback that receives an [AarSubject]
+     *
+     * Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
+     * "unsigned", "aligned")
+     */
+    fun withAar(
+        dimension1: String,
+        action: Aar.() -> Unit
+    ) {
+        getAar(listOf(dimension1), action)
     }
 
     /**
      * Returns the output bundle file from the instantapp plugin for the given dimension.
      *
-     * <p>Expected dimensions orders are: - product flavors - build type
+     *
+     * Expected dimensions orders are: - product flavors - build type
      */
-    public Zip getInstantAppBundle(String... dimensions) throws IOException {
-        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
-        dimensionList.add(getName());
-        dimensionList.addAll(Arrays.asList(dimensions));
-        return new Zip(
-                getOutputFile(
-                        "apk",
-                        StringHelper.combineAsCamelCase(ImmutableList.copyOf(dimensions)),
-                        Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ZIP));
+    fun getInstantAppBundle(vararg dimensions: String): Zip {
+        val dimensionList: MutableList<String?> =
+            Lists
+                .newArrayListWithExpectedSize(1 + dimensions.size)
+        dimensionList.add(name)
+        dimensionList.addAll(Arrays.asList(*dimensions))
+        return Zip(
+            getOutputFile(
+                "apk",
+                ImmutableList.copyOf(dimensions)
+                    .combineAsCamelCase(),
+                Joiner.on("-").join(dimensionList) + SdkConstants
+                    .DOT_ZIP
+            )
+        )
     }
 
-    /** Returns a string that contains the gradle buildscript content */
-    public static String getGradleBuildscript() {
-        return "apply from: \"../commonHeader.gradle\"\n"
-                + "buildscript { apply from: \"../commonBuildScript.gradle\" }\n"
-                + "\n"
-                + "apply from: \"../commonLocalRepo.gradle\"\n";
+    /** Fluent method to run a build.  */
+    fun executor(): GradleTaskExecutor {
+        return applyOptions(GradleTaskExecutor(this, projectConnection))
     }
 
-    /** Fluent method to run a build. */
-    public GradleTaskExecutor executor() {
-        return applyOptions(new GradleTaskExecutor(this, getProjectConnection()));
+    /** Fluent method to get the model.  */
+    fun model(): ModelBuilder {
+        return applyOptions(ModelBuilder(this, projectConnection))
     }
 
-    /** Fluent method to get the model. */
-    @NonNull
-    public ModelBuilder model() {
-        return applyOptions(new ModelBuilder(this, getProjectConnection()));
-    }
+    private fun <T : BaseGradleExecutor<T>> applyOptions(executor: T): T {
+        for ((option, value) in booleanOptions) {
+            executor.with(option, value)
+        }
 
-    private <T extends BaseGradleExecutor<T>> T applyOptions(T executor) {
-        Map<BooleanOption, Boolean> booleanOptions = getBooleanOptions();
-        booleanOptions.forEach(executor::with);
-        booleanOptions.keySet().forEach(executor::suppressOptionWarning);
-        return executor;
+        for (option in booleanOptions.keys) {
+            executor.suppressOptionWarning(option)
+        }
+        return executor
     }
 
     /**
@@ -1281,38 +1251,38 @@ public final class GradleTestProject implements TestRule {
      *
      * @param tasks Variadic list of tasks to execute.
      */
-    public void execute(@NonNull String... tasks) throws IOException, InterruptedException {
-        lastBuildResult = executor().run(tasks);
+    fun execute(vararg tasks: String) {
+        _buildResult = executor().run(*tasks)
     }
 
-    public void execute(@NonNull List<String> arguments, @NonNull String... tasks)
-            throws IOException, InterruptedException {
-        lastBuildResult = executor().withArguments(arguments).run(tasks);
+    fun execute(
+        arguments: List<String>,
+        vararg tasks: String
+    ) {
+        _buildResult = executor().withArguments(arguments).run(*tasks)
     }
 
-    public GradleConnectionException executeExpectingFailure(@NonNull String... tasks)
-            throws IOException, InterruptedException {
-        lastBuildResult = executor().expectFailure().run(tasks);
-        return lastBuildResult.getException();
-    }
-
-    /**
-     * @Deprecated do not use. Use {@link GradleTaskExecutor#run(String...)} or {@link
-     * GradleTaskExecutor#run(List)} instead.
-     */
-    @Deprecated
-    public void executeConnectedCheck() throws IOException, InterruptedException {
-        lastBuildResult = executor().executeConnectedCheck();
+    fun executeExpectingFailure(vararg tasks: String): GradleConnectionException? {
+        return executor().expectFailure().run(*tasks).run {
+            _buildResult = this
+            exception
+        }
     }
 
     /**
-     * @Deprecated do not use. Use {@link GradleTaskExecutor#run(String...)} or {@link
-     * GradleTaskExecutor#run(List)} instead.
+     * @Deprecated do not use. Use [GradleTaskExecutor.run] or [ ][GradleTaskExecutor.run] instead.
      */
-    @Deprecated
-    public void executeConnectedCheck(@NonNull List<String> arguments)
-            throws IOException, InterruptedException {
-        lastBuildResult = executor().withArguments(arguments).executeConnectedCheck();
+    @Deprecated("")
+    fun executeConnectedCheck() {
+        _buildResult = executor().executeConnectedCheck()
+    }
+
+    /**
+     * @Deprecated do not use. Use [GradleTaskExecutor.run] or [ ][GradleTaskExecutor.run] instead.
+     */
+    @Deprecated("")
+    fun executeConnectedCheck(arguments: List<String>) {
+        _buildResult = executor().withArguments(arguments).executeConnectedCheck()
     }
 
     /**
@@ -1321,11 +1291,9 @@ public final class GradleTestProject implements TestRule {
      * @param tasks Variadic list of tasks to execute.
      * @return the AndroidProject model for the project.
      */
-    @NonNull
-    public ModelContainer<AndroidProject> executeAndReturnModel(@NonNull String... tasks)
-            throws IOException, InterruptedException {
-        lastBuildResult = executor().run(tasks);
-        return model().fetchAndroidProjects();
+    fun executeAndReturnModel(vararg tasks: String): ModelContainer<AndroidProject> {
+        _buildResult = executor().run(*tasks)
+        return model().fetchAndroidProjects()
     }
 
     /**
@@ -1336,11 +1304,12 @@ public final class GradleTestProject implements TestRule {
      * @param tasks Variadic list of tasks to execute.
      * @return the model for the project with the specified type.
      */
-    @NonNull
-    public <T> T executeAndReturnModel(Class<T> modelClass, String... tasks)
-            throws IOException, InterruptedException {
-        lastBuildResult = executor().run(tasks);
-        return model().fetch(modelClass);
+    fun <T> executeAndReturnModel(
+        modelClass: Class<T>,
+        vararg tasks: String
+    ): T {
+        _buildResult = executor().run(*tasks)
+        return model().fetch(modelClass)
     }
 
     /**
@@ -1349,41 +1318,40 @@ public final class GradleTestProject implements TestRule {
      *
      * @param tasks Variadic list of tasks to execute.
      * @return the output models for the project as map of output model name (variant name +
-     *     artifact name) to the associated {@link BuiltArtifacts}
+     * artifact name) to the associated [BuiltArtifacts]
      */
-    @Nullable
-    public Map<String, BuiltArtifacts> executeAndReturnOutputModels(String... tasks)
-            throws IOException, InterruptedException {
-        executor().run(tasks);
-        ModelContainer<AndroidProject> androidProjectModelContainer =
-                model().ignoreSyncIssues().fetchAndroidProjects();
-        AndroidProject onlyModel = androidProjectModelContainer.getOnlyModel();
-        ImmutableMap.Builder<String, BuiltArtifacts> mapOfVariantOutputs = ImmutableMap.builder();
-        for (Variant variant : onlyModel.getVariants()) {
-            String postModelFile = variant.getMainArtifact().getAssembleTaskOutputListingFile();
-            BuiltArtifacts builtArtifacts =
-                    BuiltArtifactsLoaderImpl.loadFromFile(
-                            new File(postModelFile),
-                            new File(postModelFile).getParentFile().toPath());
+    fun executeAndReturnOutputModels(vararg tasks: String): Map<String, BuiltArtifacts> {
+        executor().run(*tasks)
+        val androidProjectModelContainer = model().ignoreSyncIssues().fetchAndroidProjects()
+        val onlyModel = androidProjectModelContainer.onlyModel
+        val mapOfVariantOutputs = ImmutableMap.builder<String, BuiltArtifacts>()
+        for (variant in onlyModel.variants) {
+            val postModelFile = variant.mainArtifact.assembleTaskOutputListingFile
+            val builtArtifacts: BuiltArtifacts? = loadFromFile(
+                File(postModelFile),
+                File(postModelFile).parentFile.toPath()
+            )
             if (builtArtifacts != null) {
-                mapOfVariantOutputs.put(variant.getName(), builtArtifacts);
+                mapOfVariantOutputs.put(variant.name, builtArtifacts)
             }
-            for (AndroidArtifact extraAndroidArtifact : variant.getExtraAndroidArtifacts()) {
-                String extraModelFile = extraAndroidArtifact.getAssembleTaskOutputListingFile();
+            for (extraAndroidArtifact in variant.extraAndroidArtifacts) {
+                val extraModelFile = extraAndroidArtifact.assembleTaskOutputListingFile
                 if (!extraModelFile.isEmpty()) {
-                    BuiltArtifacts extraBuiltArtifacts =
-                            BuiltArtifactsLoaderImpl.loadFromFile(
-                                    new File(postModelFile),
-                                    new File(postModelFile).getParentFile().toPath());
+                    val extraBuiltArtifacts: BuiltArtifacts? =
+                        loadFromFile(
+                            File(postModelFile),
+                            File(postModelFile).parentFile.toPath()
+                        )
                     if (extraBuiltArtifacts != null) {
                         mapOfVariantOutputs.put(
-                                variant.getName() + extraAndroidArtifact.getName(),
-                                extraBuiltArtifacts);
+                            variant.name + extraAndroidArtifact.name,
+                            extraBuiltArtifacts
+                        )
                     }
                 }
             }
         }
-        return mapOfVariantOutputs.build();
+        return mapOfVariantOutputs.build()
     }
 
     /**
@@ -1393,11 +1361,9 @@ public final class GradleTestProject implements TestRule {
      * @param tasks Variadic list of tasks to execute.
      * @return the AndroidProject model for the project.
      */
-    @NonNull
-    public ModelContainer<AndroidProject> executeAndReturnMultiModel(String... tasks)
-            throws IOException, InterruptedException {
-        lastBuildResult = executor().run(tasks);
-        return model().fetchAndroidProjects();
+    fun executeAndReturnMultiModel(vararg tasks: String): ModelContainer<AndroidProject> {
+        _buildResult = executor().run(*tasks)
+        return model().fetchAndroidProjects()
     }
 
     /**
@@ -1408,29 +1374,18 @@ public final class GradleTestProject implements TestRule {
      * @param tasks Variadic list of tasks to execute.
      * @return map of project names to output models
      */
-    @NonNull
-    public <T> Map<String, T> executeAndReturnMultiModel(Class<T> modelClass, String... tasks)
-            throws IOException, InterruptedException {
-        lastBuildResult = executor().run(tasks);
-        return model().fetchMulti(modelClass);
+    fun <T> executeAndReturnMultiModel(
+        modelClass: Class<T>,
+        vararg tasks: String?
+    ): Map<String, T> {
+        _buildResult = executor().run(*tasks)
+        return model().fetchMulti(modelClass)
     }
 
-    static class ProjectOutputModel {
-        final Map<String, VariantBuildInformation> buildInformationByVariantName;
+    internal class ProjectOutputModel(val buildInformationByVariantName: Map<String, VariantBuildInformation>)
 
-        ProjectOutputModel(Map<String, VariantBuildInformation> buildInformationByVariantName) {
-            this.buildInformationByVariantName = buildInformationByVariantName;
-        }
-    }
-
-
-    /** Returns the latest build result. */
-    public GradleBuildResult getBuildResult() {
-        return lastBuildResult;
-    }
-
-    public void setLastBuildResult(GradleBuildResult lastBuildResult) {
-        this.lastBuildResult = lastBuildResult;
+    fun setLastBuildResult(lastBuildResult: GradleBuildResult) {
+        _buildResult = lastBuildResult
     }
 
     /**
@@ -1438,256 +1393,195 @@ public final class GradleTestProject implements TestRule {
      *
      * @param path Full path of the file. May be a relative path.
      */
-    public File file(String path) {
-        File result = new File(FileUtils.toSystemDependentPath(path));
-        if (result.isAbsolute()) {
-            return result;
+    fun file(path: String): File {
+        val result = File(FileUtils.toSystemDependentPath(path))
+        return if (result.isAbsolute) {
+            result
         } else {
-            return new File(getTestDir(), path);
+            File(testDir, path)
         }
     }
 
-    /** Returns a Gradle project Connection */
-    @NonNull
-    private ProjectConnection getProjectConnection() {
-        if (projectConnection != null) {
-            return projectConnection;
+    private fun createLocalProp(): File {
+        val mainLocalProp = createLocalProp(testDir)
+        for (includedBuild in withIncludedBuilds) {
+            createLocalProp(File(testDir, includedBuild))
         }
-        GradleConnector connector = GradleConnector.newConnector();
-
-        ((DefaultGradleConnector) connector)
-                .daemonMaxIdleTime(GRADLE_DEAMON_IDLE_TIME_IN_SECONDS, TimeUnit.SECONDS);
-
-        String distributionName = String.format("gradle-%s-bin.zip", targetGradleVersion);
-        File distributionZip = new File(gradleDistributionDirectory, distributionName);
-        assertThat(distributionZip).isFile();
-
-        projectConnection =
-                connector
-                        .useDistribution(distributionZip.toURI())
-                        .useGradleUserHomeDir(GRADLE_USER_HOME.toFile())
-                        .forProjectDirectory(getTestDir())
-                        .connect();
-
-        rootProject.openConnections.add(projectConnection);
-
-        return projectConnection;
+        return mainLocalProp
     }
 
-    private File createLocalProp() throws IOException, StreamException {
-        checkNotNull(testDir, "project location is null");
-
-        File mainLocalProp = createLocalProp(testDir);
-
-        for (String includedBuild : withIncludedBuilds) {
-            createLocalProp(new File(testDir, includedBuild));
-        }
-
-        return mainLocalProp;
-    }
-
-    private File createLocalProp(File destDir) throws IOException, StreamException {
-        ProjectPropertiesWorkingCopy localProp =
-                ProjectProperties.create(
-                        destDir.getAbsolutePath(), ProjectProperties.PropertyType.LOCAL);
-
+    private fun createLocalProp(destDir: File): File {
+        val localProp = ProjectProperties.create(
+            destDir.absolutePath, ProjectProperties.PropertyType.LOCAL
+        )
         if (withSdk) {
-            localProp.setProperty(
-                    ProjectProperties.PROPERTY_SDK,
-                    Objects.requireNonNull(getAndroidHome()).getAbsolutePath());
+            val androidHome = this.androidHome ?: throw RuntimeException("androidHome is null while withSdk is true")
+            localProp.setProperty(ProjectProperties.PROPERTY_SDK, androidHome.absolutePath)
         }
         if (!withoutNdk) {
             localProp.setProperty(
-                    ProjectProperties.PROPERTY_NDK, getAndroidNdkHome().getAbsolutePath());
+                ProjectProperties.PROPERTY_NDK, androidNdkHome.absolutePath
+            )
         }
 
-        if (withCmakeDirInLocalProp && cmakeVersion != null && !cmakeVersion.isEmpty()) {
+        if (withCmakeDirInLocalProp && cmakeVersion != null && cmakeVersion.isNotEmpty()) {
             localProp.setProperty(
-                    ProjectProperties.PROPERTY_CMAKE,
-                    getCmakeVersionFolder(cmakeVersion).getAbsolutePath());
+                ProjectProperties.PROPERTY_CMAKE,
+                getCmakeVersionFolder(cmakeVersion).absolutePath
+            )
         }
-
         if (ndkSymlinkPath != null) {
-            localProp.setProperty(ProjectProperties.PROPERTY_NDK_SYMLINKDIR, ndkSymlinkPath);
+            localProp.setProperty(ProjectProperties.PROPERTY_NDK_SYMLINKDIR, ndkSymlinkPath)
         }
-
-        localProp.save();
-        return (File) localProp.getFile();
+        localProp.save()
+        return localProp.file as File
     }
 
-    private enum BuildSystem {
+    private enum class BuildSystem {
         GRADLE {
-            @NonNull
-            @Override
-            List<Path> getLocalRepositories() {
-                String customRepo = System.getenv(ENV_CUSTOM_REPO);
-                // TODO: support USE_EXTERNAL_REPO
-                ImmutableList.Builder<Path> repos = ImmutableList.builder();
-                for (String path : Splitter.on(File.pathSeparatorChar).split(customRepo)) {
-                    repos.add(Paths.get(path));
+            override val localRepositories: List<Path>
+                get() {
+                    val customRepo = System.getenv(ENV_CUSTOM_REPO)
+                    // TODO: support USE_EXTERNAL_REPO
+                    val repos = ImmutableList.builder<Path>()
+                    for (path in Splitter.on(File.pathSeparatorChar).split(customRepo)) {
+                        repos.add(Paths.get(path))
+                    }
+                    return repos.build()
                 }
-                return repos.build();
-            }
         },
         BAZEL {
-            @NonNull
-            @Override
-            List<Path> getLocalRepositories() {
-                return BazelIntegrationTestsSuite.MAVEN_REPOS;
-            }
+            override val localRepositories: List<Path>
+                get() = BazelIntegrationTestsSuite.MAVEN_REPOS
         },
         IDEA {
-            @NonNull
-            @Override
-            List<Path> getLocalRepositories() {
-                return ImmutableList.of(
-                        TestUtils.getWorkspaceFile("prebuilts/tools/common/m2/repository")
-                                .toPath());
+            override val localRepositories: List<Path>
                 // The classes build by idea and jars are added separately.
-            }
+                get() = ImmutableList.of(
+                    TestUtils
+                        .getWorkspaceFile("prebuilts/tools/common/m2/repository")
+                        .toPath()
+                )
 
-            @Override
-            String getCommonBuildScriptContent(
-                    boolean withAndroidGradlePlugin,
-                    boolean withKotlinGradlePlugin,
-                    boolean withDeviceProvider) {
-                StringBuilder buildScript =
-                        new StringBuilder(
-                                "\n"
-                                        + "def commonScriptFolder = buildscript.sourceFile.parent\n"
-                                        + "apply from: \"$commonScriptFolder/commonVersions.gradle\", to: rootProject.ext\n"
-                                        + "\n"
-                                        + "project.buildscript { buildscript ->\n"
-                                        + "    apply from: \"$commonScriptFolder/commonLocalRepo.gradle\", to:buildscript\n"
-                                        + "    dependencies {"
-                                        + "        classpath files(");
+            override fun getCommonBuildScriptContent(
+                withAndroidGradlePlugin: Boolean,
+                withKotlinGradlePlugin: Boolean,
+                withDeviceProvider: Boolean
+            ): String {
+                val buildScript = StringBuilder(
+                    """
+def commonScriptFolder = buildscript.sourceFile.parent
+apply from: "${"$"}commonScriptFolder/commonVersions.gradle", to: rootProject.ext
 
-                for (URL url :
-                        ((URLClassLoader) GradleTestProject.class.getClassLoader()).getURLs()) {
-                    buildScript.append("                '").append(url.getFile()).append("',\n");
+project.buildscript { buildscript ->
+    apply from: "${"$"}commonScriptFolder/commonLocalRepo.gradle", to:buildscript
+    dependencies {        classpath files("""
+                )
+                for (url in (GradleTestProject::class.java.classLoader as URLClassLoader).urLs) {
+                    buildScript.append("                '").append(url.file).append("',\n")
                 }
-                buildScript.append("        )\n" + "    }\n" + "}");
-                return buildScript.toString();
+                buildScript.append(
+                    """        )
+    }
+}"""
+                )
+                return buildScript.toString()
             }
-        },
-        ;
+        };
 
-        static BuildSystem get() {
-            if (TestUtils.runningFromBazel()) {
-                return BAZEL;
-            } else if (System.getenv(ENV_CUSTOM_REPO) != null) {
-                return GRADLE;
-            } else {
-                return IDEA;
-            }
-        }
+        abstract val localRepositories: List<Path>
 
-        @NonNull
-        abstract List<Path> getLocalRepositories();
-
-        String getCommonBuildScriptContent(
-                boolean withAndroidGradlePlugin,
-                boolean withKotlinGradlePlugin,
-                boolean withDeviceProvider) {
-            StringBuilder script = new StringBuilder();
-            script.append("def commonScriptFolder = buildscript.sourceFile.parent\n");
+        open fun getCommonBuildScriptContent(
+            withAndroidGradlePlugin: Boolean,
+            withKotlinGradlePlugin: Boolean,
+            withDeviceProvider: Boolean
+        ): String {
+            val script = StringBuilder()
+            script.append("def commonScriptFolder = buildscript.sourceFile.parent\n")
             script.append(
-                    "apply from: \"$commonScriptFolder/commonVersions.gradle\", to: rootProject.ext\n\n");
-            script.append("project.buildscript { buildscript ->\n");
+                "apply from: \"\$commonScriptFolder/commonVersions.gradle\", to: rootProject.ext\n\n"
+            )
+            script.append("project.buildscript { buildscript ->\n")
             script.append(
-                    "    apply from: \"$commonScriptFolder/commonLocalRepo.gradle\", to:buildscript\n");
+                "    apply from: \"\$commonScriptFolder/commonLocalRepo.gradle\", to:buildscript\n"
+            )
             if (withKotlinGradlePlugin) {
                 // To get the Kotlin version
-                script.append("    apply from: '../commonHeader.gradle'\n");
+                script.append("    apply from: '../commonHeader.gradle'\n")
             }
-
-            script.append("    dependencies {\n");
+            script.append("    dependencies {\n")
             if (withAndroidGradlePlugin) {
                 script.append(
-                        "        classpath \"com.android.tools.build:gradle:$rootProject.buildVersion\"\n");
+                    "        classpath \"com.android.tools.build:gradle:\$rootProject.buildVersion\"\n"
+                )
             }
             if (withKotlinGradlePlugin) {
                 script.append(
-                        "        classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:$rootProject.kotlinVersion\"\n");
+                    "        classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:\$rootProject.kotlinVersion\"\n"
+                )
             }
             if (withDeviceProvider) {
                 script.append(
-                        "        classpath 'com.android.tools.internal.build.test:devicepool:0.1'\n");
+                    "        classpath 'com.android.tools.internal.build.test:devicepool:0.1'\n"
+                )
             }
-            script.append("    }\n");
+            script.append("    }\n")
+            script.append("}")
+            return script.toString()
+        }
 
-            script.append("}");
-            return script.toString();
+        companion object {
+            fun get(): BuildSystem {
+                return when {
+                    TestUtils.runningFromBazel() -> {
+                        BAZEL
+                    }
+                    System.getenv(ENV_CUSTOM_REPO) != null -> {
+                        GRADLE
+                    }
+                    else -> {
+                        IDEA
+                    }
+                }
+            }
         }
     }
 
-    private void createSettingsFile() throws IOException {
+    private fun createSettingsFile() {
         if (gradleBuildCacheDirectory != null) {
-            File absoluteFile =
-                    gradleBuildCacheDirectory.isAbsolute()
-                            ? gradleBuildCacheDirectory
-                            : new File(testDir, gradleBuildCacheDirectory.getPath());
+            val absoluteFile: File = if (gradleBuildCacheDirectory.isAbsolute)
+                gradleBuildCacheDirectory
+            else
+                File(testDir, gradleBuildCacheDirectory.path)
             TestFileUtils.appendToFile(
-                    getSettingsFile(),
-                    "buildCache {\n"
-                            + "    local {\n"
-                            + "        directory = \""
-                            + absoluteFile.getPath().replace("\\", "\\\\")
-                            + "\"\n"
-                            + "    }\n"
-                            + "}");
+                settingsFile,
+                """buildCache {
+    local {
+        directory = "${absoluteFile.path.replace("\\", "\\\\")}"
+    }
+}"""
+            )
         }
     }
 
-    private void createGradleProp() throws IOException {
+    private fun createGradleProp() {
         if (gradleProperties.isEmpty()) {
-            return;
+            return
         }
-        Files.asCharSink(getGradlePropertiesFile(), Charset.defaultCharset())
-                .write(Joiner.on(System.lineSeparator()).join(gradleProperties));
-    }
 
-    @NonNull
-    GradleTestProjectBuilder.MemoryRequirement getHeapSize() {
-        return heapSize;
-    }
-
-    public File getLocalProp() {
-        return localProp;
-    }
-
-    @Nullable
-    public String getBuildToolsVersion() {
-        return buildToolsVersion;
-    }
-
-    @NonNull
-    public static String getCompileSdkHash() {
-        String compileTarget =
-                GradleTestProject.DEFAULT_COMPILE_SDK_VERSION.replaceAll("[\"']", "");
-        if (!compileTarget.startsWith("android-")) {
-            compileTarget = "android-" + compileTarget;
-        }
-        return compileTarget;
-    }
-
-    @NonNull
-    public File getAndroidHome() {
-        return androidHome;
-    }
-
-    @NonNull
-    public File getAndroidNdkHome() {
-        return androidNdkHome;
+        gradlePropertiesFile.writeText(
+            gradleProperties.joinToString(separator = System.lineSeparator())
+        )
     }
 
     /**
      * Adds `android.useAndroidX=true` to the gradle.properties file (for projects that use AndroidX
      * dependencies, see bug 130286699).
      */
-    public void addUseAndroidXProperty() throws IOException {
+    fun addUseAndroidXProperty() {
         TestFileUtils.appendToFile(
-                this.getGradlePropertiesFile(),
-                BooleanOption.USE_ANDROID_X.getPropertyName() + "=true");
+            gradlePropertiesFile,
+            BooleanOption.USE_ANDROID_X.propertyName + "=true"
+        )
     }
 }

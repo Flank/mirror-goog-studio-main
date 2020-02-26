@@ -22,8 +22,12 @@ import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.testutils.apk.Zip;
 import com.google.common.truth.Truth;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import org.junit.Before;
 import org.junit.Rule;
@@ -156,15 +160,23 @@ public class ExtractAnnotationTest {
         project.getAar(
                 "debug",
                 debugAar -> {
-                    assertThat(
-                                    Files.readAttributes(
-                                                    debugAar.getEntryAsZip("annotations.zip")
-                                                            .getEntry(
-                                                                    "com/android/tests/extractannotations/annotations.xml"),
-                                                    BasicFileAttributes.class)
-                                            .lastModifiedTime()
-                                            .toMillis())
-                            .isEqualTo(0L);
+                    try {
+                        Zip annotationZip = debugAar.getEntryAsZip("annotations.zip");
+
+                        Path annotationXml =
+                                annotationZip.getEntry(
+                                        "com/android/tests/extractannotations/annotations.xml");
+                        assertThat(annotationXml).isNotNull();
+                        //noinspection ConstantConditions
+                        assertThat(
+                                        Files.readAttributes(
+                                                        annotationXml, BasicFileAttributes.class)
+                                                .lastModifiedTime()
+                                                .toMillis())
+                                .isEqualTo(0L);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
                 });
     }
 }

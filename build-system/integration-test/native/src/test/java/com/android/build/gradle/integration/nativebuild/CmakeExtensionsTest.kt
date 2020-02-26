@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.nativebuild
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.builder.model.NativeAndroidProject
@@ -109,7 +109,7 @@ class CmakeExtensionsTest(
                 """.trimIndent()
         )
         // any backslash in the path must be escaped.
-        val ninja = GradleTestProject.getPreferredNinja().absolutePath.replace("\\", "\\\\")
+        val ninja = GradleTestProject.preferredNinja.absolutePath.replace("\\", "\\\\")
         when (enableCaching) {
             null -> TestFileUtils.appendToFile(
                 project.buildFile,

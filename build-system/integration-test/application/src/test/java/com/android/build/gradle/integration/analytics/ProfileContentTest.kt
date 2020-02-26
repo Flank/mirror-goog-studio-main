@@ -58,7 +58,7 @@ class ProfileContentTest {
 
             assertThat(profile.projectCount).isGreaterThan(0)
             val gbp = profile.getProject(0)
-            assertThat(gbp.compileSdk).isEqualTo(GradleTestProject.getCompileSdkHash())
+            assertThat(gbp.compileSdk).isEqualTo(GradleTestProject.compileSdkHash)
             assertThat(gbp.kotlinPluginVersion).isEqualTo(project.kotlinVersion)
             assertThat<GradleBuildProject.GradlePlugin,
                     Iterable<GradleBuildProject.GradlePlugin>>(gbp.pluginList)

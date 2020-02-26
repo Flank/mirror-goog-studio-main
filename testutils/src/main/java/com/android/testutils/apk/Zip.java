@@ -24,6 +24,7 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -89,42 +90,50 @@ public class Zip implements AutoCloseable {
 
     @CheckReturnValue
     @NonNull
-    public final List<Path> getEntries() throws IOException {
+    public final List<Path> getEntries() {
         try (Stream<Path> paths = Files.walk(zip.getPath("/"))) {
             return Collections.unmodifiableList(
                     paths.filter(path -> Files.isRegularFile(path)).collect(Collectors.toList()));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
     @CheckReturnValue
     @NonNull
-    public final List<Path> getEntries(@NonNull Pattern pattern) throws IOException {
+    public final List<Path> getEntries(@NonNull Pattern pattern) {
         try (Stream<Path> paths = Files.walk(zip.getPath("/"))) {
             return Collections.unmodifiableList(
                     paths.filter(path -> Files.isRegularFile(path))
                             .filter(path -> pattern.matcher(path.toString()).matches())
                             .collect(Collectors.toList()));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
     @CheckReturnValue
     @NonNull
-    public final Zip getEntryAsZip(@NonNull String name) throws IOException {
-        Zip cached = innerZips.get(name);
-        if (cached != null) {
-            return cached;
+    public final Zip getEntryAsZip(@NonNull String name) {
+        try {
+            Zip cached = innerZips.get(name);
+            if (cached != null) {
+                return cached;
+            }
+
+            // Extract inner zip into temporary location.
+            Path zipPath = getEntry(name);
+            Preconditions.checkNotNull(zipPath, "Entry %s should exist ", name);
+            Path temp = Files.createTempFile(file.getFileName().toString(), "_inner_zip.zip");
+            Files.copy(zipPath, temp, StandardCopyOption.REPLACE_EXISTING);
+            temp.toFile().deleteOnExit();
+            Zip created = new Zip(temp, displayName + ":" + name);
+
+            innerZips.put(name, created);
+            return created;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-
-        // Extract inner zip into temporary location.
-        Path zipPath = getEntry(name);
-        Preconditions.checkNotNull(zipPath, "Entry %s should exist ", name);
-        Path temp = Files.createTempFile(file.getFileName().toString(), "_inner_zip.zip");
-        Files.copy(zipPath, temp, StandardCopyOption.REPLACE_EXISTING);
-        temp.toFile().deleteOnExit();
-        Zip created = new Zip(temp, displayName + ":" + name);
-
-        innerZips.put(name, created);
-        return created;
     }
 
     @CheckReturnValue

@@ -643,8 +643,9 @@ public class NativeSoPackagingTest {
      * @param content the content
      */
     private void checkTestApk(
-            @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
-            throws Exception {
+            @NonNull GradleTestProject project,
+            @NonNull String filename,
+            @Nullable String content) {
         check(TruthHelper.assertThat(project.getTestApk()), "lib", "x86", filename, content);
     }
 
@@ -659,8 +660,9 @@ public class NativeSoPackagingTest {
      * @param content the content
      */
     private static void checkAar(
-            @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
-            throws Exception {
+            @NonNull GradleTestProject project,
+            @NonNull String filename,
+            @Nullable String content) {
         project.testAar("debug", it -> check(it, "jni", "x86", filename, content));
     }
 
@@ -669,8 +671,7 @@ public class NativeSoPackagingTest {
             @NonNull String folderName,
             @NonNull String abi,
             @NonNull String filename,
-            @Nullable String content)
-            throws Exception {
+            @Nullable String content) {
         if (content != null) {
             subject.containsFileWithContent(folderName + "/" + abi + "/" + filename, content);
         } else {

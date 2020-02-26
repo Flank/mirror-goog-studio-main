@@ -74,7 +74,7 @@ class SplitHandlingTest {
                + "'\n"
                + "}\n")
         val failure = project.executeExpectingFailure("clean", "assembleDebug")
-        val cause = getCause(failure.cause)
+        val cause = getCause(failure?.cause)
         assertThat(cause?.message).contains("xxhdpi")
     }
 

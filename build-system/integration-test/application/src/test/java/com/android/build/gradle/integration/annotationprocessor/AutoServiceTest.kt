@@ -28,6 +28,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.util.function.Consumer
 
 @RunWith(Parameterized::class)
 class AutoServiceTest(private val pluginName: String) {
@@ -84,8 +85,8 @@ class AutoServiceTest(private val pluginName: String) {
                 .containsJavaResource("META-INF/services/com.example.helloworld.MyService")
         } else {
 
-            project.testAar("debug") {
-                it.containsJavaResource("META-INF/services/com.example.helloworld.MyService")
+            project.assertThatAar("debug") {
+                containsJavaResource("META-INF/services/com.example.helloworld.MyService")
             }
         }
     }

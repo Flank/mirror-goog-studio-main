@@ -27,6 +27,7 @@ import com.android.testutils.truth.IndirectSubject;
 import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Optional;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 
@@ -41,18 +42,22 @@ public class AbstractDexAndroidSubject<
     }
 
     @NonNull
-    public final IndirectSubject<DexSubject> hasMainDexFile() throws IOException {
-        Optional<Dex> dex = actual().getMainDexFile();
-        if (!dex.isPresent()) {
-            failWithoutActual(
-                    Fact.simpleFact(String.format("'%s' does not contain main dex", actual())));
+    public final IndirectSubject<DexSubject> hasMainDexFile() {
+        try {
+            Optional<Dex> dex = actual().getMainDexFile();
+            if (!dex.isPresent()) {
+                failWithoutActual(
+                        Fact.simpleFact(String.format("'%s' does not contain main dex", actual())));
+            }
+            return () -> DexSubject.assertThat(dex.get());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-        return () -> DexSubject.assertThat(dex.get());
     }
 
     @NonNull
     public final IndirectSubject<DexClassSubject> hasMainClass(
-            @NonNull final String expectedClassName) throws IOException {
+            @NonNull final String expectedClassName) {
         DexBackedClassDef dexBackedClassDef = getMainClass(expectedClassName);
         if (dexBackedClassDef == null) {
             fail("contains class", expectedClassName);
@@ -62,7 +67,7 @@ public class AbstractDexAndroidSubject<
 
     @NonNull
     public final IndirectSubject<DexClassSubject> hasSecondaryClass(
-            @NonNull final String expectedClassName) throws IOException {
+            @NonNull final String expectedClassName) {
         DexBackedClassDef dexBackedClassDef = getSecondaryClass(expectedClassName);
         if (dexBackedClassDef == null) {
             fail("contains class", expectedClassName);
@@ -71,8 +76,8 @@ public class AbstractDexAndroidSubject<
     }
 
     @NonNull
-    public final IndirectSubject<DexClassSubject> hasClass(@NonNull final String expectedClassName)
-            throws IOException {
+    public final IndirectSubject<DexClassSubject> hasClass(
+            @NonNull final String expectedClassName) {
         DexBackedClassDef mainClassDef = getMainClass(expectedClassName);
         DexBackedClassDef classDef =
                 mainClassDef != null ? mainClassDef : getSecondaryClass(expectedClassName);
@@ -83,7 +88,6 @@ public class AbstractDexAndroidSubject<
     }
 
     public void hasDexVersion(int expectedDexVersion) {
-
         try {
             if (expectedDexVersion
                     != actual().getMainDexFile().orElseThrow(AssertionError::new).getVersion()) {
@@ -94,22 +98,30 @@ public class AbstractDexAndroidSubject<
         }
     }
 
-    private DexBackedClassDef getMainClass(@NonNull String className) throws IOException {
-        Optional<Dex> classesDex = actual().getMainDexFile();
-        if (!classesDex.isPresent()) {
-            fail("has main dex file");
-            return null;
+    private DexBackedClassDef getMainClass(@NonNull String className) {
+        try {
+            Optional<Dex> classesDex = actual().getMainDexFile();
+            if (!classesDex.isPresent()) {
+                fail("has main dex file");
+                return null;
+            }
+            return classesDex.get().getClasses().get(className);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-        return classesDex.get().getClasses().get(className);
     }
 
-    private DexBackedClassDef getSecondaryClass(@NonNull String className) throws IOException {
-        for (Dex dex : actual().getSecondaryDexFiles()) {
-            DexBackedClassDef classDef = dex.getClasses().get(className);
-            if (classDef != null) {
-                return classDef;
+    private DexBackedClassDef getSecondaryClass(@NonNull String className) {
+        try {
+            for (Dex dex : actual().getSecondaryDexFiles()) {
+                DexBackedClassDef classDef = dex.getClasses().get(className);
+                if (classDef != null) {
+                    return classDef;
+                }
             }
+            return null;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-        return null;
     }
 }

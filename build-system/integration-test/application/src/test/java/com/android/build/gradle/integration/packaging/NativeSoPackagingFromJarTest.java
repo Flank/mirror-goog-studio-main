@@ -153,7 +153,7 @@ public class NativeSoPackagingFromJarTest {
     /**
      * check an aat has (or not) the given asset file name.
      *
-     * If the content is non-null the file is expected to be there with the same content. If the
+     * <p>If the content is non-null the file is expected to be there with the same content. If the
      * content is null the file is not expected to be there.
      *
      * @param project the project
@@ -161,8 +161,9 @@ public class NativeSoPackagingFromJarTest {
      * @param content the content
      */
     private static void checkAar(
-            @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
-            throws Exception {
+            @NonNull GradleTestProject project,
+            @NonNull String filename,
+            @Nullable String content) {
         project.testAar("debug", it -> check(it, "jni", filename, content));
     }
 
@@ -170,8 +171,7 @@ public class NativeSoPackagingFromJarTest {
             @NonNull AbstractAndroidSubject subject,
             @NonNull String folderName,
             @NonNull String filename,
-            @Nullable String content)
-            throws Exception {
+            @Nullable String content) {
         if (content != null) {
             subject.containsFileWithContent(folderName + "/x86/" + filename, content);
         } else {
