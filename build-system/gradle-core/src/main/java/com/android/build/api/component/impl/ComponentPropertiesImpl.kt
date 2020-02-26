@@ -424,7 +424,11 @@ abstract class ComponentPropertiesImpl(
 
         // for the other, there's no duplicate so no issue.
         taskContainer.generateBuildConfigTask?.let {
-            sourceSets.add(internalServices.fileTree(paths.buildConfigSourceOutputDir).builtBy(it.name))
+       if (buildFeatures.buildConfig){
+            val generatedBuildConfig =
+                operations.get(InternalArtifactType.GENERATED_BUILD_CONFIG_JAVA)
+            sourceSets.add(internalServices.fileTree(generatedBuildConfig).builtBy(generatedBuildConfig))
+            }
         }
         if (taskContainer.aidlCompileTask != null) {
             val aidlFC = artifacts.getFinalProduct(AIDL_SOURCE_OUTPUT_DIR)

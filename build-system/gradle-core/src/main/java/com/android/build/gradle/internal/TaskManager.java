@@ -1135,9 +1135,8 @@ public abstract class TaskManager<
 
     public void createBuildConfigTask(@NonNull ComponentPropertiesImpl componentProperties) {
         if (componentProperties.getBuildFeatures().getBuildConfig()) {
-            TaskProvider<GenerateBuildConfig> generateBuildConfigTask =
-                    taskFactory.register(
-                            new GenerateBuildConfig.CreationAction(componentProperties));
+            TaskProvider<GenerateBuildConfig> generateBuildConfigTask = taskFactory.register(
+                    new GenerateBuildConfig.CreationAction(componentProperties));
 
             TaskFactoryUtils.dependsOn(
                     componentProperties.getTaskContainer().getSourceGenTask(),
