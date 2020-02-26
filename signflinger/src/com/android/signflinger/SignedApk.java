@@ -65,9 +65,6 @@ public class SignedApk implements Archive {
             this.archive = new ZipArchive(file);
         }
 
-        // TODO: Exploit bottom-up parsing of Android and request
-        // zipflinger to not generate virtual entries on close
-
         DefaultApkSignerEngine.SignerConfig signerConfig =
                 new DefaultApkSignerEngine.SignerConfig.Builder(
                                 "CERT", options.privateKey, options.certificates)
