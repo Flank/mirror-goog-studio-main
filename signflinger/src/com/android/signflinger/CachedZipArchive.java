@@ -19,6 +19,7 @@ package com.android.signflinger;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.zipflinger.BytesSource;
+import com.android.zipflinger.Zip64;
 import com.android.zipflinger.ZipArchive;
 import java.io.File;
 import java.io.IOException;
@@ -41,8 +42,8 @@ public class CachedZipArchive extends ZipArchive {
 
     private HashMap<String, ByteBuffer> cache = new HashMap<>();
 
-    public CachedZipArchive(@NonNull File file) throws IOException {
-        super(file);
+    public CachedZipArchive(@NonNull File file, Zip64.Policy policy) throws IOException {
+        super(file, policy);
     }
 
     @Nullable

@@ -40,7 +40,7 @@ public class ZipArchive implements Archive {
     private final Zip64.Policy policy;
 
     public ZipArchive(@NonNull File file) throws IOException {
-        this(file, Zip64.Policy.FORBID);
+        this(file, Zip64.Policy.ALLOW);
     }
 
     /**

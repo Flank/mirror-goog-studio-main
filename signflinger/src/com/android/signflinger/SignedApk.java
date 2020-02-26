@@ -26,6 +26,7 @@ import com.android.apksig.util.DataSources;
 import com.android.zipflinger.Archive;
 import com.android.zipflinger.BytesSource;
 import com.android.zipflinger.Source;
+import com.android.zipflinger.Zip64;
 import com.android.zipflinger.ZipArchive;
 import com.android.zipflinger.ZipInfo;
 import com.android.zipflinger.ZipSource;
@@ -60,9 +61,9 @@ public class SignedApk implements Archive {
         this.options = options;
         if (options.v1Enabled) {
             // Improve V1 signing performance by briefly caching zip entry content.
-            this.archive = new CachedZipArchive(file);
+            this.archive = new CachedZipArchive(file, Zip64.Policy.FORBID);
         } else {
-            this.archive = new ZipArchive(file);
+            this.archive = new ZipArchive(file, Zip64.Policy.FORBID);
         }
 
         DefaultApkSignerEngine.SignerConfig signerConfig =
