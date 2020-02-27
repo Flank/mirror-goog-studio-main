@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.api;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AndroidSourceFile;
 import java.io.File;
 import org.gradle.api.Project;
@@ -33,6 +34,7 @@ public class DefaultAndroidSourceFile implements AndroidSourceFile {
         this.project = project;
     }
 
+    @NonNull
     @Override
     public String getName() {
         return name;
@@ -44,6 +46,7 @@ public class DefaultAndroidSourceFile implements AndroidSourceFile {
         return this;
     }
 
+    @NonNull
     @Override
     public File getSrcFile() {
         return project.file(source);

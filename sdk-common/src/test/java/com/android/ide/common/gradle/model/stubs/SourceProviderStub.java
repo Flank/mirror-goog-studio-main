@@ -36,6 +36,7 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
     @NonNull private final Collection<File> myAssetsDirectories;
     @NonNull private final Collection<File> myJniLibsDirectories;
     @NonNull private final Collection<File> myShadersDirectories;
+    @NonNull private final Collection<File> myMlModelsDirectories;
 
     public SourceProviderStub() {
         this("name", null, "manifest");
@@ -55,7 +56,8 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
                 new File(rootDirectory, "res"),
                 new File(rootDirectory, "assets"),
                 new File(rootDirectory, "jniLibs"),
-                new File(rootDirectory, "shaders"));
+                new File(rootDirectory, "shaders"),
+                new File(rootDirectory, "ml"));
     }
 
     public SourceProviderStub(
@@ -70,7 +72,8 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
             @NonNull File resDirectory,
             @NonNull File assetsDirectory,
             @NonNull File jniLibsDirectory,
-            @NonNull File shadersDirectory) {
+            @NonNull File shadersDirectory,
+            @NonNull File mlMlModelsDirectory) {
         myName = name;
         myManifestFile = manifestFile;
         myJavaDirectories = Lists.newArrayList(javaDirectory);
@@ -83,6 +86,7 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
         myAssetsDirectories = Lists.newArrayList(assetsDirectory);
         myJniLibsDirectories = Lists.newArrayList(jniLibsDirectory);
         myShadersDirectories = Lists.newArrayList(shadersDirectory);
+        myMlModelsDirectories = Lists.newArrayList(mlMlModelsDirectory);
     }
 
     public SourceProviderStub(
@@ -97,7 +101,8 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
             @NonNull Collection<File> resDirectories,
             @NonNull Collection<File> assetsDirectories,
             @NonNull Collection<File> jniLibsDirectories,
-            @NonNull Collection<File> shadersDirectories) {
+            @NonNull Collection<File> shadersDirectories,
+            @NonNull Collection<File> mlModelsDirectories) {
         myName = name;
         myManifestFile = manifestFile;
         myJavaDirectories = Lists.newArrayList(javaDirectories);
@@ -110,6 +115,7 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
         myAssetsDirectories = Lists.newArrayList(assetsDirectories);
         myJniLibsDirectories = Lists.newArrayList(jniLibsDirectories);
         myShadersDirectories = Lists.newArrayList(shadersDirectories);
+        myMlModelsDirectories = Lists.newArrayList(mlModelsDirectories);
     }
 
     @Override
@@ -185,6 +191,12 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
     }
 
     @Override
+    @NonNull
+    public Collection<File> getMlModelsDirectories() {
+        return myMlModelsDirectories;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -204,7 +216,8 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
                 && Objects.equals(getResDirectories(), stub.getResDirectories())
                 && Objects.equals(getAssetsDirectories(), stub.getAssetsDirectories())
                 && Objects.equals(getJniLibsDirectories(), stub.getJniLibsDirectories())
-                && Objects.equals(getShadersDirectories(), stub.getShadersDirectories());
+                && Objects.equals(getShadersDirectories(), stub.getShadersDirectories())
+                && Objects.equals(getMlModelsDirectories(), stub.getMlModelsDirectories());
     }
 
     @Override
@@ -221,7 +234,8 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
                 getResDirectories(),
                 getAssetsDirectories(),
                 getJniLibsDirectories(),
-                getShadersDirectories());
+                getShadersDirectories(),
+                getMlModelsDirectories());
     }
 
     @Override
@@ -252,6 +266,8 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
                 + myJniLibsDirectories
                 + ", myShadersDirectories="
                 + myShadersDirectories
+                + ", myMlModelsDirectories="
+                + myMlModelsDirectories
                 + "}";
     }
 }

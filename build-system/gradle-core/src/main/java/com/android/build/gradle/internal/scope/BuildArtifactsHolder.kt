@@ -101,85 +101,20 @@ abstract class BuildArtifactsHolder(
         operations.copy(artifactType, artifactContainer)
     }
 
-    /**
-     * Registers a new [RegularFile] producer for a particular [ArtifactType]. The producer is
-     * identified by a [TaskProvider] to avoid configuring the task until the produced [RegularFile]
-     * is required by another [Task].
-     *
-     * The simplest way to use the mechanism is as follow :
-     * <pre>
-     *     open class MyTask(objectFactory: ObjectFactory): Task() {
-     *          val outputFile = objectFactory.fileProperty()
-     *     }
-     *
-     *     val myTaskProvider = taskFactory.register("myTask", MyTask::class.java)
-     *
-     *     scope.artifacts.producesFile(InternalArtifactType.SOME_ID,
-     *            OperationType.INITIAL,
-     *            myTaskProvider,
-     *            myTaskProvider.map { it -> it.outputFile }
-     *            "some_file_name")
-     *
-     * </pre>
-     *
-     * Consumers should use [getFinalProduct] or [OperationsImpl.getAll] to get a [Provider] instance
-     * for registered products which ensures that [Task]s don't get initialized until the
-     * [Provider.get] method is invoked during a consumer task configuration execution for instance.
-     *
-     * @param artifactType the produced artifact type
-     * @param taskProvider the [TaskProvider] for the task ultimately responsible for producing the
-     * artifact.
-     * @param productProvider the [Provider] of the artifact [RegularFile]
-     * @param buildDirectory the destination directory of the produced artifact or not provided if
-     * using the default location.
-     * @param fileName the desired file name, must be provided.
-     */
+    // TODO : remove these 2 APIs once all java tasks stopped using those after Kotlin translation.
     fun <T: Task, ARTIFACT_TYPE> producesFile(
         artifactType: ARTIFACT_TYPE,
         taskProvider: TaskProvider<out T>,
         productProvider: (T) -> RegularFileProperty,
-        buildDirectory: String? = null,
-        fileName: String
-    ) where ARTIFACT_TYPE : ArtifactType<RegularFile>,
-            ARTIFACT_TYPE : ArtifactType.Single {
-
-        operations.setInitialProvider(
-            taskProvider,
-            productProvider)
-            .atLocation(buildDirectory)
-            .withName(fileName)
-            .on(artifactType)
-    }
-
-    /**
-     * Registers a new [RegularFile] producer for a particular [ArtifactType]. The producer is
-     * identified by a [TaskProvider] to avoid configuring the task until the produced [RegularFile]
-     * is required by another [Task].
-     *
-     * The passed [productProvider] returns a [Provider] which mean that the output location cannot
-     * be changed and will be set by the task itself or during its configuration.
-     */
-    fun <T: Task, ARTIFACT_TYPE> producesFile(
-        artifactType: ARTIFACT_TYPE,
-        taskProvider: TaskProvider<out T>,
-        productProvider: (T) -> Provider<RegularFile>
+        fileName: String = "out"
     )
             where ARTIFACT_TYPE : ArtifactType<RegularFile>,
-                  ARTIFACT_TYPE : ArtifactType.Single {
-
-        val propertyProvider = { task : T ->
-            val property = project.objects.fileProperty()
-            property.set(productProvider(task))
-            property
-        }
-        producesFile(
-            artifactType,
-            taskProvider,
-            propertyProvider,
-            "",
-            ""
-        )
-    }
+                  ARTIFACT_TYPE : ArtifactType.Single
+            = operations.setInitialProvider(
+                taskProvider,
+                productProvider)
+                .withName(fileName)
+                .on(artifactType)
 
     /**
      * Registers a new [Directory] producer for a particular [ArtifactType]. The producer is
@@ -218,39 +153,14 @@ abstract class BuildArtifactsHolder(
     fun <T: Task, ARTIFACT_TYPE> producesDir(
         artifactType: ARTIFACT_TYPE,
         taskProvider: TaskProvider<out T>,
-        productProvider: (T) -> DirectoryProperty,
-        buildDirectory: String? = null,
-        fileName: String = "out"
-    ) where ARTIFACT_TYPE : ArtifactType<Directory>,
-            ARTIFACT_TYPE : ArtifactType.Single {
-
-        operations.setInitialProvider(
-            taskProvider,
-            productProvider
-        ).atLocation(buildDirectory).withName(fileName).on(artifactType)
-    }
-
-    // TODO : remove these 2 APIs once all java tasks stopped using those after Kotlin translation.
-    fun <T: Task, ARTIFACT_TYPE> producesFile(
-        artifactType: ARTIFACT_TYPE,
-        taskProvider: TaskProvider<out T>,
-        productProvider: (T) -> RegularFileProperty,
-        fileName: String = "out"
-    )
-            where ARTIFACT_TYPE : ArtifactType<RegularFile>,
-                  ARTIFACT_TYPE : ArtifactType.Single
-
-            = producesFile(artifactType, taskProvider, productProvider, null, fileName)
-
-
-    fun <T: Task, ARTIFACT_TYPE> producesDir(
-        artifactType: ARTIFACT_TYPE,
-        taskProvider: TaskProvider<out T>,
         propertyProvider: (T) -> DirectoryProperty,
         fileName: String = "out"
     ) where ARTIFACT_TYPE : ArtifactType<Directory>,
             ARTIFACT_TYPE : ArtifactType.Single
-            = producesDir(artifactType, taskProvider, propertyProvider, null, fileName)
+            =         operations.setInitialProvider(
+        taskProvider,
+        propertyProvider
+    ).withName(fileName).on(artifactType)
 
     /**
      * Returns a [Provider] of either a [Directory] or a [RegularFile] depending on the passed
@@ -296,34 +206,6 @@ abstract class BuildArtifactsHolder(
         return getFinalProduct(artifactType).map {
             project.files(it) as FileCollection
         }.orElse(project.files())
-    }
-
-    /**
-     * Sets a [Property] value to the final producer for the given artifact type.
-     *
-     * If there are more than one producer appending artifacts for the passed type, calling this
-     * method will generate an error and [setTaskInputToFinalProducts] should be used instead.
-     *
-     * The simplest way to use the mechanism is as follow :
-     * <pre>
-     *     abstract class MyTask: Task() {
-     *          @InputFile
-     *          abstract val inputFile: RegularFileProperty
-     *     }
-     *
-     *     val myTaskProvider = taskFactory.register("myTask", MyTask::class.java) {
-     *          scope.artifacts.setTaskInputToFinalProduct(InternalArtifactTYpe.SOME_ID, it.inputFile)
-     *     }
-     * </pre>
-     *
-     * @param artifactType requested artifact type
-     * @param taskInputProperty the [Property] to set the final producer on.
-     */
-    fun <T: FileSystemLocation, ARTIFACT_TYPE> setTaskInputToFinalProduct(
-        artifactType: ARTIFACT_TYPE, taskInputProperty: Property<T>)
-        where ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Single {
-        val finalProduct = getFinalProduct(artifactType)
-        taskInputProperty.setDisallowChanges(finalProduct)
     }
 
     /**

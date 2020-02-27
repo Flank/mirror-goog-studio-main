@@ -21,6 +21,7 @@ import static com.google.common.io.Files.getNameWithoutExtension;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Main;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -58,7 +59,6 @@ import org.xml.sax.SAXException;
 public class BazelLintWrapper {
 
     private final Path outputXml;
-    private final Path newBaseline;
     private final Path testXml;
     private final Path sandboxBase;
     private final Path outputDir;
@@ -80,7 +80,6 @@ public class BazelLintWrapper {
         testXml = Paths.get(System.getenv("XML_OUTPUT_FILE"));
         outputDir = Paths.get(System.getenv("TEST_UNDECLARED_OUTPUTS_DIR"));
         outputXml = outputDir.resolve("lint_output.xml");
-        newBaseline = outputDir.resolve("lint_baseline.xml");
 
         // Find sandboxBase, so we can print out readable paths.
         if (outputXml.toString().contains("bazel-out")) {
@@ -112,14 +111,26 @@ public class BazelLintWrapper {
             System.err.println("Cannot find project XML: " + projectXml);
             System.exit(1);
         }
+        Path newBaseline;
 
         // Lint will update the baseline file, and putting it in undeclared outputs means we can
         // download it from the CI server.
         if (originalBaseline != null) {
+            newBaseline = outputDir.resolve(originalBaseline.getFileName());
             Files.copy(originalBaseline, newBaseline);
         } else {
+            newBaseline = outputDir.resolve("lint_baseline.xml");
             Files.createFile(newBaseline);
         }
+
+        Path lintConfig = outputDir.resolve("lint.xml");
+
+        Files.write(
+                lintConfig,
+                ImmutableList.of(
+                        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+                        "<lint checkTestSources=\"true\">",
+                        "</lint>"));
 
         // We want to reuse code for configuring lint from the project descriptor XML, which is
         // private to the custom client used by Main. So instead of creating a LintCliClient, for
@@ -138,6 +149,7 @@ public class BazelLintWrapper {
                         "--project", projectXml.toString(),
                         "--xml", outputXml.toString(),
                         "--baseline", newBaseline.toString(),
+                        "--config", lintConfig.toString(),
                         "--update-baseline",
                     });
         } catch (Exception e) {
@@ -162,6 +174,7 @@ public class BazelLintWrapper {
             }
         } finally {
             System.setOut(stdOut);
+            Files.delete(lintConfig);
         }
 
         boolean targetShouldPass = checkOutput(outputXml, newBaseline);

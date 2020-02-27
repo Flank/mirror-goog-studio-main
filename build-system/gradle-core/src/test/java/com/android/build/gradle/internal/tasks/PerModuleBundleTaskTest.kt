@@ -17,7 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.packaging.JarCreatorType
-import com.android.testutils.truth.ZipFileSubject
+import com.android.testutils.apk.Zip
+import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.bouncycastle.util.io.Streams
@@ -118,12 +119,12 @@ class PerModuleBundleTaskTest {
     private fun verifyOutputZip(zipFile: File, expectedNumberOfDexFiles: Int) {
         assertThat(expectedNumberOfDexFiles).isGreaterThan(0)
         assertThat(zipFile.exists())
-        ZipFileSubject.assertThatZip(zipFile).use {
-            it.contains("dex/classes.dex")
+        Zip(zipFile).use {
+            assertThat(it).contains("dex/classes.dex")
             for (index in 2..expectedNumberOfDexFiles) {
-                it.contains("dex/classes$index.dex")
+                assertThat(it).contains("dex/classes$index.dex")
             }
-            it.doesNotContain("dex/classes" + (expectedNumberOfDexFiles + 1) + ".dex")
+            assertThat(it).doesNotContain("dex/classes" + (expectedNumberOfDexFiles + 1) + ".dex")
         }
         verifyClassesDexNotRenamed(zipFile)
     }

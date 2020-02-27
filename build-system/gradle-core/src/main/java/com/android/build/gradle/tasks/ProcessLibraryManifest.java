@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.impl.OperationsImpl;
 import com.android.build.api.variant.BuiltArtifacts;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImplKt;
@@ -375,6 +376,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             creationConfig.getTaskContainer().setProcessManifestTask(taskProvider);
 
             BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
+            OperationsImpl operations = creationConfig.getOperations();
             artifacts.producesDir(
                     InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS.INSTANCE,
                     taskProvider,
@@ -399,13 +401,13 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                     ProcessLibraryManifest::getMergeBlameFile,
                     "manifest-merger-blame-" + creationConfig.getBaseName() + "-report.txt");
 
-            artifacts.producesFile(
-                    InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE,
+            operations.setInitialProvider(
                     taskProvider,
-                    ProcessLibraryManifest::getReportFile,
-                    FileUtils.join(creationConfig.getGlobalScope().getOutputsDir(), "logs")
-                            .getAbsolutePath(),
-                    "manifest-merger-" + creationConfig.getBaseName() + "-report.txt");
+                    ProcessLibraryManifest::getReportFile)
+                    .atLocation(FileUtils.join(creationConfig.getGlobalScope().getOutputsDir(), "logs")
+                            .getAbsolutePath())
+                    .withName("manifest-merger-" + creationConfig.getBaseName() + "-report.txt")
+                    .on(InternalArtifactType.MANIFEST_MERGE_REPORT.INSTANCE);
         }
 
         @Override

@@ -37,7 +37,8 @@ class EmptyExtractAnnotationTest {
     @Test
     fun checkExtractAnnotation() {
         project.execute("assembleRelease")
-        val aar = project.getAar("release")
-        assertThat(aar).contains("classes.jar")
+        project.testAar("release") {
+            it.contains("classes.jar")
+        }
     }
 }

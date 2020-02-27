@@ -21,8 +21,8 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.fixture.TestVersions.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
-import static com.android.testutils.truth.MoreTruth.assertThatZip;
 import static com.android.testutils.truth.PathSubject.assertThat;
+import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -38,6 +38,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
+import com.android.testutils.apk.Zip;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -221,7 +222,10 @@ public class VariantDependencyTest {
         // use the model to get the output APK!
         File apk = ProjectBuildOutputUtils.findOutputFileByVariantName(projectModel, variantName);
         assertThat(apk).isFile();
-        assertThatZip(apk).contains(checkFilePath);
+
+        try (Zip it = new Zip(apk)) {
+            assertThat(it).contains(checkFilePath);
+        }
     }
 
     private static void checkApkForMissingContent(
@@ -229,6 +233,9 @@ public class VariantDependencyTest {
         // use the model to get the output APK!
         File apk = ProjectBuildOutputUtils.findOutputFileByVariantName(projectModel, variantName);
         assertThat(apk).isFile();
-        assertThatZip(apk).entries(".*").containsNoneIn(checkFilePath);
+
+        try (Zip it = new Zip(apk)) {
+            assertThat(it).entries(".*").containsNoneIn(checkFilePath);
+        }
     }
 }

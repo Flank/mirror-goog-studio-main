@@ -16,9 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.testutils.truth.PathSubject.assertThat
-import com.android.testutils.truth.ZipFileSubject.assertThatZip
-
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.ContentType
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
@@ -36,20 +33,24 @@ import com.android.builder.files.ZipCentralDirectory
 import com.android.builder.merge.DuplicateRelativeFileException
 import com.android.builder.merge.IncrementalFileMergerInput
 import com.android.builder.merge.LazyIncrementalFileMergerInput
+import com.android.builder.packaging.JarFlinger
 import com.android.ide.common.resources.FileStatus
+import com.android.testutils.apk.Zip
+import com.android.testutils.truth.PathSubject.assertThat
+import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.tools.build.apkzlib.utils.CachedSupplier
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
+import com.android.zipflinger.BytesSource
+import com.android.zipflinger.ZipArchive
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth.assertThat
-import java.io.ByteArrayInputStream
-import java.io.File
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import com.android.builder.packaging.JarFlinger
-import com.android.zipflinger.ZipArchive
+import java.io.ByteArrayInputStream
+import java.io.File
 import java.util.zip.Deflater
 
 /** Test cases for [MergeJavaResourcesDelegate].  */
@@ -109,10 +110,12 @@ class MergeJavaResourcesDelegateTest {
 
         // Make sure the output is a jar file with expected contents
         assertThat(outputFile).isFile()
-        assertThatZip(outputFile).contains("fileEndingWithDot.")
-        assertThatZip(outputFile).contains("fileNotEndingWithDot")
-        assertThatZip(outputFile).contains("javaResFromJarFile2")
-        assertThatZip(outputFile).doesNotContain("LICENSE")
+        Zip(outputFile).use {
+            assertThat(it).contains("fileEndingWithDot.")
+            assertThat(it).contains("fileNotEndingWithDot")
+            assertThat(it).contains("javaResFromJarFile2")
+            assertThat(it).doesNotContain("LICENSE")
+        }
         // regression test for b/65337573
         assertThat(File(outputFile, "fileEndingWithDot.")).doesNotExist()
         assertThat(File(outputFile, "fileNotEndingWithDot")).doesNotExist()
@@ -241,12 +244,14 @@ class MergeJavaResourcesDelegateTest {
         assertThat(incrementalStateFile).isFile()
         // Make sure the output is a jar file with expected contents
         assertThat(outputFile).isFile()
-        assertThatZip(outputFile).contains("javaRes1")
-        assertThatZip(outputFile).doesNotContain("javaRes2")
+        Zip(outputFile).use {
+            assertThat(it).contains("javaRes1")
+            assertThat(it).doesNotContain("javaRes2")
+        }
 
         // Now add a resource to the jar file and merge incrementally
-        ZFile(jarFile).use {
-            it.add("javaRes2", ByteArrayInputStream(ByteArray(0)))
+        ZipArchive(jarFile).use {
+            it.add(BytesSource(ByteArray(0), "javaRes2", 0))
         }
 
         val incrementalInput = LazyIncrementalFileMergerInput(
@@ -279,8 +284,10 @@ class MergeJavaResourcesDelegateTest {
 
         // Make sure the output is a jar file with expected contents
         assertThat(outputFile).isFile()
-        assertThatZip(outputFile).contains("javaRes1")
-        assertThatZip(outputFile).contains("javaRes2")
+        Zip(outputFile).use {
+            assertThat(it).contains("javaRes1")
+            assertThat(it).contains("javaRes2")
+        }
     }
 
     @Test

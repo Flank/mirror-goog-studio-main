@@ -16,10 +16,8 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.VariantOutput
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
-import com.android.build.gradle.internal.scope.ApkData
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -61,18 +59,7 @@ class ProcessLibraryManifestTest {
                 variantOutputConfiguration = VariantOutputConfigurationImpl(),
                 baseName = "base_name",
                 fullName = "fooRelease",
-                outputFileName = "output_file_name",
-                apkData = ApkData.of(
-                    VariantOutput.OutputType.MAIN,
-                    emptyList(),
-                    1,
-                    "",
-                    "",
-                    "",
-                    "fooRelease",
-                    "",
-                    ""
-                )
+                outputFileName = project.objects.property(String::class.java).also { it.set("output_file_name") }
         ))
     }
 

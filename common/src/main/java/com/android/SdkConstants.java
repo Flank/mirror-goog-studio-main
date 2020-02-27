@@ -403,6 +403,8 @@ public final class SdkConstants {
     public static final String FD_SYMBOLS = "symbols"; //$NON-NLS-1$
     /** resource blame output folder */
     public static final String FD_BLAME = "blame"; //$NON-NLS-1$
+    /** Machine learning models folder. */
+    public static final String FD_ML_MODELS = "ml"; // $NON-NLS-1$
 
     /** rs Libs output folder for support mode */
     public static final String FD_RS_LIBS = "rsLibs"; //$NON-NLS-1$
@@ -2694,7 +2696,7 @@ public final class SdkConstants {
     public static final String VALUE_HORIZONTAL = "horizontal"; //$NON-NLS-1$
 
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
-    public static final String GRADLE_MINIMUM_VERSION = "6.2";
+    public static final String GRADLE_MINIMUM_VERSION = "6.2.1";
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";

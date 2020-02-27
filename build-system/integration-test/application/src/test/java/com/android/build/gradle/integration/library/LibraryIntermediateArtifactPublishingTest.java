@@ -18,8 +18,8 @@ package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR;
-import static com.android.testutils.truth.MoreTruth.assertThatZip;
 import static com.android.testutils.truth.PathSubject.assertThat;
+import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.google.common.truth.Truth;
 import java.io.File;
@@ -68,7 +69,7 @@ public class LibraryIntermediateArtifactPublishingTest {
     }
 
     @Test
-    public void jarArtifactIsCreated() throws IOException, InterruptedException {
+    public void jarArtifactIsCreated() throws Exception {
         // Add a task that uses the request 'jar' artifactType as input.
         TestFileUtils.appendToFile(
                 project.getSubproject("app").getBuildFile(),
@@ -96,20 +97,26 @@ public class LibraryIntermediateArtifactPublishingTest {
         GradleBuildResult result = project.executor().run(":app:verify");
         assertThat(result.getTask(":lib:createFullJarDebug")).didWork();
         File fullJar = getJar("full.jar");
-        assertThatZip(fullJar).contains("com/example/helloworld/HelloWorld.class");
-        assertThatZip(fullJar).contains("foo.txt");
+        try (Zip it = new Zip(fullJar)) {
+            assertThat(it).contains("com/example/helloworld/HelloWorld.class");
+            assertThat(it).contains("foo.txt");
+        }
 
         File classesJar =
                 project.getSubproject(":lib")
                         .getIntermediateFile(
                                 RUNTIME_LIBRARY_CLASSES_JAR.INSTANCE.getFolderName()
                                         + "/debug/classes.jar");
-        assertThatZip(classesJar).contains("com/example/helloworld/HelloWorld.class");
-        assertThatZip(classesJar).doesNotContain("foo.txt");
+        try (Zip it = new Zip(classesJar)) {
+            assertThat(it).contains("com/example/helloworld/HelloWorld.class");
+            assertThat(it).doesNotContain("foo.txt");
+        }
 
         File resJar = project.getSubproject(":lib").getIntermediateFile("library_java_res/debug/res.jar");
-        assertThatZip(resJar).doesNotContain("com/example/helloworld/HelloWorld.class");
-        assertThatZip(resJar).contains("foo.txt");
+        try (Zip it = new Zip(resJar)) {
+            assertThat(it).doesNotContain("com/example/helloworld/HelloWorld.class");
+            assertThat(it).contains("foo.txt");
+        }
     }
 
     private File getJar(String fileName) {

@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -51,7 +49,7 @@ public class PrivateResourceTest {
     }
 
     @Test
-    public void checkPrivateResources() throws IOException {
+    public void checkPrivateResources() throws Exception {
         String expected =
                 ""
                         + "style Mylib_My_Theme\n"
@@ -60,15 +58,33 @@ public class PrivateResourceTest {
                         + "string mylib_shared_name\n"
                         + "id mylib_shared_name";
 
-        assertThat(project.getSubproject("mylibrary").getAar("release"))
-                .containsFileWithContent("public.txt", expected);
-        assertThat(project.getSubproject("mylibrary").getAar("debug"))
-                .containsFileWithContent("public.txt", expected);
+        project.getSubproject("mylibrary")
+                .testAar(
+                        "release",
+                        it -> {
+                            it.containsFileWithContent("public.txt", expected);
+                        });
+
+        project.getSubproject("mylibrary")
+                .testAar(
+                        "debug",
+                        it -> {
+                            it.containsFileWithContent("public.txt", expected);
+                        });
 
         // No public resources: file should exist but be empty
-        assertThat(project.getSubproject("mylibrary2").getAar("debug"))
-                .containsFileWithContent("public.txt", "");
-        assertThat(project.getSubproject("mylibrary2").getAar("release"))
-                .containsFileWithContent("public.txt", "");
+        project.getSubproject("mylibrary2")
+                .testAar(
+                        "debug",
+                        it -> {
+                            it.containsFileWithContent("public.txt", "");
+                        });
+
+        project.getSubproject("mylibrary2")
+                .testAar(
+                        "release",
+                        it -> {
+                            it.containsFileWithContent("public.txt", "");
+                        });
     }
 }

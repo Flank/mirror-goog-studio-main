@@ -110,7 +110,7 @@ abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
         override fun configure(task: ExtractNativeDebugMetadataTask) {
             super.configure(task)
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
+            creationConfig.operations.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
             task.ndkRevision = creationConfig.globalScope.sdkComponents.ndkRevisionProvider
             task.objcopyExecutableMapProvider =
                 creationConfig.globalScope.sdkComponents.objcopyExecutableMapProvider
@@ -202,12 +202,12 @@ class ExtractNativeDebugMetadataDelegate(
             when (debugSymbolLevel) {
                 DebugSymbolLevel.FULL -> {
                     outputFile =
-                        File(outputDir, "${FileUtils.relativePath(inputFile, inputDir)}.dbg")
+                        File(outputDir, "${inputFile.parentFile.name}/${inputFile.name}.dbg")
                     objcopyArgs = listOf("--only-keep-debug")
                 }
                 DebugSymbolLevel.SYMBOL_TABLE -> {
                     outputFile =
-                        File(outputDir, "${FileUtils.relativePath(inputFile, inputDir)}.sym")
+                        File(outputDir, "${inputFile.parentFile.name}/${inputFile.name}.sym")
                     objcopyArgs = listOf("-j", "symtab", "-j", "dynsym")
                 }
                 DebugSymbolLevel.NONE ->

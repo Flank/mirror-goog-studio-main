@@ -211,7 +211,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             creationConfig.taskContainer.processAndroidResTask = taskProvider
 
             creationConfig.artifacts.producesFile(
-                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
+                InternalArtifactType.COMPILE_R_CLASS_JAR,
                 taskProvider,
                 GenerateLibraryRFileTask::rClassOutputJar,
                 fileName = "R.jar"
@@ -281,10 +281,10 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             })
             task.packageForR.disallowChanges()
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
 
-            task.mainSplit = creationConfig.outputs.getMainSplit().apkData
+            task.mainSplit = creationConfig.outputs.getMainSplit()
 
             // This task can produce R classes with either constant IDs ("0") or sequential IDs
             // mimicking the way AAPT2 numbers IDs. If we're generating a compile time only R class
@@ -295,7 +295,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                 (projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS] && !isLibrary)
                         || projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES])
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
                 task.localResourcesFile)
         }
@@ -345,15 +345,15 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task.packageForR.setDisallowChanges(task.project.provider {
                 Strings.nullToEmpty(creationConfig.variantDslInfo.originalApplicationId)
             })
-            task.mainSplit = creationConfig.outputs.getMainSplit().apkData
+            task.mainSplit = creationConfig.outputs.getMainSplit()
             task.useConstantIds.setDisallowChanges(false)
 
             creationConfig.onTestedConfig {
-                it.artifacts.setTaskInputToFinalProduct(
+                it.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles
                 )
 
-                it.artifacts.setTaskInputToFinalProduct(
+                it.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
                     task.localResourcesFile
                 )

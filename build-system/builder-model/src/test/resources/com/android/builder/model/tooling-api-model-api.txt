@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-c32036c70a6660af230e7d06eaba4f687eafd22c8d0a5dcfa68c6c7f33ec24c9
+e185d0f3553aabbaff7302dabfbc07db9d65f54f107dc55da8d4914d9c222b61
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -380,6 +380,7 @@ com.android.builder.model.SourceProvider.getCppDirectories: java.util.Collection
 com.android.builder.model.SourceProvider.getJavaDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.SourceProvider.getJniLibsDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.SourceProvider.getManifestFile: java.io.File ()
+com.android.builder.model.SourceProvider.getMlModelsDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.SourceProvider.getName: java.lang.String ()
 com.android.builder.model.SourceProvider.getRenderscriptDirectories: java.util.Collection<java.io.File> ()
 com.android.builder.model.SourceProvider.getResDirectories: java.util.Collection<java.io.File> ()

@@ -131,6 +131,12 @@ void OverlaySwapCommand::BuildOverlayUpdateRequest(
     file->set_path(clazz.name() + ".dex");
     file->set_allocated_content(clazz.release_dex());
   }
+
+  for (auto resource : request_.resource_overlays()) {
+    auto file = request->add_files_to_write();
+    file->set_path(resource.path());
+    file->set_allocated_content(resource.release_content());
+  }
 }
 
 void OverlaySwapCommand::ProcessResponse(proto::SwapResponse* response) {

@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,7 +103,7 @@ public class ApkPreInstaller {
         try {
             return deltaPreinstall(localApks, remoteApks, packageName, diffs);
         } catch (DeltaPreInstallException e) {
-            return fullPreinstall(localApks);
+            return fullPreinstall(localApks, packageName);
         }
     }
 
@@ -160,9 +161,9 @@ public class ApkPreInstaller {
         }
     }
 
-
     @Trace
-    private String fullPreinstall(HashMap<String, Apk> fullApks) throws DeployerException {
+    private String fullPreinstall(HashMap<String, Apk> fullApks, String packageName)
+            throws DeployerException {
 
         long totalSize = 0;
         try {
@@ -175,18 +176,21 @@ public class ApkPreInstaller {
 
         String sessionId;
         try {
+            List<String> installOptions =
+                    Arrays.asList(
+                            "package",
+                            "install-create",
+                            "-t",
+                            "-r",
+                            "--dont-kill",
+                            "-S",
+                            Long.toString(totalSize));
+            String skipVerificationString = adb.getSkipVerificationOption(packageName);
+            if (skipVerificationString != null) {
+                installOptions.add(skipVerificationString);
+            }
             byte[] rawResponse =
-                    adb.binder(
-                            new String[] {
-                                "package",
-                                "install-create",
-                                "-t",
-                                "-r",
-                                "--dont-kill",
-                                "-S",
-                                Long.toString(totalSize)
-                            },
-                            null);
+                    adb.binder(installOptions.toArray(new String[installOptions.size()]), null);
             // Parse result which should be in the form:
             // "Success: created install session [X]" where X is the session id.
             String stringResponse = new String(rawResponse, StandardCharsets.UTF_8);

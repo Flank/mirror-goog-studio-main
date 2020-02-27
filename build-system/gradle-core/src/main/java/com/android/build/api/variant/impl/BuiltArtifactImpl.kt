@@ -36,13 +36,11 @@ import java.nio.file.Path
 @Suppress("DataClassPrivateConstructor")
 data class BuiltArtifactImpl private constructor(
     override val outputFile: String,
-    override val properties: Map<String, String>,
-    override val versionCode: Int,
-    override val versionName: String,
-    override val isEnabled: Boolean,
-    val variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl(),
-    val baseName: String,
-    val fullName: String
+    override val properties: Map<String, String> = mapOf(),
+    override val versionCode: Int = -1,
+    override val versionName: String = "",
+    override val isEnabled: Boolean = true,
+    val variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl()
 ) : BuiltArtifact, CommonBuiltArtifact, Serializable, VariantOutputConfiguration by variantOutputConfiguration {
 
     fun newOutput(newOutputFile: Path): BuiltArtifactImpl {
@@ -52,9 +50,7 @@ data class BuiltArtifactImpl private constructor(
             versionCode = versionCode,
             versionName = versionName,
             isEnabled = isEnabled,
-            variantOutputConfiguration = variantOutputConfiguration,
-            baseName = baseName,
-            fullName = fullName
+            variantOutputConfiguration = variantOutputConfiguration
         )
     }
 
@@ -70,16 +66,13 @@ data class BuiltArtifactImpl private constructor(
             versionCode: Int = -1,
             versionName: String = "",
             isEnabled: Boolean = true,
-            variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl(),
-            baseName: String = "",
-            fullName: String = "") = BuiltArtifactImpl(FileUtils.toSystemIndependentPath(outputFile),
+            variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl())
+                    = BuiltArtifactImpl(FileUtils.toSystemIndependentPath(outputFile),
                 properties,
                 versionCode,
                 versionName,
                 isEnabled,
-                variantOutputConfiguration,
-                baseName,
-                fullName
+                variantOutputConfiguration
         )
 
     }
@@ -89,8 +82,6 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
 
     override fun writeSpecificAttributes(out: JsonWriter, value: BuiltArtifactImpl) {
         out.name("type").value(value.outputType.toString())
-        if (value.baseName.isNotEmpty()) out.name("baseName").value(value.baseName)
-        if (value.fullName.isNotEmpty()) out.name("fullName").value(value.fullName)
         out.name("filters").beginArray()
         for (filter in value.filters) {
             out.beginObject()
@@ -105,14 +96,10 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
     override fun read(reader: JsonReader): BuiltArtifactImpl {
         var outputType: String? = null
         val filters = ImmutableList.Builder<FilterConfiguration>()
-        var baseName: String? = null
-        var fullName: String? = null
         return super.read(reader,
             { attributeName: String ->
                 when(attributeName) {
                     "type" -> outputType = reader.nextString()
-                    "baseName" -> baseName = reader.nextString()
-                    "fullName" -> fullName = reader.nextString()
                     "filters" -> readFilters(reader, filters)
                 }
             },
@@ -130,9 +117,7 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
                     properties = properties,
                     versionCode = versionCode,
                     versionName = versionName,
-                    isEnabled = isEnabled,
-                    baseName = baseName.orEmpty(),
-                    fullName = fullName.orEmpty())
+                    isEnabled = isEnabled)
             })
     }
 

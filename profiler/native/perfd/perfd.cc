@@ -31,8 +31,11 @@
 #include "perfd/event/event_profiler_component.h"
 #include "perfd/graphics/graphics_profiler_component.h"
 #include "perfd/memory/commands/heap_dump.h"
+#include "perfd/memory/commands/start_native_sample.h"
+#include "perfd/memory/commands/stop_native_sample.h"
 #include "perfd/memory/heap_dump_manager.h"
 #include "perfd/memory/memory_profiler_component.h"
+#include "perfd/memory/native_heap_manager.h"
 #include "perfd/network/network_profiler_component.h"
 #include "perfd/sessions/sessions_manager.h"
 #include "utils/current_process.h"
@@ -53,6 +56,7 @@ int Perfd::Initialize(Daemon* daemon) {
                                     termination_service);
 
   static HeapDumpManager heap_dumper(daemon->file_cache());
+  static NativeHeapManager heap_sampler(daemon->file_cache(), *trace_manager.perfetto_manager());
 
   // Register Components
   daemon->RegisterProfilerComponent(std::unique_ptr<CommonProfilerComponent>(
@@ -105,6 +109,14 @@ int Perfd::Initialize(Daemon* daemon) {
   daemon->RegisterCommandHandler(
       proto::Command::HEAP_DUMP, [](proto::Command command) {
         return HeapDump::Create(command, &heap_dumper);
+      });
+  daemon->RegisterCommandHandler(
+      proto::Command::START_NATIVE_HEAP_SAMPLE, [](proto::Command command) {
+        return StartNativeSample::Create(command, &heap_sampler);
+      });
+  daemon->RegisterCommandHandler(
+      proto::Command::STOP_NATIVE_HEAP_SAMPLE, [](proto::Command command) {
+        return StopNativeSample::Create(command, &heap_sampler);
       });
 
   return 0;

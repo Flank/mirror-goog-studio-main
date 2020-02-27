@@ -147,7 +147,7 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             task: BundleReportDependenciesTask
         ) {
             super.configure(task)
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.baseDeps)
             task.featureDeps = creationConfig.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,

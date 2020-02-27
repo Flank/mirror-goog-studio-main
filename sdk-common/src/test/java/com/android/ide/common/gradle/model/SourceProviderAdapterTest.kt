@@ -164,7 +164,8 @@ class SourceProviderAdapterTest {
                 AndroidPathType.ASSETS to listOf("assets1", "assets2"),
                 AndroidPathType.JNI_LIBS to listOf("jnilibs1", "jnilibs2"),
                 AndroidPathType.RES to listOf("res1", "res2"),
-                AndroidPathType.SHADERS to listOf("shaders1", "shaders2")
+                AndroidPathType.SHADERS to listOf("shaders1", "shaders2"),
+                AndroidPathType.ML_MODELS to listOf("ml1", "ml2")
             )
                 .mapValues { it.value.map { PathString(it) } }
         )

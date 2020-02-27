@@ -44,14 +44,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
             return ndk
         }
 
-    /**
-     * Encapsulates per-variant CMake and ndk-build configurations for your external native build.
-     *
-     * To learn more, see
-     * [Add C and C++ Code to Your Project](http://developer.android.com/studio/projects/add-native-code.html#).
-     */
-
-    val externalNativeBuild: ExternalNativeBuildOptions =
+    override val externalNativeBuild: ExternalNativeBuildOptions =
         dslServices.newInstance(ExternalNativeBuildOptions::class.java, dslServices)
 
     override val externalNativeBuildOptions: CoreExternalNativeBuildOptions
@@ -348,7 +341,7 @@ abstract class BaseFlavor(name: String, private val dslServices: DslServices) :
         action.execute(externalNativeBuild)
     }
 
-    fun externalNativeBuild(action: ExternalNativeBuildOptions.() -> Unit) {
+    override fun externalNativeBuild(action: com.android.build.api.dsl.ExternalNativeBuildOptions.() -> Unit) {
         action.invoke(externalNativeBuild)
     }
 

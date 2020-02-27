@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
+import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -24,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Apk
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
-import com.android.testutils.truth.MoreTruth;
 import java.io.File;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -100,8 +100,8 @@ public class Pre21SplitTest {
 
         // Verify .so are built for all platform.
         Apk apk = project.getApk("x86", ApkType.DEBUG);
-        MoreTruth.assertThat(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
-        MoreTruth.assertThat(apk).doesNotContain("lib/mips/libhello-jni.so");
-        MoreTruth.assertThat(apk).contains("lib/x86/libhello-jni.so");
+        assertThat(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
+        assertThat(apk).doesNotContain("lib/mips/libhello-jni.so");
+        assertThat(apk).contains("lib/x86/libhello-jni.so");
     }
 }

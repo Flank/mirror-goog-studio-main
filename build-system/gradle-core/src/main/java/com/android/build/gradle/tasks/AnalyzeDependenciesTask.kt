@@ -180,7 +180,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
                 .variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.CLASSES_JAR)
+                    AndroidArtifacts.ArtifactType.AAR_CLASS_LIST_AND_RES_SYMBOLS)
 
             task.apiDirectDependenciesConfiguration = creationConfig
                 .variantDependencies
@@ -198,12 +198,12 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            creationConfig.artifacts.producesDir(
-                artifactType = InternalArtifactType.ANALYZE_DEPENDENCIES_REPORT,
-                taskProvider = taskProvider,
-                productProvider = AnalyzeDependenciesTask::outputDirectory,
-                fileName = "analyzeDependencies"
-            )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                AnalyzeDependenciesTask::outputDirectory
+            ).withName("analyzeDependencies")
+                .on(InternalArtifactType.ANALYZE_DEPENDENCIES_REPORT)
+
         }
     }
 

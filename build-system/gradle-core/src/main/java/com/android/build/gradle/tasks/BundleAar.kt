@@ -88,11 +88,14 @@ abstract class BundleAar : Zip(), VariantAwareTask {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.bundleLibraryTask = taskProvider
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.AAR,
-                taskProvider,
-                BundleAar::getArchiveFile
-            )
+
+            val propertyProvider = { task : BundleAar ->
+                val property = creationConfig.globalScope.project.objects.fileProperty()
+                property.set(task.archiveFile)
+                property
+            }
+            creationConfig.operations.setInitialProvider(taskProvider, propertyProvider)
+                .on(InternalArtifactType.AAR)
         }
 
         override fun configure(
@@ -115,7 +118,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                     + creationConfig.variantDslInfo.componentIdentity.name
                     + ".")
 
-            task.archiveFileName.set(creationConfig.outputs.getMainSplit().apkData.outputFileName)
+            task.archiveFileName.set(creationConfig.outputs.getMainSplit().outputFileName)
             task.destinationDirectory.set(File(creationConfig.paths.aarLocation.absolutePath))
             task.archiveExtension.set(BuilderConstants.EXT_LIB_ARCHIVE)
 

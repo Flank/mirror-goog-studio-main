@@ -151,9 +151,9 @@ abstract class PackageForUnitTest : NonIncrementalTask() {
             task: PackageForUnitTest
         ) {
             super.configure(task)
-            val artifacts = creationConfig.artifacts
-            artifacts.setTaskInputToFinalProduct(PROCESSED_RES, task.resApk)
-            artifacts.setTaskInputToFinalProduct(MERGED_ASSETS, task.mergedAssets)
+            val operations = creationConfig.operations
+            operations.setTaskInputToFinalProduct(PROCESSED_RES, task.resApk)
+            operations.setTaskInputToFinalProduct(MERGED_ASSETS, task.mergedAssets)
         }
     }
 }

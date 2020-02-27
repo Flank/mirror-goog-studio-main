@@ -40,8 +40,8 @@ public class ModelVerifierTest {
         ModelVerifier.verifyModel(metadataExtractor);
     }
 
-    @Test(expected = ModelParsingException.class)
-    public void testInvalidMetadataThrowException() throws ModelParsingException {
+    @Test
+    public void testInvalidMetadataNotThrowException() throws ModelParsingException {
         when(metadataExtractor.getModelMetaData()).thenReturn(null);
         ModelVerifier.verifyModel(metadataExtractor);
     }

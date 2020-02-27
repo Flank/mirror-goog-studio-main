@@ -1,6 +1,5 @@
 package com.android.build.gradle.integration.library;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleProject;
@@ -12,8 +11,6 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.CodeShrinker;
-import com.android.ide.common.process.ProcessException;
-import com.android.testutils.apk.Aar;
 import com.google.common.base.Joiner;
 import java.io.File;
 import java.io.IOException;
@@ -137,36 +134,38 @@ public class ProguardAarPackagingTest {
     }
 
     @Test
-    public void checkDebugAarPackaging()
-            throws IOException, InterruptedException, ProcessException {
+    public void checkDebugAarPackaging() throws Exception {
         androidProject
                 .executor()
                 .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
                 .run("assembleDebug");
 
-        Aar debug = androidProject.getAar("debug");
+        androidProject.testAar(
+                "debug",
+                it -> {
+                    // check that the classes from the local jars are still in a local jar
+                    it.containsSecondaryClass("Lcom/example/libinjar/LibInJar;");
 
-        // check that the classes from the local jars are still in a local jar
-        assertThat(debug).containsSecondaryClass("Lcom/example/libinjar/LibInJar;");
-
-        // check that it's not in the main class file.
-        assertThat(debug).doesNotContainMainClass("Lcom/example/libinjar/LibInJar;");
+                    // check that it's not in the main class file.
+                    it.doesNotContainMainClass("Lcom/example/libinjar/LibInJar;");
+                });
     }
 
     @Test
-    public void checkReleaseAarPackaging()
-            throws IOException, InterruptedException, ProcessException {
+    public void checkReleaseAarPackaging() throws Exception {
         androidProject
                 .executor()
                 .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
                 .run("assembleRelease");
 
-        Aar release = androidProject.getAar("release");
+        androidProject.testAar(
+                "release",
+                it -> {
+                    // check that the classes from the local jars are in the main class file
+                    it.containsMainClass("Lcom/example/libinjar/a;");
 
-        // check that the classes from the local jars are in the main class file
-        assertThat(release).containsMainClass("Lcom/example/libinjar/a;");
-
-        // check that it's not in any local jar
-        assertThat(release).doesNotContainSecondaryClass("Lcom/example/libinjar/LibInJar;");
+                    // check that it's not in any local jar
+                    it.doesNotContainSecondaryClass("Lcom/example/libinjar/LibInJar;");
+                });
     }
 }

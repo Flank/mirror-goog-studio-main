@@ -17,15 +17,15 @@
 package com.android.build.gradle.integration.api;
 
 import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR;
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.DexSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
+import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.apk.Zip;
@@ -84,30 +84,34 @@ public class BytecodeGenerationHooksTest {
                                 + COMPILE_LIBRARY_CLASSES_JAR.INSTANCE.getFolderName()
                                 + "/debug/classes.jar");
         assertThat(classesJar).isFile();
-        try (Zip classesZip = new Zip(classesJar)) {
-            assertThat(classesZip).contains("META-INF/lib.kotlin_module");
-            assertThat(classesZip).contains("META-INF/post-lib.kotlin_module");
-        }
+        assertThat(
+                classesJar,
+                it -> {
+                    it.contains("META-INF/lib.kotlin_module");
+                    it.contains("META-INF/post-lib.kotlin_module");
+                });
 
         File resJar = project.file("library/build/intermediates/library_java_res/debug/res.jar");
         assertThat(resJar).isFile();
-        try (Zip resZip = new Zip(classesJar)) {
-            assertThat(resZip).contains("META-INF/lib.kotlin_module");
-            assertThat(resZip).contains("META-INF/post-lib.kotlin_module");
+        assertThat(
+                classesJar,
+                it -> {
+                    it.contains("META-INF/lib.kotlin_module");
+                    it.contains("META-INF/post-lib.kotlin_module");
+                });
 
-            // verify the compile classpath
-            checkDependencies(
-                    result,
-                    "BytecodeGeneratingTask(:app:generateBytecodeFordebug): ",
-                    true,
-                    "library/build/intermediates/"
-                            + COMPILE_LIBRARY_CLASSES_JAR.INSTANCE.getFolderName()
-                            + "/debug/classes.jar",
-                    "jar/build/libs/jar.jar");
+        // verify the compile classpath
+        checkDependencies(
+                result,
+                "BytecodeGeneratingTask(:app:generateBytecodeFordebug): ",
+                true,
+                "library/build/intermediates/"
+                        + COMPILE_LIBRARY_CLASSES_JAR.INSTANCE.getFolderName()
+                        + "/debug/classes.jar",
+                "jar/build/libs/jar.jar");
 
-            // verify source folders
-            checkSourceFolders(result, "SourceFoldersApi(:app:debug): ", "app/src/custom/java");
-        }
+        // verify source folders
+        checkSourceFolders(result, "SourceFoldersApi(:app:debug): ", "app/src/custom/java");
     }
 
     @Test
@@ -161,13 +165,18 @@ public class BytecodeGenerationHooksTest {
     public void buildLibrary() throws Exception {
         project.execute("clean", "lib:assembleDebug");
 
-        try (Aar aar = project.getSubproject("library").getAar("debug");
-             Zip classes = aar.getEntryAsZip("classes.jar")) {
-            assertThat(classes).contains("com/example/bytecode/Lib.class");
-            assertThat(classes).contains("com/example/bytecode/PostJavacLib.class");
-            assertThat(classes).contains("META-INF/lib.kotlin_module");
-            assertThat(classes).contains("META-INF/post-lib.kotlin_module");
-        }
+        project.getSubproject("library")
+                .getAar(
+                        "debug",
+                        it -> {
+                            try (Zip classes = it.getEntryAsZip("classes.jar")) {
+                                assertThat(classes).contains("com/example/bytecode/Lib.class");
+                                assertThat(classes)
+                                        .contains("com/example/bytecode/PostJavacLib.class");
+                                assertThat(classes).contains("META-INF/lib.kotlin_module");
+                                assertThat(classes).contains("META-INF/post-lib.kotlin_module");
+                            }
+                        });
     }
 
     @Test

@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.core
 
+import com.android.SdkConstants
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
@@ -30,7 +31,6 @@ import com.android.builder.model.VectorDrawablesOptions
 import com.android.sdklib.AndroidVersion
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
-import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import java.io.File
 import java.util.function.IntSupplier
@@ -67,6 +67,24 @@ interface VariantDslInfo {
      * @return a unique name made up of the variant and split names.
      */
     fun computeFullNameWithSplits(splitName: String): String
+
+    /**
+     * Returns the expected output file name for the variant.
+     *
+     * @param archivesBaseName the project's archiveBaseName
+     * @param baseName the variant baseName
+     */
+    fun getOutputFileName(archivesBaseName: String, baseName: String): String {
+        // we only know if it is signed during configuration, if its the base module.
+        // Otherwise, don't differentiate between signed and unsigned.
+        // we only know if it is signed during configuration, if its the base module.
+        // Otherwise, don't differentiate between signed and unsigned.
+        val suffix =
+            if (isSigningReady || !variantType.isBaseModule)
+                SdkConstants.DOT_ANDROID_PACKAGE
+            else "-unsigned.apk"
+        return archivesBaseName + "-" + baseName + suffix
+    }
 
     /**
      * Returns the full, unique name of the variant, including BuildType, flavors and test, dash

@@ -164,7 +164,11 @@ public class TestWithSameDepAsApp {
             assertThat(project.getTestApk()).doesNotContainClass(this.className);
         } else {
             // External dependencies are not packaged in AARs.
-            assertThat(project.getAar("debug")).doesNotContainClass(this.className);
+            project.testAar(
+                    "debug",
+                    it -> {
+                        it.doesNotContainClass(this.className);
+                    });
             // But should be in the test APK.
             assertThat(project.getTestApk()).containsClass(this.className);
         }

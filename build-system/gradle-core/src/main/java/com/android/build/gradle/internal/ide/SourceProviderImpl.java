@@ -57,6 +57,7 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
     private final Collection<File> libsDirs;
     @NonNull
     private final Collection<File> shaderDirs;
+    @NonNull private final Collection<File> mlModelsDirs;
 
     public SourceProviderImpl(@NonNull SourceProvider sourceProvider) {
         this.name = sourceProvider.getName();
@@ -71,6 +72,7 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
         this.assetsDirs = sourceProvider.getAssetsDirectories();
         this.libsDirs = sourceProvider.getJniLibsDirectories();
         this.shaderDirs = sourceProvider.getShadersDirectories();
+        this.mlModelsDirs = sourceProvider.getMlModelsDirectories();
     }
 
     @NonNull
@@ -145,6 +147,12 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
         return shaderDirs;
     }
 
+    @NonNull
+    @Override
+    public Collection<File> getMlModelsDirectories() {
+        return mlModelsDirs;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -154,25 +162,37 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
             return false;
         }
         SourceProviderImpl that = (SourceProviderImpl) o;
-        return Objects.equals(name, that.name) &&
-                Objects.equals(manifestFile, that.manifestFile) &&
-                Objects.equals(javaDirs, that.javaDirs) &&
-                Objects.equals(resourcesDirs, that.resourcesDirs) &&
-                Objects.equals(aidlDirs, that.aidlDirs) &&
-                Objects.equals(rsDirs, that.rsDirs) &&
-                Objects.equals(cDirs, that.cDirs) &&
-                Objects.equals(cppDirs, that.cppDirs) &&
-                Objects.equals(resDirs, that.resDirs) &&
-                Objects.equals(assetsDirs, that.assetsDirs) &&
-                Objects.equals(libsDirs, that.libsDirs) &&
-                Objects.equals(shaderDirs, that.shaderDirs);
+        return Objects.equals(name, that.name)
+                && Objects.equals(manifestFile, that.manifestFile)
+                && Objects.equals(javaDirs, that.javaDirs)
+                && Objects.equals(resourcesDirs, that.resourcesDirs)
+                && Objects.equals(aidlDirs, that.aidlDirs)
+                && Objects.equals(rsDirs, that.rsDirs)
+                && Objects.equals(cDirs, that.cDirs)
+                && Objects.equals(cppDirs, that.cppDirs)
+                && Objects.equals(resDirs, that.resDirs)
+                && Objects.equals(assetsDirs, that.assetsDirs)
+                && Objects.equals(libsDirs, that.libsDirs)
+                && Objects.equals(shaderDirs, that.shaderDirs)
+                && Objects.equals(mlModelsDirs, that.mlModelsDirs);
     }
 
     @Override
     public int hashCode() {
-        return Objects
-                .hash(name, manifestFile, javaDirs, resourcesDirs, aidlDirs, rsDirs, cDirs, cppDirs,
-                        resDirs, assetsDirs, libsDirs, shaderDirs);
+        return Objects.hash(
+                name,
+                manifestFile,
+                javaDirs,
+                resourcesDirs,
+                aidlDirs,
+                rsDirs,
+                cDirs,
+                cppDirs,
+                resDirs,
+                assetsDirs,
+                libsDirs,
+                shaderDirs,
+                mlModelsDirs);
     }
 
     @Override
@@ -190,6 +210,7 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
                 .add("assetsDirs", assetsDirs)
                 .add("libsDirs", libsDirs)
                 .add("shaderDirs", shaderDirs)
+                .add("mlModelsDirs", mlModelsDirs)
                 .toString();
     }
 }

@@ -86,8 +86,13 @@ public class LibWithProvidedAarAsJarTest {
 
     @Test
     public void checkProjectJarIsNotPackaged() throws Exception {
-        assertThat(project.getSubproject("library").getAar("debug"))
-                .doesNotContainClass("Lcom/example/android/multiproject/library2/PersionView2;");
+        project.getSubproject("library")
+                .testAar(
+                        "debug",
+                        it -> {
+                            it.doesNotContainClass(
+                                    "Lcom/example/android/multiproject/library2/PersionView2;");
+                        });
     }
 
     @Test

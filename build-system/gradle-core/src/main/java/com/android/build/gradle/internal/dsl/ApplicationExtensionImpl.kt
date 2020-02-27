@@ -24,6 +24,7 @@ import com.android.build.api.dsl.Bundle
 import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantProperties
+import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.plugins.DslContainerProvider
@@ -51,6 +52,7 @@ class ApplicationExtensionImpl(
             AaptOptions,
             AbiSplitOptions,
             AdbOptions,
+            AndroidSourceSet,
             AnnotationProcessorOptions,
             BuildType,
             CmakeOptions,

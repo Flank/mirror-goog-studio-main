@@ -18,10 +18,12 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.AppExtension
+import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.CompileOptions
@@ -52,6 +54,7 @@ open class BaseAppModuleExtension(
         AaptOptions,
         AbiSplitOptions,
         AdbOptions,
+        AndroidSourceSet,
         AnnotationProcessorOptions,
         BuildType,
         CmakeOptions,
@@ -77,6 +80,8 @@ open class BaseAppModuleExtension(
             publicExtensionImpl.buildFeatures,
             dslServices
         )
+
+    override val composeOptions: ComposeOptions = publicExtensionImpl.composeOptions
 
     // this is needed because the impl class needs this but the interface does not,
     // so CommonExtension does not define it, which means, that even though it's part of

@@ -52,14 +52,14 @@ fun RecipeExecutor.loginFragmentRecipe(
 ) {
 
   val (projectData, srcOut, resOut, _) = moduleData
-  val buildApi = moduleData.apis.buildApi
+  val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.android.support:appcompat-v7:${buildApi}.+")
-  addDependency("com.android.support:design:${buildApi}.+")
-  addDependency("com.android.support:support-annotations:${buildApi}.+")
+  addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
+  addDependency("com.android.support:design:${appCompatVersion}.+")
+  addDependency("com.android.support:support-annotations:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
   addDependency("android.arch.lifecycle:extensions:+")
 

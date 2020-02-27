@@ -226,4 +226,20 @@ interface BaseConfig<AnnotationProcessorOptionsT : AnnotationProcessorOptions> {
 
     /** Configure the shader compiler options. */
     fun shaders(action: Shaders.() -> Unit)
+
+    /**
+     * Encapsulates per-variant CMake and ndk-build configurations for your external native build.
+     *
+     * To learn more, see
+     * [Add C and C++ Code to Your Project](http://developer.android.com/studio/projects/add-native-code.html#).
+     */
+    val externalNativeBuild: ExternalNativeBuildOptions
+
+    /**
+     * Encapsulates per-variant CMake and ndk-build configurations for your external native build.
+     *
+     * To learn more, see
+     * [Add C and C++ Code to Your Project](http://developer.android.com/studio/projects/add-native-code.html#).
+     */
+    fun externalNativeBuild(action: ExternalNativeBuildOptions.() -> Unit)
 }

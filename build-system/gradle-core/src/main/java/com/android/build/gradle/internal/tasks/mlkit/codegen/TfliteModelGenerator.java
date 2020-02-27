@@ -69,7 +69,12 @@ public class TfliteModelGenerator implements ModelGenerator {
         TypeSpec.Builder classBuilder =
                 TypeSpec.classBuilder(className).addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
-        classBuilder.addJavadoc(modelInfo.getModelDescription());
+        if (modelInfo.isMetadataExisted()) {
+            classBuilder.addJavadoc(modelInfo.getModelDescription());
+        } else {
+            classBuilder.addJavadoc(
+                    "This model doesn't have metadata, so no javadoc can be generated.");
+        }
         buildFields(classBuilder);
         buildConstructor(classBuilder);
         buildCreateInputsMethod(classBuilder);
@@ -145,19 +150,23 @@ public class TfliteModelGenerator implements ModelGenerator {
 
         // Init preprocessor
         for (TensorInfo tensorInfo : modelInfo.getInputs()) {
-            CodeBlockInjector preprocessorInjector =
-                    InjectorUtils.getInputProcessorInjector(tensorInfo);
-            preprocessorInjector.inject(constructorBuilder, tensorInfo);
+            if (tensorInfo.isMetadataExisted()) {
+                CodeBlockInjector preprocessorInjector =
+                        InjectorUtils.getInputProcessorInjector(tensorInfo);
+                preprocessorInjector.inject(constructorBuilder, tensorInfo);
+            }
         }
 
         // Init associated file and postprocessor
         for (TensorInfo tensorInfo : modelInfo.getOutputs()) {
-            CodeBlockInjector postprocessorInjector =
-                    InjectorUtils.getOutputProcessorInjector(tensorInfo);
-            postprocessorInjector.inject(constructorBuilder, tensorInfo);
+            if (tensorInfo.isMetadataExisted()) {
+                CodeBlockInjector postprocessorInjector =
+                        InjectorUtils.getOutputProcessorInjector(tensorInfo);
+                postprocessorInjector.inject(constructorBuilder, tensorInfo);
 
-            CodeBlockInjector codeBlockInjector = InjectorUtils.getAssociatedFileInjector();
-            codeBlockInjector.inject(constructorBuilder, tensorInfo);
+                CodeBlockInjector codeBlockInjector = InjectorUtils.getAssociatedFileInjector();
+                codeBlockInjector.inject(constructorBuilder, tensorInfo);
+            }
         }
 
         classBuilder.addMethod(constructorBuilder.build());

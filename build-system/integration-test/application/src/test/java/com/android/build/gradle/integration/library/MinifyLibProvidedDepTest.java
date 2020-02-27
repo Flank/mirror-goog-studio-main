@@ -16,12 +16,10 @@
 
 package com.android.build.gradle.integration.library;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -62,7 +60,11 @@ public class MinifyLibProvidedDepTest {
     }
 
     @Test
-    public void checkRClassIsNotPackaged() throws IOException, ProcessException {
-        assertThatAar(project.getAar("debug")).doesNotContainClass("Lcom/android/tests/basic.R;");
+    public void checkRClassIsNotPackaged() throws Exception {
+        project.testAar(
+                "debug",
+                it -> {
+                    it.doesNotContainClass("Lcom/android/tests/basic.R;");
+                });
     }
 }

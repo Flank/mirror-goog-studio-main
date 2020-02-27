@@ -27,17 +27,20 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSET
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -67,6 +70,9 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
     lateinit var testConfigInputs: TestConfigInputs
         private set
 
+    @get:Internal("only for task execution")
+    abstract val projectDir: RegularFileProperty
+
     @get:OutputDirectory
     val outputDirectory: DirectoryProperty = objectFactory.directoryProperty()
 
@@ -74,7 +80,7 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         getWorkerFacadeWithWorkers().use {
             it.submit(
                 GenerateTestConfigRunnable::class.java,
-                GenerateTestConfigParams(testConfigInputs.computeProperties(project.projectDir),
+                GenerateTestConfigParams(testConfigInputs.computeProperties(projectDir.get().asFile),
                     outputDirectory.get().asFile)
             )
         }
@@ -123,6 +129,8 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         ) {
             super.configure(task)
             task.testConfigInputs = TestConfigInputs(unitTestProperties)
+            task.projectDir.set(task.project.projectDir)
+            task.projectDir.disallowChanges()
         }
     }
 

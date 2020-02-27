@@ -64,8 +64,11 @@ public class LibWithCompileLocalJarTest {
     @Test
     public void checkCompileLocalJarIsPackaged() throws Exception {
         // search in secondary jars only.
-        TruthHelper.assertThat(project.getAar("debug"))
-                .containsSecondaryClass("Lcom/example/android/multiproject/person/People;");
+        project.testAar(
+                "debug",
+                it -> {
+                    it.containsSecondaryClass("Lcom/example/android/multiproject/person/People;");
+                });
     }
 
     @Test

@@ -190,18 +190,16 @@ abstract class R8Task: ProguardConfigurableTask() {
                     fileName = "shrunkClasses.jar"
                 )
                 creationConfig.variantScope.consumesFeatureJars() -> {
-                    creationConfig.artifacts.producesDir(
-                        artifactType = InternalArtifactType.FEATURE_DEX,
-                        taskProvider = taskProvider,
-                        productProvider = R8Task::featureDexDir,
-                        fileName = ""
-                    )
-                    creationConfig.artifacts.producesDir(
-                        artifactType = InternalArtifactType.BASE_DEX,
-                        taskProvider = taskProvider,
-                        productProvider = R8Task::baseDexDir,
-                        fileName = ""
-                    )
+                    creationConfig.operations.setInitialProvider(
+                        taskProvider,
+                        R8Task::featureDexDir
+                    ).on(InternalArtifactType.FEATURE_DEX)
+
+                    creationConfig.operations.setInitialProvider(
+                        taskProvider,
+                        R8Task::baseDexDir
+                    ).on(InternalArtifactType.BASE_DEX)
+
                     if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
                         creationConfig.artifacts.getOperations()
                             .setInitialProvider(taskProvider, R8Task::projectOutputKeepRules)
@@ -285,7 +283,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             }
 
             if (creationConfig.variantScope.consumesFeatureJars()) {
-                artifacts.setTaskInputToFinalProduct(
+                creationConfig.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
                     task.baseJar
                 )

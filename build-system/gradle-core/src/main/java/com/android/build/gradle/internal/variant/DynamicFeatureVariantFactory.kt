@@ -21,6 +21,7 @@ import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
 import com.android.build.api.variant.impl.DynamicFeatureVariantImpl
 import com.android.build.api.variant.impl.DynamicFeatureVariantPropertiesImpl
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -98,7 +99,9 @@ internal class DynamicFeatureVariantFactory(
             )
 
         // create default output
-        variantProperties.addVariantOutput(variantData.outputFactory.addMainApk())
+        variantProperties.addVariantOutput(
+            variantOutputConfiguration = VariantOutputConfigurationImpl()
+        )
 
         return variantProperties
     }

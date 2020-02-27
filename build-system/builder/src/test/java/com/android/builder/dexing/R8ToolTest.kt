@@ -20,9 +20,10 @@ import com.android.ide.common.blame.MessageReceiver
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
-import com.android.testutils.truth.MoreTruth.assertThat
-import com.android.testutils.truth.MoreTruth.assertThatDex
-import com.android.testutils.truth.MoreTruth.assertThatZip
+import com.android.testutils.apk.Zip
+import com.android.testutils.truth.DexSubject.assertThat
+import com.android.testutils.truth.DexSubject.assertThatDex
+import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -147,7 +148,8 @@ class R8ToolTest {
             featureDexDir = null
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
-        assertThatZip(javaRes.toFile()).contains("res.txt")
+
+        Zip(javaRes.toFile()).use { assertThat(it).contains("res.txt") }
 
         // check Java resources are compressed
         ZipFile(javaRes.toFile()).use { zip ->
@@ -192,7 +194,7 @@ class R8ToolTest {
             null
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
-        assertThatZip(javaRes.toFile()).contains("res.txt")
+        Zip(javaRes.toFile()).use { assertThat(it).contains("res.txt") }
     }
 
     @Test

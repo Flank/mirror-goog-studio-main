@@ -26,7 +26,10 @@ def _lint_test_impl(ctx):
     project_xml += "<module name=\"{0}\" android=\"false\" library=\"true\">\n".format(ctx.label.name)
 
     for file in ctx.files.srcs:
-        project_xml += "  <src file=\"{0}\" />\n".format(file.path)
+        project_xml += "  <src file=\"{0}\" ".format(file.path)
+        if ctx.attr.is_test_sources:
+            project_xml += "test=\"true\" "
+        project_xml += "/>\n"
 
     for file in classpath.to_list():
         project_xml += "  <classpath jar=\"{0}\" />\n".format(file.short_path)
@@ -72,6 +75,7 @@ lint_test = rule(
         "external_annotations": attr.label_list(allow_files = True),
         "deps": attr.label_list(allow_files = True),
         "baseline": attr.label(allow_single_file = True),
+        "is_test_sources": attr.bool(),
         "_binary": attr.label(
             executable = True,
             cfg = "target",

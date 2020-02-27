@@ -23,10 +23,12 @@ import com.android.SdkConstants.SUPPRESS_ALL
 import com.android.tools.lint.client.api.Configuration
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintDriver
+import com.android.tools.lint.client.api.LintDriver.Companion.STUDIO_ID_PREFIX
 import com.android.tools.lint.client.api.SdkInfo
 import com.android.utils.CharSequences
 import com.android.utils.CharSequences.indexOf
 import com.google.common.annotations.Beta
+import com.google.common.annotations.VisibleForTesting
 import com.intellij.psi.PsiElement
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UElement
@@ -367,44 +369,103 @@ open class Context(
         val index = findPrefixOnPreviousLine(contents, lineStart, prefix)
         if (index != -1 && index + prefix.length < lineStart) {
             val line = contents.subSequence(index + prefix.length, lineStart).toString()
-            return line.contains(issue.id) || line.contains(SUPPRESS_ALL) && line.trim { it <= ' ' }.startsWith(
-                SUPPRESS_ALL
-            )
+            return isSuppressedWithComment(line, issue)
         }
 
         return false
     }
 
-    private fun findPrefixOnPreviousLine(
-        contents: CharSequence,
-        lineStart: Int,
-        prefix: String
-    ): Int {
-        // Search backwards on the previous line until you find the prefix start (also look
-        // back on previous lines if the previous line(s) contain just whitespace
-        val first = prefix[0]
-        var offset = lineStart - 2 // 0: first char on this line, -1: \n on previous line, -2 last
-        var seenNonWhitespace = false
-        while (offset >= 0) {
-            val c = contents[offset]
-            if (seenNonWhitespace && c == '\n') {
-                return -1
-            }
-
-            if (!seenNonWhitespace && !Character.isWhitespace(c)) {
-                seenNonWhitespace = true
-            }
-
-            if (c == first && CharSequences.regionMatches(
-                    contents, offset, prefix, 0,
-                    prefix.length
-                )
-            ) {
-                return offset
-            }
-            offset--
+    companion object {
+        @VisibleForTesting
+        fun isSuppressedWithComment(line: String, issue: Issue): Boolean {
+            return lineContainsId(line, issue.id) ||
+                    lineContainsId(line, SUPPRESS_ALL) ||
+                    isSuppressedWithComment(line, issue.category)
         }
 
-        return -1
+        private fun isSuppressedWithComment(line: String, category: Category): Boolean {
+            return lineContainsId(line, category.name) ||
+                    category.parent != null &&
+                    (lineContainsId(line, category.fullName) ||
+                            isSuppressedWithComment(line, category.parent))
+        }
+
+        // Like line.contains(id), but requires word match (e.g. "MyId" is found
+        // in "SomeId,MyId" but not in "NotMyId")
+        private fun lineContainsId(line: String, id: String): Boolean {
+            var index = 0
+            while (index < line.length) {
+                index = line.indexOf(id, startIndex = index, ignoreCase = true)
+                if (index == -1) {
+                    return false
+                }
+
+                if (isWord(line, id, index)) {
+                    return true
+                }
+
+                index += id.length
+            }
+
+            return false
+        }
+
+        private fun isWord(line: String, word: String, index: Int): Boolean {
+            val end = index + word.length
+            if (end < line.length && !isWordDelimiter(line[end])) {
+                return false
+            }
+
+            if (index > 0 && !isWordDelimiter(line[index - 1])) {
+                // See if it's prefixed by "AndroidLint"; as a special case we allow
+                // that since in the IDE issues are often prefixed by both
+                val prefixStart = index - STUDIO_ID_PREFIX.length
+                if (index >= STUDIO_ID_PREFIX.length &&
+                    line.regionMatches(
+                        prefixStart, STUDIO_ID_PREFIX,
+                        0, STUDIO_ID_PREFIX.length
+                    ) && (prefixStart == 0 || isWordDelimiter(line[prefixStart - 1]))
+                ) {
+                    return true
+                }
+                return false
+            }
+            return true
+        }
+
+        private fun isWordDelimiter(c: Char): Boolean = !c.isJavaIdentifierPart()
+
+        private fun findPrefixOnPreviousLine(
+            contents: CharSequence,
+            lineStart: Int,
+            prefix: String
+        ): Int {
+            // Search backwards on the previous line until you find the prefix start (also look
+            // back on previous lines if the previous line(s) contain just whitespace
+            val first = prefix[0]
+            var offset = lineStart - 2 // 0: first char on this line, -1: \n on previous line, -2 last
+            var seenNonWhitespace = false
+            while (offset >= 0) {
+                val c = contents[offset]
+                if (seenNonWhitespace && c == '\n') {
+                    return -1
+                }
+
+                if (!seenNonWhitespace && !Character.isWhitespace(c)) {
+                    seenNonWhitespace = true
+                }
+
+                if (c == first && CharSequences.regionMatches(
+                        contents, offset, prefix, 0,
+                        prefix.length
+                    )
+                ) {
+                    return offset
+                }
+                offset--
+            }
+
+            return -1
+        }
     }
 }

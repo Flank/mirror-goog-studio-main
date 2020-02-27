@@ -19,14 +19,10 @@ package com.android.build.api.variant
 import com.android.build.api.artifact.ArtifactType
 import org.gradle.api.Incubating
 import org.gradle.api.file.Directory
-import org.gradle.api.file.RegularFile
-import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkQueue
 import java.io.File
 import java.io.Serializable
 import java.util.ServiceLoader
-import java.util.function.Supplier
 
 /**
  * Represents a [Collection] of [BuiltArtifact] produced by a [org.gradle.api.Task].

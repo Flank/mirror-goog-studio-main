@@ -16,7 +16,6 @@
 
 package com.android.testutils.apk;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 

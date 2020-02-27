@@ -24,6 +24,7 @@ import com.android.tools.build.apkzlib.zfile.ApkCreator
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode
 import com.android.zipflinger.BytesSource
+import com.android.zipflinger.StableArchive
 import com.android.zipflinger.SynchronizedArchive
 import com.android.zipflinger.ZipArchive
 import com.android.zipflinger.ZipSource
@@ -42,10 +43,16 @@ import java.util.zip.Deflater
 // TODO ensure that all input zip entries have desired compression -
 //  https://issuetracker.google.com/135275558
 
-/** An implementation of [ApkCreator] using the zipflinger library */
+/** An implementation of [ApkCreator] using the zipflinger library
+ *
+ * @param deterministicEntryOrder whether or not the order of the entries in the created APK will be
+ * deterministic, regardless of any multi-threading in the implementation and/or regardless of the
+ * order of calls to [writeZip], [writeFile], and [deleteFile].
+ */
 class ApkFlinger(
     creationData: ApkCreatorFactory.CreationData,
-    private val compressionLevel: Int
+    private val compressionLevel: Int,
+    deterministicEntryOrder: Boolean = false
 ) : ApkCreator {
 
     /**
@@ -82,26 +89,30 @@ class ApkFlinger(
             else -> throw AssertionError()
         }
         val signingOptions: SigningOptions? = creationData.signingOptions.orNull()
-        if (signingOptions == null) {
-            archive = SynchronizedArchive(ZipArchive(creationData.apkPath))
-        } else {
-            val signedApkOptionsBuilder =
-                SignedApkOptions.Builder()
-                    .setCertificates(signingOptions.certificates)
-                    .setMinSdkVersion(signingOptions.minSdkVersion)
-                    .setPrivateKey(signingOptions.key)
-                    .setV1Enabled(signingOptions.isV1SigningEnabled)
-                    .setV2Enabled(signingOptions.isV2SigningEnabled)
-                    .setV1CreatedBy(creationData.createdBy ?: DEFAULT_CREATED_BY)
-                    .setV1TrustManifest(creationData.isIncremental)
-            if (signingOptions.executor != null) {
-                signedApkOptionsBuilder.setExecutor(signingOptions.executor!!)
-            }
-            archive =
-                SynchronizedArchive(
-                    SignedApk(creationData.apkPath, signedApkOptionsBuilder.build())
+        val innerArchive =
+            if (signingOptions == null) {
+                ZipArchive(creationData.apkPath)
+            } else {
+                SignedApk(
+                    creationData.apkPath,
+                    SignedApkOptions.Builder()
+                        .setCertificates(signingOptions.certificates)
+                        .setMinSdkVersion(signingOptions.minSdkVersion)
+                        .setPrivateKey(signingOptions.key)
+                        .setV1Enabled(signingOptions.isV1SigningEnabled)
+                        .setV2Enabled(signingOptions.isV2SigningEnabled)
+                        .setV1CreatedBy(creationData.createdBy ?: DEFAULT_CREATED_BY)
+                        .setV1TrustManifest(creationData.isIncremental)
+                        .also { builder ->
+                            signingOptions.executor?.let { builder.setExecutor(it) }
+                        }
+                        .build()
                 )
-        }
+            }
+        archive =
+            SynchronizedArchive(
+                if (deterministicEntryOrder) StableArchive(innerArchive) else innerArchive
+            )
     }
 
     /**

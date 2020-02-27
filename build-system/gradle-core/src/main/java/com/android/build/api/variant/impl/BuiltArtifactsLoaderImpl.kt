@@ -86,9 +86,7 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
                             versionCode = builtArtifact.versionCode,
                             versionName = builtArtifact.versionName,
                             isEnabled = builtArtifact.isEnabled,
-                            variantOutputConfiguration = builtArtifact.variantOutputConfiguration,
-                            baseName = builtArtifact.baseName,
-                            fullName = builtArtifact.fullName
+                            variantOutputConfiguration = builtArtifact.variantOutputConfiguration
                         )
                     }
                     .toList())

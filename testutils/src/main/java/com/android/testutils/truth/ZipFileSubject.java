@@ -23,12 +23,14 @@ import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Path;
+import java.util.function.Consumer;
 
 /** Truth support for zip files. */
 public class ZipFileSubject extends AbstractZipSubject<ZipFileSubject, Zip> {
 
-    public static Subject.Factory<ZipFileSubject, Zip> zips() {
+    @Deprecated
+    private static Subject.Factory<ZipFileSubject, Zip> zips() {
         return ZipFileSubject::new;
     }
 
@@ -36,19 +38,23 @@ public class ZipFileSubject extends AbstractZipSubject<ZipFileSubject, Zip> {
         super(failureMetadata, subject);
     }
 
-    public static ZipFileSubject assertThat(@NonNull Zip zip) {
-        return Truth.assertAbout(zips()).that(zip);
+    public static void assertThat(@NonNull File file, @NonNull Consumer<ZipFileSubject> action)
+            throws Exception {
+        try (Zip it = new Zip(file)) {
+            action.accept(Truth.assertAbout(zips()).that(it));
+        }
     }
 
-    /**
-     * DO NOT USE this method as zip files will not be closed on Windows.
-     *
-     * <p>Use this instead: Zip(zipFile).use { ZipFileSubject.assertThat(it)... }
-     */
+    public static void assertThat(@NonNull Path file, @NonNull Consumer<ZipFileSubject> action)
+            throws Exception {
+        try (Zip it = new Zip(file)) {
+            action.accept(Truth.assertAbout(zips()).that(it));
+        }
+    }
+
+    /** Use {@link ZipFileSubject#assertThat(File, Consumer)} */
     @Deprecated
-    @NonNull
-    public static ZipFileSubject assertThatZip(@NonNull File file) throws IOException {
-        Zip zip = new Zip(file.toPath());
+    public static ZipFileSubject assertThat(@NonNull Zip zip) {
         return Truth.assertAbout(zips()).that(zip);
     }
 

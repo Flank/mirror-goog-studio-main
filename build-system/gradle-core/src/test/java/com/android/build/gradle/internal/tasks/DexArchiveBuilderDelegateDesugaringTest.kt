@@ -29,7 +29,7 @@ import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.DexerTool
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
-import com.android.testutils.truth.MoreTruth.assertThatDex
+import com.android.testutils.truth.DexSubject.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat

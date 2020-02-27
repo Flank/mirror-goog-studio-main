@@ -661,7 +661,7 @@ public class NativeSoPackagingTest {
     private static void checkAar(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(TruthHelper.assertThat(project.getAar("debug")), "jni", "x86", filename, content);
+        project.testAar("debug", it -> check(it, "jni", "x86", filename, content));
     }
 
     private static void check(

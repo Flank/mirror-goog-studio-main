@@ -16,8 +16,6 @@
 
 package com.android.ide.common.build
 
-import java.nio.file.Path
-
 /**
  * Common interface between studio specific and agp specific in memory representations of the
  * output.json file.

@@ -117,6 +117,19 @@ class MergeSourceSetFoldersTest {
 
     @Test
     @Throws(Exception::class)
+    fun singleSetWithMlModels() {
+        val file = File("src/main")
+        val mainSet = createAssetSet(BuilderConstants.MAIN, file)
+
+        val mlModelsDir = temporaryFolder.newFile("ml")
+        task.mlModelsOutputDir.set(mlModelsDir)
+
+        assertThat(task.computeAssetSetList()).containsExactly(mainSet)
+        assertThat(mainSet.sourceFiles).containsExactly(file, mlModelsDir)
+    }
+
+    @Test
+    @Throws(Exception::class)
     fun everything() {
         val file = File("src/main")
         val file2 = File("src/main2")

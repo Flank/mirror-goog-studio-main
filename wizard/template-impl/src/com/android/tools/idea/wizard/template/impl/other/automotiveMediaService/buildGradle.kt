@@ -23,8 +23,8 @@ fun buildGradle(
   buildApiString: String?,
   generateKotlin: Boolean,
   kotlinVersion: String,
-  minApi: Int,
-  targetApi: Int,
+  minApi: String,
+  targetApi: String,
   useAndroidX: Boolean
 ): String {
   val kotlinDependenciesBlock = renderIf(generateKotlin) {"""
@@ -42,8 +42,8 @@ android {
     compileSdkVersion ${buildApiString?.toIntOrNull() ?: "\"$buildApiString\""}
     
     defaultConfig {
-        minSdkVersion $minApi
-        targetSdkVersion $targetApi
+        minSdkVersion ${minApi.toIntOrNull() ?: "\"$minApi\""}
+        targetSdkVersion ${targetApi.toIntOrNull() ?: "\"$targetApi\""}
         versionCode 1
         versionName "1.0"
 

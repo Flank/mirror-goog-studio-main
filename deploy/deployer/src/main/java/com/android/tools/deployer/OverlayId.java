@@ -16,6 +16,7 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.Apk;
+import com.android.tools.deployer.model.ApkEntryContent;
 import com.google.common.collect.ImmutableSortedMap;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -37,20 +38,25 @@ public class OverlayId {
     private final SortedMap<String, String> deltas; // OverlayFile -> Checksum
     private final String sha;
 
-    public OverlayId(OverlayId prevOverlayId, DexComparator.ChangedClasses overlays)
+    public OverlayId(
+            OverlayId prevOverlayId,
+            DexComparator.ChangedClasses dexOverlays,
+            List<ApkEntryContent> fileOverlays)
             throws DeployerException {
         apks = prevOverlayId.apks;
         deltas = new TreeMap<>(prevOverlayId.deltas);
-        overlays.newClasses.forEach(
+        dexOverlays.newClasses.forEach(
                 cls ->
                         deltas.put(
                                 String.format("%s.dex", cls.name),
                                 String.format("%d", cls.checksum)));
-        overlays.modifiedClasses.forEach(
+        dexOverlays.modifiedClasses.forEach(
                 cls ->
                         deltas.put(
                                 String.format("%s.dex", cls.name),
                                 String.format("%d", cls.checksum)));
+        fileOverlays.forEach(
+                file -> deltas.put(file.getName(), String.format("%d", file.getChecksum())));
         sha = computeShaHex(getRepresentation());
     }
 
@@ -80,12 +86,6 @@ public class OverlayId {
 
     public String getSha() {
         return sha;
-    }
-
-    public static OverlayId computeNewOverlayId(
-            DeploymentCacheDatabase.Entry lastInstall, DexComparator.ChangedClasses newOverlays)
-            throws DeployerException {
-        return new OverlayId(lastInstall.getOverlayId(), newOverlays);
     }
 
     private static String computeShaHex(String input) throws DeployerException {

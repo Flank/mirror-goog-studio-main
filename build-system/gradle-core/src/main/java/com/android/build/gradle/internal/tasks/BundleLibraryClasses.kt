@@ -89,13 +89,7 @@ private fun BundleLibraryClassesInputs.configure(
     this.packageRClass.set(packageRClass)
     if (packageRClass) {
 
-        val artifactType: InternalArtifactType<RegularFile> =
-            if (component.globalScope.extension.aaptOptions.namespaced) {
-                InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
-            } else {
-                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR
-            }
-        classes.from(component.artifacts.getFinalProduct(artifactType))
+        classes.from(component.artifacts.getFinalProduct(InternalArtifactType.COMPILE_R_CLASS_JAR))
     }
     // FIXME pass this as List<TextResources>
     this.toIgnoreRegExps.set(component.globalScope.project.provider(toIgnoreRegExps::get))

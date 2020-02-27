@@ -3,11 +3,6 @@
 Zipflinger is a library dedicated to ZIP files manipulation. It can create an archive from scratch
 but also add/remove entries without decompressing/compressing the whole archive.
 
-Partial zip64 format is supported (with full-support coming in next CL):
-   - Archive with more than 65,536 entries can be read.
-   - Archive with entries bigger than 4 GiB are not supported.
-   - Archive with entries further than 4 GiB are not supported.
-
 The goal of the library is to work as fast as possible (its original purpose is to enable fast
 Android APK deployment). The two main features allowing high-speed are Zipflinger's ability to
 edit the CD of an archive and its usage of zero-copy transfer when moving entries across archives.
@@ -57,8 +52,9 @@ existed, the archive would have been create. Two operations are requested:
  archive.delete("classes18.dex");
 
  // Add sources
- FileSource source = new FileSource("/path/to/file", "entryName");
- archive.addFile(source);
+ File myFile = new File("/path/to/file");
+ BytesSource source = new BytesSource(file, "entryName", Deflater.NO_COMPRESSION);
+ archive.add(source);
 
  // Don't forget to close in order to release the archive fd/handle.
  archive.close();
@@ -66,9 +62,8 @@ existed, the archive would have been create. Two operations are requested:
 
 Such an operation can be performed by Zipflinger in under 100 ms with a mid-range 2019 SSD laptop.
 
-If an entry has been deleted
-in the middle of the archive, Zipflinger will not leaves a "hole" there. This is done in order to be
-compatible with top-down parsers such as jarsigner or the JDK zip classes. To this effect,
+If an entry has been deleted in the middle of the archive, Zipflinger will not leave a "hole" there.
+This is done in order to be compatible with top-down parsers such as jarsigner or the JDK zip classes. To this effect,
 Zipflinger fills empty space with virtual entries (a.k.a a Local File Header with no name, up to
 64KiB extra and no Central Directory entry). Alignment is also done via "extra field".
 
@@ -78,7 +73,7 @@ Entry name heuristic:
 
 ## Zipmapper
 The mapper only plays a part when opening an existing archive. The goal of the mapper is to locate
-all entries via the Central Directories and build a map of the LRs (Local Record) , CDRs
+all entries via the Central Directories and build a map of the LFHs (Local File Header) , CDRs
 (Central Directory Record) and compile these information into a list of Entry. This data is fed to
 the FreeStore to build a map of what is currently used in the file and where their is available
 space.
@@ -93,40 +88,38 @@ free areas are never contiguous. If space is freed, adjacent free blocks are mer
 result, used space is implicitly described by the "gap" between two free blocks.
 
 All write/delete operations in an archive must first go through the freestore.
-- When a zip entry is deleted, both the LR and CDR Location are returned to the FreeStore.
+- When a zip entry is deleted, the entry Location is returned to the FreeStore.
 - When a zip entry is added, a Location must be requested to the Freestore.
 
-Allocations alignment is supported on a 4 bytes basis . This is to accommodate Android Package
-Manager optimizations where a zip entry is directly mmaped. Upon requesting an aligned allocation,
-an offset must also be provided because whas needs to be aligned is not the ZIP entry but the
-zip entry payload.
+Allocations alignment is supported. This is to accommodate Android Package Manager optimizations
+where a zip entry is directly mmaped. Upon requesting an aligned allocation, an offset must also
+be provided because what needs to be aligned is not the ZIP entry but the zip entry payload.
 
 ## ZipWriter
 All zip write operations are tracked by the Writer. This is done so an accurate map of written
 Locations can be generated when the file is closed and enable incremental V2 signing.
 
 ## Sources
-To add an entry to a zip, Zipflinger is fed sources. Four types of sources ares supported:
+To add an entry to a zip, Zipflinger is fed sources. Typically two sources ares supported:
 
-- FileSource
-- InputStreamSource
+- ByteSource
 - ZipSource (made of several ZipSourceEntry)
-- BytesSource
 
-FileSource are used to connect a ZipArchive to a file. Content is loaded when ZipArchive.close() is
-invoked in order to reduce the memory footprint.
+BytesSource are well-suited for payload already located in memory or in a File. The typical usecase
+is when an APK needs to be updated with a new file and also V1 signed. The new file will have been
+loaded from storage to generate a hash values.
 
-InputStreamSource are used to connect a ZipArchive with an InputStream. The stream is drained when
-ZipArchive.close() is called.
+Note that a BytesSource can be built from an InputStream, in which case the the stream is drained
+entirely in the BytesSource constructor.
 
 ZipSource allows to transfer entries from one zip to an other. Zero-copy is used to speed up transfer
 . Compression type/format is not changed during the transfer. Upon selecting an entry for transfer,
 ZipSourceEntry is returned. The handle is only used if alignment needs to be requested.
 
-BytesSource are well-suited for payload already located in memory. The typical usecase is when an
-APK needs to be updated with a new file and also V1 signed. The new file will have been loaded from
-storage to generate a hash values. While the file bytes are loaded in memory they can be turned into
-a source for a zip entry.
-
 All sources can be requested to be aligned via the Source.align() method. All sources except for the
-ZipSourceEntry can be requested to be compressed.
+ZipSourceEntry can be requested to be uncompressed/re-compressed.
+
+## Zip64 Support
+Zipflinger has full support for zip64 archives. It is able to handle zip64EOCD (more than 65536
+entries) with zip64Locator and zip64 extra fields containing 64-bit compressed, uncompressed, and
+offset values (archives larger than 4GiB). There is no facility to handle files larger than 2GiB.

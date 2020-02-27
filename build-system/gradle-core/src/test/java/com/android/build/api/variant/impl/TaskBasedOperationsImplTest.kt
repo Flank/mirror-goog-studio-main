@@ -425,9 +425,7 @@ class TaskBasedOperationsImplTest {
                 isUniversal = false,
                 filters = listOf(
                     FilterConfiguration(FilterConfiguration.FilterType.DENSITY, densityValue)
-                )),
-            baseName = "someBaseName",
-            fullName = "someFullName"
+                ))
         )
 
     private fun createBuiltArtifacts(vararg elements: BuiltArtifactImpl) =

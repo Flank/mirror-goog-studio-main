@@ -23,14 +23,11 @@ import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.ReproducibleFileVisitor
-import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -134,7 +131,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
 
         override fun configure(task: BundleAllClasses) {
             super.configure(task)
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.JAVAC,
                 task.javacClasses
             )
@@ -144,17 +141,16 @@ abstract class BundleAllClasses : NonIncrementalTask() {
             task.modulePath = globalScope.project.path
             task.jarCreatorType = creationConfig.variantScope.jarCreatorType
             if (globalScope.extension.aaptOptions.namespaced) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
+                creationConfig.operations.setTaskInputToFinalProduct(
+                    InternalArtifactType.COMPILE_R_CLASS_JAR,
                     task.rClassesJar
                 )
-            } else if (!globalScope.projectOptions.get(BooleanOption.GENERATE_R_JAVA)) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
+            } else {
+                creationConfig.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                     task.rClassesJar
                 )
             }
-            task.rClassesJar.disallowChanges()
         }
     }
 }

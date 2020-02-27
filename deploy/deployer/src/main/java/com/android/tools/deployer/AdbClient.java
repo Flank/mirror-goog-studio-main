@@ -276,4 +276,8 @@ public class AdbClient {
         }
         return response;
     }
+
+    public String getSkipVerificationOption(String packageName) {
+        return ApkVerifierTracker.getSkipVerificationInstallationFlag(device, packageName);
+    }
 }

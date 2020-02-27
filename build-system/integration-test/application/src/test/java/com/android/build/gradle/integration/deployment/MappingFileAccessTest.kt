@@ -19,8 +19,6 @@ package com.android.build.gradle.integration.deployment
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper
-import com.android.build.gradle.integration.common.truth.TruthHelper.*
-import com.android.testutils.truth.MoreTruth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule

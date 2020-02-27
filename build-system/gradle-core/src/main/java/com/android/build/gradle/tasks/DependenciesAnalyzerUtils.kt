@@ -28,7 +28,6 @@ import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableDependenc
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableModuleResult
 import java.io.File
 import java.util.LinkedList
-import java.util.zip.ZipFile
 
 /** Finds used/unused dependencies in our variant. */
 class DependencyUsageFinder(
@@ -121,20 +120,20 @@ class DependencyGraphAnalyzer(
 }
 
 /** Finds where a class is coming from. */
-class ClassFinder(private val externalArtifactCollection: ArtifactCollection) {
+class ClassFinder(private val externalArtifactCollection : ArtifactCollection) {
 
-    private val classToDependency: Map<String, String> by lazy {
+    private val classToDependency: Map<String, String> by lazy { getDependenciesMap() }
+
+    private fun getDependenciesMap(): Map<String, String> {
         val map = mutableMapOf<String, String>()
         externalArtifactCollection
-            .asSequence()
-            .filter { it.file.name.endsWith(SdkConstants.DOT_JAR) }
-            .forEach { artifact ->
-                val classNamesInJar = getClassFilesInJar(artifact.file)
-                classNamesInJar.forEach { artifactClass ->
-                    map[artifactClass] = artifact.id.componentIdentifier.displayName
+                .forEach { artifact ->
+                    FileUtils.join(artifact.file, "classes${SdkConstants.DOT_TXT}")
+                            .forEachLine { artifactClass ->
+                                map[artifactClass] = artifact.id.componentIdentifier.displayName
+                            }
                 }
-            }
-        map
+        return map
     }
 
     /** Returns the dependency that contains {@code className} or null if we can't find it. */
@@ -142,22 +141,6 @@ class ClassFinder(private val externalArtifactCollection: ArtifactCollection) {
 
     fun findClassesInDependency(dependencyId: String) =
         classToDependency.filterValues { it == dependencyId }.keys
-
-    private fun getClassFilesInJar(jarFile: File): List<String> {
-        val classes = mutableListOf<String>()
-
-        val zipFile = ZipFile(jarFile)
-
-        val entries = zipFile.entries()
-        while (entries.hasMoreElements()) {
-            val entry = entries.nextElement()
-            if (entry.name.endsWith(SdkConstants.DOT_CLASS)) {
-                classes.add(entry.name)
-            }
-        }
-
-        return classes
-    }
 }
 
 data class DependenciesUsageReport (

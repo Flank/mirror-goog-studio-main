@@ -51,6 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.junit.Assume;
@@ -220,13 +221,15 @@ public class DesugarAppTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 String.format(
+                        Locale.US,
                         "\n"
                                 + "android.buildTypes.debug.testCoverageEnabled true\n"
                                 + "android.defaultConfig.minSdkVersion %d\n"
                                 + "dependencies {\n"
                                 + "    compile 'com.android.support:support-v4:%s'\n"
                                 + "}",
-                        TestVersions.SUPPORT_LIB_MIN_SDK, TestVersions.SUPPORT_LIB_VERSION));
+                        TestVersions.SUPPORT_LIB_MIN_SDK,
+                        TestVersions.SUPPORT_LIB_VERSION));
 
         getProjectExecutor().run("assembleDebug");
         getProjectExecutor().run("clean", "assembleDebug");

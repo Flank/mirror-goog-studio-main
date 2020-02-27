@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="5" by="lint 4.1.0-dev">
+
+    <issue
+        id="NewForkJoinPool"
+        message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.">
+        <location
+            file="src/main/java/com/android/testutils/filesystemdiff/TreeBuilder.java"
+            line="38"/>
+    </issue>
+
+</issues>

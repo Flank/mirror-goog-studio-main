@@ -21,21 +21,26 @@ import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
 
 /** Stores necessary data for one model. */
 public class ModelInfo {
-    /** stores necessary data for model input */
-    private List<TensorInfo> inputs;
+    /** Stores necessary data for model input. */
+    private final List<TensorInfo> inputs;
 
-    /** stores necessary data for model output */
-    private List<TensorInfo> outputs;
+    /** Stores necessary data for model output. */
+    private final List<TensorInfo> outputs;
+
+    /** Stores necessary data for subgraphs. */
+    private final List<SubGraphInfo> subGraphInfos;
 
     private String modelName;
     private String modelDescription;
     private String modelVersion;
     private String modelAuthor;
     private String modelLicense;
+    private boolean metaDataExisted;
 
     private ModelInfo() {
         inputs = new ArrayList<>();
         outputs = new ArrayList<>();
+        subGraphInfos = new ArrayList<>();
     }
 
     public List<TensorInfo> getInputs() {
@@ -44,6 +49,10 @@ public class ModelInfo {
 
     public List<TensorInfo> getOutputs() {
         return outputs;
+    }
+
+    public List<SubGraphInfo> getSubGraphInfos() {
+        return subGraphInfos;
     }
 
     public String getModelName() {
@@ -66,6 +75,10 @@ public class ModelInfo {
         return modelLicense;
     }
 
+    public boolean isMetadataExisted() {
+        return metaDataExisted;
+    }
+
     public static ModelInfo buildFrom(MetadataExtractor extractor) throws ModelParsingException {
         ModelVerifier.verifyModel(extractor);
 
@@ -81,11 +94,22 @@ public class ModelInfo {
         }
 
         ModelMetadata modelMetadata = extractor.getModelMetaData();
-        modelInfo.modelName = modelMetadata.name();
-        modelInfo.modelDescription = modelMetadata.description();
-        modelInfo.modelVersion = modelMetadata.version();
-        modelInfo.modelAuthor = modelMetadata.author();
-        modelInfo.modelLicense = modelMetadata.license();
+
+        // TODO(jackqdyulei): consider to remove this check and make fields not null.
+        if (modelMetadata != null) {
+            modelInfo.modelName = modelMetadata.name();
+            modelInfo.modelDescription = modelMetadata.description();
+            modelInfo.modelVersion = modelMetadata.version();
+            modelInfo.modelAuthor = modelMetadata.author();
+            modelInfo.modelLicense = modelMetadata.license();
+            modelInfo.metaDataExisted = true;
+
+            int subgraphLength = modelMetadata.subgraphMetadataLength();
+            for (int i = 0; i < subgraphLength; i++) {
+                modelInfo.subGraphInfos.add(
+                        SubGraphInfo.buildFrom(modelMetadata.subgraphMetadata(i)));
+            }
+        }
 
         return modelInfo;
     }

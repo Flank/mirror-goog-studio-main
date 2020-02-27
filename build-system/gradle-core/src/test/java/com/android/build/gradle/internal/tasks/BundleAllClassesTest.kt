@@ -16,12 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.feature.BundleAllClasses
-import com.android.build.gradle.internal.fixtures.FakeGradleProperty
-import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -31,7 +30,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createTaskCreationServices
-import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -54,6 +52,7 @@ class BundleAllClassesTest {
     @Mock private lateinit var componentProperties: ComponentPropertiesImpl
     @Mock private lateinit var scope: VariantScope
     @Mock private lateinit var artifacts: BuildArtifactsHolder
+    @Mock private lateinit var operations: OperationsImpl
     @Mock private lateinit var fileTree: FileTree
     @Mock private lateinit var globalScope: GlobalScope
     @Mock private lateinit var variantData: BaseVariantData
@@ -85,6 +84,7 @@ class BundleAllClassesTest {
 
         MockitoAnnotations.initMocks(this)
         Mockito.`when`(componentProperties.artifacts).thenReturn(artifacts)
+        Mockito.`when`(componentProperties.operations).thenReturn(operations)
         Mockito.`when`(componentProperties.globalScope).thenReturn(globalScope)
         Mockito.`when`(componentProperties.name).thenReturn("theVariantName")
         Mockito.`when`(componentProperties.variantScope).thenReturn(scope)

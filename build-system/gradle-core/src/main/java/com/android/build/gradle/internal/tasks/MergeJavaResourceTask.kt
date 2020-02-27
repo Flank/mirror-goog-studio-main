@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.resources.FileStatus
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
@@ -47,6 +48,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.util.PatternSet
 import java.io.File
 import java.util.concurrent.Callable
 import java.util.function.Predicate
@@ -59,14 +61,10 @@ import javax.inject.Inject
 abstract class MergeJavaResourceTask
 @Inject constructor(objects: ObjectFactory) : IncrementalTask() {
 
-    // PathSensitivity.ABSOLUTE necessary here to support changing java resource file relative
-    // paths. A better solution will be custom snapshots from gradle:
-    // https://github.com/gradle/gradle/issues/8503
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
-    var projectJavaRes: FileCollection? = null
-        private set
+    abstract val projectJavaRes: ConfigurableFileCollection
 
     @get:Classpath
     @get:Optional
@@ -117,7 +115,9 @@ abstract class MergeJavaResourceTask
     // The runnable implementing the processing is not able to deal with fine-grained file but
     // instead is expecting directories of files. Use the unfiltered collection (since the filtering
     // changes the FileCollection of directories into a FileTree of files) to process, but don't
-    // use it as a jar input, it's covered by the [projectJavaRes] and [projectJavaResAsJars] above.
+    // use it as a task input, it's covered by [projectJavaRes] and [projectJavaResAsJars] above.
+    // This is a workaround for the lack of gradle custom snapshotting:
+    // https://github.com/gradle/gradle/issues/8503.
     private lateinit var unfilteredProjectJavaRes: FileCollection
 
     override fun doFullTaskAction() {
@@ -223,8 +223,9 @@ abstract class MergeJavaResourceTask
             } else {
                 val projectJavaRes = getProjectJavaRes(creationConfig)
                 task.unfilteredProjectJavaRes = projectJavaRes
-                task.projectJavaRes = projectJavaRes.asFileTree.filter(spec)
+                task.projectJavaRes.from(projectJavaRes.asFileTree.matching(patternSet))
             }
+            task.projectJavaRes.disallowChanges()
 
             if (mergeScopes.contains(SUB_PROJECTS)) {
                 task.subProjectJavaRes =
@@ -264,14 +265,22 @@ abstract class MergeJavaResourceTask
     }
 
     companion object {
-        val predicate= Predicate<String> { t ->
-            !t.endsWith(SdkConstants.DOT_CLASS) &&
-                    !t.endsWith(SdkConstants.DOT_NATIVE_LIBS)
+
+        private val excludedFileSuffixes =
+            listOf(SdkConstants.DOT_CLASS, SdkConstants.DOT_NATIVE_LIBS)
+
+        // predicate logic must match patternSet logic below
+        val predicate = Predicate<String> { path ->
+            excludedFileSuffixes.none { path.endsWith(it) }
         }
 
-        val spec: (file: File) -> Boolean = {
-            predicate.test(it.absolutePath)
-        }
+        // patternSet logic must match predicate logic above
+        val patternSet: PatternSet
+            get() {
+                val patternSet = PatternSet()
+                excludedFileSuffixes.forEach { patternSet.exclude("**/*$it") }
+                return patternSet
+            }
     }
 }
 

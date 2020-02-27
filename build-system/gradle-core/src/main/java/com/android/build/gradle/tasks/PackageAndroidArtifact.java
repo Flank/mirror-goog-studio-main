@@ -362,9 +362,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     private static File computeBuildOutputFile(
             VariantOutputImpl variantOutput, File outputDirectory) {
-        return new File(
-                outputDirectory,
-                Objects.requireNonNull(variantOutput.getApkData().getOutputFileName()));
+        return new File(outputDirectory, variantOutput.getOutputFileName().get());
     }
 
     protected ApkCreatorType apkCreatorType;
@@ -415,7 +413,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             parameter
                     .getAndroidResourcesChanged()
                     .set(changedResourceFiles.contains(new File(builtArtifact.getOutputFile())));
-            parameter.getProjectPath().set(getProject().getPath());
+            parameter.getProjectPath().set(getProjectPath().get());
             parameter.getApkCreatorType().set(apkCreatorType);
             parameter.getOutputFile().set(outputFile);
             parameter.getIncrementalFolder().set(getIncrementalFolder());
@@ -752,7 +750,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .build()) {
             packager.updateFiles();
         }
-
         /*
          * Save all used zips in the cache.
          */
@@ -1034,7 +1031,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .forEach(
                             variantOutput -> {
                                 packageAndroidArtifact.apkFileNames.add(
-                                        variantOutput.getApkData().getOutputFileName());
+                                        variantOutput.getOutputFileName().get());
                             });
             // sort strings by natural order to make it stable across executions.
             packageAndroidArtifact.apkFileNames.sort(String::compareTo);
@@ -1113,7 +1110,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             .getProjectOptions()
                             .get(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS)) {
                 creationConfig
-                        .getArtifacts()
+                        .getOperations()
                         .setTaskInputToFinalProduct(
                                 InternalArtifactType.SDK_DEPENDENCY_DATA.INSTANCE,
                                 packageAndroidArtifact.getDependencyDataFile());

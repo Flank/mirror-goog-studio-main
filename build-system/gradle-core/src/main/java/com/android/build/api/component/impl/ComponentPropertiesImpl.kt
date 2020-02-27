@@ -19,14 +19,15 @@ package com.android.build.api.component.impl
 import android.databinding.tool.LayoutXmlProcessor
 import android.databinding.tool.LayoutXmlProcessor.OriginalFileLookup
 import com.android.build.api.artifact.Operations
+import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.ComponentProperties
-import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.baseName
 import com.android.build.api.variant.impl.fullName
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.DependencyConfigurator
@@ -43,18 +44,15 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
-import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR
+import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT
 import com.android.build.gradle.internal.scope.InternalArtifactType.MLKIT_SOURCE_OUT
-import com.android.build.gradle.internal.scope.InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -110,7 +108,7 @@ abstract class ComponentPropertiesImpl(
     override val outputs: VariantOutputList
         get() = VariantOutputList(variantOutputs.toList())
 
-    override val operations: Operations
+    override val operations: OperationsImpl
         get() = artifacts.getOperations()
 
     // ---------------------------------------------------------------------------------------------
@@ -206,7 +204,11 @@ abstract class ComponentPropertiesImpl(
         )
     }
 
-    fun addVariantOutput(apkData: ApkData): VariantOutputImpl {
+    fun addVariantOutput(
+        variantOutputConfiguration: VariantOutputConfigurationImpl,
+        outputFileName: String? = null
+    ): VariantOutputImpl {
+
         // the DSL objects are now locked, if the versionCode is provided, use that
         // otherwise use the lazy manifest reader to extract the value from the manifest
         // file.
@@ -234,25 +236,22 @@ abstract class ComponentPropertiesImpl(
             "$name::versionName"
         )
 
-        val variantOutputConfiguration = VariantOutputConfigurationImpl(
-            apkData.isUniversal,
-            apkData.filters.map { filterData ->
-                FilterConfiguration(
-                    FilterConfiguration.FilterType.valueOf(filterData.filterType),
-                    filterData.identifier)
-            }
-        )
         return VariantOutputImpl(
             versionCodeProperty,
             versionNameProperty,
             variantPropertiesApiServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true, "$name::isEnabled"),
             variantOutputConfiguration,
-            apkData.baseName.orEmpty(),
-            apkData.fullName.orEmpty(),
-            apkData.outputFileName.orEmpty(),
-            apkData
+            variantOutputConfiguration.baseName(variantDslInfo),
+            variantOutputConfiguration.fullName(variantDslInfo),
+            variantPropertiesApiServices.newPropertyBackingDeprecatedApi(
+                String::class.java,
+                outputFileName
+                    ?: variantDslInfo.getOutputFileName(
+                        globalScope.archivesBaseName,
+                        variantOutputConfiguration.baseName(variantDslInfo)
+                    ),
+                "$name::archivesBaseName")
         ).also {
-            apkData.variantOutput = it
             variantOutputs.add(it)
         }
     }
@@ -400,15 +399,7 @@ abstract class ComponentPropertiesImpl(
         // First the actual source folders.
         val providers = variantSources.sortedSourceProviders
         for (provider in providers) {
-            sourceSets.addAll((provider as AndroidSourceSet).java.sourceDirectoryTrees)
-        }
-
-        // then all the generated src folders.
-        if (variantPropertiesApiServices.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
-            val rClassSource = artifacts.getFinalProduct(NOT_NAMESPACED_R_CLASS_SOURCES)
-            if (rClassSource.isPresent) {
-                sourceSets.add(project.fileTree(rClassSource).builtBy(rClassSource))
-            }
+            sourceSets.addAll((provider as AndroidSourceSet).java.getSourceDirectoryTrees())
         }
 
         // for the other, there's no duplicate so no issue.
@@ -458,10 +449,7 @@ abstract class ComponentPropertiesImpl(
         val project = globalScope.project
         var mainCollection: FileCollection = variantPropertiesApiServices.fileCollection()
         if (globalScope.extension.aaptOptions.namespaced) {
-            val namespacedRClassJar =
-                artifacts.getFinalProduct(
-                    COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
-                )
+            val namespacedRClassJar = artifacts.getFinalProduct(COMPILE_R_CLASS_JAR)
             val fileTree =
                 project.fileTree(namespacedRClassJar).builtBy(namespacedRClassJar)
             mainCollection = mainCollection.plus(fileTree)
@@ -473,7 +461,7 @@ abstract class ComponentPropertiesImpl(
             testedConfig?.let {
                 mainCollection = project.files(
                     mainCollection,
-                    it.artifacts.getFinalProduct(COMPILE_ONLY_NAMESPACED_R_CLASS_JAR).get()
+                    it.artifacts.getFinalProduct(COMPILE_R_CLASS_JAR).get()
                 )
             }
         } else {
@@ -489,7 +477,7 @@ abstract class ComponentPropertiesImpl(
                     if (buildFeatures.androidResources) {
                         val rJar =
                             artifacts.getFinalProduct(
-                                COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR
+                                COMPILE_R_CLASS_JAR
                             )
                         mainCollection = project.files(rJar)
                     }
@@ -505,19 +493,16 @@ abstract class ComponentPropertiesImpl(
                     mainCollection = project.files(rJar)
                 }
             } else { // Android test or unit test
-                if (!variantPropertiesApiServices.projectOptions[BooleanOption.GENERATE_R_JAVA]
-                ) {
-                    val rJar: Provider<RegularFile>
-                    if (variantType === VariantTypeImpl.ANDROID_TEST) {
-                        rJar =
-                            artifacts.getFinalProduct(
-                                COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-                            )
-                    } else {
-                        rJar = variantScope.rJarForUnitTests
-                    }
-                    mainCollection = project.files(rJar)
+                val rJar: Provider<RegularFile>
+                if (variantType === VariantTypeImpl.ANDROID_TEST) {
+                    rJar =
+                        artifacts.getFinalProduct(
+                            COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
+                        )
+                } else {
+                    rJar = variantScope.rJarForUnitTests
                 }
+                mainCollection = project.files(rJar)
             }
         }
         return mainCollection

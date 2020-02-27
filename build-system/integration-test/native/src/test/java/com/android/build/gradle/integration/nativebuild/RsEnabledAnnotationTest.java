@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
-import static com.android.testutils.truth.MoreTruth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
@@ -48,9 +47,13 @@ public class RsEnabledAnnotationTest {
     }
 
     @Test
-    public void checkExtractAnnotation() throws IOException {
+    public void checkExtractAnnotation() throws Exception {
         // check the resulting .aar file to ensure annotations.zip inclusion.
-        assertThat(project.getAar("debug")).contains("annotations.zip");
-        assertThat(project.getAar("debug")).doesNotContain("libs/renderscript-v8.zip");
+        project.testAar(
+                "debug",
+                it -> {
+                    it.contains("annotations.zip");
+                    it.doesNotContain("libs/renderscript-v8.zip");
+                });
     }
 }

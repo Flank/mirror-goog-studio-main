@@ -71,5 +71,9 @@ enum class AndroidPathType {
     /**
      * A shader folder.
      */
-    SHADERS
+    SHADERS,
+    /**
+     * Machine learning models folder.
+     */
+    ML_MODELS,
 }

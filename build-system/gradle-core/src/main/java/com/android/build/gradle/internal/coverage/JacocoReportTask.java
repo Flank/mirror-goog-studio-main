@@ -214,7 +214,7 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
             task.jacocoClasspath = jacocoAntConfiguration;
 
             creationConfig
-                    .getArtifacts()
+                    .getOperations()
                     .setTaskInputToFinalProduct(
                             InternalArtifactType.CODE_COVERAGE.INSTANCE,
                             task.getCoverageDirectories());

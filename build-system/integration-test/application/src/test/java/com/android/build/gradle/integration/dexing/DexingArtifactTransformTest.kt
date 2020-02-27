@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.dexing
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.internal.dependency.DexingNoClasspathTransform
@@ -358,7 +359,7 @@ class DexingArtifactTransformTest {
         assertThat(projectFile.listFiles()!!.first().lastModified()).named("project dex timestamp in incremental build that added an external dependency")
             .isEqualTo(projectTimestamp)
 
-        project.getApk(GradleTestProject.ApkType.DEBUG).containsClass("Lcom/google/common/collect/ImmutableList;")
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).containsClass("Lcom/google/common/collect/ImmutableList;")
     }
 
     private fun executor() =

@@ -28,6 +28,7 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.component.impl.UnitTestPropertiesImpl;
 import com.android.build.api.variant.impl.VariantImpl;
+import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
 import com.android.build.api.variant.impl.VariantPropertiesImpl;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
@@ -54,6 +55,7 @@ import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
+import com.google.common.collect.ImmutableList;
 import org.gradle.api.Project;
 
 /** Common superclass for all {@link VariantFactory} implementations. */
@@ -136,7 +138,8 @@ public abstract class BaseVariantFactory<
                                 taskCreationServices,
                                 globalScope);
 
-        unitTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
+        unitTestProperties.addVariantOutput(
+                new VariantOutputConfigurationImpl(false, ImmutableList.of()), null);
 
         return unitTestProperties;
     }
@@ -177,7 +180,8 @@ public abstract class BaseVariantFactory<
                                 taskCreationServices,
                                 globalScope);
 
-        androidTestProperties.addVariantOutput(variantData.getOutputFactory().addMainApk());
+        androidTestProperties.addVariantOutput(
+                new VariantOutputConfigurationImpl(false, ImmutableList.of()), null);
 
         return androidTestProperties;
     }

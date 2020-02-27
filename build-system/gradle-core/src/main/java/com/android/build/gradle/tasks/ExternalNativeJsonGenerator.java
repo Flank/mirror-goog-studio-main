@@ -179,9 +179,10 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull Function<Action<? super ExecSpec>, ExecResult> execOperation,
             @NonNull Function<Action<? super JavaExecSpec>, ExecResult> javaExecOperation) {
         List<Callable<Void>> buildSteps = new ArrayList<>(abis.size());
-        // This is a lazily initialized value that can only be computed from a Gradle managed
+        // These are lazily initialized values that can only be computed from a Gradle managed
         // thread. Compute now so that we don't in the worker threads that we'll be running as.
         variant.getPrefabPackageDirectoryList();
+        variant.getModule().getProject().getPrefabClassPath();
         for (CxxAbiModel abi : abis) {
             buildSteps.add(
                     () ->

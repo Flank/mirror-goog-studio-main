@@ -99,7 +99,7 @@ class PartialRTest {
 
         val rJar = FileUtils.join(
                 project.getSubproject("app").intermediatesDir,
-            "compile_only_namespaced_r_class_jar",
+            "compile_r_class_jar",
             "debug",
             "R.jar")
         assertThat(rJar).exists()

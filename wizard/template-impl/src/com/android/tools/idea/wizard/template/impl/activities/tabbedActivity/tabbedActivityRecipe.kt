@@ -46,12 +46,12 @@ fun RecipeExecutor.tabbedActivityRecipe(
 ) {
   val (projectData, srcOut, resOut, _) = moduleData
   val apis = moduleData.apis
-  val buildApi = apis.buildApi!!
+  val appCompatVersion = apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   addAllKotlinDependencies(moduleData)
-  addDependency("com.android.support:appcompat-v7:${buildApi}.+")
-  addDependency("com.android.support:design:${buildApi}.+")
+  addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
+  addDependency("com.android.support:design:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
   addDependency("android.arch.lifecycle:extensions:+")
 

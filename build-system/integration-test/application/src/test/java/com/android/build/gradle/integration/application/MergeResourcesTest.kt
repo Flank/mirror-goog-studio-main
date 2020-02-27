@@ -31,7 +31,7 @@ import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.android.testutils.apk.Apk
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject.assertThat
-import com.android.testutils.truth.MoreTruth.assertThatZip
+import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.assertTrue
@@ -208,7 +208,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
 
         assertThat(apUnderscore).exists()
         Zip(apUnderscore).use { zip ->
-            assertThatZip(zip).containsFileWithContent(
+            assertThat(zip).containsFileWithContent(
                 "res/raw/me.raw",
                 byteArrayOf(0, 1, 2)
             )
@@ -224,7 +224,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
          * Check that the file has been removed from the intermediates and from the apk.
          */
         assertThat(inIntermediate).doesNotExist()
-        Zip(apUnderscore).use { zip -> assertThatZip(zip).doesNotContain("res/raw/me.raw") }
+        Zip(apUnderscore).use { zip -> assertThat(zip).doesNotContain("res/raw/me.raw") }
     }
 
     @Test

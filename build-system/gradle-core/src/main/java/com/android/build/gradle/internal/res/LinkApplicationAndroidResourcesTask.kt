@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.SdkConstants.FN_RES_BASE
 import com.android.SdkConstants.FN_R_CLASS_JAR
 import com.android.SdkConstants.RES_QUALIFIER_SEP
-import com.android.build.VariantOutput
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
@@ -39,7 +38,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
-import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SplitList
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
@@ -93,7 +91,6 @@ import java.io.File
 import java.io.IOException
 import java.io.Serializable
 import java.util.ArrayList
-import java.util.regex.Pattern
 import javax.inject.Inject
 
 @CacheableTask
@@ -428,14 +425,14 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 )
             }
 
-            task.mainSplit = creationConfig.outputs.getMainSplitOrNull()?.apkData
+            task.mainSplit = creationConfig.outputs.getMainSplitOrNull()
             task.originalApplicationId.setDisallowChanges(project.provider { creationConfig.originalApplicationId })
 
             task.taskInputType = creationConfig.manifestArtifactType
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS, task.aaptFriendlyManifestFiles
             )
-            creationConfig.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
+            creationConfig.operations.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
             task.setType(creationConfig.variantType)
             task.aaptOptions = creationConfig.globalScope.extension.aaptOptions.convert()
@@ -515,23 +512,14 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.handleProvider(taskProvider)
 
-            if (creationConfig.services.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
-                creationConfig.artifacts.producesDir(
-                    InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
+            creationConfig
+                .artifacts
+                .producesFile(
+                    InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                     taskProvider,
-                    LinkApplicationAndroidResourcesTask::sourceOutputDirProperty,
-                    fileName = SdkConstants.FD_RES_CLASS
+                    LinkApplicationAndroidResourcesTask::rClassOutputJar,
+                    FN_R_CLASS_JAR
                 )
-            } else {
-                creationConfig
-                    .artifacts
-                    .producesFile(
-                        InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
-                        taskProvider,
-                        LinkApplicationAndroidResourcesTask::rClassOutputJar,
-                        FN_R_CLASS_JAR
-                    )
-            }
 
             creationConfig.artifacts.producesFile(
                 InternalArtifactType.RUNTIME_SYMBOL_LIST,
@@ -563,7 +551,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
                 )
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 sourceArtifactType.outputType,
                 task.inputResourcesDir
             )
@@ -885,48 +873,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @PathSensitive(PathSensitivity.RELATIVE)
     fun getCompiledDependenciesResources(): FileCollection? {
         return compiledDependenciesResources?.artifactFiles
-    }
-
-    private fun findPackagedResForSplit(outputFolder: File?, apkData: ApkData): File? {
-        val resourcePattern = Pattern.compile(
-            FN_RES_BASE + RES_QUALIFIER_SEP + apkData.fullName + ".ap__(.*)"
-        )
-
-        if (outputFolder == null) {
-            return null
-        }
-        val files = outputFolder.listFiles()
-        if (files != null) {
-            for (file in files) {
-                val match = resourcePattern.matcher(file.name)
-                // each time we match, we remove the associated filter from our copies.
-                if (match.matches()
-                    && !match.group(1).isEmpty()
-                    && isValidSplit(apkData, match.group(1))
-                ) {
-                    return file
-                }
-            }
-        }
-        return null
-    }
-
-    /**
-     * Returns true if the passed split identifier is a valid identifier (valid mean it is a
-     * requested split for this task). A density split identifier can be suffixed with characters
-     * added by aapt.
-     */
-    private fun isValidSplit(apkData: ApkData, splitWithOptionalSuffix: String): Boolean {
-
-        var splitFilter = apkData.getFilter(VariantOutput.FilterType.DENSITY)
-        if (splitFilter != null) {
-            if (splitWithOptionalSuffix.startsWith(splitFilter.identifier)) {
-                return true
-            }
-        }
-        val mangledName = unMangleSplitName(splitWithOptionalSuffix)
-        splitFilter = apkData.getFilter(VariantOutput.FilterType.LANGUAGE)
-        return splitFilter != null && mangledName == splitFilter.identifier
     }
 
     /**

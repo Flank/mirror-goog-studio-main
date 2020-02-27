@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
@@ -34,7 +33,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
-import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -105,13 +103,17 @@ public class OptionalAarTest {
 
     @Test
     public void checkLibDoesNotContainProvidedLibsLayout() throws Exception {
-        Aar aar = project.getSubproject("library").getAar("debug");
-
-        assertThatAar(aar).doesNotContainResource("layout/lib2layout.xml");
-        assertThatAar(aar).textSymbolFile().contains("int layout liblayout");
-        // With the new Compile library R class flow, the text symbol file will contain
-        // provided resources.
-        assertThatAar(aar).textSymbolFile().contains("int layout lib2layout");
+        project.getSubproject("library")
+                .testAar(
+                        "debug",
+                        it -> {
+                            it.doesNotContainResource("layout/lib2layout.xml");
+                            it.textSymbolFile().contains("int layout liblayout");
+                            // With the new Compile library R class flow, the text symbol file will
+                            // contain
+                            // provided resources.
+                            it.textSymbolFile().contains("int layout lib2layout");
+                        });
     }
 
     @Test

@@ -79,6 +79,9 @@ class SourceProviderAdapter(
     override fun getShadersDirectories(): MutableCollection<File> =
         convert(sourceSet[AndroidPathType.SHADERS])
 
+    override fun getMlModelsDirectories(): MutableCollection<File> =
+        convert(sourceSet[AndroidPathType.ML_MODELS])
+
     private fun convert(strings: List<PathString>): MutableCollection<File> {
         return strings.mapNotNull { it.toFile() }.toMutableList()
     }

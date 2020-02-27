@@ -46,12 +46,6 @@ public class MlGeneratedClassTest {
 
     @Before
     public void setUp() throws IOException {
-        // Add model file to assets
-        File modelFile = project.file("src/main/assets/model.tflite");
-        FileUtils.copyFile(
-                TestUtils.getWorkspaceFile("prebuilts/tools/common/mlkit/testData/model.tflite"),
-                modelFile);
-
         File buildFile = project.getBuildFile();
         TestFileUtils.appendToFile(
                 buildFile,
@@ -66,6 +60,29 @@ public class MlGeneratedClassTest {
 
     @Test
     public void testModelClass() throws IOException, InterruptedException, ProcessException {
+        // Add model file to assets
+        File modelFile = project.file("src/main/assets/model.tflite");
+        FileUtils.copyFile(
+                TestUtils.getWorkspaceFile(
+                        "prebuilts/tools/common/mlkit/testData/mobilenet_quant_metadata.tflite"),
+                modelFile);
+
+        project.executor().with(BooleanOption.ENABLE_MLKIT, true).run(":assembleDebug");
+
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        assertThatApk(apk).containsClass("Lcom/android/app/ml/Model;");
+    }
+
+    @Test
+    public void testModelClassWithoutMetadata()
+            throws IOException, InterruptedException, ProcessException {
+        // Add model file to assets
+        File modelFile = project.file("src/main/assets/model.tflite");
+        FileUtils.copyFile(
+                TestUtils.getWorkspaceFile(
+                        "prebuilts/tools/common/mlkit/testData/mobilenet_quant_no_metadata.tflite"),
+                modelFile);
+
         project.executor().with(BooleanOption.ENABLE_MLKIT, true).run(":assembleDebug");
 
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);

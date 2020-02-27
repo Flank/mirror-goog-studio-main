@@ -18,16 +18,15 @@ package com.android.build.gradle.integration.databinding;
 
 import static com.android.build.gradle.integration.common.truth.AarSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
+import static com.android.testutils.truth.DexSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
-import com.android.testutils.truth.MoreTruth;
 import com.google.common.base.Joiner;
 import com.google.common.truth.Truth8;
 import java.util.ArrayList;
@@ -91,12 +90,15 @@ public class DataBindingTest {
         String implClass = "Landroid/databinding/testapp/databinding/ActivityMainBindingImpl;";
         final Apk apk;
         if (myLibrary) {
-            Aar aar = project.getAar("debug");
-            assertThat(aar).containsClass(bindingClass);
-            assertThat(aar).containsClass(implClass);
+            project.testAar(
+                    "debug",
+                    it -> {
+                        it.containsClass(bindingClass);
+                        it.containsClass(implClass);
 
-            assertThat(aar).doesNotContainClass(myDbPkg + "adapters/Converters;");
-            assertThat(aar).doesNotContainClass(myDbPkg + "DataBindingComponent;");
+                        it.doesNotContainClass(myDbPkg + "adapters/Converters;");
+                        it.doesNotContainClass(myDbPkg + "DataBindingComponent;");
+                    });
 
             // also builds the test app
             project.executor().run("assembleDebugAndroidTest");
@@ -105,8 +107,8 @@ public class DataBindingTest {
             assertThat(testApk.getFile()).isFile();
             Optional<Dex> dexOptional = testApk.getMainDexFile();
             Truth8.assertThat(dexOptional).isPresent();
-            MoreTruth.assertThat(dexOptional.get()).containsClass(bindingClass);
-            MoreTruth.assertThat(dexOptional.get()).containsClass(implClass);
+            assertThat(dexOptional.get()).containsClass(bindingClass);
+            assertThat(dexOptional.get()).containsClass(implClass);
             apk = testApk;
         } else {
             apk = project.getApk("debug");

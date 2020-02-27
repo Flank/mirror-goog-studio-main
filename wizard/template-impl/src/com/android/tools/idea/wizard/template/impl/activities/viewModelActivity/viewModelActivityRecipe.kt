@@ -43,7 +43,7 @@ fun RecipeExecutor.viewModelActivityRecipe(
 
   val (projectData, srcOut, resOut, _) = moduleData
   val apis = moduleData.apis
-  val buildApi = apis.buildApi!!
+  val appCompatVersion = apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
@@ -57,7 +57,7 @@ fun RecipeExecutor.viewModelActivityRecipe(
     requireTheme = false, generateActivityTitle = false, useMaterial2 = useMaterial2
   )
 
-  addDependency("com.android.support:appcompat-v7:${buildApi}.+")
+  addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
   addDependency("android.arch.lifecycle:extensions:+")
   if (generateKotlin && useAndroidX) {

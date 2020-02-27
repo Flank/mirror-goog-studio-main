@@ -33,8 +33,7 @@ public class ModelVerifier {
 
         ModelMetadata metadata = extractor.getModelMetaData();
         if (metadata == null) {
-            throw new ModelParsingException(
-                    ErrorType.INVALID_METADATA, "Model doesn't have valid metadata");
+            return;
         }
 
         int inputCount = extractor.getInputTensorCount(0);

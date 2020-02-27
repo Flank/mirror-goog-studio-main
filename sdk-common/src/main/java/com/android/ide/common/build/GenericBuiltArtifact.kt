@@ -16,8 +16,6 @@
 
 package com.android.ide.common.build
 
-import java.nio.file.Path
-
 /**
  * Generic version of the gradle-api BuiltArtifact with all gradle specific types removed.
  */

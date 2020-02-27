@@ -23,7 +23,7 @@ import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.testutils.apk.Aab
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.MoreTruth.assertThat
+import com.android.testutils.truth.DexSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule

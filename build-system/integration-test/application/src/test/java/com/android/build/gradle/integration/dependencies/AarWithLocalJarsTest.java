@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.DexSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -113,7 +113,6 @@ public class AarWithLocalJarsTest {
         // check it contains classes from both the AAR's own code and from the local jar inside the AAR.
         final Optional<Dex> mainDexFile = apk.getMainDexFile();
         Truth8.assertThat(mainDexFile).isPresent();
-        //noinspection OptionalGetWithoutIsPresent
         assertThat(mainDexFile.get())
                 .containsClasses(
                         "Lcom/example/android/multiproject/person/Person;",

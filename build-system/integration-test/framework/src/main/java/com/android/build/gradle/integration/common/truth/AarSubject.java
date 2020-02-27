@@ -35,6 +35,7 @@ import java.nio.file.Path;
 public class AarSubject extends AbstractAndroidSubject<AarSubject, Aar> {
 
     public static Subject.Factory<AarSubject, Aar> aars() {
+        //noinspection resource
         return AarSubject::new;
     }
 
@@ -49,7 +50,8 @@ public class AarSubject extends AbstractAndroidSubject<AarSubject, Aar> {
     }
 
     private void validateAar() {
-        if (actual().getEntry("AndroidManifest.xml") == null) {
+        // only validate if the aar actually exists
+        if (actual().exists() && actual().getEntry("AndroidManifest.xml") == null) {
             failWithoutActual(
                     Fact.simpleFact("Invalid aar, should contain " + "AndroidManifest.xml"));
         }

@@ -20,8 +20,8 @@ import static com.android.build.gradle.internal.api.BaseVariantImpl.TASK_ACCESS_
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.FilterData;
 import com.android.build.VariantOutput;
+import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.api.ApkVariantOutput;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
@@ -67,7 +67,7 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
         if (packageAndroidArtifact != null) {
             return new File(
                     packageAndroidArtifact.getOutputDirectory().get().getAsFile(),
-                    apkData.getOutputFileName());
+                    variantOutput.getOutputFileName().get());
         } else {
             return super.getOutputFile();
         }
@@ -118,12 +118,13 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
 
     @Override
     public String getFilter(VariantOutput.FilterType filterType) {
-        FilterData filterData = apkData.getFilter(filterType);
-        return filterData != null ? filterData.getIdentifier() : null;
+        FilterConfiguration filterConfiguration =
+                variantOutput.getFilter(FilterConfiguration.FilterType.valueOf(filterType.name()));
+        return filterConfiguration != null ? filterConfiguration.getIdentifier() : null;
     }
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("apkData", apkData).toString();
+        return MoreObjects.toStringHelper(this).add("variantOutput", variantOutput).toString();
     }
 }

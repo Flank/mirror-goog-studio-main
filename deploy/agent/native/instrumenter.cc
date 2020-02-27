@@ -153,14 +153,14 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
     return true;
   }
 
-  const Transform activity_thread = Transform(
+  const Transform activity_thread(
       /* target class */ "android/app/ActivityThread",
       /* target method */ "handleDispatchPackageBroadcast",
       /* target signature */ "(I[Ljava/lang/String;)V",
       "handleDispatchPackageBroadcastEntry",
       "handleDispatchPackageBroadcastExit");
 
-  const Transform dex_path_list_element = Transform(
+  const Transform dex_path_list_element(
       /* target class */ "dalvik/system/DexPathList$Element",
       /* target method */ "findResource",
       /* target signature */ "(Ljava/lang/String;)Ljava/net/URL;",

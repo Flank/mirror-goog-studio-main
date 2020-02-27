@@ -1171,7 +1171,7 @@ public class Main {
                 }
             }
 
-            if (file.isAbsolute()) {
+            if (!file.isAbsolute()) {
                 file = file.getAbsoluteFile();
             }
         }

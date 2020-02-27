@@ -51,6 +51,9 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
         globalScope.project.objects.directoryProperty()
     private val annotationProcessorOutputDirectory =
         globalScope.project.objects.directoryProperty()
+    private val annotationProcessorOutputLocation =
+        componentProperties.artifacts.getOperations()
+            .getOutputDirectory(AP_GENERATED_SOURCES, "out")
     private val bundleArtifactFolderForDataBinding =
         globalScope.project.objects.directoryProperty()
 
@@ -86,14 +89,10 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
             fileName = "classes"
         )
 
-        annotationProcessorOutputDirectory.set(
-            artifacts.getOperations().getOutputDirectory(AP_GENERATED_SOURCES)
-        )
-        artifacts.producesDir(
-            AP_GENERATED_SOURCES,
-            taskProvider,
-            { annotationProcessorOutputDirectory }
-        )
+        artifacts.getOperations()
+            .setInitialProvider(taskProvider) { annotationProcessorOutputDirectory }
+            .atLocation(annotationProcessorOutputLocation.path)
+            .on(AP_GENERATED_SOURCES)
 
         // Data binding artifact is one of the annotation processing outputs, only if kapt is not
         // configured.
@@ -116,7 +115,7 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
         task.configureProperties(componentProperties)
         task.configurePropertiesForAnnotationProcessing(
             componentProperties,
-            annotationProcessorOutputDirectory
+            annotationProcessorOutputLocation
         )
 
         // Wrap sources in Callable to evaluate them just before execution, b/117161463.
@@ -154,9 +153,9 @@ private fun JavaCompile.handleAnnotationProcessors(
     processorListFile: Provider<RegularFile>,
     variantName: String
 ) {
+    val hasKapt = this.project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
+    val projectPath = this.project.path
     doFirst {
-        val hasKapt = this.project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
-
         val annotationProcessors =
             readAnnotationProcessorsFromJsonFile(processorListFile.get().asFile)
         val nonIncrementalAPs =
@@ -178,7 +177,7 @@ private fun JavaCompile.handleAnnotationProcessors(
         // instead of JavaPreCompileTask as it needs to be done even in incremental builds where
         // JavaPreCompileTask may be UP-TO-DATE.
         recordAnnotationProcessorsForAnalytics(
-            annotationProcessors, project.path, variantName
+            annotationProcessors, projectPath, variantName
         )
     }
 }

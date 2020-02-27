@@ -239,7 +239,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
             task.ndkLocation =
                     creationConfig.getGlobalScope().getSdkComponents().getNdkFolderProvider();
             creationConfig
-                    .getArtifacts()
+                    .getOperations()
                     .setTaskInputToFinalProduct(MERGED_SHADERS.INSTANCE, task.getSourceDir());
             task.setDefaultArgs(variantDslInfo.getDefaultGlslcArgs());
             task.setScopedArgs(variantDslInfo.getScopedGlslcArgs());

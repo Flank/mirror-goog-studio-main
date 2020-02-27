@@ -18,6 +18,7 @@ package com.android.tools.lint.detector.api
 
 import com.android.tools.lint.checks.AbstractCheckTest
 import com.android.tools.lint.client.api.UElementHandler
+import com.android.tools.lint.detector.api.Context.Companion.isSuppressedWithComment
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.getValueIfStringLiteral
@@ -38,6 +39,34 @@ class ContextTest : AbstractCheckTest() {
             ).indented(),
             gradle("")
         ).issues(TEST_ISSUE).run().expectClean()
+    }
+
+    fun testSuppressLine() {
+        // Issue id
+        assertFalse(isSuppressedWithComment("", TEST_ISSUE))
+        assertFalse(isSuppressedWithComment("A_TestIssueId", TEST_ISSUE))
+        assertFalse(isSuppressedWithComment("_TestIssueIdB", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("_TestIssueId", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("_TestIssueIdFooBar,_TestIssueId", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("/**@noinspection _TestIssueId*/", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("[@noinspection _TestIssueId]", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("<!--noinspection _TestIssueId-->", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment(" _TestIssueId ", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment(" _testissueid ", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("A, _TestIssueId", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("_TestIssueId, B", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("A, _TestIssueId, B", TEST_ISSUE))
+
+        // Category
+        assertFalse(isSuppressedWithComment("AMessages", TEST_ISSUE))
+        assertFalse(isSuppressedWithComment("MessagesB", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("Messages", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment(" Messages ", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("Correctness", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("Correctness:Messages", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("A,Messages", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("Messages,B", TEST_ISSUE))
+        assertTrue(isSuppressedWithComment("A, Messages, B", TEST_ISSUE))
     }
 
     fun testSuppressObjectAnnotation() {

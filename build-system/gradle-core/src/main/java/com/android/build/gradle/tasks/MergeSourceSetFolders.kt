@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SingleArtifactType
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.SourceProvider
@@ -78,6 +79,11 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val shadersOutputDir: DirectoryProperty
+
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val mlModelsOutputDir: DirectoryProperty
 
     @get:Input
     @get:Optional
@@ -238,6 +244,7 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
         val assetSets = assetSets.get()
         if (!shadersOutputDir.isPresent
+            && !mlModelsOutputDir.isPresent
             && ignoreAssets == null
             && libraryCollection == null
         ) {
@@ -270,6 +277,10 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
             if (shadersOutputDir.isPresent) {
                 generatedAssetFolders.add(shadersOutputDir.get().asFile)
+            }
+
+            if (mlModelsOutputDir.isPresent) {
+                generatedAssetFolders.add(mlModelsOutputDir.get().asFile)
             }
 
             // add the generated files to the main set.
@@ -350,9 +361,14 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
 
             task.sourceFolderInputs.from(Callable { variantSources.getSourceFiles(assetDirFunction) })
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.SHADER_ASSETS,
                 task.shadersOutputDir
+            )
+
+            creationConfig.operations.setTaskInputToFinalProduct(
+                InternalArtifactType.MERGED_ML_MODELS,
+                task.mlModelsOutputDir
             )
 
             val options = creationConfig.globalScope.extension.aaptOptions
@@ -458,6 +474,45 @@ abstract class MergeSourceSetFolders : IncrementalTask() {
             })
             task.assetSets.disallowChanges()
             task.sourceFolderInputs.from(Callable { variantSources.getSourceFiles(assetDirFunction) })
+        }
+    }
+
+    class MergeMlModelsSourceFoldersCreationAction(componentProperties: ComponentPropertiesImpl) :
+        CreationAction(componentProperties) {
+
+        override val name: String
+            get() = computeTaskName("merge", "MlModels")
+
+        override fun handleProvider(
+            taskProvider: TaskProvider<out MergeSourceSetFolders>
+        ) {
+            super.handleProvider(taskProvider)
+            creationConfig
+                .artifacts
+                .producesDir(
+                    InternalArtifactType.MERGED_ML_MODELS,
+                    taskProvider,
+                    MergeSourceSetFolders::outputDir,
+                    fileName = "out"
+                )
+        }
+
+        override fun configure(
+            task: MergeSourceSetFolders
+        ) {
+            super.configure(task)
+
+            val variantSources = creationConfig.variantSources
+            val mlModelsDirFunction =
+                Function<SourceProvider, Collection<File>> { it.mlModelsDirectories }
+            task.assetSets.setDisallowChanges(creationConfig.globalScope.project.provider {
+                variantSources.getSourceFilesAsAssetSets(mlModelsDirFunction)
+            })
+            task.sourceFolderInputs.from(Callable {
+                variantSources.getSourceFiles(
+                    mlModelsDirFunction
+                )
+            })
         }
     }
 }

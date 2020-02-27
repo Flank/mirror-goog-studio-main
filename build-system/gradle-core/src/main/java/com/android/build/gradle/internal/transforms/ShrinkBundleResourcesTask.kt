@@ -198,9 +198,9 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val artifacts = creationConfig.artifacts
+            val operations = creationConfig.operations
 
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                 InternalArtifactType.LINKED_RES_FOR_BUNDLE,
                 task.uncompressedResources
             )
@@ -208,20 +208,20 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
 
             task.dex = creationConfig.globalScope.project.files(
                 if (creationConfig.variantScope.consumesFeatureJars()) {
-                    artifacts.getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX)
+                    creationConfig.artifacts.getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX)
                 } else {
-                    artifacts.getOperations().getAll(MultipleArtifactType.DEX)
+                    operations.getAll(MultipleArtifactType.DEX)
                 })
 
             if (creationConfig
                     .services.projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]
             ) {
-                artifacts.setTaskInputToFinalProduct(
+                operations.setTaskInputToFinalProduct(
                     InternalArtifactType.RUNTIME_SYMBOL_LIST,
                     task.rTxtFile
                 )
             } else {
-                artifacts.setTaskInputToFinalProduct(
+                operations.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                     task.lightRClasses
                 )
@@ -232,15 +232,15 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                     .projectOptions[BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING]
             )
 
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES,
                 task.resourceDir)
 
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                 InternalArtifactType.APK_MAPPING,
                 task.mappingFileSrc)
 
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,
                 task.mergedManifests)
         }

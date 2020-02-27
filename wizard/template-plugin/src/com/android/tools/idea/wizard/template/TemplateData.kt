@@ -41,7 +41,7 @@ enum class Language(val string: String, val extension: String) {
 data class ApiTemplateData(
   val minApi: String,
   val minApiLevel: Version,
-  val buildApi: Version?,
+  val appCompatVersion: Int,
   val targetApi: Version,
   /** Not null only if it is unreleased yet API. */
   val targetApiString: String? = null,

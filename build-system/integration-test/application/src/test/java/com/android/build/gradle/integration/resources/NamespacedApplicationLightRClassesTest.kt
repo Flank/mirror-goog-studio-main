@@ -93,7 +93,7 @@ class NamespacedApplicationLightRClassesTest {
         val libFiles = project.getSubproject("lib")
         assertThat(
             libFiles.getIntermediateFile(
-                "compile_only_namespaced_r_class_jar",
+                "compile_r_class_jar",
                 "debug",
                 "R.jar")).exists()
 
@@ -129,7 +129,7 @@ class NamespacedApplicationLightRClassesTest {
         val appFiles = project.getSubproject("app")
         assertThat(
             appFiles.getIntermediateFile(
-                "compile_only_namespaced_r_class_jar",
+                "compile_r_class_jar",
                 "debug",
                 "R.jar")).exists()
 

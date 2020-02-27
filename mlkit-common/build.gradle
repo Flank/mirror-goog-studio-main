@@ -5,8 +5,10 @@ dependencies {
     implementation libs.flatbuffers
     implementation libs.tensorflow_lite_support
 
+    testCompile project(':base:testutils')
     testCompile libs.junit
     testCompile libs.apache_commons_io
+    testCompile libs.mockito_core
 }
 
 

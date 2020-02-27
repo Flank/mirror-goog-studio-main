@@ -107,9 +107,7 @@ abstract class AssetPackPreBundleTask : NonIncrementalTask() {
             task: AssetPackPreBundleTask
         ) {
             super.configure(task)
-            val artifacts = creationConfig.artifacts
-
-            artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.LINKED_RES_FOR_ASSET_PACK, task.manifestFiles)
 
             task.assetsFiles.from(assetFileCollection)

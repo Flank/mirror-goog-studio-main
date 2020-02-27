@@ -38,7 +38,7 @@ public class NativeSoPackagingDirectSubprojectAarTest {
             GradleTestProject.builder().fromTestApp(HelloWorldLibraryApp.create()).create();
 
     @Before
-    public void setUp() throws IOException, InterruptedException {
+    public void setUp() throws Exception {
         // Create an .so file in the library
         GradleTestProject lib = project.getSubproject(":lib");
         File soLib = lib.file("src/main/jniLibs/x86/libfoo.so");
@@ -48,14 +48,19 @@ public class NativeSoPackagingDirectSubprojectAarTest {
         // Create a new subproject that directly publish the aar built by :lib
         File buildFile = project.file("directLib/build.gradle");
         FileUtils.mkdirs(buildFile.getParentFile());
-        Files.write(
-                buildFile.toPath(),
-                ("configurations.create('default')\n"
-                                + "artifacts.add('default', file('"
-                                + FileUtils.toSystemIndependentPath(
-                                        lib.getAar("debug").getFile().toString())
-                                + "'))")
-                        .getBytes(StandardCharsets.UTF_8));
+
+        lib.getAar(
+                "debug",
+                it -> {
+                    Files.write(
+                            buildFile.toPath(),
+                            ("configurations.create('default')\n"
+                                            + "artifacts.add('default', file('"
+                                            + FileUtils.toSystemIndependentPath(
+                                                    it.getFile().toString())
+                                            + "'))")
+                                    .getBytes(StandardCharsets.UTF_8));
+                });
         TestFileUtils.appendToFile(project.file("settings.gradle"), "include 'directLib'\n");
 
         // Rewrite app project to depend on directLib.

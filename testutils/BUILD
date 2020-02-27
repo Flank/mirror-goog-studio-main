@@ -19,6 +19,8 @@ iml_module(
         "//tools/idea/.idea/libraries:jimfs[test]",
         "//tools/idea/.idea/libraries:asm-tools[test]",
         "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8[test]",
+        "//tools/idea/.idea/libraries:jsr305[test]",
+        "//tools/idea/.idea/libraries:javax.annotation-api[test]",
     ],
 )
 
@@ -52,6 +54,7 @@ kotlin_library(
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
+    lint_baseline = "lint_baseline.xml",
     pom = ":pom",
     resource_strip_prefix = "tools/base/testutils",
     visibility = ["//visibility:public"],
@@ -84,6 +87,7 @@ kotlin_test(
     ]),
     data = ["//prebuilts/studio/sdk:platforms/latest"] + glob(["src/test/data/**"]),
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
+    lint_baseline = "lint_baseline_tests.xml",
     resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
     deps = [

@@ -147,7 +147,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.STATIC_LIBRARY_MANIFEST,
                 task.manifestFile
             )
@@ -167,7 +167,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                             AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
 
             creationConfig.onTestedConfig {
-                it.artifacts.setTaskInputToFinalProduct(
+                it.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.RES_STATIC_LIBRARY,
                     task.tested
                 )

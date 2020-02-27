@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.resources
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -89,9 +90,10 @@ class MergeJavaResourceTaskTest {
     @Test
     fun ensureJavaResIsNotRunningWhenOnlyNativeLibsChange() {
         project.execute("assembleDebug")
-        val newSourceFile = File(project.mainJavaResDir, "com/android/tests/basic/library.so")
-        assertThat(newSourceFile.exists()).isFalse()
-        FileUtils.writeToFile(newSourceFile, "some_native_lib".trimIndent())
+        val newNativeLib = File(project.mainJniLibsDir, "x86/library.so")
+        assertThat(newNativeLib).doesNotExist()
+        FileUtils.writeToFile(newNativeLib, "some_native_lib")
+        assertThat(newNativeLib).exists()
         val gradleBuildResult = project.executor().run("assembleDebug")
         val javaResTask = gradleBuildResult.findTask(":mergeDebugJavaResource")
         assertThat(javaResTask?.wasUpToDate()).isTrue()

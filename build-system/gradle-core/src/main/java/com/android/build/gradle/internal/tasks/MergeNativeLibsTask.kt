@@ -42,6 +42,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.util.PatternSet
 import java.io.File
 import java.util.function.Predicate
 import javax.inject.Inject
@@ -53,12 +54,8 @@ import javax.inject.Inject
 abstract class MergeNativeLibsTask
 @Inject constructor(objects: ObjectFactory) : IncrementalTask() {
 
-    // PathSensitivity.ABSOLUTE necessary here because of incorrect incremental info from Gradle
-    // when using RELATIVE or NAME_ONLY: https://github.com/gradle/gradle/issues/9320, and we can't
-    // use @Classpath because we need support for changing .so file names. A better solution will be
-    // custom snapshots from gradle: https://github.com/gradle/gradle/issues/8503
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val projectNativeLibs: ConfigurableFileCollection
 
     @get:Classpath
@@ -87,7 +84,8 @@ abstract class MergeNativeLibsTask
     // The runnable implementing the processing is not able to deal with fine-grained file but
     // instead is expecting directories of files. Use the unfiltered collection (since the filtering
     // changes the FileCollection of directories into a FileTree of files) to process, but don't
-    // use it as an input, it's covered by the [projectNativeLibs] above.
+    // use it as a task input, it's covered by the [projectNativeLibs] above. This is a workaround
+    // for the lack of gradle custom snapshotting: https://github.com/gradle/gradle/issues/8503.
     @get:Internal
     abstract val unfilteredProjectNativeLibs: ConfigurableFileCollection
 
@@ -184,7 +182,8 @@ abstract class MergeNativeLibsTask
                 .disallowChanges()
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
 
-            task.projectNativeLibs.from(getProjectNativeLibs(creationConfig).asFileTree.filter(spec))
+            task.projectNativeLibs
+                .from(getProjectNativeLibs(creationConfig).asFileTree.matching(patternSet))
                 .disallowChanges()
 
             if (mergeScopes.contains(SUB_PROJECTS)) {
@@ -203,12 +202,22 @@ abstract class MergeNativeLibsTask
     }
 
     companion object {
-        val predicate = Predicate<String> { filename ->
-            filename.endsWith(SdkConstants.DOT_NATIVE_LIBS)
-                    || SdkConstants.FN_GDBSERVER == filename
-                    || SdkConstants.FN_GDB_SETUP == filename
+
+        private const val includedFileSuffix = SdkConstants.DOT_NATIVE_LIBS
+        private val includedFileNames = listOf(SdkConstants.FN_GDBSERVER, SdkConstants.FN_GDB_SETUP)
+
+        // predicate logic must match patternSet logic below
+        val predicate = Predicate<String> { fileName ->
+            fileName.endsWith(includedFileSuffix) || includedFileNames.any { it == fileName }
         }
-        val spec: (file: File) -> Boolean = { predicate.test(it.name) }
+
+        // patternSet logic must match predicate logic above
+        val patternSet: PatternSet
+            get() {
+                val patternSet = PatternSet().include("**/*$includedFileSuffix")
+                includedFileNames.forEach { patternSet.include("**/$it") }
+                return patternSet
+            }
     }
 }
 

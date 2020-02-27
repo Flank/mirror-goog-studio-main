@@ -92,7 +92,7 @@ public class ProfilerToBenchmarkAdapter {
     // constant term and StdDev or MAD coeffecient. This is a much tighter threshold than the
     // DEFAULT_ANALYZER.
     @NonNull
-    private static final Analyzer TOTAL_BUILD_TIME_ANALYZER =
+    static final Analyzer TOTAL_BUILD_TIME_ANALYZER =
             new WindowDeviationAnalyzer.Builder()
                     .setMetricAggregate(Analyzer.MetricAggregate.MEDIAN)
                     .setRunInfoQueryLimit(100)

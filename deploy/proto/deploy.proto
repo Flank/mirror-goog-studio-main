@@ -41,20 +41,23 @@ message OverlaySwapRequest {
   repeated ClassDef new_classes = 3;
   repeated ClassDef modified_classes = 4;
 
+  // The resources to be overlaid.
+  repeated OverlayFile resource_overlays = 5;
+
   // The id that should be used for the persistent overlay.
-  string overlay_id = 5;
+  string overlay_id = 6;
 
   // The id that is expected for the existing overlay.
-  string expected_overlay_id = 6;
+  string expected_overlay_id = 7;
 
   // The processes to code swap.
-  repeated int32 process_ids = 7;
+  repeated int32 process_ids = 8;
 
   // The number of extra agents that the server should wait for.
   // Those are agents that the server is not responsible to start.
-  int32 extra_agents = 8;
+  int32 extra_agents = 9;
 
-  Arch arch = 9;
+  Arch arch = 10;
 }
 
 message ClassDef {

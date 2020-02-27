@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
@@ -99,6 +100,7 @@ public class DesugarAppWithDesugarToolTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 String.format(
+                        Locale.US,
                         "\n" + "android.defaultConfig.minSdkVersion %d\n",
                         MIN_SUPPORTED_API_TRY_WITH_RESOURCES - 1));
         getProjectExecutor().run("assembleDebug", "assembleDebugAndroidTest");
@@ -118,6 +120,7 @@ public class DesugarAppWithDesugarToolTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 String.format(
+                        Locale.US,
                         "\n" + "android.defaultConfig.minSdkVersion %d\n",
                         MIN_SUPPORTED_API_TRY_WITH_RESOURCES));
         getProjectExecutor().run("assembleDebug");

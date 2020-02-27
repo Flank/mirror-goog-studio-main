@@ -128,12 +128,11 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out LibraryJniLibsTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                artifactType = artifactType,
-                taskProvider = taskProvider,
-                productProvider = LibraryJniLibsTask::outputDirectory,
-                fileName = SdkConstants.FD_JNI
-            )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                LibraryJniLibsTask::outputDirectory
+            ).withName(SdkConstants.FD_JNI)
+                .on(artifactType)
         }
 
         override fun configure(

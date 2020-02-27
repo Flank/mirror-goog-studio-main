@@ -24,6 +24,7 @@ import com.android.build.api.artifact.ReplaceRequest
 import com.android.build.api.artifact.TaskBasedOperations
 import com.android.build.api.artifact.TransformRequest
 import com.android.build.gradle.internal.scope.getOutputDirectory
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
@@ -178,6 +179,34 @@ class OperationsImpl(
             property(it).set(type.getOutputDirectory(buildDirectory, identifier, taskProvider.name))
         }
         artifactContainer.addInitialProvider(taskProvider.flatMap { property(it) })
+    }
+
+    /**
+     * Sets a [Property] value to the final producer for the given artifact type.
+     *
+     * If there are more than one producer appending artifacts for the passed type, calling this
+     * method will generate an error and [setTaskInputToFinalProducts] should be used instead.
+     *
+     * The simplest way to use the mechanism is as follow :
+     * <pre>
+     *     abstract class MyTask: Task() {
+     *          @InputFile
+     *          abstract val inputFile: RegularFileProperty
+     *     }
+     *
+     *     val myTaskProvider = taskFactory.register("myTask", MyTask::class.java) {
+     *          scope.operations.setTaskInputToFinalProduct(InternalArtifactTYpe.SOME_ID, it.inputFile)
+     *     }
+     * </pre>
+     *
+     * @param artifactType requested artifact type
+     * @param taskInputProperty the [Property] to set the final producer on.
+     */
+    fun <T: FileSystemLocation, ARTIFACT_TYPE> setTaskInputToFinalProduct(
+        artifactType: ARTIFACT_TYPE, taskInputProperty: Property<T>)
+            where ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Single {
+        val finalProduct = get(artifactType)
+        taskInputProperty.setDisallowChanges(finalProduct)
     }
 
     internal fun <ARTIFACT_TYPE, FILE_TYPE> copy(

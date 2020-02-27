@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.desugar;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.builder.core.DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -31,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Locale;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -49,7 +49,7 @@ public class DesugarLibraryWithDesugarToolTest {
     }
 
     @Test
-    public void testUsingJava8() throws IOException, InterruptedException, ProcessException {
+    public void testUsingJava8() throws Exception {
         enableDesugar();
         Files.write(
                 project.getMainSrcDir().toPath().resolve("com/example/helloworld/Data.java"),
@@ -62,7 +62,11 @@ public class DesugarLibraryWithDesugarToolTest {
                         "    default void defaultMethod () {}",
                         "}"));
         project.executor().with(BooleanOption.ENABLE_D8_DESUGARING, false).run("assembleDebug");
-        assertThatAar(project.getAar("debug")).containsClass("Lcom/example/helloworld/Data;");
+        project.testAar(
+                "debug",
+                it -> {
+                    it.containsClass("Lcom/example/helloworld/Data;");
+                });
     }
 
     @Test
@@ -72,6 +76,7 @@ public class DesugarLibraryWithDesugarToolTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 String.format(
+                        Locale.US,
                         "\n" + "android.defaultConfig.minSdkVersion %d\n",
                         MIN_SUPPORTED_API_TRY_WITH_RESOURCES - 1));
         project.executor()

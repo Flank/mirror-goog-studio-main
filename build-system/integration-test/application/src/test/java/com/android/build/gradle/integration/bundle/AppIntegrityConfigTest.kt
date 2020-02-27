@@ -20,10 +20,9 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
-import com.android.testutils.truth.ZipFileSubject
+import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
-import com.google.common.truth.Truth
-import org.junit.Before
+
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -47,8 +46,10 @@ class AppIntegrityConfigTest {
         project.execute(":bundleDebug")
         val bundleFile = getBundleFile()
         FileSubject.assertThat(bundleFile).exists()
-        ZipFileSubject.assertThatZip(bundleFile)
-            .contains("/BUNDLE-METADATA/com.google.play.apps.integrity/AppIntegrityConfig.pb")
+        Zip(bundleFile).use {
+            assertThat(it)
+                .contains("/BUNDLE-METADATA/com.google.play.apps.integrity/AppIntegrityConfig.pb")
+        }
     }
 
     private fun getBundleFile(): File {

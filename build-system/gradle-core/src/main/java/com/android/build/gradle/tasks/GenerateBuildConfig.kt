@@ -248,7 +248,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             task.sourceOutputDir = creationConfig.paths.buildConfigSourceOutputDir
 
             if (creationConfig.variantType.isTestComponent) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
+                creationConfig.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.MERGED_MANIFESTS, task.mergedManifests
                 )
             }

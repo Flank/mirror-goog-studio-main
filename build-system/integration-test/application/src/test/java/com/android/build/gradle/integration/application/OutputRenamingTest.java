@@ -58,8 +58,8 @@ public class OutputRenamingTest {
                         + "applicationVariants.all { variant ->\n"
                         + "    // Custom APK names (do not do this for 'dev' build type)\n"
                         + "    println variant.buildType.name\n"
-                        + "    def baseFileName = \"project-${variant.flavorName}-${variant.versionCode}-${variant.buildType.name}\"\n"
                         + "    variant.outputs.all { output -> \n"
+                        + "      def baseFileName = \"project-${variant.flavorName}-${output.versionCode}-${variant.buildType.name}\"\n"
                         + "      output.outputFileName = \"${baseFileName}-${output.getFilter(com.android.build.VariantOutput.FilterType.DENSITY)}-signed.apk\"\n"
                         + "    }\n"
                         + "  }\n"
@@ -118,7 +118,9 @@ public class OutputRenamingTest {
                             .orElse("null");
 
             String expectedFileName =
-                    "project--12-"
+                    "project--"
+                            + builtArtifact.getVersionCode()
+                            + "-"
                             + buildType.toLowerCase(Locale.ENGLISH)
                             + "-"
                             + filterValue

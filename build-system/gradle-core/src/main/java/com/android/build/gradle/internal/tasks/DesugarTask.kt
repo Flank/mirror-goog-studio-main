@@ -211,7 +211,7 @@ abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
                     AndroidArtifacts.ArtifactType.CLASSES_JAR
                 )
             )
-            creationConfig.artifacts.setTaskInputToFinalProduct(
+            creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.FIXED_STACK_FRAMES,
                 task.externaLibsClasses
             )

@@ -18,6 +18,7 @@ package com.android.build.gradle
 import com.android.annotations.NonNull
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.BuildFeatures
+import com.android.build.api.dsl.ComposeOptions
 import com.android.build.api.dsl.DynamicFeatureExtension
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.dsl.TestExtension
@@ -35,8 +36,6 @@ import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.AdbOptions
 import com.android.build.gradle.internal.dsl.BuildType
-import com.android.build.gradle.internal.dsl.ComposeOptions
-import com.android.build.gradle.internal.dsl.ComposeOptionsImpl
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.DexOptions
@@ -116,10 +115,8 @@ abstract class BaseExtension protected constructor(
     private val testServerList: MutableList<TestServer> = Lists.newArrayList()
     private val transformList: MutableList<Transform> = Lists.newArrayList()
 
-    @Incubating
     @get:Incubating
-    val composeOptions: ComposeOptions =
-        dslServices.newInstance(ComposeOptionsImpl::class.java)
+    abstract val composeOptions: ComposeOptions
 
     abstract override val dataBinding: DataBindingOptions
     abstract val viewBinding: ViewBindingOptions
@@ -317,20 +314,10 @@ abstract class BaseExtension protected constructor(
         flavorDimensionList.addAll(dimensions)
     }
 
-    /**
-     * Encapsulates source set configurations for all variants.
-     *
-     * Note that the Android plugin uses its own implementation of source sets. For more
-     * information about the properties you can configure in this block, see [AndroidSourceSet].
-     */
     fun sourceSets(action: Action<NamedDomainObjectContainer<AndroidSourceSet>>) {
         checkWritability()
         sourceSetManager.executeAction(action)
     }
-
-    override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
-        get() = sourceSetManager.sourceSetsContainer
-
 
     fun aaptOptions(action: Action<AaptOptions>) {
         checkWritability()
@@ -631,6 +618,8 @@ abstract class BaseExtension protected constructor(
 
     abstract override val signingConfigs: NamedDomainObjectContainer<SigningConfig>
     abstract fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
+
+    abstract override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
 
     abstract override val splits: Splits
 

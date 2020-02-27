@@ -19,10 +19,8 @@ package com.android.build.api.variant.impl
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.VariantOutputConfiguration
-import com.android.build.gradle.internal.scope.ApkData
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import java.io.File
 import java.io.Serializable
 
@@ -43,9 +41,7 @@ data class VariantOutputImpl(
     @get:Input
     val fullName: String,
     @get:Input
-    val outputFileName: String,
-    @get:Internal
-    val apkData: ApkData /* remove once all tasks started using public API to load output.json */
+    val outputFileName: Property<String>
 ) : VariantOutput, VariantOutputConfiguration by variantOutputConfiguration {
 
     data class SerializedForm(
@@ -87,7 +83,7 @@ data class VariantOutputImpl(
         variantOutputConfiguration = variantOutputConfiguration,
         fullName = fullName,
         baseName = baseName,
-        outputFileName = outputFileName)
+        outputFileName = outputFileName.get())
 
     fun getFilter(filterType: FilterConfiguration.FilterType): FilterConfiguration? =
         filters.firstOrNull { it.filterType == filterType }

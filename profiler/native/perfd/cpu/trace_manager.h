@@ -22,8 +22,8 @@
 #include <string>
 #include <vector>
 
+#include "perfd/common/perfetto_manager.h"
 #include "perfd/cpu/atrace_manager.h"
-#include "perfd/cpu/perfetto_manager.h"
 #include "perfd/cpu/profiling_app.h"
 #include "perfd/cpu/simpleperf.h"
 #include "perfd/cpu/simpleperf_manager.h"
@@ -129,7 +129,6 @@ class TraceManager final {
   // Visible for testing.
   AtraceManager* atrace_manager() { return atrace_manager_.get(); }
 
-  // Visible for testing.
   PerfettoManager* perfetto_manager() { return perfetto_manager_.get(); }
 
  private:

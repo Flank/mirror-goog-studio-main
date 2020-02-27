@@ -107,8 +107,8 @@ public final class DeviceImpl implements IDevice {
     private static final String LOG_TAG = "Device";
     private static final char SEPARATOR = '-';
 
-    private static final long GET_PROP_TIMEOUT_MS = 250;
-    private static final long INITIAL_GET_PROP_TIMEOUT_MS = 2000;
+    private static final long GET_PROP_TIMEOUT_MS = 1000;
+    private static final long INITIAL_GET_PROP_TIMEOUT_MS = 5000;
     private static final int QUERY_IS_ROOT_TIMEOUT_MS = 1000;
 
     private static final long INSTALL_TIMEOUT_MINUTES;

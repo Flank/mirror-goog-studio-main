@@ -1082,29 +1082,23 @@ public abstract class TaskManager<
                         null,
                         taskProviderCallback);
 
-        componentProperties
-                .getArtifacts()
-                .producesDir(
-                        mergeType.getOutputType(),
-                        mergeResourcesTask,
-                        MergeResources::getOutputDir,
-                        MoreObjects.firstNonNull(
-                                        outputLocation,
-                                        componentProperties
-                                                .getPaths()
-                                                .getDefaultMergeResourcesOutputDir())
-                                .getAbsolutePath(),
-                        "");
+        componentProperties.getOperations().setInitialProvider(
+                mergeResourcesTask,
+                MergeResources::getOutputDir)
+                .atLocation(MoreObjects.firstNonNull(
+                        outputLocation,
+                        componentProperties
+                                .getPaths()
+                                .getDefaultMergeResourcesOutputDir())
+                        .getAbsolutePath())
+                .on(mergeType.getOutputType());
 
         if (alsoOutputNotCompiledResources) {
-            componentProperties
-                    .getArtifacts()
-                    .producesDir(
-                            MERGED_NOT_COMPILED_RES.INSTANCE,
-                            mergeResourcesTask,
-                            MergeResources::getMergedNotCompiledResourcesOutputDirectory,
-                            mergedNotCompiledDir.getAbsolutePath(),
-                            "");
+            componentProperties.getOperations().setInitialProvider(
+                    mergeResourcesTask,
+                    MergeResources::getMergedNotCompiledResourcesOutputDirectory)
+                    .atLocation(mergedNotCompiledDir.getAbsolutePath())
+                    .on(MERGED_NOT_COMPILED_RES.INSTANCE);
         }
 
         if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
@@ -1157,6 +1151,9 @@ public abstract class TaskManager<
 
     public void createMlkitTask(@NonNull ComponentPropertiesImpl componentProperties) {
         if (componentProperties.getServices().getProjectOptions().get(BooleanOption.ENABLE_MLKIT)) {
+            taskFactory.register(
+                    new MergeSourceSetFolders.MergeMlModelsSourceFoldersCreationAction(
+                            componentProperties));
             TaskProvider<GenerateMlModelClass> generateMlModelClassTask =
                     taskFactory.register(
                             new GenerateMlModelClass.CreationAction(componentProperties));
@@ -1334,15 +1331,13 @@ public abstract class TaskManager<
             taskFactory.register(
                     new LinkAndroidResForBundleTask.CreationAction(componentProperties));
 
-            if (!projectOptions.get(BooleanOption.GENERATE_R_JAVA)) {
-                componentProperties
-                        .getArtifacts()
-                        .appendToAllClasses(
-                                project.files(
-                                        artifacts.getFinalProductAsFileCollection(
-                                                COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-                                                        .INSTANCE)));
-            }
+            componentProperties
+                    .getArtifacts()
+                    .appendToAllClasses(
+                            project.files(
+                                    artifacts.getFinalProductAsFileCollection(
+                                            COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
+                                                    .INSTANCE)));
         }
     }
 
@@ -1722,11 +1717,7 @@ public abstract class TaskManager<
 
     protected void registerRClassTransformStream(
             @NonNull ComponentPropertiesImpl componentProperties) {
-        if (globalScope.getExtension().getAaptOptions().getNamespaced()
-                || componentProperties
-                        .getServices()
-                        .getProjectOptions()
-                        .get(BooleanOption.GENERATE_R_JAVA)) {
+        if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
             return;
         }
 

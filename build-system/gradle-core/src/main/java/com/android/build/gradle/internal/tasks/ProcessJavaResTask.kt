@@ -74,7 +74,7 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
             super.configure(task)
 
             for (sourceProvider in creationConfig.variantSources.sortedSourceProviders) {
-                task.from((sourceProvider as AndroidSourceSet).resources.sourceFiles)
+                task.from((sourceProvider as AndroidSourceSet).resources.getSourceFiles())
             }
             task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
         }

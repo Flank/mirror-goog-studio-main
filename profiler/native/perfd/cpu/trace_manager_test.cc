@@ -18,8 +18,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "google/protobuf/util/message_differencer.h"
+#include "perfd/common/fake_perfetto.h"
 #include "perfd/cpu/fake_atrace.h"
-#include "perfd/cpu/fake_perfetto.h"
 #include "perfd/cpu/fake_simpleperf.h"
 #include "utils/device_info_helper.h"
 #include "utils/fake_clock.h"

@@ -65,7 +65,7 @@ fun RecipeExecutor.saveFragmentAndViewModel(
 fun RecipeExecutor.navigationDependencies(
   generateKotlin: Boolean,
   useAndroidX: Boolean,
-  buildApi: Int
+  appCompatVersion: Int
 ) {
   addDependency("android.arch.navigation:navigation-fragment:+")
   addDependency("android.arch.navigation:navigation-ui:+")
@@ -79,6 +79,6 @@ fun RecipeExecutor.navigationDependencies(
   This is to remove the lint warning for the generated project may not use the same version of the support library.
   */
   if (!useAndroidX) {
-    addDependency("com.android.support:design:${buildApi}.+")
+    addDependency("com.android.support:design:${appCompatVersion}.+")
   }
 }

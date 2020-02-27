@@ -102,20 +102,15 @@ abstract class DexSplitterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out DexSplitterTask>
         ) {
             super.handleProvider(taskProvider)
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                DexSplitterTask::featureDexDir
+            ).on(InternalArtifactType.FEATURE_DEX)
 
-            creationConfig.artifacts.producesDir(
-                artifactType = InternalArtifactType.FEATURE_DEX,
-                taskProvider = taskProvider,
-                productProvider = DexSplitterTask::featureDexDir,
-                fileName = ""
-            )
-
-            creationConfig.artifacts.producesDir(
-                artifactType = InternalArtifactType.BASE_DEX,
-                taskProvider = taskProvider,
-                productProvider = DexSplitterTask::baseDexDir,
-                fileName = ""
-            )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                DexSplitterTask::baseDexDir
+            ).on(InternalArtifactType.BASE_DEX)
         }
 
         override fun configure(
@@ -123,25 +118,24 @@ abstract class DexSplitterTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val artifacts = creationConfig.artifacts
+            val operations = creationConfig.operations
 
             task.featureJars =
                 creationConfig.variantDependencies.getArtifactFileCollection(REVERSE_METADATA_VALUES, PROJECT, REVERSE_METADATA_CLASSES)
 
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                 InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
                 task.baseJar)
 
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                 InternalArtifactType.APK_MAPPING,
                 task.mappingFileSrc)
 
-            artifacts.setTaskInputToFinalProduct(
+            operations.setTaskInputToFinalProduct(
                     InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
                     task.mainDexList)
 
-            task.inputDirs.from(
-                artifacts.getOperations().getAll(MultipleArtifactType.DEX)
+            task.inputDirs.from(operations.getAll(MultipleArtifactType.DEX)
             )
         }
     }

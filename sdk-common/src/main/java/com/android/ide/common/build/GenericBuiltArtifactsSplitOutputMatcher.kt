@@ -69,7 +69,33 @@ object GenericBuiltArtifactsSplitOutputMatcher {
         variantAbiFilters: Collection<String?>?,
         deviceDensity: Int,
         deviceAbis: List<String?>
-    ): List<File> {
+    ): List<File> =
+        computeBestArtifact(outputs.elements, variantAbiFilters, deviceDensity, deviceAbis)?.let {
+            ImmutableList.of(File(it.outputFile))
+        } ?: ImmutableList.of<File>()
+
+
+    /**
+     * Determines and return the list of APKs to use based on given device density and abis.
+     *
+     *
+     * This uses the same logic as the store, using two passes: First, find all the compatible
+     * outputs. Then take the one with the highest versionCode.
+     *
+     * @param outputs the outputs to choose from.
+     * @param variantAbiFilters a list of abi filters applied to the variant. This is used in place
+     * of the outputs, if there is a single output with no abi filters. If the list is null,
+     * then the variant does not restrict ABI packaging.
+     * @param deviceDensity the density of the device.
+     * @param deviceAbis a list of ABIs supported by the device.
+     * @return the list of APKs to install or null if none are compatible.
+     */
+    fun computeBestArtifact(
+        outputs: Collection<GenericBuiltArtifact>,
+        variantAbiFilters: Collection<String?>?,
+        deviceDensity: Int,
+        deviceAbis: List<String?>
+    ): GenericBuiltArtifact? {
         val densityEnum = Density.getEnum(deviceDensity)
         val densityValue: String?
         densityValue = densityEnum?.resourceValue
@@ -77,7 +103,7 @@ object GenericBuiltArtifactsSplitOutputMatcher {
         val matches: MutableList<GenericBuiltArtifact> =
             Lists.newArrayList()
         // find a matching output.
-        for (builtArtifact in outputs.elements) {
+        for (builtArtifact in outputs) {
             val densityFilter =
                 getFilter(builtArtifact, "DENSITY")
             val abiFilter =
@@ -91,7 +117,7 @@ object GenericBuiltArtifactsSplitOutputMatcher {
             matches.add(builtArtifact)
         }
         if (matches.isEmpty()) {
-            return ImmutableList.of()
+            return null
         }
         val match = Collections.max(
             matches
@@ -109,7 +135,7 @@ object GenericBuiltArtifactsSplitOutputMatcher {
                 variantAbiFilters,
                 deviceAbis
             )
-        ) ImmutableList.of(File(match.outputFile)) else ImmutableList.of()
+        ) match else null
     }
 
     /**

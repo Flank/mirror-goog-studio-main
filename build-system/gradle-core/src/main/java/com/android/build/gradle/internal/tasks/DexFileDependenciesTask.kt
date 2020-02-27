@@ -176,12 +176,10 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
             taskProvider: TaskProvider<out DexFileDependenciesTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                artifactType = InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES,
-                taskProvider = taskProvider,
-                productProvider = DexFileDependenciesTask::outputDirectory,
-                fileName = "out"
-            )
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                DexFileDependenciesTask::outputDirectory
+            ).on(InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES)
 
             if (creationConfig.variantScope.needsShrinkDesugarLibrary) {
                 creationConfig.artifacts.getOperations()

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import javax.annotation.CheckReturnValue;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 
 @Immutable
@@ -55,16 +56,19 @@ public abstract class DexAndroidArchive extends AndroidArchive {
         this.secondaryDexes = secondaryDexes.build();
     }
 
+    @CheckReturnValue
     @NonNull
     public final Optional<Dex> getMainDexFile() throws IOException {
         return Optional.ofNullable(mainDex);
     }
 
+    @CheckReturnValue
     @NonNull
     public final List<Dex> getSecondaryDexFiles() throws IOException {
         return secondaryDexes;
     }
 
+    @CheckReturnValue
     @NonNull
     public final List<Dex> getAllDexes() throws IOException {
         ImmutableList.Builder<Dex> dexListBuilder = ImmutableList.builder();
@@ -74,12 +78,14 @@ public abstract class DexAndroidArchive extends AndroidArchive {
         return dexListBuilder.addAll(secondaryDexes).build();
     }
 
+    @CheckReturnValue
     @Override
     public final boolean containsMainClass(@NonNull String name) throws IOException {
         AndroidArchive.checkValidClassName(name);
         return mainDex != null && mainDex.getClasses().containsKey(name);
     }
 
+    @CheckReturnValue
     @Override
     public final boolean containsSecondaryClass(@NonNull String name) throws IOException {
         AndroidArchive.checkValidClassName(name);
@@ -91,6 +97,7 @@ public abstract class DexAndroidArchive extends AndroidArchive {
         return false;
     }
 
+    @CheckReturnValue
     @Nullable
     public final DexBackedClassDef getClass(@NonNull String className) throws IOException {
         if (mainDex != null) {

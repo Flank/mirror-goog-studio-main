@@ -18,11 +18,11 @@ package com.android.tools.idea.wizard.template.impl.activities.navigationDrawerA
 import com.android.tools.idea.wizard.template.renderIf
 
 fun navigationHeaderXml(
-  buildApi: Int,
+  appCompatVersion: Int,
   targetApi: Int,
   isLibraryProject: Boolean = false
 ): String {
-  val launcherIcon = renderIf(buildApi >= 25 && targetApi >= 25) {
+  val launcherIcon = renderIf(appCompatVersion >= 25 && targetApi >= 25) {
     "@mipmap/ic_launcher_round"
   }
   val applicationProjectBlock = renderIf(!isLibraryProject) {

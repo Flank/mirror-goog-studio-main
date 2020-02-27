@@ -143,7 +143,6 @@ enum class BooleanOption(
     ENABLE_DUPLICATE_CLASSES_CHECK("android.enableDuplicateClassesCheck", true, FeatureStage.Experimental),
     ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform.desugaring", true, FeatureStage.Experimental),
     ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS("android.enableDexingArtifactTransformForExternalLibs", true, FeatureStage.Experimental),
-    GENERATE_R_JAVA("android.generateRJava", false, FeatureStage.Experimental),
     MINIMAL_KEEP_RULES("android.useMinimalKeepRules", true, FeatureStage.Experimental),
     USE_NEW_JAR_CREATOR("android.useNewJarCreator", true, FeatureStage.Experimental),
     USE_NEW_APK_CREATOR("android.useNewApkCreator", true, FeatureStage.Experimental),
@@ -367,6 +366,9 @@ enum class BooleanOption(
         false,
         FeatureStage.Removed(VERSION_4_0, "This feature was removed in AGP 4.0")
     ),
+
+    GENERATE_R_JAVA("android.generateRJava", false, FeatureStage.Removed(VERSION_4_1, "This feature was removed in AGP 4.1")),
+
 
     ; // end of enums
 

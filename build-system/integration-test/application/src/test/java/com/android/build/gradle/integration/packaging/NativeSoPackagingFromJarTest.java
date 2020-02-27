@@ -17,17 +17,15 @@
 package com.android.build.gradle.integration.packaging;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.integration.common.utils.ZipHelper;
-import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.Zip;
+import com.android.testutils.truth.ZipFileSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -124,11 +122,14 @@ public class NativeSoPackagingFromJarTest {
         // also check that the bar.jar is also present as a local jar with a the class
         // but not the so file.
         // first extract bar.jar from the apk.
-        Aar aar = libProject.getAar("debug");
-        File barJar = ZipHelper.extractFile(aar, "libs/bar.jar");
-
-        assertThatZip(barJar).contains(COM_FOO_FOO_CLASS);
-        assertThatZip(barJar).doesNotContain(LIB_X86_LIBHELLO_SO);
+        libProject.getAar(
+                "debug",
+                aar -> {
+                    // this zip will be closed with the AAR
+                    Zip entry = aar.getEntryAsZip("libs/bar.jar");
+                    ZipFileSubject.assertThat(entry).contains(COM_FOO_FOO_CLASS);
+                    ZipFileSubject.assertThat(entry).doesNotContain(LIB_X86_LIBHELLO_SO);
+                });
     }
 
     /**
@@ -162,7 +163,7 @@ public class NativeSoPackagingFromJarTest {
     private static void checkAar(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(TruthHelper.assertThat(project.getAar("debug")), "jni", filename, content);
+        project.testAar("debug", it -> check(it, "jni", filename, content));
     }
 
     private static void check(
