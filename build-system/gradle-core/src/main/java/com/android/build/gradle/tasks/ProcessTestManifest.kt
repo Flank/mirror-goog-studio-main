@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.scope.BuiltArtifactProperty
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.build.gradle.tasks.ProcessApplicationManifest.Companion.getArtifactName
 import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.ManifestProviderImpl
 import com.android.builder.internal.TestManifestGenerator
@@ -47,9 +46,6 @@ import com.android.utils.ILogger
 import com.google.common.base.Charsets
 import com.google.common.base.Preconditions
 import com.google.common.base.Strings
-import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableMap
-import com.google.common.collect.Lists
 import com.google.common.io.Files
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
@@ -59,6 +55,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -74,8 +71,9 @@ import java.io.IOException
  * application id is extracted.
  *
  *
- * Tests in androidTest get that info form the [VariantDslInfo.getTestedApplicationId],
- * while the test modules get the info from the published intermediate manifest with type [ ] TYPE_METADATA of the tested app.
+ * Tests in androidTest get that info from the [VariantDslInfo.testedApplicationId],
+ * while the test modules get the info from the published intermediate manifest with type
+ * TYPE_METADATA of the tested app.
  */
 abstract class ProcessTestManifest : ManifestProcessorTask() {
 
@@ -90,7 +88,9 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
     @get:Internal
     var tmpDir: File? = null
     private var manifests: ArtifactCollection? = null
-    private var apkData: VariantOutputImpl? = null
+
+    @get:Nested
+    abstract val apkData: Property<VariantOutputImpl>
 
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -109,21 +109,17 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             if (manifestOutputs == null || manifestOutputs.elements.isEmpty()) {
                 throw RuntimeException("Cannot find merged manifest, please file a bug.")
             }
-            val mainSplit: BuiltArtifact = manifestOutputs.elements.iterator().next()
+            val mainSplit: BuiltArtifact = manifestOutputs.elements.first()
             testedApplicationId = mainSplit.properties[BuiltArtifactProperty.PACKAGE_ID]
         }
-        val dirName = apkData!!.variantOutputConfiguration.dirName()
+        val dirName = apkData.get().variantOutputConfiguration.dirName()
         val manifestOutputFolder =
-            if (Strings.isNullOrEmpty(dirName)) manifestOutputDirectory.get().asFile else manifestOutputDirectory.get().file(
-                dirName
-            ).asFile
+            if (Strings.isNullOrEmpty(dirName)) manifestOutputDirectory.get().asFile
+            else manifestOutputDirectory.get().file(dirName).asFile
         FileUtils.mkdirs(manifestOutputFolder)
-        val manifestOutputFile =
-            File(manifestOutputFolder, SdkConstants.ANDROID_MANIFEST_XML)
-        val navJsons =
-            if (navigationJsons == null) emptyList<File>() else Lists.newArrayList(
-                navigationJsons
-            )
+        val manifestOutputFile = File(manifestOutputFolder, SdkConstants.ANDROID_MANIFEST_XML)
+        val navJsons = navigationJsons?.files ?: listOf<File>()
+
         mergeManifestsForTestVariant(
             testApplicationId.get(),
             minSdkVersion.get(),
@@ -145,10 +141,10 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             MERGED_MANIFESTS,
             testApplicationId.get(),
             variantName,
-            ImmutableList.of(
-                apkData!!.toBuiltArtifact(
+            listOf(
+                apkData.get().toBuiltArtifact(
                     manifestOutputFile,
-                    ImmutableMap.of()
+                    mapOf()
                 )
             )
         )
@@ -175,7 +171,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
      * @param outManifest the output location for the merged manifest
      * @param tmpDir temporary dir used for processing
      */
-    fun mergeManifestsForTestVariant(
+    private fun mergeManifestsForTestVariant(
         testApplicationId: String,
         minSdkVersion: String,
         targetSdkVersion: String,
@@ -187,7 +183,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         testManifestFile: File?,
         manifestProviders: List<ManifestProvider?>,
         manifestPlaceholders: Map<String?, Any?>,
-        navigationJsons: List<File>,
+        navigationJsons: Collection<File>,
         outManifest: File,
         tmpDir: File
     ) {
@@ -222,9 +218,9 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         val logger: ILogger =
             LoggerWrapper(logger)
         // These temp files are only need in the middle of processing manifests; delete
-// them when they're done. We're not relying on File#deleteOnExit for this
-// since in the Gradle daemon for example that would leave the files around much
-// longer than we want.
+        // them when they're done. We're not relying on File#deleteOnExit for this
+        // since in the Gradle daemon for example that would leave the files around much
+        // longer than we want.
         var tempFile1: File? = null
         var tempFile2: File? = null
         try {
@@ -236,7 +232,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     tmpDir
                 ).also { tempFile1 = it }
             // we are generating the manifest and if there is an existing one,
-// it will be overlaid with the generated one
+            // it will be overlaid with the generated one
             logger.verbose("Generating in %1\$s", generatedTestManifest!!.absolutePath)
             generateTestManifest(
                 testApplicationId,
@@ -289,9 +285,9 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     generatedTestManifest = tempFile2
                 }
             }
-            if (!manifestProviders.isEmpty()) {
+            if (manifestProviders.isNotEmpty()) {
                 val mergingReport = ManifestMerger2.newMerger(
-                    generatedTestManifest!!,
+                    generatedTestManifest,
                     logger,
                     ManifestMerger2.MergeType.APPLICATION
                 )
@@ -317,7 +313,8 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                 if (tempFile2 != null) {
                     FileUtils.delete(tempFile2)
                 }
-            } catch (e: IOException) { // just log this, so we do not mask the initial exception if there is any
+            } catch (e: IOException) {
+                // just log this, so we do not mask the initial exception if there is any
                 logger.error(e, "Unable to clean up the temporary files.")
             }
         }
@@ -331,66 +328,32 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             mergingReport,
             mergeBlameFile.get().asFile
         )
-        when (mergingReport.result) {
-            MergingReport.Result.WARNING -> {
-                mergingReport.log(logger)
-                try {
-                    val annotatedDocument =
-                        mergingReport.getMergedDocument(MergingReport.MergedManifestKind.BLAME)
-                    if (annotatedDocument != null) {
-                        logger.verbose(annotatedDocument)
-                    } else {
-                        logger.verbose("No blaming records from manifest merger")
-                    }
-                } catch (e: Exception) {
-                    logger.error(e, "cannot print resulting xml")
-                }
-                val finalMergedDocument =
-                    mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED)
-                        ?: throw RuntimeException("No result from manifest merger")
-                try {
-                    Files.asCharSink(
-                        outFile,
-                        Charsets.UTF_8
-                    ).write(finalMergedDocument)
-                } catch (e: IOException) {
-                    logger.error(e, "Cannot write resulting xml")
-                    throw RuntimeException(e)
-                }
-                logger.verbose("Merged manifest saved to $outFile")
-            }
-            MergingReport.Result.SUCCESS -> {
-                try {
-                    val annotatedDocument =
-                        mergingReport.getMergedDocument(MergingReport.MergedManifestKind.BLAME)
-                    if (annotatedDocument != null) {
-                        logger.verbose(annotatedDocument)
-                    } else {
-                        logger.verbose("No blaming records from manifest merger")
-                    }
-                } catch (e: Exception) {
-                    logger.error(e, "cannot print resulting xml")
-                }
-                val finalMergedDocument =
-                    mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED)
-                        ?: throw RuntimeException("No result from manifest merger")
-                try {
-                    Files.asCharSink(
-                        outFile,
-                        Charsets.UTF_8
-                    ).write(finalMergedDocument)
-                } catch (e: IOException) {
-                    logger.error(e, "Cannot write resulting xml")
-                    throw RuntimeException(e)
-                }
-                logger.verbose("Merged manifest saved to $outFile")
-            }
-            MergingReport.Result.ERROR -> {
-                mergingReport.log(logger)
-                throw RuntimeException(mergingReport.reportString)
-            }
-            else -> throw RuntimeException("Unhandled result type : " + mergingReport.result)
+        if (mergingReport.result == MergingReport.Result.ERROR) {
+            mergingReport.log(logger)
+            throw RuntimeException(mergingReport.reportString)
         }
+        if (mergingReport.result == MergingReport.Result.WARNING) {
+            mergingReport.log(logger)
+        }
+
+        try {
+            val annotatedDocument =
+                mergingReport.getMergedDocument(MergingReport.MergedManifestKind.BLAME)
+            logger.verbose(annotatedDocument
+                ?: "No blaming records from manifest merger")
+        } catch (e: Exception) {
+            logger.error(e, "cannot print resulting xml")
+        }
+        val finalMergedDocument =
+            mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED)
+                ?: throw RuntimeException("No result from manifest merger")
+        try {
+            Files.asCharSink(outFile, Charsets.UTF_8).write(finalMergedDocument)
+        } catch (e: IOException) {
+            logger.error(e, "Cannot write resulting xml")
+            throw RuntimeException(e)
+        }
+        logger.verbose("Merged manifest saved to $outFile")
     }
 
     override val aaptFriendlyManifestOutputFile: File?
@@ -437,19 +400,8 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
      * Compute the final list of providers based on the manifest file collection.
      * @return the list of providers.
      */
-    fun computeProviders(): List<ManifestProvider?> {
-        val artifacts = manifests!!.artifacts
-        val providers: MutableList<ManifestProvider?> =
-            Lists.newArrayListWithCapacity(artifacts.size)
-        for (artifact in artifacts) {
-            providers.add(
-                ManifestProviderImpl(
-                    artifact.file,
-                    getArtifactName(artifact)
-                )
-            )
-        }
-        return providers
+    private fun computeProviders(): List<ManifestProvider?> {
+        return manifests!!.artifacts.map { ManifestProviderImpl(it.file, getArtifactName(it)) }
     }
 
     @InputFiles
@@ -462,11 +414,8 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         creationConfig: BaseCreationConfig,
         private val testTargetMetadata: FileCollection
     ) : VariantTaskCreationAction<ProcessTestManifest, BaseCreationConfig>(creationConfig) {
-        override val name: String
-            get() = computeTaskName("process", "Manifest")
-
-        override val type: Class<ProcessTestManifest>
-            get() = ProcessTestManifest::class.java
+        override val name = computeTaskName("process", "Manifest")
+        override val type = ProcessTestManifest::class.java
 
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
@@ -482,20 +431,16 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             taskProvider: TaskProvider<out ProcessTestManifest>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig!!.taskContainer.processManifestTask = taskProvider
-            val artifacts = creationConfig.artifacts
-            artifacts.producesDir(
-                MERGED_MANIFESTS,
+            creationConfig.taskContainer.processManifestTask = taskProvider
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                ManifestProcessorTask::manifestOutputDirectory,
-                ""
-            )
-            artifacts.producesFile(
-                InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
+                ManifestProcessorTask::manifestOutputDirectory
+            ).on(MERGED_MANIFESTS)
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                ProcessTestManifest::mergeBlameFile,
-                "manifest-merger-blame-" + creationConfig.baseName + "-report.txt"
-            )
+                ProcessTestManifest::mergeBlameFile
+            ).withName("manifest-merger-blame-" + creationConfig.baseName + "-report.txt")
+                .on(InternalArtifactType.MANIFEST_MERGE_BLAME_FILE)
         }
 
         override fun configure(
@@ -506,12 +451,12 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             val variantDslInfo = creationConfig.variantDslInfo
             val variantSources = creationConfig.variantSources
             // Use getMainManifestIfExists() instead of getMainManifestFilePath() because this task
-// accepts either a non-null file that exists or a null file, it does not accept a
-// non-null file that does not exist.
+            // accepts either a non-null file that exists or a null file, it does not accept a
+            // non-null file that does not exist.
             task.testManifestFile
                 .set(project.provider(variantSources::mainManifestIfExists))
             task.testManifestFile.disallowChanges()
-            task.apkData = creationConfig.outputs.getMainSplit()
+            task.apkData.set(creationConfig.outputs.getMainSplit())
             task.variantType.set(creationConfig.variantType.toString())
             task.variantType.disallowChanges()
             task.tmpDir = FileUtils.join(

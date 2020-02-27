@@ -26,13 +26,10 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.mergeManifestsForApplication
-import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
-import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableMap
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
@@ -77,13 +74,7 @@ abstract class ProcessLibraryManifest @Inject constructor(objectFactory: ObjectF
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFiles
     abstract val manifestOverlays: ListProperty<File>
-    /**
-     * Returns a serialized version of our map of key value pairs for placeholder substitution.
-     *
-     *
-     * This serialized form is only used by gradle to compare past and present tasks to determine
-     * whether a task need to be re-run or not.
-     */
+
     @get:Optional
     @get:Input
     abstract val manifestPlaceholders: MapProperty<String, Any>
@@ -185,17 +176,17 @@ abstract class ProcessLibraryManifest @Inject constructor(objectFactory: ObjectF
                 throw UncheckedIOException(e)
             }
             val properties =
-                if (mergedXmlDocument != null) ImmutableMap.of(
-                    "packageId", mergedXmlDocument.packageName,
-                    "split", mergedXmlDocument.splitName
-                ) else ImmutableMap.of()
+                if (mergedXmlDocument != null) mapOf(
+                    "packageId" to mergedXmlDocument.packageName,
+                    "split" to mergedXmlDocument.splitName
+                ) else mapOf()
             if (params.manifestOutputDirectory != null) {
                 BuiltArtifactsImpl(
                     BuiltArtifacts.METADATA_FILE_VERSION,
                     InternalArtifactType.MERGED_MANIFESTS,
                     params.packageOverride,
                     params.variantName,
-                    ImmutableList.of(
+                    listOf(
                         params.mainSplit.toBuiltArtifact(
                             params.manifestOutputFile, properties
                         )
@@ -209,7 +200,7 @@ abstract class ProcessLibraryManifest @Inject constructor(objectFactory: ObjectF
                     InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
                     params.packageOverride,
                     params.variantName,
-                    ImmutableList.of(
+                    listOf(
                         params.mainSplit.toBuiltArtifact(
                             params.aaptFriendlyManifestOutputFile!!, properties
                         )
@@ -245,14 +236,6 @@ abstract class ProcessLibraryManifest @Inject constructor(objectFactory: ObjectF
     @get:InputFile
     abstract val mainManifest: Property<File>
 
-    // This information is written to the build output's metadata file, so it needs to be
-// annotated as @Input
-    @get:Input
-    val mainSplitFullName: String
-        get() =// This information is written to the build output's metadata file, so it needs to be
-// annotated as @Input
-            mainSplit.get().fullName
-
     class CreationAction
     /** `EagerTaskCreationAction` for the library process manifest task.  */(creationConfig: LibraryCreationConfig) :
         VariantTaskCreationAction<ProcessLibraryManifest, LibraryCreationConfig>(creationConfig) {
@@ -266,41 +249,37 @@ abstract class ProcessLibraryManifest @Inject constructor(objectFactory: ObjectF
             taskProvider: TaskProvider<out ProcessLibraryManifest>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig!!.taskContainer.processManifestTask = taskProvider
+            creationConfig.taskContainer.processManifestTask = taskProvider
             val artifacts = creationConfig.artifacts
             val operations = creationConfig.operations
-            artifacts.producesDir(
-                InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+            operations.setInitialProvider(
                 taskProvider,
-                ManifestProcessorTask::aaptFriendlyManifestOutputDirectory,
-                "aapt"
-            )
-            artifacts.producesDir(
-                InternalArtifactType.MERGED_MANIFESTS,
+                ManifestProcessorTask::aaptFriendlyManifestOutputDirectory
+            ).withName("aapt").on(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+
+            operations.setInitialProvider(
                 taskProvider,
-                ManifestProcessorTask::manifestOutputDirectory,
-                ""
-            )
-            artifacts.producesFile(
-                InternalArtifactType.LIBRARY_MANIFEST,
-                taskProvider, { obj: ProcessLibraryManifest -> obj.manifestOutputFile },
-                SdkConstants.ANDROID_MANIFEST_XML
-            )
-            artifacts.producesFile(
-                InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
+                ManifestProcessorTask::manifestOutputDirectory
+            ).on(InternalArtifactType.MERGED_MANIFESTS)
+
+            operations.setInitialProvider(
+                taskProvider
+            ) { task: ProcessLibraryManifest -> task.manifestOutputFile }
+                .withName(SdkConstants.ANDROID_MANIFEST_XML)
+                .on(InternalArtifactType.LIBRARY_MANIFEST)
+
+            operations.setInitialProvider(
                 taskProvider,
-                ProcessLibraryManifest::mergeBlameFile,
-                "manifest-merger-blame-" + creationConfig.baseName + "-report.txt"
-            )
+                ProcessLibraryManifest::mergeBlameFile
+            ).withName("manifest-merger-blame-" + creationConfig.baseName + "-report.txt")
+                .on(InternalArtifactType.MANIFEST_MERGE_BLAME_FILE)
+
             operations.setInitialProvider(
                 taskProvider,
                 ProcessLibraryManifest::reportFile
             )
                 .atLocation(
-                    FileUtils.join(
-                        creationConfig.globalScope.outputsDir,
-                        "logs"
-                    )
+                    FileUtils.join(creationConfig.globalScope.outputsDir, "logs")
                         .absolutePath
                 )
                 .withName("manifest-merger-" + creationConfig.baseName + "-report.txt")

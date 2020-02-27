@@ -43,13 +43,11 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.ManifestProviderImpl
 import com.android.builder.dexing.DexingType
 import com.android.manifmerger.ManifestMerger2
+import com.android.manifmerger.ManifestMerger2.Invoker
 import com.android.manifmerger.ManifestProvider
 import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
-import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableMap
-import com.google.common.collect.Lists
 import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.artifacts.ArtifactCollection
@@ -120,13 +118,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFiles
     abstract val manifestOverlays: ListProperty<File>
-    /**
-     * Returns a serialized version of our map of key value pairs for placeholder substitution.
-     *
-     *
-     * This serialized form is only used by gradle to compare past and present tasks to determine
-     * whether a task need to be re-run or not.
-     */
+
     @get:Optional
     @get:Input
     abstract val manifestPlaceholders: MapProperty<String, Any>
@@ -141,7 +133,8 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         private set
 
     @Throws(IOException::class)
-    override fun doFullTaskAction() { // read the output of the compatible screen manifest.
+    override fun doFullTaskAction() {
+        // read the output of the compatible screen manifest.
         val compatibleScreenManifests =
             BuiltArtifactsLoaderImpl().load(compatibleScreensManifest!!)
                 ?: throw RuntimeException(
@@ -149,7 +142,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 )
         if (baseModuleDebuggable.isPresent) {
             val isDebuggable = optionalFeatures.get()
-                .contains(ManifestMerger2.Invoker.Feature.DEBUGGABLE)
+                .contains(Invoker.Feature.DEBUGGABLE)
             if (baseModuleDebuggable.get() != isDebuggable) {
                 val errorMessage = String.format(
                     "Dynamic Feature '%1\$s' (build type '%2\$s') %3\$s debuggable,\n"
@@ -169,14 +162,10 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             }
         }
         var compatibleScreenManifestForSplit: BuiltArtifactImpl?
-        val mergedManifestOutputs =
-            ImmutableList.builder<BuiltArtifactImpl>()
-        val metadataFeatureMergedManifestOutputs =
-            ImmutableList.builder<BuiltArtifactImpl>()
-        val bundleManifestOutputs =
-            ImmutableList.builder<BuiltArtifactImpl>()
-        val instantAppManifestOutputs =
-            ImmutableList.builder<BuiltArtifactImpl>()
+        val mergedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
+        val metadataFeatureMergedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
+        val bundleManifestOutputs = mutableListOf<BuiltArtifactImpl>()
+        val instantAppManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val navJsons = navigationJsons?.files ?: setOf()
 
         // FIX ME : multi threading.
@@ -237,14 +226,11 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED)
             outputMergeBlameContents(mergingReport, mergeBlameFile.get().asFile)
             val properties =
-                if (mergedXmlDocument != null) ImmutableMap.of(
-                    BuiltArtifactProperty.PACKAGE_ID,
-                    mergedXmlDocument.packageName,
-                    BuiltArtifactProperty.SPLIT,
-                    mergedXmlDocument.splitName,
-                    SdkConstants.ATTR_MIN_SDK_VERSION,
-                    mergedXmlDocument.minSdkVersion
-                ) else ImmutableMap.of()
+                if (mergedXmlDocument != null) mapOf(
+                    BuiltArtifactProperty.PACKAGE_ID to mergedXmlDocument.packageName,
+                    BuiltArtifactProperty.SPLIT to mergedXmlDocument.splitName,
+                    SdkConstants.ATTR_MIN_SDK_VERSION to mergedXmlDocument.minSdkVersion
+                ) else mapOf()
             mergedManifestOutputs.add(
                 variantOutput.toBuiltArtifact(manifestOutputFile, properties)
             )
@@ -265,7 +251,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             InternalArtifactType.MERGED_MANIFESTS,
             applicationId.get(),
             variantName,
-            mergedManifestOutputs.build()
+            mergedManifestOutputs.toList()
         )
             .save(manifestOutputDirectory.get())
         BuiltArtifactsImpl(
@@ -273,15 +259,15 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             InternalArtifactType.METADATA_FEATURE_MANIFEST,
             applicationId.get(),
             variantName,
-            metadataFeatureMergedManifestOutputs.build()
+            metadataFeatureMergedManifestOutputs.toList()
         )
-            .save(metadataFeatureManifestOutputDirectory!!.get())
+            .save(metadataFeatureManifestOutputDirectory.get())
         BuiltArtifactsImpl(
             BuiltArtifacts.METADATA_FILE_VERSION,
             InternalArtifactType.BUNDLE_MANIFEST,
             applicationId.get(),
             variantName,
-            bundleManifestOutputs.build()
+            bundleManifestOutputs.toList()
         )
             .save(bundleManifestOutputDirectory.get())
         if (instantAppManifestOutputDirectory.isPresent) {
@@ -290,7 +276,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 InternalArtifactType.INSTANT_APP_MANIFEST,
                 applicationId.get(),
                 variantName,
-                instantAppManifestOutputs.build()
+                instantAppManifestOutputs.toList()
             )
                 .save(instantAppManifestOutputDirectory.get())
         }
@@ -314,8 +300,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         compatibleScreenManifestForSplit: BuiltArtifact?
     ): List<ManifestProvider> {
         val artifacts = manifests!!.artifacts
-        val providers: MutableList<ManifestProvider> =
-            Lists.newArrayListWithCapacity(artifacts.size + 2)
+        val providers = mutableListOf<ManifestProvider>()
         for (artifact in artifacts) {
             providers.add(
                 ManifestProviderImpl(
@@ -324,9 +309,10 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 )
             )
         }
-        if (microApkManifest != null) { // this is now always present if embedding is enabled, but it doesn't mean
-// anything got embedded so the file may not run (the file path exists and is
-// returned by the FC but the file doesn't exist.
+        if (microApkManifest != null) {
+            // this is now always present if embedding is enabled, but it doesn't mean
+            // anything got embedded so the file may not run (the file path exists and is
+            // returned by the FC but the file doesn't exist.
             val microManifest = microApkManifest!!.singleFile
             if (microManifest.isFile) {
                 providers.add(
@@ -386,7 +372,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
 
     /** Not an input, see [.getOptionalFeaturesString].  */
     @get:Internal
-    abstract val optionalFeatures: SetProperty<ManifestMerger2.Invoker.Feature>
+    abstract val optionalFeatures: SetProperty<Invoker.Feature>
 
     /** Synthetic input for [.getOptionalFeatures]  */
     @get:Input
@@ -394,7 +380,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         get() = optionalFeatures
             .get()
             .stream()
-            .map { obj: ManifestMerger2.Invoker.Feature -> obj.toString() }
+            .map { obj: Invoker.Feature -> obj.toString() }
             .collect(Collectors.toList())
 
     @InputFiles
@@ -431,7 +417,8 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     abstract val variantOutputs: ListProperty<VariantOutputImpl>
 
     class CreationAction(
-        creationConfig: ApkCreationConfig,  // TODO : remove this variable and find ways to access it from scope.
+        creationConfig: ApkCreationConfig,
+        // TODO : remove this variable and find ways to access it from scope.
         private val isAdvancedProfilingOn: Boolean
     ) : VariantTaskCreationAction<ProcessApplicationManifest, ApkCreationConfig>(creationConfig) {
         override val name: String
@@ -458,38 +445,30 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.processManifestTask = taskProvider
-            val artifacts = creationConfig.artifacts
-            artifacts.producesDir(
-                InternalArtifactType.MERGED_MANIFESTS,
+            val operations = creationConfig.operations
+            operations.setInitialProvider(
                 taskProvider,
-                ManifestProcessorTask::manifestOutputDirectory,
-                ""
-            )
-            artifacts.producesDir(
-                InternalArtifactType.INSTANT_APP_MANIFEST,
+                ManifestProcessorTask::manifestOutputDirectory
+            ).on(InternalArtifactType.MERGED_MANIFESTS)
+            operations.setInitialProvider(
                 taskProvider,
-                ManifestProcessorTask::instantAppManifestOutputDirectory,
-                ""
-            )
-            artifacts.producesFile(
-                InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
+                ManifestProcessorTask::instantAppManifestOutputDirectory
+            ).on(InternalArtifactType.INSTANT_APP_MANIFEST)
+            operations.setInitialProvider(
                 taskProvider,
-                ProcessApplicationManifest::mergeBlameFile,
-                "manifest-merger-blame-" + creationConfig.baseName + "-report.txt"
+                ManifestProcessorTask::mergeBlameFile
             )
-            artifacts.producesDir(
-                InternalArtifactType.METADATA_FEATURE_MANIFEST,
+                .withName("manifest-merger-blame-" + creationConfig.baseName + "-report.txt")
+                .on(InternalArtifactType.MANIFEST_MERGE_BLAME_FILE)
+            operations.setInitialProvider(
                 taskProvider,
-                ProcessApplicationManifest::metadataFeatureManifestOutputDirectory,
-                "metadata-feature"
-            )
-            artifacts.producesDir(
-                InternalArtifactType.BUNDLE_MANIFEST,
+                ManifestProcessorTask::metadataFeatureManifestOutputDirectory
+            ).withName("metadata-feature").on(InternalArtifactType.METADATA_FEATURE_MANIFEST)
+            operations.setInitialProvider(
                 taskProvider,
-                ProcessApplicationManifest::bundleManifestOutputDirectory,
-                "bundle-manifest"
-            )
-            creationConfig.operations.setInitialProvider(
+                ManifestProcessorTask::bundleManifestOutputDirectory
+            ).withName("bundle-manifest").on(InternalArtifactType.BUNDLE_MANIFEST)
+            operations.setInitialProvider(
                 taskProvider,
                 ProcessApplicationManifest::reportFile
             )
@@ -651,8 +630,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         private fun computeProviders(
             artifacts: Set<ResolvedArtifactResult>
         ): List<ManifestProvider> {
-            val providers: MutableList<ManifestProvider> =
-                Lists.newArrayListWithCapacity(artifacts.size)
+            val providers: MutableList<ManifestProvider> = mutableListOf()
             for (artifact in artifacts) {
                 val directory = artifact.file
                 val splitOutputs: BuiltArtifacts? =
@@ -673,69 +651,62 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         // TODO put somewhere else?
         @JvmStatic
         fun getArtifactName(artifact: ResolvedArtifactResult): String {
-            val id = artifact.id.componentIdentifier
-            return if (id is ProjectComponentIdentifier) {
-                id.projectPath
-            } else if (id is ModuleComponentIdentifier) {
-                val mID = id
-                mID.group + ":" + mID.module + ":" + mID.version
-            } else if (id is OpaqueComponentArtifactIdentifier) { // this is the case for local jars.
-// FIXME: use a non internal class.
-                id.getDisplayName()
-            } else if (id is ExtraComponentIdentifier) {
-                id.getDisplayName()
-            } else {
-                throw RuntimeException("Unsupported type of ComponentIdentifier")
+            return when(val id = artifact.id.componentIdentifier) {
+                is ProjectComponentIdentifier -> id.projectPath
+                is ModuleComponentIdentifier -> "${id.group}:${id.module}:${id.version}"
+                is OpaqueComponentArtifactIdentifier -> id.displayName
+                is ExtraComponentIdentifier -> id.displayName
+                else -> throw RuntimeException("Unsupported type of ComponentIdentifier")
             }
         }
 
         private fun getOptionalFeatures(
             creationConfig: ApkCreationConfig, isAdvancedProfilingOn: Boolean
-        ): EnumSet<ManifestMerger2.Invoker.Feature> {
-            val features: MutableList<ManifestMerger2.Invoker.Feature> =
+        ): EnumSet<Invoker.Feature> {
+            val features: MutableList<Invoker.Feature> =
                 ArrayList()
             val variantType = creationConfig.variantType
             if (variantType.isDynamicFeature) {
-                features.add(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
-                features.add(ManifestMerger2.Invoker.Feature.CREATE_FEATURE_MANIFEST)
-                features.add(ManifestMerger2.Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)
+                features.add(Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
+                features.add(Invoker.Feature.CREATE_FEATURE_MANIFEST)
+                features.add(Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)
             }
             if (variantType.isDynamicFeature) {
-                features.add(ManifestMerger2.Invoker.Feature.STRIP_MIN_SDK_FROM_FEATURE_MANIFEST)
+                features.add(Invoker.Feature.STRIP_MIN_SDK_FROM_FEATURE_MANIFEST)
             }
-            features.add(ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
+            features.add(Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
             if (variantType.isBaseModule || variantType.isDynamicFeature) {
-                features.add(ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
+                features.add(Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
             }
-            if (variantType.isDynamicFeature) { // create it for dynamic-features and base modules that are not hybrid base features.
-// hybrid features already contain the split name.
-                features.add(ManifestMerger2.Invoker.Feature.ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST)
+            if (variantType.isDynamicFeature) {
+                // create it for dynamic-features and base modules that are not hybrid base features.
+                // hybrid features already contain the split name.
+                features.add(Invoker.Feature.ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST)
             }
             if (creationConfig.testOnlyApk) {
-                features.add(ManifestMerger2.Invoker.Feature.TEST_ONLY)
+                features.add(Invoker.Feature.TEST_ONLY)
             }
             if (creationConfig.debuggable) {
-                features.add(ManifestMerger2.Invoker.Feature.DEBUGGABLE)
+                features.add(Invoker.Feature.DEBUGGABLE)
                 if (isAdvancedProfilingOn) {
-                    features.add(ManifestMerger2.Invoker.Feature.ADVANCED_PROFILING)
+                    features.add(Invoker.Feature.ADVANCED_PROFILING)
                 }
             }
             if (creationConfig.dexingType === DexingType.LEGACY_MULTIDEX) {
-                if (creationConfig.services.projectOptions[BooleanOption.USE_ANDROID_X]) {
-                    features.add(ManifestMerger2.Invoker.Feature.ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME)
-                } else {
-                    features.add(ManifestMerger2.Invoker.Feature.ADD_SUPPORT_MULTIDEX_APPLICATION_IF_NO_NAME)
-                }
+                features.add(
+                    if (creationConfig.services.projectOptions[BooleanOption.USE_ANDROID_X]) {
+                        Invoker.Feature.ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME
+                    } else {
+                        Invoker.Feature.ADD_SUPPORT_MULTIDEX_APPLICATION_IF_NO_NAME
+                    })
             }
-            if (creationConfig
-                    .services
-                    .projectOptions[BooleanOption.ENFORCE_UNIQUE_PACKAGE_NAMES]
+            if (creationConfig.services.projectOptions[BooleanOption.ENFORCE_UNIQUE_PACKAGE_NAMES]
             ) {
-                features.add(ManifestMerger2.Invoker.Feature.ENFORCE_UNIQUE_PACKAGE_NAME)
+                features.add(Invoker.Feature.ENFORCE_UNIQUE_PACKAGE_NAME)
             }
-            return if (features.isEmpty()) EnumSet.noneOf(ManifestMerger2.Invoker.Feature::class.java) else EnumSet.copyOf(
-                features
-            )
+            return if (features.isEmpty())
+                EnumSet.noneOf(Invoker.Feature::class.java)
+            else EnumSet.copyOf(features)
         }
     }
 }
