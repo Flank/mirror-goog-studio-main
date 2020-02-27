@@ -416,6 +416,8 @@ com.android.build.api.dsl.LibraryBuildFeatures.getDataBinding: java.lang.Boolean
 com.android.build.api.dsl.LibraryBuildFeatures.setAndroidResources: void (java.lang.Boolean)
 com.android.build.api.dsl.LibraryBuildFeatures.setDataBinding: void (java.lang.Boolean)
 com.android.build.api.dsl.LibraryExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.LibraryExtension.getAidlPackageWhiteList: java.util.Collection<java.lang.String> ()
+com.android.build.api.dsl.LibraryExtension.setAidlPackageWhiteList: void (java.util.Collection<java.lang.String>)
 com.android.build.api.dsl.LintOptions
 com.android.build.api.dsl.LintOptions.baseline: void (java.io.File)
 com.android.build.api.dsl.LintOptions.baseline: void (java.lang.String)
