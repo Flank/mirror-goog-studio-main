@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.r8.ByteDataView;
@@ -23,17 +24,28 @@ import com.android.tools.r8.D8;
 import com.android.tools.r8.D8Command;
 import com.android.tools.r8.DexFilePerClassFileConsumer;
 import com.android.tools.r8.DiagnosticsHandler;
+import com.android.tools.r8.inspector.ClassInspector;
+import com.android.tools.r8.inspector.FieldInspector;
+import com.android.tools.r8.inspector.Inspector;
+import com.android.tools.r8.inspector.ValueInspector;
 import com.android.tools.r8.origin.Origin;
+import com.android.tools.r8.references.FieldReference;
 import com.android.tools.tracer.Trace;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -48,10 +60,24 @@ public class D8DexSplitter implements DexSplitter {
             DexConsumer consumer = new DexConsumer(dex, keepCode);
             newBuilder.addDexProgramData(readDex(dex), Origin.unknown());
             newBuilder.setDexClassChecksumFilter(consumer::parseFilter);
+            newBuilder.addOutputInspection(consumer);
             newBuilder.setProgramConsumer(consumer);
             D8.run(newBuilder.build());
             consumer.join();
-            return consumer.classes.values();
+
+            return consumer.classes.values().stream()
+                    .map(
+                            dexClass -> {
+                                Collection<Deploy.ClassDef.FieldReInitState> states =
+                                        consumer.variableStates.get(dexClass.name);
+                                if (states == null) {
+                                    return dexClass;
+                                } else {
+                                    return new DexClass(dexClass, ImmutableList.copyOf(states));
+                                }
+                            })
+                    .collect(Collectors.toList());
+
         } catch (InterruptedException | CompilationFailedException e) {
             throw new RuntimeException(e);
         }
@@ -67,8 +93,14 @@ public class D8DexSplitter implements DexSplitter {
         }
     }
 
-    private static class DexConsumer implements DexFilePerClassFileConsumer {
+    private static class DexConsumer implements DexFilePerClassFileConsumer, Consumer<Inspector> {
         private final Map<String, DexClass> classes = new HashMap<>();
+
+        // Note D8 does NOT guarantee any thread / ordering / duplicates of the inspection API.
+        // We must compute both the classes (filtering out what we don't need) and the variables
+        // separately and reduce them at the end after the compilation is done.
+        private final Multimap<String, Deploy.ClassDef.FieldReInitState> variableStates =
+                ArrayListMultimap.create();
 
         private final CountDownLatch finished = new CountDownLatch(1);
         private final Predicate<DexClass> keepCode;
@@ -134,6 +166,39 @@ public class D8DexSplitter implements DexSplitter {
             if (keepCode != null && keepCode.test(clazz)) {
                 classes.put(
                         name, new DexClass(className, clazz.checksum, data.copyByteData(), dex));
+            }
+        }
+
+        @Override
+        public void accept(Inspector inspector) {
+            inspector.forEachClass(
+                    classInspector -> {
+                        classInspector.forEachField(
+                                fieldInspector -> {
+                                    inspectField(classInspector, fieldInspector);
+                                });
+                    });
+        }
+
+        private void inspectField(ClassInspector classInspector, FieldInspector fieldInspector) {
+            Deploy.ClassDef.FieldReInitState.Builder state =
+                    Deploy.ClassDef.FieldReInitState.newBuilder();
+            FieldReference field = fieldInspector.getFieldReference();
+            state.setName(field.getFieldName());
+            state.setType(field.getFieldType().getDescriptor());
+            state.setStaticVar(fieldInspector.isStatic());
+            Optional<ValueInspector> value = fieldInspector.getInitialValue();
+            if (fieldInspector.isStatic() && fieldInspector.isFinal() && value.isPresent()) {
+                state.setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT);
+                state.setValue(Integer.toString(value.get().asIntValue().getIntValue()));
+            } else {
+                state.setState(Deploy.ClassDef.FieldReInitState.VariableState.UNKNOWN);
+            }
+            // D8 can call this in any threads.
+            synchronized (this) {
+                variableStates.put(
+                        typeNameToClassName(classInspector.getClassReference().getDescriptor()),
+                        state.build());
             }
         }
     }
