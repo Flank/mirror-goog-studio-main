@@ -94,13 +94,6 @@ open class BaseAppModuleExtension(
         publicExtensionImpl.dependenciesInfo(action)
     }
 
-    var dynamicFeatures: MutableSet<String> = mutableSetOf()
-
-    /**
-     * Set of asset pack subprojects to be included in the app's bundle.
-     */
-    var assetPacks: MutableSet<String> = mutableSetOf()
-
     override val bundle: BundleOptions = publicExtensionImpl.bundle
 
     fun bundle(action: Action<BundleOptions>) {

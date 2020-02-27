@@ -176,8 +176,12 @@ com.android.build.api.dsl.ApplicationBuildFeatures.setDataBinding: void (java.la
 com.android.build.api.dsl.ApplicationExtension implements com.android.build.api.dsl.CommonExtension, com.android.build.api.dsl.ApkExtension, com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.ApplicationExtension.bundle: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Bundle, kotlin.Unit>)
 com.android.build.api.dsl.ApplicationExtension.dependenciesInfo: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo, kotlin.Unit>)
+com.android.build.api.dsl.ApplicationExtension.getAssetPacks: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.ApplicationExtension.getBundle: com.android.build.api.dsl.Bundle ()
 com.android.build.api.dsl.ApplicationExtension.getDependenciesInfo: com.android.build.api.dsl.DependenciesInfo ()
+com.android.build.api.dsl.ApplicationExtension.getDynamicFeatures: java.util.Set<java.lang.String> ()
+com.android.build.api.dsl.ApplicationExtension.setAssetPacks: void (java.util.Set<java.lang.String>)
+com.android.build.api.dsl.ApplicationExtension.setDynamicFeatures: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.AssetPackExtension
 com.android.build.api.dsl.AssetPackExtension.dynamicDelivery: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DynamicDelivery, kotlin.Unit>)
 com.android.build.api.dsl.AssetPackExtension.getDynamicDelivery: com.android.build.api.dsl.DynamicDelivery ()

@@ -74,6 +74,9 @@ class ApplicationExtensionImpl(
     override val buildFeatures: ApplicationBuildFeatures =
         dslServices.newInstance(ApplicationBuildFeaturesImpl::class.java)
 
+    override var dynamicFeatures: MutableSet<String> = mutableSetOf()
+    override var assetPacks: MutableSet<String> = mutableSetOf()
+
     @Suppress("UNCHECKED_CAST")
     override val onVariants: GenericFilteredComponentActionRegistrar<ApplicationVariant<ApplicationVariantProperties>>
         get() = dslServices.newInstance(
