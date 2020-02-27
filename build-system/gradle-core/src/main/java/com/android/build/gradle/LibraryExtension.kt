@@ -48,6 +48,8 @@ import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.builder.core.LibraryRequest
+import com.android.repository.Revision
 import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
@@ -155,4 +157,13 @@ open class LibraryExtension(
     fun aidlPackageWhiteList(vararg aidlFqcns: String) {
         Collections.addAll(publicExtensionImpl.aidlPackageWhiteList, *aidlFqcns)
     }
+
+    override val flavorDimensionList: MutableList<String>
+        get() = flavorDimensions
+
+    override val buildToolsRevision: Revision
+        get() = Revision.parseRevision(buildToolsVersion, Revision.Precision.MICRO)
+
+    override val libraryRequests: MutableCollection<LibraryRequest>
+        get() = publicExtensionImpl.libraryRequests
 }

@@ -478,4 +478,204 @@ interface CommonExtension<
      * information about the properties you can configure in this block, see [AndroidSourceSet].
      */
     fun sourceSets(action: NamedDomainObjectContainer<AndroidSourceSetT>.() -> Unit)
+
+    /**
+     * Specifies the names of product flavor dimensions for this project.
+     *
+     * When configuring product flavors with Android plugin 3.0.0 and higher, you must specify at
+     * least one flavor dimension, using the
+     * [`flavorDimensions`][flavorDimensions] property, and then assign each flavor to a dimension.
+     * Otherwise, you will get the following build error:
+     *
+     * ```
+     * Error:All flavors must now belong to a named flavor dimension.
+     * The flavor 'flavor_name' is not assigned to a flavor dimension.
+     * ```
+     *
+     * By default, when you specify only one dimension, all flavors you configure automatically
+     * belong to that dimension. If you specify more than one dimension, you need to manually assign
+     * each flavor to a dimension, as shown in the sample below.
+     *
+     * Flavor dimensions allow you to create groups of product flavors that you can combine with
+     * flavors from other flavor dimensions. For example, you can have one dimension that includes a
+     * 'free' and 'paid' version of your app, and another dimension for flavors that support
+     * different API levels, such as 'minApi21' and 'minApi24'. The Android plugin can then combine
+     * flavors from these dimensions—including their settings, code, and resources—to create
+     * variants such as 'debugFreeMinApi21' and 'releasePaidMinApi24', and so on. The sample below
+     * shows you how to specify flavor dimensions and add product flavors to them.
+     *
+     * ```
+     * android {
+     *     ...
+     *     // Specifies the flavor dimensions you want to use. The order in which you
+     *     // list each dimension determines its priority, from highest to lowest,
+     *     // when Gradle merges variant sources and configurations. You must assign
+     *     // each product flavor you configure to one of the flavor dimensions.
+     *     flavorDimensions 'api', 'version'
+     *
+     *     productFlavors {
+     *       demo {
+     *         // Assigns this product flavor to the 'version' flavor dimension.
+     *         dimension 'version'
+     *         ...
+     *     }
+     *
+     *       full {
+     *         dimension 'version'
+     *         ...
+     *       }
+     *
+     *       minApi24 {
+     *         // Assigns this flavor to the 'api' dimension.
+     *         dimension 'api'
+     *         minSdkVersion '24'
+     *         versionNameSuffix "-minApi24"
+     *         ...
+     *       }
+     *
+     *       minApi21 {
+     *         dimension "api"
+     *         minSdkVersion '21'
+     *         versionNameSuffix "-minApi21"
+     *         ...
+     *       }
+     *    }
+     * }
+     * ```
+     *
+     * To learn more, read
+     * [Combine multiple flavors](https://developer.android.com/studio/build/build-variants.html#flavor-dimensions).
+     */
+    var flavorDimensions: MutableList<String>
+
+    /**
+     * Specifies this project's resource prefix to Android Studio for editor features, such as Lint
+     * checks. This property is useful only when using Android Studio.
+     *
+     * Including unique prefixes for project resources helps avoid naming collisions with
+     * resources from other projects.
+     *
+     * For example, when creating a library with String resources,
+     * you may want to name each resource with a unique prefix, such as "`mylib_`"
+     * to avoid naming collisions with similar resources that the consumer defines.
+     *
+     * You can then specify this prefix, as shown below, so that Android Studio expects this prefix
+     * when you name project resources:
+     *
+     * ```
+     * // This property is useful only when developing your project in Android Studio.
+     * resourcePrefix 'mylib_'
+     * ```
+     */
+    var resourcePrefix: String?
+
+    /**
+     * Requires the specified NDK version to be used.
+     *
+     * Use this to specify a fixed NDK version. Without this, each new version of the Android
+     * Gradle Plugin will choose a specific version of NDK to use, so upgrading the plugin also
+     * means upgrading the NDK. Locking to a specific version can increase repeatability of the
+     * build.
+     *
+     * ```
+     * android {
+     *     // Use a fixed NDK version
+     *     ndkVersion '20.1.5948944'
+     * }
+     * ```
+     *
+     * The required format of the version is <code>major.minor.build</code>. It's not legal to
+     * specify less precision.
+     * If `ndk.dir` is specified in `local.properties` file then the NDK that it points to must
+     * match the `android.ndkVersion`.
+     *
+     * Prior to Android Gradle Plugin version 3.5, the highest installed version of NDK will be
+     * used.
+     * In Android Gradle Plugin 3.4, specifying `android.ndkVersion` was not an error, but the value
+     * would be ignored.
+     * Prior to Android Gradle Plugin version 3.4, it was illegal to specify `android.ndkVersion`.
+     *
+     * For additional information about NDK installation see
+     * [Install and configure the NDK](https://developer.android.com/studio/projects/install-ndk).
+     */
+    var ndkVersion: String?
+
+    /**
+     * Specifies the version of the
+     * [SDK Build Tools](https://developer.android.com/studio/releases/build-tools.html)
+     * to use when building your project.
+     *
+     * When using Android plugin 3.0.0 or later, configuring this property is optional. By
+     * default, the plugin uses the minimum version of the build tools required by the
+     * [version of the plugin](https://developer.android.com/studio/releases/gradle-plugin.html#revisions)
+     * you're using.
+     * To specify a different version of the build tools for the plugin to use,
+     * specify the version as follows:
+     *
+     * ```
+     * android {
+     *     // Specifying this property is optional.
+     *     buildToolsVersion "26.0.0"
+     * }
+     * ```
+     *
+     * For a list of build tools releases, read
+     * [the release notes](https://developer.android.com/studio/releases/build-tools.html#notes).
+     *
+     * Note that the value assigned to this property is parsed and stored in a normalized form,
+     * so reading it back may give a slightly different result.
+     */
+    var buildToolsVersion: String
+
+    /**
+     * Includes the specified library to the classpath.
+     *
+     * You typically use this property to support optional platform libraries that ship with the
+     * Android SDK. The following sample adds the Apache HTTP API library to the project classpath:
+     *
+     * ```
+     * android {
+     *     // Adds a platform library that ships with the Android SDK.
+     *     useLibrary 'org.apache.http.legacy'
+     * }
+     * ```
+     *
+     * To include libraries that do not ship with the SDK, such as local library modules or
+     * binaries from remote repositories,
+     * [add the libraries as dependencies](https://developer.android.com/studio/build/dependencies.html)
+     * in the `dependencies` block. Note that Android plugin 3.0.0 and later introduce
+     * [new dependency configurations](https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration.html#new_configurations).
+     * To learn more about Gradle dependencies, read
+     * [Dependency Management Basics](https://docs.gradle.org/current/userguide/artifact_dependencies_tutorial.html).
+     *
+     * @param name the name of the library.
+     */
+    fun useLibrary(name: String)
+
+    /**
+     * Includes the specified library to the classpath.
+     *
+     * You typically use this property to support optional platform libraries that ship with the
+     * Android SDK. The following sample adds the Apache HTTP API library to the project classpath:
+     *
+     * ```
+     * android {
+     *     // Adds a platform library that ships with the Android SDK.
+     *     useLibrary 'org.apache.http.legacy'
+     * }
+     * ```
+     *
+     * To include libraries that do not ship with the SDK, such as local library modules or
+     * binaries from remote repositories,
+     * [add the libraries as dependencies]("https://developer.android.com/studio/build/dependencies.html)
+     * in the `dependencies` block. Note that Android plugin 3.0.0 and later introduce
+     * [new dependency configurations](new dependency configurations).
+     * To learn more about Gradle dependencies, read
+     * [Dependency Management Basics](https://docs.gradle.org/current/userguide/artifact_dependencies_tutorial.html)
+     *
+     * @param name the name of the library.
+     * @param required if using the library requires a manifest entry, the entry will indicate that
+     *     the library is not required.
+     */
+    fun useLibrary(name: String, required: Boolean)
 }

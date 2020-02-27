@@ -32,6 +32,8 @@ import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.DslServices
+import com.android.builder.core.LibraryRequest
+import com.android.repository.Revision
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
@@ -99,4 +101,13 @@ open class BaseAppModuleExtension(
     fun bundle(action: Action<BundleOptions>) {
         action.execute(bundle)
     }
+
+    override val flavorDimensionList: MutableList<String>
+        get() = flavorDimensions
+
+    override val buildToolsRevision: Revision
+        get() = Revision.parseRevision(buildToolsVersion, Revision.Precision.MICRO)
+
+    override val libraryRequests: MutableCollection<LibraryRequest>
+        get() = publicExtensionImpl.libraryRequests
 }

@@ -34,6 +34,8 @@ import com.android.build.gradle.internal.dsl.TestExtensionImpl
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.builder.core.LibraryRequest
+import com.android.repository.Revision
 import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
@@ -127,6 +129,15 @@ open class TestExtension(
         checkWritability()
         System.err.println("android.targetVariant is deprecated, all variants are now tested.")
     }
+
+    override val flavorDimensionList: MutableList<String>
+        get() = flavorDimensions
+
+    override val buildToolsRevision: Revision
+        get() = Revision.parseRevision(buildToolsVersion, Revision.Precision.MICRO)
+
+    override val libraryRequests: MutableCollection<LibraryRequest>
+        get() = publicExtensionImpl.libraryRequests
 
     override val testBuildType: String?
         get() = null

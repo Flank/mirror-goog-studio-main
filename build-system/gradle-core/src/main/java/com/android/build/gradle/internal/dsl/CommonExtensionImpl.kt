@@ -29,6 +29,9 @@ import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.options.BooleanOption
+import com.android.builder.core.LibraryRequest
+import com.android.builder.core.ToolsRevisionUtils
+import com.android.repository.Revision
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import java.util.function.Supplier
@@ -72,6 +75,12 @@ abstract class CommonExtensionImpl<
         VariantPropertiesT>, ActionableVariantObjectOperationsExecutor<VariantT, VariantPropertiesT> {
 
     private val sourceSetManager = dslContainers.sourceSetManager
+
+    private var buildToolsRevision: Revision = ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION
+
+    // This is exposed only to support AndroidConfig.libraryRequests
+    // TODO: Make private when AndroidConfig is removed
+    val libraryRequests: MutableList<LibraryRequest> = mutableListOf()
 
     override val buildTypes: NamedDomainObjectContainer<BuildTypeT> =
         dslContainers.buildTypeContainer
@@ -221,7 +230,7 @@ abstract class CommonExtensionImpl<
     }
 
     override fun onVariantProperties(action: (VariantPropertiesT) -> Unit) {
-        variantPropertiesOperations.actions.add(Action { action.invoke(it) } )
+        variantPropertiesOperations.actions.add(Action { action.invoke(it) })
     }
 
     override fun executeVariantOperations(variant: VariantT) {
@@ -230,5 +239,28 @@ abstract class CommonExtensionImpl<
 
     override fun executeVariantPropertiesOperations(variant: VariantPropertiesT) {
         variantPropertiesOperations.executeActions(variant)
+    }
+
+    override var flavorDimensions: MutableList<String> = mutableListOf()
+
+    override var resourcePrefix: String? = null
+
+    override var ndkVersion: String? = null
+
+    override var buildToolsVersion: String
+        get() = buildToolsRevision.toString()
+        set(version) {
+            //The underlying Revision class has the maven artifact semantic,
+            // so 20 is not the same as 20.0. For the build tools revision this
+            // is not the desired behavior, so normalize e.g. to 20.0.0.
+            buildToolsRevision = Revision.parseRevision(version, Revision.Precision.MICRO)
+        }
+
+    override fun useLibrary(name: String) {
+        useLibrary(name, true)
+    }
+
+    override fun useLibrary(name: String, required: Boolean) {
+        libraryRequests.add(LibraryRequest(name, required))
     }
 }
