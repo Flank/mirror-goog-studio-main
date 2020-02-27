@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.packaging.JarCreator
@@ -130,8 +129,7 @@ class AssetPackPreBundleTaskRunnable @Inject constructor(private val params: Par
     override fun run() {
         params.packDir.mkdirs()
         FileUtils.cleanOutputDir(params.packDir)
-        val jarCreator =
-            JarCreatorFactory.make(params.packFile.toPath(), JarCreatorType.JAR_FLINGER)
+        val jarCreator = JarCreatorFactory.make(jarFile = params.packFile.toPath())
 
         // Disable compression for module zips, since this will only be used in bundletool and it
         // will need to uncompress them anyway.

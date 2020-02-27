@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
@@ -87,7 +88,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val nativeDebugMetadataDirs: ConfigurableFileCollection
+    abstract val nativeDebugMetadataFiles: ConfigurableFileCollection
 
     @get:Input
     lateinit var aaptOptionsNoCompress: Collection<String>
@@ -131,7 +132,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     mainDexList = mainDexList.orNull?.asFile,
                     obfuscationMappingFile = if (obsfuscationMappingFile.isPresent) obsfuscationMappingFile.get().asFile else null,
                     integrityConfigFile = if (integrityConfigFile.isPresent) integrityConfigFile.get().asFile else null,
-                    nativeDebugMetadataDirs = nativeDebugMetadataDirs.files,
+                    nativeDebugMetadataFiles = nativeDebugMetadataFiles.files,
                     aaptOptionsNoCompress = aaptOptionsNoCompress,
                     bundleOptions = bundleOptions,
                     bundleFlags = bundleFlags,
@@ -153,7 +154,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val mainDexList: File?,
         val obfuscationMappingFile: File?,
         val integrityConfigFile: File?,
-        val nativeDebugMetadataDirs: Set<File>,
+        val nativeDebugMetadataFiles: Set<File>,
         val aaptOptionsNoCompress: Collection<String>,
         val bundleOptions: BundleOptions,
         val bundleFlags: BundleFlags,
@@ -261,14 +262,12 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 }
             }
 
-            params.nativeDebugMetadataDirs.forEach { dir ->
-                FileUtils.getAllFiles(dir).forEach { file ->
-                    command.addMetadataFile(
-                        "com.android.tools.build.debugsymbols",
-                        "${file.parentFile.name}/${file.name}",
-                        file.toPath()
-                    )
-                }
+            params.nativeDebugMetadataFiles.forEach { file ->
+                command.addMetadataFile(
+                    "com.android.tools.build.debugsymbols",
+                    "${file.parentFile.name}/${file.name}",
+                    file.toPath()
+                )
             }
 
             command.build().execute()
@@ -361,10 +360,9 @@ abstract class PackageBundleTask : NonIncrementalTask() {
 
             task.debuggable = creationConfig.variantDslInfo.isDebuggable
 
-            task.nativeDebugMetadataDirs.from(
-                MergeNativeDebugMetadataTask.getNativeDebugMetadataDirs(creationConfig)
+            task.nativeDebugMetadataFiles.fromDisallowChanges(
+                MergeNativeDebugMetadataTask.getNativeDebugMetadataFiles(creationConfig)
             )
-            task.nativeDebugMetadataDirs.disallowChanges()
 
             task.aaptOptionsNoCompress =
             creationConfig.globalScope.extension.aaptOptions.noCompress

@@ -229,7 +229,10 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
         ) {
             val filterAndOnlyClasses = JarMerger.CLASSES_ONLY.and(filter)
 
-            JarCreatorFactory.make(toFile.toPath(), jarCreatorType).use { jarCreator ->
+            JarCreatorFactory.make(
+                jarFile = toFile.toPath(),
+                type = jarCreatorType
+            ).use { jarCreator ->
                 compressionLevel?.let { jarCreator.setCompressionLevel(it) }
                 // Merge only class files on CLASS type inputs
                 for (input in classFiles) {

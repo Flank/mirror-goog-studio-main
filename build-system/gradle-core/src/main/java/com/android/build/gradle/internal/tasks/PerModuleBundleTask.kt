@@ -114,7 +114,8 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
         FileUtils.cleanOutputDir(outputDir.get().asFile)
         val jarCreator =
             JarCreatorFactory.make(
-                File(outputDir.get().asFile, fileName.get()).toPath(), jarCreatorType.get()
+                jarFile = File(outputDir.get().asFile, fileName.get()).toPath(),
+                type = jarCreatorType.get()
             )
 
         // Disable compression for module zips, since this will only be used in bundletool and it

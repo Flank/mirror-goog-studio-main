@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.SdkConstants.DOT_DBG
+import com.android.SdkConstants.DOT_SYM
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.core.Abi
@@ -202,12 +204,12 @@ class ExtractNativeDebugMetadataDelegate(
             when (debugSymbolLevel) {
                 DebugSymbolLevel.FULL -> {
                     outputFile =
-                        File(outputDir, "${inputFile.parentFile.name}/${inputFile.name}.dbg")
+                        File(outputDir, "${inputFile.parentFile.name}/${inputFile.name}$DOT_DBG")
                     objcopyArgs = listOf("--only-keep-debug")
                 }
                 DebugSymbolLevel.SYMBOL_TABLE -> {
                     outputFile =
-                        File(outputDir, "${inputFile.parentFile.name}/${inputFile.name}.sym")
+                        File(outputDir, "${inputFile.parentFile.name}/${inputFile.name}$DOT_SYM")
                     objcopyArgs = listOf("-j", "symtab", "-j", "dynsym")
                 }
                 DebugSymbolLevel.NONE ->
