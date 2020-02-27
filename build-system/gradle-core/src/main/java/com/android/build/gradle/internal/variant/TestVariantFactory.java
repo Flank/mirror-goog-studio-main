@@ -247,11 +247,6 @@ public class TestVariantFactory
     }
 
     @NonNull
-    public static String getTestedApksConfigurationName(@NonNull String variantName) {
-        return StringHelper.appendCapitalized(variantName, CONFIG_NAME_TESTED_APKS);
-    }
-
-    @NonNull
     @Override
     public VariantType getVariantType() {
         return VariantTypeImpl.TEST_APK;

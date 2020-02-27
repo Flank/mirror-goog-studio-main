@@ -148,6 +148,14 @@ public class AndroidArtifacts {
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
         RUNTIME_CLASSPATH("runtimeClasspath", RUNTIME_ELEMENTS, true),
+        /**
+         * A 'true' runtime classpath for consuming the PACKAGED_DEPENDENCIES artifact in separate
+         * test projects and dynamic feature projects.
+         *
+         * <p>In the separate test project the tested project is added as compileOnly, so this is
+         * the only way to access this runtime classpath.
+         */
+        PROVIDED_CLASSPATH("packagedDependenciesClasspath", RUNTIME_ELEMENTS, false),
         ANNOTATION_PROCESSOR("annotationProcessorClasspath", RUNTIME_ELEMENTS, false),
         REVERSE_METADATA_VALUES("reverseMetadata", REVERSE_METADATA_ELEMENTS, false);
 
