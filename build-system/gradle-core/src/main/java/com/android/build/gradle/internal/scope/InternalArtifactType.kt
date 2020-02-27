@@ -253,7 +253,7 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object NON_NAMESPACED_LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
     object AAPT_FRIENDLY_MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object INSTANT_APP_MANIFEST: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    object MANIFEST_METADATA: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object MANIFEST_METADATA: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     object MANIFEST_MERGE_REPORT: InternalArtifactType<RegularFile>(FILE), Replaceable
     object MANIFEST_MERGE_BLAME_FILE: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Simplified android manifest with original package name.

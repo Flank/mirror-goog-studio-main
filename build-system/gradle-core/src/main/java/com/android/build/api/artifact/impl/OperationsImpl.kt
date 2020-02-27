@@ -21,7 +21,6 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.MultipleTransformRequest
 import com.android.build.api.artifact.Operations
 import com.android.build.api.artifact.ReplaceRequest
-import com.android.build.api.artifact.TaskBasedOperations
 import com.android.build.api.artifact.TransformRequest
 import com.android.build.gradle.internal.scope.getOutputDirectory
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -123,8 +122,9 @@ class OperationsImpl(
         return storageProvider.getStorage(type.kind).getArtifact(objects, type)
     }
 
-    internal fun <T: FileSystemLocation, ARTIFACT_TYPE> republish(source: ARTIFACT_TYPE, target: ARTIFACT_TYPE)
-        where ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Single {
+    internal fun <T: FileSystemLocation, ARTIFACT_TYPE, ARTIFACT_TYPE2> republish(source: ARTIFACT_TYPE, target: ARTIFACT_TYPE2)
+        where ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Single,
+              ARTIFACT_TYPE2: ArtifactType<T>, ARTIFACT_TYPE2: ArtifactType.Single {
 
         storageProvider.getStorage(target.kind).copy(target, getArtifactContainer(source))
     }

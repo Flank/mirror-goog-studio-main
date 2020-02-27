@@ -13,156 +13,146 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.tasks;
+package com.android.build.gradle.tasks
 
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NAVIGATION_JSON;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.variant.BuiltArtifact;
-import com.android.build.api.variant.BuiltArtifacts;
-import com.android.build.api.variant.impl.BuiltArtifactsImpl;
-import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
-import com.android.build.api.variant.impl.VariantOutputConfigurationImplKt;
-import com.android.build.api.variant.impl.VariantOutputImpl;
-import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.component.BaseCreationConfig;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.BuiltArtifactProperty;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.builder.internal.TestManifestGenerator;
-import com.android.manifmerger.ManifestMerger2;
-import com.android.manifmerger.ManifestProvider;
-import com.android.manifmerger.ManifestSystemProperty;
-import com.android.manifmerger.MergingReport;
-import com.android.manifmerger.PlaceholderHandler;
-import com.android.utils.FileUtils;
-import com.android.utils.ILogger;
-import com.google.common.base.Charsets;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.io.Files;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.inject.Inject;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.result.ResolvedArtifactResult;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.provider.MapProperty;
-import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskProvider;
+import com.android.SdkConstants
+import com.android.build.api.variant.BuiltArtifact
+import com.android.build.api.variant.BuiltArtifacts
+import com.android.build.api.variant.impl.BuiltArtifactsImpl
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl.Companion.loadFromDirectory
+import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.api.variant.impl.dirName
+import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
+import com.android.build.gradle.internal.scope.BuiltArtifactProperty
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.tasks.ManifestProcessorTask
+import com.android.build.gradle.tasks.ProcessApplicationManifest.Companion.getArtifactName
+import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.ManifestProviderImpl
+import com.android.builder.internal.TestManifestGenerator
+import com.android.manifmerger.ManifestMerger2
+import com.android.manifmerger.ManifestMerger2.MergeFailureException
+import com.android.manifmerger.ManifestProvider
+import com.android.manifmerger.ManifestSystemProperty
+import com.android.manifmerger.MergingReport
+import com.android.manifmerger.PlaceholderHandler
+import com.android.utils.FileUtils
+import com.android.utils.ILogger
+import com.google.common.base.Charsets
+import com.google.common.base.Preconditions
+import com.google.common.base.Strings
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableMap
+import com.google.common.collect.Lists
+import com.google.common.io.Files
+import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
+import java.io.File
+import java.io.IOException
 
 /**
  * A task that processes the manifest for test modules and tests in androidTest.
  *
- * <p>For both test modules and tests in androidTest process is the same, except for how the tested
+ *
+ * For both test modules and tests in androidTest process is the same, except for how the tested
  * application id is extracted.
  *
- * <p>Tests in androidTest get that info form the {@link VariantDslInfo#getTestedApplicationId()},
- * while the test modules get the info from the published intermediate manifest with type {@link
- * AndroidArtifacts} TYPE_METADATA of the tested app.
+ *
+ * Tests in androidTest get that info form the [VariantDslInfo.getTestedApplicationId],
+ * while the test modules get the info from the published intermediate manifest with type [ ] TYPE_METADATA of the tested app.
  */
-public abstract class ProcessTestManifest extends ManifestProcessorTask {
+abstract class ProcessTestManifest : ManifestProcessorTask() {
 
-    @NonNull private FileCollection testTargetMetadata;
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFiles
+    lateinit var testTargetMetadata: FileCollection
+        private set
 
-    /** Whether there's just a single APK with both test and tested code. */
-    private boolean onlyTestApk;
+    /** Whether there's just a single APK with both test and tested code.  */
+    private var onlyTestApk = false
+    @get:Internal
+    var tmpDir: File? = null
+    private var manifests: ArtifactCollection? = null
+    private var apkData: VariantOutputImpl? = null
 
-    private File tmpDir;
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFiles
+    var navigationJsons: FileCollection? = null
+        private set
 
-    private ArtifactCollection manifests;
-
-    private VariantOutputImpl apkData;
-
-    private FileCollection navigationJsons;
-
-    @Inject
-    public ProcessTestManifest(ObjectFactory objectFactory) {
-        super(objectFactory);
-    }
-
-    @Override
-    protected void doFullTaskAction() {
-        if (getTestedApplicationId().getOrNull() == null && testTargetMetadata.isEmpty()) {
-            throw new RuntimeException("testedApplicationId and testTargetMetadata are null");
+    override fun doFullTaskAction() {
+        if (testedApplicationId.orNull == null && testTargetMetadata.isEmpty) {
+            throw RuntimeException("testedApplicationId and testTargetMetadata are null")
         }
-        String testedApplicationId = this.getTestedApplicationId().getOrNull();
+        var testedApplicationId = testedApplicationId.orNull
         if (!onlyTestApk) {
-            BuiltArtifactsImpl manifestOutputs =
-                    BuiltArtifactsLoaderImpl.loadFromDirectory(testTargetMetadata.getSingleFile());
-
-            if (manifestOutputs == null || manifestOutputs.getElements().isEmpty()) {
-                throw new RuntimeException("Cannot find merged manifest, please file a bug.");
+            val manifestOutputs =
+                loadFromDirectory(testTargetMetadata.singleFile)
+            if (manifestOutputs == null || manifestOutputs.elements.isEmpty()) {
+                throw RuntimeException("Cannot find merged manifest, please file a bug.")
             }
-
-            BuiltArtifact mainSplit = manifestOutputs.getElements().iterator().next();
-            testedApplicationId = mainSplit.getProperties().get(BuiltArtifactProperty.PACKAGE_ID);
+            val mainSplit: BuiltArtifact = manifestOutputs.elements.iterator().next()
+            testedApplicationId = mainSplit.properties[BuiltArtifactProperty.PACKAGE_ID]
         }
-        String dirName =
-                VariantOutputConfigurationImplKt.dirName(apkData.getVariantOutputConfiguration());
-        File manifestOutputFolder =
-                Strings.isNullOrEmpty(dirName)
-                        ? getManifestOutputDirectory().get().getAsFile()
-                        : getManifestOutputDirectory().get().file(dirName).getAsFile();
-
-        FileUtils.mkdirs(manifestOutputFolder);
-        File manifestOutputFile = new File(manifestOutputFolder, SdkConstants.ANDROID_MANIFEST_XML);
-
-        List<File> navJsons =
-                navigationJsons == null
-                        ? Collections.emptyList()
-                        : Lists.newArrayList(navigationJsons);
-
+        val dirName = apkData!!.variantOutputConfiguration.dirName()
+        val manifestOutputFolder =
+            if (Strings.isNullOrEmpty(dirName)) manifestOutputDirectory.get().asFile else manifestOutputDirectory.get().file(
+                dirName
+            ).asFile
+        FileUtils.mkdirs(manifestOutputFolder)
+        val manifestOutputFile =
+            File(manifestOutputFolder, SdkConstants.ANDROID_MANIFEST_XML)
+        val navJsons =
+            if (navigationJsons == null) emptyList<File>() else Lists.newArrayList(
+                navigationJsons
+            )
         mergeManifestsForTestVariant(
-                getTestApplicationId().get(),
-                getMinSdkVersion().get(),
-                getTargetSdkVersion().get(),
-                testedApplicationId,
-                getInstrumentationRunner().get(),
-                getHandleProfiling().get(),
-                getFunctionalTest().get(),
-                getTestLabel().getOrNull(),
-                getTestManifestFile().getOrNull(),
-                computeProviders(),
-                getPlaceholdersValues().get(),
-                navJsons,
-                manifestOutputFile,
-                getTmpDir());
-
-        new BuiltArtifactsImpl(
-                        BuiltArtifacts.METADATA_FILE_VERSION,
-                        MERGED_MANIFESTS.INSTANCE,
-                        getTestApplicationId().get(),
-                        getVariantName(),
-                        ImmutableList.of(
-                                apkData.toBuiltArtifact(manifestOutputFile, ImmutableMap.of())))
-                .saveToDirectory(getManifestOutputDirectory().get().getAsFile());
+            testApplicationId.get(),
+            minSdkVersion.get(),
+            targetSdkVersion.get(),
+            testedApplicationId!!,
+            instrumentationRunner.get(),
+            handleProfiling.get(),
+            functionalTest.get(),
+            testLabel.orNull,
+            testManifestFile.orNull,
+            computeProviders(),
+            placeholdersValues.get(),
+            navJsons,
+            manifestOutputFile,
+            tmpDir!!
+        )
+        BuiltArtifactsImpl(
+            BuiltArtifacts.METADATA_FILE_VERSION,
+            MERGED_MANIFESTS,
+            testApplicationId.get(),
+            variantName,
+            ImmutableList.of(
+                apkData!!.toBuiltArtifact(
+                    manifestOutputFile,
+                    ImmutableMap.of()
+                )
+            )
+        )
+            .saveToDirectory(manifestOutputDirectory.get().asFile)
     }
 
     /**
@@ -174,9 +164,9 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
      * @param testedApplicationId the application id of the tested application
      * @param instrumentationRunner the name of the instrumentation runner
      * @param handleProfiling whether or not the Instrumentation object will turn profiling on and
-     *     off
+     * off
      * @param functionalTest whether or not the Instrumentation class should run as a functional
-     *     test
+     * test
      * @param testLabel the label for the tests
      * @param testManifestFile optionally user provided AndroidManifest.xml for testing application
      * @param manifestProviders the manifest providers
@@ -185,421 +175,434 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
      * @param outManifest the output location for the merged manifest
      * @param tmpDir temporary dir used for processing
      */
-    public void mergeManifestsForTestVariant(
-            @NonNull String testApplicationId,
-            @NonNull String minSdkVersion,
-            @NonNull String targetSdkVersion,
-            @NonNull String testedApplicationId,
-            @NonNull String instrumentationRunner,
-            @NonNull Boolean handleProfiling,
-            @NonNull Boolean functionalTest,
-            @Nullable String testLabel,
-            @Nullable File testManifestFile,
-            @NonNull List<? extends ManifestProvider> manifestProviders,
-            @NonNull Map<String, Object> manifestPlaceholders,
-            @NonNull List<File> navigationJsons,
-            @NonNull File outManifest,
-            @NonNull File tmpDir) {
-        checkNotNull(testApplicationId, "testApplicationId cannot be null.");
-        checkNotNull(testedApplicationId, "testedApplicationId cannot be null.");
-        checkNotNull(instrumentationRunner, "instrumentationRunner cannot be null.");
-        checkNotNull(handleProfiling, "handleProfiling cannot be null.");
-        checkNotNull(functionalTest, "functionalTest cannot be null.");
-        checkNotNull(manifestProviders, "manifestProviders cannot be null.");
-        checkNotNull(outManifest, "outManifestLocation cannot be null.");
-
-        ILogger logger = new LoggerWrapper(getLogger());
-
+    fun mergeManifestsForTestVariant(
+        testApplicationId: String,
+        minSdkVersion: String,
+        targetSdkVersion: String,
+        testedApplicationId: String,
+        instrumentationRunner: String,
+        handleProfiling: Boolean,
+        functionalTest: Boolean,
+        testLabel: String?,
+        testManifestFile: File?,
+        manifestProviders: List<ManifestProvider?>,
+        manifestPlaceholders: Map<String?, Any?>,
+        navigationJsons: List<File>,
+        outManifest: File,
+        tmpDir: File
+    ) {
+        Preconditions.checkNotNull(
+            testApplicationId,
+            "testApplicationId cannot be null."
+        )
+        Preconditions.checkNotNull(
+            testedApplicationId,
+            "testedApplicationId cannot be null."
+        )
+        Preconditions.checkNotNull(
+            instrumentationRunner,
+            "instrumentationRunner cannot be null."
+        )
+        Preconditions.checkNotNull(
+            handleProfiling,
+            "handleProfiling cannot be null."
+        )
+        Preconditions.checkNotNull(
+            functionalTest,
+            "functionalTest cannot be null."
+        )
+        Preconditions.checkNotNull(
+            manifestProviders,
+            "manifestProviders cannot be null."
+        )
+        Preconditions.checkNotNull(
+            outManifest,
+            "outManifestLocation cannot be null."
+        )
+        val logger: ILogger =
+            LoggerWrapper(logger)
         // These temp files are only need in the middle of processing manifests; delete
-        // them when they're done. We're not relying on File#deleteOnExit for this
-        // since in the Gradle daemon for example that would leave the files around much
-        // longer than we want.
-        File tempFile1 = null;
-        File tempFile2 = null;
+// them when they're done. We're not relying on File#deleteOnExit for this
+// since in the Gradle daemon for example that would leave the files around much
+// longer than we want.
+        var tempFile1: File? = null
+        var tempFile2: File? = null
         try {
-            FileUtils.mkdirs(tmpDir);
-            File generatedTestManifest =
-                    manifestProviders.isEmpty() && testManifestFile == null
-                            ? outManifest
-                            : (tempFile1 = File.createTempFile("manifestMerger", ".xml", tmpDir));
-
+            FileUtils.mkdirs(tmpDir)
+            var generatedTestManifest =
+                if (manifestProviders.isEmpty() && testManifestFile == null) outManifest else File.createTempFile(
+                    "manifestMerger",
+                    ".xml",
+                    tmpDir
+                ).also { tempFile1 = it }
             // we are generating the manifest and if there is an existing one,
-            // it will be overlaid with the generated one
-            logger.verbose("Generating in %1$s", generatedTestManifest.getAbsolutePath());
+// it will be overlaid with the generated one
+            logger.verbose("Generating in %1\$s", generatedTestManifest!!.absolutePath)
             generateTestManifest(
-                    testApplicationId,
-                    minSdkVersion,
-                    targetSdkVersion.equals("-1") ? null : targetSdkVersion,
-                    testedApplicationId,
-                    instrumentationRunner,
-                    handleProfiling,
-                    functionalTest,
-                    generatedTestManifest);
-
+                testApplicationId,
+                minSdkVersion,
+                if (targetSdkVersion == "-1") null else targetSdkVersion,
+                testedApplicationId,
+                instrumentationRunner,
+                handleProfiling,
+                functionalTest,
+                generatedTestManifest
+            )
             if (testManifestFile != null && testManifestFile.exists()) {
-                ManifestMerger2.Invoker invoker =
-                        ManifestMerger2.newMerger(
-                                        testManifestFile,
-                                        logger,
-                                        ManifestMerger2.MergeType.APPLICATION)
-                                .setPlaceHolderValues(manifestPlaceholders)
-                                .setPlaceHolderValue(
-                                        PlaceholderHandler.INSTRUMENTATION_RUNNER,
-                                        instrumentationRunner)
-                                .addLibraryManifest(generatedTestManifest)
-                                .addNavigationJsons(navigationJsons);
-
+                val invoker = ManifestMerger2.newMerger(
+                    testManifestFile,
+                    logger,
+                    ManifestMerger2.MergeType.APPLICATION
+                )
+                    .setPlaceHolderValues(manifestPlaceholders)
+                    .setPlaceHolderValue(
+                        PlaceholderHandler.INSTRUMENTATION_RUNNER,
+                        instrumentationRunner
+                    )
+                    .addLibraryManifest(generatedTestManifest)
+                    .addNavigationJsons(navigationJsons)
                 // we override these properties
-                invoker.setOverride(ManifestSystemProperty.PACKAGE, testApplicationId);
-                invoker.setOverride(ManifestSystemProperty.MIN_SDK_VERSION, minSdkVersion);
-                invoker.setOverride(ManifestSystemProperty.NAME, instrumentationRunner);
-                invoker.setOverride(ManifestSystemProperty.TARGET_PACKAGE, testedApplicationId);
+                invoker.setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
+                invoker.setOverride(ManifestSystemProperty.MIN_SDK_VERSION, minSdkVersion)
+                invoker.setOverride(ManifestSystemProperty.NAME, instrumentationRunner)
+                invoker.setOverride(ManifestSystemProperty.TARGET_PACKAGE, testedApplicationId)
                 invoker.setOverride(
-                        ManifestSystemProperty.FUNCTIONAL_TEST, functionalTest.toString());
+                    ManifestSystemProperty.FUNCTIONAL_TEST, functionalTest.toString()
+                )
                 invoker.setOverride(
-                        ManifestSystemProperty.HANDLE_PROFILING, handleProfiling.toString());
+                    ManifestSystemProperty.HANDLE_PROFILING, handleProfiling.toString()
+                )
                 if (testLabel != null) {
-                    invoker.setOverride(ManifestSystemProperty.LABEL, testLabel);
+                    invoker.setOverride(ManifestSystemProperty.LABEL, testLabel)
                 }
-
-                if (!targetSdkVersion.equals("-1")) {
+                if (targetSdkVersion != "-1") {
                     invoker.setOverride(
-                            ManifestSystemProperty.TARGET_SDK_VERSION, targetSdkVersion);
+                        ManifestSystemProperty.TARGET_SDK_VERSION, targetSdkVersion
+                    )
                 }
-
-                MergingReport mergingReport = invoker.merge();
+                val mergingReport = invoker.merge()
                 if (manifestProviders.isEmpty()) {
-                    handleMergingResult(mergingReport, outManifest, logger);
+                    handleMergingResult(mergingReport, outManifest, logger)
                 } else {
-                    tempFile2 = File.createTempFile("manifestMerger", ".xml", tmpDir);
-                    handleMergingResult(mergingReport, tempFile2, logger);
-                    generatedTestManifest = tempFile2;
+                    tempFile2 = File.createTempFile("manifestMerger", ".xml", tmpDir)
+                    handleMergingResult(mergingReport, tempFile2, logger)
+                    generatedTestManifest = tempFile2
                 }
             }
-
             if (!manifestProviders.isEmpty()) {
-                MergingReport mergingReport =
-                        ManifestMerger2.newMerger(
-                                        generatedTestManifest,
-                                        logger,
-                                        ManifestMerger2.MergeType.APPLICATION)
-                                .withFeatures(
-                                        ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)
-                                .setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
-                                .addManifestProviders(manifestProviders)
-                                .setPlaceHolderValues(manifestPlaceholders)
-                                .addNavigationJsons(navigationJsons)
-                                .merge();
-
-                handleMergingResult(mergingReport, outManifest, logger);
+                val mergingReport = ManifestMerger2.newMerger(
+                    generatedTestManifest!!,
+                    logger,
+                    ManifestMerger2.MergeType.APPLICATION
+                )
+                    .withFeatures(
+                        ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS
+                    )
+                    .setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
+                    .addManifestProviders(manifestProviders)
+                    .setPlaceHolderValues(manifestPlaceholders)
+                    .addNavigationJsons(navigationJsons)
+                    .merge()
+                handleMergingResult(mergingReport, outManifest, logger)
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to create the temporary file", e);
-        } catch (ManifestMerger2.MergeFailureException e) {
-            throw new RuntimeException("Manifest merging exception", e);
+        } catch (e: IOException) {
+            throw RuntimeException("Unable to create the temporary file", e)
+        } catch (e: MergeFailureException) {
+            throw RuntimeException("Manifest merging exception", e)
         } finally {
             try {
                 if (tempFile1 != null) {
-                    FileUtils.delete(tempFile1);
+                    FileUtils.delete(tempFile1!!)
                 }
                 if (tempFile2 != null) {
-                    FileUtils.delete(tempFile2);
+                    FileUtils.delete(tempFile2)
                 }
-            } catch (IOException e) {
-                // just log this, so we do not mask the initial exception if there is any
-                logger.error(e, "Unable to clean up the temporary files.");
+            } catch (e: IOException) { // just log this, so we do not mask the initial exception if there is any
+                logger.error(e, "Unable to clean up the temporary files.")
             }
         }
     }
 
-    private void handleMergingResult(
-            @NonNull MergingReport mergingReport, @NonNull File outFile, @NonNull ILogger logger)
-            throws IOException {
-        outputMergeBlameContents(mergingReport, getMergeBlameFile().get().getAsFile());
-
-        switch (mergingReport.getResult()) {
-            case WARNING:
-                mergingReport.log(logger);
-                // fall through since these are just warnings.
-            case SUCCESS:
+    @Throws(IOException::class)
+    private fun handleMergingResult(
+        mergingReport: MergingReport, outFile: File, logger: ILogger
+    ) {
+        outputMergeBlameContents(
+            mergingReport,
+            mergeBlameFile.get().asFile
+        )
+        when (mergingReport.result) {
+            MergingReport.Result.WARNING -> {
+                mergingReport.log(logger)
                 try {
-                    String annotatedDocument =
-                            mergingReport.getMergedDocument(MergingReport.MergedManifestKind.BLAME);
+                    val annotatedDocument =
+                        mergingReport.getMergedDocument(MergingReport.MergedManifestKind.BLAME)
                     if (annotatedDocument != null) {
-                        logger.verbose(annotatedDocument);
+                        logger.verbose(annotatedDocument)
                     } else {
-                        logger.verbose("No blaming records from manifest merger");
+                        logger.verbose("No blaming records from manifest merger")
                     }
-                } catch (Exception e) {
-                    logger.error(e, "cannot print resulting xml");
+                } catch (e: Exception) {
+                    logger.error(e, "cannot print resulting xml")
                 }
-                String finalMergedDocument =
-                        mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED);
-                if (finalMergedDocument == null) {
-                    throw new RuntimeException("No result from manifest merger");
-                }
+                val finalMergedDocument =
+                    mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED)
+                        ?: throw RuntimeException("No result from manifest merger")
                 try {
-                    Files.asCharSink(outFile, Charsets.UTF_8).write(finalMergedDocument);
-                } catch (IOException e) {
-                    logger.error(e, "Cannot write resulting xml");
-                    throw new RuntimeException(e);
+                    Files.asCharSink(
+                        outFile,
+                        Charsets.UTF_8
+                    ).write(finalMergedDocument)
+                } catch (e: IOException) {
+                    logger.error(e, "Cannot write resulting xml")
+                    throw RuntimeException(e)
                 }
-                logger.verbose("Merged manifest saved to " + outFile);
-                break;
-            case ERROR:
-                mergingReport.log(logger);
-                throw new RuntimeException(mergingReport.getReportString());
-            default:
-                throw new RuntimeException("Unhandled result type : " + mergingReport.getResult());
+                logger.verbose("Merged manifest saved to $outFile")
+            }
+            MergingReport.Result.SUCCESS -> {
+                try {
+                    val annotatedDocument =
+                        mergingReport.getMergedDocument(MergingReport.MergedManifestKind.BLAME)
+                    if (annotatedDocument != null) {
+                        logger.verbose(annotatedDocument)
+                    } else {
+                        logger.verbose("No blaming records from manifest merger")
+                    }
+                } catch (e: Exception) {
+                    logger.error(e, "cannot print resulting xml")
+                }
+                val finalMergedDocument =
+                    mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED)
+                        ?: throw RuntimeException("No result from manifest merger")
+                try {
+                    Files.asCharSink(
+                        outFile,
+                        Charsets.UTF_8
+                    ).write(finalMergedDocument)
+                } catch (e: IOException) {
+                    logger.error(e, "Cannot write resulting xml")
+                    throw RuntimeException(e)
+                }
+                logger.verbose("Merged manifest saved to $outFile")
+            }
+            MergingReport.Result.ERROR -> {
+                mergingReport.log(logger)
+                throw RuntimeException(mergingReport.reportString)
+            }
+            else -> throw RuntimeException("Unhandled result type : " + mergingReport.result)
         }
     }
 
-    private static void generateTestManifest(
-            @NonNull String testApplicationId,
-            @Nullable String minSdkVersion,
-            @Nullable String targetSdkVersion,
-            @NonNull String testedApplicationId,
-            @NonNull String instrumentationRunner,
-            @NonNull Boolean handleProfiling,
-            @NonNull Boolean functionalTest,
-            @NonNull File outManifestLocation) {
-        TestManifestGenerator generator =
-                new TestManifestGenerator(
-                        outManifestLocation,
-                        testApplicationId,
-                        minSdkVersion,
-                        targetSdkVersion,
-                        testedApplicationId,
-                        instrumentationRunner,
-                        handleProfiling,
-                        functionalTest);
-        try {
-            generator.generate();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    override val aaptFriendlyManifestOutputFile: File?
+        get() = null
 
-    @Nullable
-    @Override
-    public File getAaptFriendlyManifestOutputFile() {
-        return null;
-    }
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFile
+    abstract val testManifestFile: Property<File?>
 
-    @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @Optional
-    public abstract Property<File> getTestManifestFile();
+    @get:Input
+    abstract val testApplicationId: Property<String>
 
-    @Internal
-    public File getTmpDir() {
-        return tmpDir;
-    }
+    @get:Optional
+    @get:Input
+    abstract val testedApplicationId: Property<String>
 
-    public void setTmpDir(File tmpDir) {
-        this.tmpDir = tmpDir;
-    }
+    @get:Input
+    abstract val minSdkVersion: Property<String>
 
-    @Input
-    public abstract Property<String> getTestApplicationId();
+    @get:Input
+    abstract val targetSdkVersion: Property<String>
 
-    @Input
-    @Optional
-    public abstract Property<String> getTestedApplicationId();
+    @get:Input
+    abstract val instrumentationRunner: Property<String>
 
-    @Input
-    public abstract Property<String> getMinSdkVersion();
+    @get:Input
+    abstract val handleProfiling: Property<Boolean>
 
-    @Input
-    public abstract Property<String> getTargetSdkVersion();
+    @get:Input
+    abstract val functionalTest: Property<Boolean>
 
-    @Input
-    public abstract Property<String> getInstrumentationRunner();
+    @get:Input
+    abstract val variantType: Property<String>
 
-    @Input
-    public abstract Property<Boolean> getHandleProfiling();
+    @get:Optional
+    @get:Input
+    abstract val testLabel: Property<String>
 
-    @Input
-    public abstract Property<Boolean> getFunctionalTest();
-
-    @Input
-    public abstract Property<String> getVariantType();
-
-    @Input
-    @Optional
-    public abstract Property<String> getTestLabel();
-
-    @Input
-    public abstract MapProperty<String, Object> getPlaceholdersValues();
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @Optional
-    public FileCollection getTestTargetMetadata() {
-        return testTargetMetadata;
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @Optional
-    public FileCollection getNavigationJsons() {
-        return navigationJsons;
-    }
+    @get:Input
+    abstract val placeholdersValues: MapProperty<String, Any>
 
     /**
      * Compute the final list of providers based on the manifest file collection.
      * @return the list of providers.
      */
-    public List<ManifestProvider> computeProviders() {
-        final Set<ResolvedArtifactResult> artifacts = manifests.getArtifacts();
-        List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size());
-
-        for (ResolvedArtifactResult artifact : artifacts) {
+    fun computeProviders(): List<ManifestProvider?> {
+        val artifacts = manifests!!.artifacts
+        val providers: MutableList<ManifestProvider?> =
+            Lists.newArrayListWithCapacity(artifacts.size)
+        for (artifact in artifacts) {
             providers.add(
-                    new ProcessApplicationManifest.CreationAction.ManifestProviderImpl(
-                            artifact.getFile(),
-                            ProcessApplicationManifest.getArtifactName(artifact)));
+                ManifestProviderImpl(
+                    artifact.file,
+                    getArtifactName(artifact)
+                )
+            )
         }
-
-        return providers;
+        return providers
     }
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getManifests() {
-        return manifests.getArtifactFiles();
+    fun getManifests(): FileCollection {
+        return manifests!!.artifactFiles
     }
 
-    public static class CreationAction
-            extends VariantTaskCreationAction<ProcessTestManifest, BaseCreationConfig> {
+    class CreationAction(
+        creationConfig: BaseCreationConfig,
+        private val testTargetMetadata: FileCollection
+    ) : VariantTaskCreationAction<ProcessTestManifest, BaseCreationConfig>(creationConfig) {
+        override val name: String
+            get() = computeTaskName("process", "Manifest")
 
-        @NonNull private final FileCollection testTargetMetadata;
+        override val type: Class<ProcessTestManifest>
+            get() = ProcessTestManifest::class.java
 
-        public CreationAction(
-                @NonNull BaseCreationConfig creationConfig,
-                @NonNull FileCollection testTargetMetadata) {
-            super(creationConfig);
-            this.testTargetMetadata = testTargetMetadata;
-        }
-
-        @NonNull
-        @Override
-        public String getName() {
-            return computeTaskName("process", "Manifest");
-        }
-
-        @NonNull
-        @Override
-        public Class<ProcessTestManifest> getType() {
-            return ProcessTestManifest.class;
-        }
-
-        @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
+        override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
             creationConfig
-                    .getArtifacts()
-                    .republish(
-                            InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-                            InternalArtifactType.MANIFEST_METADATA.INSTANCE);
+                .operations
+                .republish(
+                    MERGED_MANIFESTS,
+                    InternalArtifactType.MANIFEST_METADATA
+                )
         }
 
-        @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends ProcessTestManifest> taskProvider) {
-            super.handleProvider(taskProvider);
-            creationConfig.getTaskContainer().setProcessManifestTask(taskProvider);
-
-            BuildArtifactsHolder artifacts = creationConfig.getArtifacts();
+        override fun handleProvider(
+            taskProvider: TaskProvider<out ProcessTestManifest>
+        ) {
+            super.handleProvider(taskProvider)
+            creationConfig!!.taskContainer.processManifestTask = taskProvider
+            val artifacts = creationConfig.artifacts
             artifacts.producesDir(
-                    InternalArtifactType.MERGED_MANIFESTS.INSTANCE,
-                    taskProvider,
-                    ManifestProcessorTask::getManifestOutputDirectory,
-                    "");
-
+                MERGED_MANIFESTS,
+                taskProvider,
+                ManifestProcessorTask::manifestOutputDirectory,
+                ""
+            )
             artifacts.producesFile(
-                    InternalArtifactType.MANIFEST_MERGE_BLAME_FILE.INSTANCE,
-                    taskProvider,
-                    ProcessTestManifest::getMergeBlameFile,
-                    "manifest-merger-blame-" + creationConfig.getBaseName() + "-report.txt");
+                InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
+                taskProvider,
+                ProcessTestManifest::mergeBlameFile,
+                "manifest-merger-blame-" + creationConfig.baseName + "-report.txt"
+            )
         }
 
-        @Override
-        public void configure(
-                @NonNull final ProcessTestManifest task) {
-            super.configure(task);
-            Project project = task.getProject();
-
-            final VariantDslInfo variantDslInfo = creationConfig.getVariantDslInfo();
-            final VariantSources variantSources = creationConfig.getVariantSources();
-
+        override fun configure(
+            task: ProcessTestManifest
+        ) {
+            super.configure(task)
+            val project = task.project
+            val variantDslInfo = creationConfig.variantDslInfo
+            val variantSources = creationConfig.variantSources
             // Use getMainManifestIfExists() instead of getMainManifestFilePath() because this task
-            // accepts either a non-null file that exists or a null file, it does not accept a
-            // non-null file that does not exist.
-            task.getTestManifestFile()
-                    .set(project.provider(variantSources::getMainManifestIfExists));
-            task.getTestManifestFile().disallowChanges();
-
-            task.apkData = creationConfig.getOutputs().getMainSplit();
-
-            task.getVariantType().set(creationConfig.getVariantType().toString());
-            task.getVariantType().disallowChanges();
-
-            task.setTmpDir(
-                    FileUtils.join(
-                            creationConfig.getPaths().getIntermediatesDir(),
-                            "tmp",
-                            "manifest",
-                            creationConfig.getDirName()));
-
-            task.getMinSdkVersion()
-                    .set(project.provider(() -> creationConfig.getMinSdkVersion().getApiString()));
-            task.getMinSdkVersion().disallowChanges();
-            task.getTargetSdkVersion()
-                    .set(
-                            project.provider(
-                                    () -> variantDslInfo.getTargetSdkVersion().getApiString()));
-            task.getTargetSdkVersion().disallowChanges();
-
-            task.testTargetMetadata = testTargetMetadata;
-            task.getTestApplicationId().set(project.provider(variantDslInfo::getTestApplicationId));
-            task.getTestApplicationId().disallowChanges();
-
+// accepts either a non-null file that exists or a null file, it does not accept a
+// non-null file that does not exist.
+            task.testManifestFile
+                .set(project.provider(variantSources::mainManifestIfExists))
+            task.testManifestFile.disallowChanges()
+            task.apkData = creationConfig.outputs.getMainSplit()
+            task.variantType.set(creationConfig.variantType.toString())
+            task.variantType.disallowChanges()
+            task.tmpDir = FileUtils.join(
+                creationConfig.paths.intermediatesDir,
+                "tmp",
+                "manifest",
+                creationConfig.dirName
+            )
+            task.minSdkVersion
+                .set(project.provider { creationConfig.minSdkVersion.apiString })
+            task.minSdkVersion.disallowChanges()
+            task.targetSdkVersion
+                .set(
+                    project.provider { variantDslInfo.targetSdkVersion.apiString }
+                )
+            task.targetSdkVersion.disallowChanges()
+            task.testTargetMetadata = testTargetMetadata
+            task.testApplicationId
+                .set(project.provider(variantDslInfo::testApplicationId))
+            task.testApplicationId.disallowChanges()
             // will only be used if testTargetMetadata is null.
-            task.getTestedApplicationId()
-                    .set(project.provider(variantDslInfo::getTestedApplicationId));
-            task.getTestedApplicationId().disallowChanges();
-
-            VariantDslInfo testedConfig = variantDslInfo.getTestedVariant();
-            task.onlyTestApk = testedConfig != null && testedConfig.getVariantType().isAar();
-
-            task.getInstrumentationRunner()
-                    .set(project.provider(variantDslInfo::getInstrumentationRunner));
-            task.getInstrumentationRunner().disallowChanges();
-
-            task.getHandleProfiling().set(project.provider(variantDslInfo::getHandleProfiling));
-            task.getHandleProfiling().disallowChanges();
-            task.getFunctionalTest().set(project.provider(variantDslInfo::getFunctionalTest));
-            task.getFunctionalTest().disallowChanges();
-            task.getTestLabel().set(project.provider(variantDslInfo::getTestLabel));
-            task.getTestLabel().disallowChanges();
-
-            task.manifests =
+            task.testedApplicationId
+                .set(project.provider(variantDslInfo::testedApplicationId))
+            task.testedApplicationId.disallowChanges()
+            val testedConfig = variantDslInfo.testedVariant
+            task.onlyTestApk = testedConfig != null && testedConfig.variantType.isAar
+            task.instrumentationRunner
+                .set(project.provider(variantDslInfo::instrumentationRunner))
+            task.instrumentationRunner.disallowChanges()
+            task.handleProfiling
+                .set(project.provider(variantDslInfo::handleProfiling))
+            task.handleProfiling.disallowChanges()
+            task.functionalTest
+                .set(project.provider(variantDslInfo::functionalTest))
+            task.functionalTest.disallowChanges()
+            task.testLabel.set(project.provider(variantDslInfo::testLabel))
+            task.testLabel.disallowChanges()
+            task.manifests = creationConfig
+                .variantDependencies
+                .getArtifactCollection(
+                    ConsumedConfigType.RUNTIME_CLASSPATH,
+                    ArtifactScope.ALL,
+                    AndroidArtifacts.ArtifactType.MANIFEST
+                )
+            task.placeholdersValues
+                .set(
+                    project.provider<Map<String, Any>>(
+                        variantDslInfo::manifestPlaceholders
+                    )
+                )
+            task.placeholdersValues.disallowChanges()
+            if (!creationConfig.globalScope.extension.aaptOptions.namespaced) {
+                task.navigationJsons = project.files(
                     creationConfig
-                            .getVariantDependencies()
-                            .getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
+                        .variantDependencies
+                        .getArtifactFileCollection(
+                            ConsumedConfigType.RUNTIME_CLASSPATH,
+                            ArtifactScope.ALL,
+                            AndroidArtifacts.ArtifactType.NAVIGATION_JSON
+                        )
+                )
+            }
+        }
 
-            task.getPlaceholdersValues()
-                    .set(project.provider(variantDslInfo::getManifestPlaceholders));
-            task.getPlaceholdersValues().disallowChanges();
+    }
 
-            if (!creationConfig.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
-                task.navigationJsons =
-                        project.files(
-                                creationConfig
-                                        .getVariantDependencies()
-                                        .getArtifactFileCollection(
-                                                RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
+    companion object {
+        private fun generateTestManifest(
+            testApplicationId: String,
+            minSdkVersion: String?,
+            targetSdkVersion: String?,
+            testedApplicationId: String,
+            instrumentationRunner: String,
+            handleProfiling: Boolean,
+            functionalTest: Boolean,
+            outManifestLocation: File
+        ) {
+            val generator = TestManifestGenerator(
+                outManifestLocation,
+                testApplicationId,
+                minSdkVersion,
+                targetSdkVersion,
+                testedApplicationId,
+                instrumentationRunner,
+                handleProfiling,
+                functionalTest
+            )
+            try {
+                generator.generate()
+            } catch (e: IOException) {
+                throw RuntimeException(e)
             }
         }
     }

@@ -35,7 +35,7 @@ fun mergeManifestsForApplication(
     mainManifest: File,
     manifestOverlays: List<File>,
     dependencies: List<ManifestProvider>,
-    navigationJsons: List<File>,
+    navigationJsons: Collection<File>,
     featureName: String?,
     packageOverride: String?,
     versionCode: Int,
