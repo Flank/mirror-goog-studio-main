@@ -564,6 +564,8 @@ com.android.build.api.dsl.Splits.getDensity: DensitySplitT ()
 com.android.build.api.dsl.Splits.getDensityFilters: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.TestBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.TestExtension implements com.android.build.api.dsl.CommonExtension
+com.android.build.api.dsl.TestExtension.getTargetProjectPath: java.lang.String ()
+com.android.build.api.dsl.TestExtension.setTargetProjectPath: void (java.lang.String)
 com.android.build.api.dsl.TestOptions
 com.android.build.api.dsl.TestOptions.getAnimationsDisabled: boolean ()
 com.android.build.api.dsl.TestOptions.getExecution: java.lang.String ()

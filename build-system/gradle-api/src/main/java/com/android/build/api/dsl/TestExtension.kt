@@ -75,5 +75,9 @@ interface TestExtension<
             TestVariant<TestVariantProperties>,
             TestVariantProperties> {
     // TODO(b/140406102)
+    /**
+     * The Gradle path of the project that this test project tests.
+     */
+    var targetProjectPath: String?
 
 }

@@ -87,4 +87,6 @@ class TestExtensionImpl(
             variantPropertiesOperations,
             TestVariantProperties::class.java
         ) as GenericFilteredComponentActionRegistrar<TestVariantProperties>
+
+    override var targetProjectPath: String? = null
 }

@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.dsl.TestExtensionImpl
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
@@ -83,8 +82,6 @@ open class TestExtension(
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =
         dslServices.domainObjectSet(ApplicationVariant::class.java)
 
-    private var _targetProjectPath: String? = null
-
     override val viewBinding: ViewBindingOptions =
         dslServices.newInstance(
             ViewBindingOptionsImpl::class.java,
@@ -110,16 +107,9 @@ open class TestExtension(
         applicationVariantList.add(variant as ApplicationVariant)
     }
 
-    /**
-     * The Gradle path of the project that this test project tests.
-     */
-    override var targetProjectPath: String?
-        get() = _targetProjectPath
-        set(value) = targetProjectPath(value)
-
     open fun targetProjectPath(targetProjectPath: String?) {
         checkWritability()
-        _targetProjectPath = targetProjectPath
+        publicExtensionImpl.targetProjectPath = targetProjectPath
     }
 
     /**
