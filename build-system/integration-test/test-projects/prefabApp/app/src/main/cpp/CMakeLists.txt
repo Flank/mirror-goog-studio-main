@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.6)
 project(app VERSION 1.0.0 LANGUAGES CXX)
 
-find_package(curl REQUIRED)
-find_package(jsoncpp REQUIRED)
+find_package(curl REQUIRED CONFIG)
+find_package(jsoncpp REQUIRED CONFIG)
 find_library(LIBLOG log)
 
 add_library(app SHARED app.cpp)

@@ -114,6 +114,36 @@ class UnusedNavigationDetectorTest : AbstractCheckTest() {
         ).incremental("res/navigation/used.xml").run().expectClean()
     }
 
+    fun testFragmentContainerView() {
+        // Regression test for https://issuetracker.google.com/149342692
+        lint().files(
+            xml(
+                "res/navigation/used.xml", "" +
+                        "<navigation />"
+            ),
+            xml(
+                "res/layout/mylayout2.xml", """
+                        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                            xmlns:app="http://schemas.android.com/apk/res-auto">
+                        </LinearLayout>
+                        """
+            ),
+            xml(
+                "res/layout/mylayout.xml", """
+                        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                            xmlns:app="http://schemas.android.com/apk/res-auto">
+
+                            <androidx.fragment.app.FragmentContainerView
+                                android:id="@+id/fragment3"
+                                android:name="androidx.navigation.fragment.NavHostFragment"
+                                app:defaultNavHost="true\"
+                                app:navGraph="@navigation/used"/>
+                        </LinearLayout>
+                        """
+            )
+        ).incremental("res/navigation/used.xml").run().expectClean()
+    }
+
     override fun getDetector(): Detector {
         return UnusedNavigationDetector()
     }

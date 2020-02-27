@@ -54,7 +54,7 @@ import org.gradle.api.file.RegularFile;
  */
 @Immutable
 final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtifact, Serializable {
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     private final boolean isSigned;
     @NonNull private final String baseName;
@@ -69,6 +69,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     private final BuildOutputSupplier<Collection<EarlySyncBuildOutput>> splitOutputsSupplier;
 
     @NonNull private final BuildOutputSupplier<Collection<EarlySyncBuildOutput>> manifestSupplier;
+    @NonNull private final Collection<AndroidArtifactOutput> buildOutputs;
     @Nullable private final String signingConfigName;
     @Nullable private final Set<String> abiFilters;
     @Nullable private final TestOptions testOptions;
@@ -152,6 +153,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                         ? apkFromBundleTaskOutputListingFile.getAsFile().getAbsolutePath()
                         : null;
         this.codeShrinker = codeShrinker;
+        this.buildOutputs = computeBuildOutputs();
     }
 
     private EarlySyncBuildOutput getOutputFor(
@@ -170,6 +172,11 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @NonNull
     @Override
     public Collection<AndroidArtifactOutput> getOutputs() {
+        return buildOutputs;
+    }
+
+    @NonNull
+    private Collection<AndroidArtifactOutput> computeBuildOutputs() {
         Collection<EarlySyncBuildOutput> manifests = manifestSupplier.get();
         Collection<EarlySyncBuildOutput> outputs = splitOutputsSupplier.get();
         if (outputs.isEmpty()) {
@@ -347,7 +354,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 && Objects.equals(
                         apkFromBundleTaskOutputListingFile, that.apkFromBundleTaskOutputListingFile)
                 && Objects.equals(codeShrinker, that.codeShrinker)
-                && Objects.equals(apkFromBundleTaskName, that.apkFromBundleTaskName);
+                && Objects.equals(apkFromBundleTaskName, that.apkFromBundleTaskName)
+                && Objects.equals(buildOutputs, that.buildOutputs);
     }
 
     @Override
@@ -373,7 +381,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 bundleTaskOutputListingFile,
                 codeShrinker,
                 apkFromBundleTaskName,
-                apkFromBundleTaskOutputListingFile);
+                apkFromBundleTaskOutputListingFile,
+                buildOutputs);
     }
 
     @Override
@@ -395,7 +404,9 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 .add("bundleTaskName", bundleTaskName)
                 .add("bundleTasOutputListingFile", bundleTaskName)
                 .add("codeShrinker", codeShrinker)
-                .add("apkFromBundleTaskOutputListingFile", apkFromBundleTaskName)
+                .add("apkFromBundleTaskOutputListingFile", apkFromBundleTaskOutputListingFile)
+                .add("apkFromBundleTaskName", apkFromBundleTaskName)
+                .add("buildOutputs", buildOutputs)
                 .toString();
     }
 

@@ -1193,6 +1193,61 @@ class ProjectInitializerTest {
         )
     }
 
+    @Test
+    fun testCrLf() {
+        // Regression test for bug handling Windows line endings,
+        // https://issuetracker.google.com/149490356
+        val root = temp.newFolder()
+        val crlf = File(root, "app/src/main/java/ClassCRLF.java")
+        crlf.parentFile.mkdirs()
+        crlf.writeText(
+            """
+            package com.example.foo.notification;
+
+            public class AppNotifBlockedReceiver extends BroadcastReceiver {
+                // content removed
+            }
+            """.trimIndent().replace("\n", "\r\n"))
+        val lf = File(root, "app/src/main/java/ClassLF.java")
+        lf.writeText(
+            """
+            package com.example.foo.tester.ui;
+
+            public class DisableActivity extends Activity {
+            // Content removed
+            }
+            """.trimIndent()
+        )
+
+        @Language("XML")
+        val descriptor = """
+            <project>
+               <module android="true" compile-sdk-version="18" name="app">
+                  <src file="app/src/main/java/ClassCRLF.java"/>
+                  <src file="app/src/main/java/ClassLF.java"/>
+               </module>
+            </project>""".trimIndent()
+        val descriptorFile = File(root, "descriptor.xml")
+        descriptorFile.writeText(descriptor.replace("\n", "\r\n"))
+
+        MainTest.checkDriver(
+            "No issues found.",
+            "The source file ClassCRLF.java does not appear to be in the right project location; its package implies .../com/example/foo/notification/ClassCRLF.java but it was found in ...src/main/java/ClassCRLF.java".replace("\\", "/"),
+
+            // Expected exit code
+            ERRNO_SUCCESS,
+
+            // Args
+            arrayOf(
+                "--quiet",
+                "--project",
+                descriptorFile.path
+            ),
+
+            null, null
+        )
+    }
+
     companion object {
         @ClassRule
         @JvmField

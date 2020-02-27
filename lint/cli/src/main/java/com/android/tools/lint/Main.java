@@ -1491,6 +1491,9 @@ public class Main {
                             + VALUE_NONE,
                     ARG_XML + " <filename>",
                     "Create an XML report instead.",
+                    ARG_TEXT + " <filename>",
+                    "Write a text report to the given file. If the filename is just `stdout` (short "
+                            + "for standard out), the report is written to the console.",
                     "",
                     "\nProject Options:",
                     ARG_PROJECT + " <file>",

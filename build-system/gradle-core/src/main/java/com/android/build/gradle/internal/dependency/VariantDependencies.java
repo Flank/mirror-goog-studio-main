@@ -395,7 +395,6 @@ public class VariantDependencies {
                                     bundling,
                                     category,
                                     null,
-                                    null,
                                     null);
                     runtimePublication.extendsFrom(runtimeClasspath);
 
@@ -411,7 +410,6 @@ public class VariantDependencies {
                                     bundling,
                                     category,
                                     null,
-                                    null,
                                     null);
                     apiPublication.setExtendsFrom(apiClasspaths);
                     elements.put(API_PUBLICATION, apiPublication);
@@ -426,8 +424,7 @@ public class VariantDependencies {
                                     bundling,
                                     category,
                                     buildType,
-                                    publicationFlavorMap,
-                                    variantNameAttr);
+                                    publicationFlavorMap);
                     allApiPublication.setExtendsFrom(apiClasspaths);
                     elements.put(ALL_API_PUBLICATION, allApiPublication);
 
@@ -441,8 +438,7 @@ public class VariantDependencies {
                                     bundling,
                                     category,
                                     buildType,
-                                    publicationFlavorMap,
-                                    variantNameAttr);
+                                    publicationFlavorMap);
                     allRuntimePublication.setExtendsFrom(runtimeClasspaths);
                     elements.put(ALL_RUNTIME_PUBLICATION, allRuntimePublication);
                 } else {
@@ -455,7 +451,7 @@ public class VariantDependencies {
                                     "APK publication for " + variantName,
                                     buildType,
                                     publicationFlavorMap,
-                                    variantNameAttr,
+                                    null /*variantNameAttr*/,
                                     null /*Usage*/);
                     elements.put(APK_PUBLICATION, apkPublication);
                     apkPublication.setVisible(false);
@@ -468,7 +464,7 @@ public class VariantDependencies {
                                     "Bundle Publication for " + variantName,
                                     buildType,
                                     publicationFlavorMap,
-                                    variantNameAttr,
+                                    null /*variantNameAttr*/,
                                     null /*Usage*/);
                     elements.put(AAB_PUBLICATION, aabPublication);
                     aabPublication.setVisible(false);
@@ -558,7 +554,7 @@ public class VariantDependencies {
                 @NonNull String configDesc,
                 @NonNull String buildType,
                 @NonNull Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap,
-                @NonNull VariantAttr variantNameAttr,
+                @Nullable VariantAttr variantNameAttr,
                 @Nullable Usage usage) {
             Configuration config = configurations.maybeCreate(configName);
             config.setDescription(configDesc);
@@ -567,7 +563,10 @@ public class VariantDependencies {
             final AttributeContainer attrContainer = config.getAttributes();
 
             applyVariantAttributes(attrContainer, buildType, publicationFlavorMap);
-            attrContainer.attribute(VariantAttr.getATTRIBUTE(), variantNameAttr);
+
+            if (variantNameAttr != null) {
+                attrContainer.attribute(VariantAttr.getATTRIBUTE(), variantNameAttr);
+            }
 
             if (usage != null) {
                 attrContainer.attribute(Usage.USAGE_ATTRIBUTE, usage);
@@ -586,8 +585,8 @@ public class VariantDependencies {
                 @NonNull Bundling bundling,
                 @NonNull Category category,
                 @Nullable String buildType,
-                @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap,
-                @Nullable VariantAttr variantNameAttr) {
+                @Nullable
+                        Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap) {
             Configuration config = configurations.maybeCreate(configName);
             config.setDescription(configDesc);
             config.setCanBeResolved(false);
@@ -605,9 +604,6 @@ public class VariantDependencies {
             if (buildType != null) {
                 Preconditions.checkNotNull(publicationFlavorMap);
                 applyVariantAttributes(attrContainer, buildType, publicationFlavorMap);
-            }
-            if (variantNameAttr != null) {
-                attrContainer.attribute(VariantAttr.getATTRIBUTE(), variantNameAttr);
             }
 
             return config;

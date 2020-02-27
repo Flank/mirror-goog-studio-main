@@ -51,6 +51,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull private final File myBuildFolder;
     @NonNull private final Collection<String> myDynamicFeatures;
     @NonNull private final ViewBindingOptions myViewBindingOptions;
+    @NonNull private final DependenciesInfo myDependenciesInfo;
     @Nullable private final String myResourcePrefix;
     private final int myApiVersion;
     private final boolean myLibrary;
@@ -82,6 +83,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 new AaptOptionsStub(),
                 ImmutableList.of(),
                 new ViewBindingOptionsStub(),
+                new DependenciesInfoStub(),
                 new File("buildFolder"),
                 "resourcePrefix",
                 1,
@@ -114,6 +116,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             @NonNull AaptOptions aaptOptions,
             @NonNull Collection<String> dynamicFeatures,
             @NonNull ViewBindingOptions viewBindingOptions,
+            @NonNull DependenciesInfo dependenciesInfo,
             @NonNull File buildFolder,
             @Nullable String resourcePrefix,
             int apiVersion,
@@ -143,6 +146,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         myAaptOptions = aaptOptions;
         myDynamicFeatures = dynamicFeatures;
         myViewBindingOptions = viewBindingOptions;
+        myDependenciesInfo = dependenciesInfo;
         myBuildFolder = buildFolder;
         myResourcePrefix = resourcePrefix;
         myApiVersion = apiVersion;
@@ -334,6 +338,12 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         return myViewBindingOptions;
     }
 
+    @Nullable
+    @Override
+    public DependenciesInfo getDependenciesInfo() {
+        return myDependenciesInfo;
+    }
+
     @NonNull
     @Override
     public AndroidGradlePluginProjectFlags getFlags() {
@@ -375,6 +385,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 && Objects.equals(getResourcePrefix(), stub.getResourcePrefix())
                 && Objects.equals(getDynamicFeatures(), stub.getDynamicFeatures())
                 && Objects.equals(getViewBindingOptions(), stub.getViewBindingOptions())
+                && Objects.equals(getDependenciesInfo(), stub.getDependenciesInfo())
                 && Objects.equals(getFlags(), stub.getFlags());
     }
 
@@ -407,6 +418,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 isBaseSplit(),
                 getDynamicFeatures(),
                 getViewBindingOptions(),
+                getDependenciesInfo(),
                 getFlags());
     }
 
@@ -473,6 +485,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 + myDynamicFeatures
                 + ", myViewBindingOptions="
                 + myViewBindingOptions
+                + ", myDependenciesInfo="
+                + myDependenciesInfo
                 + ", myFlags="
                 + myFlags
                 + "}";

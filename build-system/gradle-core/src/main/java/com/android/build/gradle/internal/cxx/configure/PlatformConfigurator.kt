@@ -202,12 +202,13 @@ class PlatformConfigurator(private val ndkRoot: File) {
                         minSdkVersionOrNull
                     }
                     else -> {
-                        warnln(
+                        infoln(
                             "Disagreement between codeName='$codeNameOrNull' " +
-                                    "and minSdkVersion='$minSdkVersionOrNull'. Only one " +
-                                    "should be specified."
+                                    "and minSdkVersion='$minSdkVersionOrNull'. Probably a " +
+                                    "preview release. Using $minSdkVersionFromCodeName to match " +
+                                    "code name."
                         )
-                        minSdkVersionOrNull
+                        minSdkVersionFromCodeName
                     }
                 }
             minSdkVersionIsDefault -> minSdkVersionFromCodeName

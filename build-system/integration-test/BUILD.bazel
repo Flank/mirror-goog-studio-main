@@ -235,7 +235,7 @@ maven_repo(
 maven_repo(
     name = "prefab_repo",
     artifacts = [
-        "//prebuilts/tools/common/m2/repository/com/google/prefab/cli/1.0.0-alpha3:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/prefab/cli/1.0.0-alpha5:jar",
     ],
     visibility = [":__subpackages__"],
 )

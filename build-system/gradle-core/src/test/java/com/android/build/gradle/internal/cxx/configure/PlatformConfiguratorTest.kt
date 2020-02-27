@@ -406,12 +406,11 @@ class PlatformConfiguratorTest {
             "x86",
             27,
             "P")
-        assertThat(logger.warnings).containsExactly(
-            "Disagreement between codeName='P' and minSdkVersion='27'. " +
-                    "Only one should be specified.")
         assertThat(logger.infos).containsExactly(
-            "Version minSdkVersion='P' is mapped to '28'.")
-        assertThat(platform).isEqualTo(27)
+            "Version minSdkVersion='P' is mapped to '28'.",
+            "Disagreement between codeName='P' and minSdkVersion='27'. Probably a preview " +
+                    "release. Using 28 to match code name.")
+        assertThat(platform).isEqualTo(28)
     }
 
     @Test

@@ -76,7 +76,7 @@ class BasicInstantExecutionTest {
 
     @Test
     fun testCleanBuild() {
-        executor().run("assemble")
+        executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false).run("assemble")
         executor().run("clean")
         executor().run("assemble")
     }
@@ -85,6 +85,7 @@ class BasicInstantExecutionTest {
     fun testWhenInvokedFromTheIde() {
         executor()
             .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
+            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
             .run("assemble")
 
         assertThat(project.testDir.resolve(".instant-execution-state")).isDirectory()

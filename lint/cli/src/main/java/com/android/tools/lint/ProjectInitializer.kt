@@ -57,12 +57,16 @@ import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.io.File
+import java.io.File.pathSeparatorChar
+import java.io.File.separator
+import java.io.File.separatorChar
 import java.io.IOException
 import java.util.EnumSet
 import java.util.HashSet
 import java.util.regex.Pattern
 import java.util.zip.ZipException
 import java.util.zip.ZipFile
+import kotlin.math.max
 
 /** Regular expression used to match package statements with [ProjectInitializer.findPackage] */
 private val PACKAGE_PATTERN = Pattern.compile("package\\s+([\\S&&[^;]]*)")
@@ -200,6 +204,7 @@ private class ProjectInitializer(
      * (which in turn can be looked up in [dependencies])
      */
     private val jarAarMap = mutableMapOf<File, String>()
+
     /**
      * Map from module name to resource visibility lookup
      */
@@ -293,7 +298,7 @@ private class ProjectInitializer(
                 TAG_JDK_BOOT_CLASS_PATH -> {
                     val path = child.getAttribute(ATTR_PATH)
                     if (path.isNotEmpty()) {
-                        for (s in path.split(File.pathSeparatorChar)) {
+                        for (s in path.split(pathSeparatorChar)) {
                             jdkBootClasspath += getFile(s, child, this.root)
                         }
                     } else {
@@ -408,6 +413,7 @@ private class ProjectInitializer(
                     try {
                         val fieldName = option.toUpperCase()
                         val cls = Desugaring::class.java
+
                         @Suppress("UNCHECKED_CAST")
                         val v =
                             cls.getField(fieldName).get(null) as? EnumSet<Desugaring> ?: continue
@@ -478,7 +484,8 @@ private class ProjectInitializer(
                     null
                 }
                 if (languageLevel != null) {
-                    LanguageVersionSettingsImpl(languageLevel,
+                    LanguageVersionSettingsImpl(
+                        languageLevel,
                         ApiVersion.createByLanguageVersion(languageLevel)
                     )
                 } else {
@@ -491,14 +498,10 @@ private class ProjectInitializer(
 
         // Special case: if the module is a path (with an optional :suffix),
         // use this as the module directory, otherwise fall back to the default root
-        name.indexOf(':', name.lastIndexOf(File.separatorChar))
+        name.indexOf(':', name.lastIndexOf(separatorChar))
         val dir =
-            if (name.contains(File.separator) && name.indexOf(
-                    ':',
-                    name.lastIndexOf(File.separator)
-                ) != -1
-            ) {
-                File(name.substring(0, name.indexOf(':', name.lastIndexOf(File.separator))))
+            if (name.contains(separator) && name.indexOf(':', name.lastIndexOf(separator)) != -1) {
+                File(name.substring(0, name.indexOf(':', name.lastIndexOf(separator))))
             } else {
                 root
             }
@@ -909,7 +912,7 @@ private class ProjectInitializer(
 
         if (!source.exists()) {
             val relativePath = if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
-                dir.canonicalPath.replace(File.separator, "\\\\")
+                dir.canonicalPath.replace(separator, "\\\\")
             else dir.canonicalPath
             reportError(
                 "$path ${if (!File(path).isAbsolute) "(relative to " +
@@ -925,18 +928,54 @@ private class ProjectInitializer(
      */
     private fun findRoot(file: File): File? {
         val path = file.path
-        if (path.endsWith(SdkConstants.DOT_JAVA) || path.endsWith(SdkConstants.DOT_KT)) {
+        if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT)) {
             val pkg = findPackage(file) ?: return null
             val parent = file.parentFile ?: return null
-            return File(path.substring(0, parent.path.length - pkg.length))
+            val packageStart = max(0, parent.path.length - pkg.length)
+            if (!pathMatchesPackage(pkg, path, packageStart)) {
+                val actual = if (path.startsWith(root.path)) {
+                    val s = path.substring(root.path.length)
+                    val end = max(0, s.length - pkg.length)
+                    s.substring(end)
+                } else {
+                    path.substring(packageStart)
+                }
+                val expected = "$separator${pkg.replace('.', separatorChar)}$separator${file.name}"
+                client.log(
+                    Severity.INFORMATIONAL, null,
+                    "The source file ${file.name} does not appear to be in the right project location; its package implies ...$expected but it was found in ...$actual"
+                )
+                return null
+            }
+            return File(path.substring(0, packageStart))
         }
 
         return null
     }
 
+    private fun pathMatchesPackage(pkg: String, path: String, packageStart: Int): Boolean {
+        var i = 0
+        var j = packageStart
+        while (i < pkg.length) {
+            if (pkg[i] != path[j] && pkg[i] != '.') {
+                return false
+            }
+            i++
+            j++
+        }
+
+        return true
+    }
+
     /** Finds the package of the given Java/Kotlin source file, if possible */
     private fun findPackage(file: File): String? {
-        val source = client.readFile(file)
+        // Don't use LintClient.readFile; this will attempt to use VFS in some cases
+        // (for example, when encountering Windows file line endings, in order to make
+        // sure that lint's text offsets matches PSI's text offsets), but since this
+        // is still early in the initialization sequence and we haven't set up the
+        // IntelliJ environment yet, we're not ready. And for the purposes of this file
+        // read, we don't actually care about line offsets at all.
+        val source = file.readText()
         val matcher = PACKAGE_PATTERN.matcher(source)
         val foundPackage = matcher.find()
         return if (foundPackage) {

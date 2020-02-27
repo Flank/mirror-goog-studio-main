@@ -253,6 +253,9 @@ public interface IdeAndroidProject extends Serializable {
     ViewBindingOptions getViewBindingOptions();
 
     @Nullable
+    IdeDependenciesInfo getDependenciesInfo();
+
+    @Nullable
     GradleVersion getParsedModelVersion();
 
     /**
