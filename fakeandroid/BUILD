@@ -47,7 +47,7 @@ sh_binary(
 dex_library(
     name = "app-launcher-dex",
     jars = [":app-launcher.jar"],
-    output = "app-launcher.dex",
+    output = "app-launcher-dex.jar",
     visibility = ["//visibility:public"],
 )
 

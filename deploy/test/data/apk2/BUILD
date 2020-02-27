@@ -3,7 +3,7 @@ load("//tools/base/bazel:android.bzl", "dex_library")
 dex_library(
     name = "apk",
     jars = [":apk_java_deploy.jar"],
-    output = "out.apk",
+    output = "out.jar",
     visibility = ["//tools/base/deploy/test:__pkg__"],
 )
 

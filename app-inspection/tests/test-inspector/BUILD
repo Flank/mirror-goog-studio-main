@@ -14,6 +14,10 @@ java_library(
 
 dex_library(
     name = "test-inspector",
+
+    # TODO: b/150637179 to move this to D8. That Java Service Provider oin META-INF
+    #       is not found in the final jar for some reason why used with D8.
+    dexer = "DX",
     jars = [
         ":test-inspector_undexed",
         "//tools/base/app-inspection/tests/test-inspector/api:test-inspector-api",
