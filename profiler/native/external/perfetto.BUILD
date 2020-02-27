@@ -20,7 +20,7 @@ java_proto_library(
     srcs = ["protos/perfetto/trace/perfetto_trace.proto"],
     grpc_support = 1,
     java_deps = ["//external:grpc-all-java"],
-    protoc_grpc_version = "1.0.3",
+    protoc_grpc_version = "1.21.1",
 )
 
 cc_grpc_proto_library(
