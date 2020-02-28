@@ -154,12 +154,8 @@ public class TestOptions
             testTasks = dslServices.domainObjectSet(Test.class);
         }
 
-        public boolean isReturnDefaultValues() {
-            return getReturnDefaultValues();
-        }
-
         @Override
-        public boolean getReturnDefaultValues() {
+        public boolean isReturnDefaultValues() {
             return returnDefaultValues;
         }
 
@@ -168,12 +164,8 @@ public class TestOptions
             this.returnDefaultValues = returnDefaultValues;
         }
 
-        public boolean isIncludeAndroidResources() {
-            return getIncludeAndroidResources();
-        }
-
         @Override
-        public boolean getIncludeAndroidResources() {
+        public boolean isIncludeAndroidResources() {
             return includeAndroidResources;
         }
 

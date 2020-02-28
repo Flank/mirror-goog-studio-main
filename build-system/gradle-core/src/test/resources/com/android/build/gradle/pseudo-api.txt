@@ -1385,8 +1385,6 @@ com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.<init>: com.an
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.all: void (groovy.lang.Closure<org.gradle.api.tasks.testing.Test>)
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.all: void (kotlin.jvm.functions.Function1<? super org.gradle.api.tasks.testing.Test, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.applyConfiguration: void (org.gradle.api.tasks.testing.Test)
-com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.getIncludeAndroidResources: boolean ()
-com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.getReturnDefaultValues: boolean ()
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.isIncludeAndroidResources: boolean ()
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.isReturnDefaultValues: boolean ()
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.setIncludeAndroidResources: void (boolean)

@@ -30,7 +30,7 @@ interface UnitTestOptions {
      *
      * @since 1.1.0
      */
-    var returnDefaultValues: Boolean
+    var isReturnDefaultValues: Boolean
 
     /**
      * Enables unit tests to use Android resources, assets, and manifests.
@@ -70,7 +70,7 @@ interface UnitTestOptions {
      *
      * @since 3.0.0
      */
-    var includeAndroidResources: Boolean
+    var isIncludeAndroidResources: Boolean
 
     /**
      * Configures all unit testing tasks.

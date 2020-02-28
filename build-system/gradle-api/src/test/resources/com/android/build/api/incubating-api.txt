@@ -582,8 +582,8 @@ com.android.build.api.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Func
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.UnitTestOptions
 com.android.build.api.dsl.UnitTestOptions.all: void (kotlin.jvm.functions.Function1<? super org.gradle.api.tasks.testing.Test, kotlin.Unit>)
-com.android.build.api.dsl.UnitTestOptions.getIncludeAndroidResources: boolean ()
-com.android.build.api.dsl.UnitTestOptions.getReturnDefaultValues: boolean ()
+com.android.build.api.dsl.UnitTestOptions.isIncludeAndroidResources: boolean ()
+com.android.build.api.dsl.UnitTestOptions.isReturnDefaultValues: boolean ()
 com.android.build.api.dsl.UnitTestOptions.setIncludeAndroidResources: void (boolean)
 com.android.build.api.dsl.UnitTestOptions.setReturnDefaultValues: void (boolean)
 com.android.build.api.dsl.VectorDrawables
