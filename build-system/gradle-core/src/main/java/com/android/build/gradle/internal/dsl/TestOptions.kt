@@ -14,58 +14,47 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.build.gradle.internal.dsl
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.services.DslServices;
-import com.android.builder.model.TestOptions.Execution;
-import com.android.utils.HelpfulEnumConverter;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
-import groovy.lang.Closure;
-import javax.inject.Inject;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
-import org.gradle.api.Action;
-import org.gradle.api.DomainObjectSet;
-import org.gradle.api.tasks.testing.Test;
-import org.gradle.util.ConfigureUtil;
+import com.android.build.gradle.internal.services.DslServices
+import com.android.builder.model.TestOptions.Execution
+import com.android.utils.HelpfulEnumConverter
+import com.google.common.base.Preconditions
+import com.google.common.base.Verify
+import groovy.lang.Closure
+import org.gradle.api.Action
+import org.gradle.api.tasks.testing.Test
+import org.gradle.util.ConfigureUtil
+import javax.inject.Inject
 
-/** Options for running tests. */
-@SuppressWarnings("unused") // Exposed in the DSL.
-public class TestOptions
-        implements com.android.build.api.dsl.TestOptions<TestOptions.UnitTestOptions> {
-    private static final HelpfulEnumConverter<Execution> EXECUTION_CONVERTER =
-            new HelpfulEnumConverter<>(Execution.class);
+open class TestOptions @Inject constructor(dslServices: DslServices) :
+    com.android.build.api.dsl.TestOptions<TestOptions.UnitTestOptions> {
+    private val executionConverter = HelpfulEnumConverter<Execution>(Execution::class.java)
 
-    @Nullable private String resultsDir;
+    private var _execution = Execution.HOST
 
-    @Nullable private String reportDir;
+    override val unitTests: UnitTestOptions =
+        dslServices.newInstance(UnitTestOptions::class.java, dslServices)
 
-    private boolean animationsDisabled;
+    override var resultsDir: String? = null
+    override var reportDir: String? = null
+    override var animationsDisabled: Boolean = false
 
-    @NonNull private Execution execution = Execution.HOST;
+    override var execution: String
+        get() = Verify.verifyNotNull(
+            executionConverter.reverse().convert(_execution),
+            "No string representation for enum."
+        )
+        set(value) {
+            @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+            _execution = Preconditions.checkNotNull(
+                executionConverter.convert(value),
+                "The value of `execution` cannot be null."
+            )!!
+        }
 
-    /**
-     * Options for controlling unit tests execution.
-     *
-     * @since 1.1.0
-     */
-    @NonNull private final UnitTestOptions unitTests;
-
-    @Inject
-    public TestOptions(DslServices dslServices) {
-        this.unitTests = dslServices.newInstance(UnitTestOptions.class, dslServices);
-    }
-
-    public void unitTests(Action<UnitTestOptions> action) {
-        action.execute(unitTests);
-    }
-
-    @Override
-    public void unitTests(Function1<? super UnitTestOptions, Unit> action) {
-        action.invoke(unitTests);
+    override fun unitTests(action: UnitTestOptions.() -> Unit) {
+        action.invoke(unitTests)
     }
 
     /**
@@ -73,114 +62,32 @@ public class TestOptions
      *
      * @since 1.2.0
      */
-    public void unitTests(Closure closure) {
-        ConfigureUtil.configure(closure, unitTests);
+    fun unitTests(closure: Closure<*>) {
+        ConfigureUtil.configure(closure, unitTests)
     }
 
-    /**
-     * Configures unit test options.
-     *
-     * @since 1.2.0
-     */
-    @Override
-    @NonNull
-    public UnitTestOptions getUnitTests() {
-        return unitTests;
+    fun unitTests(action: Action<UnitTestOptions>) {
+        action.execute(unitTests)
     }
 
-    @Override
-    @Nullable
-    public String getResultsDir() {
-        return resultsDir;
-    }
+    fun getExecutionEnum(): Execution = _execution
 
-    @Override
-    public void setResultsDir(@Nullable String resultsDir) {
-        this.resultsDir = resultsDir;
-    }
-
-    @Override
-    @Nullable
-    public String getReportDir() {
-        return reportDir;
-    }
-
-    @Override
-    public void setReportDir(@Nullable String reportDir) {
-        this.reportDir = reportDir;
-    }
-
-    @Override
-    public boolean getAnimationsDisabled() {
-        return animationsDisabled;
-    }
-
-    @Override
-    public void setAnimationsDisabled(boolean animationsDisabled) {
-        this.animationsDisabled = animationsDisabled;
-    }
-
-    @Override
-    @NonNull
-    public String getExecution() {
-        return Verify.verifyNotNull(
-                EXECUTION_CONVERTER.reverse().convert(execution),
-                "No string representation for enum.");
-    }
-
-    @NonNull
-    public Execution getExecutionEnum() {
-        return execution;
-    }
-
-    @Override
-    public void setExecution(@NonNull String execution) {
-        this.execution =
-                Preconditions.checkNotNull(
-                        EXECUTION_CONVERTER.convert(execution),
-                        "The value of `execution` cannot be null.");
-    }
-
-    /** Options for controlling unit tests execution. */
-    public static class UnitTestOptions implements com.android.build.api.dsl.UnitTestOptions {
+    open class UnitTestOptions @Inject constructor(dslServices: DslServices) :
+        com.android.build.api.dsl.UnitTestOptions {
         // Used by testTasks.all below, DSL docs generator can't handle diamond operator.
-        private final DomainObjectSet<Test> testTasks;
+        private val testTasks = dslServices.domainObjectSet(Test::class.java)
 
-        private boolean returnDefaultValues;
-        private boolean includeAndroidResources;
+        override var isReturnDefaultValues: Boolean = false
+        override var isIncludeAndroidResources: Boolean = false
 
-        @Inject
-        public UnitTestOptions(@NonNull DslServices dslServices) {
-            testTasks = dslServices.domainObjectSet(Test.class);
+        fun all(configClosure: Closure<Test>) {
+            testTasks.all {
+                ConfigureUtil.configure(configClosure, it)
+            }
         }
 
-        @Override
-        public boolean isReturnDefaultValues() {
-            return returnDefaultValues;
-        }
-
-        @Override
-        public void setReturnDefaultValues(boolean returnDefaultValues) {
-            this.returnDefaultValues = returnDefaultValues;
-        }
-
-        @Override
-        public boolean isIncludeAndroidResources() {
-            return includeAndroidResources;
-        }
-
-        @Override
-        public void setIncludeAndroidResources(boolean includeAndroidResources) {
-            this.includeAndroidResources = includeAndroidResources;
-        }
-
-        public void all(final Closure<Test> configClosure) {
-            testTasks.all(testTask -> ConfigureUtil.configure(configClosure, testTask));
-        }
-
-        @Override
-        public void all(@NonNull Function1<? super Test, Unit> configAction) {
-            testTasks.all(configAction::invoke);
+        override fun all(configAction: (Test) -> Unit) {
+            testTasks.all(configAction)
         }
 
         /**
@@ -193,8 +100,8 @@ public class TestOptions
          *
          * @since 1.2.0
          */
-        public void applyConfiguration(@NonNull Test task) {
-            this.testTasks.add(task);
+        fun applyConfiguration(task: Test) {
+            testTasks.add(task)
         }
     }
 }
