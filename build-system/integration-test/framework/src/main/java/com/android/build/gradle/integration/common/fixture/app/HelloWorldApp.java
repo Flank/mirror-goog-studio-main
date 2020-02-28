@@ -180,7 +180,6 @@ public class HelloWorldApp extends GradleProject {
                                 + "\n"
                                 + "    lintOptions.checkReleaseBuilds = false\n"
                                 + "    defaultConfig {\n"
-                                + "        minSdkVersion rootProject.supportLibMinSdk\n"
                                 + "        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
                                 + "    }\n"
                                 + "}\n"
