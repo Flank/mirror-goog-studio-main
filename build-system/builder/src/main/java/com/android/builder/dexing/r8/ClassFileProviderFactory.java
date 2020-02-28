@@ -79,13 +79,6 @@ public class ClassFileProviderFactory implements Closeable {
         }
     }
 
-    /**
-     * Paths on the classpath, used by [D8DesugarGraphGenerator].
-     *
-     * <p>TODO("Remove when D8's new API for desugaring graph computation is used")
-     */
-    @NonNull private Collection<Path> paths;
-
     @NonNull private static final AtomicLong nextId = new AtomicLong();
 
     @NonNull private List<ClassFileResourceProvider> providers;
@@ -93,8 +86,6 @@ public class ClassFileProviderFactory implements Closeable {
     private final long id;
 
     public ClassFileProviderFactory(@NonNull Collection<Path> paths) throws IOException {
-        this.paths = paths;
-
         id = nextId.addAndGet(1);
 
         providers = Lists.newArrayListWithExpectedSize(paths.size());
@@ -105,11 +96,6 @@ public class ClassFileProviderFactory implements Closeable {
         }
 
         orderedClassFileResourceProvider = new OrderedClassFileResourceProvider(providers);
-    }
-
-    @NonNull
-    public Collection<Path> getPaths() {
-        return paths;
     }
 
     public long getId() {
