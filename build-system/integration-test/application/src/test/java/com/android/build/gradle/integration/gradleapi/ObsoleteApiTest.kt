@@ -83,7 +83,7 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
                     "API 'variant.getJavaCompile()' is obsolete and has been replaced with 'variant.getJavaCompileProvider()'.\n" +
                             "It will be removed in version 5.0 of the Android Gradle plugin.\n" +
                             "For more information, see https://d.android.com/r/tools/task-configuration-avoidance.\n" +
-                            "REASON: Called from: ${project.testDir}${File.separatorChar}build.gradle:23\n" +
+                            "REASON: Called from: ${project.testDir}${File.separatorChar}build.gradle:22\n" +
                             "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.")
             }
             else -> throw RuntimeException("Unsupported type")
@@ -104,7 +104,7 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
                         "API 'variant.getJavaCompile()' is obsolete and has been replaced with 'variant.getJavaCompileProvider()'.\n" +
                                 "It will be removed in version 5.0 of the Android Gradle plugin.\n" +
                                 "For more information, see https://d.android.com/r/tools/task-configuration-avoidance.\n" +
-                                "REASON: Called from: ${project.testDir}${File.separatorChar}build.gradle:23\n" +
+                                "REASON: Called from: ${project.testDir}${File.separatorChar}build.gradle:22\n" +
                                 "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.")
                 }
                 else -> throw RuntimeException("Unsupported type")

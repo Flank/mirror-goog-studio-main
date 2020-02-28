@@ -21,14 +21,6 @@
         id="IgnoreWithoutReason"
         message="Test is ignored without giving any explanation">
         <location
-            file="src/test/java/com/android/build/gradle/integration/application/CoreLibraryDesugarTest.kt"
-            line="168"/>
-    </issue>
-
-    <issue
-        id="IgnoreWithoutReason"
-        message="Test is ignored without giving any explanation">
-        <location
             file="src/test/java/com/android/build/gradle/integration/application/InjectedPreviewSdkTest.java"
             line="28"/>
     </issue>
