@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TY
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
 import org.gradle.api.Action
@@ -35,6 +36,7 @@ import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -68,7 +70,8 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
     val transitivePackagedDepsFC : FileCollection
         get() = transitivePackagedDeps.artifactFiles
 
-    private lateinit var projectPath: String
+    @get:Input
+    abstract val projectPath: Property<String>
 
     override fun doTaskAction() {
         val apkFilters = mutableSetOf<String>()
@@ -85,7 +88,7 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             contentFilters.addAll(lines)
         }
 
-        val contentWithProject = content + "$projectPath::$variantName"
+        val contentWithProject = content + "${projectPath.get()}::$variantName"
 
         // compute the overall content
         val filteredContent =
@@ -131,7 +134,7 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             task: PackagedDependenciesWriterTask
         ) {
             super.configure(task)
-            task.projectPath = creationConfig.globalScope.project.path
+            task.projectPath.setDisallowChanges(task.project.path)
 
             task.runtimeAarOrJarDeps =
                 creationConfig.variantDependencies
