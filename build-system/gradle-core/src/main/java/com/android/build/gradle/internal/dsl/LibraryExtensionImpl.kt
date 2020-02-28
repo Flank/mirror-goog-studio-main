@@ -34,7 +34,7 @@ class LibraryExtensionImpl(
     dslServices: DslServices,
     dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) :
-    CommonExtensionImpl<
+    TestedExtensionImpl<
             AnnotationProcessorOptions,
             LibraryBuildFeatures,
             BuildType,

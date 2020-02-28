@@ -596,6 +596,8 @@ com.android.build.api.dsl.TestOptions.setReportDir: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.setResultsDir: void (java.lang.String)
 com.android.build.api.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super UnitTestOptionsT, kotlin.Unit>)
 com.android.build.api.dsl.TestedExtension
+com.android.build.api.dsl.TestedExtension.getTestBuildType: java.lang.String ()
+com.android.build.api.dsl.TestedExtension.setTestBuildType: void (java.lang.String)
 com.android.build.api.dsl.UnitTestOptions
 com.android.build.api.dsl.UnitTestOptions.all: void (kotlin.jvm.functions.Function1<? super org.gradle.api.tasks.testing.Test, kotlin.Unit>)
 com.android.build.api.dsl.UnitTestOptions.isIncludeAndroidResources: boolean ()

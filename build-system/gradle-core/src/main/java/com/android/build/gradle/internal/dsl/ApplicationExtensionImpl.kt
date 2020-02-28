@@ -36,7 +36,7 @@ class ApplicationExtensionImpl(
     dslServices: DslServices,
     dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) :
-    CommonExtensionImpl<
+    TestedExtensionImpl<
             AnnotationProcessorOptions,
             ApplicationBuildFeatures,
             BuildType,
