@@ -78,6 +78,7 @@
       <module fileurl="file://$PROJECT_DIR$/tracer/agent/android.sdktools.trace_agent.iml" filepath="$PROJECT_DIR$/tracer/agent/android.sdktools.trace_agent.iml" />
       <module fileurl="file://$PROJECT_DIR$/tracer/android.sdktools.tracer.iml" filepath="$PROJECT_DIR$/tracer/android.sdktools.tracer.iml" />
       <module fileurl="file://$PROJECT_DIR$/zipflinger/android.sdktools.zipflinger.iml" filepath="$PROJECT_DIR$/zipflinger/android.sdktools.zipflinger.iml" />
+      <module fileurl="file://$PROJECT_DIR$/zipflinger/tools/android.sdktools.zipflinger_tools.iml" filepath="$PROJECT_DIR$/zipflinger/tools/android.sdktools.zipflinger_tools.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/baseLibrary/db-baseLibrary.iml" filepath="$PROJECT_DIR$/../data-binding/baseLibrary/db-baseLibrary.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/baseLibrarySupport/db-baseLibrarySupport.iml" filepath="$PROJECT_DIR$/../data-binding/baseLibrarySupport/db-baseLibrarySupport.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon.iml" filepath="$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon.iml" />
