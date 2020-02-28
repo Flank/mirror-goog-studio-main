@@ -74,7 +74,9 @@ class UastTest : TestCase() {
                 public final class TestKt {
                     @org.jetbrains.annotations.NotNull private static final var variable: java.lang.Object = <init>()
                     public static final fun foo1() : void {
-                        [!] UnknownKotlinExpression (ANNOTATED_EXPRESSION)
+                        foo2({ 
+                            return variable.hashCode()
+                        })
                     }
                     public static final fun foo2(@org.jetbrains.annotations.NotNull function: kotlin.jvm.functions.Function0<java.lang.Integer>) : void {
                     }
@@ -851,6 +853,43 @@ class UastTest : TestCase() {
                     return super.visitCallExpression(node)
                 }
             })
+        })
+    }
+
+    fun test125138962() {
+        // Regression test for https://issuetracker.google.com/125138962
+        val source = kotlin(
+            """
+            package test.pkg
+
+            class SimpleClass() {
+                var foo: Int
+                init {
+                    @Suppress("foo")
+                    foo = android.R.layout.activity_list_item
+                }
+            }
+            """
+        ).indented()
+
+        check(source, check = { file ->
+            assertEquals(
+                """
+                package test.pkg
+
+                public final class SimpleClass {
+                    @org.jetbrains.annotations.NotNull private var foo: int
+                    public final fun getFoo() : int = UastEmptyExpression
+                    public final fun setFoo(@null p: int) : void = UastEmptyExpression
+                    public fun SimpleClass() {
+                        {
+                            foo = android.R.layout.activity_list_item
+                        }
+                    }
+                }
+                """.trimIndent(),
+                file.asSourceString().trim()
+            )
         })
     }
 }
