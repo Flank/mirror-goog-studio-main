@@ -1839,6 +1839,40 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void test125138962() {
+        // Regression test for https://issuetracker.google.com/125138962
+        lint().files(
+                        gradle("apply plugin: 'com.android.application'\n"),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.annotation.SuppressLint\n"
+                                        + "import android.view.LayoutInflater\n"
+                                        + "import android.widget.LinearLayout\n"
+                                        + "\n"
+                                        + "class SimpleClass(inflater: LayoutInflater) {\n"
+                                        + "    private var mainContainer: LinearLayout\n"
+                                        + "    init {\n"
+                                        + "        @SuppressLint(\"InflateParams\")\n"
+                                        + "        mainContainer = inflater.inflate(R.layout.mosaic_view, null, false) as LinearLayout\n"
+                                        + "\n"
+                                        + "    }\n"
+                                        + "}"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "public final class R {\n"
+                                        + "    public static final class layout {\n"
+                                        + "        public static final int mosaic_view=0x7f020000;\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        xml("src/main/res/layout/mosaic_view.xml", "" + "<LinearLayout/>\n"))
+                .issues(UnusedResourceDetector.ISSUE)
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mAccessibility =
             xml(
