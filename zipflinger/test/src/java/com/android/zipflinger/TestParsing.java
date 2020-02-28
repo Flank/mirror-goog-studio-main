@@ -17,7 +17,10 @@
 package com.android.zipflinger;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -44,6 +47,36 @@ public class TestParsing extends TestBase {
 
         entry = entries.get("empty2.txt");
         Assert.assertEquals("First entry location", new Location(83, 84), entry.getLocation());
+    }
+
+    // Create a zip entry with four deflated entries and DDs. Delete the second and third entries.
+    // If DD parsing/preservation was successful, the gap created by the deleted entry will be
+    // properly filled by overwriting the DDs and ZipInputStream will be able to parse the entire
+    // archive.
+    @Test
+    public void testZipWithDataDescriptorEditing() throws Exception {
+        File archiveFile = getTestFile("testZipWithDDEditing.zip");
+        byte[] resourceBytes = new byte[1000];
+        try (FileOutputStream f = new FileOutputStream(archiveFile);
+                ZipOutputStream s = new ZipOutputStream(f)) {
+            for (int i = 0; i < 4; i++) {
+                ZipEntry entry = new ZipEntry("file" + i);
+                s.putNextEntry(entry);
+                s.setMethod(ZipOutputStream.DEFLATED);
+                s.write(resourceBytes);
+                s.closeEntry();
+            }
+        }
+
+        try (ZipArchive archive = new ZipArchive(archiveFile)) {
+            archive.delete("file1");
+        }
+
+        try (ZipArchive archive = new ZipArchive(archiveFile)) {
+            archive.delete("file2");
+        }
+
+        verifyArchive(archiveFile);
     }
 
     @Test
