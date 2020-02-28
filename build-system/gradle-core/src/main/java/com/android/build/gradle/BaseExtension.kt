@@ -353,6 +353,17 @@ abstract class BaseExtension protected constructor(
         sourceSetManager.executeAction(action)
     }
 
+    /**
+     * Encapsulates source set configurations for all variants.
+     *
+     * Note that the Android plugin uses its own implementation of source sets. For more
+     * information about the properties you can configure in this block, see [AndroidSourceSet].
+     */
+    fun sourceSets(action: NamedDomainObjectContainer<AndroidSourceSet>.() -> Unit) {
+        checkWritability()
+        sourceSetManager.executeAction(action)
+    }
+
     override val sourceSets: NamedDomainObjectContainer<AndroidSourceSet>
         get() = sourceSetManager.sourceSetsContainer
 
