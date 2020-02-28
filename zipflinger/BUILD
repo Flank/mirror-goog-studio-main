@@ -220,7 +220,6 @@ iml_module(
     # do not sort: must match IML order
     srcs = [
         "src",
-        "tools/src",
     ],
     iml_files = ["android.sdktools.zipflinger.iml"],
     tags = ["no_test_mac"],
@@ -232,5 +231,25 @@ iml_module(
         "//tools/idea/.idea/libraries:JUnit4",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module]",
+    ],
+)
+
+java_binary(
+    name = "profiler",
+    srcs = [
+        "tools/src/com/android/zipflinger/ApkMaker.java",
+        "tools/src/com/android/zipflinger/Profiler.java",
+    ],
+    data = [
+        "//tools/base/zipflinger:tools/zipflinger.profile",
+    ],
+    jvm_flags = [
+        "-javaagent:$(location //tools/base/tracer:trace_agent)=$(location //tools/base/zipflinger:tools/zipflinger.profile)",
+    ],
+    main_class = "com.android.zipflinger.Profiler",
+    deps = [
+        ":zipflinger",
+        "//tools/base/tracer:tools.tracer",
+        "//tools/base/tracer:trace_agent",
     ],
 )
