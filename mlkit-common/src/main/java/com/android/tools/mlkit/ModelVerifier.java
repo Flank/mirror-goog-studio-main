@@ -51,8 +51,7 @@ public class ModelVerifier {
             }
             inputNameSet.add(tensorMetadata.name());
 
-            if (TensorInfo.ContentType.fromByte(tensorMetadata.contentType())
-                            == TensorInfo.ContentType.IMAGE
+            if (TensorInfo.extractContentType(tensorMetadata) == TensorInfo.ContentType.IMAGE
                     && extractor.getInputTensorShape(0, i).length != 4) {
                 throw new ModelParsingException(
                         ErrorType.INVALID_IMAGE_TENSOR,

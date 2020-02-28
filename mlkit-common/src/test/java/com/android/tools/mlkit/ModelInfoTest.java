@@ -47,8 +47,8 @@ public class ModelInfoTest {
                 inputTensorInfo.getNormalizationParams();
         assertEquals(inputNormalization.getMean()[0], 127.5f, DELTA);
         assertEquals(inputNormalization.getStd()[0], 127.5f, DELTA);
-        assertEquals(inputNormalization.getMin()[0], -1f, DELTA);
-        assertEquals(inputNormalization.getMax()[0], 1f, DELTA);
+        assertEquals(inputNormalization.getMin()[0], 0f, DELTA);
+        assertEquals(inputNormalization.getMax()[0], 255f, DELTA);
         MetadataExtractor.QuantizationParams inputQuantization =
                 inputTensorInfo.getQuantizationParams();
         assertEquals(inputQuantization.getZeroPoint(), 128f, DELTA);

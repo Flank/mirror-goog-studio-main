@@ -22,7 +22,7 @@
       <library name="tensorflow-lite-support" type="repository">
         <properties maven-id="org.tensorflow:tensorflow-lite-support:0.0.0-experimental-metadata" />
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata/tensorflow-lite-support-0.0.0-experimental-metadata.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata-monolithic/tensorflow-lite-support-0.0.0-experimental-metadata-monolithic.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

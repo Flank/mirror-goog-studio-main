@@ -11,7 +11,7 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//prebuilts/tools/common/m2/repository/com/google/flatbuffers/flatbuffers-java/1.11.1:jar",
-        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata:jar",
+        "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata-monolithic:jar",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:commons-io[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",

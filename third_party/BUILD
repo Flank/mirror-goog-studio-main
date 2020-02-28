@@ -1876,7 +1876,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.tensorflow_tensorflow-lite-support",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata-monolithic:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
