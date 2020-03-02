@@ -26,9 +26,6 @@ import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.initialization.dsl.ScriptHandler.CLASSPATH_CONFIGURATION
 
-private const val INTERNAL__CHECKED_MINIMUM_PLUGIN_VERSIONS =
-    "INTERNAL__CHECKED_MINIMUM_PLUGIN_VERSIONS"
-
 private val pluginList = listOf(
     /**
      *  https://issuetracker.google.com/116747159
@@ -78,26 +75,11 @@ internal data class DependencyInfo(
  * Enforces minimum versions of certain plugins.
  */
 fun enforceMinimumVersionsOfPlugins(project: Project, issueReporter: IssueReporter) {
-    // We're going to check all projects at the end of the configuration phase, so make sure to do
-    // this check only once by marking a custom property of the root project. The access doesn't
-    // need to be thread-safe as configuration is single-threaded.
-    val alreadyChecked =
-        project.rootProject.extensions.extraProperties.has(
-            INTERNAL__CHECKED_MINIMUM_PLUGIN_VERSIONS
-        )
-    if (alreadyChecked) {
-        return
-    }
-    project.rootProject.extensions.extraProperties.set(
-        INTERNAL__CHECKED_MINIMUM_PLUGIN_VERSIONS,
-        true
-    )
-
-    project.gradle.projectsEvaluated { gradle ->
-        gradle.allprojects {
-            for (plugin in pluginList) {
-                enforceMinimumVersionOfPlugin(it, plugin, issueReporter)
-            }
+    // Apply this check only to current subproject, other subprojects that do not apply the Android
+    // Gradle plugin should not be impacted by this check (see bug 148776286).
+    project.afterEvaluate {
+        for (plugin in pluginList) {
+            enforceMinimumVersionOfPlugin(it, plugin, issueReporter)
         }
     }
 }
@@ -154,7 +136,7 @@ internal fun visitDependency(
 
     // The selected dependency may be different from the requested dependency, but we are interested
     // in only the selected dependency
-    val dependency = (dependencyResult as ResolvedDependencyResult).selected
+    val dependency = dependencyResult.selected
     val moduleVersion = dependency.moduleVersion!!
     val group = moduleVersion.group
     val name = moduleVersion.name
