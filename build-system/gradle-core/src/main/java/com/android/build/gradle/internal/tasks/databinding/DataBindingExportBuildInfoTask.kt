@@ -14,113 +14,98 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks.databinding;
+package com.android.build.gradle.internal.tasks.databinding
 
-import android.databinding.tool.LayoutXmlProcessor;
-import android.databinding.tool.processing.Scope;
-import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.ComponentPropertiesImpl;
-import com.android.build.gradle.internal.tasks.NonIncrementalTask;
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.options.BooleanOption;
-import java.io.File;
-import javax.inject.Inject;
-import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskProvider;
+import android.databinding.tool.LayoutXmlProcessor
+import android.databinding.tool.processing.Scope
+import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.options.BooleanOption
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskProvider
 
 /**
  * Task to create an empty class annotated with @BindingBuildInfo, so that the Java compiler invokes
  * data binding even when the rest of the source code does not have data binding annotations.
  *
- * <p>Note: The task name might be misleading: Historically, this task was used to generate a class
+ * Note: The task name might be misleading: Historically, this task was used to generate a class
  * that contained the build environment information needed for data binding, but it is now no longer
  * the case. We'll rename it later.
  */
 @CacheableTask
-public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask {
+abstract class DataBindingExportBuildInfoTask : NonIncrementalTask() {
 
-    private final Property<LayoutXmlProcessor> xmlProcessor;
+    @get:Input
+    abstract val generatedClassFileName: Property<String>
 
-    private boolean useAndroidX;
+    @get:Input
+    abstract val useAndroidX: Property<Boolean>
 
-    private File emptyClassOutDir;
+    @get:Internal
+    abstract val xmlProcessor: Property<LayoutXmlProcessor>
 
-    @Inject
-    public DataBindingExportBuildInfoTask(ObjectFactory objectFactory) {
-        xmlProcessor = objectFactory.property(LayoutXmlProcessor.class);
+    @get:OutputDirectory
+    abstract val triggerDir: DirectoryProperty
+
+    override fun doTaskAction() {
+        xmlProcessor.get().writeEmptyInfoClass(useAndroidX.get())
+        Scope.assertNoError()
     }
 
-    @Input
-    public boolean isUseAndroidX() {
-        return useAndroidX;
-    }
+    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+        VariantTaskCreationAction<DataBindingExportBuildInfoTask, ComponentPropertiesImpl>(
+            componentProperties
+        ) {
 
-    @Input
-    public String getGeneratedClassFileName() {
-        return xmlProcessor.get().getInfoClassFullName();
-    }
+        override val name: String = computeTaskName("dataBindingExportBuildInfo")
 
-    @OutputDirectory
-    public File getEmptyClassOutDir() {
-        return emptyClassOutDir;
-    }
+        override val type: Class<DataBindingExportBuildInfoTask> =
+            DataBindingExportBuildInfoTask::class.java
 
-    @Override
-    protected void doTaskAction() {
-        xmlProcessor.get().writeEmptyInfoClass(useAndroidX);
-        Scope.assertNoError();
-    }
-
-    public static class CreationAction
-            extends VariantTaskCreationAction<
-                    DataBindingExportBuildInfoTask, ComponentPropertiesImpl> {
-
-        public CreationAction(@NonNull ComponentPropertiesImpl componentProperties) {
-            super(componentProperties);
+        override fun handleProvider(
+            taskProvider: TaskProvider<out DataBindingExportBuildInfoTask>
+        ) {
+            super.handleProvider(taskProvider)
+            creationConfig.taskContainer.dataBindingExportBuildInfoTask = taskProvider
         }
 
-        @NonNull
-        @Override
-        public String getName() {
-            return computeTaskName("dataBindingExportBuildInfo");
-        }
-
-        @NonNull
-        @Override
-        public Class<DataBindingExportBuildInfoTask> getType() {
-            return DataBindingExportBuildInfoTask.class;
-        }
-
-        @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends DataBindingExportBuildInfoTask> taskProvider) {
-            super.handleProvider(taskProvider);
-            creationConfig.getTaskContainer().setDataBindingExportBuildInfoTask(taskProvider);
-        }
-
-        @Override
-        public void configure(
-                @NonNull DataBindingExportBuildInfoTask task) {
-            super.configure(task);
-
-            task.xmlProcessor.set(
-                    creationConfig
-                            .getGlobalScope()
-                            .getProject()
-                            .provider(creationConfig::getLayoutXmlProcessor));
-            task.xmlProcessor.disallowChanges();
-            task.useAndroidX =
-                    creationConfig
-                            .getServices()
-                            .getProjectOptions()
-                            .get(BooleanOption.USE_ANDROID_X);
-            task.emptyClassOutDir = creationConfig.getPaths().getClassOutputForDataBinding();
-
-            task.dependsOn(creationConfig.getTaskContainer().getSourceGenTask());
+        override fun configure(
+            task: DataBindingExportBuildInfoTask
+        ) {
+            super.configure(task)
+            task.generatedClassFileName.setDisallowChanges(
+                creationConfig
+                    .globalScope
+                    .project.provider<String> {
+                    task.xmlProcessor.get().infoClassFullName
+                }
+            )
+            task.useAndroidX.setDisallowChanges(
+                creationConfig
+                    .services
+                    .projectOptions[BooleanOption.USE_ANDROID_X]
+            )
+            task.xmlProcessor.setDisallowChanges(
+                creationConfig
+                    .globalScope
+                    .project
+                    .provider<LayoutXmlProcessor>(creationConfig::layoutXmlProcessor)
+            )
+            task.triggerDir.setDisallowChanges(
+                creationConfig
+                    .globalScope
+                    .project.layout.projectDirectory.dir(
+                    creationConfig.paths.classOutputForDataBinding.path
+                )
+            )
+            task.dependsOn(creationConfig.taskContainer.sourceGenTask)
         }
     }
 }
