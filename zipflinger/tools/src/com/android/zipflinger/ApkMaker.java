@@ -20,13 +20,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Random;
+import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class ApkMaker {
-
-    static final int NUM_DEX = 10;
-    private static long fileId = 0;
 
     public static void create(long numRes, int resSize, int numDex, int dexSize, String path)
             throws IOException {
@@ -35,20 +33,21 @@ public class ApkMaker {
                 ZipOutputStream s = new ZipOutputStream(f)) {
             byte[] resourceBytes = new byte[resSize];
             for (int i = 0; i < numRes; i++) {
-                long id = fileId++;
-                String name = String.format("res/foo/bar/%06d", id);
+                String name = String.format("res/foo/bar/%06d", i);
                 ZipEntry entry = new ZipEntry(name);
                 s.putNextEntry(entry);
+                s.setLevel(Deflater.NO_COMPRESSION);
                 r.nextBytes(resourceBytes);
                 s.write(resourceBytes);
                 s.closeEntry();
             }
 
             byte[] dexBytes = new byte[dexSize];
-            for (int i = 0; i < NUM_DEX; i++) {
+            for (int i = 0; i < numDex; i++) {
                 String name = String.format("classes%d.dex", i);
                 ZipEntry entry = new ZipEntry(name);
                 s.putNextEntry(entry);
+                s.setLevel(Deflater.NO_COMPRESSION);
                 r.nextBytes(dexBytes);
                 s.write(dexBytes);
                 s.closeEntry();
