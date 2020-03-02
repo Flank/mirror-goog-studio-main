@@ -3142,6 +3142,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         androidTestCompile "org.projectlombok:lombok:1.18.8"
                         annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
                         debugCompile "android.arch.persistence.room:compiler:1.1.1"
+                        implementation "com.jakewharton:butterknife:10.1.0"
                     }
                 """
             ).indented()

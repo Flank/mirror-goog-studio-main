@@ -2812,7 +2812,6 @@ open class GradleDetector : Detector(), GradleScanner {
             "org.projectlombok:lombok",
             "com.google.auto.value:auto-value",
             "org.parceler:parceler",
-            "com.jakewharton:butterknife",
             "com.github.hotchemi:permissionsdispatcher-processor",
             "com.alibaba:arouter-compiler",
             "org.androidannotations:androidannotations",
