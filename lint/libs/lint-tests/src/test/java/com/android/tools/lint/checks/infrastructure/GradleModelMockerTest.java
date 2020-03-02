@@ -43,6 +43,7 @@ import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import com.android.tools.lint.LintCliFlags;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
@@ -1026,11 +1027,11 @@ public class GradleModelMockerTest {
         assertThat(coordinates.getVersion()).isEqualTo("1.10.19");
         assertThat(coordinates.getPackaging()).isEqualTo("aar");
 
-        coordinates = library.getRequestedCoordinates();
-        assertThat(coordinates.getGroupId()).isEqualTo("org.mockito");
-        assertThat(coordinates.getArtifactId()).isEqualTo("mockito-core");
-        assertThat(coordinates.getVersion()).isEqualTo("1.10.8");
-        assertThat(coordinates.getPackaging()).isEqualTo("aar");
+        try {
+            coordinates = library.getRequestedCoordinates();
+            fail("Expected this method to throw as done in IdeLibrary");
+        } catch (UnusedModelMethodException pass) {
+        }
     }
 
     @Test
