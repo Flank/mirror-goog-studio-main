@@ -82,8 +82,10 @@
       <module fileurl="file://$PROJECT_DIR$/../data-binding/baseLibrarySupport/db-baseLibrarySupport.iml" filepath="$PROJECT_DIR$/../data-binding/baseLibrarySupport/db-baseLibrarySupport.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon.iml" filepath="$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon.iml" />
       <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/dynamic-layout-inspector.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/dynamic-layout-inspector.iml" />
+      <module fileurl="file://$PROJECT_DIR$/fakeandroid/fakeandroid.iml" filepath="$PROJECT_DIR$/fakeandroid/fakeandroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/perf-logger/perf-logger.iml" filepath="$PROJECT_DIR$/perf-logger/perf-logger.iml" />
       <module fileurl="file://$PROJECT_DIR$/testutils/testutils-tests.iml" filepath="$PROJECT_DIR$/testutils/testutils-tests.iml" />
+      <module fileurl="file://$PROJECT_DIR$/transport/test-framework/transport-test-framework.iml" filepath="$PROJECT_DIR$/transport/test-framework/transport-test-framework.iml" />
       <module fileurl="file://$PROJECT_DIR$/usb-devices/usb-devices.iml" filepath="$PROJECT_DIR$/usb-devices/usb-devices.iml" />
     </modules>
   </component>

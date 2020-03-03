@@ -27,10 +27,9 @@
     <orderEntry type="library" scope="TEST" name="kotlin-stdlib-jdk8" level="project" />
     <orderEntry type="library" scope="TEST" name="mockito" level="project" />
     <orderEntry type="library" scope="TEST" name="studio-proto" level="project" />
-    <orderEntry type="library" name="transport_java_proto" level="project" />
+    <orderEntry type="library" name="transport-proto" level="project" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="library" scope="TEST" name="studio-grpc" level="project" />
-    <orderEntry type="library" scope="TEST" name="transport-proto" level="project" />
-    <orderEntry type="module" scope="TEST" module-name="transport-test-framework" />
+    <orderEntry type="module" module-name="transport-test-framework" scope="TEST" />
   </component>
 </module>
