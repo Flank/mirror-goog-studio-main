@@ -48,6 +48,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_TRIGGER
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT
@@ -74,7 +75,6 @@ import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.attributes.Attribute
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -191,7 +191,11 @@ abstract class ComponentPropertiesImpl(
             variantDslInfo.originalApplicationId,
             globalScope
                 .dataBindingBuilder
-                .createJavaFileWriter(paths.classOutputForDataBinding),
+                .createJavaFileWriter(
+                    // Can't use artifacts.getFinalProduct(DATA_BINDING_TRIGGER) here as it may not
+                    // have been set (DataBindingIntegrationTestAppsTest would fail).
+                    artifacts.getOperations()
+                        .getOutputPath(InternalArtifactType.DATA_BINDING_TRIGGER)),
             OriginalFileLookup { file: File? ->
                 val input =
                     SourceFile(file!!)
@@ -397,8 +401,22 @@ abstract class ComponentPropertiesImpl(
             sourceSets.add(internalServices.fileTree(aidlFC).builtBy(aidlFC))
         }
         if (buildFeatures.dataBinding || buildFeatures.viewBinding) {
-            taskContainer.dataBindingExportBuildInfoTask?.let {
-                sourceSets.add(internalServices.fileTree(paths.classOutputForDataBinding).builtBy(it))
+            // DATA_BINDING_TRIGGER artifact is created for data binding only (not view binding)
+            if (buildFeatures.dataBinding) {
+                // Under some conditions (e.g., for a unit test variant where
+                // includeAndroidResources == false or testedVariantType != AAR, see
+                // TaskManager.createUnitTestVariantTasks), the artifact may not have been created,
+                // so we need to check its presence first (using internal AGP API instead of Gradle
+                // API---see https://android.googlesource.com/platform/tools/base/+/ca24108e58e6e0dc56ce6c6f639cdbd0fa3b812f).
+                if (!artifacts.getOperations().getArtifactContainer(DATA_BINDING_TRIGGER)
+                        .needInitialProducer().get()
+                ) {
+                    val dataBindingTriggerDir = artifacts.getFinalProduct(DATA_BINDING_TRIGGER)
+                    sourceSets.add(
+                        internalServices.fileTree(dataBindingTriggerDir)
+                            .builtBy(dataBindingTriggerDir)
+                    )
+                }
             }
             addDataBindingSources(sourceSets)
         }

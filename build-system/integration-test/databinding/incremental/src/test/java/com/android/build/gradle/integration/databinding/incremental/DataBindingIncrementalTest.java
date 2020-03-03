@@ -25,6 +25,8 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.TestUtils;
 import com.android.testutils.truth.DexClassSubject;
@@ -114,15 +116,10 @@ public class DataBindingIncrementalTest {
     }
 
     private File getGeneratedInfoClass() {
-        return project.getGeneratedSourceFile(
-                "source",
-                "dataBinding",
-                "trigger",
-                "debug",
-                "android",
-                "databinding",
-                "testapp",
-                "DataBindingInfo.java");
+        return new File(
+                ArtifactTypeUtil.getOutputDir(
+                        InternalArtifactType.DATA_BINDING_TRIGGER.INSTANCE, project.getBuildDir()),
+                "debug/android/databinding/testapp/DataBindingInfo.java");
     }
 
     private File getGeneratedSourceFile() {

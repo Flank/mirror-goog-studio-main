@@ -279,6 +279,11 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // the merger of a module's AAPT_PROGUARD_FILE and those of its feature(s)
     object MERGED_AAPT_PROGUARD_FILE: InternalArtifactType<RegularFile>(FILE), Replaceable
 
+    // directory containing an empty class annotated with a data binding annotation (it could be any
+    // data binding annotation), so that the Java compiler still invokes data binding in the case
+    // that data binding is used (e.g., in layout files) but the source code does not use data
+    // binding annotations.
+    object DATA_BINDING_TRIGGER: InternalArtifactType<Directory>(DIRECTORY, Category.GENERATED), Replaceable
     // the data binding artifact for a library that gets published with the aar
     object DATA_BINDING_ARTIFACT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // the file into which data binding will output the list of classes that should be stripped in

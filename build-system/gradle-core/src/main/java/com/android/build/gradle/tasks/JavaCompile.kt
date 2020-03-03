@@ -53,6 +53,9 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
 
     private val classesOutputDirectory = globalScope.project.objects.directoryProperty()
     private val annotationProcessorOutputDirectory = globalScope.project.objects.directoryProperty()
+
+    // We need to get this path at the task's configuration, so we have to manually construct it
+    // here (normally the Operations API doesn't require this manual step).
     private val annotationProcessorOutputLocation =
         componentProperties.artifacts.getOperations()
             .getOutputPath(AP_GENERATED_SOURCES, "out")
@@ -82,15 +85,10 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
 
         val artifacts = componentProperties.artifacts
 
-        classesOutputDirectory.set(
-            artifacts.getOperations().getOutputPath(JAVAC, "classes")
-        )
-        artifacts.producesDir(
-            JAVAC,
-            taskProvider,
-            { classesOutputDirectory },
-            fileName = "classes"
-        )
+        artifacts.getOperations()
+            .setInitialProvider(taskProvider) { classesOutputDirectory }
+            .withName("classes")
+            .on(JAVAC)
 
         artifacts.getOperations()
             .setInitialProvider(taskProvider) { annotationProcessorOutputDirectory }
@@ -140,14 +138,17 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
 
         // Manually declare these output providers as the task's outputs as they are not yet
         // annotated as outputs.
-        task.outputs.dir(classesOutputDirectory)
-        task.outputs.dir(annotationProcessorOutputDirectory).optional()
+        task.outputs.dir(classesOutputDirectory).withPropertyName("classesOutputDirectory")
+        task.outputs.dir(annotationProcessorOutputDirectory)
+            .withPropertyName("annotationProcessorOutputDirectory").optional()
         // Also do that for data binding artifacts---even though the output providers are present
         // in DataBindingCompilerArguments, it is not enough. (If we don't do this, these tests will
         // fail: DataBindingMultiModuleTest, DataBindingExternalArtifactDependencyTest,
         // DataBindingIncrementalityTest.)
-        task.outputs.dir(dataBindingArtifactDir).optional()
-        task.outputs.file(dataBindingExportClassListFile).optional()
+        task.outputs.dir(dataBindingArtifactDir).withPropertyName("dataBindingArtifactDir")
+            .optional()
+        task.outputs.file(dataBindingExportClassListFile)
+            .withPropertyName("dataBindingExportClassListFile").optional()
 
         task.logger.info(
             "Configuring Java sources compilation with source level " +
@@ -171,16 +172,13 @@ fun registerDataBindingOutputs(
     if (firstRegistration) {
         artifacts.getOperations()
             .setInitialProvider(taskProvider) { dataBindingArtifactDir }
-            .atLocation(artifacts.getOperations().getOutputPath(DATA_BINDING_ARTIFACT).path)
+            // a name is required, or DataBindingCachingTest would fail (somehow adding a name
+            // solves the issue of overlapping outputs between Kapt and JavaCompile when this
+            // artifact is set as the output of both tasks).
+            .withName("out")
             .on(DATA_BINDING_ARTIFACT)
-        artifacts.producesDir(
-            DATA_BINDING_ARTIFACT,
-            taskProvider,
-            { dataBindingArtifactDir }
-        )
     } else {
-        artifacts
-            .getOperations()
+        artifacts.getOperations()
             .replace(taskProvider) { dataBindingArtifactDir }
             .on(DATA_BINDING_ARTIFACT)
     }
@@ -188,14 +186,12 @@ fun registerDataBindingOutputs(
         if (firstRegistration) {
             artifacts.getOperations()
                 .setInitialProvider(taskProvider) { dataBindingExportClassListFile }
-                .atLocation(
-                    artifacts.getOperations().getOutputPath(DATA_BINDING_EXPORT_CLASS_LIST, "out")
-                        .path
-                )
+                // a name is required for a regular file, without it
+                // ./gradlew :dataBinding:buildDataBindingRuntimeArtifacts would fail
+                .withName("class_list")
                 .on(DATA_BINDING_EXPORT_CLASS_LIST)
         } else {
-            artifacts
-                .getOperations()
+            artifacts.getOperations()
                 .replace(taskProvider) { dataBindingExportClassListFile }
                 .on(DATA_BINDING_EXPORT_CLASS_LIST)
         }

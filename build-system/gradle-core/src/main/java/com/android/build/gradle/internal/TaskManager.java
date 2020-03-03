@@ -2521,6 +2521,7 @@ public abstract class TaskManager<
 
         taskFactory.register(new DataBindingGenBaseClassesTask.CreationAction(componentProperties));
 
+        // DATA_BINDING_TRIGGER artifact is created for data binding only (not view binding)
         if (dataBindingEnabled) {
             taskFactory.register(
                     new DataBindingExportBuildInfoTask.CreationAction(componentProperties));
@@ -3315,7 +3316,7 @@ public abstract class TaskManager<
 
     private void configureKaptTaskInScopeForDataBinding(
             @NonNull ComponentPropertiesImpl componentProperties, @NonNull Task kaptTask) {
-        DirectoryProperty databindingArtifact =
+        DirectoryProperty dataBindingArtifactDir =
                 componentProperties.getGlobalScope().getProject().getObjects().directoryProperty();
         RegularFileProperty exportClassListFile =
                 componentProperties.getGlobalScope().getProject().getObjects().fileProperty();
@@ -3323,7 +3324,7 @@ public abstract class TaskManager<
 
         // Data binding artifacts are part of the annotation processing outputs
         JavaCompileKt.registerDataBindingOutputs(
-                databindingArtifact,
+                dataBindingArtifactDir,
                 exportClassListFile,
                 componentProperties.getVariantType().isExportDataBindingClassList(),
                 false, // Set to false to replace the first registration done by JavaCompile earlier
@@ -3332,8 +3333,16 @@ public abstract class TaskManager<
 
         // Manually declare these output providers as the task's outputs as they are not yet
         // annotated as outputs (same with the code in JavaCompileCreationAction.configure).
-        kaptTask.getOutputs().dir(databindingArtifact);
-        kaptTask.getOutputs().file(exportClassListFile).optional();
+        // Ideally we need to unset these output providers from JavaCompile's outputs, but there's
+        // currently no way to do it.
+        kaptTask.getOutputs()
+                .dir(dataBindingArtifactDir)
+                .withPropertyName("dataBindingArtifactDir")
+                .optional();
+        kaptTask.getOutputs()
+                .file(exportClassListFile)
+                .withPropertyName("dataBindingExportClassListFile")
+                .optional();
     }
 
     protected void configureTestData(
