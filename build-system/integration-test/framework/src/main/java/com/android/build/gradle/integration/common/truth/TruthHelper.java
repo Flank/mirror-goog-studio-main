@@ -33,7 +33,6 @@ import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
-import com.android.testutils.apk.SplitApks;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Optional;
 import com.google.common.collect.ListMultimap;
@@ -104,11 +103,6 @@ public class TruthHelper {
     @NonNull
     public static ApkSubject assertThat(@Nullable Apk apk) {
         return assertAbout(ApkSubject.apks()).that(apk);
-    }
-
-    @NonNull
-    public static SplitApksSubject assertThat(@NonNull SplitApks apks) {
-        return assertAbout(SplitApksSubject.splitApks()).that(apks);
     }
 
     @NonNull

@@ -957,52 +957,6 @@ public class ManifestMerger2 {
     }
 
     /**
-     * Sets the element's attribute value to True.
-     * @param element the xml element which attribute should be mutated.
-     * @param attributeName the android namespace attribute name.
-     */
-    private static void setAttributeToTrue(Element element, String attributeName) {
-
-        Attr enabledAttribute = element.getAttributeNodeNS(
-                SdkConstants.ANDROID_URI, attributeName);
-
-        // force it to be true.
-        if (enabledAttribute != null) {
-            element.setAttributeNS(
-                    SdkConstants.ANDROID_URI,
-                    enabledAttribute.getName(),
-                    SdkConstants.VALUE_TRUE);
-        }
-    }
-
-    /**
-     * Adds a provider element as a child of the document's application element, as shown here:
-     * <provider android:name="com.android.tools.ir.server.InstantRunContentProvider"
-     * android:authorities="com.android.tools.ir.server.InstantRunContentProvider"
-     * android:multiprocess="true" />
-     *
-     * @param document the document to add the provider element to
-     * @param application the application element to add the provider element to
-     */
-    private static void addIrContentProvider(
-            @NonNull Document document, @NonNull Element application) {
-        Element cp = document.createElement(SdkConstants.TAG_PROVIDER);
-        setAndroidAttribute(cp, SdkConstants.ATTR_NAME, BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER);
-        // Qualify authority as unique so that multiple IR app packages installed on a single
-        // device do not conflict.
-        String pkg = document.getDocumentElement().getAttribute(SdkConstants.ATTR_PACKAGE);
-        if (pkg == null) {
-            throw new RuntimeException("no package name set");
-        }
-        setAndroidAttribute(cp, SdkConstants.ATTR_AUTHORITIES, pkg + "." +
-                            BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER);
-        // Multiprocess so we start in every process and decide on our own how to handle
-        // having multiple processes
-        setAndroidAttribute(cp, SdkConstants.ATTR_MULTIPROCESS, SdkConstants.VALUE_TRUE);
-        application.appendChild(cp);
-    }
-
-    /**
      * Remove an Android-namespaced XML attribute on the given node.
      *
      * @param node Node in which to remove the attribute; must be part of a document

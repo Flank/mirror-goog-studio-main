@@ -654,8 +654,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     }
 
     /**
-     * Packages the application incrementally. In case of instant run packaging, this is not a
-     * perfectly incremental task as some files are always rewritten even if no change has occurred.
+     * Packages the application incrementally.
      *
      * @param outputFile expected output package file
      * @param changedDex incremental dex packaging data

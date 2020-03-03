@@ -45,11 +45,6 @@ public class MergingReport {
         MERGED,
 
         /**
-         * Merged manifest file with Instant Run related decorations.
-         */
-        INSTANT_RUN,
-
-        /**
          * Merged manifest file with unresolved placeholders encoded to be AAPT friendly.
          */
         AAPT_SAFE,
