@@ -106,7 +106,7 @@ enum class BooleanOption(
     DEPLOYMENT_PROVIDES_LIST_OF_CHANGES("android.deployment.provideListOfChanges", false, FeatureStage.Experimental),
     ENABLE_JVM_RESOURCE_COMPILER("android.enableJvmResourceCompiler", false, FeatureStage.Experimental),
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false, FeatureStage.Experimental),
-    NAMESPACED_R_CLASS("android.namespacedRClass", false, FeatureStage.Experimental),
+    NON_TRANSITIVE_R_CLASS("android.nonTransitiveRClass", false, FeatureStage.Experimental),
     FULL_R8("android.enableR8.fullMode", false, FeatureStage.Experimental),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false, FeatureStage.Experimental),
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false, FeatureStage.Experimental),
@@ -367,8 +367,11 @@ enum class BooleanOption(
         FeatureStage.Removed(VERSION_4_0, "This feature was removed in AGP 4.0")
     ),
 
-    GENERATE_R_JAVA("android.generateRJava", false, FeatureStage.Removed(VERSION_4_1, "This feature was removed in AGP 4.1")),
-
+    @Suppress("unused")
+    GENERATE_R_JAVA(
+        "android.generateRJava",
+        false,
+        FeatureStage.Removed(VERSION_4_1, "This feature was removed in AGP 4.1")),
 
     ; // end of enums
 

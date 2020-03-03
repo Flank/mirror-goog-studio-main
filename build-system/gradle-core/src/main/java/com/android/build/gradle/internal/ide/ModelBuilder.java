@@ -462,7 +462,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                         variantProperties.getBuildFeatures().getMlModelBinding()));
 
         boolean transitiveRClass =
-                !globalScope.getProjectOptions().get(BooleanOption.NAMESPACED_R_CLASS);
+                !globalScope.getProjectOptions().get(BooleanOption.NON_TRANSITIVE_R_CLASS);
         flags.put(AndroidGradlePluginProjectFlags.BooleanFlag.TRANSITIVE_R_CLASS, transitiveRClass);
 
         return new AndroidGradlePluginProjectFlagsImpl(flags.build());

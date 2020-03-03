@@ -159,7 +159,7 @@ public class ModelTest {
     public void checkFlagsNamespacedRClassOff() throws Exception {
         AndroidProject model =
                 project.model()
-                        .with(BooleanOption.NAMESPACED_R_CLASS, false)
+                        .with(BooleanOption.NON_TRANSITIVE_R_CLASS, false)
                         .with(BooleanOption.USE_NON_FINAL_RES_IDS, false)
                         .fetchAndroidProjects()
                         .getOnlyModel();
@@ -174,7 +174,7 @@ public class ModelTest {
     public void checkFlagsNamespacedRClassOn() throws Exception {
         AndroidProject model =
                 project.model()
-                        .with(BooleanOption.NAMESPACED_R_CLASS, true)
+                        .with(BooleanOption.NON_TRANSITIVE_R_CLASS, true)
                         .with(BooleanOption.USE_NON_FINAL_RES_IDS, true)
                         .fetchAndroidProjects()
                         .getOnlyModel();
