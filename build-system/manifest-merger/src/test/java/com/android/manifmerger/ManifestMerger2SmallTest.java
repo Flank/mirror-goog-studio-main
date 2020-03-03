@@ -1443,7 +1443,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.PACKAGED));
         assertEquals(
                 "2",
                 xmlDocument
@@ -1529,47 +1529,6 @@ public class ManifestMerger2SmallTest {
                         .item(0)
                         .getAttributes()
                         .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_MIN_SDK_VERSION)
-                        .getNodeValue());
-    }
-
-    @Test
-    public void testBundleToolManifestDynamicFeature() throws Exception {
-        String xml =
-                ""
-                        + "<manifest\n"
-                        + "    package=\"com.foo.example\""
-                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
-                        + "    <application t:name=\".applicationOne\">\n"
-                        + "        <activity t:name=\"activityOne\"/>\n"
-                        + "    </application>\n"
-                        + "</manifest>";
-
-        File inputFile = TestUtils.inputAsFile("dynamicFeatureBundleTool", xml);
-
-        MockLog mockLog = new MockLog();
-        MergingReport mergingReport =
-                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .setFeatureName("dynamic_split")
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
-                        .withFeatures(
-                                ManifestMerger2.Invoker.Feature
-                                        .ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
-                        .merge();
-
-        assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.BUNDLE));
-        assertEquals(
-                "dynamic_split",
-                xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
-
-        assertEquals(
-                "dynamic_split",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
                         .getNodeValue());
     }
 
@@ -1729,7 +1688,7 @@ public class ManifestMerger2SmallTest {
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
             // ensure tools annotation removal.
             Document xmlDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.PACKAGED));
             assertNull(
                     "splitName should not be supplied for apk merged manifest",
                     xmlDocument
@@ -1738,17 +1697,6 @@ public class ManifestMerger2SmallTest {
                             .getAttributes()
                             .getNamedItemNS(
                                     SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME));
-
-            Document bundleDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.BUNDLE));
-            assertEquals(
-                    "feature",
-                    bundleDocument
-                            .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                            .item(0)
-                            .getAttributes()
-                            .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
-                            .getNodeValue());
         } finally {
             assertTrue(appFile.delete());
             assertTrue(libFile.delete());
@@ -1797,7 +1745,7 @@ public class ManifestMerger2SmallTest {
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
             // ensure tools annotation removal.
             Document xmlDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.PACKAGED));
             assertNull(
                     "splitName should not be supplied for apk merged manifest",
                     xmlDocument
@@ -1896,16 +1844,6 @@ public class ManifestMerger2SmallTest {
             assertEquals(
                     "2",
                     instantAppDocument
-                            .getDocumentElement()
-                            .getAttributeNS(
-                                    SdkConstants.ANDROID_URI,
-                                    SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
-
-            Document bundleDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.BUNDLE));
-            assertEquals(
-                    "1",
-                    bundleDocument
                             .getDocumentElement()
                             .getAttributeNS(
                                     SdkConstants.ANDROID_URI,

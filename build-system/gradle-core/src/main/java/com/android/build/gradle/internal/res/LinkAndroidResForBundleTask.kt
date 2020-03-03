@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.res
 
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.dsl.convert
@@ -106,10 +105,6 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     lateinit var incrementalFolder: File
         private set
 
-    @get:Nested
-    lateinit var mainSplit: VariantOutputImpl
-        private set
-
     @get:Input
     lateinit var aapt2Version: String
         private set
@@ -127,11 +122,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
     override fun doTaskAction() {
 
-        val manifestFile =
-            BuiltArtifactsLoaderImpl().load(manifestFiles)
-                ?.getBuiltArtifact(mainSplit)
-                ?.outputFile
-                ?: throw RuntimeException("Cannot find merged manifest file")
+        val manifestFile = manifestFile.get().asFile
 
         val outputFile = bundledResFile.get().asFile
         FileUtils.mkdirs(outputFile.parentFile)
@@ -152,7 +143,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
         val config = AaptPackageConfig(
             androidJarPath = androidJar.get().absolutePath,
             generateProtos = true,
-            manifestFile = File(manifestFile),
+            manifestFile = manifestFile,
             options = aaptOptions,
             resourceOutputApk = outputFile,
             variantType = VariantTypeImpl.BASE_APK,
@@ -190,9 +181,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
         }
     }
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val manifestFiles: DirectoryProperty
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    abstract val manifestFile: RegularFileProperty
 
     @InputFiles
     @Optional
@@ -254,11 +245,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
 
-            task.mainSplit = creationConfig.outputs.getMainSplit()
-
             creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,
-                task.manifestFiles)
+                task.manifestFile)
 
             creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_RES,

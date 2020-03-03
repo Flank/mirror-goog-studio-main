@@ -1312,7 +1312,7 @@ open class LintCliClient : LintClient {
                         return CharSequences.getInputStream(text)
                     }
                 }).merge()
-            val xmlDocument = mergeReport.getMergedXmlDocument(MergedManifestKind.MERGED)
+            val xmlDocument = mergeReport.getMergedXmlDocument(MergedManifestKind.PACKAGED)
             if (xmlDocument != null) {
                 val document = xmlDocument.xml
                 if (document != null) {

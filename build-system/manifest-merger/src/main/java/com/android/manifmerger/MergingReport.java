@@ -41,9 +41,7 @@ import org.xml.sax.SAXException;
 public class MergingReport {
 
     public enum MergedManifestKind {
-        /**
-         * Merged manifest file
-         */
+        /** Merged manifest file, used as a base for other Manifest files like PACKAGED, BUNDLE */
         MERGED,
 
         /**
@@ -59,8 +57,8 @@ public class MergingReport {
         /** Blame file for merged manifest file. */
         BLAME,
 
-        /** Merged manifest file for bundletool. */
-        BUNDLE,
+        /** Merged manifest file as packaged in the APK or AAR */
+        PACKAGED,
 
         /** Feature manifest to be merged back into the base. */
         METADATA_FEATURE,

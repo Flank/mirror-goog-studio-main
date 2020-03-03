@@ -170,7 +170,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         val packagedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val mergedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val metadataFeatureMergedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
-        val bundleManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val instantAppManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val navJsons = navigationJsons?.files ?: setOf()
 
@@ -198,11 +197,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 dirName,
                 SdkConstants.ANDROID_MANIFEST_XML
             )
-            val bundleManifestOutputFile = FileUtils.join(
-                bundleManifestOutputDirectory.get().asFile,
-                dirName,
-                SdkConstants.ANDROID_MANIFEST_XML
-            )
             val instantAppManifestOutputFile =
                 if (instantAppManifestOutputDirectory.isPresent) FileUtils.join(
                     instantAppManifestOutputDirectory.get().asFile,
@@ -227,7 +221,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 packagedManifestOutputFile.absolutePath,  // no aapt friendly merged manifest file necessary for applications.
                 null /* aaptFriendlyManifestOutputFile */,
                 metadataFeatureManifestOutputFile.absolutePath,
-                bundleManifestOutputFile.absolutePath,
                 instantAppManifestOutputFile?.absolutePath,
                 ManifestMerger2.MergeType.APPLICATION,
                 manifestPlaceholders.get(),
@@ -237,7 +230,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 LoggerWrapper.getLogger(ProcessApplicationManifest::class.java)
             )
             val mergedXmlDocument =
-                mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED)
+                mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.PACKAGED)
             outputMergeBlameContents(mergingReport, mergeBlameFile.get().asFile)
             val properties =
                 if (mergedXmlDocument != null) mapOf(
@@ -254,9 +247,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             metadataFeatureMergedManifestOutputs.add(
                 variantOutput.toBuiltArtifact(metadataFeatureManifestOutputFile, properties)
             )
-            bundleManifestOutputs.add(
-                variantOutput.toBuiltArtifact(bundleManifestOutputFile, properties)
-            )
             if (instantAppManifestOutputFile != null) {
                 instantAppManifestOutputs.add(
                     variantOutput.toBuiltArtifact(instantAppManifestOutputFile, properties)
@@ -264,36 +254,32 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             }
         }
         BuiltArtifactsImpl(
-            BuiltArtifacts.METADATA_FILE_VERSION,
-            InternalArtifactType.PACKAGED_MANIFESTS,
-            applicationId.get(),
-            variantName,
-            packagedManifestOutputs.toList()
+            artifactType = InternalArtifactType.MERGED_MANIFESTS,
+            applicationId = applicationId.get(),
+            variantName = variantName,
+            elements = mergedManifestOutputs.toList()
+        )
+            .save(mergedManifestOutputDirectory.get())
+        BuiltArtifactsImpl(
+            artifactType = InternalArtifactType.PACKAGED_MANIFESTS,
+            applicationId = applicationId.get(),
+            variantName = variantName,
+            elements = packagedManifestOutputs.toList()
         )
             .save(packagedManifestOutputDirectory.get())
         BuiltArtifactsImpl(
-            BuiltArtifacts.METADATA_FILE_VERSION,
-            InternalArtifactType.METADATA_FEATURE_MANIFEST,
-            applicationId.get(),
-            variantName,
-            metadataFeatureMergedManifestOutputs.toList()
+            artifactType = InternalArtifactType.METADATA_FEATURE_MANIFEST,
+            applicationId = applicationId.get(),
+            variantName = variantName,
+            elements = metadataFeatureMergedManifestOutputs.toList()
         )
             .save(metadataFeatureManifestOutputDirectory.get())
-        BuiltArtifactsImpl(
-            BuiltArtifacts.METADATA_FILE_VERSION,
-            InternalArtifactType.BUNDLE_MANIFEST,
-            applicationId.get(),
-            variantName,
-            bundleManifestOutputs.toList()
-        )
-            .save(bundleManifestOutputDirectory.get())
         if (instantAppManifestOutputDirectory.isPresent) {
             BuiltArtifactsImpl(
-                BuiltArtifacts.METADATA_FILE_VERSION,
-                InternalArtifactType.INSTANT_APP_MANIFEST,
-                applicationId.get(),
-                variantName,
-                instantAppManifestOutputs.toList()
+                artifactType = InternalArtifactType.INSTANT_APP_MANIFEST,
+                applicationId = applicationId.get(),
+                variantName = variantName,
+                elements = instantAppManifestOutputs.toList()
             )
                 .save(instantAppManifestOutputDirectory.get())
         }
@@ -485,10 +471,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 taskProvider,
                 ManifestProcessorTask::metadataFeatureManifestOutputDirectory
             ).withName("metadata-feature").on(InternalArtifactType.METADATA_FEATURE_MANIFEST)
-            operations.setInitialProvider(
-                taskProvider,
-                ManifestProcessorTask::bundleManifestOutputDirectory
-            ).withName("bundle-manifest").on(InternalArtifactType.BUNDLE_MANIFEST)
             operations.setInitialProvider(
                 taskProvider,
                 ProcessApplicationManifest::reportFile

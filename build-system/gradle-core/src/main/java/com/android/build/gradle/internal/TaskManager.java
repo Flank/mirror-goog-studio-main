@@ -189,6 +189,7 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PrepareKotlinCompileTask;
 import com.android.build.gradle.tasks.ProcessApplicationManifest;
+import com.android.build.gradle.tasks.ProcessManifestForBundleTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
@@ -928,7 +929,7 @@ public abstract class TaskManager<
                 new CompatibleScreensManifest.CreationAction(creationConfig, screenSizes));
 
         TaskProvider<? extends ManifestProcessorTask> processManifestTask =
-                createMergeManifestTask(creationConfig);
+                createMergeManifestTasks(creationConfig);
 
         final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
         if (taskContainer.getMicroApkTask() != null) {
@@ -967,8 +968,11 @@ public abstract class TaskManager<
 
     /** Creates the merge manifests task. */
     @NonNull
-    protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTask(
+    protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTasks(
             @NonNull ApkCreationConfig creationConfig) {
+
+        taskFactory.register(new ProcessManifestForBundleTask.CreationAction(creationConfig));
+
         return taskFactory.register(
                 new ProcessApplicationManifest.CreationAction(
                         creationConfig,

@@ -268,21 +268,25 @@ public class MergerTest extends TestCase {
             outFile.getAbsolutePath(),
             "--remove-tools-declarations"
         };
-        Merger merger = new MergerWithMock() {
-            @Override
-            protected ManifestMerger2.Invoker createInvoker(@NonNull File mainManifestFile, @NonNull ILogger logger) {
-                try {
-                    XmlDocument xmlDocument = Mockito.mock(XmlDocument.class);
-                    when(mMergingReport.getResult()).thenReturn(MergingReport.Result.SUCCESS);
-                    when(mMergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED))
-                            .thenReturn("Pretty combined");
-                    when(mInvoker.merge()).thenReturn(mMergingReport);
-                } catch (ManifestMerger2.MergeFailureException e) {
-                    fail(e.getMessage());
-                }
-                return mInvoker;
-            }
-        };
+        Merger merger =
+                new MergerWithMock() {
+                    @Override
+                    protected ManifestMerger2.Invoker createInvoker(
+                            @NonNull File mainManifestFile, @NonNull ILogger logger) {
+                        try {
+                            XmlDocument xmlDocument = Mockito.mock(XmlDocument.class);
+                            when(mMergingReport.getResult())
+                                    .thenReturn(MergingReport.Result.SUCCESS);
+                            when(mMergingReport.getMergedDocument(
+                                            MergingReport.MergedManifestKind.PACKAGED))
+                                    .thenReturn("Pretty combined");
+                            when(mInvoker.merge()).thenReturn(mMergingReport);
+                        } catch (ManifestMerger2.MergeFailureException e) {
+                            fail(e.getMessage());
+                        }
+                        return mInvoker;
+                    }
+                };
         merger.process(args);
         verify(mInvoker).withFeatures(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS);
         verify(mInvoker).addLibraryManifest(new File("src/lib1/AndroidManifest.xml"));

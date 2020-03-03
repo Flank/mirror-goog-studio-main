@@ -182,7 +182,6 @@ class DynamicAppTest {
             "intermediates",
             "bundle_manifest",
             "debug",
-            "bundle-manifest",
             "AndroidManifest.xml")
         FileSubject.assertThat(bundleManifest).isFile()
         FileSubject.assertThat(bundleManifest).contains("android:splitName=\"feature1\"")
@@ -190,7 +189,7 @@ class DynamicAppTest {
 
         val baseManifest = FileUtils.join(project.getSubproject("app").buildDir,
             "intermediates",
-            "merged_manifests",
+            "packaged_manifests",
             "debug",
             "AndroidManifest.xml")
         FileSubject.assertThat(baseManifest).isFile()
@@ -201,7 +200,6 @@ class DynamicAppTest {
             "intermediates",
             "bundle_manifest",
             "debug",
-            "bundle-manifest",
             "AndroidManifest.xml")
         FileSubject.assertThat(baseBundleManifest).isFile()
         FileSubject.assertThat(baseBundleManifest).contains("android:splitName=\"feature1\"")
@@ -268,7 +266,7 @@ class DynamicAppTest {
         // Check that neither splitName or featureSplit are merged back to the base.
         val baseManifest = FileUtils.join(project.getSubproject("app").buildDir,
             "intermediates",
-            "merged_manifests",
+            "packaged_manifests",
             "debug",
             "AndroidManifest.xml")
         assertThat(baseManifest).isFile()
@@ -280,7 +278,6 @@ class DynamicAppTest {
             "intermediates",
             "bundle_manifest",
             "debug",
-            "bundle-manifest",
             "AndroidManifest.xml")
         assertThat(featureBundleManifest).isFile()
         assertThat(featureBundleManifest).contains("android:splitName=\"feature1\"")
@@ -289,7 +286,6 @@ class DynamicAppTest {
             "intermediates",
             "bundle_manifest",
             "debug",
-            "bundle-manifest",
             "AndroidManifest.xml")
         assertThat(baseBundleManifest).isFile()
         assertThat(baseBundleManifest).contains("android:splitName=\"feature1\"")

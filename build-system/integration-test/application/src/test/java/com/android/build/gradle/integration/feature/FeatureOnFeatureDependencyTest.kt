@@ -109,9 +109,8 @@ class FeatureOnFeatureDependencyTest {
         project.execute("clean", "assembleDebug")
 
         val manifestFile = project.getSubproject(":leafFeature").getIntermediateFile(
-            "bundle_manifest",
+            "packaged_manifests",
             "debug",
-            "bundle-manifest",
             "AndroidManifest.xml")
 
         assertThat(manifestFile).exists()
@@ -147,7 +146,7 @@ class FeatureOnFeatureDependencyTest {
 
     private fun getMergedManifestFile(project: GradleTestProject): File {
         return project.getIntermediateFile(
-            "merged_manifests",
+            "packaged_manifests",
             "debug",
             "AndroidManifest.xml")
     }

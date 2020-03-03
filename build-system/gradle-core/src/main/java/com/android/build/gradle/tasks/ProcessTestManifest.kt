@@ -347,7 +347,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             logger.error(e, "cannot print resulting xml")
         }
         val finalMergedDocument =
-            mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED)
+            mergingReport.getMergedDocument(MergingReport.MergedManifestKind.PACKAGED)
                 ?: throw RuntimeException("No result from manifest merger")
         try {
             Files.asCharSink(outFile, Charsets.UTF_8).write(finalMergedDocument)

@@ -429,6 +429,9 @@ public class ManifestMerger2 {
 
         mergingReportBuilder.setFinalPackageName(finalMergedDocument.getPackageName());
         mergingReportBuilder.setMergedXmlDocument(
+                MergingReport.MergedManifestKind.PACKAGED, finalMergedDocument);
+        // for compat reasons, we need to keep the XML document
+        mergingReportBuilder.setMergedXmlDocument(
                 MergingReport.MergedManifestKind.MERGED, finalMergedDocument);
 
         MergingReport mergingReport = mergingReportBuilder.build();
@@ -565,6 +568,9 @@ public class ManifestMerger2 {
             addFeatureSplitAttribute(document, mFeatureName);
         }
 
+        mergingReport.setMergedDocument(
+                MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
+
         if (!mFeatureName.isEmpty()) {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
         }
@@ -594,7 +600,7 @@ public class ManifestMerger2 {
 
         if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_XML_STRING)) {
             mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
+                    MergingReport.MergedManifestKind.PACKAGED, prettyPrint(document));
         }
 
         if (mOptionalFeatures.contains(Invoker.Feature.MAKE_AAPT_SAFE)) {
@@ -637,8 +643,6 @@ public class ManifestMerger2 {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
         }
 
-        mergingReport.setMergedDocument(
-                MergingReport.MergedManifestKind.BUNDLE, prettyPrint(document));
         if (mOptionalFeatures.contains(Invoker.Feature.CREATE_FEATURE_MANIFEST)) {
             // feature manifest should be added based on the bundle manifest for merging.
             createStrippedFeatureManifest(document, mergingReport);
@@ -1017,7 +1021,7 @@ public class ManifestMerger2 {
      * @param localName Non-prefixed attribute name
      * @param value value of the attribute
      */
-    private static void setAndroidAttribute(Element node, String localName, String value) {
+    public static void setAndroidAttribute(Element node, String localName, String value) {
         String prefix =
                 XmlUtils.lookupNamespacePrefix(
                         node, SdkConstants.ANDROID_URI, SdkConstants.ANDROID_NS_NAME, true);
@@ -1046,7 +1050,7 @@ public class ManifestMerger2 {
      * @return the list (possibly empty) of children elements with the given name
      */
     @NonNull
-    private static ImmutableList<Element> getChildElementsByName(
+    public static ImmutableList<Element> getChildElementsByName(
             @NonNull Element element, @NonNull String name) {
         ImmutableList.Builder<Element> childListBuilder = ImmutableList.builder();
         NodeList childNodes = element.getChildNodes();
@@ -2158,7 +2162,7 @@ public class ManifestMerger2 {
      * Implementation a {@link com.android.manifmerger.KeyResolver} capable of resolving all
      * selectors value in the context of the passed libraries to this merging activities.
      */
-    static class SelectorResolver implements KeyResolver<String> {
+    public static class SelectorResolver implements KeyResolver<String> {
 
         private final Map<String, String> mSelectors = new HashMap<String, String>();
 
