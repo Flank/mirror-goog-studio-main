@@ -46,7 +46,7 @@ import java.io.File
  * 4. Update the "prebuilts" maven_repo target in
  *    //tools/base/build-system/integration-test/native/BUILD.bazel with the new version number.
  */
-private const val DEFAULT_PREFAB_VERSION = "1.0.0-alpha5"
+private const val DEFAULT_PREFAB_VERSION = "1.0.0-alpha6"
 private const val PREFAB_CONFIG_NAME = "_internal_prefab_binary"
 
 private fun getPrefabArtifact(configuration: Configuration): File =
