@@ -111,6 +111,7 @@ proto::SwapRequest OverlaySwapCommand::PrepareAndBuildRequest(
 
   request.set_package_name(package_name_);
   request.set_restart_activity(request_.restart_activity());
+  request.set_structural_redefinition(request_.structural_redefinition());
   return request;
 }
 

@@ -28,6 +28,8 @@ message SwapRequest {
   int32 extra_agents = 7;
 
   Arch arch = 8;
+
+  bool structural_redefinition = 9;
 }
 
 message OverlaySwapRequest {
@@ -58,6 +60,8 @@ message OverlaySwapRequest {
   int32 extra_agents = 9;
 
   Arch arch = 10;
+
+  bool structural_redefinition = 11;
 }
 
 message ClassDef {

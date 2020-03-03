@@ -50,6 +50,9 @@ public class OptimisticApkSwapper {
     private final AdbClient adb;
     private final ILogger logger;
 
+    // Temp flag.
+    private final boolean useStructuralRedefinition;
+
     /**
      * @param installer used to perform swaps on device.
      * @param restart whether to restart the application or not.
@@ -60,11 +63,13 @@ public class OptimisticApkSwapper {
             Installer installer,
             Map<Integer, ClassRedefiner> redefiners,
             boolean restart,
+            boolean useStructuralRedefinition,
             AdbClient adb,
             ILogger logger) {
         this.installer = installer;
         this.redefiners = redefiners;
         this.restart = restart;
+        this.useStructuralRedefinition = useStructuralRedefinition;
         this.adb = adb;
         this.logger = logger;
     }
@@ -108,6 +113,8 @@ public class OptimisticApkSwapper {
                             .setPath(file.getName())
                             .setContent(file.getContent()));
         }
+
+        request.setStructuralRedefinition(useStructuralRedefinition);
 
         // TODO: Debugger stuff. Given that this will be R+ we don't need the complicated workaround
         // the JDI bug in O.

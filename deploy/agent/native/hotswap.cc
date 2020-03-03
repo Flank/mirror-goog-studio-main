@@ -247,8 +247,11 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   const std::string& r_class_prefix = "/R$";
   std::vector<ClassInfo> detailed_error_classes;
 
-  jvmtiExtensionFunction const* extension =
-      GetExtensionFunctionVoid(jni_, jvmti_, STRUCTRUAL_REDEFINE_EXTENSION);
+  jvmtiExtensionFunction const* extension = nullptr;
+  if (swap_request.structural_redefinition()) {
+    extension =
+        GetExtensionFunctionVoid(jni_, jvmti_, STRUCTRUAL_REDEFINE_EXTENSION);
+  }
 
   VariableReinitializer var_reinit(jvmti_, jni_);
 
