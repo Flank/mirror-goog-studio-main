@@ -39,6 +39,7 @@ filegroup(
     ),
     visibility = [
         "//tools/adt/idea/old-agp-tests:__pkg__",
+        "//tools/adt/idea/sync-perf-tests:__pkg__",
         "//prebuilts/studio/buildbenchmarks:__pkg__",
     ],
 )
