@@ -20,7 +20,7 @@
     </orderEntry>
     <orderEntry type="module-library">
       <library name="tensorflow-lite-support" type="repository">
-        <properties maven-id="org.tensorflow:tensorflow-lite-support:0.0.0-experimental-metadata" />
+        <properties maven-id="org.tensorflow:tensorflow-lite-support:0.0.0-experimental-metadata-monolithic" />
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata-monolithic/tensorflow-lite-support-0.0.0-experimental-metadata-monolithic.jar!/" />
         </CLASSES>
