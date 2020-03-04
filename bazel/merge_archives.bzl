@@ -90,7 +90,7 @@ def create_manifest_argfile(ctx, name, manifests):
         outputs = [argfile],
         # Note: we ignore 'Manifest-Version' entries because we don't want them duplicated in the output.
         # Note: singlejar delimits argfile tokens by whitespace, so we surround every manifest line with quotes.
-        command = "cat {srcs} | grep -v '^Manifest-Version:' | sed 's/.\\+/\"\\0\"/' > {out}".format(
+        command = "cat {srcs} | grep -v '^Manifest-Version:' | sed -E 's/(.+)/\"\\1\"/' > {out}".format(
             srcs = " ".join([shell.quote(m.path) for m in manifests]),
             out = shell.quote(argfile.path),
         ),
