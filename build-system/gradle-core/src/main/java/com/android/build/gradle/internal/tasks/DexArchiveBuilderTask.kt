@@ -478,18 +478,25 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 .minSdkVersionWithTargetDeviceApi
                 .featureLevel
             task.dexParams.minSdkVersion.set(minSdkVersion)
-            task.dexParams.withDesugaring
-                .set(creationConfig.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8)
-            if (creationConfig.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
-                && minSdkVersion < AndroidVersion.VersionCodes.N
+            val languageDesugaring =
+                creationConfig.variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
+            task.dexParams.withDesugaring.set(languageDesugaring)
+            if (languageDesugaring && minSdkVersion < AndroidVersion.VersionCodes.N
             ) {
-                // Set bootclasspath and classpath only if desugaring with D8 and minSdkVersion < 24
+                // Set classpath only if desugaring with D8 and minSdkVersion < 24
                 task.dexParams.desugarClasspath.from(desugaringClasspathClasses)
                 if (dexExternalLibsInArtifactTransform) {
                     // If dexing external libraries in artifact transforms, make sure to add them
                     // as desugaring classpath.
                     task.dexParams.desugarClasspath.from(externalLibraryClasses)
                 }
+            }
+            // Set bootclasspath only for two cases:
+            // 1. language desugaring with D8 and minSdkVersion < 24
+            // 2. library desugaring enabled(required for API conversion)
+            val libraryDesugaring = creationConfig.variantScope.isCoreLibraryDesugaringEnabled
+            if (languageDesugaring && minSdkVersion < AndroidVersion.VersionCodes.N
+                || libraryDesugaring) {
                 task.dexParams.desugarBootclasspath
                     .from(creationConfig.globalScope.filteredBootClasspath)
             }
@@ -517,7 +524,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.dxDexParams.dxNoOptimizeFlagPresent.set(
                 dexOptions.additionalParameters.contains("--no-optimize")
             )
-            if (creationConfig.variantScope.isCoreLibraryDesugaringEnabled) {
+            if (libraryDesugaring) {
                 task.dexParams.coreLibDesugarConfig
                     .set(getDesugarLibConfig(creationConfig.globalScope.project))
             }

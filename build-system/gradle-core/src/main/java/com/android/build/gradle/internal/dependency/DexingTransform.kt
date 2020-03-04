@@ -364,7 +364,8 @@ data class DexingArtifactConfiguration(
                 parameters.minSdkVersion.set(minSdk)
                 parameters.debuggable.set(isDebuggable)
                 parameters.enableDesugaring.set(enableDesugaring)
-                if (needsClasspath) {
+                // bootclasspath is required by d8 to do API conversion for library desugaring
+                if (needsClasspath || enableCoreLibraryDesugaring) {
                     parameters.bootClasspath.from(bootClasspath)
                 }
                 parameters.errorFormat.set(errorFormat)
