@@ -25,6 +25,9 @@ import junit.framework.TestCase
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UFile
+import org.jetbrains.uast.ULocalVariable
+import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 // Misc tests to verify type handling in the Kotlin UAST initialization.
@@ -890,6 +893,41 @@ class UastTest : TestCase() {
                 """.trimIndent(),
                 file.asSourceString().trim()
             )
+        })
+    }
+
+    // Disabled until KT-37200 is fixed
+    fun ignore_testIdea234484() {
+        // Regression test for https://youtrack.jetbrains.com/issue/KT-37200
+        val source = kotlin(
+            """
+            package test.pkg
+
+            inline fun <reified F> ViewModelContext.viewModelFactory(): F {
+                return activity as? F ?: throw IllegalStateException("Boo!")
+            }
+
+            sealed class ViewModelContext {
+                abstract val activity: Number
+            }
+            """
+        ).indented()
+
+        check(source, check = { file ->
+            val newFile = file.sourcePsi.toUElement()
+            newFile?.accept(object : AbstractUastVisitor() {
+                override fun visitLocalVariable(node: ULocalVariable): Boolean {
+                    val initializerType = node.uastInitializer?.getExpressionType()
+                    val interfaceType = node.type
+                    val equals = initializerType == interfaceType // Stack overflow!
+
+                    return super.visitLocalVariable(node)
+                }
+
+                override fun visitMethod(node: UMethod): Boolean {
+                    return super.visitMethod(node)
+                }
+            })
         })
     }
 }

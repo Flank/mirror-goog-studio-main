@@ -875,7 +875,7 @@ public class TestLintClient extends LintCliClient {
 
     @Override
     protected boolean addBootClassPath(
-            @NonNull Collection<? extends Project> knownProjects, List<File> files) {
+            @NonNull Collection<? extends Project> knownProjects, Set<File> files) {
         boolean ok = super.addBootClassPath(knownProjects, files);
 
         // Also add in the kotlin standard libraries if applicable

@@ -985,19 +985,19 @@ open class LintCliClient : LintClient {
             allProjects.add(project)
             allProjects.addAll(project.allLibraries)
         }
-        val files: MutableList<File> = ArrayList(50)
+        val classpath: MutableSet<File> = LinkedHashSet(50)
         for (project in allProjects) {
             // Note that there could be duplicates here since we're including multiple library
             // dependencies that could have the same dependencies (e.g. lib1 and lib2 both
             // referencing guava.jar)
-            files.addAll(project.javaSourceFolders)
+            classpath.addAll(project.javaSourceFolders)
             if (includeTests) {
-                files.addAll(project.testSourceFolders)
+                classpath.addAll(project.testSourceFolders)
             }
-            files.addAll(project.generatedSourceFolders)
-            files.addAll(project.getJavaLibraries(true))
+            classpath.addAll(project.generatedSourceFolders)
+            classpath.addAll(project.getJavaLibraries(true))
             if (includeTests) {
-                files.addAll(project.testLibraries)
+                classpath.addAll(project.testLibraries)
             }
             // Don't include all class folders:
             //  files.addAll(project.getJavaClassFolders());
@@ -1009,17 +1009,17 @@ open class LintCliClient : LintClient {
             // compiled libraries will not work; see
             // https://issuetracker.google.com/72032121
             if (project.isLibrary) {
-                files.addAll(project.javaClassFolders)
+                classpath.addAll(project.javaClassFolders)
             } else if (project.isGradleProject) {
                 // As of 3.4, R.java is in a special jar file
                 for (f in project.javaClassFolders) {
                     if (f.name == SdkConstants.FN_R_CLASS_JAR) {
-                        files.add(f)
+                        classpath.add(f)
                     }
                 }
             }
         }
-        addBootClassPath(knownProjects, files)
+        addBootClassPath(knownProjects, classpath)
         var maxLevel = LanguageLevel.JDK_1_7
         for (project in knownProjects) {
             val level = project.javaLanguageLevel
@@ -1039,13 +1039,13 @@ open class LintCliClient : LintClient {
         if (languageLevelProjectExtension != null) {
             languageLevelProjectExtension.languageLevel = maxLevel
         }
-        projectEnvironment.registerPaths(files)
+        projectEnvironment.registerPaths(classpath.toList())
         val manager = ServiceManager.getService(
             mockProject,
             JavaFileManager::class.java
         ) as KotlinCliJavaFileManagerImpl
         val roots: MutableList<JavaRoot> = ArrayList()
-        for (file in files) {
+        for (file in classpath) {
             // IntelliJ's framework requires absolute path to JARs, name resolution might fail
             // otherwise. We defensively ensure all paths are absolute.
             require(file.isAbsolute) {
@@ -1078,7 +1078,7 @@ open class LintCliClient : LintClient {
 
     protected open fun addBootClassPath(
         knownProjects: Collection<Project>,
-        files: MutableList<File>
+        files: MutableSet<File>
     ): Boolean {
         var buildTarget: IAndroidTarget? = null
         var isAndroid = false
