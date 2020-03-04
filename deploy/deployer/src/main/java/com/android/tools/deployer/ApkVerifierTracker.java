@@ -55,7 +55,8 @@ public class ApkVerifierTracker {
         // In R, ADB reports both real package name (instead of process name) and also allows
         // the user to skip app verification on install. We use the real package name flag
         // here to avoid creating another flag for a feature that's on the same Android version.
-        if (!device.supportsFeature(IDevice.Feature.REAL_PKG_NAME)) {
+        // TODO(b/150669044): properly support verification skipping for DP2+
+        if (true || !device.supportsFeature(IDevice.Feature.REAL_PKG_NAME)) {
             return null;
         }
 
