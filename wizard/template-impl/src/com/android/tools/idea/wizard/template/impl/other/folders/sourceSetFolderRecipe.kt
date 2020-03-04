@@ -31,9 +31,9 @@ fun RecipeExecutor.generateResourcesFolder(
   if (remapFolder) {
     val newDirectory = moduleData.rootDir.resolve(location)
     createDirectory(newDirectory)
-    addSourceSet(sourceSetType, sourceProviderName, moduleData.srcDir.resolve(sourceProviderName).resolve(dirName))
+    addSourceSet(sourceSetType, sourceProviderName, moduleData.manifestDir.resolve(dirName))
     addSourceSet(sourceSetType, sourceProviderName, newDirectory)
   } else {
-    createDirectory(moduleData.rootDir.resolve(dirName))
+    createDirectory(moduleData.manifestDir.resolve(dirName))
   }
 }
