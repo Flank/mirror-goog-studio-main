@@ -40,9 +40,9 @@ public class ApkVerifierTrackerTest {
         oDevice = mock(IDevice.class);
         when(oDevice.supportsFeature(IDevice.Feature.REAL_PKG_NAME)).thenReturn(false);
         when(oDevice.getSerialNumber()).thenReturn("oDevice");
-        //rDevice = mock(IDevice.class);
-        //when(rDevice.supportsFeature(IDevice.Feature.REAL_PKG_NAME)).thenReturn(true);
-        //when(rDevice.getSerialNumber()).thenReturn("rDevice");
+        rDevice = mock(IDevice.class);
+        when(rDevice.supportsFeature(IDevice.Feature.REAL_PKG_NAME)).thenReturn(true);
+        when(rDevice.getSerialNumber()).thenReturn("rDevice");
     }
 
     @After
@@ -54,38 +54,38 @@ public class ApkVerifierTrackerTest {
     public void verifyOnFirstInstall() {
         assertNull(getSkipVerificationInstallationFlag(oDevice, FIRST_PACKAGE));
         assertNull(getSkipVerificationInstallationFlag(oDevice, SECOND_PACKAGE));
-        //assertNull(getSkipVerificationInstallationFlag(rDevice, FIRST_PACKAGE));
-        //assertNull(getSkipVerificationInstallationFlag(rDevice, SECOND_PACKAGE));
+        assertNull(getSkipVerificationInstallationFlag(rDevice, FIRST_PACKAGE));
+        assertNull(getSkipVerificationInstallationFlag(rDevice, SECOND_PACKAGE));
     }
 
     @Test
     public void skipVerifyOnSecondInstall() {
         assertNull(
                 ApkVerifierTracker.getSkipVerificationInstallationFlag(oDevice, FIRST_PACKAGE, 0));
-        //assertNull(
-        //        ApkVerifierTracker.getSkipVerificationInstallationFlag(rDevice, FIRST_PACKAGE, 0));
+        assertNull(
+                ApkVerifierTracker.getSkipVerificationInstallationFlag(rDevice, FIRST_PACKAGE, 0));
 
         // Ensure that a fast followup install does not incur verification.
         assertNull(
                 SKIP_VERIFICATION_OPTION,
                 ApkVerifierTracker.getSkipVerificationInstallationFlag(oDevice, FIRST_PACKAGE, 1));
-        //assertEquals(
-        //        SKIP_VERIFICATION_OPTION,
-        //        ApkVerifierTracker.getSkipVerificationInstallationFlag(rDevice, FIRST_PACKAGE, 1));
+        assertEquals(
+                SKIP_VERIFICATION_OPTION,
+                ApkVerifierTracker.getSkipVerificationInstallationFlag(rDevice, FIRST_PACKAGE, 1));
 
         // Ensure skipping doesn't bleed over to a different package.
         assertNull(
                 ApkVerifierTracker.getSkipVerificationInstallationFlag(oDevice, SECOND_PACKAGE, 2));
-        //assertNull(
-        //        ApkVerifierTracker.getSkipVerificationInstallationFlag(rDevice, SECOND_PACKAGE, 2));
+        assertNull(
+                ApkVerifierTracker.getSkipVerificationInstallationFlag(rDevice, SECOND_PACKAGE, 2));
     }
 
     @Test
     public void reverifiesAfterAnHourThenNoVerification() {
         assertNull(
                 ApkVerifierTracker.getSkipVerificationInstallationFlag(oDevice, FIRST_PACKAGE, 0));
-        //assertNull(
-        //        ApkVerifierTracker.getSkipVerificationInstallationFlag(rDevice, FIRST_PACKAGE, 0));
+        assertNull(
+                ApkVerifierTracker.getSkipVerificationInstallationFlag(rDevice, FIRST_PACKAGE, 0));
 
         long hour = TimeUnit.HOURS.toMillis(1);
 
@@ -93,27 +93,27 @@ public class ApkVerifierTrackerTest {
         assertNull(
                 ApkVerifierTracker.getSkipVerificationInstallationFlag(
                         oDevice, FIRST_PACKAGE, hour - 1));
-        //assertEquals(
-        //        SKIP_VERIFICATION_OPTION,
-        //        ApkVerifierTracker.getSkipVerificationInstallationFlag(
-        //                rDevice, FIRST_PACKAGE, hour - 1));
+        assertEquals(
+                SKIP_VERIFICATION_OPTION,
+                ApkVerifierTracker.getSkipVerificationInstallationFlag(
+                        rDevice, FIRST_PACKAGE, hour - 1));
 
         // Ensure that an install on or after an hour gets verified, and that timestamps don't get
         // updated erroneously.
         assertNull(
                 ApkVerifierTracker.getSkipVerificationInstallationFlag(
                         oDevice, FIRST_PACKAGE, hour));
-        //assertNull(
-        //        ApkVerifierTracker.getSkipVerificationInstallationFlag(
-        //                rDevice, FIRST_PACKAGE, hour));
+        assertNull(
+                ApkVerifierTracker.getSkipVerificationInstallationFlag(
+                        rDevice, FIRST_PACKAGE, hour));
 
         // Ensure that a fast subsequent install skips verification.
         assertNull(
                 ApkVerifierTracker.getSkipVerificationInstallationFlag(
                         oDevice, FIRST_PACKAGE, hour + 1));
-        //assertEquals(
-        //        SKIP_VERIFICATION_OPTION,
-        //        ApkVerifierTracker.getSkipVerificationInstallationFlag(
-        //                rDevice, FIRST_PACKAGE, hour + 1));
+        assertEquals(
+                SKIP_VERIFICATION_OPTION,
+                ApkVerifierTracker.getSkipVerificationInstallationFlag(
+                        rDevice, FIRST_PACKAGE, hour + 1));
     }
 }
