@@ -68,6 +68,7 @@ public interface IDevice extends IShellEnabledDevice {
         PROCSTATS, // procstats service (dumpsys procstats) available
         ABB_EXEC, // Android Binder Bridge available
         REAL_PKG_NAME, // Reports the real package name, instead of inferring from client description
+        SKIP_VERIFICATION, // Skips verification on installation.
     }
 
     /** Device level hardware features. */
