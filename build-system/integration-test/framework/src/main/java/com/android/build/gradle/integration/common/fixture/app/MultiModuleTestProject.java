@@ -13,9 +13,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
 
-/**
- * A TestProject containing multiple TestProject as modules.
- */
+/** A TestProject containing multiple TestProject as modules. */
 public class MultiModuleTestProject implements TestProject {
 
     private final ImmutableMap<String, TestProject> subprojects;
@@ -24,7 +22,7 @@ public class MultiModuleTestProject implements TestProject {
      * Creates a MultiModuleTestProject.
      *
      * @param subprojects a map with gradle project path as key and the corresponding TestProject as
-     *                    value.
+     *     value.
      */
     public MultiModuleTestProject(@NonNull Map<String, ? extends TestProject> subprojects) {
         this.subprojects = ImmutableMap.copyOf(subprojects);
@@ -33,14 +31,12 @@ public class MultiModuleTestProject implements TestProject {
     /**
      * Creates a MultiModuleTestProject with multiple subproject of the same TestProject.
      *
-     * @param baseName Base name of the subproject.  Actual project name will be baseName + index.
+     * @param baseName Base name of the subproject. Actual project name will be baseName + index.
      * @param subproject A TestProject.
      * @param count Number of subprojects to create.
      */
     public MultiModuleTestProject(
-            @NonNull String baseName,
-            @NonNull TestProject subproject,
-            int count) {
+            @NonNull String baseName, @NonNull TestProject subproject, int count) {
         ImmutableMap.Builder<String, TestProject> builder = ImmutableMap.builder();
         for (int i = 0; i < count; i++) {
             builder.put(baseName + i, subproject);
@@ -48,17 +44,14 @@ public class MultiModuleTestProject implements TestProject {
         subprojects = builder.build();
     }
 
-    /**
-     * Return the test project with the given project path.
-     */
+    /** Return the test project with the given project path. */
     public TestProject getSubproject(String subprojectPath) {
         return subprojects.get(subprojectPath);
     }
 
     @Override
-    public void write(
-            @NonNull final File projectDir,
-            @Nullable final String buildScriptContent)  throws IOException {
+    public void write(@NonNull final File projectDir, @Nullable final String buildScriptContent)
+            throws IOException {
         for (Map.Entry<String, ? extends TestProject> entry : subprojects.entrySet()) {
             String subprojectPath = entry.getKey();
             TestProject subproject = entry.getValue();
@@ -115,6 +108,13 @@ public class MultiModuleTestProject implements TestProject {
         @NonNull
         public Builder fileDependency(@NonNull GradleProject from, @NonNull String file) {
             String snippet = "\ndependencies {\n    " + "implementation files('" + file + "')\n}\n";
+            from.replaceFile(from.getFile("build.gradle").appendContent(snippet));
+            return this;
+        }
+
+        @NonNull
+        public Builder unitTestDependency(@NonNull GradleProject from, @NonNull String to) {
+            String snippet = "\ndependencies {\n    " + "testImplementation '" + to + "'\n}\n";
             from.replaceFile(from.getFile("build.gradle").appendContent(snippet));
             return this;
         }
