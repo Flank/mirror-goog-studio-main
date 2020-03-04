@@ -66,7 +66,7 @@ fun AndroidProject.getArtifactMetaData(name: String): ArtifactMetaData {
 
 fun AndroidProject.getProductFlavor(name: String): ProductFlavorContainer {
     return searchForExistingItem(
-            productFlavors, name, { it.productFlavor.getName() }, "ProductFlavorContainer")
+            productFlavors, name, { it.productFlavor.name }, "ProductFlavorContainer")
 }
 
 fun AndroidProject.findTestedBuildType(): String? {
@@ -106,7 +106,7 @@ fun AndroidProject.testDefaultSourceSets(projectDir: File) {
         SourceProviderHelper(
                 name,
                 projectDir,
-                btContainer.buildType.getName(),
+                btContainer.buildType.name,
                 btContainer.sourceProvider)
                 .test()
 

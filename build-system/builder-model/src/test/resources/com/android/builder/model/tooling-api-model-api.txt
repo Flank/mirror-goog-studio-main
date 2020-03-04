@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-e185d0f3553aabbaff7302dabfbc07db9d65f54f107dc55da8d4914d9c222b61
+a526f1e9c255e9cbacbe4ba6e0f3d4119b8e0d99d2bf5fd47118fff7ceb34786
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -139,7 +139,7 @@ com.android.builder.model.BaseArtifact.getVariantSourceProvider: com.android.bui
 com.android.builder.model.BaseBuildOutput
 com.android.builder.model.BaseBuildOutput.getName: java.lang.String ()
 com.android.builder.model.BaseBuildOutput.getOutputs: java.util.Collection<com.android.build.OutputFile> ()
-com.android.builder.model.BaseConfig
+com.android.builder.model.BaseConfig implements com.android.builder.model.Named
 com.android.builder.model.BaseConfig.getApplicationIdSuffix: java.lang.String ()
 com.android.builder.model.BaseConfig.getBuildConfigFields: java.util.Map<java.lang.String, com.android.builder.model.ClassField> ()
 com.android.builder.model.BaseConfig.getConsumerProguardFiles: java.util.Collection<java.io.File> ()
@@ -268,6 +268,8 @@ com.android.builder.model.ModelBuilderParameter.setAbiName: void (java.lang.Stri
 com.android.builder.model.ModelBuilderParameter.setShouldBuildVariant: void (boolean)
 com.android.builder.model.ModelBuilderParameter.setShouldGenerateSources: void (boolean)
 com.android.builder.model.ModelBuilderParameter.setVariantName: void (java.lang.String)
+com.android.builder.model.Named
+com.android.builder.model.Named.getName: java.lang.String ()
 com.android.builder.model.NativeAndroidProject
 com.android.builder.model.NativeAndroidProject.getApiVersion: int ()
 com.android.builder.model.NativeAndroidProject.getArtifacts: java.util.Collection<com.android.builder.model.NativeArtifact> ()
