@@ -376,13 +376,20 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 .minSdkVersionWithTargetDeviceApi
                 .featureLevel
             task.dexParams.minSdkVersion.set(minSdkVersion)
-            task.dexParams.withDesugaring
-                .set(variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8)
-            if (variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
-                && minSdkVersion < AndroidVersion.VersionCodes.N
+            val languageDesugaring =
+                variantScope.java8LangSupportType == VariantScope.Java8LangSupport.D8
+            task.dexParams.withDesugaring.set(languageDesugaring)
+            if (languageDesugaring && minSdkVersion < AndroidVersion.VersionCodes.N
             ) {
-                // Set bootclasspath and classpath only if desugaring with D8 and minSdkVersion < 24
+                // Set classpath only if desugaring with D8 and minSdkVersion < 24
                 task.dexParams.desugarClasspath.from(desugaringClasspathClasses)
+            }
+            // Set bootclasspath only for two cases:
+            // 1. language desugaring with D8 and minSdkVersion < 24
+            // 2. library desugaring enabled(required for API conversion)
+            val libraryDesugaring = variantScope.isCoreLibraryDesugaringEnabled
+            if (languageDesugaring && minSdkVersion < AndroidVersion.VersionCodes.N
+                || libraryDesugaring) {
                 task.dexParams.desugarBootclasspath
                     .from(variantScope.globalScope.filteredBootClasspath)
             }
@@ -411,7 +418,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 dexOptions.additionalParameters.contains("--no-optimize")
             )
             task.userLevelCache = userLevelCache
-            if (variantScope.isCoreLibraryDesugaringEnabled) {
+            if (libraryDesugaring) {
                 task.dexParams.coreLibDesugarConfig
                     .set(getDesugarLibConfig(variantScope.globalScope.project))
             }
