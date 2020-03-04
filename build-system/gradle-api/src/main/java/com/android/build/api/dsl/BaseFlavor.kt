@@ -57,6 +57,42 @@ interface BaseFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions> :
     var versionName: String?
 
     /**
+     * The minimum SDK version.
+     * Setting this it will override previous calls of [minSdk] and [minSdkPreview] setters. Only
+     * one of [minSdk] and [minSdkPreview] should be set.
+     *
+     * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
+     */
+    var minSdk: Int?
+
+    /**
+     * The minimum SDK version.
+     * Setting this it will override previous calls of [minSdk] and [minSdkPreview] setters. Only
+     * one of [minSdk] and [minSdkPreview] should be set.
+     *
+     * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
+     */
+    var minSdkPreview: String?
+
+    /**
+     * The target SDK version.
+     * Setting this it will override previous calls of [targetSdk] and [targetSdkPreview] setters.
+     * Only one of [targetSdk] and [targetSdkPreview] should be set.
+     *
+     * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
+     */
+    var targetSdk: Int?
+
+    /**
+     * The target SDK version.
+     * Setting this it will override previous calls of [targetSdk] and [targetSdkPreview] setters.
+     * Only one of [targetSdk] and [targetSdkPreview] should be set.
+     *
+     * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
+     */
+    var targetSdkPreview: String?
+
+    /**
      * The maxSdkVersion, or null if not specified. This is only the value set on this produce
      * flavor.
      *
