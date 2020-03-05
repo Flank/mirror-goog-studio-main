@@ -114,7 +114,7 @@ interface Template {
    */
   companion object NoActivity: Template {
     override val widgets: Collection<Widget<*>> = listOf()
-    override val uiContexts: Collection<WizardUiContext> get() = TODO()
+    override val uiContexts: Collection<WizardUiContext> get() = listOf(WizardUiContext.ActivityGallery)
     override val constraints: Collection<TemplateConstraint> = listOf()
     override val recipe: Recipe get() = throw UnsupportedOperationException()
     override val revision: Int = 1
