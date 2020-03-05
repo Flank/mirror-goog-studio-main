@@ -55,13 +55,21 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Earl
                     if (!outputFolder.exists()) {
                         return;
                     }
-                    Collection<EarlySyncBuildOutput> previous =
-                            EarlySyncBuildOutput.load(metadataFileVersion, outputFolder)
-                                    .stream()
-                                    .filter(
-                                            buildOutput ->
-                                                    outputTypes.contains(buildOutput.getType()))
-                                    .collect(Collectors.toList());
+                    Collection<EarlySyncBuildOutput> previous;
+                    try {
+                        previous =
+                                EarlySyncBuildOutput.load(metadataFileVersion, outputFolder)
+                                        .stream()
+                                        .filter(
+                                                buildOutput ->
+                                                        outputTypes.contains(buildOutput.getType()))
+                                        .collect(Collectors.toList());
+                    } catch (Exception e) {
+                        // we cannot load the previous listing file, probably because of file
+                        // format differences. It's not very problematic, the sync should still go
+                        // through and things will fall into place after the next build.
+                        return;
+                    }
 
                     if (previous.isEmpty()) {
                         outputTypes.forEach(
