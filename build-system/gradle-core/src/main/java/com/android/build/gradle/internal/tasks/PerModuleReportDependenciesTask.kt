@@ -202,7 +202,9 @@ abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory
             .addModuleDependencies(moduleDependency.build())
             .build()
 
-        appDependencies.writeTo(FileOutputStream(dependenciesList.get().asFile))
+        FileOutputStream(dependenciesList.get().asFile).use {
+            appDependencies.writeTo(it)
+        }
     }
 
 
