@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
  *
  * This generated during DSL execution and is used for variant creation
  */
-class BuildTypeData<BuildTypeT: BuildType<*>>(
+class BuildTypeData<BuildTypeT : BuildType<*, *>>(
     val buildType: BuildTypeT,
     sourceSet: DefaultAndroidSourceSet,
     androidTestSourceSet: DefaultAndroidSourceSet?,

@@ -41,7 +41,7 @@ open class BuildType @Inject constructor(
     private val dslServices: DslServices
 ) :
     AbstractBuildType(), CoreBuildType, Serializable,
-    com.android.build.api.dsl.BuildType<AnnotationProcessorOptions> {
+    com.android.build.api.dsl.BuildType<AnnotationProcessorOptions, SigningConfig> {
 
     /**
      * Name of this build type.
@@ -50,78 +50,20 @@ open class BuildType @Inject constructor(
         return name
     }
 
-    /** Whether this build type should generate a debuggable apk.  */
     override var isDebuggable: Boolean = false
         get() = // Accessing coverage data requires a debuggable package.
             field || isTestCoverageEnabled
-        set(value) {
-            field = value
-        }
 
-    /**
-     * Whether test coverage is enabled for this build type.
-     *
-     * If enabled this uses Jacoco to capture coverage and creates a report in the build
-     * directory.
-     *
-     * The version of Jacoco can be configured with:
-     * ```
-     * android {
-     *     jacoco {
-     *         version = '0.6.2.201302030002'
-     *     }
-     * }
-     * ```
-     */
     override var isTestCoverageEnabled: Boolean = false
 
-    /**
-     * Specifies whether the plugin should generate resources for pseudolocales.
-     *
-     * A pseudolocale is a locale that simulates characteristics of languages that cause UI,
-     * layout, and other translation-related problems when an app is localized. Pseudolocales can
-     * aid your development workflow because you can test and make adjustments to your UI before you
-     * finalize text for translation.
-     *
-     * When you set this property to `true` as shown below, the plugin generates
-     * resources for the following pseudo locales and makes them available in your connected
-     * device's language preferences: `en-XA` and `ar-XB`.
-     *
-     * ```
-     * android {
-     *     buildTypes {
-     *         debug {
-     *             pseudoLocalesEnabled true
-     *         }
-     *     }
-     * }
-     * ```
-     *
-     * When you build your app, the plugin includes the pseudolocale resources in your APK. If
-     * you notice that your APK does not include those locale resources, make sure your build
-     * configuration isn't limiting which locale resources are packaged with your APK, such as using
-     * the `resConfigs` property to
-     * [remove unused locale resources](https://d.android.com/studio/build/shrink-code.html#unused-alt-resources).
-     *
-     * To learn more, read
-     * [Test Your App with Pseudolocales](https://d.android.com/guide/topics/resources/pseudolocales.html).
-     */
     override var isPseudoLocalesEnabled: Boolean = false
 
-    /**
-     * Whether this build type is configured to generate an APK with debuggable native code.
-     */
     override var isJniDebuggable: Boolean = false
 
-    /**
-     * Whether the build type is configured to generate an apk with debuggable RenderScript code.
-     */
     override var isRenderscriptDebuggable: Boolean = false
 
-    /** Optimization level to use by the renderscript compiler.  */
     override var renderscriptOptimLevel = 3
 
-    /** Whether zipalign is enabled for this build type.  */
     override var isZipAlignEnabled: Boolean = true
 
     /**
@@ -163,60 +105,6 @@ open class BuildType @Inject constructor(
 
     private var _matchingFallbacks: ImmutableList<String>? = null
 
-    /**
-     * Specifies a sorted list of build types that the plugin should try to use when a direct
-     * variant match with a local module dependency is not possible.
-     *
-     *
-     * Android plugin 3.0.0 and higher try to match each variant of your module with the same one
-     * from its dependencies. For example, when you build a "freeDebug" version of your app, the
-     * plugin tries to match it with "freeDebug" versions of the local library modules the app
-     * depends on.
-     *
-     *
-     * However, there may be situations in which **your app includes build types that a
-     * dependency does not**. For example, consider if your app includes a "stage" build type, but
-     * a dependency includes only a "debug" and "release" build type. When the plugin tries to build
-     * the "stage" version of your app, it won't know which version of the dependency to use, and
-     * you'll see an error message similar to the following:
-     *
-     * ```
-     * Error:Failed to resolve: Could not resolve project :mylibrary.
-     * Required by:
-     * project :app
-     * ```
-     *
-     *
-     * In this situation, you can use `matchingFallbacks` to specify alternative
-     * matches for the app's "stage" build type, as shown below:
-     *
-     * ```
-     * // In the app's build.gradle file.
-     * android {
-     *     buildTypes {
-     *         release {
-     *             // Because the dependency already includes a "release" build type,
-     *             // you don't need to provide a list of fallbacks here.
-     *         }
-     *         stage {
-     *             // Specifies a sorted list of fallback build types that the
-     *             // plugin should try to use when a dependency does not include a
-     *             // "stage" build type. You may specify as many fallbacks as you
-     *             // like, and the plugin selects the first build type that's
-     *             // available in the dependency.
-     *             matchingFallbacks = ['debug', 'qa', 'release']
-     *         }
-     *     }
-     * }
-     * ```
-     *
-     *
-     * Note that there is no issue when a library dependency includes a build type that your app
-     * does not. That's because the plugin simply never requests that build type from the
-     * dependency.
-     *
-     * @return the names of product flavors to use, in descending priority order
-     */
     override var matchingFallbacks: List<String>
         get() = _matchingFallbacks ?: ImmutableList.of()
         set(value) { _matchingFallbacks = ImmutableList.copyOf(value) }
@@ -271,28 +159,21 @@ open class BuildType @Inject constructor(
         return this
     }
 
-    /**
-     * Whether a linked Android Wear app should be embedded in variant using this build type.
-     *
-     * Wear apps can be linked with the following code:
-     *
-     * ```
-     * dependencies {
-     *     freeWearApp project(:wear:free') // applies to variant using the free flavor
-     *     wearApp project(':wear:base') // applies to all other variants
-     * }
-     * ```
-     */
+    fun setSigningConfig(signingConfig: Any?) {
+        this.signingConfig = signingConfig as SigningConfig?
+    }
+
     override var isEmbedMicroApp: Boolean = true
 
-    /** Whether this product flavor should be selected in Studio by default  */
     override fun getIsDefault(): Property<Boolean> {
         return _isDefaultProperty
     }
 
     override var isDefault: Boolean
         get() = _isDefaultProperty.get()
-        set(value) { _isDefaultProperty.set(value) }
+        set(value) {
+            _isDefaultProperty.set(value)
+        }
 
     fun setIsDefault(isDefault: Boolean) {
         this.isDefault = isDefault
@@ -565,11 +446,6 @@ open class BuildType @Inject constructor(
         action.invoke(shaders)
     }
 
-    /**
-     * Whether removal of unused java code is enabled.
-     *
-     * Default is false.
-     */
     override var isMinifyEnabled: Boolean = false
         get() =
             // Try to return a sensible value for the model and other Gradle plugins inspecting the DSL.
@@ -722,8 +598,9 @@ open class BuildType @Inject constructor(
             return this
         }
         dslChecksEnabled.set(false)
-        return try {
-            super.initWith(that) as BuildType
+        try {
+            this.signingConfig = that.signingConfig as SigningConfig?
+            return super.initWith(that) as BuildType
         } finally {
             dslChecksEnabled.set(true)
         }

@@ -37,7 +37,7 @@ interface CommonExtension<
         AndroidSourceSetT : AndroidSourceSet,
         AnnotationProcessorOptionsT : AnnotationProcessorOptions,
         BuildFeaturesT : BuildFeatures,
-        BuildTypeT : BuildType<AnnotationProcessorOptionsT>,
+        BuildTypeT : BuildType<AnnotationProcessorOptionsT, SigningConfigT>,
         CMakeT : Cmake,
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,

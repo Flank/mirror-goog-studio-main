@@ -32,7 +32,7 @@ import org.gradle.api.NamedDomainObjectContainer
  */
 interface DslContainerProvider<
         DefaultConfigT : DefaultConfig<*>,
-        BuildTypeT : BuildType<*>,
+        BuildTypeT : BuildType<*, *>,
         ProductFlavorT : ProductFlavor<*>,
         SigningConfigT : SigningConfig> {
 
