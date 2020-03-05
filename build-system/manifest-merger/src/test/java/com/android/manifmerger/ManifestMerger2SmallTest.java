@@ -1334,58 +1334,6 @@ public class ManifestMerger2SmallTest {
     }
 
     @Test
-    public void testInstantAppFeatureMetadataManifest() throws Exception {
-        String xml =
-                ""
-                        + "<manifest\n"
-                        + "    package=\"com.foo.example\""
-                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
-                        + "    <application t:name=\".applicationOne\">\n"
-                        + "        <activity t:name=\"activityOne\"/>\n"
-                        + "    </application>\n"
-                        + "    <uses-sdk\n"
-                        + "        t:minSdkVersion=\"22\"\n"
-                        + "        t:targetSdkVersion=\"27\" />"
-                        + "</manifest>";
-
-        File inputFile = TestUtils.inputAsFile("testInstantAppFeatureMetadataManifest", xml);
-
-        MockLog mockLog = new MockLog();
-        MergingReport mergingReport =
-                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_FEATURE_MANIFEST)
-                        .setFeatureName("feature")
-                        .merge();
-
-        assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.METADATA_FEATURE));
-        assertEquals(
-                "feature",
-                xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
-
-        assertEquals(
-                "feature",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
-                        .getNodeValue());
-
-        assertEquals(
-                "22",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_USES_SDK)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_MIN_SDK_VERSION)
-                        .getNodeValue());
-    }
-
-    @Test
     public void testDynamicAppFeatureSplitOption() throws Exception {
         String xml =
                 ""
@@ -1500,35 +1448,10 @@ public class ManifestMerger2SmallTest {
                                 ManifestMerger2.Invoker.Feature
                                         .ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST)
                         .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_FEATURE_MANIFEST)
-                        .withFeatures(
-                                ManifestMerger2.Invoker.Feature.STRIP_MIN_SDK_FROM_FEATURE_MANIFEST)
                         .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.METADATA_FEATURE));
-        assertEquals(
-                "dynamic_split",
-                xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
-
-        assertEquals(
-                "dynamic_split",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
-                        .getNodeValue());
-
-        assertNull(
-                "minSdk should be stripped",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_USES_SDK)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(
-                                SdkConstants.ANDROID_URI, SdkConstants.ATTR_MIN_SDK_VERSION));
 
         Document mergedDocument =
                 parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));

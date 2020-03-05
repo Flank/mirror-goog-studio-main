@@ -158,7 +158,6 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                 params.manifestOutputFile.absolutePath,
                 if (params.aaptFriendlyManifestOutputFile != null) params.aaptFriendlyManifestOutputFile.absolutePath else null,
                 null /* outInstantRunManifestLocation */,
-                null,  /*outMetadataFeatureManifestLocation */
                 ManifestMerger2.MergeType.LIBRARY /* outInstantAppManifestLocation */,
                 params.manifestPlaceholders,
                 optionalFeatures,

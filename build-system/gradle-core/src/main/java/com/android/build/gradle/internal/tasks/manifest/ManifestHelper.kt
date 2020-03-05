@@ -46,7 +46,6 @@ fun mergeManifestsForApplication(
     outMergedManifestLocation: String?,
     outPackagedManifestLocation: String,
     outAaptSafeManifestLocation: String?,
-    outMetadataFeatureManifestLocation: String?,
     outInstantAppManifestLocation: String?,
     mergeType: ManifestMerger2.MergeType,
     placeHolders: Map<String, Any>,
@@ -114,13 +113,6 @@ fun mergeManifestsForApplication(
                     outAaptSafeManifestLocation
                 )
             )
-        }
-        if (outMetadataFeatureManifestLocation != null) {
-            val featureManifest =
-                mergingReport.getMergedDocument(MergingReport.MergedManifestKind.METADATA_FEATURE)
-            if (featureManifest != null) {
-                save(featureManifest, File(outMetadataFeatureManifestLocation))
-            }
         }
         if (outInstantAppManifestLocation != null) {
             val instantAppManifest =

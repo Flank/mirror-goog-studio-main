@@ -569,19 +569,15 @@ public class ManifestMerger2 {
             addFeatureSplitAttribute(document, mFeatureName);
         }
 
+        if (mOptionalFeatures.contains(Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)) {
+            addUsesSplitTagsForDependencies(document, mDependencyFeatureNames);
+        }
+
         mergingReport.setMergedDocument(
                 MergingReport.MergedManifestKind.INTERNAL_MERGED, prettyPrint(document));
 
-        if (!mFeatureName.isEmpty()) {
-            adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
-        }
-
         if (mOptionalFeatures.contains(Invoker.Feature.TARGET_SANDBOX_VERSION)) {
             addTargetSandboxVersionAttribute(document);
-        }
-
-        if (mOptionalFeatures.contains(Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)) {
-            addUsesSplitTagsForDependencies(document, mDependencyFeatureNames);
         }
 
         // These features should occur at the end of all optional features, as they are based off of
@@ -590,14 +586,10 @@ public class ManifestMerger2 {
         if (mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_MANIFEST)) {
             addInstantAppManifest(document, mergingReport);
         }
-        if (mOptionalFeatures.contains(Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)) {
-            createBundleToolManifest(document, mergingReport);
-        } else if (mOptionalFeatures.contains(Invoker.Feature.CREATE_FEATURE_MANIFEST)) {
-            // createBundleToolManifest will produce the feature manifest at a certain point;
-            // if we're not making a bundletool manifest we need to prepare the feature manifest
-            // now
-            createStrippedFeatureManifest(document, mergingReport);
-        }
+
+        // remove all instant-app decorations from the merged manifest, as the packaged manifest
+        // does not need it.
+        adjustInstantAppFeatureSplitInfo(document, mFeatureName, false);
 
         if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_XML_STRING)) {
             mergingReport.setMergedDocument(
@@ -636,52 +628,6 @@ public class ManifestMerger2 {
         }
     }
 
-    private void createBundleToolManifest(
-            @NonNull Document document, @NonNull MergingReport.Builder mergingReport)
-            throws MergeFailureException {
-        // add splitName if requested for bundletool and we haven't added it to the merged manifest.
-        if (mOptionalFeatures.contains(Invoker.Feature.ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST)) {
-            adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
-        }
-
-        if (mOptionalFeatures.contains(Invoker.Feature.CREATE_FEATURE_MANIFEST)) {
-            // feature manifest should be added based on the bundle manifest for merging.
-            createStrippedFeatureManifest(document, mergingReport);
-        }
-
-        // remove split name from the manifest, unless it was requested from before.
-        adjustInstantAppFeatureSplitInfo(document, mFeatureName, false);
-    }
-
-    /**
-     * Prepares a feature manifest suitable for inclusion in dependent features or a base module,
-     * and saves it as part of the merging report. Does not mutate the passed in document.
-     */
-    private void createStrippedFeatureManifest(
-            @NonNull Document mergedManifest, @NonNull MergingReport.Builder mergingReport)
-            throws MergeFailureException {
-
-        // Avoid a clone if won't have any work to do
-        if (!mOptionalFeatures.contains(Invoker.Feature.STRIP_MIN_SDK_FROM_FEATURE_MANIFEST)
-                && !mOptionalFeatures.contains(Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)) {
-            mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.METADATA_FEATURE, prettyPrint(mergedManifest));
-            return;
-        }
-
-        Document featureManifest = cloneDocument(mergedManifest);
-
-        if (mOptionalFeatures.contains(Invoker.Feature.STRIP_MIN_SDK_FROM_FEATURE_MANIFEST)) {
-            stripMinSdkFromFeatureManifest(featureManifest);
-        }
-        if (mOptionalFeatures.contains(Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)) {
-            stripUsesSplitFromFeatureManifest(featureManifest);
-        }
-
-        mergingReport.setMergedDocument(
-                MergingReport.MergedManifestKind.METADATA_FEATURE, prettyPrint(featureManifest));
-    }
-
     /**
      * Creates a manifest suitable for use with AAPT by (1) substituting placeholders to an AAPT
      * friendly encoding and (2) removing any <nav-graph> tags. Saves the modified manifest as part
@@ -695,42 +641,6 @@ public class ManifestMerger2 {
         removeNavGraphs(clonedDocument);
         mergingReport.setMergedDocument(
                 MergingReport.MergedManifestKind.AAPT_SAFE, prettyPrint(clonedDocument));
-    }
-
-    /**
-     * This will strip the min sdk from the feature manifest, used to merge it back into the base
-     * module. This is used in dynamic-features, as dynamic-features can have different min sdk than
-     * the base module. It doesn't need to be strictly <= the base module like libraries.
-     *
-     * @param document the resulting document to use for stripping the min sdk from.
-     */
-    private void stripMinSdkFromFeatureManifest(@NonNull Document document) {
-        // make changes necessary for metadata feature manifest
-        Element manifest = document.getDocumentElement();
-        ImmutableList<Element> usesSdkList =
-                getChildElementsByName(manifest, SdkConstants.TAG_USES_SDK);
-        final Element usesSdk;
-        if (!usesSdkList.isEmpty()) {
-            usesSdk = usesSdkList.get(0);
-            usesSdk.removeAttributeNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_MIN_SDK_VERSION);
-        }
-    }
-
-    /**
-     * This will strip uses-split from the feature manifest used to merge it back into the base
-     * module and features that require it. If featureB depends on featureA, we don't want the
-     * {@code <uses split android:name="featureA"/>} from featureB's manifest to appear in
-     * featureA's manifest after merging.
-     *
-     * @param document the resulting document to use for stripping the min sdk from.
-     */
-    private void stripUsesSplitFromFeatureManifest(@NonNull Document document) {
-        // make changes necessary for metadata feature manifest
-        Element manifest = document.getDocumentElement();
-        ImmutableList<Element> usesSplitList =
-                getChildElementsByName(manifest, SdkConstants.TAG_USES_SPLIT);
-
-        usesSplitList.forEach(manifest::removeChild);
     }
 
     /**
@@ -1691,9 +1601,6 @@ public class ManifestMerger2 {
 
             /** Create a feature manifest to be merged into the base. */
             CREATE_FEATURE_MANIFEST,
-
-            /** Strip the min sdk from the feature manifest. */
-            STRIP_MIN_SDK_FROM_FEATURE_MANIFEST,
 
             /** Add instant app manifest. */
             ADD_INSTANT_APP_MANIFEST,

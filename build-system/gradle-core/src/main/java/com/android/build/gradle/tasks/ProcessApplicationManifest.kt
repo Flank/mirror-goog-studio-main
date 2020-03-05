@@ -17,11 +17,9 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.variant.BuiltArtifact
-import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl.Companion.loadFromDirectory
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.LoggerWrapper
@@ -50,7 +48,6 @@ import com.android.manifmerger.ManifestProvider
 import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
-import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -171,7 +168,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         var compatibleScreenManifestForSplit: BuiltArtifactImpl?
         val packagedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val mergedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
-        val metadataFeatureMergedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val instantAppManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val navJsons = navigationJsons?.files ?: setOf()
 
@@ -193,11 +189,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                     dirName,
                     SdkConstants.ANDROID_MANIFEST_XML
                 )
-            )
-            val metadataFeatureManifestOutputFile = FileUtils.join(
-                metadataFeatureManifestOutputDirectory.get().asFile,
-                dirName,
-                SdkConstants.ANDROID_MANIFEST_XML
             )
             val instantAppManifestOutputFile =
                 if (instantAppManifestOutputDirectory.isPresent) FileUtils.join(
@@ -222,7 +213,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 mergedManifestOutputFile.absolutePath,
                 packagedManifestOutputFile.absolutePath,  // no aapt friendly merged manifest file necessary for applications.
                 null /* aaptFriendlyManifestOutputFile */,
-                metadataFeatureManifestOutputFile.absolutePath,
                 instantAppManifestOutputFile?.absolutePath,
                 ManifestMerger2.MergeType.APPLICATION,
                 manifestPlaceholders.get(),
@@ -246,9 +236,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             packagedManifestOutputs.add(
                 variantOutput.toBuiltArtifact(packagedManifestOutputFile, properties)
             )
-            metadataFeatureMergedManifestOutputs.add(
-                variantOutput.toBuiltArtifact(metadataFeatureManifestOutputFile, properties)
-            )
             if (instantAppManifestOutputFile != null) {
                 instantAppManifestOutputs.add(
                     variantOutput.toBuiltArtifact(instantAppManifestOutputFile, properties)
@@ -269,13 +256,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             elements = packagedManifestOutputs.toList()
         )
             .save(packagedManifestOutputDirectory.get())
-        BuiltArtifactsImpl(
-            artifactType = InternalArtifactType.METADATA_FEATURE_MANIFEST,
-            applicationId = applicationId.get(),
-            variantName = variantName,
-            elements = metadataFeatureMergedManifestOutputs.toList()
-        )
-            .save(metadataFeatureManifestOutputDirectory.get())
         if (instantAppManifestOutputDirectory.isPresent) {
             BuiltArtifactsImpl(
                 artifactType = InternalArtifactType.INSTANT_APP_MANIFEST,
@@ -471,10 +451,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 .on(InternalArtifactType.MANIFEST_MERGE_BLAME_FILE)
             operations.setInitialProvider(
                 taskProvider,
-                ManifestProcessorTask::metadataFeatureManifestOutputDirectory
-            ).withName("metadata-feature").on(InternalArtifactType.METADATA_FEATURE_MANIFEST)
-            operations.setInitialProvider(
-                taskProvider,
                 ProcessApplicationManifest::reportFile
             )
                 .atLocation(
@@ -637,15 +613,9 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         ): List<ManifestProvider> {
             val providers: MutableList<ManifestProvider> = mutableListOf()
             for (artifact in artifacts) {
-                val directory = artifact.file
-                val splitOutputs: BuiltArtifacts? =
-                    loadFromDirectory(directory)
-                if (splitOutputs == null || splitOutputs.elements.isEmpty()) {
-                    throw GradleException("Could not load manifest from $directory")
-                }
                 providers.add(
                     ManifestProviderImpl(
-                        File(splitOutputs.elements.iterator().next().outputFile),
+                        artifact.file,
                         getArtifactName(artifact)
                     )
                 )
@@ -673,11 +643,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             val variantType = creationConfig.variantType
             if (variantType.isDynamicFeature) {
                 features.add(Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
-                features.add(Invoker.Feature.CREATE_FEATURE_MANIFEST)
                 features.add(Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)
-            }
-            if (variantType.isDynamicFeature) {
-                features.add(Invoker.Feature.STRIP_MIN_SDK_FROM_FEATURE_MANIFEST)
             }
             features.add(Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
             if (variantType.isBaseModule || variantType.isDynamicFeature) {
