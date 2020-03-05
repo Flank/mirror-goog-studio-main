@@ -327,7 +327,9 @@ abstract class ComponentPropertiesImpl(
                 )
             }
             val artifactProvider = artifacts.getFinalProduct(buildArtifactType)
-            if (artifactProvider.isPresent) {
+            val artifactContainer =
+                artifacts.getOperations().getArtifactContainer(buildArtifactType)
+            if (!artifactContainer.needInitialProducer().get()) {
                 variantScope
                     .publishIntermediateArtifact(
                         artifactProvider,
