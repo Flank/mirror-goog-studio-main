@@ -119,7 +119,9 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             .addAllModuleDependencies(moduleDeps)
             .build()
 
-        appDeps.writeTo(FileOutputStream(dependenciesList.get().asFile))
+        FileOutputStream(dependenciesList.get().asFile).use {
+            appDeps.writeTo(it)
+        }
     }
 
 
