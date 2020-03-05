@@ -107,7 +107,6 @@ interface Template {
 
   /** Returns a thumbnail which are drawn in the UI. It will be called every time when any parameter is updated. */
   // TODO(qumeric): consider using IconLoader and/or wizard icons.
-  // TODO(qumeric): rename to pick thumb?
   fun thumb(): Thumb
 
   /**

@@ -31,15 +31,15 @@ fun appwidgetInfoXml(
   resizeable: Resizeable
 ): String {
   val resizeableBlock = when (resizeable) {
-    Resizeable.both -> "android:resizeMode=\"horizontal|vertical\""
-    Resizeable.horizontal -> "android:resizeMode=\"horizontal\""
-    Resizeable.vertical -> "android:resizeMode=\"vertical\""
-    Resizeable.none -> ""
+    Resizeable.Both -> "android:resizeMode=\"horizontal|vertical\""
+    Resizeable.Horizontal -> "android:resizeMode=\"horizontal\""
+    Resizeable.Vertical -> "android:resizeMode=\"vertical\""
+    Resizeable.None -> ""
   }
   val placementBlock = when (placement) {
-    Placement.both -> "android:widgetCategory=\"home_screen|keyguard\""
-    Placement.homescreen -> "android:widgetCategory=\"home_screen\""
-    Placement.keyguard -> "android:widgetCategory=\"keyguard\""
+    Placement.Both -> "android:widgetCategory=\"home_screen|keyguard\""
+    Placement.Homescreen -> "android:widgetCategory=\"home_screen\""
+    Placement.Keyguard -> "android:widgetCategory=\"keyguard\""
   }
 
   return """

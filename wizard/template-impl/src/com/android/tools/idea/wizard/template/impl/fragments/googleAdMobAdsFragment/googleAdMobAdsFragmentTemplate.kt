@@ -38,6 +38,7 @@ import com.android.tools.idea.wizard.template.impl.defaultPackageNameParameter
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
+import java.util.Locale
 
 /**
  * Possible values for the AdFormat. Values are in camel case intentionally to be shown in the combo box.
@@ -91,8 +92,7 @@ val googleAdMobAdsFragmentTemplate
       LanguageWidget()
     )
 
-    //TODO: Switch the thumbnail based on the adFormat widget
-    thumb { File("template_admob_fragment.png") }
+    thumb { File("template_admob_fragment_" + adFormat.value.name.toLowerCase(Locale.US) + ".png") }
 
     recipe = { data: TemplateData ->
       googleAdMobAdsFragmentRecipe(data as ModuleTemplateData, fragmentClass.value, layoutName.value, adFormat.value, packageName.value)
