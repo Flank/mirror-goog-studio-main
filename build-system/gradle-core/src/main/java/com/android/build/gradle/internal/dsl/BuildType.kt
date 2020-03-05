@@ -103,19 +103,14 @@ open class BuildType @Inject constructor(
     private val _isDefaultProperty: Property<Boolean> =
         dslServices.property(Boolean::class.java).convention(false)
 
-    private var _matchingFallbacks: ImmutableList<String>? = null
-
-    override var matchingFallbacks: List<String>
-        get() = _matchingFallbacks ?: ImmutableList.of()
-        set(value) { _matchingFallbacks = ImmutableList.copyOf(value) }
+    override var matchingFallbacks: MutableList<String> = mutableListOf()
 
     fun setMatchingFallbacks(vararg fallbacks: String) {
-        matchingFallbacks =
-            ImmutableList.copyOf(fallbacks)
+        matchingFallbacks = mutableListOf(*fallbacks)
     }
 
     fun setMatchingFallbacks(fallback: String) {
-        matchingFallbacks = ImmutableList.of(fallback)
+        matchingFallbacks = mutableListOf(fallback)
     }
 
     override val javaCompileOptions: JavaCompileOptions =

@@ -175,5 +175,5 @@ interface BuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
      *
      * @return the names of product flavors to use, in descending priority order
      */
-    var matchingFallbacks: List<String>
+    var matchingFallbacks: MutableList<String>
 }
