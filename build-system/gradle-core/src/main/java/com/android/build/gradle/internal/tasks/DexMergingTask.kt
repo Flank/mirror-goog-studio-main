@@ -299,18 +299,15 @@ abstract class DexMergingTask : NonIncrementalTask() {
                         return component.globalScope.project.files(
                             forAction(DexMergingAction.MERGE_PROJECT),
                             forAction(DexMergingAction.MERGE_LIBRARY_PROJECTS),
-                            component.globalScope.project.provider {
-                                @Suppress("IMPLICIT_CAST_TO_ANY")
-                                if (dexingType == DexingType.LEGACY_MULTIDEX) {
-                                    // we have to dex it
-                                    forAction(DexMergingAction.MERGE_EXTERNAL_LIBS)
-                                } else {
-                                    // we merge external dex in a separate task
-                                    component.artifacts.getOperations().getAll(
-                                        MultipleArtifactType.EXTERNAL_LIBS_DEX)
-                                        .map { component.globalScope.project.files(it) }
-                                        .orElse(component.globalScope.project.files())
-                                }
+                            if (dexingType == DexingType.LEGACY_MULTIDEX) {
+                                // we have to dex it
+                                forAction(DexMergingAction.MERGE_EXTERNAL_LIBS)
+                            } else {
+                                // we merge external dex in a separate task
+                                component.artifacts.getOperations().getAll(
+                                    MultipleArtifactType.EXTERNAL_LIBS_DEX)
+                                    .map { component.globalScope.project.files(it) }
+                                    .orElse(component.globalScope.project.files())
                             })
                     }
                 }
