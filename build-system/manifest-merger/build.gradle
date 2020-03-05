@@ -34,6 +34,5 @@ project.ext.pomName = 'Android Tools Manifest Merger library'
 project.ext.pomDesc = 'A Library to merge Android manifests.'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 

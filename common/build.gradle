@@ -21,7 +21,6 @@ project.ext.pomName = 'Android Tools common library'
 project.ext.pomDesc = 'common library used by other Android tools libraries.'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
 task writeVersionProperties(type: com.android.tools.internal.VersionPropertiesWriter) {

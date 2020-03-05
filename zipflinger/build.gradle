@@ -40,5 +40,4 @@ project.ext.pomName = 'Android Zip Flinger Library'
 project.ext.pomDesc = 'Library used to build and incrementally modify zip files'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"

@@ -16,6 +16,5 @@ project.ext.pomName = 'Android Builder Test API library'
 project.ext.pomDesc = 'API for the Test extension point in the Builder library.'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 

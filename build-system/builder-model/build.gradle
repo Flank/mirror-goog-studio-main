@@ -41,7 +41,6 @@ compileKotlin {
 }
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
 ["Model-Version": version, "Model-Api-Version": apiVersion].each { key, value ->

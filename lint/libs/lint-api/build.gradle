@@ -38,6 +38,5 @@ project.ext.pomName = 'Android Tools Lint API'
 project.ext.pomDesc = 'API to build lint checks'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 

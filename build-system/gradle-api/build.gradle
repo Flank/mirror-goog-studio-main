@@ -54,7 +54,6 @@ project.ext.pomName = 'Android Gradle API'
 project.ext.pomDesc = 'APIs to customize Android Gradle Builds'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/bintray.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
 dokka {
