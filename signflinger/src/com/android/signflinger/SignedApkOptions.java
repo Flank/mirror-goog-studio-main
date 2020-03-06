@@ -18,9 +18,21 @@ package com.android.signflinger;
 
 import com.android.annotations.NonNull;
 import com.android.apksig.util.RunnablesExecutor;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Options for SignedApk.
@@ -71,6 +83,41 @@ public class SignedApkOptions {
         this.v1BuiltBy = v1BuiltBy;
         this.v1TrustManifest = v1TrustManifest;
         this.minSdkVersion = minSdkVersion;
+    }
+
+    public static PrivateKey bytesToPrivateKey(String keyAlgorithm, byte[] bytes)
+            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+
+        // Keep overly strictly linter happy by limiting what JCA KeyFactory algorithms are used
+        // here
+        KeyFactory keyFactory;
+        switch (keyAlgorithm.toUpperCase(Locale.US)) {
+            case "RSA":
+                keyFactory = KeyFactory.getInstance("rsa");
+                break;
+            case "DSA":
+                keyFactory = KeyFactory.getInstance("dsa");
+                break;
+            case "EC":
+                keyFactory = KeyFactory.getInstance("ec");
+                break;
+            default:
+                throw new IllegalStateException("Unsupported key algorithm: " + keyAlgorithm);
+        }
+
+        return keyFactory.generatePrivate(new PKCS8EncodedKeySpec(bytes));
+    }
+
+    public static List<X509Certificate> bytesToCertificateChain(byte[] bytes)
+            throws CertificateException {
+        CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+        Collection<? extends Certificate> certs =
+                certificateFactory.generateCertificates(new ByteArrayInputStream(bytes));
+        List<X509Certificate> result = new ArrayList<>(certs.size());
+        for (Certificate cert : certs) {
+            result.add((X509Certificate) cert);
+        }
+        return result;
     }
 
     public static class Builder {

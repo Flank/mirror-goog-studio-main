@@ -32,11 +32,25 @@ java_binary(
     ],
 )
 
-java_binary(
-    name = "profiler",
+java_library(
+    name = "profiler_lib",
     srcs = [
         "src/com/android/zipflinger/ApkMaker.java",
         "src/com/android/zipflinger/Profiler.java",
+    ],
+    visibility = [
+        "//tools/base/signflinger/tools:__subpackages__",
+        "//tools/base/zipflinger/tools:__subpackages__",
+    ],
+    deps = [
+        "//tools/base/zipflinger",
+    ],
+)
+
+java_binary(
+    name = "profileAdd",
+    srcs = [
+        "src/com/android/zipflinger/ProfileAdd.java",
     ],
     data = [
         "resources/zipflinger.profile",
@@ -44,8 +58,49 @@ java_binary(
     jvm_flags = [
         "-javaagent:$(location //tools/base/tracer:trace_agent)=$(location resources/zipflinger.profile)",
     ],
-    main_class = "com.android.zipflinger.Profiler",
+    main_class = "com.android.zipflinger.ProfileAdd",
     deps = [
+        ":profiler_lib",
+        "//tools/base/tracer:tools.tracer",
+        "//tools/base/tracer:trace_agent",
+        "//tools/base/zipflinger",
+    ],
+)
+
+java_binary(
+    name = "profileCreate",
+    srcs = [
+        "src/com/android/zipflinger/ProfileCreate.java",
+    ],
+    data = [
+        "resources/zipflinger.profile",
+    ],
+    jvm_flags = [
+        "-javaagent:$(location //tools/base/tracer:trace_agent)=$(location resources/zipflinger.profile)",
+    ],
+    main_class = "com.android.zipflinger.ProfileCreate",
+    deps = [
+        ":profiler_lib",
+        "//tools/base/tracer:tools.tracer",
+        "//tools/base/tracer:trace_agent",
+        "//tools/base/zipflinger",
+    ],
+)
+
+java_binary(
+    name = "profileCompressor",
+    srcs = [
+        "src/com/android/zipflinger/ProfileCompressor.java",
+    ],
+    data = [
+        "resources/zipflinger.profile",
+    ],
+    jvm_flags = [
+        "-javaagent:$(location //tools/base/tracer:trace_agent)=$(location resources/zipflinger.profile)",
+    ],
+    main_class = "com.android.zipflinger.ProfileCompressor",
+    deps = [
+        ":profiler_lib",
         "//tools/base/tracer:tools.tracer",
         "//tools/base/tracer:trace_agent",
         "//tools/base/zipflinger",
