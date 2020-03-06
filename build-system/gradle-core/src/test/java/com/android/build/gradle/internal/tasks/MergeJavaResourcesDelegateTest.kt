@@ -51,8 +51,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.ByteArrayInputStream
 import java.io.File
-import java.nio.file.attribute.FileTime
-import java.time.Instant
 import java.util.zip.Deflater
 import java.util.zip.ZipFile
 
@@ -126,13 +124,15 @@ class MergeJavaResourcesDelegateTest {
 
         // Check that the zip entries' timestamps are erased (regression test for bug 142890134)
         ZipFile(outputFile).use {
-            // For some reason, zero-timestamp instant is different from Instant.EPOCH, which is
-            // 1970-01-01T00:00:00Z
-            val zeroTimestampInstant = FileTime.from(Instant.parse("1979-11-30T00:00:00Z"))
-            assertThat(it.getEntry("fileEndingWithDot.").lastModifiedTime)
-                .isEqualTo(zeroTimestampInstant)
-            assertThat(it.getEntry("fileNotEndingWithDot").lastModifiedTime)
-                .isEqualTo(zeroTimestampInstant)
+            val entry1Timestamp =
+                it.getEntry("fileEndingWithDot.").lastModifiedTime.toInstant().toString()
+            val entry2Timestamp =
+                it.getEntry("fileNotEndingWithDot").lastModifiedTime.toInstant().toString()
+
+            // Different OSes/timezones may interpret the zero timestamp differently (see bug
+            // 150817339), but looks like they agree on the same date.
+            assertThat(entry1Timestamp).isEqualTo(entry2Timestamp)
+            assertThat(entry2Timestamp).startsWith("1979-11-30")
         }
     }
 
