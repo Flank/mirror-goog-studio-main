@@ -46,6 +46,7 @@ import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.plugins.BasePluginConvention;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** A scope containing data for the Android plugin. */
@@ -128,7 +129,10 @@ public class GlobalScope {
 
     @NonNull
     public String getProjectBaseName() {
-        return (String) project.property("archivesBaseName");
+        BasePluginConvention convention =
+                Preconditions.checkNotNull(
+                        project.getConvention().findPlugin(BasePluginConvention.class));
+        return convention.getArchivesBaseName();
     }
 
     @NonNull
@@ -176,11 +180,6 @@ public class GlobalScope {
 
     public boolean isActive(OptionalCompilationStep step) {
         return optionalCompilationSteps.contains(step);
-    }
-
-    @NonNull
-    public String getArchivesBaseName() {
-        return (String)getProject().getProperties().get("archivesBaseName");
     }
 
     @NonNull

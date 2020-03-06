@@ -236,7 +236,7 @@ abstract class ComponentPropertiesImpl(
                 String::class.java,
                 outputFileName
                     ?: variantDslInfo.getOutputFileName(
-                        globalScope.archivesBaseName,
+                        globalScope.projectBaseName,
                         variantOutputConfiguration.baseName(variantDslInfo)
                     ),
                 "$name::archivesBaseName")
