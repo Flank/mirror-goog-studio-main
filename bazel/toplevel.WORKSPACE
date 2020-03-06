@@ -84,3 +84,10 @@ http_archive(
     strip_prefix = "x86_64",
     build_file = "//tools/base/bazel/avd:system_images.BUILD",
 )
+
+# An empty local repository which must be overridden according to the instructions at
+# go/agp-profiled-benchmarks if running the "_profiled" AGP build benchmarks.
+local_repository(
+    name = "yourkit_controller",
+    path = "tools/base/yourkit-controller",
+)

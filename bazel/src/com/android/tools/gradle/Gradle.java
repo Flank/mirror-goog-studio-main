@@ -77,6 +77,51 @@ public class Gradle implements Closeable {
         arguments.add("--profile");
     }
 
+    // We need to control YourKit from the init script, because otherwise it's going to write the
+    // profiling data on JVM shutdown (using a shutdown hook), and that is not guaranteed to wait.
+    public void withYourKit(@NonNull File libraryPath, @NonNull File settings) throws IOException {
+        String samplingSettings = new String(Files.readAllBytes(settings.toPath()));
+        String content =
+                "initscript {\n"
+                        + "  dependencies {\n"
+                        + "    classpath files(\""
+                        + libraryPath.getAbsolutePath()
+                        + "\")\n"
+                        + "  }\n"
+                        + "}\n"
+                        + "\n"
+                        + "rootProject {\n"
+                        + "  def controller = new com.yourkit.api.Controller()\n"
+                        + "  def settings = '''\\\n"
+                        + samplingSettings
+                        + "'''\n"
+                        + "\n"
+                        + "  task startProfiling {\n"
+                        + "    doLast {\n"
+                        + "      controller.startSampling(settings)\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "\n"
+                        + "  task captureProfileSnapshot {\n"
+                        + "    doLast {\n"
+                        + "      controller.stopCpuProfiling()\n"
+                        + "      controller.capturePerformanceSnapshot()\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "}";
+        try (FileWriter writer = new FileWriter(getInitScript(), true)) {
+            writer.write(content);
+        }
+    }
+
+    public void startYourKitProfiling() throws IOException {
+        run("startProfiling");
+    }
+
+    public void captureYourKitSnapshot() throws IOException {
+        run("captureProfileSnapshot");
+    }
+
     @NonNull
     private File getInitScript() {
         return new File(outDir, "init.script");
