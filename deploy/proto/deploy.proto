@@ -304,6 +304,7 @@ message OverlayUpdateRequest {
   string expected_overlay_id = 3;
   repeated OverlayFile files_to_write = 4;
   repeated string files_to_delete = 5;
+  bool wipe_all_files = 6;
 }
 
 message OverlayFile {

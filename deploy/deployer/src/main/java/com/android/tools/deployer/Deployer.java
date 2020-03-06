@@ -138,7 +138,7 @@ public class Deployer {
                 OverlayIdPusher oidPusher = new OverlayIdPusher(installer);
                 String appId = ApplicationDumper.getPackageName(apkList);
                 OverlayId oid = new OverlayId(apkList);
-                oidPusher.pushOverlayId(appId, oid);
+                oidPusher.pushOverlayId(appId, oid, result.skippedInstall /* clearOverlays */);
 
                 runner.create(
                         Tasks.DEPLOY_CACHE_STORE,
