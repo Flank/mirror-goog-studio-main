@@ -1,6 +1,5 @@
 apply plugin: 'java'
 apply plugin: 'jacoco-tools-base'
-apply plugin: 'sdk-java-lib'
 
 dependencies {
     compile project(':base:common')
@@ -10,9 +9,6 @@ dependencies {
 group = 'com.android.tools'
 archivesBaseName = 'dvlib'
 version = rootProject.ext.baseVersion
-
-// configure the manifest of the sdkJar task
-sdkJar.manifest.attributes("Main-Class": "com.android.validator.DeviceValidator")
 
 project.ext.pomName = 'Android Tools dvlib'
 project.ext.pomDesc = 'A Library to manage the Android device database XML files.'

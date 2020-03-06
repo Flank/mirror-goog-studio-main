@@ -1,7 +1,5 @@
 apply plugin: 'java'
 apply plugin: 'kotlin'
-apply plugin: 'clone-artifacts'
-apply plugin: 'sdk-java-lib'
 
 dependencies {
     compile project(':base:annotations')
@@ -45,7 +43,6 @@ apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
 ["Model-Version": version, "Model-Api-Version": apiVersion].each { key, value ->
     jar.manifest.attributes((key): value)
-    sdkJar.manifest.attributes((key): value)
 }
 
 def generated = project.layout.buildDirectory.dir("generated/resources")

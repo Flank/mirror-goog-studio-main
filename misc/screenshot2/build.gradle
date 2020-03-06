@@ -1,5 +1,4 @@
 apply plugin: 'java'
-apply plugin: 'sdk-java-lib'
 
 group = 'com.android.tools'
 archivesBaseName = 'screenshot2'
@@ -17,15 +16,6 @@ task Screenshot2StartScripts(type: CreateStartScripts) {
     description 'Creates OS specific scripts to start screenshot2'
     mainClassName = 'com.android.screenshot.Screenshot'
     applicationName = 'screenshot2'
-}
-
-sdk {
-    common(mac, linux) {
-        item(new File(buildDir, 'scripts/screenshot2')) {
-            into 'bin'
-            builtBy 'Screenshot2StartScripts'
-        }
-    }
 }
 
 jar {

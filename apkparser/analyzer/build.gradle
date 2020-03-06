@@ -15,7 +15,6 @@
  */
 
 apply plugin: 'java'
-apply plugin: 'sdk-java-lib'
 
 def jardeps = [
     project.file('../../../../prebuilts/tools/common/archive-patcher/explainer.jar'),
@@ -36,17 +35,6 @@ dependencies {
 
     testCompile(libs.junit)
     testCompile project(":base:testutils")
-}
-
-jardeps.each { file ->
-    sdk {
-        common {
-            item(file) {
-                into "lib"
-                notice project.file('../../../../prebuilts/tools/common/archive-patcher/LICENSE')
-            }
-        }
-    }
 }
 
 sourceSets {

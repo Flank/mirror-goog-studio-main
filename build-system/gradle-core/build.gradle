@@ -4,7 +4,6 @@ import java.time.format.DateTimeFormatter
 apply plugin: 'java-gradle-plugin'
 apply plugin: 'kotlin'
 apply plugin: 'jacoco-tools-base'
-apply plugin: 'clone-artifacts'
 apply plugin: 'license-report'
 apply plugin: 'com.google.protobuf'
 

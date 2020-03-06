@@ -1,6 +1,5 @@
 apply plugin: 'java'
 apply plugin: 'jacoco-tools-base'
-apply plugin: 'clone-artifacts'
 
 dependencies {
     compile project(':base:ddmlib')
