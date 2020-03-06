@@ -30,6 +30,9 @@ message SwapRequest {
   Arch arch = 8;
 
   bool structural_redefinition = 9;
+
+  // Lets the agent know what instrumentation to apply.
+  bool overlay_swap = 10;
 }
 
 message OverlaySwapRequest {

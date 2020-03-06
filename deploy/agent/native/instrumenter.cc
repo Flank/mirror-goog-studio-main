@@ -124,7 +124,8 @@ bool ApplyTransform(jvmtiEnv* jvmti, JNIEnv* jni, const Transform& transform) {
   return success;
 }
 
-bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
+bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
+                bool overlay_swap) {
   // The breadcrumb class stores some checks between runs of the agent.
   // We can't use the class from the FindClass call because it may not have
   // actually found the class.
@@ -152,14 +153,14 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
     return true;
   }
 
-  const Transform activity_thread(
+  const HookTransform activity_thread(
       /* target class */ "android/app/ActivityThread",
       /* target method */ "handleDispatchPackageBroadcast",
       /* target signature */ "(I[Ljava/lang/String;)V",
       "handleDispatchPackageBroadcastEntry",
       "handleDispatchPackageBroadcastExit");
 
-  const Transform dex_path_list_element(
+  const HookTransform dex_path_list_element(
       /* target class */ "dalvik/system/DexPathList$Element",
       /* target method */ "findResource",
       /* target signature */ "(Ljava/lang/String;)Ljava/net/URL;",
@@ -175,9 +176,39 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
       /* target signature */ "(Ljava/lang/String;)Ljava/util/List;",
       MethodHooks::kNoHook, "handleSplitDexPathExit");
 
-  const Transform dex_path_list(
+  const HookTransform dex_path_list(
       /* target class */ "dalvik/system/DexPathList",
       /* transforms */ {split_paths, split_dex_paths});
+
+  const HookTransform res_manager(
+      /* target class */ "android/app/ResourcesManager",
+      /* target method */ "applyNewResourceDirsLocked",
+      /* target signature */
+      "(Landroid/content/pm/ApplicationInfo;[Ljava/lang/String;)V",
+      "addResourceOverlays", MethodHooks::kNoHook);
+
+  const HookTransform asset_manager_builder(
+      /* target class */ "android/content/res/AssetManager$Builder",
+      /* target method */ "build",
+      /* target signature */
+      "()Landroid/content/res/AssetManager;", "addResourceOverlays",
+      MethodHooks::kNoHook);
+
+  // This transform changes the integer cookie passed in to each of these
+  // methods to zero. The cookie is used to determine where to look for a
+  // resource; a cookie of zero means "look everywhere". Setting this value to
+  // zero prevents the app from trying to load content from our resource loader
+  // that is not present.
+  const ParameterSetTransform asset_manager(
+      "android/content/res/AssetManager",
+      {{/* target method */ "openXmlBlockAsset",
+        /* target signature */ "(ILjava/lang/String;)Landroid/content/res/"
+                               "XmlBlock;"},
+       {/* target method */ "openNonAsset",
+        /* target signature */ "(ILjava/lang/String;I)Ljava/io/InputStream;"},
+       {/* target method */ "openNonAssetFd",
+        /* target signature */ "(ILjava/lang/String;)Landroid/content/res/"
+                               "AssetFileDescriptor;"}});
 
   bool success = true;
   success &=
@@ -187,7 +218,13 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
 
   success &= ApplyTransform(jvmti, jni, activity_thread);
   success &= ApplyTransform(jvmti, jni, dex_path_list_element);
-  success &= ApplyTransform(jvmti, jni, dex_path_list);
+
+  if (overlay_swap) {
+    success &= ApplyTransform(jvmti, jni, dex_path_list);
+    success &= ApplyTransform(jvmti, jni, res_manager);
+    success &= ApplyTransform(jvmti, jni, asset_manager_builder);
+    success &= ApplyTransform(jvmti, jni, asset_manager);
+  }
 
   // Failing to disable this event does not actually have any bearing on
   // whether or not instrumentation was a success, so we do not modify the
@@ -241,7 +278,7 @@ extern "C" void JNICALL Agent_ClassFileLoadHook(
 }
 
 bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
-                           const std::string& package_name) {
+                           const std::string& package_name, bool overlay_swap) {
   jvmtiEventCallbacks callbacks;
   callbacks.ClassFileLoadHook = Agent_ClassFileLoadHook;
 
@@ -264,7 +301,7 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
     return false;
   }
 
-  if (!Instrument(jvmti, jni, instrument_jar_path)) {
+  if (!Instrument(jvmti, jni, instrument_jar_path, overlay_swap)) {
     Log::E("Error instrumenting application.");
     return false;
   }

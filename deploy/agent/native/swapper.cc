@@ -41,7 +41,10 @@ proto::AgentSwapResponse Swapper::Swap(jvmtiEnv* jvmti, JNIEnv* jni,
   proto::AgentSwapResponse response;
   response.set_pid(getpid());
 
-  if (!InstrumentApplication(jvmti, jni, request.package_name())) {
+  // TODO: Find a cleaner method to distinguish swap / overlay swap than a
+  // boolean flag passed through.
+  if (!InstrumentApplication(jvmti, jni, request.package_name(),
+                             request.overlay_swap())) {
     ErrEvent("Could not instrument application");
     response.set_status(proto::AgentSwapResponse::INSTRUMENTATION_FAILED);
     return response;

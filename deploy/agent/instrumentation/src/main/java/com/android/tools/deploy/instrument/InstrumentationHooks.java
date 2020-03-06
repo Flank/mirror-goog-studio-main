@@ -20,10 +20,14 @@ import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
 
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import java.io.File;
+import java.lang.ref.Reference;
+import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -46,14 +50,15 @@ public final class InstrumentationHooks {
     // handleDispatchPackageBroadcastExit; read by handleFindResourceEntry.
     private static Path currentPackagePath;
 
+    private static Object resourcesLoader = null;
+
     public static void setRestart(boolean restart) {
         mRestart = restart;
     }
 
     public static List<File> handleSplitDexPathExit(List<File> files) {
         try {
-            Class<?> clazz = Class.forName("android.app.ActivityThread");
-            Object activityThread = call(clazz, "currentActivityThread");
+            Object activityThread = getActivityThread();
 
             String packageName = getPackageName(activityThread);
             Path packagePath = getPackagePath(activityThread);
@@ -76,8 +81,7 @@ public final class InstrumentationHooks {
 
     public static List<File> handleSplitPathsExit(List<File> files) {
         try {
-            Class<?> clazz = Class.forName("android.app.ActivityThread");
-            Object activityThread = call(clazz, "currentActivityThread");
+            Object activityThread = getActivityThread();
 
             String packageName = getPackageName(activityThread);
             Path packagePath = getPackagePath(activityThread);
@@ -97,6 +101,98 @@ public final class InstrumentationHooks {
 
     private static Predicate<File> prefixMatch(Path prefix) {
         return file -> file.toPath().startsWith(prefix);
+    }
+
+    public static void addResourceOverlays(
+            Object resourcesManager, ApplicationInfo appInfo, String[] oldPaths) {
+        try {
+            // A ResourcesLoader is a collection of resource providers that can add or override
+            // existing resources in the APK.
+            Class<?> resourcesLoaderClass =
+                    Class.forName("android.content.res.loader.ResourcesLoader");
+            // A ResourcesProvider loads resource data from a resource table (.arsc).
+            Class<?> resourcesProviderClass =
+                    Class.forName("android.content.res.loader.ResourcesProvider");
+            // An AssetsProvider is a provider of file-based resources, such as layout xml.
+            Class<?> assetsProviderClass =
+                    Class.forName("android.content.res.loader.AssetsProvider");
+
+            if (resourcesLoader == null) {
+                resourcesLoader = resourcesLoaderClass.newInstance();
+            }
+
+            Object[] loaderList = (Object[]) Array.newInstance(resourcesLoaderClass, 1);
+            loaderList[0] = resourcesLoader;
+
+            // Enumerate every Resources object that currently exists in the application. Add our
+            // resources loader to each one.
+            Object resourcesRefs = getDeclaredField(resourcesManager, "mResourceReferences");
+            for (Object ref : (Collection) resourcesRefs) {
+                Object resources = call(ref, Reference.class, "get");
+                if (resources == null) {
+                    continue;
+                }
+
+                call(resources, "addLoaders", arg(loaderList));
+            }
+
+            Object activityThread = getActivityThread();
+            Overlay overlay = new Overlay(getPackageName(activityThread));
+
+            // Create an asset provider for file-based resources (xml, etc.) based in the overlay
+            // directory.
+            Object directoryAssetsProvider =
+                    Class.forName("android.content.res.loader.DirectoryAssetsProvider")
+                            .getConstructor(File.class)
+                            .newInstance(overlay.getOverlayRoot().toFile());
+
+            List<Object> providers = new ArrayList<>();
+
+            // If a resource table is present in the overlay directory, use that to create the
+            // provider.
+            if (overlay.getResourceTable().isPresent()) {
+                ParcelFileDescriptor fd =
+                        ParcelFileDescriptor.open(
+                                overlay.getResourceTable().get(),
+                                ParcelFileDescriptor.MODE_READ_ONLY);
+                providers.add(
+                        call(
+                                resourcesProviderClass,
+                                "loadFromTable",
+                                arg(fd),
+                                arg(directoryAssetsProvider, assetsProviderClass)));
+            } else {
+                providers.add(
+                        call(
+                                resourcesProviderClass,
+                                "empty",
+                                arg(directoryAssetsProvider, assetsProviderClass)));
+            }
+
+            // Set our loader to use our providers. This will update every AssetManager that
+            // currently references our loader.
+            call(resourcesLoader, "setProviders", arg(providers, List.class));
+        } catch (Exception e) {
+            Log.e(TAG, "Exception", e);
+        }
+    }
+
+    // Instruments AssetManager$Builder#build(). Inserts our resource loader's ApkAssets object(s)
+    // at the front of the builder's internal list.
+    public static void addResourceOverlays(Object builder) {
+        try {
+            // When an asset manager is created, insert our loader's ApkAssets object at the front
+            // of the list of ApkAssets being used to construct the AssetManager. This allows us to
+            // intercept lookups that progress forwards through the ApkAsset list, such as when
+            // resolving the id associated with a particular resource.
+            ArrayList mUserApkAssets = (ArrayList) getDeclaredField(builder, "mUserApkAssets");
+            if (resourcesLoader != null) {
+                List apkAssets = (List) call(resourcesLoader, "getApkAssets");
+                mUserApkAssets.addAll(0, apkAssets);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Exception", e);
+        }
     }
 
     // Instruments DexPathList$Element#findResource(). Checks to see if an Element object refers
@@ -189,6 +285,11 @@ public final class InstrumentationHooks {
             mRestart = false;
             isPackageChanging = false;
         }
+    }
+
+    public static Object getActivityThread() throws Exception {
+        Class<?> clazz = Class.forName("android.app.ActivityThread");
+        return call(clazz, "currentActivityThread");
     }
 
     public static String getPackageName(Object activityThread) throws Exception {
