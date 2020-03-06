@@ -334,4 +334,14 @@ public class MinifyTest {
 
         assertThat(taskInfo).didWork();
     }
+
+    @Test
+    public void testProguardRuleForNativeMethods() throws Exception {
+        TestFileUtils.appendToFile(project.file("proguard-rules.pro"), "\n-printconfiguration");
+        GradleBuildResult result = project.executor().run("assembleMinified");
+        try (Scanner stdout = result.getStdout()) {
+            ScannerSubject.assertThat(stdout)
+                    .contains("-keepclasseswithmembernames,includedescriptorclasses class *");
+        }
+    }
 }
