@@ -40,8 +40,16 @@ message StackPointer {
 message StackFrame {
     // Unique id of the frame.
     int64 id = 1;
-    // Demangled name of the frame.
+    // Demangled name of the frame on Linux/Mac.
+    // On windows this is a mangled named until
+    // b/151081845 is fixed.
     string name = 2;
+    // Path to the module (so) used for this frame.
+    string module = 3;
+    // The relative program counter offset for this
+    // frame. To desymbolize this,module and symbols
+    // can be passed to llvm.
+    int64 rel_pc = 4;
 }
 
 // Allocation stats for each sampled StackPointer.

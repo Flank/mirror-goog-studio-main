@@ -85,7 +85,13 @@ void PerfettoManager::Shutdown() {
 perfetto::protos::TraceConfig PerfettoManager::BuildCommonTraceConfig() {
   perfetto::protos::TraceConfig config;
   config.set_write_into_file(true);
-  config.set_file_write_period_ms(1000);
+  // The intervals are somewhat arbitrary. We want to write to file
+  // at an interval that isn't going to be super noticable for users
+  // at the same time we don't want to fill our in memory buffers.
+  // We write to file at 2x slower than our flush period just to ensure
+  // we have data to write.
+  config.set_file_write_period_ms(2000);
+  config.set_flush_period_ms(1000);
   return config;
 }
 

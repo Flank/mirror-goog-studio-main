@@ -16,7 +16,9 @@
 
 #include "memory_request_handler.h"
 
+#ifndef _MSC_VER
 #include <cxxabi.h>
+#endif
 
 using namespace profiler::perfetto;
 using profiler::perfetto::proto::NativeAllocationContext;
@@ -38,23 +40,36 @@ void MemoryRequestHandler::PopulateEvents(NativeAllocationContext* batch) {
     pointer->set_frame_id(frame_id);
   }
 
-  auto frames =
-      processor_->ExecuteQuery("select id, name from stack_profile_frame");
+  auto frames = processor_->ExecuteQuery(
+      "select spf.id, spf.name, spm.name, spf.rel_pc "
+      "from stack_profile_frame spf join stack_profile_mapping spm "
+      "on spf.mapping = spm.id");
   while (frames.Next()) {
     auto id = frames.Get(0).long_value;
-    auto name_field = frames.Get(1);
-    auto name = name_field.is_null() ? "" : name_field.string_value;
+    auto frame_name_field = frames.Get(1);
+    auto frame_name =
+        frame_name_field.is_null() ? "" : frame_name_field.string_value;
+    auto module_name_field = frames.Get(2);
+    auto module_name =
+        module_name_field.is_null() ? "" : module_name_field.string_value;
+    auto rel_pc = frames.Get(3).long_value;
     auto frame = batch->add_frames();
-
+    // TODO (b/151081845): Enable demangling support on windows.
+#ifdef _MSC_VER
+    frame->set_name(frame_name);
+#else
     // Demangle stack pointer frame to human readable c++ frame.
     int ignored;
-    char* data = abi::__cxa_demangle(name, nullptr, nullptr, &ignored);
+    char* data = abi::__cxa_demangle(frame_name, nullptr, nullptr, &ignored);
     if (data != nullptr) {
       frame->set_name(data);
     } else {
-      frame->set_name(name);
+      frame->set_name(frame_name);
     }
+#endif
     frame->set_id(id);
+    frame->set_module(module_name);
+    frame->set_rel_pc(rel_pc);
   }
 
   auto alloc = processor_->ExecuteQuery(

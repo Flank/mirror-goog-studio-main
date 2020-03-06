@@ -61,8 +61,13 @@ TEST(MemoryRequestHandlerTest, TestMemoryDataPopulated) {
   EXPECT_EQ(context.pointers_size(), 1484);
   EXPECT_EQ(context.frames_size(), 599);
 
+#ifndef _MSC_VER  // Demangling is not currently available on windows.
   // Validate frame names are demanged
   EXPECT_NE(context.frames(0).name().rfind("_Z", 0), 0);
+#else
+  // Until b/151081845 is fixed validate name is set.
+  EXPECT_EQ(context.frames(0).name().rfind("_Z", 0), 0);
+#endif
 
   // Validate allocations point to a valid stack
   long stack_id = context.allocations(0).stack_id();
