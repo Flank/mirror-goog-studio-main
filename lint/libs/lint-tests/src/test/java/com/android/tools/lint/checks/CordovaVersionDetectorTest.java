@@ -35,7 +35,7 @@ public class CordovaVersionDetectorTest extends AbstractCheckTest {
                                 "assets/www/cordova.js",
                                 ""
                                         + ";(function() {\n"
-                                        + "var PLATFORM_VERSION_BUILD_LABEL = '4.1.1';\n"
+                                        + "var PLATFORM_VERSION_BUILD_LABEL = '7.1.1';\n"
                                         + "})();\n")));
     }
 
