@@ -43,18 +43,19 @@ abstract class AbstractTestDataImpl(
     val testedApksDir: FileCollection?
 ) : TestData {
     private var extraInstrumentationTestRunnerArgs: Map<String, String> = mutableMapOf()
-    private var animationsDisabled = false
 
-    override fun getInstrumentationRunner(): String {
-        return testVariantConfig.instrumentationRunner.get()
-    }
+    override val instrumentationRunner: String
+        get() {
+            return testVariantConfig.instrumentationRunner.get()
+        }
 
-    override fun getInstrumentationRunnerArguments(): Map<String, String> {
-        return ImmutableMap.builder<String, String>()
-            .putAll(testVariantConfig.instrumentationRunnerArguments)
-            .putAll(extraInstrumentationTestRunnerArgs)
-            .build()
-    }
+    override val instrumentationRunnerArguments: Map<String, String>
+        get() {
+            return ImmutableMap.builder<String, String>()
+                .putAll(testVariantConfig.instrumentationRunnerArguments)
+                .putAll(extraInstrumentationTestRunnerArgs)
+                .build()
+        }
 
     fun setExtraInstrumentationTestRunnerArgs(
         extraInstrumentationTestRunnerArgs: Map<String, String>
@@ -65,56 +66,55 @@ abstract class AbstractTestDataImpl(
             )
     }
 
-    override fun getAnimationsDisabled(): Boolean {
-        return animationsDisabled
-    }
+    override var animationsDisabled: Boolean = false
 
-    fun setAnimationsDisabled(animationsDisabled: Boolean) {
-        this.animationsDisabled = animationsDisabled
-    }
+    override val isTestCoverageEnabled: Boolean
+        get() {
+            return testVariantConfig.isTestCoverageEnabled
+        }
 
-    override fun isTestCoverageEnabled(): Boolean {
-        return testVariantConfig.isTestCoverageEnabled
-    }
+    override val minSdkVersion: AndroidVersion
+        get() {
+            return testVariantConfig.minSdkVersion
+        }
 
-    override fun getMinSdkVersion(): AndroidVersion {
-        return testVariantConfig.minSdkVersion
-    }
-
-    override fun getFlavorName(): String {
-        return testVariantConfig
-            .componentIdentity
-            .flavorName
-            .toUpperCase(Locale.getDefault())
-    }
+    override val flavorName: String
+        get() {
+            return testVariantConfig
+                .componentIdentity
+                .flavorName
+                .toUpperCase(Locale.getDefault())
+        }
 
     open fun getTestedApksFromBundle(): FileCollection? = null
 
-    override fun getTestDirectories(): List<File> {
-        // For now we check if there are any test sources. We could inspect the test classes and
-        // apply JUnit logic to see if there's something to run, but that would not catch the case
-        // where user makes a typo in a test name or forgets to inherit from a JUnit class
-        val javaDirectories =
-            ImmutableList.builder<File>()
-        for (sourceProvider in testVariantSources.sortedSourceProviders) {
-            javaDirectories.addAll(sourceProvider.javaDirectories)
+    override val testDirectories: List<File>
+        get() {
+            // For now we check if there are any test sources. We could inspect the test classes and
+            // apply JUnit logic to see if there's something to run, but that would not catch the case
+            // where user makes a typo in a test name or forgets to inherit from a JUnit class
+            val javaDirectories =
+                ImmutableList.builder<File>()
+            for (sourceProvider in testVariantSources.sortedSourceProviders) {
+                javaDirectories.addAll(sourceProvider.javaDirectories)
+            }
+            return javaDirectories.build()
         }
-        return javaDirectories.build()
-    }
 
-    override fun getTestApk(): File {
-        val testApkOutputs = BuiltArtifactsLoaderImpl().load(testApkDir.get())
-            ?: throw RuntimeException("No test APK in provided directory, file a bug")
-        if (testApkOutputs.elements.size != 1) {
-            throw RuntimeException(
-                "Unexpected number of main APKs, expected 1, got  "
-                        + testApkOutputs.elements.size
-                        + ":"
-                        + Joiner.on(",").join(testApkOutputs.elements)
-            )
+    override val testApk: File
+        get() {
+            val testApkOutputs = BuiltArtifactsLoaderImpl().load(testApkDir.get())
+                ?: throw RuntimeException("No test APK in provided directory, file a bug")
+            if (testApkOutputs.elements.size != 1) {
+                throw RuntimeException(
+                    "Unexpected number of main APKs, expected 1, got  "
+                            + testApkOutputs.elements.size
+                            + ":"
+                            + Joiner.on(",").join(testApkOutputs.elements)
+                )
+            }
+            return File(testApkOutputs.elements.iterator().next().outputFile)
         }
-        return File(testApkOutputs.elements.iterator().next().outputFile)
-    }
 
     abstract override fun getTestedApks(
         deviceConfigProvider: DeviceConfigProvider,

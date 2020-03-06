@@ -13,106 +13,93 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.test
 
-package com.android.build.gradle.internal.test;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
-import com.android.build.api.variant.BuiltArtifacts;
-import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
-import com.android.build.api.variant.impl.VariantPropertiesImpl;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.testing.TestData;
-import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.builder.testing.api.DeviceConfigProvider;
-import com.android.utils.ILogger;
-import com.google.common.collect.ImmutableList;
-import java.io.File;
-import java.io.IOException;
-import javax.xml.parsers.ParserConfigurationException;
-import org.gradle.api.file.Directory;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Provider;
-import org.xml.sax.SAXException;
+import com.android.build.api.component.impl.AndroidTestPropertiesImpl
+import com.android.build.api.variant.VariantOutputConfiguration
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.test.BuiltArtifactsSplitOutputMatcher.computeBestOutput
+import com.android.builder.testing.api.DeviceConfigProvider
+import com.android.utils.ILogger
+import com.google.common.collect.ImmutableList
+import org.gradle.api.file.Directory
+import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
+import org.xml.sax.SAXException
+import java.io.File
+import java.io.IOException
+import javax.xml.parsers.ParserConfigurationException
 
 /**
- * Implementation of {@link TestData} on top of a {@link TestVariantData}
+ * Implementation of [TestData] on top of a [TestVariantData]
  */
-public class TestDataImpl extends AbstractTestDataImpl {
+class TestDataImpl(
+    private val testVariantData: AndroidTestPropertiesImpl,
+    testApkDir: Provider<Directory>,
+    testedApksDir: FileCollection?
+) : AbstractTestDataImpl(
+    testVariantData.variantDslInfo,
+    testVariantData.variantSources,
+    testApkDir,
+    testedApksDir
+) {
 
-    @NonNull private final AndroidTestPropertiesImpl testVariantData;
-
-    @NonNull private final VariantDslInfo testVariantDslInfo;
-
-    public TestDataImpl(
-            @NonNull AndroidTestPropertiesImpl testVariantData,
-            @NonNull Provider<Directory> testApkDir,
-            @Nullable FileCollection testedApksDir) {
-        super(
-                testVariantData.getVariantDslInfo(),
-                testVariantData.getVariantSources(),
-                testApkDir,
-                testedApksDir);
-        this.testVariantData = testVariantData;
-        this.testVariantDslInfo = testVariantData.getVariantDslInfo();
+    init {
         if (testVariantData
-                        .getOutputs()
-                        .getSplitsByType(
-                                com.android.build.api.variant.VariantOutput.OutputType.ONE_OF_MANY)
-                        .size()
-                > 1) {
-            throw new RuntimeException("Multi-output in test variant not yet supported");
+                .outputs
+                .getSplitsByType(
+                    VariantOutputConfiguration.OutputType.ONE_OF_MANY
+                )
+                .isNotEmpty()
+        ) {
+            throw RuntimeException("Multi-output in test variant not yet supported")
         }
     }
 
-    @Override
-    public void load(File metadataFile)
-            throws ParserConfigurationException, SAXException, IOException {
+    @Throws(
+        ParserConfigurationException::class,
+        SAXException::class,
+        IOException::class
+    )
+    override fun load(folder: File) {
         // do nothing, there is nothing in the metadata file we cannot get from the tested scope.
     }
 
-    @NonNull
-    @Override
-    public Provider<String> getApplicationId() {
-        return testVariantData.getApplicationId();
-    }
+    override val applicationId: Provider<String>
+        get() = testVariantData.applicationId
 
-    @NonNull
-    @Override
-    public Provider<String> getTestedApplicationId() {
-        return testVariantData.getTestedConfig().getApplicationId();
-    }
+    override val testedApplicationId: Provider<String>
+        get() = testVariantData.testedConfig.applicationId
 
-    @Override
-    public boolean isLibrary() {
-        VariantPropertiesImpl testedVariant = testVariantData.getTestedVariant();
-        return testedVariant.getVariantType().isAar();
-    }
-
-    @NonNull
-    @Override
-    public ImmutableList<File> getTestedApks(
-            @NonNull DeviceConfigProvider deviceConfigProvider, @NonNull ILogger logger) {
-        VariantPropertiesImpl testedVariant = testVariantData.getTestedVariant();
-
-        ImmutableList.Builder<File> apks = ImmutableList.builder();
-        BuiltArtifacts builtArtifacts =
-                new BuiltArtifactsLoaderImpl()
-                        .load(
-                                testedVariant
-                                        .getArtifacts()
-                                        .getFinalProduct(InternalArtifactType.APK.INSTANCE)
-                                        .get());
-        if (builtArtifacts == null) {
-            return ImmutableList.of();
+    override val isLibrary: Boolean
+        get() {
+            return testVariantData.testedVariant.variantType.isAar
         }
+
+    override fun getTestedApks(
+        deviceConfigProvider: DeviceConfigProvider, logger: ILogger
+    ): ImmutableList<File> {
+        val testedVariant = testVariantData.testedVariant
+        val apks =
+            ImmutableList.builder<File>()
+        val builtArtifacts = BuiltArtifactsLoaderImpl()
+            .load(
+                testedVariant
+                    .artifacts
+                    .getFinalProduct(
+                        InternalArtifactType.APK
+                    )
+                    .get()
+            )
+            ?: return ImmutableList.of()
         apks.addAll(
-                BuiltArtifactsSplitOutputMatcher.INSTANCE.computeBestOutput(
-                        deviceConfigProvider,
-                        builtArtifacts,
-                        testedVariant.getVariantDslInfo().getSupportedAbis()));
-        return apks.build();
+            computeBestOutput(
+                deviceConfigProvider,
+                builtArtifacts,
+                testedVariant.variantDslInfo.supportedAbis
+            )
+        )
+        return apks.build()
     }
 }

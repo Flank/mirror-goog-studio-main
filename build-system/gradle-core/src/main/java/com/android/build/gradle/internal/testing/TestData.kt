@@ -13,28 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.testing
 
-package com.android.build.gradle.internal.testing;
-
-import com.android.annotations.NonNull;
-import com.android.builder.testing.api.DeviceConfigProvider;
-import com.android.ide.common.process.ProcessException;
-import com.android.sdklib.AndroidVersion;
-import com.android.utils.ILogger;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import javax.xml.parsers.ParserConfigurationException;
-import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.Input;
-import org.xml.sax.SAXException;
+import com.android.builder.testing.api.DeviceConfigProvider
+import com.android.ide.common.process.ProcessException
+import com.android.sdklib.AndroidVersion
+import com.android.utils.ILogger
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
+import org.xml.sax.SAXException
+import java.io.File
+import java.io.IOException
+import javax.xml.parsers.ParserConfigurationException
 
 /**
  * Data representing the test app and the tested application/library.
  */
-public interface TestData {
-
+interface TestData {
     /**
      * load the tested variant build output metadata file.
      *
@@ -43,47 +38,46 @@ public interface TestData {
      * @throws SAXException xml parsing error
      * @throws IOException cannot load the xml file.
      */
-    void load(File folder) throws ParserConfigurationException, SAXException, IOException;
+    @Throws(
+        ParserConfigurationException::class,
+        SAXException::class,
+        IOException::class
+    )
+    fun load(folder: File)
 
     /**
      * Returns the application id.
      *
      * @return the id
      */
-    @Input
-    @NonNull
-    Provider<String> getApplicationId();
+    @get:Input
+    val applicationId: Provider<String>
 
     /**
      * Returns the tested application id. This can be empty if the test package is self-contained.
      *
      * @return the id or null.
      */
-    @Input
-    @NonNull
-    Provider<String> getTestedApplicationId();
+    @get:Input
+    val testedApplicationId: Provider<String>
 
-    @Input
-    @NonNull
-    String getInstrumentationRunner();
+    @get:Input
+    val instrumentationRunner: String
 
-    @Input
-    @NonNull
-    Map<String, String> getInstrumentationRunnerArguments();
+    @get:Input
+    val instrumentationRunnerArguments: Map<String, String>
 
-    @Input
-    boolean getAnimationsDisabled();
+    @get:Input
+    val animationsDisabled: Boolean
 
-    /** Returns whether the tested app is enabled for code coverage */
-    @Input
-    boolean isTestCoverageEnabled();
+    /** Returns whether the tested app is enabled for code coverage  */
+    @get:Input
+    val isTestCoverageEnabled: Boolean
 
-    /** The min SDK version of the app */
-    @Input
-    @NonNull
-    AndroidVersion getMinSdkVersion();
-
-    boolean isLibrary();
+    /** The min SDK version of the app  */
+    @get:Input
+    val minSdkVersion: AndroidVersion
+    val isLibrary: Boolean
 
     /**
      * Returns an APK file to install based on given density and abis.
@@ -91,26 +85,27 @@ public interface TestData {
      * @param deviceConfigProvider provider for the test device characteristics.
      * @return the file to install or null if non is compatible.
      */
-    @NonNull
-    List<File> getTestedApks(@NonNull DeviceConfigProvider deviceConfigProvider, ILogger logger)
-            throws ProcessException;
+    @Throws(ProcessException::class)
+    fun getTestedApks(
+        deviceConfigProvider: DeviceConfigProvider,
+        logger: ILogger
+    ): List<File?>
+
     /**
      * Returns the flavor name being test.
      *
      * @return the tested flavor name.
      */
-    @Input
-    @NonNull
-    String getFlavorName();
+    @get:Input
+    val flavorName: String
 
     /**
      * Returns the APK containing the test classes for the application.
      *
      * @return the APK file.
      */
-    @Input
-    @NonNull
-    File getTestApk();
+    @get:Input
+    val testApk: File
 
     /**
      * Returns the list of directories containing test so the build system can check the presence of
@@ -118,14 +113,13 @@ public interface TestData {
      *
      * @return list of folders containing test source files.
      */
-    @Input
-    @NonNull
-    List<File> getTestDirectories();
+    @get:Input
+    val testDirectories: List<File?>
 
     /**
      * Resolves all providers and returns a static version of this class
      *
      * @return StaticTestData version of this class
      */
-    StaticTestData get();
+    fun get(): StaticTestData
 }

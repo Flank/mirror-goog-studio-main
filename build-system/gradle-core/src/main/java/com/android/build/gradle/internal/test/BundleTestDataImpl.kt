@@ -49,17 +49,18 @@ internal class BundleTestDataImpl(
     null
 ) {
 
-    override fun getApplicationId(): Provider<String> = testVariantData.applicationId
+    override val applicationId: Provider<String>
+        get() = testVariantData.applicationId
 
-    override fun getTestedApplicationId(): Provider<String> =
-        testVariantData.testedConfig.applicationId
+    override val testedApplicationId: Provider<String>
+        get() = testVariantData.testedConfig.applicationId
 
-    override fun load(metadataFile: File) {
+    override fun load(folder: File) {
         // do nothing, there is nothing in the metadata file we cannot get from the tested scope.
     }
 
-    override fun isLibrary(): Boolean =
-        testVariantData.testedVariant.variantType.isAar
+    override val isLibrary: Boolean
+        get() = testVariantData.testedVariant.variantType.isAar
 
     override fun getTestedApks(
         deviceConfigProvider: DeviceConfigProvider,

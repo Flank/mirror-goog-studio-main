@@ -13,105 +13,77 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal.test
 
-package com.android.build.gradle.internal.test;
+import com.android.build.api.variant.BuiltArtifact
+import com.android.build.api.variant.BuiltArtifacts
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl.Companion.loadFromDirectory
+import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.VariantSources
+import com.android.builder.testing.api.DeviceConfigProvider
+import com.android.utils.ILogger
+import com.google.common.collect.ImmutableList
+import org.gradle.api.file.Directory
+import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import java.io.File
+import java.util.HashMap
+import java.util.stream.Collectors
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.variant.BuiltArtifact;
-import com.android.build.api.variant.BuiltArtifacts;
-import com.android.build.api.variant.impl.BuiltArtifactImpl;
-import com.android.build.api.variant.impl.BuiltArtifactsImpl;
-import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl;
-import com.android.build.gradle.internal.core.VariantDslInfo;
-import com.android.build.gradle.internal.core.VariantSources;
-import com.android.build.gradle.internal.testing.TestData;
-import com.android.builder.testing.api.DeviceConfigProvider;
-import com.android.utils.ILogger;
-import com.google.common.collect.ImmutableList;
-import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import org.gradle.api.file.Directory;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
+/** Implementation of [TestData] for separate test modules.  */
+class TestApplicationTestData(
+    variantDslInfo: VariantDslInfo,
+    variantSources: VariantSources,
+    override val applicationId: Provider<String>,
+    private val _testedApplicationIdProperty: Property<String>,
+    testApkDir: Provider<Directory>,
+    testedApksDir: FileCollection
+) : AbstractTestDataImpl(variantDslInfo, variantSources, testApkDir, testedApksDir) {
+    private val testedProperties = mutableMapOf<String, String>()
 
-/** Implementation of {@link TestData} for separate test modules. */
-public class TestApplicationTestData extends AbstractTestDataImpl {
-
-    private final Provider<String> testApplicationId;
-    private final Property<String> testedApplicationId;
-    private final Map<String, String> testedProperties;
-
-    public TestApplicationTestData(
-            @NonNull VariantDslInfo variantDslInfo,
-            @NonNull VariantSources variantSources,
-            Provider<String> testApplicationId,
-            Property<String> testedApplicationIdProperty,
-            @NonNull Provider<Directory> testApkDir,
-            @NonNull FileCollection testedApksDir) {
-        super(variantDslInfo, variantSources, testApkDir, testedApksDir);
-        this.testedProperties = new HashMap<>();
-        this.testApplicationId = testApplicationId;
-        this.testedApplicationId = testedApplicationIdProperty;
-    }
-
-    @Override
-    public void load(File metadataFile) {
-        BuiltArtifactsImpl testedManifests =
-                BuiltArtifactsLoaderImpl.loadFromDirectory(metadataFile);
+    override fun load(folder: File) {
+        val testedManifests =
+            loadFromDirectory(folder)
 
         // all published manifests have the same package so first one will do.
-        Optional<BuiltArtifactImpl> splitOutput =
-                testedManifests.getElements().stream().findFirst();
-
-        if (splitOutput.isPresent()) {
-            testedProperties.putAll(splitOutput.get().getProperties());
+        val splitOutput =
+            testedManifests!!.elements.stream().findFirst()
+        if (splitOutput.isPresent) {
+            testedProperties.putAll(splitOutput.get().properties)
         } else {
-            throw new RuntimeException(
-                    "No merged manifest metadata at " + metadataFile.getAbsolutePath());
+            throw RuntimeException(
+                "No merged manifest metadata at ${folder.absolutePath}"
+            )
         }
         // TODO: Make this not be so terrible and get a real property instead of create a fake one
-        testedApplicationId.set(testedProperties.get("packageId"));
+        _testedApplicationIdProperty.set(testedProperties["packageId"])
     }
 
-    @NonNull
-    @Override
-    public Provider<String> getApplicationId() {
-        return testApplicationId;
-    }
+    override val testedApplicationId: Provider<String>
+        get() {
+            return _testedApplicationIdProperty
+        }
 
-    @NonNull
-    @Override
-    public Provider<String> getTestedApplicationId() {
-        return testedApplicationId;
-    }
+    override val isLibrary: Boolean
+        get() = false
 
-    @Override
-    public boolean isLibrary() {
-        return false;
-    }
-
-    @NonNull
-    @Override
-    public List<File> getTestedApks(
-            @NonNull DeviceConfigProvider deviceConfigProvider, @NonNull ILogger logger) {
-
-        if (getTestedApksDir() == null) {
-            return ImmutableList.of();
+    override fun getTestedApks(
+        deviceConfigProvider: DeviceConfigProvider, logger: ILogger
+    ): List<File> {
+        if (testedApksDir == null) {
+            return ImmutableList.of()
         }
         // retrieve all the published files.
-        @Nullable
-        BuiltArtifacts builtArtifacts = new BuiltArtifactsLoaderImpl().load(getTestedApksDir());
-        return builtArtifacts != null
-                ? builtArtifacts.getElements().stream()
-                        .map(BuiltArtifact::getOutputFile)
-                        .map(File::new)
-                        .collect(Collectors.toList())
-                : ImmutableList.of();
+        val builtArtifacts: BuiltArtifacts? = BuiltArtifactsLoaderImpl().load(testedApksDir)
+        return if (builtArtifacts != null) builtArtifacts.elements.stream()
+            .map(BuiltArtifact::outputFile)
+            .map { pathname: String? ->
+                File(
+                    pathname
+                )
+            }
+            .collect(Collectors.toList()) else ImmutableList.of()
     }
 }
