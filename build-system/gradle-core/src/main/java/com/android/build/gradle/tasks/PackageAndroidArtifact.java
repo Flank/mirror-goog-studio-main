@@ -225,8 +225,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     @Nullable protected Collection<String> aaptOptionsNoCompress;
 
-    protected List<String> apkFileNames = new ArrayList<>();
-
     protected String projectBaseName;
 
     @Nullable protected String buildTargetAbi;
@@ -350,15 +348,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     @Input
     public abstract ArtifactTransformationRequest getTransformationRequest();
-
-    /**
-     * Returns the paths to generated APKs as @Input to this task, so that when the output file name
-     * is changed (e.g., by the users), the task will be re-executed in non-incremental mode.
-     */
-    @Input
-    public Collection<String> getApkNames() {
-        return apkFileNames;
-    }
 
     private static File computeBuildOutputFile(
             VariantOutputImpl variantOutput, File outputDirectory) {
@@ -1025,16 +1014,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                             .getPaths()
                                             .getIncrementalDir(packageAndroidArtifact.getName()),
                                     "tmp"));
-
-            creationConfig
-                    .getOutputs()
-                    .forEach(
-                            variantOutput -> {
-                                packageAndroidArtifact.apkFileNames.add(
-                                        variantOutput.getOutputFileName().get());
-                            });
-            // sort strings by natural order to make it stable across executions.
-            packageAndroidArtifact.apkFileNames.sort(String::compareTo);
 
             packageAndroidArtifact.aaptOptionsNoCompress =
                     DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions())
