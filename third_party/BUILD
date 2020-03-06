@@ -51,7 +51,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_aapt2-proto",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/aapt2-proto/0.4.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/aapt2-proto/4.1.0-alpha01-6193524:jar",
     visibility = ["//visibility:public"],
     exports = [":com.google.protobuf_protobuf-java"],
 )
@@ -59,7 +59,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_bundletool",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.13.2:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.13.3:jar",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [
