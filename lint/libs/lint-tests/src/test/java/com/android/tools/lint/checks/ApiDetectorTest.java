@@ -6588,6 +6588,31 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "sealed class ViewModelContext {\n"
                                         + "    abstract val activity: Number\n"
                                         + "}\n"),
+                        kotlin(
+                                ""
+                                        + "inline fun <reified A : Activity, T : Any> ActivityScenario<A>.withActivity(\n"
+                                        + "    crossinline block: A.() -> T\n"
+                                        + "): T {\n"
+                                        + "    lateinit var value: T\n"
+                                        + "    var err: Throwable? = null\n"
+                                        + "    onActivity { activity ->\n"
+                                        + "        try {\n"
+                                        + "            value = block(activity)\n"
+                                        + "        } catch (t: Throwable) {\n"
+                                        + "            err = t\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "    err?.let { throw it }\n"
+                                        + "    return value\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package androidx.test.core.app;\n"
+                                        + "import android.app.Activity;\n"
+                                        + "import java.io.Closeable;\n"
+                                        + "public class ActivityScenario<A extends Activity> implements Closeable {\n"
+                                        + ""
+                                        + "}"),
                         mSupportClasspath,
                         mSupportJar)
                 .checkMessage(this::checkReportedError)
