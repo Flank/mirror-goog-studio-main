@@ -41,8 +41,11 @@ import org.xml.sax.SAXException;
 public class MergingReport {
 
     public enum MergedManifestKind {
-        /** Merged manifest file, used as a base for other Manifest files like PACKAGED, BUNDLE */
-        MERGED,
+        /**
+         * Merged manifest file, used as a base for other Manifest files like MERGED, BUNDLE or
+         * METADATA_FEATURE
+         */
+        INTERNAL_MERGED,
 
         /**
          * Merged manifest file with unresolved placeholders encoded to be AAPT friendly.
@@ -53,7 +56,7 @@ public class MergingReport {
         BLAME,
 
         /** Merged manifest file as packaged in the APK or AAR */
-        PACKAGED,
+        MERGED,
 
         /** Feature manifest to be merged back into the base. */
         METADATA_FEATURE,

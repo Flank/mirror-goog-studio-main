@@ -62,7 +62,6 @@ import java.util.stream.Collectors;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -429,9 +428,6 @@ public class ManifestMerger2 {
 
         mergingReportBuilder.setFinalPackageName(finalMergedDocument.getPackageName());
         mergingReportBuilder.setMergedXmlDocument(
-                MergingReport.MergedManifestKind.PACKAGED, finalMergedDocument);
-        // for compat reasons, we need to keep the XML document
-        mergingReportBuilder.setMergedXmlDocument(
                 MergingReport.MergedManifestKind.MERGED, finalMergedDocument);
 
         MergingReport mergingReport = mergingReportBuilder.build();
@@ -569,7 +565,7 @@ public class ManifestMerger2 {
         }
 
         mergingReport.setMergedDocument(
-                MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
+                MergingReport.MergedManifestKind.INTERNAL_MERGED, prettyPrint(document));
 
         if (!mFeatureName.isEmpty()) {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
@@ -600,7 +596,7 @@ public class ManifestMerger2 {
 
         if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_XML_STRING)) {
             mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.PACKAGED, prettyPrint(document));
+                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
 
         if (mOptionalFeatures.contains(Invoker.Feature.MAKE_AAPT_SAFE)) {

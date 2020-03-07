@@ -160,7 +160,7 @@ public class Merger {
             MergingReport merge = invoker.merge();
             if (merge.getResult().isSuccess()) {
                 String mergedDocument =
-                        merge.getMergedDocument(MergingReport.MergedManifestKind.PACKAGED);
+                        merge.getMergedDocument(MergingReport.MergedManifestKind.MERGED);
                 if (mergedDocument != null) {
                     if (outFile != null) {
                         try {

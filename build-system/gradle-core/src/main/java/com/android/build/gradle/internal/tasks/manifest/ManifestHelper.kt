@@ -94,7 +94,7 @@ fun mergeManifestsForApplication(
         }
 
         val xmlDocument =
-            mergingReport.getMergedDocument(MergingReport.MergedManifestKind.PACKAGED)
+            mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED)
         val annotatedDocument =
             mergingReport.getMergedDocument(MergingReport.MergedManifestKind.BLAME)
         if (annotatedDocument != null) {
@@ -103,7 +103,7 @@ fun mergeManifestsForApplication(
         save(xmlDocument, File(outPackagedManifestLocation))
         logger.verbose("Merged manifest saved to $outPackagedManifestLocation")
         if (outMergedManifestLocation != null) {
-            save(mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED),
+            save(mergingReport.getMergedDocument(MergingReport.MergedManifestKind.INTERNAL_MERGED),
                 File(outMergedManifestLocation))
         }
 

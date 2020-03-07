@@ -278,7 +278,7 @@ public class MergerTest extends TestCase {
                             when(mMergingReport.getResult())
                                     .thenReturn(MergingReport.Result.SUCCESS);
                             when(mMergingReport.getMergedDocument(
-                                            MergingReport.MergedManifestKind.PACKAGED))
+                                            MergingReport.MergedManifestKind.MERGED))
                                     .thenReturn("Pretty combined");
                             when(mInvoker.merge()).thenReturn(mMergingReport);
                         } catch (ManifestMerger2.MergeFailureException e) {

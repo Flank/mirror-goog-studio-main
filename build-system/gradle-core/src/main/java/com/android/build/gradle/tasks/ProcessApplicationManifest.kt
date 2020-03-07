@@ -230,7 +230,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 LoggerWrapper.getLogger(ProcessApplicationManifest::class.java)
             )
             val mergedXmlDocument =
-                mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.PACKAGED)
+                mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED)
             outputMergeBlameContents(mergingReport, mergeBlameFile.get().asFile)
             val properties =
                 if (mergedXmlDocument != null) mapOf(

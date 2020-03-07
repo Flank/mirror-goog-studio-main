@@ -166,7 +166,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                 LoggerWrapper.getLogger(ProcessLibraryManifest::class.java)
             )
             val mergedXmlDocument =
-                mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.PACKAGED)
+                mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED)
             try {
                 outputMergeBlameContents(
                     mergingReport,

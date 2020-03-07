@@ -197,7 +197,7 @@ public class ManifestMergerTestUtil {
             List<File> overlayFiles = new ArrayList<File>();
             List<File> navigationFiles = new ArrayList<File>();
             List<String> dependencyFeatureNames = new ArrayList<>();
-            MergingReport.MergedManifestKind resultKind = MergingReport.MergedManifestKind.PACKAGED;
+            MergingReport.MergedManifestKind resultKind = MergingReport.MergedManifestKind.MERGED;
             int tempIndex = 0;
 
             while ((line = reader.readLine()) != null) {
