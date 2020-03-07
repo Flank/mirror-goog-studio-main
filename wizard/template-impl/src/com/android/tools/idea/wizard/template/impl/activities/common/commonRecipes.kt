@@ -83,7 +83,16 @@ fun RecipeExecutor.generateManifest(
   generateManifestStrings(activityClass, activityTitle, resOut, resOut, isNewModule, generateActivityTitle, isDynamicFeature)
 
   val manifest = androidManifestXml(
-    isNewModule, hasNoActionBar, packageName, activityClass, isLauncher, isLibrary, mainTheme, noActionBarTheme, generateActivityTitle
+    isNewModule,
+    hasNoActionBar,
+    packageName,
+    activityClass,
+    isLauncher,
+    isLibrary,
+    mainTheme,
+    noActionBarTheme,
+    generateActivityTitle,
+    requireTheme
   )
 
   mergeXml(manifest, manifestOut.resolve("AndroidManifest.xml"))
