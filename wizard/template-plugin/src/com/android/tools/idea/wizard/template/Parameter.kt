@@ -36,8 +36,6 @@ enum class Constraint {
   NONEMPTY,
   /** The associated value should represent a fully qualified activity class name. */
   ACTIVITY,
-  /** The associated value should represent an API level. */
-  API_LEVEL,
   /** The associated value should represent a valid class name. */
   CLASS,
   /** The associated value should represent a valid package name. */
