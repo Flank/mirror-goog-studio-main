@@ -23,7 +23,6 @@ import com.android.tools.mlkit.MlkitNames;
 import com.android.tools.mlkit.ModelInfo;
 import com.android.tools.mlkit.ModelParsingException;
 import com.android.tools.mlkit.TensorInfo;
-import com.google.common.base.CaseFormat;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -36,7 +35,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import javax.lang.model.element.Modifier;
-import org.apache.commons.io.FilenameUtils;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -61,9 +59,7 @@ public class TfliteModelGenerator implements ModelGenerator {
         this.modelInfo = ModelInfo.buildFrom(extractor);
         this.packageName = packageName;
         this.logger = Logging.getLogger(this.getClass());
-        className =
-                CaseFormat.LOWER_UNDERSCORE.to(
-                        CaseFormat.UPPER_CAMEL, FilenameUtils.removeExtension(modelFile.getName()));
+        className = MlkitNames.computeModelClassName(modelFile);
     }
 
     @Override
