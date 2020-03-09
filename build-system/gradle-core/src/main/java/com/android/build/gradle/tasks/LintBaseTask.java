@@ -23,7 +23,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS;
 
 import com.android.Version;
 import com.android.annotations.NonNull;
@@ -304,7 +304,7 @@ public abstract class LintBaseTask extends DefaultTask {
 
             BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
             Provider<? extends FileSystemLocation> tmpMergedManifest =
-                    artifacts.getFinalProduct(MERGED_MANIFESTS.INSTANCE);
+                    artifacts.getFinalProduct(PACKAGED_MANIFESTS.INSTANCE);
             if (!tmpMergedManifest.isPresent()) {
                 tmpMergedManifest = artifacts.getFinalProduct(LIBRARY_MANIFEST.INSTANCE);
             }

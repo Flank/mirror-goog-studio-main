@@ -148,10 +148,16 @@ public class LibraryVariantFactory
                 dataBinding = projectOptions.get(BooleanOption.BUILD_FEATURE_DATABINDING);
             }
 
+            Boolean mlModelBinding = features.getMlModelBinding();
+            if (mlModelBinding == null) {
+                mlModelBinding = projectOptions.get(BooleanOption.BUILD_FEATURE_MLMODELBINDING);
+            }
+
             return new BuildFeatureValuesImpl(
                     buildFeatures,
                     androidResources,
                     dataBinding && androidResources,
+                    mlModelBinding,
                     projectOptions);
         } else {
             throw new RuntimeException("buildFeatures not of type DynamicFeatureBuildFeatures");

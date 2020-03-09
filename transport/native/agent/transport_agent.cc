@@ -78,7 +78,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
     Log::E(Log::Tag::TRANSPORT, "Failed to parse config from %s", options);
     return JNI_ERR;
   }
-  Agent::Instance(config);
+  Agent::Instance(true, config);
 
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
   LoadDex(jvmti_env, jni_env);

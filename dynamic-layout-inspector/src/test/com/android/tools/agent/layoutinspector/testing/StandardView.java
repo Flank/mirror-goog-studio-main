@@ -34,6 +34,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.RootLinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 
@@ -90,6 +91,7 @@ public class StandardView {
                         .withLayoutHeight(400)
                         .withResolutionStack(LAYOUT, STYLE_ID, OTHER_ID)
                         .withResources(resources)
+                        .withAttachedToWindow(true)
                         .build();
 
         when(textView.getText()).thenReturn("Hello World!");
@@ -112,12 +114,13 @@ public class StandardView {
                         .build();
 
         LinearLayout linearLayout =
-                ViewBuilder.create(LinearLayout.class, WindowManager.LayoutParams.class)
+                ViewBuilder.create(RootLinearLayout.class, WindowManager.LayoutParams.class)
                         .withDrawId(10)
                         .withId(LINEAR_LAYOUT_ID)
                         .withBounds(10, 50, 980, 2000)
                         .withLayoutId(LAYOUT)
                         .withResources(resources)
+                        .withAttachedToWindow(true)
                         .build();
 
         WindowManager.LayoutParams params =

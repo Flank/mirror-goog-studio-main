@@ -1,6 +1,5 @@
 package com.android.build.gradle.integration.library;
 
-
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -11,10 +10,10 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.CodeShrinker;
+import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import java.io.File;
 import java.io.IOException;
-import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -116,7 +115,7 @@ public class ProguardAarPackagingTest {
         libraryInJarProject.execute("assemble");
 
         // Copy the generated jar into the android project.
-        androidProject.file("libs").mkdirs();
+        FileUtils.mkdirs(androidProject.file("libs"));
         String libInJarName =
                 Joiner.on(File.separatorChar)
                         .join(

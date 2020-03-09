@@ -20,6 +20,7 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addLifecycleDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.layout.appBarActivityXml
 import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.res.layout.fragmentSimpleXml
@@ -53,7 +54,7 @@ fun RecipeExecutor.tabbedActivityRecipe(
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support:design:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
-  addDependency("android.arch.lifecycle:extensions:+")
+  addLifecycleDependencies(useAndroidX)
 
   generateManifest(
     moduleData, activityClass, activityClass, packageName, isLauncher, true,

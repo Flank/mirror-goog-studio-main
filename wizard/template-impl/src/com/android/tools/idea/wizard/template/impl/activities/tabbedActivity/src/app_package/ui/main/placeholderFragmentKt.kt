@@ -20,9 +20,12 @@ import com.android.tools.idea.wizard.template.getMaterialComponentName
 
 fun placeholderFragmentKt(
   packageName: String,
-  useAndroidX: Boolean) =
+  useAndroidX: Boolean): String {
 
-  """package ${packageName}.ui.main
+  val viewModelInitializationBlock = if (useAndroidX) "pageViewModel = ViewModelProvider(this).get(PageViewModel::class.java)"
+  else "pageViewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(PageViewModel::class.java)"
+
+  return """package ${packageName}.ui.main
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -31,7 +34,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)}
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)}
-import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProviders", useAndroidX)}
+import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)}
 import ${packageName}.R
 
 /**
@@ -43,7 +46,7 @@ class PlaceholderFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        pageViewModel = ViewModelProviders.of(this).get(PageViewModel::class.java).apply {
+        $viewModelInitializationBlock.apply {
             setIndex(arguments?.getInt(ARG_SECTION_NUMBER) ?: 1)
         }
     }
@@ -81,3 +84,4 @@ class PlaceholderFragment : Fragment() {
         }
     }
 }"""
+}

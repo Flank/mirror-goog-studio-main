@@ -65,6 +65,12 @@ interface VariantType {
      * Returns true if this is the test component of the module.
      */
     val isTestComponent: Boolean
+
+    /**
+     * Returns true if this is a separate test module.
+     */
+    val isSeparateTestProject: Boolean
+
     /**
      * Returns true if the variant is a test variant, whether this is the test component of a module
      * (testing the prod component of the same module) or a separate test-only module.
@@ -145,6 +151,7 @@ enum class VariantTypeImpl(
     override val publishToRepository: Boolean = false,
     override val publishToOtherModules: Boolean = false,
     override val isForTesting: Boolean = false,
+    override val isSeparateTestProject: Boolean = false,
     override val prefix: String,
     override val suffix: String,
     override val isSingleBuildType: Boolean = false,
@@ -191,6 +198,7 @@ enum class VariantTypeImpl(
     TEST_APK(
         isApk = true,
         isForTesting = true,
+        isSeparateTestProject = true,
         prefix = "",
         suffix = "",
         artifactName = AndroidProject.ARTIFACT_MAIN,

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dependency;
 
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_TESTED_APKS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.AAB_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_API_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.ALL_RUNTIME_PUBLICATION;
@@ -41,11 +42,11 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
-import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.IssueReporter;
+import com.android.utils.StringHelper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -284,11 +285,12 @@ public class VariantDependenciesBuilder {
 
         Configuration globalTestedApks =
                 configurations.findByName(VariantDependencies.CONFIG_NAME_TESTED_APKS);
+        Configuration providedClasspath;
         if (variantType.isApk() && globalTestedApks != null) {
             // this configuration is created only for test-only project
             Configuration testedApks =
                     configurations.maybeCreate(
-                            TestVariantFactory.getTestedApksConfigurationName(variantName));
+                            StringHelper.appendCapitalized(variantName, CONFIG_NAME_TESTED_APKS));
             testedApks.setVisible(false);
             testedApks.setDescription(
                     "Resolved configuration for tested apks for variant: " + variantName);
@@ -296,6 +298,12 @@ public class VariantDependenciesBuilder {
             final AttributeContainer testedApksAttributes = testedApks.getAttributes();
             applyVariantAttributes(testedApksAttributes, buildType, consumptionFlavorMap);
             testedApksAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
+            // For the test only classpath find the packaged dependencies through this testedApks
+            // configuration.
+            providedClasspath = testedApks;
+        } else {
+            // For dynamic features, use the runtime classpath to find the packaged dependencies.
+            providedClasspath = runtimeClasspath;
         }
 
         Configuration reverseMetadataValues = null;
@@ -516,6 +524,7 @@ public class VariantDependenciesBuilder {
                 runtimeClasspaths,
                 implementationConfigurations,
                 elements,
+                providedClasspath,
                 annotationProcessor,
                 reverseMetadataValues,
                 wearApp,

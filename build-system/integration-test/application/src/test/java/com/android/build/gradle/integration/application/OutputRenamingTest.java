@@ -117,6 +117,7 @@ public class OutputRenamingTest {
                             .findFirst()
                             .orElse("null");
 
+            // FIXME b/150290712
             String expectedFileName =
                     "project--"
                             + builtArtifact.getVersionCode()

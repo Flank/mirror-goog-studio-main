@@ -97,7 +97,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
     abstract val localResourcesFile: RegularFileProperty
 
     @get:Input
-    abstract val namespacedRClass: Property<Boolean>
+    abstract val nonTransitiveRClass: Property<Boolean>
 
     @get:Input
     abstract val compileClasspathLibraryRClasses: Property<Boolean>
@@ -123,7 +123,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                     null,
                     rClassOutputJar.get().asFile,
                     textSymbolOutputFileProperty.orNull?.asFile,
-                    namespacedRClass.get(),
+                    nonTransitiveRClass.get(),
                     compileClasspathLibraryRClasses.get(),
                     symbolsWithPackageNameOutputFile.orNull?.asFile,
                     useConstantIds.get()
@@ -146,7 +146,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
         val sourceOutputDirectory: File?,
         val rClassOutputJar: File?,
         val textSymbolOutputFile: File?,
-        val namespacedRClass: Boolean,
+        val nonTransitiveRClass: Boolean,
         val compileClasspathLibraryRClasses: Boolean,
         val symbolsWithPackageNameOutputFile: File?,
         val useConstantIds: Boolean
@@ -173,7 +173,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                 rClassOutputJar = params.rClassOutputJar,
                 symbolFileOut = params.textSymbolOutputFile,
                 platformSymbols = androidAttrSymbol,
-                namespacedRClass = params.namespacedRClass,
+                nonTransitiveRClass = params.nonTransitiveRClass,
                 generateDependencyRClasses = !params.compileClasspathLibraryRClasses,
                 idProvider = idProvider
             )
@@ -240,14 +240,14 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
         ) {
             super.configure(task)
 
-            val projectOptions = creationConfig.globalScope.projectOptions
+            val projectOptions = creationConfig.services.projectOptions
 
             task.platformAttrRTxt.fromDisallowChanges(creationConfig.globalScope.platformAttrs)
 
-            val namespacedRClass = projectOptions[BooleanOption.NAMESPACED_R_CLASS]
+            val nonTransitiveRClass = projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
             val compileClasspathLibraryRClasses = projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES]
 
-            if (!namespacedRClass || !compileClasspathLibraryRClasses) {
+            if (!nonTransitiveRClass || !compileClasspathLibraryRClasses) {
                 // We need the dependencies for generating our own R class or for generating R
                 // classes of the dependencies:
                 //   * If we're creating a transitive (non-namespaced) R class, then we need the
@@ -273,7 +273,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                 ))
             }
 
-            task.namespacedRClass.set(namespacedRClass)
+            task.nonTransitiveRClass.set(nonTransitiveRClass)
             task.compileClasspathLibraryRClasses.set(compileClasspathLibraryRClasses)
 
             task.packageForR.set(task.project.provider {
@@ -282,7 +282,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task.packageForR.disallowChanges()
 
             creationConfig.operations.setTaskInputToFinalProduct(
-                InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
+                InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles)
 
             task.mainSplit = creationConfig.outputs.getMainSplit()
 
@@ -325,7 +325,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             task: GenerateLibraryRFileTask
         ) {
             super.configure(task)
-            val projectOptions = creationConfig.globalScope.projectOptions
+            val projectOptions = creationConfig.services.projectOptions
 
             task.platformAttrRTxt.fromDisallowChanges(creationConfig.globalScope.platformAttrs)
 
@@ -340,7 +340,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                     )
                 )
 
-            task.namespacedRClass.setDisallowChanges(projectOptions[BooleanOption.NAMESPACED_R_CLASS])
+            task.nonTransitiveRClass.setDisallowChanges(projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS])
             task.compileClasspathLibraryRClasses.setDisallowChanges(false)
             task.packageForR.setDisallowChanges(task.project.provider {
                 Strings.nullToEmpty(creationConfig.variantDslInfo.originalApplicationId)
@@ -350,7 +350,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
 
             creationConfig.onTestedConfig {
                 it.operations.setTaskInputToFinalProduct(
-                    InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles
+                    InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles
                 )
 
                 it.operations.setTaskInputToFinalProduct(

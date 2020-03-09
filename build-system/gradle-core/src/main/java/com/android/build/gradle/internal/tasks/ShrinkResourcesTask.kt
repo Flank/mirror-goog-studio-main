@@ -225,7 +225,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
                 task.mappingFileSrc)
 
             operations.setTaskInputToFinalProduct(
-                InternalArtifactType.MERGED_MANIFESTS,
+                InternalArtifactType.PACKAGED_MANIFESTS,
                 task.mergedManifests
             )
 

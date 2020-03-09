@@ -29,9 +29,11 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
 import com.android.build.gradle.internal.fixtures.ProjectFactory;
+import com.android.build.gradle.internal.manifest.LazyManifestParser;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.FakeServices;
 import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices;
 import com.android.build.gradle.internal.variant.DimensionCombinationImpl;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -46,6 +48,7 @@ import java.util.List;
 import kotlin.Pair;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 /** Test cases for {@link VariantDslInfo}. */
@@ -55,66 +58,11 @@ public class VariantDslInfoTest {
     private ProductFlavor flavorConfig;
     private BuildType buildType;
     private DslServices dslServices;
+    private VariantPropertiesApiServices variantPropertiesApiServices;
 
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-    }
-
-    @Test
-    public void testPackageOverrideNone() {
-        initNoDeviceApiInjection();
-
-        VariantDslInfo variant = getVariant();
-
-        assertThat(variant.getIdOverride()).isNull();
-    }
-
-    @Test
-    public void testIdOverrideIdFroflavor() {
-        initNoDeviceApiInjection();
-
-        flavorConfig.setApplicationId("foo.bar");
-
-        VariantDslInfo variant = getVariant();
-
-        assertThat(variant.getIdOverride()).isEqualTo("foo.bar");
-    }
-
-    @Test
-    public void testPackageOverridePackageFroflavorWithSuffix() {
-        initNoDeviceApiInjection();
-
-        flavorConfig.setApplicationId("foo.bar");
-        buildType.setApplicationIdSuffix(".fortytwo");
-
-        VariantDslInfo variant = getVariant();
-
-        assertThat(variant.getIdOverride()).isEqualTo("foo.bar.fortytwo");
-    }
-
-    @Test
-    public void testPackageOverridePackageFroflavorWithSuffix2() {
-        initNoDeviceApiInjection();
-
-        flavorConfig.setApplicationId("foo.bar");
-        buildType.setApplicationIdSuffix("fortytwo");
-
-        VariantDslInfo variant = getVariant();
-
-        assertThat(variant.getIdOverride()).isEqualTo("foo.bar.fortytwo");
-    }
-
-    @Test
-    public void testVersionNameFroflavorWithSuffix() {
-        initNoDeviceApiInjection();
-
-        flavorConfig.setVersionName("1.0");
-        buildType.setVersionNameSuffix("-DEBUG");
-
-        VariantDslInfo variant = getVariant();
-
-        assertThat(variant.getVersionName()).isEqualTo("1.0-DEBUG");
     }
 
     @Test
@@ -193,30 +141,6 @@ public class VariantDslInfoTest {
         VariantDslInfo variant = getVariant();
 
         assertThat(variant.getTargetSdkVersion()).isEqualTo(DefaultApiVersion.create(-1));
-    }
-
-    @Test
-    public void testGetVersionCode() {
-        initNoDeviceApiInjection();
-
-        defaultConfig.setVersionCode(42);
-
-        VariantDslInfo variant = getVariant();
-
-        assertThat(variant.getVersionCode()).isEqualTo(42);
-    }
-
-    @Test
-    public void testGetVersionName() {
-        initNoDeviceApiInjection();
-
-        defaultConfig.setVersionName("foo");
-        defaultConfig.setVersionNameSuffix("-bar");
-        buildType.setVersionNameSuffix("-baz");
-
-        VariantDslInfo variant = getVariant();
-
-        assertThat(variant.getVersionName()).isEqualTo("foo-bar-baz");
     }
 
     @Test
@@ -300,7 +224,9 @@ public class VariantDslInfoTest {
                         new MockSourceProvider("debug"),
                         signingOverride,
                         null /*manifest supplier*/,
+                        Mockito.mock(LazyManifestParser.class),
                         dslServices,
+                        variantPropertiesApiServices,
                         () -> true);
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
@@ -339,6 +265,8 @@ public class VariantDslInfoTest {
                         projectOptions,
                         it -> new File(it.toString()));
         dslServices = FakeServices.createDslServices(projectServices);
+        variantPropertiesApiServices =
+                FakeServices.createVariantPropertiesApiServices(projectServices);
 
         defaultConfig = new DefaultConfig("main", dslServices);
         flavorConfig = new ProductFlavor("flavor", dslServices);

@@ -39,6 +39,7 @@ import org.mockito.Mockito
  * project/plugin
  */
 interface VariantInputModelDsl {
+    fun defaultConfig(action: DefaultConfig.() -> Unit)
     fun buildTypes(action: Container<BuildType>.() -> Unit)
     fun productFlavors(action: Container<ProductFlavor>.() -> Unit)
 }
@@ -62,8 +63,13 @@ interface Container<T: Named> {
 class VariantInputModelBuilder(
     private val dslServices: DslServices = createDslServices()
 ): VariantInputModelDsl {
+    val defaultConfig: DefaultConfig = DefaultConfig(BuilderConstants.MAIN, dslServices)
     val buildTypes: ContainerImpl<BuildType> = ContainerImpl { name -> BuildType(name, dslServices) }
     val productFlavors: ContainerImpl<ProductFlavor> = ContainerImpl { name -> ProductFlavor(name, dslServices) }
+
+    override fun defaultConfig(action: DefaultConfig.() -> Unit) {
+        action(defaultConfig)
+    }
 
     override fun buildTypes(action: Container<BuildType>.() -> Unit) {
         action(buildTypes)
@@ -92,7 +98,7 @@ class VariantInputModelBuilder(
 
         // the default Config
         val defaultConfig = DefaultConfigData(
-            DefaultConfig(BuilderConstants.MAIN, dslServices),
+            defaultConfig,
             Mockito.mock(DefaultAndroidSourceSet::class.java),
             Mockito.mock(DefaultAndroidSourceSet::class.java),
             Mockito.mock(DefaultAndroidSourceSet::class.java)

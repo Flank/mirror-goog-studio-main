@@ -24,16 +24,11 @@ import java.util.function.Predicate
 
 object JarCreatorFactory {
 
-    // TODO: combine these 3 methods into a single method with default parameters
-    fun make(jarFile: Path): JarCreator {
-        return make(jarFile, null, JarCreatorType.JAR_FLINGER)
-    }
-
-    fun make(jarFile: Path, type: JarCreatorType): JarCreator {
-        return make(jarFile, null, type)
-    }
-
-    fun make(jarFile: Path, filter: Predicate<String>?, type: JarCreatorType): JarCreator {
+    fun make(
+        jarFile: Path,
+        filter: Predicate<String>? = null,
+        type: JarCreatorType = JarCreatorType.JAR_FLINGER
+    ): JarCreator {
         return when (type) {
             JarCreatorType.JAR_MERGER -> JarMerger(jarFile, filter)
             JarCreatorType.JAR_FLINGER -> JarFlinger(jarFile, filter)

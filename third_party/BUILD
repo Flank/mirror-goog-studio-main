@@ -98,6 +98,14 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "com.google.android_annotations",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/android/annotations/4.1.1.4:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "com.google.api-client_google-api-client",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/api-client/google-api-client/1.22.0:jar",
     visibility = ["//visibility:public"],
@@ -105,6 +113,14 @@ maven_java_library(
         ":com.google.http-client_google-http-client-jackson2",
         ":com.google.oauth-client_google-oauth-client",
     ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.google.api.grpc_proto-google-common-protos",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/api/grpc/proto-google-common-protos/1.12.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [":com.google.protobuf_protobuf-java"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -118,7 +134,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.auth_google-auth-library-credentials",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auth/google-auth-library-credentials/0.4.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auth/google-auth-library-credentials/0.13.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -375,7 +391,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.squareup.okio_okio",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/squareup/okio/okio/1.6.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/squareup/okio/okio/1.13.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -495,36 +511,51 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-all",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-all/1.0.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-all/1.21.1:jar",
     visibility = ["//visibility:public"],
     exports = [
+        ":io.grpc_grpc-api",
         ":io.grpc_grpc-auth",
         ":io.grpc_grpc-context",
         ":io.grpc_grpc-core",
         ":io.grpc_grpc-netty",
         ":io.grpc_grpc-okhttp",
         ":io.grpc_grpc-protobuf",
-        ":io.grpc_grpc-protobuf-lite",
         ":io.grpc_grpc-protobuf-nano",
         ":io.grpc_grpc-stub",
+        ":io.grpc_grpc-testing",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "io.grpc_grpc-api",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-api/1.21.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.code.findbugs_jsr305",
+        ":com.google.errorprone_error_prone_annotations",
+        ":com.google.guava_guava",
+        ":io.grpc_grpc-context",
+        ":org.codehaus.mojo_animal-sniffer-annotations",
     ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-auth",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-auth/1.0.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-auth/1.21.1:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.auth_google-auth-library-credentials",
-        ":io.grpc_grpc-core",
+        ":io.grpc_grpc-api",
     ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-context",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-context/1.0.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-context/1.21.1:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -532,30 +563,33 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-core",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-core/1.0.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-core/1.21.1:jar",
     visibility = ["//visibility:public"],
     exports = [
-        ":com.google.code.findbugs_jsr305",
-        ":com.google.guava_guava",
-        ":io.grpc_grpc-context",
+        ":com.google.android_annotations",
+        ":com.google.code.gson_gson",
+        ":io.grpc_grpc-api",
+        ":io.opencensus_opencensus-api",
+        ":io.opencensus_opencensus-contrib-grpc-metrics",
     ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-netty",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-netty/1.0.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-netty/1.21.1:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":io.grpc_grpc-core",
         ":io.netty_netty-codec-http2",
+        ":io.netty_netty-handler-proxy",
     ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-okhttp",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-okhttp/1.0.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-okhttp/1.21.1:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.squareup.okhttp_okhttp",
@@ -567,13 +601,13 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-protobuf",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf/1.0.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf/1.21.1:jar",
     visibility = ["//visibility:public"],
     exports = [
+        ":com.google.api.grpc_proto-google-common-protos",
         ":com.google.guava_guava",
         ":com.google.protobuf_protobuf-java",
-        ":com.google.protobuf_protobuf-java-util",
-        ":io.grpc_grpc-core",
+        ":io.grpc_grpc-api",
         ":io.grpc_grpc-protobuf-lite",
     ],
 )
@@ -581,32 +615,44 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-protobuf-lite",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf-lite/1.0.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf-lite/1.21.1:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.guava_guava",
-        ":io.grpc_grpc-core",
+        ":io.grpc_grpc-api",
     ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-protobuf-nano",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf-nano/1.0.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf-nano/1.21.1:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.guava_guava",
         ":com.google.protobuf.nano_protobuf-javanano",
-        ":io.grpc_grpc-core",
+        ":io.grpc_grpc-api",
     ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-stub",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-stub/1.0.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-stub/1.21.1:jar",
     visibility = ["//visibility:public"],
-    exports = [":io.grpc_grpc-core"],
+    exports = [":io.grpc_grpc-api"],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "io.grpc_grpc-testing",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-testing/1.21.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":io.grpc_grpc-core",
+        ":io.grpc_grpc-stub",
+        ":junit_junit",
+    ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -620,7 +666,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-buffer",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-buffer/4.1.3.Final:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-buffer/4.1.34.Final:jar",
     visibility = ["//visibility:public"],
     exports = [":io.netty_netty-common"],
 )
@@ -628,34 +674,61 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-codec",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-codec/4.1.3.Final:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-codec/4.1.34.Final:jar",
     visibility = ["//visibility:public"],
-    exports = [":io.netty_netty-transport"],
+    exports = [
+        ":io.netty_netty-buffer",
+        ":io.netty_netty-common",
+        ":io.netty_netty-transport",
+    ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-codec-http",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http/4.1.3.Final:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http/4.1.34.Final:jar",
     visibility = ["//visibility:public"],
-    exports = [":io.netty_netty-codec"],
+    exports = [
+        ":io.netty_netty-buffer",
+        ":io.netty_netty-codec",
+        ":io.netty_netty-common",
+        ":io.netty_netty-handler",
+        ":io.netty_netty-transport",
+    ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-codec-http2",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http2/4.1.3.Final:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http2/4.1.34.Final:jar",
     visibility = ["//visibility:public"],
     exports = [
+        ":io.netty_netty-buffer",
+        ":io.netty_netty-codec",
         ":io.netty_netty-codec-http",
+        ":io.netty_netty-common",
         ":io.netty_netty-handler",
+        ":io.netty_netty-transport",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "io.netty_netty-codec-socks",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-socks/4.1.34.Final:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":io.netty_netty-buffer",
+        ":io.netty_netty-codec",
+        ":io.netty_netty-common",
+        ":io.netty_netty-transport",
     ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-common",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-common/4.1.3.Final:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-common/4.1.34.Final:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -663,11 +736,27 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-handler",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-handler/4.1.3.Final:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-handler/4.1.34.Final:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":io.netty_netty-buffer",
         ":io.netty_netty-codec",
+        ":io.netty_netty-common",
+        ":io.netty_netty-transport",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "io.netty_netty-handler-proxy",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-handler-proxy/4.1.34.Final:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":io.netty_netty-buffer",
+        ":io.netty_netty-codec",
+        ":io.netty_netty-codec-http",
+        ":io.netty_netty-codec-socks",
+        ":io.netty_netty-common",
         ":io.netty_netty-transport",
     ],
 )
@@ -675,7 +764,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-resolver",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-resolver/4.1.3.Final:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-resolver/4.1.34.Final:jar",
     visibility = ["//visibility:public"],
     exports = [":io.netty_netty-common"],
 )
@@ -683,11 +772,31 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-transport",
-    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-transport/4.1.3.Final:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-transport/4.1.34.Final:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":io.netty_netty-buffer",
+        ":io.netty_netty-common",
         ":io.netty_netty-resolver",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "io.opencensus_opencensus-api",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/opencensus/opencensus-api/0.21.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [":io.grpc_grpc-context"],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "io.opencensus_opencensus-contrib-grpc-metrics",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/opencensus/opencensus-contrib-grpc-metrics/0.21.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.guava_guava",
+        ":io.opencensus_opencensus-api",
     ],
 )
 
@@ -1767,7 +1876,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.tensorflow_tensorflow-lite-support",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.0.0-experimental-metadata-monolithic:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )

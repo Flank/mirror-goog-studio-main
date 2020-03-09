@@ -77,7 +77,7 @@ class Aapt2FromMavenTest {
         assertNotNull(artifact, "Artifact view should be created here.")
 
         // Add repo after calling getAapt2FromMaven to check that it is not resolved early.
-        GradleTestProject.getLocalRepositories().forEach { repoPath ->
+        GradleTestProject.localRepositories.forEach { repoPath ->
             project.repositories.add(project.repositories.maven {
                 it.url = repoPath.toUri()
             })

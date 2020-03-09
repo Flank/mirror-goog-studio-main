@@ -100,6 +100,13 @@ enum class ReplacedOption(
         "This property has been replaced by ${BooleanOption.ENABLE_INCREMENTAL_DEXING_V2.propertyName}"
     ),
 
+    @Suppress("unused")
+    NAMESPACED_R_CLASS(
+        "android.namespacedRClass",
+        Version.VERSION_4_1,
+        "This property has been replaced by ${BooleanOption.NON_TRANSITIVE_R_CLASS.propertyName}"
+    ),
+
     ;
 
     override val status: Option.Status

@@ -26,3 +26,49 @@ transport_test(
     app_dexes = ["//tools/base/transport/test-framework/test-app:test-app"],
     deps = ["//tools/idea/.idea/libraries:truth"],
 )
+
+cc_library(
+    name = "native_test_support",
+    srcs = glob(["src/main/native/**/*.cc"]),
+    copts = [
+        "-Itools/base/profiler/native/agent/",
+        "-Itools/base/transport/native",
+        "-I$(GENDIR)/tools/base/transport",
+    ],
+    linkstatic = 1,
+    tags = ["no_windows"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/transport/native/agent",
+        "//tools/base/transport/native/utils",
+        "//tools/base/transport/proto:cc_proto",
+    ],
+    alwayslink = 1,
+)
+
+cc_binary(
+    name = "libagentrule-jni.dylib",
+    linkshared = 1,
+    tags = [
+        "no_linux",
+        "no_windows",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":native_test_support",
+    ],
+)
+
+cc_binary(
+    name = "libagentrule-jni.so",
+    linkshared = 1,
+    tags = [
+        "no_mac",
+        "no_windows",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":native_test_support",
+    ],
+)

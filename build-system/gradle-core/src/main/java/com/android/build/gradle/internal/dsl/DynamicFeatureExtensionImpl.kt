@@ -32,7 +32,7 @@ class DynamicFeatureExtensionImpl(
     dslServices: DslServices,
     dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 )  :
-    CommonExtensionImpl<
+    TestedExtensionImpl<
             AnnotationProcessorOptions,
             DynamicFeatureBuildFeatures,
             BuildType,

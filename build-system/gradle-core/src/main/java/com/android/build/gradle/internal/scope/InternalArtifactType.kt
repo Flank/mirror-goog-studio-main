@@ -248,12 +248,14 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
 
     object COMPATIBLE_SCREEN_MANIFEST: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     object MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
+    // manifests that end up being packaged in the aar or the apk file formats.
+    object PACKAGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     object LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Same as above: InternalArtifactType<RegularFile>(FILE), Replaceable but the resource references have stripped namespaces.
     object NON_NAMESPACED_LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
     object AAPT_FRIENDLY_MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object INSTANT_APP_MANIFEST: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    object MANIFEST_METADATA: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object MANIFEST_METADATA: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     object MANIFEST_MERGE_REPORT: InternalArtifactType<RegularFile>(FILE), Replaceable
     object MANIFEST_MERGE_BLAME_FILE: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Simplified android manifest with original package name.
@@ -279,6 +281,9 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
 
     // the data binding artifact for a library that gets published with the aar
     object DATA_BINDING_ARTIFACT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // the file into which data binding will output the list of classes that should be stripped in
+    // the packaging phase
+    object DATA_BINDING_EXPORT_CLASS_LIST: InternalArtifactType<RegularFile>(FILE), Replaceable
     // the merged data binding artifacts from all the dependencies
     object DATA_BINDING_DEPENDENCY_ARTIFACTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // directory containing layout info files for data binding when merge-resources type == MERGE

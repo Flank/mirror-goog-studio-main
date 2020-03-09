@@ -15,6 +15,7 @@
  */
 #include "agent.h"
 
+#include <google/protobuf/util/message_differencer.h>
 #include <grpc++/support/channel_arguments.h>
 #include <grpc/support/log.h>
 #include <limits.h>
@@ -55,8 +56,13 @@ using proto::InternalEventService;
 using proto::InternalNetworkService;
 using std::lock_guard;
 
-Agent& Agent::Instance(const AgentConfig& config) {
+Agent& Agent::Instance(bool replace, const AgentConfig& config) {
   static Agent* instance = new Agent(config);
+  if (replace && !google::protobuf::util::MessageDifferencer::Equals(
+                     config, instance->agent_config())) {
+    delete instance;
+    instance = new Agent(config);
+  }
   return *instance;
 }
 
@@ -66,7 +72,8 @@ Agent::Agent(const AgentConfig& config)
       can_grpc_target_change_(false),
       grpc_target_initialized_(false),
       memory_component_(nullptr),  // set in ConnectToDaemon()
-      profiler_initialized_(false) {
+      profiler_initialized_(false),
+      running_(true) {
   if (agent_config_.common().socket_type() == CommonConfig::ABSTRACT_SOCKET) {
     // We use an existing socket of which the file descriptor will be provided
     // into kAgentSocketName. This is provided via socket_thread_ so we don't
@@ -87,6 +94,19 @@ Agent::Agent(const AgentConfig& config)
 #ifdef NDEBUG
   gpr_set_log_verbosity(static_cast<gpr_log_severity>(SHRT_MAX));
 #endif
+}
+
+Agent::~Agent() {
+  running_ = false;
+  if (heartbeat_thread_.joinable()) {
+    heartbeat_thread_.join();
+  }
+  if (socket_thread_.joinable()) {
+    socket_thread_.join();
+  }
+  if (command_handler_thread_.joinable()) {
+    command_handler_thread_.join();
+  }
 }
 
 void Agent::StartHeartbeat() {
@@ -285,7 +305,7 @@ void Agent::RunHeartbeatThread() {
   SetThreadName("Studio:Heartbeat");
   Stopwatch stopwatch;
   bool was_daemon_alive = false;
-  while (true) {
+  while (running_) {
     int64_t start_ns = stopwatch.GetElapsed();
     // TODO: handle erroneous status
     EmptyResponse response;
@@ -338,7 +358,7 @@ void Agent::RunSocketThread() {
       ListenToSocket(CreateUnixSocket(app_socket_name.str().c_str()));
 
   int buffer_length = 1;
-  while (true) {
+  while (running_) {
     int receive_fd;
     char buf[buffer_length];
     // Try to get next message with a 1-second timeout.
@@ -436,5 +456,4 @@ void Agent::OpenCommandStream() {
   command_handler_thread_ = std::thread(&Agent::RunCommandHandlerThread, this);
   Log::V(Log::Tag::TRANSPORT, "Agent command stream started.");
 }
-
 }  // namespace profiler

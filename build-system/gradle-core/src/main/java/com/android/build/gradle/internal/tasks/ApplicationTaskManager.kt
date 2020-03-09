@@ -81,7 +81,8 @@ class ApplicationTaskManager(
             createAssetPackTasks(variantProperties)
         }
 
-        if (variantProperties.buildFeatures.dataBinding) {
+        if (variantProperties.buildFeatures.dataBinding
+                && variantProperties.globalScope.hasDynamicFeatures()) {
             // Create a task that will package the manifest ids(the R file packages) of all
             // features into a file. This file's path is passed into the Data Binding annotation
             // processor which uses it to known about all available features.

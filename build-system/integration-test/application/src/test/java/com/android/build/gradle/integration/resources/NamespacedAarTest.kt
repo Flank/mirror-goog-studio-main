@@ -142,42 +142,43 @@ class NamespacedAarTest {
             assertThat(lib.resStaticLibrary).exists()
         }
 
-        project.getSubproject("publishedLib").getAar("release") { aar ->
-            assertThat(aar.entries.map { it.toString() })
+        val subproject = project.getSubproject("publishedLib")
+        subproject.withAar("release") {
+            assertThat(entries.map { it.toString() })
                 .containsExactly(
                     "/res/values/values.xml",
                     "/classes.jar",
                     "/res.apk",
                     "/AndroidManifest.xml",
-                    "/R.txt")
+                    "/R.txt"
+                )
             // Check that the AndroidManifest.xml in the AAR does not contain namespaces.
-            val manifest = aar.androidManifestContentsAsString
+            val manifest = androidManifestContentsAsString
             assertThat(manifest).contains("@string/my_version_name")
             assertThat(manifest).doesNotContain("@com.example.publishedLib:string/my_version_name")
             // TODO: use the full namespaced manifest when creating res.apk and test its contents.
+        }
 
-            AarSubject.assertThat(aar)
-                .containsFileWithContent(
-                    "R.txt",
-                    """
-                        int string foo 0x0
-                        int string my_version_name 0x0
+        subproject.assertThatAar("release") {
+            containsFileWithContent(
+                "R.txt",
+                """
+                    int string foo 0x0
+                    int string my_version_name 0x0
+                """.trimIndent()
+            )
+            containsFileWithContent(
+            "res/values/values.xml",
+                """
+                    <?xml version="1.0" encoding="utf-8"?>
+                    <resources>
+                
+                        <string name="foo">publishedLib</string>
+                        <string name="my_version_name">1.0</string>
+                
+                    </resources>
                     """.trimIndent()
-                )
-
-            AarSubject.assertThat(aar)
-                .containsFileWithContent(
-                    "res/values/values.xml",
-                    """
-                        <?xml version="1.0" encoding="utf-8"?>
-                        <resources>
-                    
-                            <string name="foo">publishedLib</string>
-                            <string name="my_version_name">1.0</string>
-                    
-                        </resources>
-                        """.trimIndent()
-                )
+            )
         }
 
     }

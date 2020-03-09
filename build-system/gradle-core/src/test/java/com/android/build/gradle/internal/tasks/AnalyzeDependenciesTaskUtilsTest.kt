@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.dependency.getClassesInJar
+import com.android.build.gradle.internal.dependency.getResourcesFromExplodedAarToFile
 import com.android.build.gradle.internal.dependency.writePathsToFile
 import com.android.build.gradle.internal.fixtures.FakeArtifactCollection
 import com.android.build.gradle.internal.fixtures.FakeComponentIdentifier
@@ -27,7 +28,9 @@ import com.android.build.gradle.tasks.AnalyzeDependenciesTask.VariantClassesHold
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask.VariantDependenciesHolder
 import com.android.build.gradle.tasks.ClassFinder
 import com.android.build.gradle.tasks.DependencyUsageFinder
+import com.android.build.gradle.tasks.ResourcesFinder
 import com.android.testutils.TestInputsGenerator
+import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Incubating
@@ -36,6 +39,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.nio.charset.Charset
+import java.nio.file.Files
 
 class AnalyzeDependenciesTaskUtilsTest {
 
@@ -121,6 +126,57 @@ class AnalyzeDependenciesTaskUtilsTest {
                 .containsExactly(getClassName(class1), getClassName(class2))
         assertThat(finder.findClassesInDependency(barPackage))
                 .containsExactly(getClassName(class3))
+    }
+
+    @Test
+    fun testResourceFinder() {
+        val fooPackage = "foo"
+        val barPackage = "bar"
+        val fooProject = tmp.newFolder(fooPackage)
+        val barProject = tmp.newFolder(barPackage)
+        val fooDependencySources = tmp.newFolder("dependency-sources-foo")
+        addResourceTestDirectoryTo(fooProject)
+        val barDependencySources = tmp.newFolder("dependency-sources-bar")
+        //Add bar resource which will depend on a resource from foo.
+        val barMainActivty = """
+            <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                            xmlns:app="http://schemas.android.com/apk/res-auto">
+                <TextView
+                    android:id="@+id/text_box"
+                    android:text="@string/app_name"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"/>
+            </RelativeLayout>
+        """.trimIndent()
+        val barRes = File(barProject, SdkConstants.FD_RES)
+        val barLayout = File(barRes, SdkConstants.FD_RES_LAYOUT)
+        barRes.mkdir()
+        barLayout.mkdir()
+        val barActivityFile = File(barLayout, "bar_activity.xml")
+        barActivityFile.writeText(barMainActivty)
+
+        val fooResSymbols = getResourcesFromExplodedAarToFile(fooProject)
+        val barResSymbols = getResourcesFromExplodedAarToFile(barProject)
+        writePathsToFile(
+                File(fooDependencySources, "resources_symbols${SdkConstants.DOT_TXT}"),
+                fooResSymbols)
+        writePathsToFile(
+                File(barDependencySources, "resources_symbols${SdkConstants.DOT_TXT}"),
+                barResSymbols)
+
+        val artifacts = FakeArtifactCollection(mutableSetOf(
+                FakeResolvedArtifactResult(fooDependencySources,
+                        FakeComponentIdentifier(fooPackage)),
+                FakeResolvedArtifactResult(barDependencySources,
+                        FakeComponentIdentifier(barPackage))
+        ))
+
+        val finder = ResourcesFinder(artifacts)
+
+        assertThat(finder.findUsedDependencies())
+                .containsExactlyElementsIn(listOf(fooPackage, barPackage))
+        assertThat(finder.findUnUsedDependencies().size).isEqualTo(0)
+        assertThat(finder.find("string:app_name:-1").size).isEqualTo(2)
     }
 
     @Test
@@ -281,6 +337,53 @@ class AnalyzeDependenciesTaskUtilsTest {
         assertThat(dependencyUsageFinder.unusedDirectDependencies)
             .containsExactly("com/test:NewDependency:3")
         // TODO: Add tests for the new dependency graph
+    }
+
+    private fun addResourceTestDirectoryTo(parentDirectory: File): File {
+        val resDir = File(parentDirectory, SdkConstants.FD_RES).also { it.mkdir() }
+        val layoutDir = File(resDir, SdkConstants.FD_RES_LAYOUT).also { it.mkdir() }
+        val valuesDir = File(resDir, SdkConstants.FD_RES_VALUES).also { it.mkdir() }
+
+        val layoutMainActivity = File(layoutDir, "activity_main.xml")
+        layoutMainActivity.writeText(
+                """
+                    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                    xmlns:app="http://schemas.android.com/apk/res-auto">
+                        <ImageView android:src="@drawable/foo"/>
+                    </RelativeLayout>"""
+        )
+        val values = File(valuesDir, "values.xml")
+        values.writeText(
+                """
+                    <resources>
+                        <string name="app_name">My app</string>
+                        <string name="desc">It does something</string>
+                    </resources>"""
+        )
+        val valuesStyles = File(valuesDir, "style.xml")
+        valuesStyles.writeText(
+                """
+                    <resources>
+                        <attr name="myAttr" format="color" />
+                        <declare-styleable name="ds">
+                            <attr name="android:name" />
+                            <attr name="android:color" />
+                            <attr name="myAttr" />
+                        </declare-styleable>
+                    </resources>"""
+        )
+        val valuesStylesReversed = File(valuesDir, "stylesReversed.xml")
+        valuesStylesReversed.writeText(
+                """
+                    <resources>
+                            <declare-styleable name="ds2">
+                                <attr name="myAttr2" />
+                                <attr name="maybeAttr" />
+                            </declare-styleable>
+                        <attr name="myAttr2" format="color" />
+                        </resources>"""
+        )
+        return resDir
     }
 
     private fun getClassName(cls: Class<*>): String

@@ -43,8 +43,7 @@ const char* kDexUtilityClass = "com/android/tools/deploy/instrument/DexUtility";
 const std::string kInstrumentationJarName =
     "instruments-"_s + instrumentation_jar_hash + ".jar";
 
-const std::string kNoEntryHook = "";
-const std::string kNoExitHook = "";
+const std::string MethodHooks::kNoHook = "";
 
 const Transform* current_transform = nullptr;
 
@@ -164,13 +163,21 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar) {
       /* target class */ "dalvik/system/DexPathList$Element",
       /* target method */ "findResource",
       /* target signature */ "(Ljava/lang/String;)Ljava/net/URL;",
-      "handleFindResourceEntry", kNoExitHook);
+      "handleFindResourceEntry", MethodHooks::kNoHook);
+
+  const MethodHooks split_paths(
+      /* target method */ "splitPaths",
+      /* target signature */ "(Ljava/lang/String;Z)Ljava/util/List;",
+      MethodHooks::kNoHook, "handleSplitPathsExit");
+
+  const MethodHooks split_dex_paths(
+      /* target method */ "splitDexPath",
+      /* target signature */ "(Ljava/lang/String;)Ljava/util/List;",
+      MethodHooks::kNoHook, "handleSplitDexPathExit");
 
   const Transform dex_path_list(
       /* target class */ "dalvik/system/DexPathList",
-      /* target method */ "splitDexPath",
-      /* target signature */ "(Ljava/lang/String;)Ljava/util/List;",
-      kNoEntryHook, "handleSplitDexPathExit");
+      /* transforms */ {split_paths, split_dex_paths});
 
   bool success = true;
   success &=

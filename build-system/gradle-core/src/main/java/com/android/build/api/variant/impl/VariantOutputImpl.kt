@@ -21,14 +21,17 @@ import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.VariantOutputConfiguration
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import java.io.File
 import java.io.Serializable
 
 data class VariantOutputImpl(
     @get:Input
-    override val versionCode: Property<Int>,
+    @get:Optional
+    override val versionCode: Property<Int?>,
     @get:Input
-    override val versionName: Property<String>,
+    @get:Optional
+    override val versionName: Property<String?>,
     @get:Input
     override val enabled: Property<Boolean>,
 
@@ -46,9 +49,9 @@ data class VariantOutputImpl(
 
     data class SerializedForm(
         @get:Input
-        val versionCode: Int,
+        val versionCode: Int?,
         @get:Input
-        val versionName: String,
+        val versionName: String?,
         @get:Input
         val variantOutputConfiguration: VariantOutputConfigurationImpl,
         @get:Input
@@ -59,27 +62,27 @@ data class VariantOutputImpl(
         val outputFileName: String): Serializable {
 
         fun toBuiltArtifact(outputFile: File, properties: Map<String, String>): BuiltArtifactImpl =
-            BuiltArtifactImpl.make(outputFile = outputFile.absolutePath,
+            BuiltArtifactImpl.make(
+                outputFile = outputFile.absolutePath,
                 properties = properties,
                 versionCode = versionCode,
                 versionName = versionName,
-                isEnabled = true,
                 variantOutputConfiguration = variantOutputConfiguration
             )
     }
 
     fun toBuiltArtifact(outputFile: File, properties: Map<String, String>): BuiltArtifactImpl =
-        BuiltArtifactImpl.make(outputFile = outputFile.absolutePath,
+        BuiltArtifactImpl.make(
+            outputFile = outputFile.absolutePath,
             properties = properties,
-            versionCode = versionCode.get(),
-            versionName = versionName.get(),
-            isEnabled = enabled.get(),
+            versionCode = versionCode.orNull,
+            versionName = versionName.orNull,
             variantOutputConfiguration = variantOutputConfiguration
-            )
+        )
 
     fun toSerializedForm() = SerializedForm(
-        versionCode = versionCode.get(),
-        versionName = versionName.get(),
+        versionCode = versionCode.orNull,
+        versionName = versionName.orNull,
         variantOutputConfiguration = variantOutputConfiguration,
         fullName = fullName,
         baseName = baseName,

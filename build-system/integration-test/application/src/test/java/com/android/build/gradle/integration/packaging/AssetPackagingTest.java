@@ -658,16 +658,20 @@ public class AssetPackagingTest {
      * @param content the content
      */
     private static void checkAar(
-            @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
-            throws Exception {
-        project.testAar("debug", it -> check(it, filename, content));
+            @NonNull GradleTestProject project,
+            @NonNull String filename,
+            @Nullable String content) {
+        project.testAar(
+                "debug",
+                it -> {
+                    check(it, filename, content);
+                });
     }
 
     private static void check(
             @NonNull AbstractAndroidSubject subject,
             @NonNull String filename,
-            @Nullable String content)
-            throws Exception {
+            @Nullable String content) {
         if (content != null) {
             subject.containsFileWithContent("assets/" + filename, content);
         } else {

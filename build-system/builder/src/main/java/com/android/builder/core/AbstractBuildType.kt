@@ -127,7 +127,7 @@ abstract class AbstractBuildType : BaseConfigImpl(), BuildType {
 
     override fun toString(): String {
         return MoreObjects.toStringHelper(this)
-            .add("name", getName())
+            .add("name", name)
             .add("debuggable", isDebuggable)
             .add("testCoverageEnabled", isTestCoverageEnabled)
             .add("jniDebuggable", isJniDebuggable)

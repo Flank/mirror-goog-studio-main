@@ -38,7 +38,7 @@ fun RecipeExecutor.googleMapsFragmentRecipe(
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.google.android.gms:play-services-maps:+")
+  addDependency("com.google.android.gms:play-services-maps:+", toBase = moduleData.isDynamic)
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
 
   mergeXml(androidManifestXml(), manifestOut.resolve("AndroidManifest.xml"))

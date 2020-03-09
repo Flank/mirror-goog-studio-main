@@ -255,6 +255,47 @@ public class Cmd extends ShellCommand {
                         return 1;
                     }
                 }
+            case "list":
+                {
+                    if (device.getApi() < 26) {
+                        // "list" doesn't exist on APIs < 26
+                        stdout.println("Unknown command: list");
+                        return 255;
+                    }
+                    String target = args.nextArgument();
+                    if (target == null) {
+                        stdout.println(
+                                "\nException occurred while executing:\n"
+                                        + "java.lang.IllegalArgumentException: Argument expected after \"list\"\n\tat com...");
+                        return 255;
+                    }
+                    if (!target.equals("packages")) {
+                        stdout.println("\nOnly \"packages\" supported");
+                        return 255;
+                    }
+                    String option = args.nextOption();
+                    if (option == null) {
+                        stdout.println(
+                                "\nException occurred while executing:\n"
+                                        + "java.lang.IllegalArgumentException: Options expected after \"list packages\"\n\tat com...");
+                        return 255;
+                    }
+                    if (!option.equals("--uid")) {
+                        stdout.println("\nOnly \"--uid\" supported");
+                        return 255;
+                    }
+                    String uidString = args.nextArgument();
+                    if (uidString == null) {
+                        stdout.println(
+                                "\nException occurred while executing:\n"
+                                        + "java.lang.IllegalArgumentException: UID expected after \"list packages --uid\"\n\tat com...");
+                        return 255;
+                    }
+                    int uid = Integer.parseInt(uidString);
+                    device.getApps(uid)
+                            .forEach(app -> stdout.println(String.format("package:%s", app)));
+                    return 0;
+                }
         }
         return 20;
     }

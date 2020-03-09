@@ -44,6 +44,6 @@ def app_inspection_proto(name, jar, proto_file_name, visibility = None):
         name = name,
         srcs = [":" + unpack_name],
         grpc_support = 1,
-        protoc_grpc_version = "1.0.3",
+        protoc_grpc_version = "1.21.1",
         visibility = visibility,
     )

@@ -34,6 +34,8 @@ kotlin_test(
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-core",
+        "//tools/base/transport/test-framework",
+        "//tools/idea/.idea/libraries:studio-grpc",
         "//tools/idea/.idea/libraries:studio-proto",
         "//tools/idea/.idea/libraries:transport-proto",
     ],
@@ -176,7 +178,7 @@ cc_library(
 )
 
 cc_library(
-    name = "native_property_testing",
+    name = "native_test_support",
     srcs = [
         "src/test/native/testing/component_tree_test_java_jni.cc",
         "src/test/native/testing/properties_test_java_jni.cc",
@@ -192,6 +194,7 @@ cc_library(
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/transport/proto:cc_proto",
+        "//tools/base/transport/test-framework:native_test_support",
     ],
     alwayslink = 1,
 )
@@ -206,7 +209,7 @@ cc_binary(
     ],
     deps = [
         ":jni",
-        ":native_property_testing",
+        ":native_test_support",
     ],
 )
 
@@ -219,6 +222,6 @@ cc_binary(
     ],
     deps = [
         ":jni",
-        ":native_property_testing",
+        ":native_test_support",
     ],
 )

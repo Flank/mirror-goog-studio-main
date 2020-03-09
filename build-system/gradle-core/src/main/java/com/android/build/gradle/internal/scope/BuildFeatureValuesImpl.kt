@@ -24,6 +24,7 @@ class BuildFeatureValuesImpl constructor(
     buildFeatures: BuildFeatures,
     override val androidResources: Boolean = true,
     override val dataBinding: Boolean = false,
+    override val mlModelBinding: Boolean = false,
     projectOptions: ProjectOptions
 ) : BuildFeatureValues {
 

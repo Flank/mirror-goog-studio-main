@@ -55,11 +55,6 @@ abstract class AbstractProductFlavor(
         this.dimension = dimension
     }
 
-    /**
-     * The application ID.
-     *
-     * See [Set the Application ID](https://developer.android.com/studio/build/application-id.html)
-     */
     override var applicationId: String? = null
 
     fun setApplicationId(applicationId: String?): ProductFlavor {
@@ -77,11 +72,6 @@ abstract class AbstractProductFlavor(
      */
     private var _versionCode: Int? = null
 
-    /**
-     * Version code.
-     *
-     * See [Versioning Your Application](http://developer.android.com/tools/publishing/versioning.html)
-     */
     override var versionCode: Int?
         get() = _versionCode
         set(value) { _versionCode = value }
@@ -100,11 +90,7 @@ abstract class AbstractProductFlavor(
      * but still allow [mergeWithHigherPriorityFlavor] to set it.
      */
     private var _versionName: String? = null
-    /**
-     * Version name.
-     *
-     * See [Versioning Your Application](http://developer.android.com/tools/publishing/versioning.html)
-     */
+
     override var versionName: String?
         get() = _versionName
         set(value) { _versionName = value }
@@ -144,10 +130,6 @@ abstract class AbstractProductFlavor(
 
     override var renderscriptTargetApi: Int? = null
 
-    /**
-     * Whether the renderscript code should be compiled in support mode to make it compatible
-     * with older versions of Android.
-     */
     override var renderscriptSupportModeEnabled: Boolean? = null
 
     fun setRenderscriptSupportModeEnabled(renderscriptSupportMode: Boolean?): ProductFlavor {
@@ -159,10 +141,6 @@ abstract class AbstractProductFlavor(
         this.renderscriptSupportModeEnabled = renderscriptSupportModeEnabled
     }
 
-    /**
-     * Whether RenderScript BLAS support lib should be used to make it compatible
-     * with older versions of Android.
-     */
     override var renderscriptSupportModeBlasEnabled: Boolean? = null
 
     fun setRenderscriptSupportModeBlasEnabled(renderscriptSupportModeBlas: Boolean?): ProductFlavor {
@@ -174,7 +152,6 @@ abstract class AbstractProductFlavor(
         this.renderscriptSupportModeBlasEnabled = renderscriptSupportModeBlas
     }
 
-    /** Whether the renderscript code should be compiled to generate C/C++ bindings.  */
     override var renderscriptNdkModeEnabled: Boolean? = null
 
     fun setRenderscriptNdkModeEnabled(renderscriptNdkMode: Boolean?): ProductFlavor {
@@ -186,11 +163,6 @@ abstract class AbstractProductFlavor(
         this.renderscriptNdkModeEnabled = renderscriptNdkModeEnabled
     }
 
-    /**
-     * Test application ID.
-     *
-     * See [Set the Application ID](https://developer.android.com/studio/build/application-id.html)
-     */
     override var testApplicationId: String? = null
 
     fun setTestApplicationId(applicationId: String?): ProductFlavor {
@@ -202,16 +174,6 @@ abstract class AbstractProductFlavor(
         testApplicationId = applicationId
     }
 
-    /**
-     * Test instrumentation runner class name.
-     *
-     *
-     * This is a fully qualified class name of the runner, e.g.
-     * `android.test.InstrumentationTestRunner`
-     *
-     *
-     * See [ instrumentation](http://developer.android.com/guide/topics/manifest/instrumentation-element.html).
-     */
     override var testInstrumentationRunner: String? = null
 
     fun setTestInstrumentationRunner(testInstrumentationRunner: String?): ProductFlavor {
@@ -223,20 +185,6 @@ abstract class AbstractProductFlavor(
         this.testInstrumentationRunner = testInstrumentationRunner
     }
 
-    /**
-     * Test instrumentation runner custom arguments.
-     *
-     * e.g. `[key: "value"]` will give `adb shell am instrument -w -e key value com.example`...
-     *
-     * See [instrumentation](http://developer.android.com/guide/topics/manifest/instrumentation-element.html).
-     *
-     * Test runner arguments can also be specified from the command line:
-     *
-     * ```
-     * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.size=medium
-     * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.foo=bar
-     * ```
-     */
     override var testInstrumentationRunnerArguments: MutableMap<String, String> = Maps.newHashMap()
 
     fun setTestInstrumentationRunnerArguments(
@@ -246,9 +194,6 @@ abstract class AbstractProductFlavor(
         return this
     }
 
-    /**
-     * See [instrumentation](http://developer.android.com/guide/topics/manifest/instrumentation-element.html).
-     */
     override var testHandleProfiling: Boolean? = null
 
     fun setTestHandleProfiling(handleProfiling: Boolean): ProductFlavor {
@@ -256,9 +201,6 @@ abstract class AbstractProductFlavor(
         return this
     }
 
-    /**
-     * See [instrumentation](http://developer.android.com/guide/topics/manifest/instrumentation-element.html).
-     */
     override var testFunctionalTest: Boolean? = null
 
     fun setTestFunctionalTest(functionalTest: Boolean): ProductFlavor {
@@ -282,54 +224,29 @@ abstract class AbstractProductFlavor(
      */
     abstract override val vectorDrawables: DefaultVectorDrawablesOptions
 
-    /**
-     * Whether to enable unbundling mode for embedded wear app.
-     *
-     * If true, this enables the app to transition from an embedded wear app to one
-     * distributed by the play store directly.
-     */
     override var wearAppUnbundled: Boolean? = null
 
-    private var _resourceConfiguration: MutableSet<String>? = null
+    override var resourceConfigurations: MutableSet<String> = Sets.newHashSet()
+
     /**
      * Adds a res config filter (for instance 'hdpi')
      */
     fun addResourceConfiguration(configuration: String) {
-        if (_resourceConfiguration == null) {
-            _resourceConfiguration = Sets.newHashSet()
-        }
-        _resourceConfiguration!!.add(configuration)
+        resourceConfigurations.add(configuration)
     }
 
     /**
      * Adds a res config filter (for instance 'hdpi')
      */
     fun addResourceConfigurations(vararg configurations: String) {
-        if (_resourceConfiguration == null) {
-            _resourceConfiguration = Sets.newHashSet()
-        }
-        _resourceConfiguration!!.addAll(listOf(*configurations))
+        resourceConfigurations.addAll(listOf(*configurations))
     }
 
     /**
      * Adds a res config filter (for instance 'hdpi')
      */
     fun addResourceConfigurations(configurations: Collection<String>) {
-        if (_resourceConfiguration == null) {
-            _resourceConfiguration = Sets.newHashSet()
-        }
-        _resourceConfiguration!!.addAll(configurations)
-    }
-
-    /**
-     * Adds a res config filter (for instance 'hdpi')
-     */
-    override val resourceConfigurations: Collection<String>
-        get() {
-        if (_resourceConfiguration == null) {
-            _resourceConfiguration = Sets.newHashSet()
-        }
-        return _resourceConfiguration!!
+        resourceConfigurations.addAll(configurations)
     }
 
     /** Class representing a request with fallbacks.  */

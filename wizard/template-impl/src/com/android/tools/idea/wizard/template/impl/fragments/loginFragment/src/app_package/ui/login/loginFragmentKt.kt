@@ -28,7 +28,7 @@ fun loginFragmentKt(
 package ${escapeKotlinIdentifier(packageName)}.ui.login
 
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)}
-import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProviders", useAndroidX)}
+import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)}
 import ${getMaterialComponentName("android.support.annotation.StringRes", useAndroidX)}
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)}
 import android.os.Bundle
@@ -59,7 +59,7 @@ class ${fragmentClass} : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loginViewModel = ViewModelProviders.of(this, LoginViewModelFactory())
+        loginViewModel = ViewModelProvider(this, LoginViewModelFactory())
             .get(LoginViewModel::class.java)
 
         val usernameEditText = view.findViewById<EditText>(R.id.username)

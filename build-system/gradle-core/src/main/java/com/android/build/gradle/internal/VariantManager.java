@@ -49,6 +49,7 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.manifest.LazyManifestParser;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
@@ -127,6 +128,10 @@ public class VariantManager<
                             TestComponentImpl<? extends TestComponentPropertiesImpl>,
                             TestComponentPropertiesImpl>>
             testComponents = Lists.newArrayList();
+
+    @NonNull
+    private final Map<File, LazyManifestParser> lazyManifestParserMap =
+            Maps.newHashMapWithExpectedSize(3);
 
     @NonNull private final Map<File, ManifestAttributeSupplier> manifestParserMap;
     @NonNull protected final GlobalScope globalScope;
@@ -297,7 +302,11 @@ public class VariantManager<
                         getParser(
                                 defaultConfigSourceProvider.getManifestFile(),
                                 variantType.getRequiresManifest()),
+                        getLazyManifestParser(
+                                defaultConfigSourceProvider.getManifestFile(),
+                                variantType.getRequiresManifest()),
                         dslServices,
+                        variantPropertiesApiServices,
                         this::canParseManifest);
 
         // We must first add the flavors to the variant config, in order to get the proper
@@ -500,6 +509,7 @@ public class VariantManager<
         final DefaultAndroidSourceSet testSourceSet =
                 variantInputModel.getDefaultConfigData().getTestSourceSet(variantType);
         DslServices dslServices = globalScope.getDslServices();
+
         @SuppressWarnings("ConstantConditions")
         VariantBuilder variantBuilder =
                 VariantBuilder.getBuilder(
@@ -515,7 +525,10 @@ public class VariantManager<
                                         testSourceSet.getManifestFile(),
                                         variantType.getRequiresManifest())
                                 : null,
+                        getLazyManifestParser(
+                                testSourceSet.getManifestFile(), variantType.getRequiresManifest()),
                         dslServices,
+                        variantPropertiesApiServices,
                         this::canParseManifest);
 
         variantBuilder.setTestedVariant(
@@ -955,6 +968,18 @@ public class VariantManager<
                                 this::canParseManifest,
                                 isManifestFileRequired,
                                 projectServices.getIssueReporter()));
+    }
+
+    @NonNull
+    private LazyManifestParser getLazyManifestParser(
+            @NonNull File file, boolean isManifestFileRequired) {
+        return lazyManifestParserMap.computeIfAbsent(
+                file,
+                f ->
+                        new LazyManifestParser(
+                                projectServices.getObjectFactory().fileProperty().fileValue(f),
+                                isManifestFileRequired,
+                                projectServices));
     }
 
     private boolean canParseManifest() {

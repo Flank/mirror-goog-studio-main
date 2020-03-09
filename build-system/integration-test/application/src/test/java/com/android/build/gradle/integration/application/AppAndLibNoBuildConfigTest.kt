@@ -56,8 +56,8 @@ class AppAndLibNoBuildConfigTest {
     fun `ensure buildConfig is not in the AAR`() {
         project.execute("lib:assembleDebug")
 
-        project.getSubproject(":lib").testAar("debug") {
-            it.doesNotContainClass("Lcom/android/tests/testprojecttest/lib/BuildConfig;")
+        project.getSubproject(":lib").assertThatAar("debug") {
+            doesNotContainClass("Lcom/android/tests/testprojecttest/lib/BuildConfig;")
         }
     }
 

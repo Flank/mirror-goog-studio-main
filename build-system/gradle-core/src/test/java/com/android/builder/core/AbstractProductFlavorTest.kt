@@ -53,7 +53,7 @@ class AbstractProductFlavorTest : TestCase() {
 
     fun test_initWith() {
         val flavor: AbstractProductFlavor =
-            ProductFlavorImpl(custom!!.getName())
+            ProductFlavorImpl(custom.name)
         flavor._initWith(custom!!)
         assertEquals(custom.toString(), flavor.toString())
     }

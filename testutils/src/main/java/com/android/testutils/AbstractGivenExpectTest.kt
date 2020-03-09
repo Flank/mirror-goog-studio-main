@@ -51,7 +51,7 @@ abstract class AbstractGivenExpectTest<GivenT, ResultT> {
     }
 
     /**
-     * Registers an action block return the expected result values. This also runs the test.
+     * runs the tests and compares the results.
      */
     protected fun runTest(given: GivenT, expected: ResultT?) {
         // run the states by running all the necessary actions.

@@ -50,7 +50,7 @@ class SymbolExportUtilsTest {
             librarySymbols = librarySymbols,
             depSymbolTables = setOf(depSymbolTable),
             platformSymbols = SymbolTable.builder().build(),
-            namespacedRClass = false,
+            nonTransitiveRClass = false,
             symbolFileOut = symbolFileOut
         )
 
@@ -91,7 +91,7 @@ class SymbolExportUtilsTest {
             librarySymbols = librarySymbols,
             depSymbolTables = setOf(depSymbolTable),
             platformSymbols = SymbolTable.builder().build(),
-            namespacedRClass = true,
+            nonTransitiveRClass = true,
             symbolFileOut = symbolFileOut
         )
 

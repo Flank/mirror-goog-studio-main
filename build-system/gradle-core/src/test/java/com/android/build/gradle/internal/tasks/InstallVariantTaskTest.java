@@ -87,7 +87,6 @@ public class InstallVariantTaskTest {
                                         ImmutableMap.of(),
                                         123,
                                         "version_name",
-                                        true,
                                         new VariantOutputConfigurationImpl(
                                                 false, ImmutableList.of()))));
         InstallVariantTask.install(

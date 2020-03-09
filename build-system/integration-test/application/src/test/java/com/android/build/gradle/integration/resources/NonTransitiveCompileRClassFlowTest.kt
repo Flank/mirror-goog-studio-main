@@ -122,7 +122,7 @@ class NonTransitiveCompileRClassFlowTest {
 
         project.executor()
             .with(BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES, true)
-            .with(BooleanOption.NAMESPACED_R_CLASS, true)
+            .with(BooleanOption.NON_TRANSITIVE_R_CLASS, true)
             .run(tasks)
         Zip(lib2RJar).use {
             // It shouldn't contain any other R classes other than the local one
@@ -135,7 +135,7 @@ class NonTransitiveCompileRClassFlowTest {
 
         project.executor()
             .with(BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES, true)
-            .with(BooleanOption.NAMESPACED_R_CLASS, false)
+            .with(BooleanOption.NON_TRANSITIVE_R_CLASS, false)
             .run(tasks)
         Zip(lib2RJar).use {
             // It shouldn't contain any other R classes other than the local one
@@ -148,7 +148,7 @@ class NonTransitiveCompileRClassFlowTest {
 
         project.executor()
             .with(BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES, false)
-            .with(BooleanOption.NAMESPACED_R_CLASS, true)
+            .with(BooleanOption.NON_TRANSITIVE_R_CLASS, true)
             .run(tasks)
         Zip(lib2RJar).use {
             // It contain all R classes
@@ -161,7 +161,7 @@ class NonTransitiveCompileRClassFlowTest {
 
         project.executor()
             .with(BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES, false)
-            .with(BooleanOption.NAMESPACED_R_CLASS, false)
+            .with(BooleanOption.NON_TRANSITIVE_R_CLASS, false)
             .run(tasks)
         Zip(lib2RJar).use {
             // It contain all R

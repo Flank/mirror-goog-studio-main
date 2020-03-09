@@ -32,21 +32,14 @@ interface CommonBuiltArtifact {
      *
      * @return version code
      */
-    val versionCode: Int
+    val versionCode: Int?
 
     /**
      * Returns a read-only version name.
      *
      * @return version name
      */
-    val versionName: String
-
-    /**
-     * Returns a read-only value to indicate if this output is enabled.
-     *
-     * @return true if enabled, false otherwise.
-     */
-    val isEnabled: Boolean
+    val versionName: String?
 
     /**
      * Absolute path to the built file

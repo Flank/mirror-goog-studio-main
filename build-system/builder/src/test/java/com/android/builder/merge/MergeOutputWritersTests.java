@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.tools.build.apkzlib.zip.StoredEntry;
 import com.android.tools.build.apkzlib.zip.ZFile;
+import com.android.tools.build.apkzlib.zip.ZFileOptions;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import java.io.ByteArrayInputStream;
@@ -176,7 +177,7 @@ public class MergeOutputWritersTests {
         File zipFile = new File(dir, "test.zip");
         try (ZFile zf = ZFile.openReadWrite(zipFile)) {}
 
-        MergeOutputWriter w = MergeOutputWriters.toZip(zipFile);
+        MergeOutputWriter w = MergeOutputWriters.toZip(zipFile, new ZFileOptions());
         w.open();
         w.create("a", new ByteArrayInputStream(new byte[] {1, 2, 3}), true);
         w.create("b/c", new ByteArrayInputStream(new byte[] {4, 5}), false);
@@ -211,7 +212,7 @@ public class MergeOutputWritersTests {
             zf.add("d e/f g", new ByteArrayInputStream(new byte[] { 3, 3, 3 }));
         }
 
-        MergeOutputWriter w = MergeOutputWriters.toZip(zipFile);
+        MergeOutputWriter w = MergeOutputWriters.toZip(zipFile, new ZFileOptions());
         w.open();
         w.remove("a");
         w.remove("b/c");
@@ -234,7 +235,7 @@ public class MergeOutputWritersTests {
             zf.add("d e/f g", new ByteArrayInputStream(new byte[] { 29, 31 }));
         }
 
-        MergeOutputWriter w = MergeOutputWriters.toZip(zipFile);
+        MergeOutputWriter w = MergeOutputWriters.toZip(zipFile, new ZFileOptions());
         w.open();
         w.replace("a", new ByteArrayInputStream(new byte[] {4, 9}), true);
         w.replace("b/c", new ByteArrayInputStream(new byte[] {16, 25}), false);

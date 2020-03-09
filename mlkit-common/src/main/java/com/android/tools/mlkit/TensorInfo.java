@@ -16,10 +16,14 @@
 
 package com.android.tools.mlkit;
 
+import org.tensorflow.lite.schema.Tensor;
 import org.tensorflow.lite.support.metadata.schema.AssociatedFile;
+import org.tensorflow.lite.support.metadata.schema.ContentProperties;
 import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
+import org.tensorflow.lite.support.metadata.schema.NormalizationOptions;
+import org.tensorflow.lite.support.metadata.schema.ProcessUnit;
+import org.tensorflow.lite.support.metadata.schema.ProcessUnitOptions;
 import org.tensorflow.lite.support.metadata.schema.TensorMetadata;
-import tflite.Tensor;
 
 /**
  * Stores necessary data for each single input or output. For tflite model, this class stores
@@ -277,7 +281,7 @@ public class TensorInfo {
                 builder.setFileType(FileType.fromByte(file.type()));
             }
 
-            builder.setContentType(ContentType.fromByte(tensorMetadata.contentType()));
+            builder.setContentType(extractContentType(tensorMetadata));
             builder.setName(
                     tensorMetadata.name() == null
                             ? getDefaultName(source, index)
@@ -285,12 +289,12 @@ public class TensorInfo {
             builder.setDescription(tensorMetadata.description());
             builder.setQuantizationParams(extractor.getQuantizationParams(tensor));
 
-            if (tensorMetadata.stats() != null
-                    && tensorMetadata.stats().meanAsByteBuffer() != null) {
+            NormalizationOptions normalizationOptions = extractNormalizationOptions(tensorMetadata);
+            if (tensorMetadata.stats() != null && normalizationOptions != null) {
                 builder.setNormalizationParams(
                         new MetadataExtractor.NormalizationParams(
-                                tensorMetadata.stats().meanAsByteBuffer().asFloatBuffer(),
-                                tensorMetadata.stats().stdAsByteBuffer().asFloatBuffer(),
+                                normalizationOptions.meanAsByteBuffer().asFloatBuffer(),
+                                normalizationOptions.stdAsByteBuffer().asFloatBuffer(),
                                 tensorMetadata.stats().minAsByteBuffer().asFloatBuffer(),
                                 tensorMetadata.stats().maxAsByteBuffer().asFloatBuffer()));
             }
@@ -305,5 +309,26 @@ public class TensorInfo {
 
     private static String formatName(String tensorName) {
         return tensorName.replaceAll("[^a-zA-Z0-9]+", "");
+    }
+
+    public static TensorInfo.ContentType extractContentType(TensorMetadata tensorMetadata) {
+        byte type = tensorMetadata.content().contentPropertiesType();
+        if (type == ContentProperties.ImageProperties) {
+            return ContentType.IMAGE;
+        } else if (type == ContentProperties.FeatureProperties) {
+            return ContentType.FEATURE;
+        }
+        return ContentType.FEATURE;
+    }
+
+    private static NormalizationOptions extractNormalizationOptions(TensorMetadata tensorMetadata) {
+        for (int i = 0; i < tensorMetadata.processUnitsLength(); i++) {
+            ProcessUnit unit = tensorMetadata.processUnits(i);
+            if (unit.optionsType() == ProcessUnitOptions.NormalizationOptions) {
+                return (NormalizationOptions) unit.options(new NormalizationOptions());
+            }
+        }
+
+        return null;
     }
 }

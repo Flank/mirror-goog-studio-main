@@ -73,6 +73,10 @@ data class IdeAndroidGradlePluginProjectFlags(
     val usesCompose: Boolean
         get() = getBooleanFlag(BooleanFlag.JETPACK_COMPOSE)
 
+    /** Whether the ML model binding feature is enabled for this project. */
+    val mlModelBindingEnabled: Boolean
+        get() = getBooleanFlag(BooleanFlag.ML_MODEL_BINDING)
+
     private fun getBooleanFlag(flag: BooleanFlag): Boolean {
         return booleanFlagMap[flag] ?: flag.legacyDefault
     }

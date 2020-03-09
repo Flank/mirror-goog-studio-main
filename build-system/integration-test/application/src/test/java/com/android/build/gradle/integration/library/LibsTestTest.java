@@ -41,7 +41,7 @@ public class LibsTestTest {
         String manifestContent =
                 Files.toString(
                         project.file(
-                                "lib1/build/intermediates/merged_manifests/debugAndroidTest/AndroidManifest.xml"),
+                                "lib1/build/intermediates/packaged_manifests/debugAndroidTest/AndroidManifest.xml"),
                         StandardCharsets.UTF_8);
 
         Document manifest = XmlUtils.parseDocument(manifestContent, true);

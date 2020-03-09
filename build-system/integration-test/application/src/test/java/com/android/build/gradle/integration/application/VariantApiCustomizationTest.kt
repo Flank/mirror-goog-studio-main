@@ -108,7 +108,7 @@ android {
         project.execute("clean", "assembleDebug")
         val appProject = project.getSubproject(":app")
         // now check that resulting merged manifest has the right 123 version.
-        val manifestFile = File(appProject.buildDir, "intermediates/merged_manifests/debug/AndroidManifest.xml")
+        val manifestFile = File(appProject.buildDir, "intermediates/packaged_manifests/debug/AndroidManifest.xml")
         FileSubject.assertThat(manifestFile).exists()
         assertThat(manifestFile.readText()).contains("android:versionCode=\"123\"")
         assertThat(manifestFile.readText()).contains("android:versionName=\"foo\"")

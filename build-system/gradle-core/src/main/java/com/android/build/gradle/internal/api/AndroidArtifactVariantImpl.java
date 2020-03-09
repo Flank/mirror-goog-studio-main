@@ -60,12 +60,14 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl
     @Nullable
     @Override
     public String getVersionName() {
-        return componentProperties.getVariantDslInfo().getVersionName();
+        // FIXME break if memoization of these is still enabled. b/150291033
+        return componentProperties.getOutputs().getMainSplit().getVersionName().getOrNull();
     }
 
     @Override
     public int getVersionCode() {
-        return componentProperties.getVariantDslInfo().getVersionCode();
+        // FIXME break if memoization of these is still enabled. b/150291033
+        return componentProperties.getOutputs().getMainSplit().getVersionCode().getOrElse(-1);
     }
 
     @NonNull

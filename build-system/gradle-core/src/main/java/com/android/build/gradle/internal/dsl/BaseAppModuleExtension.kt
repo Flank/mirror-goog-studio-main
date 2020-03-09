@@ -32,6 +32,8 @@ import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.SourceSetManager
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.DslServices
+import com.android.builder.core.LibraryRequest
+import com.android.repository.Revision
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
@@ -94,16 +96,18 @@ open class BaseAppModuleExtension(
         publicExtensionImpl.dependenciesInfo(action)
     }
 
-    var dynamicFeatures: MutableSet<String> = mutableSetOf()
-
-    /**
-     * Set of asset pack subprojects to be included in the app's bundle.
-     */
-    var assetPacks: MutableSet<String> = mutableSetOf()
-
     override val bundle: BundleOptions = publicExtensionImpl.bundle
 
     fun bundle(action: Action<BundleOptions>) {
         action.execute(bundle)
     }
+
+    override val flavorDimensionList: MutableList<String>
+        get() = flavorDimensions
+
+    override val buildToolsRevision: Revision
+        get() = Revision.parseRevision(buildToolsVersion, Revision.Precision.MICRO)
+
+    override val libraryRequests: MutableCollection<LibraryRequest>
+        get() = publicExtensionImpl.libraryRequests
 }

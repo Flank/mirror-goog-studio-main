@@ -72,6 +72,6 @@ class ProcessLibraryManifestTest {
         assertThat(task.inputs.properties).containsKey("versionName")
         assertThat(task.inputs.properties).containsKey("manifestPlaceholders")
         assertThat(task.inputs.properties).containsKey("packageOverride")
-        assertThat(task.inputs.properties).containsEntry("mainSplitFullName", "fooRelease")
+        assertThat(task.inputs.properties).containsEntry("mainSplit.fullName", "fooRelease")
     }
 }

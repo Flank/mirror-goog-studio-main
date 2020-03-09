@@ -27,13 +27,14 @@ import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.plugins.DslContainerProvider
+import com.google.common.collect.Lists
 
 /** Internal implementation of the 'new' DSL interface */
 class LibraryExtensionImpl(
     dslServices: DslServices,
     dslContainers: DslContainerProvider<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
 ) :
-    CommonExtensionImpl<
+    TestedExtensionImpl<
             AnnotationProcessorOptions,
             LibraryBuildFeatures,
             BuildType,
@@ -68,6 +69,8 @@ class LibraryExtensionImpl(
             TestOptions,
             TestOptions.UnitTestOptions> {
 
+    private var _aidlPackageWhiteList: MutableCollection<String> = Lists.newArrayList()
+
     override val buildFeatures: LibraryBuildFeatures =
         dslServices.newInstance(LibraryBuildFeaturesImpl::class.java)
 
@@ -87,4 +90,10 @@ class LibraryExtensionImpl(
             variantPropertiesOperations,
             LibraryVariantProperties::class.java
         ) as GenericFilteredComponentActionRegistrar<LibraryVariantProperties>
+
+    override var aidlPackageWhiteList: MutableCollection<String>
+        get() = _aidlPackageWhiteList
+        set(value) {
+            _aidlPackageWhiteList.addAll(value)
+        }
 }

@@ -23,8 +23,8 @@ import java.io.File
  * This is an interface for the gradle tooling api, and should only be used from Android Studio.
  * It is not part of the DSL & API interfaces of the Android Gradle Plugin.
  */
-interface BaseConfig {
-    fun getName(): String
+interface BaseConfig: Named {
+    override fun getName(): String
     /**
      * The application id suffix applied to this base config.
      * To get the final application id, use [AndroidArtifact.getApplicationId].

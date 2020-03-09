@@ -1292,13 +1292,13 @@ public class ManifestMerger2SmallTest {
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
                         .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
                         .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
-                        .withFeatures(
-                                ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)
+                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
                         .setFeatureName("feature")
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        Document xmlDocument =
+                parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_APP));
         assertEquals(
                 "feature",
                 xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
@@ -1336,8 +1336,6 @@ public class ManifestMerger2SmallTest {
                         .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
                         .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
                         .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_FEATURE_MANIFEST)
-                        .withFeatures(
-                                ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)
                         .setFeatureName("feature")
                         .merge();
 

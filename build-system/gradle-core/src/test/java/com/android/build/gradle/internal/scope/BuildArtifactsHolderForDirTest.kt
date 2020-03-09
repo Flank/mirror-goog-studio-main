@@ -17,18 +17,15 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
+import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Test
@@ -64,7 +61,7 @@ class BuildArtifactsHolderForDirTest {
 
     @Test
     fun earlyFinalOutput() {
-        val finalVersion = holder.getFinalProduct(MERGED_MANIFESTS)
+        val finalVersion = holder.getFinalProduct(PACKAGED_MANIFESTS)
         // no-one appends or replaces, it's not provided.
         assertThat(finalVersion.isPresent).isFalse()
     }
@@ -80,14 +77,14 @@ class BuildArtifactsHolderForDirTest {
         )
         val taskProvider = registerDirectoryTask("final")
         newHolder.producesDir(
-            MERGED_MANIFESTS,
+            PACKAGED_MANIFESTS,
             taskProvider,
             DirectoryProducerTask::output,
             fileName = "finalFile"
         )
 
         // now get final version.
-        val finalVersion = newHolder.getFinalProduct(MERGED_MANIFESTS)
+        val finalVersion = newHolder.getFinalProduct(PACKAGED_MANIFESTS)
         assertThat(finalVersion.get().asFile.name).isEqualTo("finalFile")
     }
 
@@ -101,21 +98,21 @@ class BuildArtifactsHolderForDirTest {
 
         val taskProvider = registerDirectoryTask("test")
         newHolder.producesDir(
-            MERGED_MANIFESTS,
+            PACKAGED_MANIFESTS,
             taskProvider,
             DirectoryProducerTask::output,
             fileName = "finalFile"
         )
 
 
-        val finalArtifactFiles = newHolder.getFinalProduct(MERGED_MANIFESTS)
+        val finalArtifactFiles = newHolder.getFinalProduct(PACKAGED_MANIFESTS)
         val outputFile = finalArtifactFiles.get().asFile
         val relativeFile = outputFile.relativeTo(project.buildDir)
         assertThat(relativeFile).isNotNull()
         assertThat(relativeFile.path).isEqualTo(
             FileUtils.join(
                 InternalArtifactType.Category.INTERMEDIATES.name.toLowerCase(),
-                artifactTypeToString(MERGED_MANIFESTS),
+                artifactTypeToString(PACKAGED_MANIFESTS),
                 "test",
                 "finalFile"))
     }

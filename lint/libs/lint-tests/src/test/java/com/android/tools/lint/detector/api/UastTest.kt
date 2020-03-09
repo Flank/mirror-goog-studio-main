@@ -25,6 +25,9 @@ import junit.framework.TestCase
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UFile
+import org.jetbrains.uast.ULocalVariable
+import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
 // Misc tests to verify type handling in the Kotlin UAST initialization.
@@ -74,7 +77,9 @@ class UastTest : TestCase() {
                 public final class TestKt {
                     @org.jetbrains.annotations.NotNull private static final var variable: java.lang.Object = <init>()
                     public static final fun foo1() : void {
-                        [!] UnknownKotlinExpression (ANNOTATED_EXPRESSION)
+                        foo2({ 
+                            return variable.hashCode()
+                        })
                     }
                     public static final fun foo2(@org.jetbrains.annotations.NotNull function: kotlin.jvm.functions.Function0<java.lang.Integer>) : void {
                     }
@@ -849,6 +854,78 @@ class UastTest : TestCase() {
                     val resolved = node.resolve()
                     assertNotNull(resolved)
                     return super.visitCallExpression(node)
+                }
+            })
+        })
+    }
+
+    fun test125138962() {
+        // Regression test for https://issuetracker.google.com/125138962
+        val source = kotlin(
+            """
+            package test.pkg
+
+            class SimpleClass() {
+                var foo: Int
+                init {
+                    @Suppress("foo")
+                    foo = android.R.layout.activity_list_item
+                }
+            }
+            """
+        ).indented()
+
+        check(source, check = { file ->
+            assertEquals(
+                """
+                package test.pkg
+
+                public final class SimpleClass {
+                    @org.jetbrains.annotations.NotNull private var foo: int
+                    public final fun getFoo() : int = UastEmptyExpression
+                    public final fun setFoo(@null p: int) : void = UastEmptyExpression
+                    public fun SimpleClass() {
+                        {
+                            foo = android.R.layout.activity_list_item
+                        }
+                    }
+                }
+                """.trimIndent(),
+                file.asSourceString().trim()
+            )
+        })
+    }
+
+    // Disabled until KT-37200 is fixed
+    fun ignore_testIdea234484() {
+        // Regression test for https://youtrack.jetbrains.com/issue/KT-37200
+        val source = kotlin(
+            """
+            package test.pkg
+
+            inline fun <reified F> ViewModelContext.viewModelFactory(): F {
+                return activity as? F ?: throw IllegalStateException("Boo!")
+            }
+
+            sealed class ViewModelContext {
+                abstract val activity: Number
+            }
+            """
+        ).indented()
+
+        check(source, check = { file ->
+            val newFile = file.sourcePsi.toUElement()
+            newFile?.accept(object : AbstractUastVisitor() {
+                override fun visitLocalVariable(node: ULocalVariable): Boolean {
+                    val initializerType = node.uastInitializer?.getExpressionType()
+                    val interfaceType = node.type
+                    val equals = initializerType == interfaceType // Stack overflow!
+
+                    return super.visitLocalVariable(node)
+                }
+
+                override fun visitMethod(node: UMethod): Boolean {
+                    return super.visitMethod(node)
                 }
             })
         })

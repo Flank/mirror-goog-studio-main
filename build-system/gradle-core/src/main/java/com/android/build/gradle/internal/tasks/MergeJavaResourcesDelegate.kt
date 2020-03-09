@@ -35,6 +35,7 @@ import com.android.builder.merge.MergeOutputWriters
 import com.android.builder.merge.RenameIncrementalFileMergerInput
 import com.android.builder.merge.StreamMergeAlgorithms
 import com.android.builder.packaging.PackagingUtils
+import com.android.tools.build.apkzlib.zip.ZFileOptions
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import org.gradle.api.logging.Logging
@@ -199,7 +200,12 @@ class MergeJavaResourcesDelegate(
          */
         val baseOutput = if (mergedType == QualifiedContent.DefaultContentType.RESOURCES) {
             IncrementalFileMergerOutputs.fromAlgorithmAndWriter(
-                mergeTransformAlgorithm, MergeOutputWriters.toZip(outputLocation)
+                mergeTransformAlgorithm,
+                MergeOutputWriters.toZip(
+                    outputLocation,
+                    // Erase timestamps of zip entries for better cacheability (see bug 142890134)
+                    ZFileOptions().also { it.noTimestamps = true }
+                )
             )
         } else {
             IncrementalFileMergerOutputs.fromAlgorithmAndWriter(

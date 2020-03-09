@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks.mlkit.codegen;
 
 import com.android.tools.mlkit.TensorInfo;
 import com.google.common.base.CaseFormat;
-import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -60,6 +60,10 @@ public class CodeUtils {
         }
     }
 
+    public static String getProcessedTypeName(TensorInfo tensorInfo) {
+        return "processed" + tensorInfo.getName();
+    }
+
     public static String getProcessorBuilderName(TensorInfo tensorInfo) {
         return getProcessorName(tensorInfo) + "Builder";
     }
@@ -97,11 +101,11 @@ public class CodeUtils {
         return type.toString();
     }
 
-    public static TypeName getOutputParameterType(TensorInfo tensorInfo) {
+    public static ClassName getOutputParameterType(TensorInfo tensorInfo) {
         if (tensorInfo.getFileType() == TensorInfo.FileType.TENSOR_AXIS_LABELS) {
-            return ParameterizedTypeName.get(ClassNames.MAP, ClassNames.STRING, ClassNames.FLOAT);
+            return ClassNames.TENSOR_LABEL;
         } else {
-            return ClassNames.BYTE_BUFFER;
+            return ClassNames.TENSOR_BUFFER;
         }
     }
 

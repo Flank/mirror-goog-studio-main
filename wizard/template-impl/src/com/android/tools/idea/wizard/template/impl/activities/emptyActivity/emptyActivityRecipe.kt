@@ -42,6 +42,8 @@ fun RecipeExecutor.generateEmptyActivity(
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
   val ktOrJavaExt = projectData.language.extension
 
+  addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
+
   generateManifest(
     moduleData , activityClass, "", packageName, isLauncher, false,
     requireTheme = false, generateActivityTitle = false, useMaterial2 = useMaterial2

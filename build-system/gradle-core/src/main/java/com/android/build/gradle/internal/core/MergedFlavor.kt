@@ -42,7 +42,7 @@ class MergedFlavor(
          */
         @JvmStatic
         fun clone(productFlavor: ProductFlavor, dslServices: DslServices): MergedFlavor {
-            val mergedFlavor = MergedFlavor(productFlavor.getName(), dslServices)
+            val mergedFlavor = MergedFlavor(productFlavor.name, dslServices)
             mergedFlavor._initWith(productFlavor)
             return mergedFlavor
         }

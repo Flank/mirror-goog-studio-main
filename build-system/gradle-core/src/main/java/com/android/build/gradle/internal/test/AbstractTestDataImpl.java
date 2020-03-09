@@ -69,10 +69,11 @@ public abstract class AbstractTestDataImpl implements TestData {
         this.testedApksDir = testedApksDir;
     }
 
+
     @NonNull
     @Override
     public String getInstrumentationRunner() {
-        return testVariantConfig.getInstrumentationRunner();
+        return testVariantConfig.getInstrumentationRunner().get();
     }
 
     @NonNull

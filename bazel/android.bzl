@@ -101,8 +101,8 @@ def select_android(android, default):
         "//conditions:default": default,
     })
 
-def dex_library(name, jars = [], output = None, visibility = None, tags = [], flags = [], dexer = "DX"):
-    if dexer != "D8":
+def dex_library(name, jars = [], output = None, visibility = None, tags = [], flags = [], dexer = "D8"):
+    if dexer == "DX":
         cmd = "$(location //prebuilts/studio/sdk:dx-preview) --dex --output=./$@ ./$(SRCS)"
         tools = ["//prebuilts/studio/sdk:dx-preview"]
     else:

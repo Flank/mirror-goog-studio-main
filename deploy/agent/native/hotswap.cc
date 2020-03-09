@@ -313,16 +313,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
       Log::E("%s", suspend_error.c_str());
     }
 
-    for (size_t i = 0; i < num_modified_classes; i++) {
-      // Currently only supports one class per redefinition request.
-      Log::I("Calling Redefinition Extension");
-      error_num = (*extension)(jvmti_, def[i].klass, def[i].class_bytes,
-                               def[i].class_byte_count);
-      if (error_num != JVMTI_ERROR_NONE) {
-        break;
-      }
-      Log::I("Done Redefinition Extension");
-    }
+    error_num = (*extension)(jvmti_, num_modified_classes, def);
 
     var_reinit.ReinitializeVariables();
 

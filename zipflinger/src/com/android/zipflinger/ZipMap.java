@@ -272,7 +272,7 @@ public class ZipMap {
         }
     }
 
-    private void parseExtra(@NonNull ByteBuffer buf, @NonNull Entry entry) {
+    private static void parseExtra(@NonNull ByteBuffer buf, @NonNull Entry entry) {
         buf.order(ByteOrder.LITTLE_ENDIAN);
         while (buf.remaining() >= 4) {
             short id = buf.getShort();

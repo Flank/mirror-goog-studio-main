@@ -161,13 +161,6 @@ class VariantPathHelper(
             throw RuntimeException("getManifestOutputDirectory called for an unexpected variant.")
         }
 
-    val generatedClassListOutputFileForDataBinding: File
-        get() = File(dataBindingIntermediate("class-list"), "_generated.txt")
-
-    private fun dataBindingIntermediate(name: String): File? {
-        return intermediate("data-binding", name)
-    }
-
     /**
      * Returns a place to store incremental build data. The {@code name} argument has to be unique
      * per task, ideally generated with [TaskInformation.name].

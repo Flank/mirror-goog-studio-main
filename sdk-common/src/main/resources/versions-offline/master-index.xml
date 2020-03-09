@@ -136,4 +136,8 @@
   <androidx.compose/>
   <com.google.androidbrowserhelper/>
   <org.jetbrains.kotlin/>
+  <com.google.prefab/>
+  <com.android.billingclient/>
+  <com.android.ndk.thirdparty/>
+  <com.google.oboe/>
 </metadata>

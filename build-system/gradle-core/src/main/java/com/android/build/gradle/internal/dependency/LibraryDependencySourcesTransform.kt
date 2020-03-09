@@ -1,8 +1,9 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.SdkConstants
-import com.android.ide.common.symbols.IdProvider
-import com.android.ide.common.symbols.parseResourceSourceSetDirectory
+import com.android.ide.common.resources.usage.ResourceUsageModel
+import com.android.resources.ResourceFolderType
+import com.android.utils.XmlUtils
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
@@ -10,6 +11,7 @@ import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
 import java.io.File
+import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipInputStream
@@ -35,24 +37,38 @@ abstract class LibraryDependencySourcesTransform : TransformAction<GenericTransf
         // Write classes and resources paths to transform output files.
         writePathsToFile(
                 File(outputDir, "classes${SdkConstants.DOT_TXT}"),
-                classesInExplodedAar)
-        writeResourcesFromExplodedAarToFile(
-                explodedAar,
-                File(outputDir, "resources_symbols${SdkConstants.DOT_TXT}"))
+                classesInExplodedAar
+        )
+        writePathsToFile(
+                File(outputDir, "resources_symbols${SdkConstants.DOT_TXT}"),
+                getResourcesFromExplodedAarToFile(explodedAar)
+        )
     }
 }
 
-fun writeResourcesFromExplodedAarToFile(explodedAar: File, outputFile: File) {
+fun getResourcesFromExplodedAarToFile(explodedAar: File) : List<String> {
     val resourceDir = explodedAar.resolve(SdkConstants.FD_RESOURCES)
     if (resourceDir.list() == null || resourceDir.listFiles()!!.none()) {
-        return
+        return emptyList()
     }
-    val resourceSymbols = parseResourceSourceSetDirectory(
-            resourceDir,
-            IdProvider.constant(),
-            null
-    )
-    SymbolIo.writeRDef(resourceSymbols, outputFile.toPath())
+    val resourceUsageModel = ResourceUsageModel()
+    // Extract resource declarations and usages from exploded AAR into resourceUsageModel.
+    resourceDir
+            .walkTopDown()
+            .filter { it.isFile }
+            .sorted()
+            .forEach { file ->
+                val resourceString = file.readText(Charset.defaultCharset())
+                val document = XmlUtils.parseDocument(resourceString, false)
+                val resFolderType = ResourceFolderType.getTypeByName(file.parentFile.name)
+                if (file.name.endsWith(SdkConstants.DOT_XML)) {
+                    resourceUsageModel
+                            .visitXmlDocument(file, resFolderType, document)
+                } else {
+                    resourceUsageModel.visitBinaryResource(resFolderType, file)
+                }
+            }
+    return resourceUsageModel.resources.map { it.toString() }
 }
 
 /** Gets a list of .class filepaths from all JAR files stored within an exploded AAR File. */

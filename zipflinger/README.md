@@ -123,3 +123,30 @@ ZipSourceEntry can be requested to be uncompressed/re-compressed.
 Zipflinger has full support for zip64 archives. It is able to handle zip64EOCD (more than 65536
 entries) with zip64Locator and zip64 extra fields containing 64-bit compressed, uncompressed, and
 offset values (archives larger than 4GiB). There is no facility to handle files larger than 2GiB.
+
+## Profiling
+To peek inside Zipflinger and understand where walltime is spent, you can run the "profiler" target.
+```
+tools/base/bazel/bazel run //tools/base/zipflinger:profiler
+
+Profiling with an APK :
+  - Total size (MiB)  :   118
+  - Num res           :  5000
+  - Size res (KiB)    :    16
+  - Num dex           :    10
+  - Size dex (MiB)    :     4
+```
+Once the target has run, retrieve the report from the workstation tmp folder. e.g On Linux:
+```
+cp /tmp/report.json ~/
+```
+You can examine the report in Chrome via about://tracing. 
+
+Edit time (ms) on a 3Ghz machine with a PM981 NVMe drive.
+
+APK Size     NumRes      SizeRes       NumDex       SizeDex       Time (ms)          
+ 120 MiB      5000       16 KiB         10            4 MiB          27
+  60 MiB      2500       16 KiB         10            4 MiB          18
+  49 MiB      2500        4 KiB         10            4 MiB          18
+  
+The edit time is dominated by the parsing time (itself dominated by the number of entries).  

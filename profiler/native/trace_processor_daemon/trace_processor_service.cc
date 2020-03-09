@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
+#include "trace_processor_service.h"
+
 #include <grpc++/grpc++.h>
 
+#include "memory/memory_request_handler.h"
 #include "perfetto/trace_processor/basic_types.h"
 #include "perfetto/trace_processor/read_trace.h"
 #include "perfetto/trace_processor/trace_processor.h"
 
-#include "trace_processor_service.h"
-#include "trace_processor_service.pb.h"
-
 using ::perfetto::trace_processor::Config;
 using ::perfetto::trace_processor::ReadTrace;
+using ::perfetto::trace_processor::TraceProcessor;
 
 namespace profiler {
 namespace perfetto {
+
+using proto::QueryParameters;
 
 grpc::Status TraceProcessorServiceImpl::LoadTrace(
     grpc::ServerContext* context, const proto::LoadTraceRequest* request,
@@ -52,13 +55,12 @@ grpc::Status TraceProcessorServiceImpl::LoadTrace(
   // chunk of memory.
   config.ingest_ftrace_in_raw_table = false;
 
-  std::unique_ptr<TraceProcessor> tp = TraceProcessor::CreateInstance(config);
-  tp_ = tp.release();
+  tp_ = TraceProcessor::CreateInstance(config);
 
   std::cout << "Loading trace (" << trace_id << ") from: " << trace_path
             << std::endl;
 
-  auto read_status = ReadTrace(tp_, trace_path.c_str(), {});
+  auto read_status = ReadTrace(tp_.get(), trace_path.c_str(), {});
 
   response->set_ok(read_status.ok());
   if (!read_status.ok()) {
@@ -115,6 +117,21 @@ void TraceProcessorServiceImpl::LoadAllProcessMetadata(
     auto name = name_sql_value.is_null() ? "" : name_sql_value.string_value;
     thread_proto->set_name(name);
   }
+}
+
+grpc::Status TraceProcessorServiceImpl::QueryBatch(
+    grpc::ServerContext* context, const proto::QueryBatchRequest* batch_request,
+    proto::QueryBatchResponse* batch_response) {
+  for (auto& request : batch_request->query()) {
+    switch (request.query_case()) {
+      case QueryParameters::kMemoryRequest:
+        MemoryRequestHandler handler(tp_.get());
+        handler.PopulateEvents(
+            batch_response->add_result()->mutable_memory_events());
+        break;
+    }
+  }
+  return grpc::Status::OK;
 }
 
 }  // namespace perfetto

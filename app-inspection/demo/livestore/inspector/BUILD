@@ -22,5 +22,6 @@ dex_library(
     name = "livestore-inspector_dex",
     jars = [
         ":livestore-inspector",
+        "//prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.8.5:jar",
     ],
 )

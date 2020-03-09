@@ -16,6 +16,8 @@
 
 package android.graphics;
 
+import androidx.annotation.Nullable;
+
 /**
  * HardwareRenderer
  *
@@ -23,7 +25,16 @@ package android.graphics;
  * PictureCapturedCallback} is excluded in stubbed version of android.jar.
  */
 public class HardwareRenderer {
-    public void setPictureCaptureCallback(PictureCapturedCallback callback) {}
+    private PictureCapturedCallback mCallback;
+
+    public void setPictureCaptureCallback(PictureCapturedCallback callback) {
+        mCallback = callback;
+    }
+
+    @Nullable
+    public PictureCapturedCallback getPictureCaptureCallback() {
+        return mCallback;
+    }
 
     public interface PictureCapturedCallback {
         void onPictureCaptured(Picture picture);

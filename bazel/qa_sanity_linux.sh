@@ -36,11 +36,12 @@ if [[ $lsb_release == "crostini" ]]; then
   # Generate a UUID for use as the bazel invocation id
   readonly build_invocation_id="$(uuidgen)"
 
-  #Build the project in parallel for crostini
+  #Build the project for crostini, 2 jobs at a time to address OOM issues
   "${script_dir}/bazel" \
     --max_idle_secs=60 \
     build \
     ${config_options} \
+    --jobs=2 \
     --invocation_id=${build_invocation_id} \
     --define=meta_android_build_number=${build_number} \
     --build_tag_filters=${target_filters} \

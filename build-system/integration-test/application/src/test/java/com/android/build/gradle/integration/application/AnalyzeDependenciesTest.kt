@@ -18,8 +18,8 @@ import org.junit.Test
  */
 class AnalyzeDependenciesTest {
 
-    private val emptyAar = generateAarWithContent("com.analyzedependenciesTest.emptyaar")
-    private val usedAar = generateAarWithContent("com.analyzedependenciesTest.usedaar",
+    private val emptyAar = generateAarWithContent("com.analyzedependenciesTest.emptyAar")
+    private val usedClassAar = generateAarWithContent("com.analyzedependenciesTest.usedClassAar",
             Resources.toByteArray(
                     Resources.getResource(
                             AnalyzeDependenciesTest::class.java,
@@ -33,8 +33,8 @@ class AnalyzeDependenciesTest {
                 dependencies {
                 implementation project(path: ':usedLocalLib')
                 implementation project(path: ':unUsedLocalLib')
-                implementation 'com.analyzedependenciesTest:emptyaar:1'
-                implementation 'com.analyzedependenciesTest:usedaar:1'
+                implementation 'com.analyzedependenciesTest:emptyAar:1'
+                implementation 'com.analyzedependenciesTest:usedClassAar:1'
                  }
             """.trimIndent()
             )
@@ -68,6 +68,22 @@ class AnalyzeDependenciesTest {
                     }
                 }
             """.trimIndent())
+            .withFile(
+                    "src/main/res/layout/layout_random_name.xml",
+                    """<?xml version="1.0" encoding="utf-8"?>
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                    <TextView
+                        android:id="@+id/text_box"
+                        android:text="test"
+                        android:layout_x="10px"
+                        android:layout_y="110px"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+                        """.trimIndent()
+            )
 
     private val unUsedLocalLib = MinimalSubProject.lib("com.example.unusedlocallib")
             .withFile("src/main/java/com/example/usedlocallib/UnUsedLocalLib.java",
@@ -84,9 +100,9 @@ class AnalyzeDependenciesTest {
     private val mavenRepo = MavenRepoGenerator(
             listOf(
                     MavenRepoGenerator.Library(
-                            "com.analyzedependenciesTest:emptyaar:1", "aar", emptyAar),
+                            "com.analyzedependenciesTest:emptyAar:1", "aar", emptyAar),
                     MavenRepoGenerator.Library(
-                            "com.analyzedependenciesTest:usedaar:1", "aar", usedAar)
+                            "com.analyzedependenciesTest:usedClassAar:1", "aar", usedClassAar)
             )
     )
 
@@ -106,7 +122,7 @@ class AnalyzeDependenciesTest {
             .create()
 
     @Test
-    fun `Verify correct dependencies report is produced, only considering class references`() {
+    fun `Verify correct dependencies report is produced, only considering class and resource references`() {
         val buildType = "debug"
         project.execute(
                 ":app:assemble${buildType.usLocaleCapitalize()}",
@@ -125,8 +141,7 @@ class AnalyzeDependenciesTest {
         val parsedJson =
                 Gson().fromJson(dependencyReportJson, DependenciesUsageReport::class.java)
 
-        assertThat(parsedJson.remove).containsExactly("com.analyzedependenciesTest:emptyaar:1")
+        assertThat(parsedJson.remove).containsExactly("com.analyzedependenciesTest:emptyAar:1")
         assertThat(parsedJson.add.size).isEqualTo(0)
-        assertThat(parsedJson.remove.size).isEqualTo(1)
     }
 }

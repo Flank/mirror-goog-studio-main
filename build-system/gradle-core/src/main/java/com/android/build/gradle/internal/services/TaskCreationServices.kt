@@ -34,7 +34,5 @@ interface TaskCreationServices: BaseServices {
 
     fun fileCollection(): ConfigurableFileCollection
     fun fileCollection(vararg files: Any): ConfigurableFileCollection
-//    fun fileTree(): ConfigurableFileTree
-//    fun fileTree(dir: Any): ConfigurableFileTree
 
 }

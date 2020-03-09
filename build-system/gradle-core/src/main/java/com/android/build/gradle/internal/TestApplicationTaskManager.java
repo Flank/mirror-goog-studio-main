@@ -16,10 +16,8 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST_METADATA;
-import static com.android.build.gradle.internal.variant.TestVariantFactory.getTestedApksConfigurationName;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
@@ -29,6 +27,7 @@ import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.TestVariantPropertiesImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
@@ -47,7 +46,6 @@ import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.Objects;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
@@ -84,27 +82,19 @@ public class TestApplicationTaskManager
 
         TestVariantPropertiesImpl testVariantProperties = variant.getProperties();
 
-        Configuration testedApksConfig =
-                project.getConfigurations()
-                        .getByName(getTestedApksConfigurationName(testVariantProperties.getName()));
-
         Provider<Directory> testingApk =
                 testVariantProperties
                         .getArtifacts()
                         .getFinalProduct(InternalArtifactType.APK.INSTANCE);
 
-        // create a FileCollection that will contain the APKs to be tested.
-        // FULL_APK is published only to the runtime configuration
+        // The APKs to be tested.
         FileCollection testedApks =
-                testedApksConfig
-                        .getIncoming()
-                        .artifactView(
-                                config ->
-                                        config.attributes(
-                                                container ->
-                                                        container.attribute(
-                                                                ARTIFACT_TYPE, APK.getType())))
-                        .getFiles();
+                testVariantProperties
+                        .getVariantDependencies()
+                        .getArtifactFileCollection(
+                                AndroidArtifacts.ConsumedConfigType.PROVIDED_CLASSPATH,
+                                AndroidArtifacts.ArtifactScope.ALL,
+                                APK);
 
         // same for the manifests.
         FileCollection testedManifestMetadata = getTestedManifestMetadata(testVariantProperties);
@@ -194,19 +184,14 @@ public class TestApplicationTaskManager
 
     /** Returns the manifest configuration of the tested application */
     @NonNull
-    private FileCollection getTestedManifestMetadata(@NonNull ApkCreationConfig creationConfig) {
+    private static FileCollection getTestedManifestMetadata(
+            @NonNull ApkCreationConfig creationConfig) {
         return creationConfig
                 .getVariantDependencies()
-                .getCompileClasspath()
-                .getIncoming()
-                .artifactView(
-                        config ->
-                                config.attributes(
-                                        container ->
-                                                container.attribute(
-                                                        ARTIFACT_TYPE,
-                                                        MANIFEST_METADATA.getType())))
-                .getFiles();
+                .getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        MANIFEST_METADATA);
     }
 
     /** Creates the merge manifests task. */

@@ -175,6 +175,8 @@ public class BytecodeGenerationHooksTest {
                                         .contains("com/example/bytecode/PostJavacLib.class");
                                 assertThat(classes).contains("META-INF/lib.kotlin_module");
                                 assertThat(classes).contains("META-INF/post-lib.kotlin_module");
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
                             }
                         });
     }

@@ -1978,6 +1978,7 @@ public final class SdkConstants {
 
     // Material TextInputLayout Attributes
     public static final String ATTR_END_ICON_TINT = "endIconTint";
+    public static final String ATTR_ERROR_ICON_TINT = "errorIconTint";
     public static final String ATTR_ERROR_TEXT_COLOR = "errorTextColor";
     public static final String ATTR_HELPER_TEXT_TEXT_COLOR = "helperTextTextColor";
     public static final String ATTR_HINT_ENABLED = "hintEnabled";
@@ -2138,6 +2139,11 @@ public final class SdkConstants {
 
     public static final String EXT_CSV = "csv";
 
+    /** Extension of native debug metadata files, i.e. "dbg" */
+    public static final String EXT_DBG = "dbg";
+    /** Extension of native debug symbol table files, i.e. "sym" */
+    public static final String EXT_SYM = "sym";
+
     private static final String DOT = "."; //$NON-NLS-1$
 
     /** Dot-Extension of the Application package Files, i.e. ".apk". */
@@ -2174,6 +2180,10 @@ public final class SdkConstants {
     public static final String DOT_TXT = ".txt"; //$NON-NLS-1$
     /** Dot-Extension for Java heap dumps. */
     public static final String DOT_HPROF = DOT + EXT_HPROF; //$NON-NLS-1$
+    /** Dot-Extension of native debug metadata files, i.e. ".dbg" */
+    public static final String DOT_DBG = ".dbg";
+    /** Extension of native debug symbol table files, i.e. ".sym" */
+    public static final String DOT_SYM = ".sym";
 
     /** Resource base name for java files and classes */
     public static final String FN_RESOURCE_BASE = "R"; //$NON-NLS-1$
@@ -2347,6 +2357,14 @@ public final class SdkConstants {
     public static final String ATTR_DRAWABLE_BOTTOM = "drawableBottom"; //$NON-NLS-1$
     public static final String ATTR_DRAWABLE_TOP = "drawableTop"; //$NON-NLS-1$
     public static final String ATTR_DRAWABLE_PADDING = "drawablePadding"; //$NON-NLS-1$
+
+    // AppCompatTextView
+    public static final String ATTR_DRAWABLE_RIGHT_COMPAT = "drawableRightCompat"; // $NON-NLS-1$
+    public static final String ATTR_DRAWABLE_LEFT_COMPAT = "drawableLeftCompat"; // $NON-NLS-1$
+    public static final String ATTR_DRAWABLE_START_COMPAT = "drawableStartCompat"; // $NON-NLS-1$
+    public static final String ATTR_DRAWABLE_END_COMPAT = "drawableEndCompat"; // $NON-NLS-1$
+    public static final String ATTR_DRAWABLE_BOTTOM_COMPAT = "drawableBottomCompat"; // $NON-NLS-1$
+    public static final String ATTR_DRAWABLE_TOP_COMPAT = "drawableTopCompat"; // $NON-NLS-1$
 
     public static final String ATTR_USE_DEFAULT_MARGINS = "useDefaultMargins"; //$NON-NLS-1$
     public static final String ATTR_MARGINS_INCLUDED_IN_ALIGNMENT =

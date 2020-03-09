@@ -16,6 +16,10 @@
 
 package com.android.build.gradle.integration.common.fixture;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_TEST_PROJECT_NAME;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.GRADLE_TEST_VERSION;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -141,14 +145,14 @@ public final class GradleTestProjectBuilder {
         MemoryRequirement memoryRequirement = MemoryRequirement.use(heapSize, metaspace);
 
         return new GradleTestProject(
-                name,
+                (name != null ? name : DEFAULT_TEST_PROJECT_NAME),
                 testProject,
-                targetGradleVersion,
+                (targetGradleVersion != null ? targetGradleVersion : GRADLE_TEST_VERSION),
                 withoutNdk,
                 withDependencyChecker,
                 gradleProperties,
                 memoryRequirement,
-                compileSdkVersion,
+                (compileSdkVersion != null ? compileSdkVersion : DEFAULT_COMPILE_SDK_VERSION),
                 buildToolsVersion,
                 profileDirectory,
                 cmakeVersion,

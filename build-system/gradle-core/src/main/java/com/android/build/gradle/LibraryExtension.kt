@@ -48,7 +48,8 @@ import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.google.common.collect.Lists
+import com.android.builder.core.LibraryRequest
+import com.android.repository.Revision
 import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
@@ -104,10 +105,6 @@ open class LibraryExtension(
     private val libraryVariantList: DomainObjectSet<LibraryVariant> =
         dslServices.domainObjectSet(LibraryVariant::class.java)
 
-    private var _packageBuildConfig = true
-
-    private var _aidlPackageWhiteList: MutableCollection<String>? = null
-
     override val viewBinding: ViewBindingOptions =
         dslServices.newInstance(
             ViewBindingOptionsImpl::class.java,
@@ -151,15 +148,22 @@ open class LibraryExtension(
         libraryVariantList.add(variant as LibraryVariant)
     }
 
-    override var aidlPackageWhiteList: MutableCollection<String>?
-        get() = _aidlPackageWhiteList
-        set(value) = value?.let { aidlPackageWhiteList(*it.toTypedArray()) } ?: Unit
+    override var aidlPackageWhiteList: MutableCollection<String>
+        get() = publicExtensionImpl.aidlPackageWhiteList
+        set(value) {
+            publicExtensionImpl.aidlPackageWhiteList = value
+        }
 
     fun aidlPackageWhiteList(vararg aidlFqcns: String) {
-        if (_aidlPackageWhiteList == null) {
-            _aidlPackageWhiteList = Lists.newArrayList()
-        }
-        Collections.addAll(_aidlPackageWhiteList!!, *aidlFqcns)
+        Collections.addAll(publicExtensionImpl.aidlPackageWhiteList, *aidlFqcns)
     }
 
+    override val flavorDimensionList: MutableList<String>
+        get() = flavorDimensions
+
+    override val buildToolsRevision: Revision
+        get() = Revision.parseRevision(buildToolsVersion, Revision.Precision.MICRO)
+
+    override val libraryRequests: MutableCollection<LibraryRequest>
+        get() = publicExtensionImpl.libraryRequests
 }

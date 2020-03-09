@@ -25,7 +25,7 @@
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 #define STRUCTRUAL_REDEFINE_EXTENSION \
-  "com.android.art.UNSAFE.class.structurally_redefine_class_direct"
+  "com.android.art.class.structurally_redefine_classes"
 
 namespace deploy {
 

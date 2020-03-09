@@ -435,6 +435,52 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                                 + "0 errors, 1 warnings\n");
     }
 
+    public void testKotlinKtAnnotated() {
+        // Regression test for https://issuetracker.google.com/125138962
+        // Makes sure that we correctly process annotation in an annotated expression
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "class SimpleClass() {\n"
+                                        + "    var foo: String\n"
+                                        + "    init {\n"
+                                        + "        @Suppress(\"SdCardPath\")\n"
+                                        + "        foo = \"/sdcard/foo\"\n"
+                                        + "\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        // Elvis expressions
+                                        + "    fun foo(x: String?) {\n"
+                                        + "        @Suppress(\"SdCardPath\")\n"
+                                        + "        x?.toString()\n"
+                                        + "            ?: \"/sdcard/foo\"\n"
+                                        + "            ?: \"redundant\"\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        // Object literals
+                                        + "    fun objectLiteral() {\n"
+                                        + "        val runnable =\n"
+                                        + "                @Suppress(\"SdCardPath\")\n"
+                                        + "                object : Runnable {\n"
+                                        + "                    override fun run() {\n"
+                                        + "                        println(\"/sdcard/foo\")\n"
+                                        + "                    }\n"
+                                        + "                }\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        // Annotated Blocks
+                                        + "    fun block() {\n"
+                                        + "        @Suppress(\"SdCardPath\")\n"
+                                        + "        {\n"
+                                        + "            val x = \"/sdcard/foo\"\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .run()
+                .expectClean();
+    }
+
     // We've recently removed the large file limit (look for PersistentFSConstants)
     public void testLargeFiles() {
         int max = 2600 * 1024;

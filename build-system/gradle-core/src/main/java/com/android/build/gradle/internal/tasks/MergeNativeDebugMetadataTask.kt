@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.SdkConstants.DOT_DBG
+import com.android.SdkConstants.DOT_SYM
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.impl.ApplicationVariantPropertiesImpl
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
@@ -23,6 +25,7 @@ import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.ConfigurableFileCollection
@@ -35,9 +38,9 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.util.PatternSet
 import java.io.File
 import java.io.Serializable
-import java.util.concurrent.Callable
 import javax.inject.Inject
 
 /**
@@ -83,18 +86,18 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
         @VisibleForTesting
         internal fun mergeFiles(inputFiles: Collection<File>, outputFile: File) {
             FileUtils.deleteIfExists(outputFile)
-            JarCreatorFactory.make(outputFile.toPath()).use { zipCreator ->
+            JarCreatorFactory.make(jarFile = outputFile.toPath()).use { zipCreator ->
                 inputFiles.forEach {
                     zipCreator.addFile("${it.parentFile.name}/${it.name}", it.toPath())
                 }
             }
         }
 
-        fun getNativeDebugMetadataDirs(
+        fun getNativeDebugMetadataFiles(
             componentProperties: ComponentPropertiesImpl
         ): FileCollection {
-            val nativeDebugMetadataDirs = componentProperties.globalScope.project.files()
-            when(componentProperties.variantDslInfo.ndkConfig.debugSymbolLevelEnum) {
+            val nativeDebugMetadataDirs = componentProperties.services.fileCollection()
+            when (componentProperties.variantDslInfo.ndkConfig.debugSymbolLevelEnum) {
                 DebugSymbolLevel.FULL -> {
                     nativeDebugMetadataDirs.from(
                         componentProperties.artifacts.getFinalProduct(
@@ -126,8 +129,10 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
                 DebugSymbolLevel.NONE -> { }
             }
             nativeDebugMetadataDirs.disallowChanges()
-            return nativeDebugMetadataDirs
+            return nativeDebugMetadataDirs.asFileTree.matching(patternSet)
         }
+
+        private val patternSet = PatternSet().include("**/*$DOT_DBG").include("**/*$DOT_SYM")
     }
 
     class CreationAction(componentProperties: ApplicationVariantPropertiesImpl) :
@@ -157,13 +162,7 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
             task: MergeNativeDebugMetadataTask
         ) {
             super.configure(task)
-
-            task.inputFiles.from(
-                Callable {
-                    getNativeDebugMetadataDirs(creationConfig).asFileTree.filter { it.isFile }
-                }
-            )
-            task.inputFiles.disallowChanges()
+            task.inputFiles.fromDisallowChanges(getNativeDebugMetadataFiles(creationConfig))
         }
     }
 }

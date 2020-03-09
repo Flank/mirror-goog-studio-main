@@ -18,13 +18,13 @@ package com.android.tools.mlkit;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import org.tensorflow.lite.schema.Metadata;
+import org.tensorflow.lite.schema.Model;
+import org.tensorflow.lite.schema.QuantizationParameters;
+import org.tensorflow.lite.schema.SubGraph;
+import org.tensorflow.lite.schema.Tensor;
+import org.tensorflow.lite.schema.TensorType;
 import org.tensorflow.lite.support.metadata.schema.ModelMetadata;
-import tflite.Metadata;
-import tflite.Model;
-import tflite.QuantizationParameters;
-import tflite.SubGraph;
-import tflite.Tensor;
-import tflite.TensorType;
 
 /** Class to load metadata from TFLite FlatBuffer. */
 // TODO(jackqdyulei): This file is forked from metadata library because right now we only have

@@ -35,6 +35,7 @@ fun RecipeExecutor.composeActivityRecipe(
 
   val (_, srcOut, resOut, _) = moduleData
   addAllKotlinDependencies(moduleData)
+  addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
 
   val composeVersion = "0.1.0-dev03"
   // Note: Don't use minRev = "0.1.0-devXX" because compose and Studio are in lock step at the moment.

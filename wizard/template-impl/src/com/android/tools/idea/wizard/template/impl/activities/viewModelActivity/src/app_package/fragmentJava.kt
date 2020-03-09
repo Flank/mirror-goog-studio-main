@@ -24,11 +24,14 @@ fun fragmentJava(
   fragmentPackage: String,
   packageName: String,
   useAndroidX: Boolean,
-  viewModelClass: String) =
+  viewModelClass: String): String {
 
-  """package ${packageName}.${fragmentPackage};
+  val viewModelInitializationBlock = if (useAndroidX) "new ViewModelProvider(this).get(${viewModelClass}.class);"
+  else "new ViewModelProvider(this, new ViewModelProvider.NewInstanceFactory()).get(${viewModelClass}.class);"
 
-import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProviders", useAndroidX)};
+  return """package ${packageName}.${fragmentPackage};
+
+import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)};
 import android.os.Bundle;
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
 import ${getMaterialComponentName("android.support.annotation.Nullable", useAndroidX)};
@@ -56,9 +59,10 @@ public class ${fragmentClass} extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mViewModel = ViewModelProviders.of(this).get(${viewModelClass}.class);
+        mViewModel = $viewModelInitializationBlock
         // TODO: Use the ViewModel
     }
 
 }
 """
+}

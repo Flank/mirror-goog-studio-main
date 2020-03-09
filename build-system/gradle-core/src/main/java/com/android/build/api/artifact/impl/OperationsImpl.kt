@@ -21,9 +21,8 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.MultipleTransformRequest
 import com.android.build.api.artifact.Operations
 import com.android.build.api.artifact.ReplaceRequest
-import com.android.build.api.artifact.TaskBasedOperations
 import com.android.build.api.artifact.TransformRequest
-import com.android.build.gradle.internal.scope.getOutputDirectory
+import com.android.build.gradle.internal.scope.getOutputPath
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
@@ -90,8 +89,12 @@ class OperationsImpl(
 
     // End of public API implementation, start of private AGP services.
 
-    internal fun <T: FileSystemLocation> getOutputDirectory(type: ArtifactType<T>, vararg paths: String)=
-        type.getOutputDirectory(buildDirectory, identifier, *paths)
+    /**
+     * Returns a [File] representing the artifact type location (could be a directory or regular
+     * file).
+     */
+    internal fun <T: FileSystemLocation> getOutputPath(type: ArtifactType<T>, vararg paths: String)=
+        type.getOutputPath(buildDirectory, identifier, *paths)
 
     /**
      * Returns the [ArtifactContainer] for the passed [type]. The instance may be allocated as part
@@ -123,8 +126,9 @@ class OperationsImpl(
         return storageProvider.getStorage(type.kind).getArtifact(objects, type)
     }
 
-    internal fun <T: FileSystemLocation, ARTIFACT_TYPE> republish(source: ARTIFACT_TYPE, target: ARTIFACT_TYPE)
-        where ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Single {
+    internal fun <T: FileSystemLocation, ARTIFACT_TYPE, ARTIFACT_TYPE2> republish(source: ARTIFACT_TYPE, target: ARTIFACT_TYPE2)
+        where ARTIFACT_TYPE: ArtifactType<T>, ARTIFACT_TYPE: ArtifactType.Single,
+              ARTIFACT_TYPE2: ArtifactType<T>, ARTIFACT_TYPE2: ArtifactType.Single {
 
         storageProvider.getStorage(target.kind).copy(target, getArtifactContainer(source))
     }
@@ -176,7 +180,7 @@ class OperationsImpl(
         taskProvider.configure {
             // since the taskProvider will execute, resolve its output path, and since there can
             // be multiple ones, just put the task name at all times.
-            property(it).set(type.getOutputDirectory(buildDirectory, identifier, taskProvider.name))
+            property(it).set(type.getOutputPath(buildDirectory, identifier, taskProvider.name))
         }
         artifactContainer.addInitialProvider(taskProvider.flatMap { property(it) })
     }
@@ -241,7 +245,7 @@ internal class TransformRequestImpl<TASK : Task, FILE_TYPE : FileSystemLocation>
         taskProvider.configure {
             from(it).set(currentProvider)
             // since the task will now execute, resolve its output path.
-            into(it).set(operationsImpl.getOutputDirectory(type, taskProvider.name))
+            into(it).set(operationsImpl.getOutputPath(type, taskProvider.name))
         }
     }
 }
@@ -260,7 +264,7 @@ internal class ReplaceRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
 
         val artifactContainer = operationsImpl.getArtifactContainer(type)
         taskProvider.configure {
-            with(it).set(operationsImpl.getOutputDirectory(type, taskProvider.name))
+            with(it).set(operationsImpl.getOutputPath(type, taskProvider.name))
         }
         artifactContainer.replace(taskProvider.flatMap { with(it) })
     }
@@ -281,7 +285,7 @@ internal class AppendRequestImpl<TASK: Task, FILE_TYPE: FileSystemLocation>(
 
         val artifactContainer = operationsImpl.getArtifactContainer(type)
         taskProvider.configure {
-            with(it).set(operationsImpl.getOutputDirectory(type, taskProvider.name))
+            with(it).set(operationsImpl.getOutputPath(type, taskProvider.name))
         }
         // all producers of a multiple artifact type are added to the initial list (just like
         // the AGP producers) since the transforms always operate on the complete list of added
@@ -316,7 +320,7 @@ internal class MultipleTransformRequestImpl<TASK: Task, FILE_TYPE: FileSystemLoc
         val currentProviders= artifactContainer.transform(taskProvider.flatMap { newList })
         taskProvider.configure {
             newList.add(into(it))
-            into(it).set(operationsImpl.getOutputDirectory(type, taskProvider.name))
+            into(it).set(operationsImpl.getOutputPath(type, taskProvider.name))
             from(it).set(currentProviders)
         }
     }
@@ -371,7 +375,7 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
                 val resolver = buildOutputLocationResolver!!
                 File(resolver.invoke(it).get().asFile, fileName.orEmpty())
             } else {
-                operationsImpl.getOutputDirectory(type,
+                operationsImpl.getOutputPath(type,
                     if (artifactContainer.hasCustomProviders()) taskProvider.name else "",
                     fileName.orEmpty())
             }

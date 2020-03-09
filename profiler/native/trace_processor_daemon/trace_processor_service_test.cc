@@ -25,7 +25,6 @@
 #include <gtest/gtest.h>
 
 #include "trace_processor_service.h"
-#include "trace_processor_service.pb.h"
 
 namespace profiler {
 namespace perfetto {

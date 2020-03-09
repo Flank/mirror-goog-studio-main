@@ -605,6 +605,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                             + "a literal integer");
         } else if (codeNode == null
                 && context.isEnabled(SET_VERSION)
+                && !context.getProject().isLibrary()
                 // Not required in Gradle projects; typically defined in build.gradle instead
                 // and inserted at build time
                 && !context.getMainProject().isGradleProject()) {
@@ -619,6 +620,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
         Attr nameNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_VERSION_NAME);
         if (nameNode == null
                 && context.isEnabled(SET_VERSION)
+                && !context.getProject().isLibrary()
                 // Not required in Gradle projects; typically defined in build.gradle instead
                 // and inserted at build time
                 && !context.getMainProject().isGradleProject()) {

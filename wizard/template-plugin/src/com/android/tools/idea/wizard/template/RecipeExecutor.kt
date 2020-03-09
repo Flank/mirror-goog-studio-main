@@ -69,8 +69,16 @@ interface RecipeExecutor {
    * @param configuration Gradle configuration to use.
    * @param minRev If [minRev] is present, [minRev] or a higher number is used as the version of the dependency.
    * @param moduleDir determines a module to add the dependency. The current module will be used if it is null.
+   * @param toBase If true the dependency will be added to a base module if it exists.
+   *        Example: Libraries with manifest resources added to a Dynamic Feature Module need to be added to the base module.
    */
-  fun addDependency(mavenCoordinate: String, configuration: String = "compile", minRev: String? = null, moduleDir: File? = null)
+  fun addDependency(
+    mavenCoordinate: String,
+    configuration: String = "compile",
+    minRev: String? = null,
+    moduleDir: File? = null,
+    toBase: Boolean = false
+  )
 
   /**
    * Records a module dependency.

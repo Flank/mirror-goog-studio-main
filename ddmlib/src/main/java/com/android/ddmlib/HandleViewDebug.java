@@ -19,6 +19,7 @@ package com.android.ddmlib;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.internal.ClientImpl;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
@@ -103,7 +104,9 @@ public final class HandleViewDebug extends ChunkHandler {
         void clientDisconnected(ClientImpl client) {}
 
         @Override
-        void handleChunk(ClientImpl client, int type, ByteBuffer data, boolean isReply, int msgId) {
+        @VisibleForTesting
+        public void handleChunk(
+                ClientImpl client, int type, ByteBuffer data, boolean isReply, int msgId) {
             if (type != mChunkType) {
                 handleUnknownChunk(client, type, data, isReply, msgId);
                 return;

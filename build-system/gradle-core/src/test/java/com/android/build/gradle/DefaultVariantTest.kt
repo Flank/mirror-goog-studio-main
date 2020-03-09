@@ -85,7 +85,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
         }
 
         withVariantFilter { variant ->
-            if (variant.buildType.getName() == "debug") {
+            if (variant.buildType.name == "debug") {
                 variant.ignore = true
             }
         }
@@ -319,7 +319,7 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
                 (variant.name == "f2FbFxDebug") ||
                         (variant.name == "f2FbFyDebug") ||
                         (variant.name == "f2FaFyDebug") ||
-                        (variant.buildType.getName() == "release")
+                        (variant.buildType.name == "release")
         }
 
         // Left to right comparison this would be f2FaFxDebug, (as f1 is first)

@@ -60,11 +60,11 @@ fun RecipeExecutor.automotiveMediaServiceRecipe(
       // TODO: This should be created through a gradle build model instead of creating from text,
       //         creating this way given that this is the only place to create a build.gradle for anther module.
       source = buildGradle(
-        buildApiString = apis.buildApiString,
+        buildApiString = apis.buildApi.apiString,
         generateKotlin = projectData.language == Language.Kotlin,
         kotlinVersion = projectData.kotlinVersion,
-        minApi = apis.minApi,
-        targetApi = apis.targetApiString ?: apis.targetApi.toString(),
+        minApi = apis.minApi.apiString,
+        targetApi = apis.targetApi.apiString,
         useAndroidX = useAndroidX),
       to = projectData.rootDir.resolve(sharedModule).resolve("build.gradle"),
       // Setting the commitDocument as true because the media dependency needs to be added to the build gradle in the following line

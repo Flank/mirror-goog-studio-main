@@ -12,6 +12,7 @@ maven_java_library(
         "//tools/base/deploy/deployer:__subpackages__",
         "//tools/base/lint:__subpackages__",
         "//tools/base/signflinger:__subpackages__",
+        "//tools/base/zipflinger/tools:__subpackages__",
     ],
     deps = [
         "//tools/base/annotations",
@@ -180,47 +181,12 @@ java_test(
     ],
 )
 
-java_binary(
-    name = "verify",
-    srcs = [
-        "tools/src/com/android/zipflinger/Verify.java",
-    ],
-    main_class = "com.android.zipflinger.Verify",
-    deps = [
-        ":zipflinger",
-    ],
-)
-
-java_binary(
-    name = "map",
-    srcs = [
-        "tools/src/com/android/zipflinger/Mapper.java",
-    ],
-    main_class = "com.android.zipflinger.Mapper",
-    deps = [
-        ":zipflinger",
-    ],
-)
-
-# Debug tool to create zip files directly with zipflinger
-java_binary(
-    name = "zip",
-    srcs = [
-        "tools/src/com/android/zipflinger/ZipCreator.java",
-    ],
-    main_class = "com.android.zipflinger.ZipCreator",
-    deps = [
-        ":zipflinger",
-    ],
-)
-
 # managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.zipflinger",
     # do not sort: must match IML order
     srcs = [
         "src",
-        "tools/src",
     ],
     iml_files = ["android.sdktools.zipflinger.iml"],
     tags = ["no_test_mac"],

@@ -20,6 +20,7 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addLifecycleDependencies
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.res.layout.blankFragmentXml
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.src.app_package.blankFragmentJava
 import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.src.app_package.blankFragmentKt
@@ -31,7 +32,7 @@ fun RecipeExecutor.viewModelFragmentRecipe(
   layoutName: String,
   viewModelName: String
 ) {
-  val (projectData, srcOut, resOut, manifestOut) = moduleData
+  val (projectData, srcOut, resOut ) = moduleData
   val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
@@ -40,7 +41,7 @@ fun RecipeExecutor.viewModelFragmentRecipe(
   val applicationPackage = projectData.applicationPackage
 
   addDependency("com.android.support:support-v4:${appCompatVersion}.+")
-  addDependency("android.arch.lifecycle:extensions:+")
+  addLifecycleDependencies(useAndroidX)
 
   if (projectData.language == Language.Kotlin && useAndroidX) {
     addDependency("androidx.lifecycle:lifecycle-viewmodel-ktx:+")

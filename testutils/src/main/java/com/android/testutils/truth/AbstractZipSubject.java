@@ -55,9 +55,8 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
      *
      * @param conformingTo a regular expression to match entries we are interested in.
      * @return a {@link IterableSubject} propositions for matching entries.
-     * @throws IOException of the zip file cannot be opened.
      */
-    public final IterableSubject entries(@NonNull String conformingTo) throws IOException {
+    public final IterableSubject entries(@NonNull String conformingTo) {
         // validate file presence
         exists();
 

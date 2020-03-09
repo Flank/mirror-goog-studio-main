@@ -1,14 +1,18 @@
 package com.android.build.gradle.integration.testing;
 
+import static com.android.build.gradle.integration.common.fixture.TestVersions.SUPPORT_LIB_VERSION;
+import static com.android.build.gradle.integration.common.fixture.TestVersions.TEST_SUPPORT_LIB_VERSION;
+import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.TestVersions;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Iterables;
 import com.google.common.truth.Truth;
@@ -32,6 +36,15 @@ public class SeparateTestModuleTest {
     @Before
     public void setUp() throws IOException {
         TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    implementation \"com.android.support:support-v4:"
+                        + SUPPORT_LIB_VERSION
+                        + "\"\n"
+                        + "}\n");
+
+        TestFileUtils.appendToFile(
                 project.getSubproject("test").getBuildFile(),
                 "\n"
                         + "android {\n"
@@ -41,13 +54,37 @@ public class SeparateTestModuleTest {
                         + "    targetSdkVersion 16\n"
                         + "  }\n"
                         + "  dependencies {\n"
-                        + "    implementation ('com.android.support.test:runner:"
-                        + TestVersions.TEST_SUPPORT_LIB_VERSION
-                        + "', {\n"
-                        + "      exclude group: 'com.android.support', module: 'support-annotations'\n"
-                        + "    })\n"
+                        + "    // This dependency should be de-duplicated from the main app.\n"
+                        + "    implementation 'com.android.support:support-v4:"
+                        + SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "    implementation 'com.android.support.test:runner:"
+                        + TEST_SUPPORT_LIB_VERSION
+                        + "'\n"
                         + "  }\n"
                         + "}\n");
+    }
+
+    @Test
+    public void checkDependencySubtraction() throws Exception {
+        project.execute(":app:assembleDebug", ":test:assembleDebug");
+        try (Apk main = project.getSubproject("app").getApk(ApkType.DEBUG);
+                Apk test = project.getSubproject("test").getApk(ApkType.DEBUG)) {
+
+            // Sanity check the test dependency is packaged
+            assertThat(test).containsClass("Landroid/support/test/runner/AndroidJUnit4;");
+
+            // Check that a class shared with a production dependency is correctly subtracted.
+            // So it should be present in the main APK, but not the test APK.
+            String GUARDED_BY = "Landroid/support/annotation/GuardedBy;";
+            assertThat(main).containsClass(GUARDED_BY);
+            assertThat(test).doesNotContainClass(GUARDED_BY);
+
+            // Check that a resource shared with a production dependency is *not* subtracted
+            String NOTIFICATION_ACTION = "layout/notification_action.xml";
+            assertThat(main).containsResource(NOTIFICATION_ACTION);
+            assertThat(test).containsResource(NOTIFICATION_ACTION);
+        }
     }
 
     @Test
@@ -64,7 +101,7 @@ public class SeparateTestModuleTest {
 
         assertThat(
                         testProject.file(
-                                "build/intermediates/merged_manifests/debug/AndroidManifest.xml"))
+                                "build/intermediates/packaged_manifests/debug/AndroidManifest.xml"))
                 .containsAllOf(
                         "package=\"com.example.android.testing.blueprint.test\"",
                         "android:name=\"android.support.test.runner.AndroidJUnitRunner\"",
@@ -78,7 +115,7 @@ public class SeparateTestModuleTest {
 
         assertThat(
                         testProject.file(
-                                "build/intermediates/merged_manifests/debug/AndroidManifest.xml"))
+                                "build/intermediates/packaged_manifests/debug/AndroidManifest.xml"))
                 .containsAllOf(
                         "package=\"com.example.android.testing.blueprint.test\"",
                         "<instrumentation",

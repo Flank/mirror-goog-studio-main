@@ -82,7 +82,7 @@ enum class BooleanOption(
     PRECOMPILE_DEPENDENCIES_RESOURCES("android.precompileDependenciesResources", true, FeatureStage.Supported),
 
     ENABLE_PREFAB("android.enablePrefab", false, FeatureStage.Supported),
-    INCLUDE_DEPENDENCY_INFO_IN_APKS("android.includeDependencyInfoInApks", false, FeatureStage.Supported),
+    INCLUDE_DEPENDENCY_INFO_IN_APKS("android.includeDependencyInfoInApks", true, FeatureStage.Supported),
 
     // FIXME switch to false once we know we don't use these getters internally.
     DISABLE_MEMOIZATION("android.compatibility.disableMemoization", true, FeatureStage.Supported),
@@ -91,6 +91,7 @@ enum class BooleanOption(
      * EXPERIMENTAL FEATURES
      */
 
+    BUILD_FEATURE_MLMODELBINDING("android.defaults.buildfeatures.mlmodelbinding", false, ApiStage.Experimental),
     ENABLE_PROFILE_JSON("android.enableProfileJson", false, FeatureStage.Experimental),
     WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.warn", false, FeatureStage.Experimental),
     DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.disallow", false, FeatureStage.Experimental),
@@ -105,7 +106,7 @@ enum class BooleanOption(
     DEPLOYMENT_PROVIDES_LIST_OF_CHANGES("android.deployment.provideListOfChanges", false, FeatureStage.Experimental),
     ENABLE_JVM_RESOURCE_COMPILER("android.enableJvmResourceCompiler", false, FeatureStage.Experimental),
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false, FeatureStage.Experimental),
-    NAMESPACED_R_CLASS("android.namespacedRClass", false, FeatureStage.Experimental),
+    NON_TRANSITIVE_R_CLASS("android.nonTransitiveRClass", false, FeatureStage.Experimental),
     FULL_R8("android.enableR8.fullMode", false, FeatureStage.Experimental),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false, FeatureStage.Experimental),
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false, FeatureStage.Experimental),
@@ -113,7 +114,6 @@ enum class BooleanOption(
     ENABLE_SIDE_BY_SIDE_NDK("android.enableSideBySideNdk", true, FeatureStage.Experimental),
     ENABLE_R_TXT_RESOURCE_SHRINKING("android.enableRTxtResourceShrinking", true, FeatureStage.Experimental),
     ENABLE_PARTIAL_R_INCREMENTAL_BUILDS("android.enablePartialRIncrementalBuilds", false, FeatureStage.Experimental),
-    ENABLE_MLKIT("android.enableMlkit", false, FeatureStage.Experimental),
     ENABLE_RESOURCE_OPTIMIZATIONS("android.enableResourceOptimizations", false, FeatureStage.Experimental),
 
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
@@ -367,8 +367,11 @@ enum class BooleanOption(
         FeatureStage.Removed(VERSION_4_0, "This feature was removed in AGP 4.0")
     ),
 
-    GENERATE_R_JAVA("android.generateRJava", false, FeatureStage.Removed(VERSION_4_1, "This feature was removed in AGP 4.1")),
-
+    @Suppress("unused")
+    GENERATE_R_JAVA(
+        "android.generateRJava",
+        false,
+        FeatureStage.Removed(VERSION_4_1, "This feature was removed in AGP 4.1")),
 
     ; // end of enums
 

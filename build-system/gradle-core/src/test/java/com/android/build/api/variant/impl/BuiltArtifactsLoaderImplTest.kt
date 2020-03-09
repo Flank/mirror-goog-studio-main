@@ -105,9 +105,9 @@ class BuiltArtifactsLoaderImplTest {
           "filterType": "DENSITY",
           "value": "xxxhdpi"
         }
-      ],      "versionCode": 123,
+      ],
+      "versionCode": 123,
       "versionName": "version_name",
-      "enabled": true,
       "outputFile": "file1.xml"
     },
     {
@@ -120,7 +120,6 @@ class BuiltArtifactsLoaderImplTest {
       ],
       "versionCode": 123,
       "versionName": "version_name",
-      "enabled": true,
       "outputFile": "file2.xml"
     }
   ]
@@ -174,14 +173,13 @@ class BuiltArtifactsLoaderImplTest {
             FakeGradleDirectory(tmpFolder.root))
 
         assertThat(builtArtifacts).isNotNull()
-        assertThat(builtArtifacts!!.artifactType).isEqualTo(InternalArtifactType.MERGED_MANIFESTS)
+        assertThat(builtArtifacts!!.artifactType).isEqualTo(InternalArtifactType.PACKAGED_MANIFESTS)
         assertThat(builtArtifacts.applicationId).isEqualTo("com.android.test")
         assertThat(builtArtifacts.variantName).isEqualTo("debug")
         assertThat(builtArtifacts.elements).hasSize(1)
         val builtArtifact = builtArtifacts.elements.first()
         assertThat(builtArtifact.outputFile).isEqualTo(
             FileUtils.toSystemIndependentPath(File(tmpFolder.root, "file1.xml").absolutePath))
-        assertThat(builtArtifact.isEnabled).isTrue()
         assertThat(builtArtifact.versionCode).isEqualTo(123)
         assertThat(builtArtifact.versionName).isEqualTo("version_name")
         assertThat(builtArtifact.outputType).isEqualTo(VariantOutputConfiguration.OutputType.SINGLE)
@@ -193,7 +191,7 @@ class BuiltArtifactsLoaderImplTest {
             """{
   "version": 1,
   "artifactType": {
-    "type": "MERGED_MANIFESTS",
+    "type": "PACKAGED_MANIFESTS",
     "kind": "Directory"
   },
   "applicationId": "com.android.test",
@@ -204,7 +202,6 @@ class BuiltArtifactsLoaderImplTest {
       "filters": [],
       "versionCode": 123,
       "versionName": "version_name",
-      "enabled": true,
       "outputFile": "file1.xml"
     }
   ]

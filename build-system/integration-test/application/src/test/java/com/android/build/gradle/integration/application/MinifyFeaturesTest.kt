@@ -592,9 +592,9 @@ class MinifyFeaturesTest(
     fun testApksAreMinified() {
 
         val apkType = object : GradleTestProject.ApkType {
-            override fun getBuildType() = "minified"
-            override fun getTestName(): String? = null
-            override fun isSigned() = true
+            override val buildType = "minified"
+            override val testName: String? = null
+            override val isSigned: Boolean = true
         }
 
         val executor = project.executor()

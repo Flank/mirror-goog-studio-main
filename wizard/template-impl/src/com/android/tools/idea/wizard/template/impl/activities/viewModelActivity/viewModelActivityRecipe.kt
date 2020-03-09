@@ -21,6 +21,7 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addLifecycleDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
 import com.android.tools.idea.wizard.template.impl.activities.viewModelActivity.res.layout.activityXml
 import com.android.tools.idea.wizard.template.impl.activities.viewModelActivity.res.layout.fragmentXml
@@ -59,7 +60,7 @@ fun RecipeExecutor.viewModelActivityRecipe(
 
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
-  addDependency("android.arch.lifecycle:extensions:+")
+  addLifecycleDependencies(useAndroidX)
   if (generateKotlin && useAndroidX) {
     addDependency("androidx.lifecycle:lifecycle-viewmodel-ktx:+")
   }

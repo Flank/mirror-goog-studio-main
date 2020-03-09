@@ -597,7 +597,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             val dependencies = ArrayList<FileCollection>(2)
             dependencies.add(
-                creationConfig.globalScope.project.files(
+                creationConfig.services.fileCollection(
                     creationConfig.artifacts.getFinalProduct(
                         InternalArtifactType.RES_STATIC_LIBRARY))
             )
@@ -609,8 +609,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 )
             )
 
-            task.dependenciesFileCollection =
-                creationConfig.globalScope.project.files(dependencies)
+            task.dependenciesFileCollection = creationConfig.services.fileCollection(dependencies)
 
             task.sharedLibraryDependencies = creationConfig.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,

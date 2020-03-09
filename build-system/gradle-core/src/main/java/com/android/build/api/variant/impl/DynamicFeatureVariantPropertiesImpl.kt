@@ -104,13 +104,13 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
         Boolean::class.java,
         baseModuleMetadata.map { it.debuggable })
 
-    override val baseModuleVersionCode: Provider<Int> = variantApiServices.providerOf(
+    override val baseModuleVersionCode: Provider<Int?> = variantApiServices.nullableProviderOf(
         Int::class.java,
-        baseModuleMetadata.map { Integer.parseInt(it.versionCode) })
+        baseModuleMetadata.map { it.versionCode?.toInt() })
 
-    override val baseModuleVersionName: Provider<String> = variantApiServices.providerOf(
+    override val baseModuleVersionName: Provider<String?> = variantApiServices.nullableProviderOf(
         String::class.java,
-        baseModuleMetadata.map { it.versionName ?: "" })
+        baseModuleMetadata.map { it.versionName })
 
     override val featureName: Provider<String> =
         variantApiServices.providerOf(String::class.java, featureSetMetadata.map {
@@ -146,7 +146,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
 
         // Have to wrap the return of artifact.elements.map because we cannot call
         // finalizeValueOnRead directly on Provider
-        return variantPropertiesApiServices.providerOf(
+        return internalServices.providerOf(
             ModuleMetadata::class.java,
             artifact.elements.map { ModuleMetadata.load(it.single().asFile) })
     }
@@ -163,7 +163,7 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
 
         // Have to wrap the return of artifact.elements.map because we cannot call
         // finalizeValueOnRead directly on Provider
-        return variantPropertiesApiServices.providerOf(
+        return internalServices.providerOf(
             FeatureSetMetadata::class.java,
             artifact.elements.map { FeatureSetMetadata.load(it.single().asFile) })
     }

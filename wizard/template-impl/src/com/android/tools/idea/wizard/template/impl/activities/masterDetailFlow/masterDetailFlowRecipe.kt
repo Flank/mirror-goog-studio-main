@@ -61,7 +61,7 @@ fun RecipeExecutor.masterDetailFlowRecipe(
   val applicationPackage = projectData.applicationPackage
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.android.support:support-v4:${appCompatVersion}.+")
+  addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support:recyclerview-v7:${appCompatVersion}.+")
   addDependency("com.android.support:design:${appCompatVersion}.+")
 

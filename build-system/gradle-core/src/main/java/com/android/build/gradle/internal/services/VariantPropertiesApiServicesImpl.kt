@@ -115,7 +115,46 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
+    override fun <T> newPropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T>, id: String): Property<T> {
+        return initializeProperty(type, id).also {
+            it.set(value)
+            if (!disableMemoization) {
+                it.finalizeValueOnRead()
+            }
+
+            // FIXME when Gradle supports this
+            // it.preventGet()
+
+            delayedLock(it)
+        }
+    }
+
+    override fun <T> newNullablePropertyBackingDeprecatedApi(type: Class<T>, value: Provider<T?>, id: String): Property<T?> {
+        return initializeNullableProperty(type, id).also {
+            it.set(value)
+            if (!disableMemoization) {
+                it.finalizeValueOnRead()
+            }
+
+            // FIXME when Gradle supports this
+            // it.preventGet()
+
+            delayedLock(it)
+        }
+    }
+
     override fun <T> providerOf(type: Class<T>, value: Provider<T>, id: String): Provider<T> {
+        return initializeProperty(type, id).also {
+            it.set(value)
+            it.disallowChanges()
+            it.finalizeValueOnRead()
+
+            // FIXME when Gradle supports this
+            // it.preventGet()
+        }
+    }
+
+    override fun <T> nullableProviderOf(type: Class<T>, value: Provider<T?>, id: String): Provider<T?> {
         return initializeProperty(type, id).also {
             it.set(value)
             it.disallowChanges()
@@ -148,6 +187,10 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
+    override fun <T> provider(callable: Callable<T>): Provider<T> {
+        return projectServices.providerFactory.provider(callable)
+    }
+
     override fun <T : Named> named(type: Class<T>, name: String): T =
         projectServices.objectFactory.named(type, name)
 
@@ -164,7 +207,7 @@ class VariantPropertiesApiServicesImpl(
     override fun fileTree(dir: Any): ConfigurableFileTree =
         projectServices.objectFactory.fileTree().setDir(dir)
 
-    fun lockProperties() {
+    override fun lockProperties() {
         for (property in properties) {
             property.disallowChanges()
         }
@@ -184,6 +227,7 @@ class VariantPropertiesApiServicesImpl(
     }
 
     private fun <T> initializeProperty(type: Class<T>, id: String): Property<T> {
+
         return if (projectOptions[BooleanOption.USE_SAFE_PROPERTIES]) {
             GradleProperty.safeReadingBeforeExecution(
                 id,
@@ -193,4 +237,17 @@ class VariantPropertiesApiServicesImpl(
             projectServices.objectFactory.property(type)
         }
     }
+
+    private fun <T> initializeNullableProperty(type: Class<T>, id: String): Property<T?> {
+
+        return if (projectOptions[BooleanOption.USE_SAFE_PROPERTIES]) {
+            GradleProperty.safeReadingBeforeExecution(
+                id,
+                projectServices.objectFactory.property(type)
+            )
+        } else {
+            projectServices.objectFactory.property(type)
+        }
+    }
+
 }

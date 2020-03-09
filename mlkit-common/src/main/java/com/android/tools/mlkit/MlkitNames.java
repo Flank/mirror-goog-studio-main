@@ -15,11 +15,23 @@
  */
 package com.android.tools.mlkit;
 
+import com.android.utils.StringHelper;
+
 /** Store names that used by both light class and gradle task. */
 public class MlkitNames {
-    public static final String INPUTS = "Inputs";
     public static final String OUTPUTS = "Outputs";
-    public static final String LABEL = "Label";
 
     public static final String PACKAGE_SUFFIX = ".ml";
+
+    /** Format getter method to getPropertyNameAsType(i.e. getImage1AsTensorImage()). */
+    public static String formatGetterName(String propertyName, String type) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder
+                .append("get")
+                .append(StringHelper.usLocaleCapitalize(propertyName))
+                .append("As")
+                .append(StringHelper.usLocaleCapitalize(type));
+
+        return stringBuilder.toString();
+    }
 }

@@ -133,6 +133,7 @@ class ApplicationVariantFactory(
         return BuildFeatureValuesImpl(
             buildFeatures,
             dataBinding = features.dataBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_DATABINDING],
+            mlModelBinding = features.mlModelBinding ?: projectOptions[BooleanOption.BUILD_FEATURE_MLMODELBINDING],
             projectOptions = projectOptions)
     }
 
@@ -304,9 +305,8 @@ class ApplicationVariantFactory(
                     outputType = variantOutput.outputType.name,
                     filters = variantOutput.filters.map { filter -> GenericFilterConfiguration(filter.filterType.name, filter.identifier) },
                     // this is wrong, talk to xav@, we cannot continue supporting this.
-                    versionCode = variantOutput.versionCode.get(),
-                    versionName = variantOutput.versionName.get(),
-                    isEnabled = variantOutput.enabled.get(),
+                    versionCode = variantOutput.versionCode.orNull,
+                    versionName = variantOutput.versionName.orNull,
                     outputFile = "not_provided",
                     properties = mapOf()
                 ) to variantOutput

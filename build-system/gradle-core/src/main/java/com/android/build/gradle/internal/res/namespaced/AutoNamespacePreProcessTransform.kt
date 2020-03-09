@@ -21,7 +21,6 @@ import com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY
 import com.android.SdkConstants.FN_R_DEF_TXT
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.builder.packaging.JarCreator
@@ -125,7 +124,7 @@ abstract class AutoNamespacePreProcessTransform : TransformAction<AutoNamespaceP
                 .log(LogLevel.INFO, "Failed to parse resource in AAR $inputAar", it)
         }
 
-        JarCreatorFactory.make(outputZip.toPath(), JarCreatorType.JAR_FLINGER).use { out: JarCreator ->
+        JarCreatorFactory.make(jarFile = outputZip.toPath()).use { out: JarCreator ->
             out.setCompressionLevel(Deflater.NO_COMPRESSION)
             val symbolTableBuilder = SymbolTable.builder().tablePackage(packageName)
             for (entry in inputAar.entries()) {

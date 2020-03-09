@@ -28,6 +28,7 @@ import com.google.common.truth.StringSubject;
 import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -58,9 +59,13 @@ public class AarSubject extends AbstractAndroidSubject<AarSubject, Aar> {
     }
 
     @NonNull
-    public StringSubject textSymbolFile() throws IOException {
-        Path entry = actual().getEntry("R.txt");
-        Preconditions.checkNotNull(entry);
-        return Truth.assertThat(new String(Files.readAllBytes(entry), Charsets.UTF_8));
+    public StringSubject textSymbolFile() {
+        try {
+            Path entry = actual().getEntry("R.txt");
+            Preconditions.checkNotNull(entry);
+            return Truth.assertThat(new String(Files.readAllBytes(entry), Charsets.UTF_8));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }

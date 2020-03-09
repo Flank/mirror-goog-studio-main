@@ -32,7 +32,6 @@ fun RecipeExecutor.scrollFragmentRecipe(
   layoutName: String,
   packageName: String
 ) {
-
   val (projectData, srcOut, resOut, manifestOut) = moduleData
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension

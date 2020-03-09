@@ -24,9 +24,9 @@ import com.android.tools.deployer.ApkParser;
 import com.android.tools.deployer.devices.shell.Shell;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
+import io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.NettyServerBuilder;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -96,7 +97,8 @@ public class FakeDevice {
         this.storage.deleteOnExit();
         this.zygotepid = runProcess(0, "zygote64");
         this.logcat = File.createTempFile("logs", "txt");
-        this.shellServer = ServerBuilder.forPort(0).addService(new FakeDeviceService(this)).build();
+        this.shellServer =
+                NettyServerBuilder.forPort(0).addService(new FakeDeviceService(this)).build();
         this.fakeShell = getFakeShell();
         this.fakeApp = getFakeApp();
 
@@ -235,6 +237,16 @@ public class FakeDevice {
 
     public Set<String> getApps() {
         return apps.keySet();
+    }
+
+    public Set<String> getApps(int uid) {
+        Set<String> results = new HashSet<>();
+        for (Map.Entry<String, Application> entry : apps.entrySet()) {
+            if (entry.getValue().user.uid == uid) {
+                results.add(entry.getKey());
+            }
+        }
+        return results;
     }
 
     @Nullable
@@ -604,8 +616,8 @@ public class FakeDevice {
             int port = Integer.valueOf(matcher.group(1));
             this.stub =
                     FakeAppGrpc.newBlockingStub(
-                            ManagedChannelBuilder.forAddress("localhost", port)
-                                    .usePlaintext(true)
+                            NettyChannelBuilder.forAddress("localhost", port)
+                                    .usePlaintext()
                                     .build());
         }
 

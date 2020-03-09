@@ -56,14 +56,14 @@ fun RecipeExecutor.generateNavigationDrawer(
 
   val (projectTemplateData, srcOut, resOut, _, _, _, _, _, isNewModule) = data
   val apis = data.apis
-  val (_, minApiLevel, appCompatVersion, targetApi) = apis
-  val includeImageDrawables = minApiLevel < 21
+  val (_, targetApi, minApi, appCompatVersion) = apis
+  val includeImageDrawables = minApi.api < 21
   val language = projectTemplateData.language
   val useAndroidX = projectTemplateData.androidXSupport
   val useMaterial2 = useAndroidX || hasDependency("com.google.android.material:material")
 
   addAllKotlinDependencies(data)
-  addDependency("com.android.support:support-v4:${appCompatVersion}.+")
+  addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
 
   generateManifest(
     data,
@@ -128,7 +128,7 @@ fun RecipeExecutor.generateNavigationDrawer(
     resOut.resolve("layout/${layoutName}.xml")
   )
   save(
-    navigationHeaderXml(appCompatVersion, targetApi, data.isLibrary),
+    navigationHeaderXml(appCompatVersion, targetApi.api, data.isLibrary),
     resOut.resolve("layout/${navHeaderLayoutName}.xml")
   )
   save(

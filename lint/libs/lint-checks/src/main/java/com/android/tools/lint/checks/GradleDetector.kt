@@ -1584,10 +1584,9 @@ open class GradleDetector : Detector(), GradleScanner {
             for (path in dependencies) {
                 val message = getBlacklistedDependencyMessage(context, path) ?: continue
                 val projectDir = context.project.dir
-                var coordinates = path[0].requestedCoordinates
-                if (coordinates == null) {
-                    coordinates = path[0].resolvedCoordinates
-                }
+                // No need to use requestedCoordinates since they'll differ only in
+                // version and here we only match by group and artifact id
+                val coordinates = path[0].resolvedCoordinates
                 var location = guessGradleLocation(
                     context.client,
                     projectDir,
@@ -2812,7 +2811,6 @@ open class GradleDetector : Detector(), GradleScanner {
             "org.projectlombok:lombok",
             "com.google.auto.value:auto-value",
             "org.parceler:parceler",
-            "com.jakewharton:butterknife",
             "com.github.hotchemi:permissionsdispatcher-processor",
             "com.alibaba:arouter-compiler",
             "org.androidannotations:androidannotations",

@@ -23,13 +23,13 @@ import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.manifest.ManifestDataProvider
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.DimensionCombination
-import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.ManifestAttributeSupplier
 import com.android.builder.core.VariantType
-import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
@@ -51,7 +51,9 @@ abstract class VariantBuilder protected constructor(
     private val buildTypeSourceProvider: SourceProvider? = null,
     protected val signingConfigOverride: SigningConfig?,
     protected val manifestAttributeSupplier: ManifestAttributeSupplier? = null,
+    protected val manifestDataProvider: ManifestDataProvider,
     protected val dslServices: DslServices,
+    protected val variantPropertiesApiServices: VariantPropertiesApiServices,
     protected val isInExecutionPhase: BooleanSupplier
 ) {
 
@@ -69,7 +71,9 @@ abstract class VariantBuilder protected constructor(
             buildTypeSourceSet: SourceProvider? = null,
             signingConfigOverride: SigningConfig? = null,
             manifestAttributeSupplier: ManifestAttributeSupplier? = null,
+            manifestDataProvider: ManifestDataProvider,
             dslServices: DslServices,
+            variantPropertiesApiServices: VariantPropertiesApiServices,
             isInExecutionPhase: BooleanSupplier
 
         ): VariantBuilder {
@@ -84,7 +88,9 @@ abstract class VariantBuilder protected constructor(
                     buildTypeSourceSet,
                     signingConfigOverride,
                     manifestAttributeSupplier,
+                    manifestDataProvider,
                     dslServices,
+                    variantPropertiesApiServices,
                     isInExecutionPhase
 
                 )
@@ -98,7 +104,9 @@ abstract class VariantBuilder protected constructor(
                     buildTypeSourceSet,
                     signingConfigOverride,
                     manifestAttributeSupplier,
+                    manifestDataProvider,
                     dslServices,
+                    variantPropertiesApiServices,
                     isInExecutionPhase
                 )
             }
@@ -321,7 +329,9 @@ private class VariantConfigurationBuilder(
     buildTypeSourceSet: SourceProvider? = null,
     signingConfigOverride: SigningConfig?,
     manifestAttributeSupplier: ManifestAttributeSupplier? = null,
+    manifestDataProvider: ManifestDataProvider,
     dslServices: DslServices,
+    variantPropertiesApiServices: VariantPropertiesApiServices,
     isInExecutionPhase: BooleanSupplier
 ) : VariantBuilder(
     dimensionCombination,
@@ -332,11 +342,14 @@ private class VariantConfigurationBuilder(
     buildTypeSourceSet,
     signingConfigOverride,
     manifestAttributeSupplier,
+    manifestDataProvider,
     dslServices,
+    variantPropertiesApiServices,
     isInExecutionPhase
 ) {
 
     override fun createVariantDslInfo(): VariantDslInfoImpl {
+        val flavorList = flavors.map { it.first }
 
         return VariantDslInfoImpl(
             ComponentIdentityImpl(
@@ -350,11 +363,13 @@ private class VariantConfigurationBuilder(
             defaultSourceProvider.manifestFile,
             buildType,
             // this could be removed once the product flavor is internal only.
-            flavors.map { it.first }.toImmutableList(),
+            flavorList.toImmutableList(),
             signingConfigOverride,
             manifestAttributeSupplier,
             testedVariant,
+            manifestDataProvider,
             dslServices,
+            variantPropertiesApiServices,
             isInExecutionPhase
         )
     }
@@ -378,7 +393,9 @@ private class TestModuleConfigurationBuilder(
     buildTypeSourceSet: SourceProvider? = null,
     signingConfigOverride: SigningConfig?,
     manifestAttributeSupplier: ManifestAttributeSupplier? = null,
+    manifestDataProvider: ManifestDataProvider,
     dslServices: DslServices,
+    variantPropertiesApiServices: VariantPropertiesApiServices,
     isInExecutionPhase: BooleanSupplier
 ) : VariantBuilder(
     dimensionCombination,
@@ -389,11 +406,15 @@ private class TestModuleConfigurationBuilder(
     buildTypeSourceSet,
     signingConfigOverride,
     manifestAttributeSupplier,
+    manifestDataProvider,
     dslServices,
+    variantPropertiesApiServices,
     isInExecutionPhase
 ) {
 
     override fun createVariantDslInfo(): VariantDslInfoImpl {
+        val flavorList = flavors.map { it.first }
+
         return object: VariantDslInfoImpl(
             ComponentIdentityImpl(
                 name,
@@ -406,11 +427,13 @@ private class TestModuleConfigurationBuilder(
             defaultSourceProvider.manifestFile,
             buildType,
             // this could be removed once the product flavor is internal only.
-            flavors.map { it.first }.toImmutableList(),
+            flavorList.toImmutableList(),
             signingConfigOverride,
             manifestAttributeSupplier,
             testedVariant,
+            manifestDataProvider,
             dslServices,
+            variantPropertiesApiServices,
             isInExecutionPhase
         ) {
             override val applicationId: String

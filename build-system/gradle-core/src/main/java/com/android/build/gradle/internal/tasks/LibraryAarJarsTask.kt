@@ -229,7 +229,10 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
         ) {
             val filterAndOnlyClasses = JarMerger.CLASSES_ONLY.and(filter)
 
-            JarCreatorFactory.make(toFile.toPath(), jarCreatorType).use { jarCreator ->
+            JarCreatorFactory.make(
+                jarFile = toFile.toPath(),
+                type = jarCreatorType
+            ).use { jarCreator ->
                 compressionLevel?.let { jarCreator.setCompressionLevel(it) }
                 // Merge only class files on CLASS type inputs
                 for (input in classFiles) {
@@ -325,17 +328,9 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                 task.typedefRecipe
             )
 
-            task.packageName.set(
-                creationConfig.globalScope.project.provider {
-                    creationConfig.variantDslInfo.packageFromManifest
-                }
-            )
-            task.packageName.disallowChanges()
-
+            task.packageName.setDisallowChanges(creationConfig.variantDslInfo.packageFromManifest)
             task.jarCreatorType.setDisallowChanges(creationConfig.variantScope.jarCreatorType)
-
-            task.debugBuild
-                .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+            task.debugBuild.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
 
             /*
              * Only get files that are CLASS, and exclude files that are both CLASS and RESOURCES

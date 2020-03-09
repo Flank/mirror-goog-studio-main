@@ -14,6 +14,7 @@ import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.core.BuilderConstants;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.Maps;
+import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -107,7 +108,7 @@ public class DensitySplitTest {
                     "Check Valid output: " + (densityFilter == null ? "universal" : densityFilter),
                     value);
 
-            assertEquals(value.intValue(), output.getVersionCode());
+            assertThat(output.getVersionCode()).isEqualTo(value);
             expected.remove(densityFilter);
         }
 

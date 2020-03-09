@@ -565,8 +565,7 @@ public class ManifestMerger2 {
             addFeatureSplitAttribute(document, mFeatureName);
         }
 
-        if (mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)
-                && !mFeatureName.isEmpty()) {
+        if (!mFeatureName.isEmpty()) {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
         }
 
@@ -610,8 +609,7 @@ public class ManifestMerger2 {
         if (!mOptionalFeatures.contains(Invoker.Feature.TARGET_SANDBOX_VERSION)) {
             previousTargetSandboxVersion = addTargetSandboxVersionAttribute(document);
         }
-        if (!mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)
-                && !mFeatureName.isEmpty()) {
+        if (!mFeatureName.isEmpty()) {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
         }
 
@@ -626,8 +624,7 @@ public class ManifestMerger2 {
                 removeTargetSandboxVersionAttribute(document);
             }
         }
-        if (!mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)
-                && !mFeatureName.isEmpty()) {
+        if (!mFeatureName.isEmpty()) {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName, false);
         }
     }
@@ -636,9 +633,7 @@ public class ManifestMerger2 {
             @NonNull Document document, @NonNull MergingReport.Builder mergingReport)
             throws MergeFailureException {
         // add splitName if requested for bundletool and we haven't added it to the merged manifest.
-        if (mOptionalFeatures.contains(Invoker.Feature.ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST)
-                && !mOptionalFeatures.contains(
-                        Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)) {
+        if (mOptionalFeatures.contains(Invoker.Feature.ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST)) {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
         }
 
@@ -650,9 +645,7 @@ public class ManifestMerger2 {
         }
 
         // remove split name from the manifest, unless it was requested from before.
-        if (!mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_FEATURE_SPLIT_INFO)) {
-            adjustInstantAppFeatureSplitInfo(document, mFeatureName, false);
-        }
+        adjustInstantAppFeatureSplitInfo(document, mFeatureName, false);
     }
 
     /**
@@ -1727,9 +1720,6 @@ public class ManifestMerger2 {
 
             /** Mark this application as a feature split */
             ADD_FEATURE_SPLIT_ATTRIBUTE,
-
-            /** Mark the entry points to the application with splitName */
-            ADD_INSTANT_APP_FEATURE_SPLIT_INFO,
 
             /** Create a bundletool manifest */
             CREATE_BUNDLETOOL_MANIFEST,

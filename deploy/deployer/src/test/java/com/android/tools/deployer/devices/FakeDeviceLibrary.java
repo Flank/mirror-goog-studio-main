@@ -27,6 +27,7 @@ import com.android.tools.deployer.devices.shell.Mkdir;
 import com.android.tools.deployer.devices.shell.Rm;
 import com.android.tools.deployer.devices.shell.SessionPm;
 import com.android.tools.deployer.devices.shell.Stat;
+import com.android.tools.deployer.devices.shell.Xargs;
 import java.io.IOException;
 
 public class FakeDeviceLibrary {
@@ -111,6 +112,7 @@ public class FakeDeviceLibrary {
             device.getShell().addCommand(new Cp());
             device.getShell().addCommand(new Ls());
             device.getShell().addCommand(new Stat());
+            device.getShell().addCommand(new Xargs());
         }
 
         return device;

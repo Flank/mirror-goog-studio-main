@@ -91,8 +91,6 @@ class CentralDirectory {
         }
 
         // Step 3: write clean CD chunks
-        // These cast to (int) are fine since we are dealing with an array in RAM which size
-        // is limited to 2GiB by the language.
         for (Location toWrite : cleanCDLocations) {
             buf.limit(Math.toIntExact(toWrite.first + toWrite.size()));
             buf.position(Math.toIntExact(toWrite.first));

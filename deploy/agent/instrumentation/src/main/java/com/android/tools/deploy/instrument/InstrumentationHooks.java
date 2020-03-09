@@ -27,6 +27,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.Predicate;
 
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class InstrumentationHooks {
@@ -49,43 +50,53 @@ public final class InstrumentationHooks {
         mRestart = restart;
     }
 
-    public static List<File> handleSplitDexPathExit(List<File> dexPathFiles) {
+    public static List<File> handleSplitDexPathExit(List<File> files) {
         try {
             Class<?> clazz = Class.forName("android.app.ActivityThread");
-            String packageName = call(clazz, "currentPackageName").toString();
-
             Object activityThread = call(clazz, "currentActivityThread");
-            Object loadedApk =
-                    call(
-                            activityThread,
-                            "peekPackageInfo",
-                            arg(packageName),
-                            arg(true, boolean.class));
 
-            HashSet<Object> apkPaths = new HashSet<>();
-            apkPaths.add(call(loadedApk, "getAppDir"));
+            String packageName = getPackageName(activityThread);
+            Path packagePath = getPackagePath(activityThread);
 
-            Object[] splitPaths = (Object[]) call(loadedApk, "getSplitAppDirs");
-            if (splitPaths != null) {
-                for (Object path : splitPaths) {
-                    apkPaths.add(path);
-                }
+            // If we've added native libraries, we need to remove them and
+            // replace them with dex overlays. If we don't remove any files,
+            // we need to additionally check if we need dex overlays.
+            Overlay overlay = new Overlay(packageName);
+            if (files.removeIf(prefixMatch(overlay.getOverlayRoot()))
+                    || files.stream().anyMatch(prefixMatch(packagePath))) {
+                files.addAll(0, overlay.getDexFiles());
             }
 
-            // If the classloader being created references any of the APKs in the
-            // application, we insert the overlay dex into the front of the list.
-            for (File file : dexPathFiles) {
-                if (apkPaths.contains(file.toString())) {
-                    Overlay overlay = new Overlay(packageName);
-                    dexPathFiles.addAll(0, overlay.getDexFiles());
-                    break;
-                }
+        } catch (Exception e) {
+            Log.e(TAG, "Exception", e);
+        }
+
+        return files;
+    }
+
+    public static List<File> handleSplitPathsExit(List<File> files) {
+        try {
+            Class<?> clazz = Class.forName("android.app.ActivityThread");
+            Object activityThread = call(clazz, "currentActivityThread");
+
+            String packageName = getPackageName(activityThread);
+            Path packagePath = getPackagePath(activityThread);
+
+            // If any files in the list are in the package's installation directory,
+            // include our overlay files in the list as well.
+            if (files.stream().anyMatch(prefixMatch(packagePath))) {
+                Overlay overlay = new Overlay(packageName);
+                files.addAll(0, overlay.getNativeLibraryDirs());
             }
         } catch (Exception e) {
             Log.e(TAG, "Exception", e);
         }
 
-        return dexPathFiles;
+        return files;
+    }
+
+    private static Predicate<File> prefixMatch(Path prefix) {
+        return file -> file.toPath().startsWith(prefix);
     }
 
     // Instruments DexPathList$Element#findResource(). Checks to see if an Element object refers

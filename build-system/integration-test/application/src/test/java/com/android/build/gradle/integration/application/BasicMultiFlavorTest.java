@@ -72,19 +72,6 @@ public class BasicMultiFlavorTest {
     }
 
     @Test
-    public void checkPrecedenceForMultiFlavor() throws IOException, InterruptedException {
-        project.execute("assembleFreeBetaDebug");
-
-        // Make sure "beta" overrides "free" and "defaultConfig".
-        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "free", "beta"))
-                .hasMaxSdkVersion(18);
-
-        // Make sure the suffixes are applied in the right order.
-        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "free", "beta"))
-                .hasVersionName("com.example.default.free.beta.debug");
-    }
-
-    @Test
     public void checkResValueAndManifestPlaceholders() throws IOException, InterruptedException {
         addResValuesAndPlaceholders();
         ModelContainer<AndroidProject> model =

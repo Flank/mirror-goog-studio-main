@@ -21,6 +21,7 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
+import com.android.tools.idea.wizard.template.impl.activities.common.addLifecycleDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifestStrings
 import com.android.tools.idea.wizard.template.impl.activities.common.generateThemeStyles
 import com.android.tools.idea.wizard.template.impl.activities.loginActivity.res.layout.activityLoginXml
@@ -66,7 +67,7 @@ fun RecipeExecutor.loginActivityRecipe(
   addDependency("com.android.support:design:${appCompatVersion}.+")
   addDependency("com.android.support:support-annotations:${appCompatVersion}.+")
   addDependency("com.android.support.constraint:constraint-layout:+")
-  addDependency("android.arch.lifecycle:extensions:+")
+  addLifecycleDependencies(useAndroidX)
 
   val baseFeatureResOut = moduleData.baseFeature?.resDir ?: resOut
   val isDynamicFeature = moduleData.baseFeature != null
@@ -79,7 +80,7 @@ fun RecipeExecutor.loginActivityRecipe(
            manifestOut.resolve("AndroidManifest.xml"))
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(stringsXml(simpleName, activityTitle, moduleData.isNewModule), resOut.resolve("values/strings.xml"))
-  save(activityLoginXml(activityClass, packageName, useAndroidX, apis.minApiLevel), resOut.resolve("layout/${layoutName}.xml"))
+  save(activityLoginXml(activityClass, packageName, useAndroidX, apis.minApi.api), resOut.resolve("layout/${layoutName}.xml"))
 
   val loginActivity = when (projectData.language) {
     Language.Java -> loginActivityJava(layoutName, packageName, useAndroidX)

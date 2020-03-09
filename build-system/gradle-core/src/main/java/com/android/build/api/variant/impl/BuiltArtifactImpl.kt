@@ -37,9 +37,8 @@ import java.nio.file.Path
 data class BuiltArtifactImpl private constructor(
     override val outputFile: String,
     override val properties: Map<String, String> = mapOf(),
-    override val versionCode: Int = -1,
-    override val versionName: String = "",
-    override val isEnabled: Boolean = true,
+    override val versionCode: Int?,
+    override val versionName: String?,
     val variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl()
 ) : BuiltArtifact, CommonBuiltArtifact, Serializable, VariantOutputConfiguration by variantOutputConfiguration {
 
@@ -49,7 +48,6 @@ data class BuiltArtifactImpl private constructor(
             properties = properties,
             versionCode = versionCode,
             versionName = versionName,
-            isEnabled = isEnabled,
             variantOutputConfiguration = variantOutputConfiguration
         )
     }
@@ -63,15 +61,14 @@ data class BuiltArtifactImpl private constructor(
         fun make(
             outputFile: String,
             properties: Map<String, String> = mapOf(),
-            versionCode: Int = -1,
-            versionName: String = "",
-            isEnabled: Boolean = true,
-            variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl())
+            versionCode: Int? = null,
+            versionName: String? = null,
+            variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl()
+        )
                     = BuiltArtifactImpl(FileUtils.toSystemIndependentPath(outputFile),
                 properties,
                 versionCode,
                 versionName,
-                isEnabled,
                 variantOutputConfiguration
         )
 
@@ -106,18 +103,18 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
             { outputFile: String,
                 properties: Map<String, String>,
                 versionCode: Int,
-                versionName: String,
-                isEnabled: Boolean ->
+                versionName: String ->
                 BuiltArtifactImpl.make(
-                    variantOutputConfiguration =
-                        VariantOutputConfigurationImpl(
-                            isUniversal = OutputType.UNIVERSAL.name == outputType,
-                            filters = filters.build()),
                     outputFile = outputFile,
                     properties = properties,
                     versionCode = versionCode,
                     versionName = versionName,
-                    isEnabled = isEnabled)
+                    variantOutputConfiguration =
+                    VariantOutputConfigurationImpl(
+                        isUniversal = OutputType.UNIVERSAL.name == outputType,
+                        filters = filters.build()
+                    )
+                )
             })
     }
 

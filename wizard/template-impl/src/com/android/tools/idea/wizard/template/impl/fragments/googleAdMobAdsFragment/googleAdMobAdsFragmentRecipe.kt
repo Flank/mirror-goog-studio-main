@@ -41,7 +41,7 @@ fun RecipeExecutor.googleAdMobAdsFragmentRecipe(
   val applicationPackage = projectData.applicationPackage
   addAllKotlinDependencies(moduleData)
 
-  addDependency("com.google.android.gms:play-services-ads:+")
+  addDependency("com.google.android.gms:play-services-ads:+", toBase = moduleData.isDynamic)
   addDependency("com.android.support.constraint:constraint-layout:+")
 
   mergeXml(androidManifestXml(), manifestOut.resolve("AndroidManifest.xml"))

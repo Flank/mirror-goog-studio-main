@@ -3930,8 +3930,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
         String expected =
                 ""
                         + "src/test/pkg/CastTest.java:15: Error: Cast from Cursor to Closeable requires API level 16 (current min is 14) [NewApi]\n"
-                        + "        Closeable closeable = (Closeable) cursor; // Requires 16\n"
-                        + "                              ~~~~~~~~~~~~~~~~~~\n"
+                        + "        Closeable closeable = (java.io.Closeable) cursor; // Requires 16\n"
+                        + "                              ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "src/test/pkg/CastTest.java:21: Error: Cast from KeyCharacterMap to Parcelable requires API level 16 (current min is 14) [NewApi]\n"
                         + "        Parcelable parcelable2 = (Parcelable)map; // Requires API 16\n"
                         + "                                 ~~~~~~~~~~~~~~~\n"
@@ -3958,7 +3958,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "public class CastTest {\n"
                                         + "    public void test(Cursor cursor) throws IOException {\n"
                                         + "        cursor.close();\n"
-                                        + "        Closeable closeable = (Closeable) cursor; // Requires 16\n"
+                                        + "        Closeable closeable = (java.io.Closeable) cursor; // Requires 16\n"
                                         + "        closeable.close();\n"
                                         + "    }\n"
                                         + "\n"
@@ -6571,6 +6571,28 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
+    }
+
+    public void testKT_37200() {
+        // Regression test for https://youtrack.jetbrains.com/issue/KT-37200
+        lint().files(
+                        manifest().minSdk(15),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "inline fun <reified F> ViewModelContext.viewModelFactory(): F {\n"
+                                        + "    return activity as? F ?: throw IllegalStateException(\"Boo!\")\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "sealed class ViewModelContext {\n"
+                                        + "    abstract val activity: Number\n"
+                                        + "}\n"),
+                        mSupportClasspath,
+                        mSupportJar)
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expectClean();
     }
 
     public void testTargetApiInCustomJar() {

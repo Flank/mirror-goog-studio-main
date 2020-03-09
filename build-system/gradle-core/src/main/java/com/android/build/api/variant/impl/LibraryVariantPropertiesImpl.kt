@@ -70,7 +70,7 @@ open class LibraryVariantPropertiesImpl @Inject constructor(
 
     override val applicationId: Property<String> = variantPropertiesApiServices.propertyOf(
         String::class.java,
-        Callable { variantDslInfo.packageFromManifest })
+        variantDslInfo.packageFromManifest)
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

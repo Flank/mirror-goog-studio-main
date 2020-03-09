@@ -47,7 +47,7 @@ import java.nio.file.Path
  * @param sourceOut directory to contain R.java
  * @param rClassOutputJar file to output R.jar.
  * @param symbolFileOut R.txt file location
- * @param namespacedRClass if true, the generated R class for this library and the  R.txt will
+ * @param nonTransitiveRClass if true, the generated R class for this library and the  R.txt will
  *                         contain only the resources defined in this library, otherwise they will
  *                         contain all the resources merged from the transitive dependencies.
  */
@@ -61,7 +61,7 @@ fun processLibraryMainSymbolTable(
         rClassOutputJar: File?,
         symbolFileOut: File?,
         platformSymbols: SymbolTable,
-        namespacedRClass: Boolean,
+        nonTransitiveRClass: Boolean,
         generateDependencyRClasses: Boolean,
         idProvider: IdProvider
 ) {
@@ -77,7 +77,7 @@ fun processLibraryMainSymbolTable(
             librarySymbols,
             depSymbolTables,
             platformSymbols,
-            namespacedRClass,
+            nonTransitiveRClass,
             symbolFileOut?.toPath(),
             generateDependencyRClasses,
             idProvider
@@ -101,7 +101,7 @@ internal fun processLibraryMainSymbolTable(
     librarySymbols: SymbolTable,
     depSymbolTables: Set<SymbolTable>,
     platformSymbols: SymbolTable,
-    namespacedRClass: Boolean,
+    nonTransitiveRClass: Boolean,
     symbolFileOut: Path?,
     generateDependencyRClasses: Boolean = true,
     idProvider: IdProvider = IdProvider.sequential()
@@ -114,7 +114,7 @@ internal fun processLibraryMainSymbolTable(
         finalPackageName, librarySymbols, depSymbolTables, platformSymbols, idProvider
     )
 
-    val mainSymbolTable = if (namespacedRClass) allSymbols.filter(librarySymbols) else allSymbols
+    val mainSymbolTable = if (nonTransitiveRClass) allSymbols.filter(librarySymbols) else allSymbols
 
     // Generate R.txt file.
     symbolFileOut?.let {

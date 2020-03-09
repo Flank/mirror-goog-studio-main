@@ -102,13 +102,6 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     @get:Optional
     abstract val resOffset: Property<Int>
 
-    @get:Input
-    @get:Optional
-    abstract val versionName: Property<String?>
-
-    @get:Input
-    abstract val versionCode: Property<Int?>
-
     @get:OutputDirectory
     lateinit var incrementalFolder: File
         private set
@@ -257,15 +250,11 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             super.configure(task)
 
             val variantScope = creationConfig.variantScope
-            val projectOptions = creationConfig.globalScope.projectOptions
+            val projectOptions = creationConfig.services.projectOptions
 
             task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
 
-            val mainSplit = creationConfig.outputs.getMainSplit()
-            task.versionCode.setDisallowChanges(mainSplit.versionCode)
-            task.versionName.setDisallowChanges(mainSplit.versionName)
-
-            task.mainSplit = mainSplit
+            task.mainSplit = creationConfig.outputs.getMainSplit()
 
             creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,
@@ -306,7 +295,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             task.androidJar = creationConfig.globalScope.sdkComponents.androidJarProvider
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
-                creationConfig.globalScope.projectOptions
+                creationConfig.services.projectOptions
             )
 
             task.manifestMergeBlameFile = creationConfig.artifacts.getFinalProduct(

@@ -24,8 +24,8 @@ import java.io.File
  **/
 sealed class TemplateData
 
-// TODO: change it to enum, wrapper, sealed class or at least UShort
-typealias Version = Int
+/** apiLevelString usually has the value of apiLevel (as a String), but may be a "name" for unreleased APIs. */
+data class  ApiVersion(val api: Int, val apiString: String)
 
 // TODO: use wrappers/similar to check validity?
 typealias PackageName = String
@@ -39,13 +39,10 @@ enum class Language(val string: String, val extension: String) {
 }
 
 data class ApiTemplateData(
-  val minApi: String,
-  val minApiLevel: Version,
+  val buildApi: ApiVersion,
+  val targetApi: ApiVersion,
+  val minApi: ApiVersion,
   val appCompatVersion: Int,
-  val targetApi: Version,
-  /** Not null only if it is unreleased yet API. */
-  val targetApiString: String? = null,
-  val buildApiString: String? = null,
   val buildApiRevision: Int? = null
 )
 

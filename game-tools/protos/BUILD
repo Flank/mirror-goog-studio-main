@@ -5,6 +5,6 @@ android_java_proto_library(
     srcs = glob(["*.proto"]),
     grpc_support = True,
     java_deps = ["//tools/base/third_party:io.grpc_grpc-all"],
-    protoc_grpc_version = "1.0.3",
+    protoc_grpc_version = "1.21.1",
     visibility = ["//visibility:public"],
 )

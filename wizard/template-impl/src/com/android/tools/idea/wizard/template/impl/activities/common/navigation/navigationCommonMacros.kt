@@ -17,6 +17,7 @@ package com.android.tools.idea.wizard.template.impl.activities.common.navigation
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.RecipeExecutor
+import com.android.tools.idea.wizard.template.impl.activities.common.addLifecycleDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.res.layout.fragmentFirstXml
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.src.ui.firstFragmentJava
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.src.ui.firstFragmentKt
@@ -34,12 +35,7 @@ fun RecipeExecutor.saveFragmentAndViewModel(
   useAndroidX: Boolean = true
 ) {
   val firstFragmentClass = "${underscoreToCamelCase(fragmentPrefix)}Fragment"
-  val secondFragmentPrefix = "${fragmentPrefix}_second"
-  // TODO(qumeric): check if it is correct?
-  val secondFragmentClass = "${underscoreToCamelCase(secondFragmentPrefix)}Fragment"
-
   val viewModelClass = "${underscoreToCamelCase(fragmentPrefix)}ViewModel"
-
   val generateKotlin = language == Language.Kotlin
 
   save(
@@ -69,7 +65,7 @@ fun RecipeExecutor.navigationDependencies(
 ) {
   addDependency("android.arch.navigation:navigation-fragment:+")
   addDependency("android.arch.navigation:navigation-ui:+")
-  addDependency("android.arch.lifecycle:extensions:+")
+  addLifecycleDependencies(useAndroidX)
   if (generateKotlin) {
     addDependency("android.arch.navigation:navigation-fragment-ktx:+")
     addDependency("android.arch.navigation:navigation-ui-ktx:+")

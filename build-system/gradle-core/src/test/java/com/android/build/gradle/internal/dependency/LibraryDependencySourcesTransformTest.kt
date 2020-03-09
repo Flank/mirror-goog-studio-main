@@ -120,19 +120,18 @@ class LibraryDependencySourcesTransformTest {
         val outputClassesFile = FileUtils.join(transformOutputs.outputDirectory,
                 "resources_symbols${SdkConstants.DOT_TXT}")
 
-        assertThat(outputClassesFile.readLines()).containsExactlyElementsIn(
-                listOf(
-                        "R_DEF: Internal format may change without notice",
-                        "",
-                        "attr? maybeAttr",
-                        "attr myAttr",
-                        "attr myAttr2",
-                        "layout activity_main",
-                        "string app_name",
-                        "string desc",
-                        "styleable ds android:name android:color myAttr",
-                        "styleable ds2 myAttr2 maybeAttr"
-                )
+        assertThat(outputClassesFile.readLines()).containsExactly(
+                        "styleable:ds2:-1",
+                        "attr:myAttr2:-1",
+                        "attr:maybeAttr:-1",
+                        "attr:myAttr:-1",
+                        "styleable:ds:-1",
+                        "attr:android_name:-1",
+                        "attr:android_color:-1",
+                        "string:app_name:-1",
+                        "string:desc:-1",
+                        "layout:activity_main:-1",
+                        "drawable:foo:-1"
         )
     }
 

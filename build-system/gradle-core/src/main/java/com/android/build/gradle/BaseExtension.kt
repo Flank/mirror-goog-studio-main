@@ -121,19 +121,6 @@ abstract class BaseExtension protected constructor(
     abstract override val dataBinding: DataBindingOptions
     abstract val viewBinding: ViewBindingOptions
 
-    final override var buildToolsRevision: Revision =
-        ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION
-        private set
-
-    override val libraryRequests: MutableCollection<LibraryRequest> = mutableListOf()
-
-    override val flavorDimensionList: MutableList<String> = mutableListOf()
-
-    private var _resourcePrefix: String? = null
-
-    override val resourcePrefix: String?
-        get() = _resourcePrefix
-
     override var defaultPublishConfig: String = "release"
 
     override var variantFilter: Action<VariantFilter>? = null
@@ -141,8 +128,6 @@ abstract class BaseExtension protected constructor(
     protected val logger: Logger = Logging.getLogger(this::class.java)
 
     private var isWritable = true
-
-    override var ndkVersion: String? = null
 
     /**
      * Disallow further modification on the extension.
@@ -168,146 +153,10 @@ abstract class BaseExtension protected constructor(
         compileSdkVersion(apiLevel)
     }
 
-    /**
-     * Includes the specified library to the classpath.
-     *
-     * You typically use this property to support optional platform libraries that ship with the
-     * Android SDK. The following sample adds the Apache HTTP API library to the project classpath:
-     *
-     * ```
-     * android {
-     *     // Adds a platform library that ships with the Android SDK.
-     *     useLibrary 'org.apache.http.legacy'
-     * }
-     * ```
-     *
-     * To include libraries that do not ship with the SDK, such as local library modules or
-     * binaries from remote repositories,
-     * [add the libraries as dependencies](https://developer.android.com/studio/build/dependencies.html)
-     * in the `dependencies` block. Note that Android plugin 3.0.0 and later introduce
-     * [new dependency configurations](https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration.html#new_configurations).
-     * To learn more about Gradle dependencies, read
-     * [Dependency Management Basics](https://docs.gradle.org/current/userguide/artifact_dependencies_tutorial.html).
-     *
-     * @param name the name of the library.
-     */
-    fun useLibrary(name: String) {
-        useLibrary(name, true)
-    }
-
-    /**
-     * Includes the specified library to the classpath.
-     *
-     * You typically use this property to support optional platform libraries that ship with the
-     * Android SDK. The following sample adds the Apache HTTP API library to the project classpath:
-     *
-     * ```
-     * android {
-     *     // Adds a platform library that ships with the Android SDK.
-     *     useLibrary 'org.apache.http.legacy'
-     * }
-     * ```
-     *
-     * To include libraries that do not ship with the SDK, such as local library modules or
-     * binaries from remote repositories,
-     * [add the libraries as dependencies]("https://developer.android.com/studio/build/dependencies.html)
-     * in the `dependencies` block. Note that Android plugin 3.0.0 and later introduce
-     * [new dependency configurations](new dependency configurations).
-     * To learn more about Gradle dependencies, read
-     * [Dependency Management Basics](https://docs.gradle.org/current/userguide/artifact_dependencies_tutorial.html)
-     *
-     * @param name the name of the library.
-     * @param required if using the library requires a manifest entry, the entry will indicate that
-     *     the library is not required.
-     */
-    fun useLibrary(name: String, required: Boolean) {
-        libraryRequests.add(LibraryRequest(name, required))
-    }
-
     open fun buildToolsVersion(version: String) {
         buildToolsVersion = version
     }
 
-    /** {@inheritDoc} */
-    override var buildToolsVersion: String
-        get() = buildToolsRevision.toString()
-        set(version) {
-            checkWritability()
-            //The underlying Revision class has the maven artifact semantic,
-            // so 20 is not the same as 20.0. For the build tools revision this
-            // is not the desired behavior, so normalize e.g. to 20.0.0.
-            buildToolsRevision = Revision.parseRevision(version, Revision.Precision.MICRO)
-        }
-
-    /**
-     * Specifies the names of product flavor dimensions for this project.
-     *
-     * When configuring product flavors with Android plugin 3.0.0 and higher, you must specify at
-     * least one flavor dimension, using the <a
-     * href="com.android.build.gradle.BaseExtension.html#com.android.build.gradle.BaseExtension:flavorDimensions(java.lang.String[])">
-     * `flavorDimensions`</a> property, and then assign each flavor to a dimension.
-     * Otherwise, you will get the following build error:
-     *
-     * ```
-     * Error:All flavors must now belong to a named flavor dimension.
-     * The flavor 'flavor_name' is not assigned to a flavor dimension.
-     * ```
-     *
-     * By default, when you specify only one dimension, all flavors you configure automatically
-     * belong to that dimension. If you specify more than one dimension, you need to manually assign
-     * each flavor to a dimension, as shown in the sample below.
-     *
-     * Flavor dimensions allow you to create groups of product flavors that you can combine with
-     * flavors from other flavor dimensions. For example, you can have one dimension that includes a
-     * 'free' and 'paid' version of your app, and another dimension for flavors that support
-     * different API levels, such as 'minApi21' and 'minApi24'. The Android plugin can then combine
-     * flavors from these dimensions—including their settings, code, and resources—to create
-     * variants such as 'debugFreeMinApi21' and 'releasePaidMinApi24', and so on. The sample below
-     * shows you how to specify flavor dimensions and add product flavors to them.
-     *
-     * ```
-     * android {
-     *     ...
-     *     // Specifies the flavor dimensions you want to use. The order in which you
-     *     // list each dimension determines its priority, from highest to lowest,
-     *     // when Gradle merges variant sources and configurations. You must assign
-     *     // each product flavor you configure to one of the flavor dimensions.
-     *     flavorDimensions 'api', 'version'
-     *
-     *     productFlavors {
-     *       demo {
-     *         // Assigns this product flavor to the 'version' flavor dimension.
-     *         dimension 'version'
-     *         ...
-     *     }
-     *
-     *       full {
-     *         dimension 'version'
-     *         ...
-     *       }
-     *
-     *       minApi24 {
-     *         // Assigns this flavor to the 'api' dimension.
-     *         dimension 'api'
-     *         minSdkVersion '24'
-     *         versionNameSuffix "-minApi24"
-     *         ...
-     *       }
-     *
-     *       minApi21 {
-     *         dimension "api"
-     *         minSdkVersion '21'
-     *         versionNameSuffix "-minApi21"
-     *         ...
-     *       }
-     *    }
-     * }
-     * ```
-     *
-     * To learn more, read <a
-     * href="https://developer.android.com/studio/build/build-variants.html#flavor-dimensions">
-     * Combine multiple flavors</a>.
-     */
     fun flavorDimensions(vararg dimensions: String) {
         checkWritability()
         flavorDimensionList.clear()
@@ -447,8 +296,8 @@ abstract class BaseExtension protected constructor(
         this.variantFilter = variantFilter
     }
 
-    fun resourcePrefix(prefix: String) {
-        _resourcePrefix = prefix
+    open fun resourcePrefix(prefix: String) {
+        resourcePrefix = prefix
     }
 
     abstract fun addVariant(variant: BaseVariant)
@@ -589,6 +438,21 @@ abstract class BaseExtension protected constructor(
     }
 
     // Kept for binary and source compatibility until the old DSL interfaces can go away.
+    abstract override val flavorDimensionList: MutableList<String>
+
+    abstract override var resourcePrefix: String?
+
+    abstract override var ndkVersion: String?
+
+    abstract override var buildToolsVersion: String
+
+    abstract override val buildToolsRevision: Revision
+
+    abstract override val libraryRequests: MutableCollection<LibraryRequest>
+
+    abstract fun useLibrary(name: String)
+    abstract fun useLibrary(name: String, required: Boolean)
+
     abstract override val aaptOptions: AaptOptions
 
     abstract override val adbOptions: AdbOptions

@@ -151,8 +151,9 @@ public class TestVariantFactory
         if (buildFeatures instanceof TestBuildFeatures) {
             return new BuildFeatureValuesImpl(
                     buildFeatures,
-                    true /*androidResources */,
+                    true /* androidResources */,
                     false /* dataBinding */,
+                    false /* mlModelBinding */,
                     projectOptions);
         } else {
             throw new RuntimeException("buildFeatures not of type TestBuildFeatures");
@@ -243,11 +244,6 @@ public class TestVariantFactory
         // with the debug signing config.
         dslContainers.getSigningConfigContainer().create(BuilderConstants.DEBUG);
         dslContainers.getBuildTypeContainer().create(BuilderConstants.DEBUG);
-    }
-
-    @NonNull
-    public static String getTestedApksConfigurationName(@NonNull String variantName) {
-        return StringHelper.appendCapitalized(variantName, CONFIG_NAME_TESTED_APKS);
     }
 
     @NonNull

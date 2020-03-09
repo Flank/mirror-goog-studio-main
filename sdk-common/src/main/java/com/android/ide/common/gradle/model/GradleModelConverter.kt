@@ -175,7 +175,7 @@ class GradleModelConverter(
 
             // Add the flavor configs
             productFlavors.forEach {
-                configs.addAll(configsFor(configSchema.pathFor(it.productFlavor.getName()), it))
+                configs.addAll(configsFor(configSchema.pathFor(it.productFlavor.name), it))
             }
 
             // Add the multi-flavor configs
@@ -422,7 +422,7 @@ class GradleModelConverter(
      * Returns the list of [ConfigAssociation] for the given [BuildTypeContainer].
      */
     private fun configsFor(buildType: BuildTypeContainer): List<ConfigAssociation> {
-        val artifactFilter = matchBuildType(buildType.buildType.getName())
+        val artifactFilter = matchBuildType(buildType.buildType.name)
         val result = ArrayList<ConfigAssociation>()
         val configWithoutSources = convert(buildType.buildType)
 
@@ -456,11 +456,11 @@ class GradleModelConverter(
             }
             productFlavors.forEach {
                 builder.getOrPutDimension(it.productFlavor.dimension ?: DIM_UNNAMED_FLAVOR)
-                    .add(it.productFlavor.getName())
+                    .add(it.productFlavor.name)
             }
             val buildTypeDimension = builder.getOrPutDimension(DIM_BUILD_TYPE)
             buildTypes.forEach {
-                buildTypeDimension.add(it.buildType.getName())
+                buildTypeDimension.add(it.buildType.name)
             }
             val artifactDimension = builder.getOrPutDimension(DIM_ARTIFACTS)
             artifactDimension.add(ARTIFACT_NAME_MAIN)

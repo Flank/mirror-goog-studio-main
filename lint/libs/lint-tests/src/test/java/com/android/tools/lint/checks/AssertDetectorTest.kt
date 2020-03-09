@@ -298,7 +298,7 @@ class AssertDetectorTest : AbstractCheckTest() {
         package kotlin
 
         fun assert(value: Boolean) {
-            @android.annotation.SuppressLint("KotlinAssert")
+            @Suppress("Assert", "KotlinAssert")
             assert(value) { "Assertion failed" }
         }
 
