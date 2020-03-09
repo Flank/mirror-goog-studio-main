@@ -4,17 +4,15 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-23263a8a42362afe8ffe985caf403b5d18910df248b3e025faa204f89fe87033
+2c2371913076c070e621fbe3ff5b063bd5a3be9f9e0b825952ab7b148a71d58c
 -------------------------------------------------------------------------
 com.android.build.api.attributes.BuildTypeAttr implements org.gradle.api.Named
 com.android.build.api.attributes.BuildTypeAttr$Companion
-com.android.build.api.attributes.BuildTypeAttr$Companion.getATTRIBUTE: org.gradle.api.attributes.Attribute<com.android.build.api.attributes.BuildTypeAttr> ()
-com.android.build.api.attributes.BuildTypeAttr.getATTRIBUTE: org.gradle.api.attributes.Attribute<com.android.build.api.attributes.BuildTypeAttr> ()
+com.android.build.api.attributes.BuildTypeAttr$Companion.<init>: com.android.build.api.attributes.BuildTypeAttr$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.attributes.ProductFlavorAttr implements org.gradle.api.Named
 com.android.build.api.attributes.VariantAttr implements org.gradle.api.Named
 com.android.build.api.attributes.VariantAttr$Companion
-com.android.build.api.attributes.VariantAttr$Companion.getATTRIBUTE: org.gradle.api.attributes.Attribute<com.android.build.api.attributes.VariantAttr> ()
-com.android.build.api.attributes.VariantAttr.getATTRIBUTE: org.gradle.api.attributes.Attribute<com.android.build.api.attributes.VariantAttr> ()
+com.android.build.api.attributes.VariantAttr$Companion.<init>: com.android.build.api.attributes.VariantAttr$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.transform.Context
 com.android.build.api.transform.Context.getLogging: org.gradle.api.logging.LoggingManager ()
 com.android.build.api.transform.Context.getPath: java.lang.String ()
