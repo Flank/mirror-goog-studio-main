@@ -56,12 +56,14 @@ import javax.inject.Inject
  * Task that consumes [InternalArtifactType.MERGED_MANIFESTS] to produce a unique Android Manifest
  * file suitable for the bundle tool.
  *
- * The merged manifest will be annotated by added android:splitName to all activities in case the
+ * The bundle tool manifest must have the android:splitName to all activities in case the
  * module is a dynamic feature module, otherwise it wil be unchanged.
+ *
+ * The merged manifest already has the annotated activities so we just need to copy the main
+ * split unchanged. We cannot use republish because there can be many merged manifests, but there
+ * is only one bundle tool manifest.
  */
-abstract class ProcessManifestForBundleTask @Inject constructor(
-    objects: ObjectFactory,
-    workers: WorkerExecutor): NonIncrementalTask() {
+abstract class ProcessManifestForBundleTask: NonIncrementalTask() {
 
     @get:OutputFile
     abstract val bundleManifest: RegularFileProperty
@@ -70,23 +72,8 @@ abstract class ProcessManifestForBundleTask @Inject constructor(
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val applicationMergedManifests: DirectoryProperty
 
-    @get:Input
-    @get:org.gradle.api.tasks.Optional
-    abstract val featureName: Property<String>
-
     @get:Nested
     abstract val mainSplit: Property<VariantOutputImpl>
-
-    @get:Internal
-    val model = ManifestModel(false)
-
-    // Use a property to hold the [WorkerExecutor] so unit tests can reset it if necessary.
-    @get:Internal
-    val workersProperty: Property<WorkerExecutor> = objects.property(WorkerExecutor::class.java)
-
-    init {
-        workersProperty.set(workers)
-    }
 
     @TaskAction
     override fun doTaskAction() {
@@ -96,76 +83,8 @@ abstract class ProcessManifestForBundleTask @Inject constructor(
             ?: throw RuntimeException("Cannot find main split from generated manifest files at" +
                     " ${applicationMergedManifests.asFile.get().absolutePath}")
 
-        workersProperty.get().noIsolation().submit(WorkItem::class.java) {
-            it.featureName.set(featureName)
-            it.inputXmlFile.set(File(builtArtifact.outputFile))
-            it.outputXmlFile.set(bundleManifest)
-        }
-    }
-
-    interface WorkItemParameters: WorkParameters, Serializable {
-        val inputXmlFile: RegularFileProperty
-        val outputXmlFile: RegularFileProperty
-        val featureName: Property<String>
-    }
-
-    abstract class WorkItem@Inject constructor(private val workItemParameters: WorkItemParameters)
-        : WorkAction<WorkItemParameters> {
-        override fun execute() {
-            // if there is no feature name to write, just use the original merged manifest file.
-            if (!workItemParameters.featureName.isPresent) {
-                workItemParameters.inputXmlFile.get().asFile.copyTo(
-                    target = workItemParameters.outputXmlFile.get().asFile, overwrite = true)
-                return
-            }
-
-            val xmlDocument = BufferedInputStream(FileInputStream(
-                workItemParameters.inputXmlFile.get().asFile)).use {
-                PositionXmlParser.parse(it)
-            }
-            adjustInstantAppFeatureSplitInfo(document = xmlDocument,
-                featureName = workItemParameters.featureName.get())
-            workItemParameters.outputXmlFile.get().asFile.writeText(XmlDocument.prettyPrint(xmlDocument))
-        }
-
-        /**
-         * Set the "android:splitName" attribute to `featureName` for every `activity`,
-         * `service` and `provider` element.
-         *
-         * @param document the document whose attributes are changed
-         * @param featureName the value all of the changed attributes are set to
-         */
-        private fun adjustInstantAppFeatureSplitInfo(
-            document: Document, featureName: String
-        ) {
-            val manifest = document.documentElement ?: return
-            // then update attributes in the application element's child elements
-            val applicationElements =
-                ManifestMerger2.getChildElementsByName(manifest, SdkConstants.TAG_APPLICATION)
-            if (applicationElements.isEmpty()) {
-                return
-            }
-            // assumes just 1 application element among manifest's immediate children.
-            val application = applicationElements[0]
-            val elementNamesToUpdate =
-                listOf(
-                    SdkConstants.TAG_ACTIVITY,
-                    SdkConstants.TAG_SERVICE,
-                    SdkConstants.TAG_PROVIDER
-                )
-            for (elementName in elementNamesToUpdate) {
-                for (elementToUpdate in ManifestMerger2.getChildElementsByName(
-                    application,
-                    elementName
-                )) {
-                    ManifestMerger2.setAndroidAttribute(
-                        elementToUpdate,
-                        SdkConstants.ATTR_SPLIT_NAME,
-                        featureName
-                    )
-                }
-            }
-        }
+        File(builtArtifact.outputFile).copyTo(
+            target = bundleManifest.get().asFile, overwrite = true)
     }
 
     class CreationAction(creationConfig: ApkCreationConfig) :
@@ -189,18 +108,11 @@ abstract class ProcessManifestForBundleTask @Inject constructor(
 
         override fun configure(task: ProcessManifestForBundleTask) {
             super.configure(task)
-            task.workersProperty.disallowChanges()
             creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS,
                 task.applicationMergedManifests
             )
             task.mainSplit.setDisallowChanges(creationConfig.outputs.getMainSplit())
-            if (creationConfig.variantType.isDynamicFeature) {
-                val dfCreationConfig =
-                    creationConfig as DynamicFeatureCreationConfig
-
-                task.featureName.setDisallowChanges(dfCreationConfig.featureName)
-            }
         }
     }
 }

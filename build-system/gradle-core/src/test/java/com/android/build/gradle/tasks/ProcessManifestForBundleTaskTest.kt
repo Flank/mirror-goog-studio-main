@@ -70,24 +70,6 @@ class ProcessManifestForBundleTaskTest {
             VariantOutputConfiguration.OutputType.SINGLE)
         Mockito.`when`(variantOutputConfiguration.filters).thenReturn(listOf())
         task.mainSplit.set(mainSplit)
-        val workItemParameters =
-            project.objects.newInstance(ProcessManifestForBundleTask.WorkItemParameters::class.java)
-        val workQueue = object: WorkQueue {
-            override fun <T : WorkParameters?> submit(
-                p0: Class<out WorkAction<T>>?,
-                p1: Action<in T>?
-            ) {
-                @Suppress("UNCHECKED_CAST")
-                p1?.execute(workItemParameters as T)
-                project.objects.newInstance(ProcessManifestForBundleTask.WorkItem::class.java,
-                    workItemParameters).execute()
-            }
-
-            override fun await() {
-            }
-
-        }
-        Mockito.`when`(workers.noIsolation()).thenReturn(workQueue)
     }
 
     @Test
@@ -106,7 +88,6 @@ class ProcessManifestForBundleTaskTest {
         task.applicationMergedManifests.set(sourceManifestFolder)
 
         task.bundleManifest.set(temporaryFolder.newFile("output_manifest.xml"))
-        task.workersProperty.set(workers)
         task.taskAction()
 
         Truth.assertThat(task.bundleManifest.get().asFile.readText(Charsets.UTF_8))
@@ -114,7 +95,7 @@ class ProcessManifestForBundleTaskTest {
     }
 
     @Test
-    fun testWithFeatureNameProcessing() {
+    fun testFeatureNameNotRemoved() {
         val sourceManifest = File(sourceManifestFolder, "AndroidManifest.xml")
         sourceManifest.writeText(
             """<?xml version="1.0" encoding="utf-8"?>
@@ -127,7 +108,8 @@ class ProcessManifestForBundleTaskTest {
                     <application android:debuggable="true" >
                         <activity
                             android:name="com.example.feature1.FeatureActivity"
-                            android:label="Feature Activity" >
+                            android:label="Feature Activity" 
+                            android:splitName="feature1">
                             <intent-filter>
                                 <action android:name="android.intent.action.MAIN" />
                                 <category android:name="android.intent.category.LAUNCHER" />
@@ -146,10 +128,8 @@ class ProcessManifestForBundleTaskTest {
             )
         ).saveToDirectory(sourceManifestFolder)
         task.applicationMergedManifests.set(sourceManifestFolder)
-        task.featureName.set("feature1")
 
         task.bundleManifest.set(temporaryFolder.newFile("output_manifest.xml"))
-        task.workersProperty.set(workers)
         task.taskAction()
 
         Truth.assertThat(task.bundleManifest.get().asFile.readText(Charsets.UTF_8))

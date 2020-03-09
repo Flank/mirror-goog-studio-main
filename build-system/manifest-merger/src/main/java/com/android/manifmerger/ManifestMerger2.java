@@ -567,6 +567,7 @@ public class ManifestMerger2 {
 
         if (mOptionalFeatures.contains(Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)) {
             addFeatureSplitAttribute(document, mFeatureName);
+            adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
         }
 
         if (mOptionalFeatures.contains(Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)) {

@@ -1360,7 +1360,7 @@ public class ManifestMerger2SmallTest {
 
         assertTrue(mergingReport.getResult().isSuccess());
         Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+                parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         assertEquals(
                 "feature",
                 xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
@@ -1531,8 +1531,7 @@ public class ManifestMerger2SmallTest {
                                 SdkConstants.ANDROID_URI,
                                 SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
 
-        Document mergedDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document mergedDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         assertNull(
                 "splitName should be empty",
                 mergedDocument
