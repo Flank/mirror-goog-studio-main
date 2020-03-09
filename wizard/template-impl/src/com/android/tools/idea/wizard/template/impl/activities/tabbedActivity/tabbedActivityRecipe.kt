@@ -69,7 +69,7 @@ fun RecipeExecutor.tabbedActivityRecipe(
   val appBarActivityLayoutXml = appBarActivityXml(
     activityClass,
     packageName,
-    "AppTheme.AppBarOverlay",
+    moduleData.themesData.appBarOverlay.name,
     useAndroidX,
     useMaterial2)
   save(appBarActivityLayoutXml, resOut.resolve("layout/${layoutName}.xml"))
