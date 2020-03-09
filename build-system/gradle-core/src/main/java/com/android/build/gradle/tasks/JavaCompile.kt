@@ -186,9 +186,6 @@ fun registerDataBindingOutputs(
         if (firstRegistration) {
             artifacts.getOperations()
                 .setInitialProvider(taskProvider) { dataBindingExportClassListFile }
-                // a name is required for a regular file, without it
-                // ./gradlew :dataBinding:buildDataBindingRuntimeArtifacts would fail
-                .withName("class_list")
                 .on(DATA_BINDING_EXPORT_CLASS_LIST)
         } else {
             artifacts.getOperations()
