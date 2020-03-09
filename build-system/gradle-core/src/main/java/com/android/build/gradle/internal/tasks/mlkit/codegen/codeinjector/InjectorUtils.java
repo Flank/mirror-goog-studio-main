@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codebl
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultPostprocessorInitInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultPreprocessorInitInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.DefaultProcessInjector;
+import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.ImagePostprocessorInitInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.ImagePreprocessorInitInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.codeblock.processor.ImageProcessInjector;
 import com.android.build.gradle.internal.tasks.mlkit.codegen.codeinjector.innerclass.OutputsClassInjector;
@@ -69,6 +70,10 @@ public class InjectorUtils {
     }
 
     public static CodeBlockInjector getOutputProcessorInjector(TensorInfo tensorInfo) {
-        return new DefaultPostprocessorInitInjector();
+        if (tensorInfo.getContentType() == TensorInfo.ContentType.IMAGE) {
+            return new ImagePostprocessorInitInjector();
+        } else {
+            return new DefaultPostprocessorInitInjector();
+        }
     }
 }

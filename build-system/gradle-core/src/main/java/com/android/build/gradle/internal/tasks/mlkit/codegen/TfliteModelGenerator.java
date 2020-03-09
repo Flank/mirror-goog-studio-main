@@ -192,7 +192,7 @@ public class TfliteModelGenerator implements ModelGenerator {
         for (TensorInfo tensorInfo : modelInfo.getInputs()) {
             InjectorUtils.getProcessInjector(tensorInfo).inject(methodBuilder, tensorInfo);
         }
-        methodBuilder.addStatement("$T $L = new $T()", outputType, localOutputs, outputType);
+        methodBuilder.addStatement("$T $L = new $T(model)", outputType, localOutputs, outputType);
         methodBuilder.addStatement(
                 "$L.run($L, $L.getBuffer())",
                 FIELD_MODEL,
