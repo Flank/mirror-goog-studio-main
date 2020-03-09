@@ -205,7 +205,7 @@ class VdTree {
                 mPortHeight = Float.parseFloat(value);
             } else if ("android:alpha".equals(name)) {
                 mRootAlpha = Float.parseFloat(value);
-            } else if ("android:tint".equals(name)) {
+            } else if ("android:tint".equals(name) && value.startsWith("#")) {
                 mRootTint = parseColorValue(value);
             }
         }
