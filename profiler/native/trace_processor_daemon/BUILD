@@ -28,6 +28,7 @@ cc_library(
     ],
     deps = [
         "//tools/base/profiler/native/trace_processor_daemon/proto:cc_trace_processor_service_proto",
+        "@com_google_absl//absl/strings",
         "@perfetto//:trace_processor",
     ],
 )
@@ -50,6 +51,7 @@ cc_test(
     linkstatic = 1,
     deps = [
         ":trace_processor_service_impl",
+        "@com_google_absl//absl/strings",
         "@googletest//:gtest_main",
     ],
 )

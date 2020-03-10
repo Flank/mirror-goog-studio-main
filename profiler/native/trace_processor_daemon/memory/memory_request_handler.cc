@@ -15,6 +15,7 @@
  */
 
 #include "memory_request_handler.h"
+#include "absl/strings/escaping.h"
 
 #ifndef _MSC_VER
 #include <cxxabi.h>
@@ -48,27 +49,45 @@ void MemoryRequestHandler::PopulateEvents(NativeAllocationContext* batch) {
     auto id = frames.Get(0).long_value;
     auto frame_name_field = frames.Get(1);
     auto frame_name =
-        frame_name_field.is_null() ? "" : frame_name_field.string_value;
+        frame_name_field.is_null() ? nullptr : frame_name_field.string_value;
     auto module_name_field = frames.Get(2);
     auto module_name =
-        module_name_field.is_null() ? "" : module_name_field.string_value;
+        module_name_field.is_null() ? nullptr : module_name_field.string_value;
     auto rel_pc = frames.Get(3).long_value;
     auto frame = batch->add_frames();
+    char* demangled_name = nullptr;
     // TODO (b/151081845): Enable demangling support on windows.
-#ifdef _MSC_VER
-    frame->set_name(frame_name);
-#else
+#ifndef _MSC_VER
     // Demangle stack pointer frame to human readable c++ frame.
-    int ignored;
-    char* data = abi::__cxa_demangle(frame_name, nullptr, nullptr, &ignored);
-    if (data != nullptr) {
-      frame->set_name(data);
-    } else {
-      frame->set_name(frame_name);
+    if (frame_name != nullptr) {
+      int ignored;
+      demangled_name =
+          abi::__cxa_demangle(frame_name, nullptr, nullptr, &ignored);
+      if (demangled_name != nullptr) {
+        frame_name = demangled_name;
+      }
     }
 #endif
+    if (frame_name != nullptr) {
+      // Due to a bug in utf-8 conversion between java and c++ with proto we
+      // encode our strings to base64 and decode them in java.
+      // https://github.com/protocolbuffers/protobuf/issues/4691
+      std::string converted;
+      absl::Base64Escape(frame_name, &converted);
+      frame->set_name(converted);
+      if (demangled_name != nullptr) {
+        delete demangled_name;
+      }
+    }
     frame->set_id(id);
-    frame->set_module(module_name);
+    if (module_name != nullptr) {
+      // Due to a bug in utf-8 conversion between java and c++ with proto we
+      // encode our strings to base64 and decode them in java.
+      // https://github.com/protocolbuffers/protobuf/issues/4691
+      std::string converted;
+      absl::Base64Escape(module_name, &converted);
+      frame->set_module(converted);
+    }
     frame->set_rel_pc(rel_pc);
   }
 

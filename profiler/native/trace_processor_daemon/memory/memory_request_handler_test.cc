@@ -26,6 +26,7 @@
 #include <grpc++/grpc++.h>
 #include <gtest/gtest.h>
 
+#include "absl/strings/escaping.h"
 #include "perfetto/trace_processor/basic_types.h"
 #include "perfetto/trace_processor/read_trace.h"
 #include "perfetto/trace_processor/trace_processor.h"
@@ -52,6 +53,25 @@ std::unique_ptr<TraceProcessor> LoadTrace(std::string trace_path) {
   EXPECT_TRUE(read_status.ok());
   return tp;
 }
+
+TEST(MemoryRequestHandlerTest, TestBase64Encoded) {
+  auto tp = LoadTrace(TESTDATA_PATH);
+  MemoryRequestHandler handler{tp.get()};
+  NativeAllocationContext context;
+  handler.PopulateEvents(&context);
+  std::string dest;
+
+  EXPECT_TRUE(absl::Base64Unescape(context.frames(0).name(), &dest));
+#ifndef _MSC_VER  // Demangling is not currently available on windows.
+  // Validate frame names are demanged
+  EXPECT_NE(dest.rfind("_Z", 0), 0);
+#else
+  // Until b/151081845 is fixed validate name is set.
+  EXPECT_EQ(dest.rfind("_Z", 0), 0);
+#endif
+  EXPECT_TRUE(absl::Base64Unescape(context.frames(0).module(), &dest));
+}
+
 TEST(MemoryRequestHandlerTest, TestMemoryDataPopulated) {
   auto tp = LoadTrace(TESTDATA_PATH);
   MemoryRequestHandler handler{tp.get()};
@@ -60,14 +80,6 @@ TEST(MemoryRequestHandlerTest, TestMemoryDataPopulated) {
   EXPECT_EQ(context.allocations_size(), 473);
   EXPECT_EQ(context.pointers_size(), 1484);
   EXPECT_EQ(context.frames_size(), 599);
-
-#ifndef _MSC_VER  // Demangling is not currently available on windows.
-  // Validate frame names are demanged
-  EXPECT_NE(context.frames(0).name().rfind("_Z", 0), 0);
-#else
-  // Until b/151081845 is fixed validate name is set.
-  EXPECT_EQ(context.frames(0).name().rfind("_Z", 0), 0);
-#endif
 
   // Validate allocations point to a valid stack
   long stack_id = context.allocations(0).stack_id();
