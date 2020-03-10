@@ -53,16 +53,17 @@ Status StopNativeSample::ExecuteOn(Daemon* daemon) {
 
   if (sampling_stopped) {
     // Send trace file info.
-    Event start_event;
-    start_event.set_pid(command().pid());
-    start_event.set_kind(Event::MEMORY_NATIVE_SAMPLE_CAPTURE);
-    start_event.set_command_id(command().command_id());
-    start_event.set_group_id(config.start_time());
-    start_event.set_timestamp(end_timestamp);
-    auto* dump_info = start_event.mutable_memory_native_sample();
+    Event end_event;
+    end_event.set_pid(command().pid());
+    end_event.set_kind(Event::MEMORY_NATIVE_SAMPLE_CAPTURE);
+    end_event.set_command_id(command().command_id());
+    end_event.set_group_id(config.start_time());
+    end_event.set_timestamp(end_timestamp);
+    end_event.set_is_ended(true);
+    auto* dump_info = end_event.mutable_memory_native_sample();
     dump_info->set_start_time(config.start_time());
     dump_info->set_end_time(end_timestamp);
-    daemon->buffer()->Add(start_event);
+    daemon->buffer()->Add(end_event);
   }
   return Status::OK;
 }
