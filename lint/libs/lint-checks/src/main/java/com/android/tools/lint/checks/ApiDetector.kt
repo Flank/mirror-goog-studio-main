@@ -844,7 +844,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             interfaceType: PsiClassType
         ) {
             val apiDatabase = apiDatabase ?: return
-            if (sameType(classType, interfaceType)) {
+            if (classType == interfaceType) {
                 return
             }
             val evaluator = context.evaluator
@@ -1657,7 +1657,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 return
             }
 
-            if (sameType(initializerType, interfaceType)) {
+            if (initializerType == interfaceType) {
                 return
             }
 
@@ -1675,7 +1675,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     return
                 }
 
-                if (sameType(rhsType, interfaceType)) {
+                if (rhsType == interfaceType) {
                     return
                 }
 
@@ -1686,22 +1686,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     visitCall(method, null, node)
                 }
             }
-        }
-
-        private fun sameType(type1: PsiClassType, type2: PsiClassType): Boolean {
-            if (type1 === type2) {
-                return true
-            }
-
-            // Workaround for KT-37200:
-            // Calling PsiType.equals(PsiType) can lead to StackOverflowExceptions
-            // in some scenarios; therefore, we replace this:
-            //    Return (initializerType == interfaceType)
-            // with:
-            return type1.presentableText == type2.presentableText &&
-                    // presentableText comparison is faster and always true when canonical text
-                    // matches, so doing that before this:
-                    type1.canonicalText == type2.canonicalText
         }
 
         override fun visitTryExpression(node: UTryExpression) {
