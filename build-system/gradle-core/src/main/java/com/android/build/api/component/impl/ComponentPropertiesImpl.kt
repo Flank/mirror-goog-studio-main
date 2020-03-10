@@ -48,10 +48,10 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR
-import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_TRIGGER
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_TRIGGER
 import com.android.build.gradle.internal.scope.InternalArtifactType.MLKIT_SOURCE_OUT
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.VariantScope
@@ -296,18 +296,48 @@ abstract class ComponentPropertiesImpl(
     ): ArtifactCollection {
         val mainCollection =
             variantDependencies.getArtifactCollection(configType, ArtifactScope.ALL, classesType)
-        val extraArtifact = internalServices.provider(Callable{
+        val extraArtifact = internalServices.provider(Callable {
             variantData.getGeneratedBytecode(generatedBytecodeKey);
         })
         val combinedCollection = internalServices.fileCollection(
             mainCollection.artifactFiles, extraArtifact
         )
-        return ArtifactCollectionWithExtraArtifact.makeExtraCollection(
+        val extraCollection = ArtifactCollectionWithExtraArtifact.makeExtraCollection(
             mainCollection,
             combinedCollection,
             extraArtifact,
             globalScope.project.path
         )
+
+        return onTestedConfig { testedVariant ->
+            // This is required because of http://b/150500779. Kotlin Gradle plugin relies on
+            // TestedComponentIdentifierImpl being present in the returned artifact collection, as
+            // artifacts with that identifier type are added to friend paths to kotlinc invocation.
+            // Because jar containing all classes of the main artifact is in the classpath when
+            // compiling test, we need to add TestedComponentIdentifierImpl artifact with that file.
+            // This is needed when compiling test variants that access internal members.
+            val internalArtifactType = testedVariant.variantScope.publishingSpec
+                .getSpec(classesType, configType.publishedTo)!!.outputType
+
+            @Suppress("USELESS_CAST") // Explicit cast needed here.
+            val testedAllClasses: Provider<FileCollection> =
+                internalServices.provider(Callable {
+                    internalServices.fileCollection(
+                        testedVariant.operations.get(internalArtifactType)
+                    ) as FileCollection
+                })
+            val combinedCollectionForTest = internalServices.fileCollection(
+                combinedCollection, testedAllClasses, testedAllClasses
+            )
+
+            ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
+                extraCollection,
+                combinedCollectionForTest,
+                testedAllClasses,
+                globalScope.project.path,
+                null
+            )
+        } ?: extraCollection
     }
 
     // TODO Move these outside of Variant specific class (maybe GlobalTaskScope?)
