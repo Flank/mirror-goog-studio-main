@@ -121,9 +121,12 @@ void InstallServer::Acknowledge() {
 void InstallServer::Pump() {
   Phase("InstallServer::Pump");
   ServerRequest request;
-  while (input_.Read(-1, &request) &&
-         request.type() == ServerRequest::HANDLE_REQUEST) {
-    HandleRequest(request);
+  while (input_.Read(-1, &request)) {
+    if (request.type() == ServerRequest::HANDLE_REQUEST) {
+      HandleRequest(request);
+    } else if (request.type() == ServerRequest::SERVER_EXIT) {
+      break;
+    }
   }
 }
 
