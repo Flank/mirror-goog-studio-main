@@ -551,6 +551,10 @@ public class ManifestMerger2 {
             addDebuggableAttribute(document);
         }
 
+        if (mMergeType == MergeType.APPLICATION) {
+            optionalAddApplicationTagIfMissing(document);
+        }
+
         if (mOptionalFeatures.contains(
                 Invoker.Feature.ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME)) {
             addMultiDexApplicationIfNoName(document, SdkConstants.MULTI_DEX_APPLICATION.newName());
@@ -765,6 +769,32 @@ public class ManifestMerger2 {
             setAndroidAttribute(usesSplit, ATTR_NAME, usedSplitName);
             manifest.appendChild(usesSplit);
         }
+    }
+
+    /**
+     * Adds <application> tag if missing as it required by package manager in R and above..
+     *
+     * @param document the loaded manifest file
+     */
+    private static void optionalAddApplicationTagIfMissing(@NonNull Document document) {
+        Element manifest = document.getDocumentElement();
+
+        if (manifest.getElementsByTagName(SdkConstants.TAG_APPLICATION).getLength() > 0) return;
+
+        Element application = document.createElement(SdkConstants.TAG_APPLICATION);
+        manifest.appendChild(application);
+    }
+
+    /**
+     * Remove an Android-namespaced XML attribute on the given node.
+     *
+     * @param node Node in which to remove the attribute; must be part of a document
+     * @param localName Non-prefixed attribute name
+     */
+    private static void removeAndroidAttribute(Element node, String localName) {
+        // removeAttributeNS calculates the prefix.
+        // Setting it with localName will actually prevent it from working properly.
+        node.removeAttributeNS(SdkConstants.ANDROID_URI, localName);
     }
 
     /**
