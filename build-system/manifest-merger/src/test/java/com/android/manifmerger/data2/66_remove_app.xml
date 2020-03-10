@@ -47,6 +47,8 @@
     android:versionName="1.0.0">
 
     <!-- The "remove" tag will eradicate this element from the output. -->
+    <!-- but is re-added without children to satisfy R+ package manager -->
+    <application/>
 </manifest>
 
 @errors

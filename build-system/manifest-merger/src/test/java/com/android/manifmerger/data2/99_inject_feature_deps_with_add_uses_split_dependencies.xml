@@ -31,6 +31,7 @@ featureB
 
   <uses-split android:name="featureA"/>
   <uses-split android:name="featureB"/>
+  <application/>
 </manifest>
 
 @errors
