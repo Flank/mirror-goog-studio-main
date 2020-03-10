@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -150,8 +150,8 @@ abstract class ProcessManifestForMetadataFeatureTask @Inject constructor(
         }
     }
 
-    class CreationAction(creationConfig: ApkCreationConfig) :
-        VariantTaskCreationAction<ProcessManifestForMetadataFeatureTask, ApkCreationConfig>(
+    class CreationAction(creationConfig: BaseCreationConfig) :
+        VariantTaskCreationAction<ProcessManifestForMetadataFeatureTask, BaseCreationConfig>(
             creationConfig = creationConfig
         ) {
         override val name: String

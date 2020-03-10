@@ -46,11 +46,6 @@ abstract class ManifestProcessorTask : IncrementalTask() {
     @get:OutputDirectory
     abstract val aaptFriendlyManifestOutputDirectory: DirectoryProperty
 
-    /** The instant app manifest which is used if we are deploying the app as an instant app.  */
-    @get:Optional
-    @get:OutputDirectory
-    abstract val instantAppManifestOutputDirectory: DirectoryProperty
-
     /**
      * The aapt friendly processed Manifest. In case we are processing a library manifest, some
      * placeholders may not have been resolved (and will be when the library is merged into the

@@ -577,16 +577,9 @@ public class ManifestMerger2 {
         mergingReport.setMergedDocument(
                 MergingReport.MergedManifestKind.INTERNAL_MERGED, prettyPrint(document));
 
-        if (mOptionalFeatures.contains(Invoker.Feature.TARGET_SANDBOX_VERSION)) {
-            addTargetSandboxVersionAttribute(document);
-        }
-
         // These features should occur at the end of all optional features, as they are based off of
         // the final merged manifest. This is true for all instant app manifests, bundletool manifests,
         // and feature manifests.
-        if (mOptionalFeatures.contains(Invoker.Feature.ADD_INSTANT_APP_MANIFEST)) {
-            addInstantAppManifest(document, mergingReport);
-        }
 
         // remove all instant-app decorations from the merged manifest, as the packaged manifest
         // does not need it.
@@ -599,33 +592,6 @@ public class ManifestMerger2 {
 
         if (mOptionalFeatures.contains(Invoker.Feature.MAKE_AAPT_SAFE)) {
             createAaptSafeManifest(document, mergingReport);
-        }
-    }
-
-    private void addInstantAppManifest(
-            @NonNull Document document, @NonNull MergingReport.Builder mergingReport) {
-        String previousTargetSandboxVersion = null;
-        // If we haven't already added target sandbox version or split info, add them.
-        if (!mOptionalFeatures.contains(Invoker.Feature.TARGET_SANDBOX_VERSION)) {
-            previousTargetSandboxVersion = addTargetSandboxVersionAttribute(document);
-        }
-        if (!mFeatureName.isEmpty()) {
-            adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
-        }
-
-        mergingReport.setMergedDocument(
-                MergingReport.MergedManifestKind.INSTANT_APP, prettyPrint(document));
-
-        // undo any changes we have made to the document.
-        if (!mOptionalFeatures.contains(Invoker.Feature.TARGET_SANDBOX_VERSION)) {
-            if (previousTargetSandboxVersion != null) {
-                setTargetSandboxVersionAttribute(document, previousTargetSandboxVersion);
-            } else {
-                removeTargetSandboxVersionAttribute(document);
-            }
-        }
-        if (!mFeatureName.isEmpty()) {
-            adjustInstantAppFeatureSplitInfo(document, mFeatureName, false);
         }
     }
 
@@ -801,7 +767,7 @@ public class ManifestMerger2 {
      * @param value the new value of the attribute
      * @return the previous value of the attribute or null if the attribute was not set.
      */
-    private static String setManifestAndroidAttribute(
+    public static String setManifestAndroidAttribute(
             @NonNull Document document, @NonNull String attribute, @NonNull String value) {
         Element manifest = document.getDocumentElement();
         if (manifest == null) {

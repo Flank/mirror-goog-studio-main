@@ -157,12 +157,11 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                 null,
                 params.manifestOutputFile.absolutePath,
                 if (params.aaptFriendlyManifestOutputFile != null) params.aaptFriendlyManifestOutputFile.absolutePath else null,
-                null /* outInstantRunManifestLocation */,
-                ManifestMerger2.MergeType.LIBRARY /* outInstantAppManifestLocation */,
-                params.manifestPlaceholders,
+                ManifestMerger2.MergeType.LIBRARY /* outInstantRunManifestLocation */,
+                params.manifestPlaceholders /* outInstantAppManifestLocation */,
                 optionalFeatures,
-                emptyList(), params.reportFile,
-                LoggerWrapper.getLogger(ProcessLibraryManifest::class.java)
+                emptyList(),
+                params.reportFile, LoggerWrapper.getLogger(ProcessLibraryManifest::class.java)
             )
             val mergedXmlDocument =
                 mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED)

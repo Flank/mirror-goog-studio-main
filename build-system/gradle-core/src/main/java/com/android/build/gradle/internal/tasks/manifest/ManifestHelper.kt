@@ -46,7 +46,6 @@ fun mergeManifestsForApplication(
     outMergedManifestLocation: String?,
     outPackagedManifestLocation: String,
     outAaptSafeManifestLocation: String?,
-    outInstantAppManifestLocation: String?,
     mergeType: ManifestMerger2.MergeType,
     placeHolders: Map<String, Any>,
     optionalFeatures: Collection<ManifestMerger2.Invoker.Feature>,
@@ -113,13 +112,6 @@ fun mergeManifestsForApplication(
                     outAaptSafeManifestLocation
                 )
             )
-        }
-        if (outInstantAppManifestLocation != null) {
-            val instantAppManifest =
-                mergingReport.getMergedDocument(MergingReport.MergedManifestKind.INSTANT_APP)
-            if (instantAppManifest != null) {
-                save(instantAppManifest, File(outInstantAppManifestLocation))
-            }
         }
         return mergingReport
     } catch (e: ManifestMerger2.MergeFailureException) {

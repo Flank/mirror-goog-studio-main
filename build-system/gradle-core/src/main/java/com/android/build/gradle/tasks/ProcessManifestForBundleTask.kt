@@ -19,38 +19,22 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
-import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
+import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.manifmerger.ManifestMerger2
-import com.android.manifmerger.ManifestModel
-import com.android.manifmerger.XmlDocument
-import com.android.utils.PositionXmlParser
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkerExecutor
-import org.w3c.dom.Document
-import java.io.BufferedInputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.Serializable
-import javax.inject.Inject
 
 /**
  * Task that consumes [InternalArtifactType.MERGED_MANIFESTS] to produce a unique Android Manifest
@@ -87,8 +71,8 @@ abstract class ProcessManifestForBundleTask: NonIncrementalTask() {
             target = bundleManifest.get().asFile, overwrite = true)
     }
 
-    class CreationAction(creationConfig: ApkCreationConfig) :
-        VariantTaskCreationAction<ProcessManifestForBundleTask, ApkCreationConfig>(
+    class CreationAction(creationConfig: BaseCreationConfig) :
+        VariantTaskCreationAction<ProcessManifestForBundleTask, BaseCreationConfig>(
             creationConfig = creationConfig
         ) {
         override val name: String

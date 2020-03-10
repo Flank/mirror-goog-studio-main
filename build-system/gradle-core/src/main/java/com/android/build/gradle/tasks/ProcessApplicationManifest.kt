@@ -190,12 +190,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                     SdkConstants.ANDROID_MANIFEST_XML
                 )
             )
-            val instantAppManifestOutputFile =
-                if (instantAppManifestOutputDirectory.isPresent) FileUtils.join(
-                    instantAppManifestOutputDirectory.get().asFile,
-                    dirName,
-                    SdkConstants.ANDROID_MANIFEST_XML
-                ) else null
             val mergingReport = mergeManifestsForApplication(
                 mainManifest.get(),
                 manifestOverlays.get(),
@@ -213,7 +207,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 mergedManifestOutputFile.absolutePath,
                 packagedManifestOutputFile.absolutePath,  // no aapt friendly merged manifest file necessary for applications.
                 null /* aaptFriendlyManifestOutputFile */,
-                instantAppManifestOutputFile?.absolutePath,
                 ManifestMerger2.MergeType.APPLICATION,
                 manifestPlaceholders.get(),
                 optionalFeatures.get(),
@@ -236,11 +229,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             packagedManifestOutputs.add(
                 variantOutput.toBuiltArtifact(packagedManifestOutputFile, properties)
             )
-            if (instantAppManifestOutputFile != null) {
-                instantAppManifestOutputs.add(
-                    variantOutput.toBuiltArtifact(instantAppManifestOutputFile, properties)
-                )
-            }
         }
         BuiltArtifactsImpl(
             artifactType = InternalArtifactType.MERGED_MANIFESTS,
@@ -256,15 +244,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             elements = packagedManifestOutputs.toList()
         )
             .save(packagedManifestOutputDirectory.get())
-        if (instantAppManifestOutputDirectory.isPresent) {
-            BuiltArtifactsImpl(
-                artifactType = InternalArtifactType.INSTANT_APP_MANIFEST,
-                applicationId = applicationId.get(),
-                variantName = variantName,
-                elements = instantAppManifestOutputs.toList()
-            )
-                .save(instantAppManifestOutputDirectory.get())
-        }
     }
 
     @get:Internal
@@ -439,10 +418,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 taskProvider,
                 ManifestProcessorTask::packagedManifestOutputDirectory
             ).on(InternalArtifactType.PACKAGED_MANIFESTS)
-            operations.setInitialProvider(
-                taskProvider,
-                ManifestProcessorTask::instantAppManifestOutputDirectory
-            ).on(InternalArtifactType.INSTANT_APP_MANIFEST)
             operations.setInitialProvider(
                 taskProvider,
                 ManifestProcessorTask::mergeBlameFile

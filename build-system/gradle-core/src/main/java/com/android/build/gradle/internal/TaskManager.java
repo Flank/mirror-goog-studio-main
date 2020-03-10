@@ -189,6 +189,7 @@ import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PrepareKotlinCompileTask;
 import com.android.build.gradle.tasks.ProcessApplicationManifest;
 import com.android.build.gradle.tasks.ProcessManifestForBundleTask;
+import com.android.build.gradle.tasks.ProcessManifestForInstantAppTask;
 import com.android.build.gradle.tasks.ProcessManifestForMetadataFeatureTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
@@ -974,6 +975,7 @@ public abstract class TaskManager<
         taskFactory.register(new ProcessManifestForBundleTask.CreationAction(creationConfig));
         taskFactory.register(
                 new ProcessManifestForMetadataFeatureTask.CreationAction(creationConfig));
+        taskFactory.register(new ProcessManifestForInstantAppTask.CreationAction(creationConfig));
 
         return taskFactory.register(
                 new ProcessApplicationManifest.CreationAction(

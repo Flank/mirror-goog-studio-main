@@ -1294,46 +1294,6 @@ public class ManifestMerger2SmallTest {
     }
 
     @Test
-    public void testInstantAppFeatureSplitOption() throws Exception {
-        String xml =
-                ""
-                        + "<manifest\n"
-                        + "    package=\"com.foo.example\""
-                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
-                        + "    <application t:name=\".applicationOne\">\n"
-                        + "        <activity t:name=\"activityOne\"/>\n"
-                        + "    </application>\n"
-                        + "</manifest>";
-
-        File inputFile = TestUtils.inputAsFile("testFeatureSplitOption", xml);
-
-        MockLog mockLog = new MockLog();
-        MergingReport mergingReport =
-                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
-                        .setFeatureName("feature")
-                        .merge();
-
-        assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_APP));
-        assertEquals(
-                "feature",
-                xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
-
-        assertEquals(
-                "feature",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
-                        .getNodeValue());
-    }
-
-    @Test
     public void testDynamicAppFeatureSplitOption() throws Exception {
         String xml =
                 ""
@@ -1389,37 +1349,6 @@ public class ManifestMerger2SmallTest {
         validateFeatureName(invoker, "foosplit_12", true);
         validateFeatureName(invoker, "SPLIT", true);
         validateFeatureName(invoker, "_SPLIT", false);
-    }
-
-    @Test
-    public void testTargetSandboxVersionOption() throws Exception {
-        String xml =
-                ""
-                        + "<manifest\n"
-                        + "    package=\"com.foo.example\""
-                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
-                        + "    <application t:name=\".applicationOne\">\n"
-                        + "        <activity t:name=\"activityOne\"/>\n"
-                        + "    </application>\n"
-                        + "</manifest>";
-
-        File inputFile = TestUtils.inputAsFile("testTargetSandboxVersionOption", xml);
-
-        MockLog mockLog = new MockLog();
-        MergingReport mergingReport =
-                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.TARGET_SANDBOX_VERSION)
-                        .merge();
-
-        assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
-        assertEquals(
-                "2",
-                xmlDocument
-                        .getDocumentElement()
-                        .getAttributeNS(
-                                SdkConstants.ANDROID_URI,
-                                SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
     }
 
     @Test
@@ -1501,35 +1430,6 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_APP));
-        assertEquals(
-                "dynamic_split",
-                xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
-
-        assertEquals(
-                "dynamic_split",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
-                        .getNodeValue());
-        assertEquals(
-                "dynamic_split",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
-                        .getNodeValue());
-        assertEquals(
-                "2",
-                xmlDocument
-                        .getDocumentElement()
-                        .getAttributeNS(
-                                SdkConstants.ANDROID_URI,
-                                SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
 
         Document mergedDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         assertNull(
@@ -1545,51 +1445,6 @@ public class ManifestMerger2SmallTest {
                         .getDocumentElement()
                         .getAttributes()
                         .getNamedItemNS(
-                                SdkConstants.ANDROID_URI,
-                                SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
-    }
-
-    @Test
-    public void testInstantAppManifestDynamicFeatureWithTargetSandboxVersionSet() throws Exception {
-        String xml =
-                ""
-                        + "<manifest\n"
-                        + "    package=\"com.foo.example\""
-                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\""
-                        + "    t:targetSandboxVersion=\"1\" >\n"
-                        + "    <application t:name=\".applicationOne\">\n"
-                        + "        <activity t:name=\"activityOne\"/>\n"
-                        + "    </application>\n"
-                        + "</manifest>";
-
-        File inputFile = TestUtils.inputAsFile("InstantAppManifestDynamicFeature", xml);
-
-        MockLog mockLog = new MockLog();
-        MergingReport mergingReport =
-                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .setFeatureName("dynamic_split")
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
-                        .merge();
-
-        assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_APP));
-        assertEquals(
-                "2",
-                xmlDocument
-                        .getDocumentElement()
-                        .getAttributeNS(
-                                SdkConstants.ANDROID_URI,
-                                SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
-
-        Document mergedDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
-        assertEquals(
-                "1",
-                mergedDocument
-                        .getDocumentElement()
-                        .getAttributeNS(
                                 SdkConstants.ANDROID_URI,
                                 SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
     }
@@ -1709,24 +1564,6 @@ public class ManifestMerger2SmallTest {
                             .getNamedItemNS(
                                     SdkConstants.ANDROID_URI,
                                     SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
-
-            Document instantAppDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_APP));
-            assertEquals(
-                    "feature",
-                    instantAppDocument
-                            .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                            .item(0)
-                            .getAttributes()
-                            .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
-                            .getNodeValue());
-            assertEquals(
-                    "2",
-                    instantAppDocument
-                            .getDocumentElement()
-                            .getAttributeNS(
-                                    SdkConstants.ANDROID_URI,
-                                    SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
         } finally {
             assertTrue(appFile.delete());
             assertTrue(libFile.delete());
@@ -1781,16 +1618,6 @@ public class ManifestMerger2SmallTest {
             assertEquals(
                     "1",
                     xmlDocument
-                            .getDocumentElement()
-                            .getAttributeNS(
-                                    SdkConstants.ANDROID_URI,
-                                    SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
-
-            Document instantAppDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_APP));
-            assertEquals(
-                    "2",
-                    instantAppDocument
                             .getDocumentElement()
                             .getAttributeNS(
                                     SdkConstants.ANDROID_URI,
