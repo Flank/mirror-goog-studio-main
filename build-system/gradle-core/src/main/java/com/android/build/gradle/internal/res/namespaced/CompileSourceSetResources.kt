@@ -84,7 +84,6 @@ abstract class CompileSourceSetResources : IncrementalTask() {
         get() = true
 
     override fun doFullTaskAction() {
-        FileUtils.cleanOutputDir(outputDirectory.get().asFile)
         val requests = mutableListOf<CompileResourceRequest>()
         val addedFiles = mutableMapOf<Path, Path>()
         for (inputDirectory in inputDirectories) {
