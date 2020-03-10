@@ -44,7 +44,7 @@ public class MlkitNames {
     }
 
     public static String computeModelClassName(File modelFile) {
-        // TODO(b/150986465): in gradle or other place, handle the case that two models might
+        // TODO(b/151171517): in gradle or other place, handle the case that two models might
         // have same class name.
         String formattedName =
                 CaseFormat.LOWER_UNDERSCORE.to(
