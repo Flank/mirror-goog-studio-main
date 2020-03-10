@@ -1,0 +1,17 @@
+java_library(
+    name = "test-framework",
+    srcs = glob([
+        "src/**/*.java",
+    ]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
+        "//tools/base/bazel:studio-grpc",
+        "//tools/base/bazel:studio-proto",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/transport/proto:transport_java_proto",
+        "//tools/base/transport/test-framework",
+        "//tools/idea/.idea/libraries:JUnit4",
+        "//tools/idea/.idea/libraries:truth",
+    ],
+)
