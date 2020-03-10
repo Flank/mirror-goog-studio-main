@@ -52,7 +52,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_TRIGGER
-import com.android.build.gradle.internal.scope.InternalArtifactType.MLKIT_SOURCE_OUT
+import com.android.build.gradle.internal.scope.InternalArtifactType.ML_SOURCE_OUT
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -461,10 +461,10 @@ abstract class ComponentPropertiesImpl(
             sourceSets.add(internalServices.fileTree(rsFC).builtBy(rsFC))
         }
         if (buildFeatures.mlModelBinding) {
-            val mlkitModelClassSourceOut: Provider<Directory> =
-                artifacts.getFinalProduct(MLKIT_SOURCE_OUT)
+            val mlModelClassSourceOut: Provider<Directory> =
+                artifacts.getFinalProduct(ML_SOURCE_OUT)
             sourceSets.add(
-                internalServices.fileTree(mlkitModelClassSourceOut).builtBy(mlkitModelClassSourceOut)
+                internalServices.fileTree(mlModelClassSourceOut).builtBy(mlModelClassSourceOut)
             )
         }
         sourceSets.build()
