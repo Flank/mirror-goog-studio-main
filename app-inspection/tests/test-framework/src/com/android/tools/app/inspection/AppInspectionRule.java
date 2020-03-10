@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,41 +28,40 @@ import com.android.tools.profiler.proto.Transport.GetEventsRequest;
 import com.android.tools.profiler.proto.TransportServiceGrpc;
 import com.android.tools.profiler.proto.TransportServiceGrpc.TransportServiceBlockingStub;
 import com.android.tools.transport.TransportRule;
+import com.android.tools.transport.device.SdkLevel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.rules.ExternalResource;
+import org.junit.rules.RuleChain;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 /**
- * A utility class for wrapping useful app-inspection gRPC operations, spinning up a separate thread
- * to manage host / device communication.
+ * A JUnit rule for wrapping useful app-inspection gRPC operations, spinning up a separate thread to
+ * manage host / device communication.
  *
  * <p>While running, it polls the transport framework for events, which should be received after
  * calls to {@link #sendCommand(AppInspectionCommand)}. You can fetch those events using {@link
  * #sendCommandAndGetResponse(AppInspectionCommand)} instead, or by calling {@link
  * #consumeCollectedEvent()}.
  *
- * <p>{@link #shutdown()} must be called to ensure the thread can finish.
+ * <p>The thread will be spun down when the rule itself tears down.
  */
-final class ServiceLayer implements Runnable {
-    // All asynchronous operations are expected to be subseconds. so we choose a relatively small
-    // but still generous timeout. If a callback didn't occur during the timeout, we fail the test.
-    static final long TIMEOUT_SECONDS = 10;
+public final class AppInspectionRule extends ExternalResource implements Runnable {
+    /**
+     * All asynchronous operations are expected to only take subseconds, so we choose a relatively
+     * small but still generous timeout. If a callback doesn't complete during it, we fail the test.
+     */
+    private static final int TIMEOUT_MS = 10 * 1000;
 
-    @NonNull
-    static ServiceLayer create(@NonNull TransportRule transportRule) {
-        TransportServiceBlockingStub transportStub = TransportServiceGrpc.newBlockingStub(transportRule.getGrpc().getChannel());
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        int pid = transportRule.getPid();
-        ServiceLayer layer = new ServiceLayer(transportStub, executor, pid);
-        executor.submit(layer);
-        return layer;
-    }
+    public final TransportRule transportRule;
 
-    private final TransportServiceBlockingStub transportStub;
+    private TransportServiceBlockingStub transportStub;
     private final ExecutorService executor;
-    private final int pid;
+    private int pid;
 
     private AtomicInteger nextCommandId = new AtomicInteger(1);
     private List<Common.Event> unexpectedResponses = new ArrayList<>();
@@ -70,13 +69,26 @@ final class ServiceLayer implements Runnable {
             new ConcurrentHashMap<>();
     private LinkedBlockingQueue<Common.Event> events = new LinkedBlockingQueue<>();
 
-    private ServiceLayer(
-            @NonNull TransportServiceBlockingStub transportStub,
-            @NonNull ExecutorService executor,
-            int pid) {
-        this.transportStub = transportStub;
-        this.executor = executor;
-        this.pid = pid;
+    public AppInspectionRule(@NonNull String activityClass, @NonNull SdkLevel sdkLevel) {
+        this.transportRule =
+                new TransportRule(
+                        activityClass,
+                        sdkLevel,
+                        new TransportRule.Config() {
+                            @Override
+                            public void initDaemonConfig(
+                                    @NonNull Common.CommonConfig.Builder daemonConfig) {
+                                daemonConfig.setProfilerUnifiedPipeline(true);
+                            }
+                        });
+
+        this.executor = Executors.newSingleThreadExecutor();
+    }
+
+    @Override
+    public Statement apply(Statement base, Description description) {
+        return RuleChain.outerRule(transportRule)
+                .apply(super.apply(base, description), description);
     }
 
     boolean hasEventToCollect() {
@@ -99,7 +111,7 @@ final class ServiceLayer implements Runnable {
             @NonNull AppInspectionCommand appInspectionCommand) throws Exception {
         CompletableFuture<Common.Event> local =
                 commandIdToFuture.get(sendCommand(appInspectionCommand));
-        Common.Event response = local.get();
+        Common.Event response = local.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         assertThat(response).isNotNull();
         assertThat(response.hasAppInspectionResponse()).isTrue();
         assertThat(response.getPid()).isEqualTo(pid);
@@ -122,8 +134,23 @@ final class ServiceLayer implements Runnable {
         CompletableFuture<Common.Event> local = new CompletableFuture<>();
         commandIdToFuture.put(commandId, local);
         ExecuteRequest executeRequest = ExecuteRequest.newBuilder().setCommand(command).build();
+
+        // Ignore execute response because the stub is blocking anyway
+        //noinspection ResultOfMethodCallIgnored
         transportStub.execute(executeRequest);
+
         return commandId;
+    }
+
+    /**
+     * Assert that the expected text is logged to the console.
+     *
+     * <p>It's preferred using this over {@link
+     * com.android.tools.fakeandroid.FakeAndroidDriver#waitForInput(String)} because this method
+     * also includes a timeout for early aborting if things went wrong.
+     */
+    public void assertInput(@NonNull String expected) {
+        assertThat(transportRule.getAndroidDriver().waitForInput(expected, TIMEOUT_MS)).isTrue();
     }
 
     @Override
@@ -153,8 +180,23 @@ final class ServiceLayer implements Runnable {
         }
     }
 
-    void shutdown() {
+    @Override
+    protected void before() {
+        this.transportStub =
+                TransportServiceGrpc.newBlockingStub(transportRule.getGrpc().getChannel());
+        this.pid = transportRule.getPid();
+
+        executor.submit(this);
+    }
+
+    @Override
+    protected void after() {
         executor.shutdownNow();
+        try {
+            executor.awaitTermination(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         assertThat(unexpectedResponses).isEmpty();
         assertThat(events).isEmpty();
     }
