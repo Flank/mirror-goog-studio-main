@@ -3331,18 +3331,18 @@ public abstract class TaskManager<
                 kaptTaskProvider,
                 componentProperties.getArtifacts());
 
-        // Manually declare these output providers as the task's outputs as they are not yet
+        // Register the DirectoryProperty / RegularFileProperty as outputs as they are not yet
         // annotated as outputs (same with the code in JavaCompileCreationAction.configure).
-        // Ideally we need to unset these output providers from JavaCompile's outputs, but there's
-        // currently no way to do it.
+        // Ideally we need to unset the corresponding properties from JavaCompile's outputs, but
+        // there's currently no way to do it.
         kaptTask.getOutputs()
                 .dir(dataBindingArtifactDir)
-                .withPropertyName("dataBindingArtifactDir")
-                .optional();
-        kaptTask.getOutputs()
-                .file(exportClassListFile)
-                .withPropertyName("dataBindingExportClassListFile")
-                .optional();
+                .withPropertyName("dataBindingArtifactDir");
+        if (componentProperties.getVariantType().isExportDataBindingClassList()) {
+            kaptTask.getOutputs()
+                    .file(exportClassListFile)
+                    .withPropertyName("dataBindingExportClassListFile");
+        }
     }
 
     protected void configureTestData(
