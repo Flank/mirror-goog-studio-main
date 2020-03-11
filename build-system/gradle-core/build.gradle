@@ -64,6 +64,7 @@ dependencies {
     compile libs.protobuf
     compile libs.protobuf_util
     compile libs.tink
+    compile libs.unified_test_platform
 
     compileOnly libs.kotlin_gradle_plugin
 

@@ -72,6 +72,7 @@ kotlin_library(
         "//tools/base/third_party:com.google.auto.value_auto-value",
         "//tools/base/third_party:com.google.auto.value_auto-value-annotations",
         "//tools/base/third_party:com.google.crypto.tink_tink",
+        "//tools/base/third_party:com.google.test.platform_core-proto",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-core",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-processor",
         "//tools/base/third_party:com.android.tools.build_bundletool",
