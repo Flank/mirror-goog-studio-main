@@ -1,11 +1,9 @@
-FROM gcr.io/cloud-marketplace/google/rbe-ubuntu16-04@sha256:94d7d8552902d228c32c8c148cc13f0effc2b4837757a6e95b73fdc5c5e4b07b
+FROM gcr.io/cloud-marketplace/google/rbe-ubuntu18-04@sha256:4c4db0bd706a5410b692dd625345493f623228444f229ffcfcf57ea09eb5f384
 RUN apt-get update && apt-get --no-install-recommends install -y ca-certificates-java locales && rm -rf /var/lib/apt/lists/*
 # Install lib32ncurses5 for sdk linker dependency on 32 bit libraries.
 RUN apt-get update && apt-get install -y lib32ncurses5 lib32z1
 # Install dependencies for emulator.
 RUN apt-get update && apt-get install -y libpulse-dev libgl1-mesa-glx libxcomposite-dev libxcursor-dev libasound2
-# Install dependencies to build skia
-RUN apt-get update && apt-get install -y libstdc++-5-dev
 # Container uses dockerUseURandom to mount /dev/urandom as /dev/random.
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
