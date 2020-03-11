@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputFile
@@ -47,6 +48,7 @@ import java.io.File
  * split unchanged. We cannot use republish because there can be many merged manifests, but there
  * is only one bundle tool manifest.
  */
+@CacheableTask
 abstract class ProcessManifestForBundleTask: NonIncrementalTask() {
 
     @get:OutputFile

@@ -284,6 +284,9 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
             creationConfig.operations.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles)
 
+            creationConfig.operations.setTaskInputToFinalProduct(
+                InternalArtifactType.MERGED_MANIFESTS, task.mergedManifestFiles)
+
             task.mainSplit = creationConfig.outputs.getMainSplit()
 
             // This task can produce R classes with either constant IDs ("0") or sequential IDs

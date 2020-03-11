@@ -166,9 +166,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             }
         }
         var compatibleScreenManifestForSplit: BuiltArtifactImpl?
-        val packagedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val mergedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
-        val instantAppManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val navJsons = navigationJsons?.files ?: setOf()
 
         // FIX ME : multi threading.
@@ -178,13 +176,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             val dirName = variantOutput.dirName()
             val mergedManifestOutputFile = File(
                 mergedManifestOutputDirectory.get().asFile,
-                FileUtils.join(
-                    dirName,
-                    SdkConstants.ANDROID_MANIFEST_XML
-                )
-            )
-            val packagedManifestOutputFile = File(
-                packagedManifestOutputDirectory.get().asFile,
                 FileUtils.join(
                     dirName,
                     SdkConstants.ANDROID_MANIFEST_XML
@@ -205,7 +196,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 targetSdkVersion.orNull,
                 maxSdkVersion.orNull,
                 mergedManifestOutputFile.absolutePath,
-                packagedManifestOutputFile.absolutePath,  // no aapt friendly merged manifest file necessary for applications.
                 null /* aaptFriendlyManifestOutputFile */,
                 ManifestMerger2.MergeType.APPLICATION,
                 manifestPlaceholders.get(),
@@ -226,9 +216,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             mergedManifestOutputs.add(
                 variantOutput.toBuiltArtifact(mergedManifestOutputFile, properties)
             )
-            packagedManifestOutputs.add(
-                variantOutput.toBuiltArtifact(packagedManifestOutputFile, properties)
-            )
         }
         BuiltArtifactsImpl(
             artifactType = InternalArtifactType.MERGED_MANIFESTS,
@@ -237,13 +224,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             elements = mergedManifestOutputs.toList()
         )
             .save(mergedManifestOutputDirectory.get())
-        BuiltArtifactsImpl(
-            artifactType = InternalArtifactType.PACKAGED_MANIFESTS,
-            applicationId = applicationId.get(),
-            variantName = variantName,
-            elements = packagedManifestOutputs.toList()
-        )
-            .save(packagedManifestOutputDirectory.get())
     }
 
     @get:Internal
@@ -414,10 +394,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 taskProvider,
                 ProcessApplicationManifest::mergedManifestOutputDirectory
             ).on(InternalArtifactType.MERGED_MANIFESTS)
-            operations.setInitialProvider(
-                taskProvider,
-                ManifestProcessorTask::packagedManifestOutputDirectory
-            ).on(InternalArtifactType.PACKAGED_MANIFESTS)
             operations.setInitialProvider(
                 taskProvider,
                 ManifestProcessorTask::mergeBlameFile

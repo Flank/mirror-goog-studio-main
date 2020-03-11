@@ -51,6 +51,7 @@ import com.google.common.base.Preconditions
 import com.google.common.base.Strings
 import com.google.common.io.Files
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -60,6 +61,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -80,6 +82,11 @@ import java.io.IOException
  */
 abstract class ProcessTestManifest : ManifestProcessorTask() {
 
+    @get:OutputDirectory
+    abstract val packagedManifestOutputDirectory: DirectoryProperty
+
+    /** Whether there's just a single APK with both test and tested code.  */
+    private var onlyTestApk = false
     @get:Internal
     var tmpDir: File? = null
 
@@ -416,7 +423,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             creationConfig.taskContainer.processManifestTask = taskProvider
             creationConfig.operations.setInitialProvider(
                 taskProvider,
-                ManifestProcessorTask::packagedManifestOutputDirectory
+                ProcessTestManifest::packagedManifestOutputDirectory
             ).on(PACKAGED_MANIFESTS)
             creationConfig.operations.setInitialProvider(
                 taskProvider,

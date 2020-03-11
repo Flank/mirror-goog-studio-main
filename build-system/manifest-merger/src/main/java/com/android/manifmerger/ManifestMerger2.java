@@ -575,20 +575,7 @@ public class ManifestMerger2 {
         }
 
         mergingReport.setMergedDocument(
-                MergingReport.MergedManifestKind.INTERNAL_MERGED, prettyPrint(document));
-
-        // These features should occur at the end of all optional features, as they are based off of
-        // the final merged manifest. This is true for all instant app manifests, bundletool manifests,
-        // and feature manifests.
-
-        // remove all instant-app decorations from the merged manifest, as the packaged manifest
-        // does not need it.
-        adjustInstantAppFeatureSplitInfo(document, mFeatureName, false);
-
-        if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_XML_STRING)) {
-            mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
-        }
+                MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
 
         if (mOptionalFeatures.contains(Invoker.Feature.MAKE_AAPT_SAFE)) {
             createAaptSafeManifest(document, mergingReport);
@@ -732,31 +719,6 @@ public class ManifestMerger2 {
                 }
             }
         }
-    }
-
-    /**
-     * Set "android:targetSandboxVersion" attribute to 2 for the manifest element.
-     *
-     * @param document the document whose attributes are changes
-     * @return the previous value of the targetSandboxVersion attribute or null if
-     *     targetSandboxVersion was not set.
-     */
-    private static String addTargetSandboxVersionAttribute(@NonNull Document document) {
-        return setTargetSandboxVersionAttribute(document, "2");
-    }
-
-    /**
-     * Set "android:targetSandboxVersion" attribute for the manifest element.
-     *
-     * @param document the document whose attributes will be modified
-     * @param value the new value of targetSandboxVersion
-     * @return the previous value of the targetSandboxVersion attribute or null if
-     *     targetSandboxVersion was not set.
-     */
-    private static String setTargetSandboxVersionAttribute(
-            @NonNull Document document, @NonNull String value) {
-        return setManifestAndroidAttribute(
-                document, SdkConstants.ATTR_TARGET_SANDBOX_VERSION, value);
     }
 
     /**

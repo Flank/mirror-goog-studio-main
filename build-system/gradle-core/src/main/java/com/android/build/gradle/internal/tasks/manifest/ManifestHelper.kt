@@ -44,7 +44,6 @@ fun mergeManifestsForApplication(
     targetSdkVersion: String?,
     maxSdkVersion: Int?,
     outMergedManifestLocation: String?,
-    outPackagedManifestLocation: String,
     outAaptSafeManifestLocation: String?,
     mergeType: ManifestMerger2.MergeType,
     placeHolders: Map<String, Any>,
@@ -91,17 +90,14 @@ fun mergeManifestsForApplication(
             mergingReport.log(logger)
         }
 
-        val xmlDocument =
-            mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED)
         val annotatedDocument =
             mergingReport.getMergedDocument(MergingReport.MergedManifestKind.BLAME)
         if (annotatedDocument != null) {
             logger.verbose(annotatedDocument)
         }
-        save(xmlDocument, File(outPackagedManifestLocation))
-        logger.verbose("Merged manifest saved to $outPackagedManifestLocation")
+        logger.verbose("Merged manifest saved to $outMergedManifestLocation")
         if (outMergedManifestLocation != null) {
-            save(mergingReport.getMergedDocument(MergingReport.MergedManifestKind.INTERNAL_MERGED),
+            save(mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED),
                 File(outMergedManifestLocation))
         }
 
@@ -132,7 +128,7 @@ fun findOriginalManifestFilePosition(
     mergedFilePosition: SourceFilePosition
 ): SourceFilePosition {
     if (mergedFilePosition.file == SourceFile.UNKNOWN || mergedFilePosition.file.sourceFile?.absolutePath?.contains(
-            "packaged_manifests"
+            "merged_manifests"
         ) == false
     ) {
         return mergedFilePosition

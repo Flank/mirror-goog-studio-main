@@ -32,10 +32,6 @@ import java.io.IOException
 /** A task that processes the manifest  */
 abstract class ManifestProcessorTask : IncrementalTask() {
 
-    /** The processed Manifests files folder.  */
-    @get:OutputDirectory
-    abstract val packagedManifestOutputDirectory: DirectoryProperty
-
     /**
      * The aapt friendly processed Manifest. In case we are processing a library manifest, some
      * placeholders may not have been resolved (and will be when the library is merged into the

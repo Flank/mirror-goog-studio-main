@@ -42,12 +42,6 @@ public class MergingReport {
 
     public enum MergedManifestKind {
         /**
-         * Merged manifest file, used as a base for other Manifest files like MERGED, BUNDLE or
-         * METADATA_FEATURE
-         */
-        INTERNAL_MERGED,
-
-        /**
          * Merged manifest file with unresolved placeholders encoded to be AAPT friendly.
          */
         AAPT_SAFE,
@@ -57,12 +51,6 @@ public class MergingReport {
 
         /** Merged manifest file as packaged in the APK or AAR */
         MERGED,
-
-        /** Feature manifest to be merged back into the base. */
-        METADATA_FEATURE,
-
-        /** Merged manifest file for deploying app as an instant app. */
-        INSTANT_APP,
     }
 
     @NonNull

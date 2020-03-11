@@ -73,6 +73,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":createDebugCompatibleScreenManifests" to DID_WORK,
         ":extractDeepLinksDebug" to FROM_CACHE,
         ":processDebugManifest" to DID_WORK,
+        ":processDebugManifestForPackage" to FROM_CACHE,
         ":processDebugResources" to DID_WORK,
         ":compileDebugJavaWithJavac" to FROM_CACHE
     ).plus(

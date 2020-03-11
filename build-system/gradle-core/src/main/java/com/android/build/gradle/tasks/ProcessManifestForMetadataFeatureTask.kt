@@ -21,12 +21,12 @@ import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.XmlDocument
 import com.android.utils.PositionXmlParser
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
@@ -38,14 +38,12 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import org.w3c.dom.Document
-import org.w3c.dom.Element
 import java.io.BufferedInputStream
 import java.io.FileInputStream
 import java.io.Serializable
-import java.util.function.Consumer
 import javax.inject.Inject
 
+@CacheableTask
 abstract class ProcessManifestForMetadataFeatureTask @Inject constructor(
     objects: ObjectFactory,
     workers: WorkerExecutor): NonIncrementalTask() {
@@ -104,49 +102,6 @@ abstract class ProcessManifestForMetadataFeatureTask @Inject constructor(
             stripUsesSplitFromFeatureManifest(xmlDocument)
             workItemParameters.outputXmlFile.get().asFile.writeText(
                 XmlDocument.prettyPrint(xmlDocument))
-        }
-
-        /**
-         * This will strip the min sdk from the feature manifest, used to merge it back into the base
-         * module. This is used in dynamic-features, as dynamic-features can have different min sdk than
-         * the base module. It doesn't need to be strictly <= the base module like libraries.
-         *
-         * @param document the resulting document to use for stripping the min sdk from.
-         */
-        private fun stripMinSdkFromFeatureManifest(document: Document) {
-            // make changes necessary for metadata feature manifest
-            val manifest = document.documentElement
-            val usesSdkList =
-                ManifestMerger2.getChildElementsByName(manifest, SdkConstants.TAG_USES_SDK)
-            val usesSdk: Element
-            if (!usesSdkList.isEmpty()) {
-                usesSdk = usesSdkList[0]
-                usesSdk.removeAttributeNS(
-                    SdkConstants.ANDROID_URI,
-                    SdkConstants.ATTR_MIN_SDK_VERSION
-                )
-            }
-        }
-
-        /**
-         * This will strip uses-split from the feature manifest used to merge it back into the base
-         * module and features that require it. If featureB depends on featureA, we don't want the
-         * `<uses split android:name="featureA"/>` from featureB's manifest to appear in
-         * featureA's manifest after merging.
-         *
-         * @param document the resulting document to use for stripping the min sdk from.
-         */
-        private fun stripUsesSplitFromFeatureManifest(document: Document) {
-            // make changes necessary for metadata feature manifest
-            val manifest = document.documentElement
-            val usesSplitList =
-                ManifestMerger2.getChildElementsByName(
-                    manifest,
-                    SdkConstants.TAG_USES_SPLIT
-                )
-            usesSplitList.forEach(Consumer { node: Element? ->
-                manifest.removeChild(node)
-            })
         }
     }
 
