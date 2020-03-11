@@ -219,10 +219,8 @@ private fun applyVersionForCompatibility(config: ConfigDescription): ConfigDescr
         config.uiModeType() != ResTableConfig.UI_MODE.TYPE_ANY ||
             config.uiModeNight() != ResTableConfig.UI_MODE.NIGHT_ANY -> SDKConstants.SDK_FROYO
         config.layoutSize() != ResTableConfig.SCREEN_LAYOUT.SIZE_ANY ||
-            config.layoutLong() != ResTableConfig.SCREEN_LAYOUT.SCREENLONG_ANY -> {
-
-            SDKConstants.SDK_DONUT
-        }
+            config.layoutLong() != ResTableConfig.SCREEN_LAYOUT.SCREENLONG_ANY ||
+            config.density != ResTableConfig.DENSITY.DEFAULT -> SDKConstants.SDK_DONUT
         else -> 0
     }
 

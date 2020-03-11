@@ -30,7 +30,7 @@ import java.io.File
  *   i.e. ".../values-en/strings.xml" would have a [resourceDirectory] or "values"
  * @param configString the configuration associated with this resource.
  */
-class ResourcePathData(
+data class ResourcePathData(
   var source: Source,
   var extension: String,
   var name: String,
@@ -40,7 +40,7 @@ class ResourcePathData(
   var file: File,
   var config: ConfigDescription
 ) {
-  val type: ResourceType? = ResourceType.fromFolderName(resourceDirectory)
+  val type: AaptResourceType? = resourceTypeFromTag(resourceDirectory)
 
   fun getIntermediateContainerFilename(): String {
     return compilationRename(file)
