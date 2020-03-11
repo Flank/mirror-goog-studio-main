@@ -106,34 +106,21 @@ fun tryCreateCxxModuleModel(
         CachingEnvironment(cxxFolder).use {
             val ndkHandler = global.sdkComponents.ndkHandlerSupplier.get()
                 if (!ndkHandler.ndkPlatform.isConfigured) {
-                    if (ndkHandler.userExplicitlyRequestedNdkVersion) {
-                        try {
-                            global.sdkComponents.installNdk(ndkHandler)
-                        } catch (e: NumberFormatException) {
-                            // This is likely a mis-formatted NDK version in build.gradle. Just issue
-                            // an infoln because an appropriate errorln will have been emitted by
-                            // NdkLocator.
-                            infoln(
-                                "NDK auto-download failed, possibly due to a malformed NDK version in " +
-                                        "build.gradle. If manual download is necessary from SDK manager " +
-                                        "then the preferred NDK version is " +
-                                        "'$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION'."
-                            )
-                            return ndkHandler
-                        }
-                    } else {
-                        // Don't auto-download if the user has not explicitly specified an NDK
-                        // version in build.gradle. The default version may not be the one that
-                        // the user prefers but he hasn't had a chance yet to set
-                        // android.ndkVersion. We don't want to auto-download a massive NDK without
-                        // confirmation that it's the right one.
+                    try {
+                        global.sdkComponents.installNdk(ndkHandler)
+                    } catch (e: NumberFormatException) {
+                        // This is likely a mis-formatted NDK version in build.gradle. Just issue
+                        // an infoln because an appropriate errorln will have been emitted by
+                        // NdkLocator.
                         infoln(
-                            "NDK auto-download is disabled. To enable auto-download, " +
-                                    "set an explicit version in build.gradle by setting " +
-                                    "android.ndkVersion. The preferred NDK version is " +
+                            "NDK auto-download failed, possibly due to a malformed NDK version in " +
+                                    "build.gradle. If manual download is necessary from SDK manager " +
+                                    "then the preferred NDK version is " +
                                     "'$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION'."
                         )
+                        return ndkHandler
                     }
+
                     if (!ndkHandler.ndkPlatform.isConfigured) {
                         throw InvalidUserDataException(
                             "NDK not configured. Download " +
