@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,34 +28,41 @@ import com.android.tools.profiler.proto.Transport.GetEventsRequest;
 import com.android.tools.profiler.proto.TransportServiceGrpc;
 import com.android.tools.profiler.proto.TransportServiceGrpc.TransportServiceBlockingStub;
 import com.android.tools.transport.TransportRule;
-import com.android.tools.transport.device.SdkLevel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.rules.ExternalResource;
-import org.junit.rules.RuleChain;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
 
 /**
- * A JUnit rule for wrapping useful app-inspection gRPC operations, spinning up a separate thread to
- * manage host / device communication.
+ * A utility class for wrapping useful app-inspection gRPC operations, spinning up a separate thread
+ * to manage host / device communication.
  *
  * <p>While running, it polls the transport framework for events, which should be received after
  * calls to {@link #sendCommand(AppInspectionCommand)}. You can fetch those events using {@link
  * #sendCommandAndGetResponse(AppInspectionCommand)} instead, or by calling {@link
  * #consumeCollectedEvent()}.
  *
- * <p>The thread will be spun down when the rule itself tears down.
+ * <p>{@link #shutdown()} must be called to ensure the thread can finish.
  */
-public final class AppInspectionRule extends ExternalResource implements Runnable {
-    public final TransportRule transportRule;
+final class ServiceLayer implements Runnable {
+    // All asynchronous operations are expected to be subseconds. so we choose a relatively small
+    // but still generous timeout. If a callback didn't occur during the timeout, we fail the test.
+    static final long TIMEOUT_SECONDS = 10;
 
-    private TransportServiceBlockingStub transportStub;
+    @NonNull
+    static ServiceLayer create(@NonNull TransportRule transportRule) {
+        TransportServiceBlockingStub transportStub = TransportServiceGrpc.newBlockingStub(transportRule.getGrpc().getChannel());
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        int pid = transportRule.getPid();
+        ServiceLayer layer = new ServiceLayer(transportStub, executor, pid);
+        executor.submit(layer);
+        return layer;
+    }
+
+    private final TransportServiceBlockingStub transportStub;
     private final ExecutorService executor;
-    private int pid;
+    private final int pid;
 
     private AtomicInteger nextCommandId = new AtomicInteger(1);
     private List<Common.Event> unexpectedResponses = new ArrayList<>();
@@ -63,26 +70,13 @@ public final class AppInspectionRule extends ExternalResource implements Runnabl
             new ConcurrentHashMap<>();
     private LinkedBlockingQueue<Common.Event> events = new LinkedBlockingQueue<>();
 
-    public AppInspectionRule(@NonNull String activityClass, @NonNull SdkLevel sdkLevel) {
-        this.transportRule =
-                new TransportRule(
-                        activityClass,
-                        sdkLevel,
-                        new TransportRule.Config() {
-                            @Override
-                            public void initDaemonConfig(
-                                    @NonNull Common.CommonConfig.Builder daemonConfig) {
-                                daemonConfig.setProfilerUnifiedPipeline(true);
-                            }
-                        });
-
-        this.executor = Executors.newSingleThreadExecutor();
-    }
-
-    @Override
-    public Statement apply(Statement base, Description description) {
-        return RuleChain.outerRule(transportRule)
-                .apply(super.apply(base, description), description);
+    private ServiceLayer(
+            @NonNull TransportServiceBlockingStub transportStub,
+            @NonNull ExecutorService executor,
+            int pid) {
+        this.transportStub = transportStub;
+        this.executor = executor;
+        this.pid = pid;
     }
 
     boolean hasEventToCollect() {
@@ -159,17 +153,7 @@ public final class AppInspectionRule extends ExternalResource implements Runnabl
         }
     }
 
-    @Override
-    protected void before() throws Throwable {
-        this.transportStub =
-                TransportServiceGrpc.newBlockingStub(transportRule.getGrpc().getChannel());
-        this.pid = transportRule.getPid();
-
-        executor.submit(this);
-    }
-
-    @Override
-    protected void after() {
+    void shutdown() {
         executor.shutdownNow();
         assertThat(unexpectedResponses).isEmpty();
         assertThat(events).isEmpty();
