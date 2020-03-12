@@ -593,17 +593,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 ArrayList()
             val variantType = creationConfig.variantType
             if (variantType.isDynamicFeature) {
-                features.add(Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
-                features.add(Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)
-            }
-            features.add(Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
-            if (variantType.isBaseModule || variantType.isDynamicFeature) {
-                features.add(Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
-            }
-            if (variantType.isDynamicFeature) {
-                // create it for dynamic-features and base modules that are not hybrid base features.
-                // hybrid features already contain the split name.
-                features.add(Invoker.Feature.ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST)
+                features.add(Invoker.Feature.ADD_DYNAMIC_FEATURE_ATTRIBUTES)
             }
             if (creationConfig.testOnlyApk) {
                 features.add(Invoker.Feature.TEST_ONLY)

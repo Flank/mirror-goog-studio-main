@@ -1293,11 +1293,8 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
                         .withFeatures(
-                                ManifestMerger2.Invoker.Feature
-                                        .ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
+                                ManifestMerger2.Invoker.Feature.ADD_DYNAMIC_FEATURE_ATTRIBUTES)
                         .setFeatureName("feature")
                         .merge();
 
@@ -1356,12 +1353,8 @@ public class ManifestMerger2SmallTest {
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
                         .setFeatureName("dynamic_split")
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
                         .withFeatures(
-                                ManifestMerger2.Invoker.Feature
-                                        .ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_FEATURE_MANIFEST)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
+                                ManifestMerger2.Invoker.Feature.ADD_DYNAMIC_FEATURE_ATTRIBUTES)
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
@@ -1423,9 +1416,6 @@ public class ManifestMerger2SmallTest {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(
                                     appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                            .withFeatures(ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
-                            .withFeatures(
-                                    ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
                             .addLibraryManifest(libFile)
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
@@ -1493,9 +1483,6 @@ public class ManifestMerger2SmallTest {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(
                                     appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                            .withFeatures(ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
-                            .withFeatures(
-                                    ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
                             .addLibraryManifest(libFile)
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());

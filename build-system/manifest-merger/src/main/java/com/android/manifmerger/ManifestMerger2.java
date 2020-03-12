@@ -565,12 +565,9 @@ public class ManifestMerger2 {
             addMultiDexApplicationIfNoName(document, SdkConstants.MULTI_DEX_APPLICATION.oldName());
         }
 
-        if (mOptionalFeatures.contains(Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)) {
+        if (mOptionalFeatures.contains(Invoker.Feature.ADD_DYNAMIC_FEATURE_ATTRIBUTES)) {
             addFeatureSplitAttribute(document, mFeatureName);
-            adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
-        }
-
-        if (mOptionalFeatures.contains(Invoker.Feature.ADD_USES_SPLIT_DEPENDENCIES)) {
+            adjustInstantAppFeatureSplitInfo(document, mFeatureName);
             addUsesSplitTagsForDependencies(document, mDependencyFeatureNames);
         }
 
@@ -687,10 +684,9 @@ public class ManifestMerger2 {
      *
      * @param document the document whose attributes are changed
      * @param featureName the value all of the changed attributes are set to
-     * @param addName whether to add the attribute or remove it
      */
     private static void adjustInstantAppFeatureSplitInfo(
-            @NonNull Document document, @NonNull String featureName, boolean addName) {
+            @NonNull Document document, @NonNull String featureName) {
         Element manifest = document.getDocumentElement();
         if (manifest == null) {
             return;
@@ -712,11 +708,7 @@ public class ManifestMerger2 {
                         SdkConstants.TAG_PROVIDER);
         for (String elementName : elementNamesToUpdate) {
             for (Element elementToUpdate : getChildElementsByName(application, elementName)) {
-                if (addName) {
-                    setAndroidAttribute(elementToUpdate, SdkConstants.ATTR_SPLIT_NAME, featureName);
-                } else {
-                    removeAndroidAttribute(elementToUpdate, SdkConstants.ATTR_SPLIT_NAME);
-                }
+                setAndroidAttribute(elementToUpdate, SdkConstants.ATTR_SPLIT_NAME, featureName);
             }
         }
     }
@@ -1520,25 +1512,10 @@ public class ManifestMerger2 {
             ADVANCED_PROFILING,
 
             /** Mark this application as a feature split */
-            ADD_FEATURE_SPLIT_ATTRIBUTE,
-
-            /** Create a bundletool manifest */
-            CREATE_BUNDLETOOL_MANIFEST,
-
-            /** Add the split name to the bundletool manifest. */
-            ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST,
-
-            /** Create a feature manifest to be merged into the base. */
-            CREATE_FEATURE_MANIFEST,
-
-            /** Add instant app manifest. */
-            ADD_INSTANT_APP_MANIFEST,
+            ADD_DYNAMIC_FEATURE_ATTRIBUTES,
 
             /** Set the android:debuggable flag to the application. */
             DEBUGGABLE,
-
-            /** Set the android:targetSandboxVersion attribute. */
-            TARGET_SANDBOX_VERSION,
 
             /**
              * When there are attribute value conflicts, automatically pick the higher priority
@@ -1568,9 +1545,6 @@ public class ManifestMerger2 {
 
             /** Enforce that dependencies manifests don't have duplicated package names. */
             ENFORCE_UNIQUE_PACKAGE_NAME,
-
-            /** Adds <uses-split> tags referring to feature dependencies. */
-            ADD_USES_SPLIT_DEPENDENCIES,
         }
 
         /**
