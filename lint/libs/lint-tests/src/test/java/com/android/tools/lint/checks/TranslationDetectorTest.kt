@@ -1378,4 +1378,26 @@ class TranslationDetectorTest : AbstractCheckTest() {
             )
         ).run().expectClean()
     }
+
+    fun testIncrementalDefaultLocale() {
+        // Regression test for https://issuetracker.google.com/142590628
+        lint().files(
+            xml(
+                "res/values/strings.xml", """
+                <resources xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
+                    <string name="app_name">My Application</string>
+                    <string name="test">This is a test</string>
+                </resources>
+                """
+            ).indented(),
+            xml(
+                "res/values-en-rGB/strings.xml",
+                """
+                <resources>
+                    <string name="app_name">My Application</string>
+                </resources>
+                """
+            ).indented()
+        ).incremental("res/values/strings.xml").run().expectClean()
+    }
 }
