@@ -44,7 +44,14 @@ data class AndroidGradlePluginAttributionData(
      * The key of the map represents the absolute path to the file or the directory output and the
      * key contains a list of tasks declaring this file or directory as their output.
      */
-    val tasksSharingOutput: Map<String, List<String>> = emptyMap()
+    val tasksSharingOutput: Map<String, List<String>> = emptyMap(),
+
+    /**
+     * Contains garbage collection data for the last build.
+     * The key of the map represents the name of the garbage collector, while the value represents
+     * the time spent collecting in milliseconds.
+     */
+    val garbageCollectionData: Map<String, Long> = emptyMap()
 ) : Serializable {
     companion object {
         fun save(outputDir: File, attributionData: AndroidGradlePluginAttributionData) {
