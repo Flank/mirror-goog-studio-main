@@ -247,6 +247,8 @@ abstract class CommonExtensionImpl<
 
     override var ndkVersion: String? = null
 
+    override var ndkPath: String? = null
+
     override var buildToolsVersion: String
         get() = buildToolsRevision.toString()
         set(version) {

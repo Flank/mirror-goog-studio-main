@@ -584,6 +584,8 @@ interface CommonExtension<
      * }
      * ```
      *
+     * If this field is specified then android.ndkPath may not be specified.
+     *
      * The required format of the version is <code>major.minor.build</code>. It's not legal to
      * specify less precision.
      * If `ndk.dir` is specified in `local.properties` file then the NDK that it points to must
@@ -599,6 +601,25 @@ interface CommonExtension<
      * [Install and configure the NDK](https://developer.android.com/studio/projects/install-ndk).
      */
     var ndkVersion: String?
+
+    /**
+     * Requires the specified path to NDK be used.
+     *
+     * Use this to specify a path to the NDK folder to be used for C and C++ builds.
+     *
+     * ```
+     * android {
+     *     // Path to custom NDK location
+     *     ndkPath '/path/to/ndk'
+     * }
+     * ```
+     *
+     * If this field is specified then android.ndkVersion may not be specified.
+     *
+     * For additional information about NDK installation see
+     * [Install and configure the NDK](https://developer.android.com/studio/projects/install-ndk).
+     */
+    var ndkPath: String?
 
     /**
      * Specifies the version of the

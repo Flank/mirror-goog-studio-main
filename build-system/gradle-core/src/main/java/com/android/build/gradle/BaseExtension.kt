@@ -444,6 +444,8 @@ abstract class BaseExtension protected constructor(
 
     abstract override var ndkVersion: String?
 
+    abstract var ndkPath: String?
+
     abstract override var buildToolsVersion: String
 
     abstract override val buildToolsRevision: Revision
