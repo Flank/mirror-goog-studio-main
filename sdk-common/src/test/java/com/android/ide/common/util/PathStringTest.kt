@@ -99,6 +99,43 @@ class PathStringTest {
     }
 
     @Test
+    fun testStartsWithBackslashes() {
+        val emptyString = PathString("")
+        val invalidRoot = PathString("C")
+        val root = PathString("C:/")
+        val rootBack = PathString("C:\\")
+        val foo = PathString("C:/foo")
+        val fooBack = PathString("C:\\foo")
+        val fooBa = PathString("C:/foo/ba")
+        val fooBaBack = PathString("C:\\foo\\ba")
+
+        val fullPath = PathString("C:/foo/bar/")
+        val fullPathBack = PathString("C:\\foo\\bar\\")
+
+        assertThat(fullPath.startsWith(emptyString)).isFalse()
+        assertThat(fullPath.startsWith(invalidRoot)).isFalse()
+        assertThat(fullPath.startsWith(root)).isTrue()
+        assertThat(fullPath.startsWith(rootBack)).isTrue()
+        assertThat(fullPath.startsWith(foo)).isTrue()
+        assertThat(fullPath.startsWith(fooBack)).isTrue()
+        assertThat(fullPath.startsWith(fooBa)).isFalse()
+        assertThat(fullPath.startsWith(fooBaBack)).isFalse()
+        assertThat(fullPath.startsWith(fullPath)).isTrue()
+        assertThat(fullPath.startsWith(fullPathBack)).isTrue()
+
+        assertThat(fullPathBack.startsWith(emptyString)).isFalse()
+        assertThat(fullPathBack.startsWith(invalidRoot)).isFalse()
+        assertThat(fullPathBack.startsWith(root)).isTrue()
+        assertThat(fullPathBack.startsWith(rootBack)).isTrue()
+        assertThat(fullPathBack.startsWith(foo)).isTrue()
+        assertThat(fullPathBack.startsWith(fooBack)).isTrue()
+        assertThat(fullPathBack.startsWith(fooBa)).isFalse()
+        assertThat(fullPathBack.startsWith(fooBaBack)).isFalse()
+        assertThat(fullPathBack.startsWith(fullPath)).isTrue()
+        assertThat(fullPathBack.startsWith(fullPathBack)).isTrue()
+    }
+
+    @Test
     fun testDefaultFilesystem() {
         val defaultFilesystemUri = PathString("").filesystemUri
         val fileSystem = Paths.get(defaultFilesystemUri).fileSystem
