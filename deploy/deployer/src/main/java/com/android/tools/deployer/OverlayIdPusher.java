@@ -25,9 +25,10 @@ public class OverlayIdPusher {
         this.installer = installer;
     }
 
-    public boolean pushOverlayId(String packageName, OverlayId oid) {
+    public boolean pushOverlayId(String packageName, OverlayId oid, boolean clearOverlays) {
         try {
-            Deploy.OverlayIdPushResponse resp = installer.pushOverlayId(packageName, oid.getSha());
+            Deploy.OverlayIdPushResponse resp =
+                    installer.pushOverlayId(packageName, oid.getSha(), clearOverlays);
             // TODO Needs new DeployerExceptions
             return resp.getStatus() != Deploy.OverlayIdPushResponse.Status.OK;
         } catch (IOException e) {

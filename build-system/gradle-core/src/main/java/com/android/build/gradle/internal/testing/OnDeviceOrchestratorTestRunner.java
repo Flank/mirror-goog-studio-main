@@ -47,7 +47,7 @@ public class OnDeviceOrchestratorTestRunner extends SimpleTestRunner {
     @NonNull
     @Override
     protected RemoteAndroidTestRunner createRemoteAndroidTestRunner(
-            @NonNull TestData testData, @NonNull DeviceConnector device) {
+            @NonNull StaticTestData testData, @NonNull DeviceConnector device) {
         return new AndroidTestOrchestratorRemoteAndroidTestRunner(
                 testData.getApplicationId(),
                 testData.getInstrumentationRunner(),

@@ -33,7 +33,7 @@ interface LibraryExtension<
         AdbOptionsT : AdbOptions,
         AndroidSourceSetT : AndroidSourceSet,
         AnnotationProcessorOptionsT : AnnotationProcessorOptions,
-        BuildTypeT : BuildType<AnnotationProcessorOptionsT>,
+        BuildTypeT : BuildType<AnnotationProcessorOptionsT, SigningConfigT>,
         CMakeT : Cmake,
         CompileOptionsT : CompileOptions,
         DataBindingT : DataBinding,

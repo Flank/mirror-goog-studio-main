@@ -18,10 +18,16 @@ package com.android.signflinger;
 
 import com.android.apksig.ApkVerifier;
 import com.android.apksig.apk.ApkFormatException;
+import com.android.apksig.apk.ApkUtils;
+import com.android.apksig.util.DataSource;
+import com.android.apksig.util.DataSources;
 import com.android.apksig.util.RunnablesExecutor;
 import com.android.apksig.util.RunnablesProvider;
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,5 +78,22 @@ public final class Utils {
             Assert.fail(message);
         }
         Assert.assertTrue(result.isVerified());
+    }
+
+    public static void verifySdkDependencyBlock(File file) throws Exception {
+        DataSource apk = DataSources.asDataSource(new RandomAccessFile(file, "r"));
+        ApkUtils.ZipSections zipSections = ApkUtils.findZipSections(apk);
+
+        ApkUtils.ApkSigningBlock apkSigningBlock = ApkUtils.findApkSigningBlock(apk, zipSections);
+        DataSource signingBlockContents = apkSigningBlock.getContents();
+        ByteBuffer signingBlockContent =
+                signingBlockContents.getByteBuffer(0, Math.toIntExact(signingBlockContents.size()));
+        signingBlockContent.order(ByteOrder.LITTLE_ENDIAN);
+
+        signingBlockContent.getLong(); // Size of entire block.
+        long sizeOfSigner = signingBlockContent.getLong();
+        signingBlockContent.get(new byte[(int) sizeOfSigner]); // skip ID and Value of singer
+        signingBlockContent.getLong(); // Size of Dependency info block.
+        Assert.assertEquals(SignedApk.DEPENDENCY_INFO_BLOCK_ID, signingBlockContent.getInt());
     }
 }

@@ -24,7 +24,6 @@ import com.android.manifmerger.MergingReport
 import com.google.common.base.Supplier
 import java.io.File
 import java.io.FileWriter
-import java.io.IOException
 import org.apache.tools.ant.BuildException
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputFile
@@ -75,7 +74,7 @@ abstract class InvokeManifestMerger : NonIncrementalTask(), Supplier<File> {
         FileWriter(outputFile!!).use { fileWriter ->
             fileWriter.append(
                 mergingReport
-                    .getMergedDocument(MergingReport.MergedManifestKind.MERGED)
+                    .getMergedDocument(MergingReport.MergedManifestKind.INTERNAL_MERGED)
             )
         }
     }

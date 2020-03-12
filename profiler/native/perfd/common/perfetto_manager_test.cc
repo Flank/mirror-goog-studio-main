@@ -177,6 +177,7 @@ TEST(PerfettoManagerTest, ValidateHeapprofdConfig) {
   // Validate we write to file at some interval.
   EXPECT_TRUE(config.write_into_file());
   EXPECT_GT(config.file_write_period_ms(), 0);
+  EXPECT_GT(config.flush_period_ms(), 0);
   // Validate we have 1 buffer.
   EXPECT_EQ(config.buffers().size(), 1);
   // Validate heap profd data source.

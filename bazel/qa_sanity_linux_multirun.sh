@@ -36,7 +36,17 @@ target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emula
   --test_tag_filters=${target_filters} \
   --tool_tag=${script_name} \
   -- \
-  //tools/adt/idea/android-uitests:CreateNewFlavorsTest
+  //tools/adt/idea/android-uitests:CreateNewFlavorsTest \
+  //tools/adt/idea/android-uitests:AddRemoveCppDependencyTest \
+  //tools/adt/idea/android-uitests:BuildCppKotlinTest \
+  //tools/adt/idea/android-uitests:CreateCppKotlinProjectTest \
+  //tools/adt/idea/android-uitests:CreateNewAppModuleWithDefaultsTest \
+  //tools/adt/idea/android-uitests:CreateNewProjectWithCpp1Test \
+  //tools/adt/idea/android-uitests:CreateNewProjectWithCpp2Test \
+  //tools/adt/idea/android-uitests:CreateNewProjectWithCpp3Test \
+  //tools/adt/idea/android-uitests:GenerateApkWithReleaseVariantTest \
+  //tools/adt/idea/android-uitests:LaunchApkViewerTest \
+  //tools/adt/idea/android-uitests:LocalApkProjTest
 
 readonly bazel_status_sanity_longrunning=$?
 

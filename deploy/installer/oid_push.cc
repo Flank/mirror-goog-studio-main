@@ -33,12 +33,13 @@ const int kRxFileMode =
 
 // Only one argument, the OID is expected.
 void OverlayIdPushCommand::ParseParameters(int argc, char** argv) {
-  if (argc < 2) {
+  if (argc < 3) {
     return;
   }
 
   package_name_ = argv[0];
   oid_ = argv[1];
+  clear_overlays_ = strcmp(argv[2], "true") == 0;
 
   ready_to_run_ = true;
 }
@@ -123,6 +124,7 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
   update_request->set_overlay_id(oid_);
   update_request->set_expected_overlay_id("");
   update_request->set_overlay_path("code_cache");
+  update_request->set_wipe_all_files(clear_overlays_);
 
   std::unique_ptr<InstallClient> client_ = StartInstallServer(
       workspace_.GetExecutor(), workspace_.GetTmpFolder() + kInstallServer,

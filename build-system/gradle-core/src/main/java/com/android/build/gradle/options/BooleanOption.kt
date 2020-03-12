@@ -85,7 +85,7 @@ enum class BooleanOption(
     INCLUDE_DEPENDENCY_INFO_IN_APKS("android.includeDependencyInfoInApks", true, FeatureStage.Supported),
 
     // FIXME switch to false once we know we don't use these getters internally.
-    DISABLE_MEMOIZATION("android.compatibility.disableMemoization", true, FeatureStage.Supported),
+    ENABLE_LEGACY_API("android.compatibility.enableLegacyApi", true, FeatureStage.Supported),
 
     /* ---------------------
      * EXPERIMENTAL FEATURES

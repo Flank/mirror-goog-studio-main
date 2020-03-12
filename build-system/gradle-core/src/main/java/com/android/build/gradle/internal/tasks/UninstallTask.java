@@ -70,8 +70,8 @@ public abstract class UninstallTask extends NonIncrementalTask {
                         device.uninstallPackage(applicationId.get(), getTimeOutInMs(), iLogger);
                         logger.lifecycle(
                                 "Uninstalling {} (from {}:{}) from device '{}' ({}).",
-                                applicationId,
-                                getProjectName(),
+                                applicationId.get(),
+                                getProject().getName(),
                                 variantName,
                                 device.getName(),
                                 device.getSerialNumber());
@@ -80,7 +80,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
                     int n = devices.size();
                     logger.quiet(
                             "Uninstalled {} from {} device{}.",
-                            applicationId,
+                            applicationId.get(),
                             n,
                             n == 1 ? "" : "s");
 

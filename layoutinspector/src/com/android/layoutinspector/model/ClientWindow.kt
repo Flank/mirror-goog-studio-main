@@ -16,10 +16,9 @@
 package com.android.layoutinspector.model
 
 import com.google.common.annotations.VisibleForTesting
-import com.android.ddmlib.ChunkHandler
 import com.android.ddmlib.Client
 import com.android.ddmlib.ClientData
-import com.android.ddmlib.HandleViewDebug
+import com.android.ddmlib.DebugViewDumpHandler
 import com.android.layoutinspector.LayoutInspectorCaptureOptions
 import com.android.layoutinspector.ProtocolVersion
 import com.google.common.collect.Lists
@@ -67,7 +66,8 @@ class ClientWindow(val title: String, private val client: Client, val clientView
       clientViewInspector.captureView(client, title, node, timeout, unit)
 
     private class ListViewRootsHandler :
-        HandleViewDebug.ViewDumpHandler(HandleViewDebug.CHUNK_VULW) {
+      DebugViewDumpHandler(
+        DebugViewDumpHandler.CHUNK_VULW) {
 
         private val myViewRoots = Lists.newCopyOnWriteArrayList<String>()
 
@@ -76,7 +76,7 @@ class ClientWindow(val title: String, private val client: Client, val clientView
 
             for (i in 0 until nWindows) {
                 val len = data.int
-                myViewRoots.add(ChunkHandler.getString(data, len))
+                myViewRoots.add(getString(data, len))
             }
         }
 
@@ -92,7 +92,7 @@ class ClientWindow(val title: String, private val client: Client, val clientView
         }
     }
 
-    private class CaptureByteArrayHandler(type: Int) : HandleViewDebug.ViewDumpHandler(type) {
+    private class CaptureByteArrayHandler(type: Int) : DebugViewDumpHandler(type) {
 
         private val mData = AtomicReference<ByteArray>()
 
@@ -134,7 +134,7 @@ class ClientWindow(val title: String, private val client: Client, val clientView
             timeout: Long,
             timeUnit: TimeUnit): ByteArray? {
 
-            val handler = CaptureByteArrayHandler(HandleViewDebug.CHUNK_VURT)
+            val handler = CaptureByteArrayHandler(DebugViewDumpHandler.CHUNK_VURT)
             client.dumpViewHierarchy(title, skipChildren, includeProperties, useV2, handler)
 
             return try {
@@ -151,7 +151,7 @@ class ClientWindow(val title: String, private val client: Client, val clientView
             timeout: Long,
             timeUnit: TimeUnit): ByteArray? {
 
-            val handler = CaptureByteArrayHandler(HandleViewDebug.CHUNK_VUOP)
+            val handler = CaptureByteArrayHandler(DebugViewDumpHandler.CHUNK_VUOP)
             client.captureView(title, node.toString(), handler)
             return try {
                 handler.getData(timeout, timeUnit)

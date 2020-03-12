@@ -136,11 +136,13 @@ TEST(NativeSampleTest, CommandsGeneratesEvents) {
             MemoryNativeTrackingData::NOT_RECORDING);
   EXPECT_EQ(events[2].memory_native_tracking_status().start_time(), 10);
   EXPECT_EQ(events[2].memory_native_tracking_status().failure_message(), "");
+  EXPECT_TRUE(events[2].is_ended());
 
   EXPECT_EQ(events[3].kind(), proto::Event::MEMORY_NATIVE_SAMPLE_CAPTURE);
   EXPECT_TRUE(events[3].has_memory_native_sample());
   EXPECT_EQ(events[3].memory_native_sample().start_time(), 10);
   EXPECT_EQ(events[3].memory_native_sample().end_time(), 20);
+  EXPECT_TRUE(events[3].is_ended());
 
   // Kill read thread to cleanly exit test.
   event_buffer.InterruptWriteEvents();

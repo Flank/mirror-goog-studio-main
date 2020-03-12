@@ -53,9 +53,6 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
 
     private val classesOutputDirectory = globalScope.project.objects.directoryProperty()
     private val annotationProcessorOutputDirectory = globalScope.project.objects.directoryProperty()
-    private val annotationProcessorOutputLocation =
-        componentProperties.artifacts.getOperations()
-            .getOutputPath(AP_GENERATED_SOURCES, "out")
 
     private val dataBindingArtifactDir = globalScope.project.objects.directoryProperty()
     private val dataBindingExportClassListFile = globalScope.project.objects.fileProperty()
@@ -82,19 +79,16 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
 
         val artifacts = componentProperties.artifacts
 
-        classesOutputDirectory.set(
-            artifacts.getOperations().getOutputPath(JAVAC, "classes")
-        )
-        artifacts.producesDir(
-            JAVAC,
-            taskProvider,
-            { classesOutputDirectory },
-            fileName = "classes"
-        )
+        artifacts.getOperations()
+            .setInitialProvider(taskProvider) { classesOutputDirectory }
+            .withName("classes")
+            .on(JAVAC)
 
         artifacts.getOperations()
             .setInitialProvider(taskProvider) { annotationProcessorOutputDirectory }
-            .atLocation(annotationProcessorOutputLocation.path)
+            // Setting a name is not required, but a lot of AGP and IDE tests are assuming this name
+            // so we leave it here for now.
+            .withName(AP_GENERATED_SOURCES_DIR_NAME)
             .on(AP_GENERATED_SOURCES)
 
         if (componentProperties.buildFeatures.dataBinding) {
@@ -115,10 +109,7 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
         task.extensions.add(PROPERTY_VARIANT_NAME_KEY, componentProperties.name)
 
         task.configureProperties(componentProperties)
-        task.configurePropertiesForAnnotationProcessing(
-            componentProperties,
-            annotationProcessorOutputLocation
-        )
+        task.configurePropertiesForAnnotationProcessing(componentProperties)
 
         // Wrap sources in Callable to evaluate them just before execution, b/117161463.
         val sourcesToCompile = Callable { listOf(componentProperties.javaSources) }
@@ -136,18 +127,32 @@ class JavaCompileCreationAction(private val componentProperties: ComponentProper
 
         task.handleAnnotationProcessors(apList, componentProperties.name)
 
+        // Set up the outputs
         task.setDestinationDir(classesOutputDirectory.asFile)
+        // Can't write `task.options.setAnnotationProcessorGeneratedSourcesDirectory(
+        // annotationProcessorOutputDirectory.asFile)` due to a new requirement in Gradle 7.0:
+        // https://docs.gradle.org/current/userguide/upgrading_version_6.html#querying_a_mapped_output_property_of_a_task_before_the_task_has_completed
+        // (currently caught by BasicInstantExecutionTest).
+        task.options.annotationProcessorGeneratedSourcesDirectory =
+            componentProperties.artifacts.getOperations()
+                .getOutputPath(AP_GENERATED_SOURCES, AP_GENERATED_SOURCES_DIR_NAME)
 
-        // Manually declare these output providers as the task's outputs as they are not yet
-        // annotated as outputs.
-        task.outputs.dir(classesOutputDirectory)
-        task.outputs.dir(annotationProcessorOutputDirectory).optional()
-        // Also do that for data binding artifacts---even though the output providers are present
-        // in DataBindingCompilerArguments, it is not enough. (If we don't do this, these tests will
-        // fail: DataBindingMultiModuleTest, DataBindingExternalArtifactDependencyTest,
-        // DataBindingIncrementalityTest.)
-        task.outputs.dir(dataBindingArtifactDir).optional()
-        task.outputs.file(dataBindingExportClassListFile).optional()
+        // The API of JavaCompile to set up outputs only accepts File or Provider<File> (see above).
+        // However, for task wiring to work correctly, we will need to register the corresponding
+        // DirectoryProperty / RegularFileProperty as outputs too (they are not yet annotated as
+        // outputs).
+        task.outputs.dir(classesOutputDirectory).withPropertyName("classesOutputDirectory")
+        task.outputs.dir(annotationProcessorOutputDirectory)
+            .withPropertyName("annotationProcessorOutputDirectory")
+
+        // Also do that for data binding artifacts
+        if (componentProperties.buildFeatures.dataBinding) {
+            task.outputs.dir(dataBindingArtifactDir).withPropertyName("dataBindingArtifactDir")
+            if (componentProperties.variantType.isExportDataBindingClassList) {
+                task.outputs.file(dataBindingExportClassListFile)
+                    .withPropertyName("dataBindingExportClassListFile")
+            }
+        }
 
         task.logger.info(
             "Configuring Java sources compilation with source level " +
@@ -171,16 +176,13 @@ fun registerDataBindingOutputs(
     if (firstRegistration) {
         artifacts.getOperations()
             .setInitialProvider(taskProvider) { dataBindingArtifactDir }
-            .atLocation(artifacts.getOperations().getOutputPath(DATA_BINDING_ARTIFACT).path)
+            // a name is required, or DataBindingCachingTest would fail (somehow adding a name
+            // solves the issue of overlapping outputs between Kapt and JavaCompile when this
+            // artifact is set as the output of both tasks).
+            .withName("out")
             .on(DATA_BINDING_ARTIFACT)
-        artifacts.producesDir(
-            DATA_BINDING_ARTIFACT,
-            taskProvider,
-            { dataBindingArtifactDir }
-        )
     } else {
-        artifacts
-            .getOperations()
+        artifacts.getOperations()
             .replace(taskProvider) { dataBindingArtifactDir }
             .on(DATA_BINDING_ARTIFACT)
     }
@@ -188,14 +190,9 @@ fun registerDataBindingOutputs(
         if (firstRegistration) {
             artifacts.getOperations()
                 .setInitialProvider(taskProvider) { dataBindingExportClassListFile }
-                .atLocation(
-                    artifacts.getOperations().getOutputPath(DATA_BINDING_EXPORT_CLASS_LIST, "out")
-                        .path
-                )
                 .on(DATA_BINDING_EXPORT_CLASS_LIST)
         } else {
-            artifacts
-                .getOperations()
+            artifacts.getOperations()
                 .replace(taskProvider) { dataBindingExportClassListFile }
                 .on(DATA_BINDING_EXPORT_CLASS_LIST)
         }
@@ -239,3 +236,5 @@ private fun isPostN(compileSdkVersion: String): Boolean {
     val hash = AndroidTargetHash.getVersionFromHash(compileSdkVersion)
     return hash != null && hash.apiLevel >= 24
 }
+
+private const val AP_GENERATED_SOURCES_DIR_NAME = "out"

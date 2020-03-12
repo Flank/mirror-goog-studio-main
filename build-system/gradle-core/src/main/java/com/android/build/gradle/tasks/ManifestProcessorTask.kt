@@ -61,14 +61,6 @@ abstract class ManifestProcessorTask : IncrementalTask() {
     abstract val aaptFriendlyManifestOutputFile: File?
 
     /**
-     * The bundle manifest which is consumed by the bundletool (as opposed to the one packaged with
-     * the apk when built directly).
-     */
-    @get:Optional
-    @get:OutputDirectory
-    abstract val bundleManifestOutputDirectory: DirectoryProperty
-
-    /**
      * The feature manifest which is consumed by its base feature (as opposed to the one packaged
      * with the feature APK). This manifest, unlike the one packaged with the APK, does not specify
      * a minSdkVersion. This is used by by both normal features and dynamic-features.

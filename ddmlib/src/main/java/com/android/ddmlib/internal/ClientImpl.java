@@ -19,26 +19,25 @@ package com.android.ddmlib.internal;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
-import com.android.ddmlib.BadPacketException;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.DdmConstants;
 import com.android.ddmlib.DdmPreferences;
-import com.android.ddmlib.DebugPortManager;
+import com.android.ddmlib.DebugViewDumpHandler;
 import com.android.ddmlib.Debugger;
-import com.android.ddmlib.HandleExit;
-import com.android.ddmlib.HandleHeap;
-import com.android.ddmlib.HandleHello;
-import com.android.ddmlib.HandleNativeHeap;
-import com.android.ddmlib.HandleProfiling;
-import com.android.ddmlib.HandleThread;
-import com.android.ddmlib.HandleViewDebug;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.JdwpHandshake;
-import com.android.ddmlib.JdwpPacket;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MonitorThread;
 import com.android.ddmlib.ThreadInfo;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleExit;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleHeap;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleHello;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleNativeHeap;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleProfiling;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleThread;
+import com.android.ddmlib.internal.jdwp.chunkhandler.HandleViewDebug;
+import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.jdwp.JdwpAgent;
 import com.android.ddmlib.jdwp.JdwpProtocol;
 import java.io.IOException;
@@ -133,6 +132,11 @@ public class ClientImpl extends JdwpAgent implements Client {
     /** Returns the {@link IDevice} on which this Client is running. */
     @Override
     public IDevice getDevice() {
+        return mDevice;
+    }
+
+    /** Returns the {@link DeviceImpl} on which this Client is running. */
+    public DeviceImpl getDeviceImpl() {
         return mDevice;
     }
 
@@ -758,7 +762,7 @@ public class ClientImpl extends JdwpAgent implements Client {
                     mReadBuffer.reset();
                     break;
                 }
-            } catch (BadPacketException | IndexOutOfBoundsException e) {
+            } catch (IndexOutOfBoundsException e) {
                 mReadBuffer.reset();
                 break;
             }
@@ -845,15 +849,13 @@ public class ClientImpl extends JdwpAgent implements Client {
     }
 
     @Override
-    public void listViewRoots(HandleViewDebug.ViewDumpHandler replyHandler) throws IOException {
+    public void listViewRoots(DebugViewDumpHandler replyHandler) throws IOException {
         HandleViewDebug.listViewRoots(this, replyHandler);
     }
 
     @Override
     public void captureView(
-            @NonNull String viewRoot,
-            @NonNull String view,
-            @NonNull HandleViewDebug.ViewDumpHandler handler)
+            @NonNull String viewRoot, @NonNull String view, @NonNull DebugViewDumpHandler handler)
             throws IOException {
         HandleViewDebug.captureView(this, viewRoot, view, handler);
     }
@@ -864,7 +866,7 @@ public class ClientImpl extends JdwpAgent implements Client {
             boolean skipChildren,
             boolean includeProperties,
             boolean useV2,
-            @NonNull HandleViewDebug.ViewDumpHandler handler)
+            @NonNull DebugViewDumpHandler handler)
             throws IOException {
         HandleViewDebug.dumpViewHierarchy(
                 this, viewRoot, skipChildren, includeProperties, useV2, handler);

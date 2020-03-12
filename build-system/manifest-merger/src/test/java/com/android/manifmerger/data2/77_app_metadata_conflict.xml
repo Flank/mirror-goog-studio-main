@@ -27,6 +27,7 @@
 
     <application
             android:name="TheApp"
+            tools:replace="android:name"
             android:backupAgent=".MyBackupAgent" >
         <activity android:name=".MainActivity" />
         <receiver android:name="AppReceiver" />
@@ -60,7 +61,7 @@
 
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.app1">
+    package="com.example.lib1">
 
     <application android:name="TheApp" >
         <activity android:name=".Library1" />
@@ -122,5 +123,5 @@
 
 @errors
 
-ERROR:Attribute meta-data#name.for.backup.api.key@value value=\(the_apps_backup_api_key\) from ManifestMerger2Test0_main.xml:33:13-52
+ERROR:Attribute meta-data#name.for.backup.api.key@value value=\(the_apps_backup_api_key\) from ManifestMerger2Test0_main.xml:34:13-52
     is also present at ManifestMerger2Test1_lib1.xml:16:13-56 value=\(the_library1_backup_api_key\).

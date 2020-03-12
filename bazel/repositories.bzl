@@ -1,3 +1,14 @@
+def _impl(repository_ctx):
+    s = "bazel_version = \"" + native.bazel_version + "\""
+    repository_ctx.file("bazel_version.bzl", s)
+    repository_ctx.file("BUILD", "")
+
+# Helper rule for getting the bazel version. Required by com_google_absl.
+bazel_version_repository = repository_rule(
+    implementation = _impl,
+    local = True,
+)
+
 # Bazel repository mapped to git repositories.
 _git = [
     {
@@ -89,6 +100,19 @@ _archives = [
         "repo_mapping": {
             "@zlib": "@zlib_repo",
         },
+    },
+    {
+        "name": "com_google_absl",
+        "archive": "//prebuilts/tools/common/external-src-archives/google_absl/1.0.0:abseil-cpp-070f6e47b33a2909d039e620c873204f78809492.tar.gz",
+        "strip_prefix": "abseil-cpp",
+        "repo_mapping": {
+            "@upb_lib": "@upb",
+        },
+    },
+    {
+        "name": "upb",
+        "archive": "//prebuilts/tools/common/external-src-archives/upb/1.0.0:upb-d8f3d6f9d415b31f3ce56d46791706c38fa311bc.tar.gz",
+        "strip_prefix": "upb-d8f3d6f9d415b31f3ce56d46791706c38fa311bc",
     },
     # Perfetto Dependencies:
     # These are external dependencies to build Perfetto (from external/perfetto)

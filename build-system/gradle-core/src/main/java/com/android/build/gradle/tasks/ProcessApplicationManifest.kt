@@ -44,6 +44,8 @@ import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.
 import com.android.builder.dexing.DexingType
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.ManifestMerger2.Invoker
+import com.android.manifmerger.ManifestMerger2.COMPATIBLE_SCREENS_SUB_MANIFEST
+import com.android.manifmerger.ManifestMerger2.WEAR_APP_SUB_MANIFEST
 import com.android.manifmerger.ManifestProvider
 import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
@@ -170,7 +172,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         val packagedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val mergedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val metadataFeatureMergedManifestOutputs = mutableListOf<BuiltArtifactImpl>()
-        val bundleManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val instantAppManifestOutputs = mutableListOf<BuiltArtifactImpl>()
         val navJsons = navigationJsons?.files ?: setOf()
 
@@ -198,11 +199,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 dirName,
                 SdkConstants.ANDROID_MANIFEST_XML
             )
-            val bundleManifestOutputFile = FileUtils.join(
-                bundleManifestOutputDirectory.get().asFile,
-                dirName,
-                SdkConstants.ANDROID_MANIFEST_XML
-            )
             val instantAppManifestOutputFile =
                 if (instantAppManifestOutputDirectory.isPresent) FileUtils.join(
                     instantAppManifestOutputDirectory.get().asFile,
@@ -227,7 +223,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 packagedManifestOutputFile.absolutePath,  // no aapt friendly merged manifest file necessary for applications.
                 null /* aaptFriendlyManifestOutputFile */,
                 metadataFeatureManifestOutputFile.absolutePath,
-                bundleManifestOutputFile.absolutePath,
                 instantAppManifestOutputFile?.absolutePath,
                 ManifestMerger2.MergeType.APPLICATION,
                 manifestPlaceholders.get(),
@@ -254,9 +249,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             metadataFeatureMergedManifestOutputs.add(
                 variantOutput.toBuiltArtifact(metadataFeatureManifestOutputFile, properties)
             )
-            bundleManifestOutputs.add(
-                variantOutput.toBuiltArtifact(bundleManifestOutputFile, properties)
-            )
             if (instantAppManifestOutputFile != null) {
                 instantAppManifestOutputs.add(
                     variantOutput.toBuiltArtifact(instantAppManifestOutputFile, properties)
@@ -264,36 +256,32 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             }
         }
         BuiltArtifactsImpl(
-            BuiltArtifacts.METADATA_FILE_VERSION,
-            InternalArtifactType.PACKAGED_MANIFESTS,
-            applicationId.get(),
-            variantName,
-            packagedManifestOutputs.toList()
+            artifactType = InternalArtifactType.MERGED_MANIFESTS,
+            applicationId = applicationId.get(),
+            variantName = variantName,
+            elements = mergedManifestOutputs.toList()
+        )
+            .save(mergedManifestOutputDirectory.get())
+        BuiltArtifactsImpl(
+            artifactType = InternalArtifactType.PACKAGED_MANIFESTS,
+            applicationId = applicationId.get(),
+            variantName = variantName,
+            elements = packagedManifestOutputs.toList()
         )
             .save(packagedManifestOutputDirectory.get())
         BuiltArtifactsImpl(
-            BuiltArtifacts.METADATA_FILE_VERSION,
-            InternalArtifactType.METADATA_FEATURE_MANIFEST,
-            applicationId.get(),
-            variantName,
-            metadataFeatureMergedManifestOutputs.toList()
+            artifactType = InternalArtifactType.METADATA_FEATURE_MANIFEST,
+            applicationId = applicationId.get(),
+            variantName = variantName,
+            elements = metadataFeatureMergedManifestOutputs.toList()
         )
             .save(metadataFeatureManifestOutputDirectory.get())
-        BuiltArtifactsImpl(
-            BuiltArtifacts.METADATA_FILE_VERSION,
-            InternalArtifactType.BUNDLE_MANIFEST,
-            applicationId.get(),
-            variantName,
-            bundleManifestOutputs.toList()
-        )
-            .save(bundleManifestOutputDirectory.get())
         if (instantAppManifestOutputDirectory.isPresent) {
             BuiltArtifactsImpl(
-                BuiltArtifacts.METADATA_FILE_VERSION,
-                InternalArtifactType.INSTANT_APP_MANIFEST,
-                applicationId.get(),
-                variantName,
-                instantAppManifestOutputs.toList()
+                artifactType = InternalArtifactType.INSTANT_APP_MANIFEST,
+                applicationId = applicationId.get(),
+                variantName = variantName,
+                elements = instantAppManifestOutputs.toList()
             )
                 .save(instantAppManifestOutputDirectory.get())
         }
@@ -334,7 +322,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             if (microManifest.isFile) {
                 providers.add(
                     ManifestProviderImpl(
-                        microManifest, "Wear App sub-manifest"
+                        microManifest, WEAR_APP_SUB_MANIFEST
                     )
                 )
             }
@@ -343,7 +331,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             providers.add(
                 ManifestProviderImpl(
                     File(compatibleScreenManifestForSplit.outputFile),
-                    "Compatible-Screens sub-manifest"
+                    COMPATIBLE_SCREENS_SUB_MANIFEST
                 )
             )
         }
@@ -485,10 +473,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 taskProvider,
                 ManifestProcessorTask::metadataFeatureManifestOutputDirectory
             ).withName("metadata-feature").on(InternalArtifactType.METADATA_FEATURE_MANIFEST)
-            operations.setInitialProvider(
-                taskProvider,
-                ManifestProcessorTask::bundleManifestOutputDirectory
-            ).withName("bundle-manifest").on(InternalArtifactType.BUNDLE_MANIFEST)
             operations.setInitialProvider(
                 taskProvider,
                 ProcessApplicationManifest::reportFile

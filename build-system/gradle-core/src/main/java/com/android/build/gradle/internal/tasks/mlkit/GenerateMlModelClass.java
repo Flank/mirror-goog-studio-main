@@ -102,11 +102,10 @@ public abstract class GenerateMlModelClass extends NonIncrementalTask {
         @Override
         public void configure(@NonNull GenerateMlModelClass task) {
             super.configure(task);
-            // TODO(b/146015231): consider to use a new type here, rather than MERGED_ASSETS.
             creationConfig
                     .getOperations()
                     .setTaskInputToFinalProduct(
-                            InternalArtifactType.MERGED_ASSETS.INSTANCE, task.getModelFileDir());
+                            InternalArtifactType.MERGED_ML_MODELS.INSTANCE, task.getModelFileDir());
             task.getPackageName()
                     .set(creationConfig.getVariantDslInfo().getOriginalApplicationId());
         }

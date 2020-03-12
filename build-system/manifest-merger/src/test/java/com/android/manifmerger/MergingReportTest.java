@@ -134,12 +134,16 @@ public class MergingReportTest extends TestCase {
     }
 
     public void testGetMergedDocument() {
-        MergingReport mergingReport = new MergingReport.Builder(mLoggerMock)
-                .setMergedDocument(MergingReport.MergedManifestKind.MERGED, "Some String")
-                .build();
+        MergingReport mergingReport =
+                new MergingReport.Builder(mLoggerMock)
+                        .setMergedDocument(
+                                MergingReport.MergedManifestKind.INTERNAL_MERGED, "Some String")
+                        .build();
 
-        assertNotNull(mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED));
-        assertEquals("Some String",
-                mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED));
+        assertNotNull(
+                mergingReport.getMergedDocument(MergingReport.MergedManifestKind.INTERNAL_MERGED));
+        assertEquals(
+                "Some String",
+                mergingReport.getMergedDocument(MergingReport.MergedManifestKind.INTERNAL_MERGED));
     }
 }

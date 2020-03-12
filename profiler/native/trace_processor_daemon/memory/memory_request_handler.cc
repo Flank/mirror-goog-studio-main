@@ -15,8 +15,11 @@
  */
 
 #include "memory_request_handler.h"
+#include "absl/strings/escaping.h"
 
+#ifndef _MSC_VER
 #include <cxxabi.h>
+#endif
 
 using namespace profiler::perfetto;
 using profiler::perfetto::proto::NativeAllocationContext;
@@ -38,23 +41,54 @@ void MemoryRequestHandler::PopulateEvents(NativeAllocationContext* batch) {
     pointer->set_frame_id(frame_id);
   }
 
-  auto frames =
-      processor_->ExecuteQuery("select id, name from stack_profile_frame");
+  auto frames = processor_->ExecuteQuery(
+      "select spf.id, spf.name, spm.name, spf.rel_pc "
+      "from stack_profile_frame spf join stack_profile_mapping spm "
+      "on spf.mapping = spm.id");
   while (frames.Next()) {
     auto id = frames.Get(0).long_value;
-    auto name_field = frames.Get(1);
-    auto name = name_field.is_null() ? "" : name_field.string_value;
+    auto frame_name_field = frames.Get(1);
+    auto frame_name =
+        frame_name_field.is_null() ? nullptr : frame_name_field.string_value;
+    auto module_name_field = frames.Get(2);
+    auto module_name =
+        module_name_field.is_null() ? nullptr : module_name_field.string_value;
+    auto rel_pc = frames.Get(3).long_value;
     auto frame = batch->add_frames();
-
+    char* demangled_name = nullptr;
+    // TODO (b/151081845): Enable demangling support on windows.
+#ifndef _MSC_VER
     // Demangle stack pointer frame to human readable c++ frame.
-    int ignored;
-    char* data = abi::__cxa_demangle(name, nullptr, nullptr, &ignored);
-    if (data != nullptr) {
-      frame->set_name(data);
-    } else {
-      frame->set_name(name);
+    if (frame_name != nullptr) {
+      int ignored;
+      demangled_name =
+          abi::__cxa_demangle(frame_name, nullptr, nullptr, &ignored);
+      if (demangled_name != nullptr) {
+        frame_name = demangled_name;
+      }
+    }
+#endif
+    if (frame_name != nullptr) {
+      // Due to a bug in utf-8 conversion between java and c++ with proto we
+      // encode our strings to base64 and decode them in java.
+      // https://github.com/protocolbuffers/protobuf/issues/4691
+      std::string converted;
+      absl::Base64Escape(frame_name, &converted);
+      frame->set_name(converted);
+      if (demangled_name != nullptr) {
+        delete demangled_name;
+      }
     }
     frame->set_id(id);
+    if (module_name != nullptr) {
+      // Due to a bug in utf-8 conversion between java and c++ with proto we
+      // encode our strings to base64 and decode them in java.
+      // https://github.com/protocolbuffers/protobuf/issues/4691
+      std::string converted;
+      absl::Base64Escape(module_name, &converted);
+      frame->set_module(converted);
+    }
+    frame->set_rel_pc(rel_pc);
   }
 
   auto alloc = processor_->ExecuteQuery(

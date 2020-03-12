@@ -32,10 +32,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.android.annotations.NonNull;
+import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.MockLog;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +47,9 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,22 +64,37 @@ public class SimpleTestRunnableTest {
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
     private DeviceConnector deviceConnector;
     private ILogger logger;
-    private StubTestData testData;
-    private File testApk;
     private List<File> testedApks;
+
+    // Test data fields
+    @NonNull private String instrumentationRunner;
+    @NonNull private String applicationId;
+
+    private String testedApplicationId;
+    @NonNull private String flavorName;
+    @NonNull private File testApk;
+    @NonNull private List<File> testDirectories;
+    @NonNull private Map<String, String> instrumentationRunnerArguments;
+
+    @NonNull private AndroidVersion minSdkVersion;
 
     @Before
     public void setUpMocks() throws Exception {
         deviceConnector = Mockito.mock(DeviceConnector.class);
         logger = new MockLog();
-        testData =
-                new StubTestData(
-                        "com.example.app", "android.support.test.runner.AndroidJUnitRunner");
-        testData.getInstrumentationRunnerArguments().put("numShards", "10");
-        testData.getInstrumentationRunnerArguments().put("shardIndex", "2");
+
+        applicationId = "com.example.app";
+        instrumentationRunner = "android.support.test.runner.AndroidJUnitRunner";
+        flavorName = "";
+        testDirectories = new ArrayList<>();
+        testedApks = new ArrayList<>();
+        instrumentationRunnerArguments = new HashMap<>();
+        minSdkVersion = new AndroidVersion(AndroidVersion.VersionCodes.BASE, null);
+
+        instrumentationRunnerArguments.put("numShards", "10");
+        instrumentationRunnerArguments.put("shardIndex", "2");
 
         testApk = new File(temporaryFolder.newFolder(), "test.apk");
-        testData.setTestApk(testApk);
     }
 
     @Test
@@ -113,7 +133,7 @@ public class SimpleTestRunnableTest {
 
     @Test
     public void checkAdditionalTestOutputWith15() throws Exception {
-        testData.setTestedApplicationId("com.example.app.test");
+        testedApplicationId = "com.example.app.test";
 
         when(deviceConnector.getApiLevel()).thenReturn(15);
         when(deviceConnector.getName()).thenReturn("FakeDevice");
@@ -145,7 +165,7 @@ public class SimpleTestRunnableTest {
 
     @Test
     public void checkAdditionalTestOutputWith16() throws Exception {
-        testData.setTestedApplicationId("com.example.app.test");
+        testedApplicationId = "com.example.app.test";
 
         when(deviceConnector.getApiLevel()).thenReturn(16);
         when(deviceConnector.getName()).thenReturn("FakeDevice");
@@ -165,9 +185,7 @@ public class SimpleTestRunnableTest {
                 invocation -> {
                     MultiLineReceiver receiver = invocation.getArgument(1);
                     receiver.processNewLines(
-                            new String[] {
-                                testData.getTestedApplicationId() + "-benchmarkData.json"
-                            });
+                            new String[] {testedApplicationId + "-benchmarkData.json"});
                     receiver.flush();
                     return null;
                 };
@@ -222,8 +240,7 @@ public class SimpleTestRunnableTest {
     @Test
     public void instrumentationArgsCanOverridesCoverageFile() throws Exception {
         String customCoverageFilePath = "path/to/custom/coverage/" + FILE_COVERAGE_EC;
-        testData.setInstrumentationRunnerArguments(
-                ImmutableMap.of("coverageFile", customCoverageFilePath));
+        instrumentationRunnerArguments = ImmutableMap.of("coverageFile", customCoverageFilePath);
 
         File buddyApk = temporaryFolder.newFile();
         File resultsDir = temporaryFolder.newFile();
@@ -259,10 +276,7 @@ public class SimpleTestRunnableTest {
                         installOptions);
 
         assertThat(runnable.getCoverageFile())
-                .isEqualTo(
-                        String.format(
-                                "/data/data/%s/%s",
-                                testData.getTestedApplicationId(), FILE_COVERAGE_EC));
+                .isEqualTo(String.format("/data/data/%s/%s", null, FILE_COVERAGE_EC));
     }
 
     private SimpleTestRunnable getSimpleTestRunnable(
@@ -277,12 +291,10 @@ public class SimpleTestRunnableTest {
                         deviceConnector,
                         "project",
                         new RemoteAndroidTestRunner(
-                                testData.getApplicationId(),
-                                testData.getInstrumentationRunner(),
-                                deviceConnector),
+                                applicationId, instrumentationRunner, deviceConnector),
                         "flavor",
                         testedApks,
-                        testData,
+                        getStaticData(),
                         Collections.singleton(buddyApk),
                         resultsDir,
                         additionalTestOutputEnabled,
@@ -343,5 +355,23 @@ public class SimpleTestRunnableTest {
         verify(deviceConnector).uninstallPackage("com.example.app", TIMEOUT, logger);
         verify(deviceConnector).disconnect(TIMEOUT, logger);
         verifyNoMoreInteractions(deviceConnector);
+    }
+
+    @NonNull
+    private StaticTestData getStaticData() {
+        return new StaticTestData(
+                applicationId,
+                testedApplicationId,
+                instrumentationRunner,
+                instrumentationRunnerArguments,
+                false,
+                false,
+                minSdkVersion,
+                false,
+                flavorName,
+                testApk,
+                testDirectories,
+                (@NonNull DeviceConfigProvider deviceConfigProvider, ILogger logger) ->
+                        ImmutableList.copyOf(testedApks));
     }
 }

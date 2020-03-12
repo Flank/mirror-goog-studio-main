@@ -24,6 +24,7 @@ import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.api.LibraryVariantOutput;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.TaskContainer;
+import com.android.build.gradle.internal.services.BaseServices;
 import java.io.File;
 import javax.inject.Inject;
 import org.gradle.api.tasks.bundling.Zip;
@@ -39,19 +40,20 @@ public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements L
     @Inject
     public LibraryVariantOutputImpl(
             @NonNull TaskContainer taskContainer,
-            @NonNull DeprecationReporter deprecationReporter,
+            @NonNull BaseServices services,
             @NonNull VariantOutputImpl variantOutput) {
-        super(taskContainer, deprecationReporter, variantOutput);
+        super(taskContainer, services, variantOutput);
     }
 
     @Nullable
     @Override
     public Zip getPackageLibrary() {
-        deprecationReporter.reportDeprecatedApi(
-                "variant.getPackageLibraryProvider()",
-                "variantOutput.getPackageLibrary()",
-                TASK_ACCESS_DEPRECATION_URL,
-                DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        services.getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getPackageLibraryProvider()",
+                        "variantOutput.getPackageLibrary()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         return taskContainer.getBundleLibraryTask().getOrNull();
     }
 

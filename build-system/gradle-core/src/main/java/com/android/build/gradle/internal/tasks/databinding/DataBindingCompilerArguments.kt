@@ -177,6 +177,14 @@ class DataBindingCompilerArguments constructor(
                     FEATURE_DATA_BINDING_BASE_FEATURE_INFO
                 ),
                 featureInfoDir = artifacts.getFinalProduct(FEATURE_DATA_BINDING_FEATURE_INFO),
+                // Note that aarOurDir and exportClassListOutFile below are outputs. In the usual
+                // pattern, they need to be a DirectoryProperty or RegularFileProperty and should
+                // be created by calling project.objects.directoryProperty() or fileProperty().
+                // However, we currently create these properties in JavaCompile.kt to register them
+                // as artifacts in AGP, so it is not possible here. Instead, we have to call
+                // getFinalProduct() to get the artifacts' locations.
+                // This is a non-standard pattern, but we've used it only for data binding so far,
+                // so it's probably acceptable for now.
                 aarOutDir = artifacts.getFinalProduct(DATA_BINDING_ARTIFACT),
                 exportClassListOutFile = artifacts.getFinalProduct(DATA_BINDING_EXPORT_CLASS_LIST),
                 enableDebugLogs = enableDebugLogs,

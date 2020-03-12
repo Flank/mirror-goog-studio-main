@@ -107,7 +107,6 @@ interface Template {
 
   /** Returns a thumbnail which are drawn in the UI. It will be called every time when any parameter is updated. */
   // TODO(qumeric): consider using IconLoader and/or wizard icons.
-  // TODO(qumeric): rename to pick thumb?
   fun thumb(): Thumb
 
   /**
@@ -115,7 +114,7 @@ interface Template {
    */
   companion object NoActivity: Template {
     override val widgets: Collection<Widget<*>> = listOf()
-    override val uiContexts: Collection<WizardUiContext> get() = TODO()
+    override val uiContexts: Collection<WizardUiContext> get() = listOf(WizardUiContext.ActivityGallery)
     override val constraints: Collection<TemplateConstraint> = listOf()
     override val recipe: Recipe get() = throw UnsupportedOperationException()
     override val revision: Int = 1

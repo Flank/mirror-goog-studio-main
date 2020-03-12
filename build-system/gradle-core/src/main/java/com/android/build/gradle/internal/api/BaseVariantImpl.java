@@ -225,7 +225,8 @@ public abstract class BaseVariantImpl implements BaseVariant {
                             "variant.getApplicationId() is not supported by dynamic-feature plugins as it cannot handle delayed setting of the application ID. Please use getApplicationIdTextResource() instead.");
         }
 
-        return componentProperties.getVariantDslInfo().getApplicationId();
+        // FIXME: Break if this is done during configuration
+        return componentProperties.getApplicationId().get();
     }
 
     @Override

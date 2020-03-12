@@ -37,6 +37,19 @@ enum class Language(val string: String, val extension: String) {
   Java("Java", "java"),
   Kotlin("Kotlin", "kt")
 }
+// We define a new enum here instead of reusing existing ones because it should be available
+// both from intellij.android.core and wizardTemplate modules.
+enum class BytecodeLevel(val description: String, val versionString: String) {
+  L6("6 (less features)", "1.6"),
+  L7("7", "1.7"),
+  L8("8 (slower build)", "1.8");
+
+  override fun toString() = description
+
+  companion object {
+    val default: BytecodeLevel get() = L7
+  }
+}
 
 data class ApiTemplateData(
   val buildApi: ApiVersion,
@@ -60,7 +73,8 @@ data class ProjectTemplateData(
   val includedFormFactorNames: FormFactorNames,
   val debugKeystoreSha1: String?,
   val overridePathCheck: Boolean? = false, // To disable android plugin checking for ascii in paths (windows tests)
-  val isNewProject: Boolean
+  val isNewProject: Boolean,
+  val bytecodeLevel: BytecodeLevel
 ): TemplateData()
 
 fun FormFactorNames.has(ff: FormFactor) = !this[ff].isNullOrEmpty()

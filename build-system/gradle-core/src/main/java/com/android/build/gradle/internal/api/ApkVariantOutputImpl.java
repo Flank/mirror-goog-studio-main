@@ -26,7 +26,10 @@ import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.api.ApkVariantOutput;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.TaskContainer;
+import com.android.build.gradle.internal.services.BaseServices;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
+import com.android.builder.errors.IssueReporter;
 import com.google.common.base.MoreObjects;
 import java.io.File;
 import javax.inject.Inject;
@@ -43,19 +46,20 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
     @Inject
     public ApkVariantOutputImpl(
             @NonNull TaskContainer taskContainer,
-            @NonNull DeprecationReporter deprecationReporter,
+            @NonNull BaseServices services,
             @NonNull VariantOutputImpl variantOutput) {
-        super(taskContainer, deprecationReporter, variantOutput);
+        super(taskContainer, services, variantOutput);
     }
 
     @Nullable
     @Override
     public PackageAndroidArtifact getPackageApplication() {
-        deprecationReporter.reportDeprecatedApi(
-                "variant.getPackageApplicationProvider()",
-                "variantOutput.getPackageApplication()",
-                TASK_ACCESS_DEPRECATION_URL,
-                DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
+        services.getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "variant.getPackageApplicationProvider()",
+                        "variantOutput.getPackageApplication()",
+                        TASK_ACCESS_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
         return taskContainer.getPackageAndroidTask().getOrNull();
     }
 
@@ -87,13 +91,27 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
     @Override
     public int getVersionCodeOverride() {
         // consider throwing an exception instead, as this is not reliable.
-        deprecationReporter.reportDeprecatedApi(
-                "VariantOutput.versionCode()",
-                "ApkVariantOutput.getVersionCodeOverride()",
-                BaseVariantImpl.USE_PROPERTIES_DEPRECATION_URL,
-                DeprecationReporter.DeprecationTarget.USE_PROPERTIES);
+        services.getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "VariantOutput.versionCode()",
+                        "ApkVariantOutput.getVersionCodeOverride()",
+                        BaseVariantImpl.USE_PROPERTIES_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.USE_PROPERTIES);
 
-        // FIXME break if memoization of these is still enabled. b/150291033
+        if (!services.getProjectOptions().get(BooleanOption.ENABLE_LEGACY_API)) {
+            services.getIssueReporter()
+                    .reportError(
+                            IssueReporter.Type.GENERIC,
+                            new RuntimeException(
+                                    "Access to deprecated legacy com.android.build.gradle.api.ApkVariantOutput.getVersionCodeOverride() requires compatibility mode for Property values in new com.android.build.api.variant.VariantOutput.versionCode\n"
+                                            + "Turn on with by putting '"
+                                            + BooleanOption.ENABLE_LEGACY_API.getPropertyName()
+                                            + "=true'\n"
+                                            + "in gradle.properties"));
+            // return default value during sync
+            return -1;
+        }
+
         return variantOutput.getVersionCode().getOrElse(-1);
     }
 
@@ -105,18 +123,46 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
     @Nullable
     @Override
     public String getVersionNameOverride() {
-        deprecationReporter.reportDeprecatedApi(
-                "VariantOutput.versionName()",
-                "ApkVariantOutput.getVersionNameOverride()",
-                BaseVariantImpl.USE_PROPERTIES_DEPRECATION_URL,
-                DeprecationReporter.DeprecationTarget.USE_PROPERTIES);
-        // FIXME break if memoization of these is still enabled. b/150291033
+        services.getDeprecationReporter()
+                .reportDeprecatedApi(
+                        "VariantOutput.versionName()",
+                        "ApkVariantOutput.getVersionNameOverride()",
+                        BaseVariantImpl.USE_PROPERTIES_DEPRECATION_URL,
+                        DeprecationReporter.DeprecationTarget.USE_PROPERTIES);
+
+        if (!services.getProjectOptions().get(BooleanOption.ENABLE_LEGACY_API)) {
+            services.getIssueReporter()
+                    .reportError(
+                            IssueReporter.Type.GENERIC,
+                            new RuntimeException(
+                                    "Access to deprecated legacy com.android.build.gradle.api.ApkVariantOutput.getVersionNameOverride() requires compatibility mode for Property values in new com.android.build.api.variant.VariantOutput.versionName\n"
+                                            + "Turn on with by putting '"
+                                            + BooleanOption.ENABLE_LEGACY_API.getPropertyName()
+                                            + "=true'\n"
+                                            + "in gradle.properties"));
+            // return default value during sync
+            return null;
+        }
+
         return variantOutput.getVersionName().getOrNull();
     }
 
     @Override
     public int getVersionCode() {
-        // FIXME break if memoization of these is still enabled. b/150291033
+        if (!services.getProjectOptions().get(BooleanOption.ENABLE_LEGACY_API)) {
+            services.getIssueReporter()
+                    .reportError(
+                            IssueReporter.Type.GENERIC,
+                            new RuntimeException(
+                                    "Access to deprecated legacy com.android.build.gradle.api.ApkVariantOutput.versionCode requires compatibility mode for Property values in new com.android.build.api.variant.VariantOutput.versionCode\n"
+                                            + "Turn on with by putting '"
+                                            + BooleanOption.ENABLE_LEGACY_API.getPropertyName()
+                                            + "=true'\n"
+                                            + "in gradle.properties"));
+            // return default value during sync
+            return -1;
+        }
+
         return variantOutput.getVersionCode().getOrElse(-1);
     }
 

@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.dependency.SourceSetManager
  */
 interface VariantInputModel<
         DefaultConfigT : com.android.build.api.dsl.DefaultConfig<*>,
-        BuildTypeT : com.android.build.api.dsl.BuildType<*>,
+        BuildTypeT : com.android.build.api.dsl.BuildType<*, *>,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor<*>,
         SigningConfigT : com.android.build.api.dsl.SigningConfig> {
 

@@ -1653,21 +1653,11 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             val interfaceType = node.type
 
-            if (interfaceType === initializerType || interfaceType !is PsiClassType) {
+            if (interfaceType !is PsiClassType) {
                 return
             }
 
-            // Workaround for KT-37200:
-            // Calling PsiType.equals(PsiType) can lead to StackOverflowExceptions
-            // in some scenarios; therefore, we replace this:
-            //    if (initializerType == interfaceType) {
-            //        return
-            //    }
-            // with:
-            if (initializerType.presentableText == interfaceType.presentableText &&
-                // presentableText comparison is faster and always true when canonical text
-                // matches, so doing that before this:
-                initializerType.canonicalText == interfaceType.canonicalText) {
+            if (initializerType == interfaceType) {
                 return
             }
 
@@ -1681,11 +1671,11 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 val rhsType = rExpression.getExpressionType() as? PsiClassType ?: return
 
                 val interfaceType = node.leftOperand.getExpressionType()
-                if (rhsType == interfaceType) {
+                if (interfaceType !is PsiClassType) {
                     return
                 }
 
-                if (interfaceType !is PsiClassType) {
+                if (rhsType == interfaceType) {
                     return
                 }
 

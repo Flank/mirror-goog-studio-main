@@ -44,6 +44,7 @@ import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
+import java.util.Locale
 
 val googleAdMobAdsActivityTemplate
   get() = template {
@@ -116,8 +117,7 @@ val googleAdMobAdsActivityTemplate
       LanguageWidget()
     )
 
-    //TODO: Switch the thumbnail based on the adFormat widget
-    thumb { File("template_admob_activity.png") }
+    thumb { File("template_admob_activity_" + adFormat.value.name.toLowerCase(Locale.US) + ".png") }
 
     recipe = { data: TemplateData ->
       googleAdMobAdsActivityRecipe(

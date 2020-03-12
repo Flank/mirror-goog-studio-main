@@ -30,7 +30,7 @@
 
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example">
+    package="com.example.lib">
 
     <application>
         <!-- Activity merged -->
@@ -126,7 +126,7 @@
         <provider android:name="com.example.Provider1" />
         <activity-alias android:name="com.example.AliasActivity1" />
         <!-- Activity merged -->
-        <activity android:name="com.example.WidgetLibrary1" />
+        <activity android:name="com.example.lib.WidgetLibrary1" />
 
         <!-- Alias activity merged -->
         <activity-alias
@@ -146,7 +146,7 @@
             android:name="com.example.AppService2" />
 
         <!-- Receiver merged -->
-        <receiver android:name="com.example.LibReceiver" />
+        <receiver android:name="com.example.lib.LibReceiver" />
 
         <!-- Provider merged -->
         <provider
@@ -154,6 +154,3 @@
 
     </application>
 </manifest>
-
-@errors
-

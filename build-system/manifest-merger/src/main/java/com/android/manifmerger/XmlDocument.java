@@ -122,10 +122,16 @@ public class XmlDocument {
      */
     @NonNull
     public String prettyPrint() {
+        return prettyPrint(getXml());
+    }
+
+    /** Returns a pretty string representation of this document. */
+    @NonNull
+    public static String prettyPrint(Document document) {
         return XmlPrettyPrinter.prettyPrint(
-                getXml(),
+                document,
                 XmlFormatPreferences.defaults(),
-                XmlFormatStyle.get(getRootNode().getXml()),
+                XmlFormatStyle.get(document),
                 null, /* endOfLineSeparator */
                 false /* endWithNewLine */);
     }

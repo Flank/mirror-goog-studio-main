@@ -16,6 +16,9 @@
 
 #include "tools/base/deploy/installer/server/install_server.h"
 
+#include <ftw.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/wait.h>
 
 #include "tools/base/deploy/common/event.h"
@@ -121,9 +124,12 @@ void InstallServer::Acknowledge() {
 void InstallServer::Pump() {
   Phase("InstallServer::Pump");
   ServerRequest request;
-  while (input_.Read(-1, &request) &&
-         request.type() == ServerRequest::HANDLE_REQUEST) {
-    HandleRequest(request);
+  while (input_.Read(-1, &request)) {
+    if (request.type() == ServerRequest::HANDLE_REQUEST) {
+      HandleRequest(request);
+    } else if (request.type() == ServerRequest::SERVER_EXIT) {
+      break;
+    }
   }
 }
 
@@ -160,6 +166,17 @@ void InstallServer::HandleOverlayUpdate(
     const proto::OverlayUpdateRequest& request,
     proto::OverlayUpdateResponse* response) const {
   const std::string overlay_folder = request.overlay_path() + "/.overlay"_s;
+
+  if (request.wipe_all_files()) {
+    if (nftw(overlay_folder.c_str(),
+             [](const char* path, const struct stat* sbuf, int type,
+                struct FTW* ftwb) { return remove(path); },
+             10 /*max FD*/, FTW_DEPTH | FTW_MOUNT | FTW_PHYS) != 0) {
+      response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
+      response->set_error_message("Could not wipe existing overlays");
+    }
+  }
+
   if (!DoesOverlayIdMatch(overlay_folder, request.expected_overlay_id())) {
     response->set_status(proto::OverlayUpdateResponse::ID_MISMATCH);
     return;

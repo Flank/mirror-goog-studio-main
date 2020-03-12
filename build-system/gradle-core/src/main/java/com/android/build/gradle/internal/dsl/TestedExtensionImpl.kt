@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.services.DslServices
 abstract class TestedExtensionImpl<
         AnnotationProcessorOptionsT : com.android.build.api.dsl.AnnotationProcessorOptions,
         BuildFeaturesT : BuildFeatures,
-        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptionsT>,
+        BuildTypeT : com.android.build.api.dsl.BuildType<AnnotationProcessorOptionsT, SigningConfigT>,
         DefaultConfigT : DefaultConfig<AnnotationProcessorOptionsT>,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor<AnnotationProcessorOptionsT>,
         SigningConfigT : com.android.build.api.dsl.SigningConfig,

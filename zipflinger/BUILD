@@ -185,9 +185,7 @@ java_test(
 iml_module(
     name = "studio.android.sdktools.zipflinger",
     # do not sort: must match IML order
-    srcs = [
-        "src",
-    ],
+    srcs = ["src"],
     iml_files = ["android.sdktools.zipflinger.iml"],
     tags = ["no_test_mac"],
     test_data = glob(["test/resource/**"]),

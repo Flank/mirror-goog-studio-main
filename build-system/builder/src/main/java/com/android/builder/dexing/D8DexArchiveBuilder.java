@@ -31,8 +31,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -59,7 +57,6 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
             @NonNull Path output,
             @Nullable DependencyGraphUpdater<File> desugarGraphUpdater)
             throws DexArchiveBuilderException {
-        List<ClassFile> inputClassFiles = new ArrayList<>();
         D8DiagnosticsHandler d8DiagnosticsHandler = new InterceptingDiagnosticsHandler();
         try {
 
@@ -67,15 +64,8 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
             AtomicInteger entryCount = new AtomicInteger();
             input.forEach(
                     entry -> {
-                        ClassFile classFile =
-                                new ClassFile(
-                                        entry.getInput().getPath(),
-                                        entry.getRelativePath(),
-                                        readAllBytes(entry));
-                        inputClassFiles.add(classFile);
-
                         builder.addClassProgramData(
-                                classFile.getContents(), D8DiagnosticsHandler.getOrigin(entry));
+                                readAllBytes(entry), D8DiagnosticsHandler.getOrigin(entry));
                         entryCount.incrementAndGet();
                     });
             if (entryCount.get() == 0) {
@@ -115,6 +105,10 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                                         dexParams.getCoreLibDesugarOutputKeepRuleFile().toPath()));
                     }
                 }
+                if (desugarGraphUpdater != null) {
+                    builder.setDesugarGraphConsumer(
+                            new D8DesugarGraphConsumerAdapter(desugarGraphUpdater));
+                }
             } else {
                 builder.setDisableDesugaring(true);
             }
@@ -122,16 +116,6 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
             D8.run(builder.build(), MoreExecutors.newDirectExecutorService());
         } catch (Throwable e) {
             throw getExceptionToRethrow(e, d8DiagnosticsHandler);
-        }
-
-        // Since D8's new API with desugarGraphUpdater is not yet implemented, we simulate its
-        // effects with an implementation from the AGP.
-        // TODO: Call D8's new API with desugarGraphUpdater once it is available.
-        if (desugarGraphUpdater != null) {
-            D8DesugarGraphGenerator.generate(
-                    inputClassFiles,
-                    dexParams,
-                    new D8DesugarGraphConsumerAdapter(desugarGraphUpdater));
         }
     }
 

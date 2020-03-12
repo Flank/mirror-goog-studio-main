@@ -17,6 +17,7 @@ package com.android.ddmlib;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.jdwp.JdwpCommands;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

@@ -20,7 +20,7 @@ import com.android.SdkConstants.ABI_ARMEABI_V7A
 import com.android.SdkConstants.ABI_INTEL_ATOM
 import com.android.SdkConstants.ABI_INTEL_ATOM64
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel.FULL
@@ -70,7 +70,7 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
             }
         project.getSubproject(":app").buildFile.appendText(
             """
-                android.buildTypes.release.ndk.debugSymbolLevel '$debugSymbolLevel'
+                android.buildTypes.debug.ndk.debugSymbolLevel '$debugSymbolLevel'
                 """.trimIndent()
         )
     }
@@ -85,9 +85,9 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
             createAbiFile(subProject, ABI_INTEL_ATOM64, "$it.so")
         }
 
-        project.executor().run("app:assembleRelease")
+        project.executor().run("app:assembleDebug")
 
-        val output = getNativeDebugSymbolsOutput("release")
+        val output = getNativeDebugSymbolsOutput("debug")
         if (debugSymbolLevel == null || debugSymbolLevel == NONE) {
             assertThat(output).doesNotExist()
             return
@@ -145,7 +145,7 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
         }
 
         try {
-            project.executor().run("app:assembleRelease")
+            project.executor().run("app:assembleDebug")
         } catch (e: BuildException) {
             // message starts with, e.g., "Entry name 'armeabi-v7a/collide.so.sym' collided"
             assertThat(Throwables.getRootCause(e).message).startsWith("Entry name")
@@ -156,15 +156,15 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
 
     @Test
     fun testTaskSkippedWhenNoNativeLibs() {
-        val taskName = "mergeReleaseNativeDebugMetadata"
-        val output = getNativeDebugSymbolsOutput("release")
+        val taskName = "mergeDebugNativeDebugMetadata"
+        val output = getNativeDebugSymbolsOutput("debug")
         // first test that the task is skipped when there are no native libraries.
-        val result1 = project.executor().run("app:assembleRelease")
+        val result1 = project.executor().run("app:assembleDebug")
         assertThat(output).doesNotExist()
         assertThat(result1.skippedTasks).contains(":app:$taskName")
         // then test that the task does work after adding native libraries.
         createAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "foo.so")
-        val result2 = project.executor().run("app:assembleRelease")
+        val result2 = project.executor().run("app:assembleDebug")
         // task still shouldn't do work if debugSymbolLevel null or NONE.
         if (debugSymbolLevel == null || debugSymbolLevel == NONE) {
             assertThat(output).doesNotExist()
@@ -178,11 +178,11 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
     @Test
     fun testTaskRunsWhenNativeLibNameChanges() {
         Assume.assumeTrue(debugSymbolLevel == SYMBOL_TABLE || debugSymbolLevel == FULL)
-        val taskName = "mergeReleaseNativeDebugMetadata"
-        val output = getNativeDebugSymbolsOutput("release")
+        val taskName = "mergeDebugNativeDebugMetadata"
+        val output = getNativeDebugSymbolsOutput("debug")
         // first add a native library, build, and check the output.
         createAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "foo.so")
-        val result1 = project.executor().run("app:assembleRelease")
+        val result1 = project.executor().run("app:assembleDebug")
         assertThat(output).exists()
         assertThat(result1.didWorkTasks).contains(":app:$taskName")
         Zip(output).use { zip ->
@@ -209,7 +209,7 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
                 "$ABI_ARMEABI_V7A/bar.so"
             )
         )
-        val result2 = project.executor().run("app:assembleRelease")
+        val result2 = project.executor().run("app:assembleDebug")
         assertThat(output).exists()
         assertThat(result2.didWorkTasks).contains(":app:$taskName")
         Zip(output).use { zip ->

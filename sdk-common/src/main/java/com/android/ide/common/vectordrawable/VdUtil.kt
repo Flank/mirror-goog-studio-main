@@ -56,6 +56,8 @@ private const val ALPHA_MASK = 0xFF000000.toInt()
  * @return the integer color value
  */
 fun parseColorValue(color: String): Int {
+  require(color.startsWith("#")) { "Invalid color value $color" }
+
   return when (color.length) {
     7 -> {
       // #RRGGBB

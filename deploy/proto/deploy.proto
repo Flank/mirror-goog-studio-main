@@ -28,6 +28,8 @@ message SwapRequest {
   int32 extra_agents = 7;
 
   Arch arch = 8;
+
+  bool structural_redefinition = 9;
 }
 
 message OverlaySwapRequest {
@@ -58,6 +60,8 @@ message OverlaySwapRequest {
   int32 extra_agents = 9;
 
   Arch arch = 10;
+
+  bool structural_redefinition = 11;
 }
 
 message ClassDef {
@@ -300,6 +304,7 @@ message OverlayUpdateRequest {
   string expected_overlay_id = 3;
   repeated OverlayFile files_to_write = 4;
   repeated string files_to_delete = 5;
+  bool wipe_all_files = 6;
 }
 
 message OverlayFile {

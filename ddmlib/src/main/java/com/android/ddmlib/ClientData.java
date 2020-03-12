@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-
 /** Contains the data of a {@link ClientImpl}. */
 public class ClientData {
     /* This is a place to stash data associated with a Client, such as thread
@@ -244,7 +243,7 @@ public class ClientData {
          *
          * @param data The raw data from an HPSG chunk.
          */
-        synchronized void addHeapData(ByteBuffer data) {
+        public synchronized void addHeapData(ByteBuffer data) {
             HeapSegment hs;
 
             if (mHeapDataComplete) {
@@ -261,10 +260,8 @@ public class ClientData {
             mHeapSegments.add(hs);
         }
 
-        /**
-         * Called when all heap data has arrived.
-         */
-        synchronized void sealHeapData() {
+        /** Called when all heap data has arrived. */
+        public synchronized void sealHeapData() {
             mHeapDataComplete = true;
         }
 
@@ -460,7 +457,7 @@ public class ClientData {
     }
 
     @Deprecated
-    static IHprofDumpHandler getHprofDumpHandler() {
+    public static IHprofDumpHandler getHprofDumpHandler() {
         return sHprofDumpHandler;
     }
 
@@ -472,7 +469,7 @@ public class ClientData {
         sMethodProfilingHandler = handler;
     }
 
-    static IMethodProfilingHandler getMethodProfilingHandler() {
+    public static IMethodProfilingHandler getMethodProfilingHandler() {
         return sMethodProfilingHandler;
     }
 
@@ -488,7 +485,7 @@ public class ClientData {
 
     @Deprecated
     @Nullable
-    static IAllocationTrackingHandler getAllocationTrackingHandler() {
+    public static IAllocationTrackingHandler getAllocationTrackingHandler() {
         return sAllocationTrackingHandler;
     }
 
@@ -515,10 +512,8 @@ public class ClientData {
         return mVmIdentifier;
     }
 
-    /**
-     * Sets VM identifier.
-     */
-    void setVmIdentifier(String ident) {
+    /** Sets VM identifier. */
+    public void setVmIdentifier(String ident) {
         mVmIdentifier = ident;
     }
 
@@ -569,7 +564,7 @@ public class ClientData {
      * <p>There may be a race between HELO and APNM. Rather than try to enforce ordering on the
      * device, we just don't allow the pre-initialized name to replace a specified one.
      */
-    void setNames(Names names) {
+    public void setNames(Names names) {
         /*
          * The application VM is first named <pre-initialized> before being assigned
          * its real name.
@@ -582,11 +577,11 @@ public class ClientData {
         }
     }
 
-    void setAbi(String abi) {
+    public void setAbi(String abi) {
         mAbi = abi;
     }
 
-    void setJvmFlags(String jvmFlags) {
+    public void setJvmFlags(String jvmFlags) {
         mJvmFlags = jvmFlags;
     }
 
@@ -612,20 +607,22 @@ public class ClientData {
 
     /**
      * Sets the current heap info values for the specified heap.
-     *  @param heapId The heap whose info to update
+     *
+     * @param heapId The heap whose info to update
      * @param sizeInBytes The size of the heap, in bytes
      * @param bytesAllocated The number of bytes currently allocated in the heap
      * @param objectsAllocated The number of objects currently allocated in
      * @param timeStamp
      * @param reason
      */
-    synchronized void setHeapInfo(int heapId,
-                                  long maxSizeInBytes,
-                                  long sizeInBytes,
-                                  long bytesAllocated,
-                                  long objectsAllocated,
-                                  long timeStamp,
-                                  byte reason) {
+    public synchronized void setHeapInfo(
+            int heapId,
+            long maxSizeInBytes,
+            long sizeInBytes,
+            long bytesAllocated,
+            long objectsAllocated,
+            long timeStamp,
+            byte reason) {
         mHeapInfoMap.put(heapId, new HeapInfo(maxSizeInBytes, sizeInBytes, bytesAllocated,
                 objectsAllocated, timeStamp, reason));
     }
@@ -637,10 +634,8 @@ public class ClientData {
         return mHeapData;
     }
 
-    /**
-     * Returns the {@link HeapData} object for the native code.
-     */
-    HeapData getNativeHeapData() {
+    /** Returns the {@link HeapData} object for the native code. */
+    public HeapData getNativeHeapData() {
         return mNativeHeapData;
     }
 
@@ -666,18 +661,14 @@ public class ClientData {
         return mHeapInfoMap.get(heapId);
     }
 
-    /**
-     * Adds a new thread to the list.
-     */
-    synchronized void addThread(int threadId, String threadName) {
+    /** Adds a new thread to the list. */
+    public synchronized void addThread(int threadId, String threadName) {
         ThreadInfo attr = new ThreadInfo(threadId, threadName);
         mThreadMap.put(threadId, attr);
     }
 
-    /**
-     * Removes a thread from the list.
-     */
-    synchronized void removeThread(int threadId) {
+    /** Removes a thread from the list. */
+    public synchronized void removeThread(int threadId) {
         mThreadMap.remove(threadId);
     }
 
@@ -692,10 +683,8 @@ public class ClientData {
         return threads.toArray(new ThreadInfo[0]);
     }
 
-    /**
-     * Returns the {@link ThreadInfo} by thread id.
-     */
-    synchronized ThreadInfo getThread(int threadId) {
+    /** Returns the {@link ThreadInfo} by thread id. */
+    public synchronized ThreadInfo getThread(int threadId) {
         return mThreadMap.get(threadId);
     }
 
@@ -717,14 +706,12 @@ public class ClientData {
      *
      * @param allocInfo The {@link NativeAllocationInfo} to add.
      */
-    synchronized void addNativeAllocation(NativeAllocationInfo allocInfo) {
+    public synchronized void addNativeAllocation(NativeAllocationInfo allocInfo) {
         mNativeAllocationList.add(allocInfo);
     }
 
-    /**
-     * Clear the current malloc info.
-     */
-    synchronized void clearNativeAllocationInfo() {
+    /** Clear the current malloc info. */
+    public synchronized void clearNativeAllocationInfo() {
         mNativeAllocationList.clear();
     }
 
@@ -737,11 +724,11 @@ public class ClientData {
         return mNativeTotalMemory;
     }
 
-    synchronized void setTotalNativeMemory(int totalMemory) {
+    public synchronized void setTotalNativeMemory(int totalMemory) {
         mNativeTotalMemory = totalMemory;
     }
 
-    synchronized void addNativeLibraryMapInfo(long startAddr, long endAddr, String library) {
+    public synchronized void addNativeLibraryMapInfo(long startAddr, long endAddr, String library) {
         mNativeLibMapInfo.add(new NativeLibraryMapInfo(startAddr, endAddr, library));
     }
 
@@ -752,7 +739,7 @@ public class ClientData {
         return Collections.unmodifiableList(mNativeLibMapInfo);
     }
 
-    synchronized void setAllocationStatus(AllocationTrackingStatus status) {
+    public synchronized void setAllocationStatus(AllocationTrackingStatus status) {
         mAllocationStatus = status;
     }
 
@@ -765,7 +752,7 @@ public class ClientData {
         return mAllocationStatus;
     }
 
-    synchronized void setAllocationsData(byte[] data) {
+    public synchronized void setAllocationsData(byte[] data) {
         mAllocationsData = data;
     }
 
@@ -796,7 +783,7 @@ public class ClientData {
         return null;
     }
 
-    void addFeature(String feature) {
+    public void addFeature(String feature) {
         mFeatures.add(feature);
     }
 
@@ -814,18 +801,17 @@ public class ClientData {
 
     /**
      * Sets the device-side path to the hprof file being written
+     *
      * @param pendingHprofDump the file to the hprof file
      */
     @Deprecated
-    void setPendingHprofDump(String pendingHprofDump) {
+    public void setPendingHprofDump(String pendingHprofDump) {
         mPendingHprofDump = pendingHprofDump;
     }
 
-    /**
-     * Returns the path to the device-side hprof file being written.
-     */
+    /** Returns the path to the device-side hprof file being written. */
     @Deprecated
-    String getPendingHprofDump() {
+    public String getPendingHprofDump() {
         return mPendingHprofDump;
     }
 
@@ -834,7 +820,7 @@ public class ClientData {
         return mPendingHprofDump != null;
     }
 
-    synchronized void setMethodProfilingStatus(MethodProfilingStatus status) {
+    public synchronized void setMethodProfilingStatus(MethodProfilingStatus status) {
         mProfilingStatus = status;
     }
 
@@ -849,16 +835,15 @@ public class ClientData {
 
     /**
      * Sets the device-side path to the method profile file being written
+     *
      * @param pendingMethodProfiling the file being written
      */
-    void setPendingMethodProfiling(String pendingMethodProfiling) {
+    public void setPendingMethodProfiling(String pendingMethodProfiling) {
         mPendingMethodProfiling = pendingMethodProfiling;
     }
 
-    /**
-     * Returns the path to the device-side method profiling file being written.
-     */
-    String getPendingMethodProfiling() {
+    /** Returns the path to the device-side method profiling file being written. */
+    public String getPendingMethodProfiling() {
         return mPendingMethodProfiling;
     }
 
@@ -902,7 +887,7 @@ public class ClientData {
         public final Integer mUserId;
         public final String mPackageName;
 
-        Names(String processName, Integer id, String packageName) {
+        public Names(String processName, Integer id, String packageName) {
             this.mProcessName = processName;
             mUserId = id;
             this.mPackageName = packageName;

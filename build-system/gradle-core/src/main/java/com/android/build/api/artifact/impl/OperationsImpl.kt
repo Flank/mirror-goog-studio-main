@@ -17,6 +17,7 @@
 package com.android.build.api.artifact.impl
 
 import com.android.build.api.artifact.AppendRequest
+import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.MultipleTransformRequest
 import com.android.build.api.artifact.Operations
@@ -369,6 +370,10 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
 
         val artifactContainer = operationsImpl.getArtifactContainer(type)
         taskProvider.configure {
+            // Regular-file artifacts require a file name (see bug 151076862)
+            if (type.kind is ArtifactKind.FILE && fileName == null) {
+                fileName = DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
+            }
             val outputAbsolutePath = if (buildOutputLocation != null) {
                 File(buildOutputLocation, fileName.orEmpty())
             } else if (buildOutputLocationResolver != null) {
@@ -385,3 +390,5 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
         artifactContainer.setInitialProvider(taskProvider.flatMap { from(it) })
     }
 }
+
+const val DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS = "out"

@@ -16,6 +16,8 @@
 
 package com.android.manifmerger;
 
+import static com.android.manifmerger.ManifestMerger2.COMPATIBLE_SCREENS_SUB_MANIFEST;
+import static com.android.manifmerger.ManifestMerger2.WEAR_APP_SUB_MANIFEST;
 import static com.android.manifmerger.MergingReport.Record.Severity.ERROR;
 import static com.android.manifmerger.MergingReport.Record.Severity.WARNING;
 import static com.android.manifmerger.XmlNode.NodeKey;
@@ -172,10 +174,11 @@ public class PreValidator {
     private static void validateManifestAttribute(
             @NonNull MergingReport.Builder mergingReport, @NonNull XmlElement manifest, XmlDocument.Type fileType) {
         Attr attributeNode = manifest.getXml().getAttributeNode(AndroidManifest.ATTRIBUTE_PACKAGE);
-        // it's ok for an overlay to have no package name, but it's an error for other manifest
-        // types.
+        // it's ok for an overlay or a sub-manifest to have no package name, but it's an error for
+        // other manifest types.
         if ((attributeNode == null || attributeNode.getValue().isEmpty())
-                && fileType != XmlDocument.Type.OVERLAY) {
+                && fileType != XmlDocument.Type.OVERLAY
+                && !isSubManifest(manifest)) {
             mergingReport.addMessage(
                     manifest,
                     ERROR,
@@ -183,6 +186,15 @@ public class PreValidator {
                             "Missing 'package' declaration in manifest at %1$s",
                             manifest.printPosition()));
         }
+    }
+
+    private static boolean isSubManifest(@NonNull XmlElement manifest) {
+        String description = manifest.getSourceFile().getDescription();
+        if (description == null) {
+            return false;
+        }
+        return description.equals(WEAR_APP_SUB_MANIFEST)
+                || description.equals(COMPATIBLE_SCREENS_SUB_MANIFEST);
     }
 
     /**

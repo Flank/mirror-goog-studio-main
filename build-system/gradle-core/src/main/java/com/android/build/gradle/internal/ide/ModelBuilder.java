@@ -894,7 +894,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                             testOptionsDsl.getExecutionEnum());
         }
 
-
+        // FIXME: Remove appId from the model
         String applicationId;
         try {
             // This can throw an exception if no package name can be found.
@@ -905,6 +905,7 @@ public class ModelBuilder<Extension extends BaseExtension>
             applicationId = "";
             syncIssueReporter.reportError(Type.GENERIC, e);
         }
+
         MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
         BuildArtifactsHolder artifacts = componentProperties.getArtifacts();
 

@@ -46,7 +46,7 @@ public class SimpleTestRunner extends BaseTestRunner {
     protected List<TestResult> scheduleTests(
             @NonNull String projectName,
             @NonNull String variantName,
-            @NonNull TestData testData,
+            @NonNull StaticTestData testData,
             @NonNull Map<DeviceConnector, ImmutableList<File>> apksForDevice,
             @NonNull Set<File> helperApks,
             int timeoutInMs,
@@ -85,7 +85,7 @@ public class SimpleTestRunner extends BaseTestRunner {
 
     @NonNull
     protected RemoteAndroidTestRunner createRemoteAndroidTestRunner(
-            @NonNull TestData testData, DeviceConnector device) {
+            @NonNull StaticTestData testData, DeviceConnector device) {
         return new RemoteAndroidTestRunner(
                 testData.getApplicationId(), testData.getInstrumentationRunner(), device);
     }

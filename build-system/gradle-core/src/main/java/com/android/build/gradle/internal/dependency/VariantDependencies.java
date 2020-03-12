@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedCo
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantType;
-import com.android.builder.core.VariantTypeImpl;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -282,25 +281,49 @@ public class VariantDependencies {
             return artifacts;
         }
 
-        // We remove the transitive dependencies coming from the
-        // tested app to avoid having the same artifact on each app and tested app.
-        // This applies only to the package scope since we do want these in the compile
-        // scope in order to compile.
-        // We only do this for the AndroidTest.
-        // We do have to however keep the Android resources.
-        if (testedVariant.getVariantType() == VariantTypeImpl.BASE_APK
-                && configType == RUNTIME_CLASSPATH
-                && variantType.isApk()) {
-            if (isArtifactTypeSubtractedForInstrumentationTests(artifactType)) {
-                ArtifactCollection testedArtifactCollection =
-                        testedVariant
-                                .getVariantDependencies()
-                                .getArtifactCollection(
-                                        configType, scope, artifactType, attributeMap);
-                artifacts = new SubtractingArtifactCollection(artifacts, testedArtifactCollection);
-            }
+        // For artifact that should not be duplicated between test APk and tested APK (e.g. classes)
+        // we remove duplicates from test APK. More specifically, for androidTest variants for base
+        // and dynamic features, we need to remove artifacts that are already packaged in the tested
+        // variant. Also, we remove artifacts already packaged in base/features that the tested
+        // feature depends on.
+        if (!variantType.isApk()) {
+            // Don't filter unit tests.
+            return artifacts;
+        }
+        if (configType != RUNTIME_CLASSPATH) {
+            // Only filter runtime classpath.
+            return artifacts;
+        }
+        if (testedVariant.getVariantType().isAar()) {
+            // Don't filter test APKs for library projects, as there is no tested APK.
+            return artifacts;
+        }
+        if (!isArtifactTypeSubtractedForInstrumentationTests(artifactType)) {
+            return artifacts;
+        }
+        if (testedVariant.getVariantType().isDynamicFeature()) {
+            // If we're in an androidTest for a dynamic feature we need to filter out artifacts from
+            // the base and dynamic features this dynamic feature depends on.
+            FileCollection excludedDirectories =
+                    testedVariant
+                            .getVariantDependencies()
+                            .computeArtifactCollection(
+                                    PROVIDED_CLASSPATH,
+                                    PROJECT,
+                                    AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES,
+                                    null)
+                            .getArtifactFiles();
+
+            artifacts =
+                    new FilteredArtifactCollection(
+                            project, new FilteringSpec(artifacts, excludedDirectories));
         }
 
+        ArtifactCollection testedArtifactCollection =
+                testedVariant
+                        .getVariantDependencies()
+                        .getArtifactCollection(configType, scope, artifactType, attributeMap);
+        artifacts = new SubtractingArtifactCollection(artifacts, testedArtifactCollection);
         return artifacts;
     }
 

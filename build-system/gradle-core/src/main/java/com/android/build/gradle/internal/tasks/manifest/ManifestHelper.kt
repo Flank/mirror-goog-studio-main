@@ -47,7 +47,6 @@ fun mergeManifestsForApplication(
     outPackagedManifestLocation: String,
     outAaptSafeManifestLocation: String?,
     outMetadataFeatureManifestLocation: String?,
-    outBundleManifestLocation: String?,
     outInstantAppManifestLocation: String?,
     mergeType: ManifestMerger2.MergeType,
     placeHolders: Map<String, Any>,
@@ -104,9 +103,8 @@ fun mergeManifestsForApplication(
         save(xmlDocument, File(outPackagedManifestLocation))
         logger.verbose("Merged manifest saved to $outPackagedManifestLocation")
         if (outMergedManifestLocation != null) {
-            File(outPackagedManifestLocation).copyTo(
-                target = File(outMergedManifestLocation), overwrite = true
-            )
+            save(mergingReport.getMergedDocument(MergingReport.MergedManifestKind.INTERNAL_MERGED),
+                File(outMergedManifestLocation))
         }
 
         if (outAaptSafeManifestLocation != null) {
@@ -122,13 +120,6 @@ fun mergeManifestsForApplication(
                 mergingReport.getMergedDocument(MergingReport.MergedManifestKind.METADATA_FEATURE)
             if (featureManifest != null) {
                 save(featureManifest, File(outMetadataFeatureManifestLocation))
-            }
-        }
-        if (outBundleManifestLocation != null) {
-            val bundleMergedManifest =
-                mergingReport.getMergedDocument(MergingReport.MergedManifestKind.BUNDLE)
-            if (bundleMergedManifest != null) {
-                save(bundleMergedManifest, File(outBundleManifestLocation))
             }
         }
         if (outInstantAppManifestLocation != null) {

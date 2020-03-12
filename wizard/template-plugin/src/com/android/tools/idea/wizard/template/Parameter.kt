@@ -36,8 +36,6 @@ enum class Constraint {
   NONEMPTY,
   /** The associated value should represent a fully qualified activity class name. */
   ACTIVITY,
-  /** The associated value should represent an API level. */
-  API_LEVEL,
   /** The associated value should represent a valid class name. */
   CLASS,
   /** The associated value should represent a valid package name. */
@@ -50,9 +48,9 @@ enum class Constraint {
   LAYOUT,
   /** The associated value should represent a valid drawable resource name. */
   DRAWABLE,
-  /** The associated value should represent a valid values file name. */
-  NAVIGATION,
   /** The associated value should represent a valid navigation resource name. */
+  NAVIGATION,
+  /** The associated value should represent a valid values file name. */
   VALUES,
   /** The associated value should represent a valid id resource name. */
   ID,
@@ -73,7 +71,6 @@ enum class Constraint {
  * A user should provide [value]s to all parameters via interacting with UI.
  * Later this data is passed to the [Recipe] and used to render actual template files.
  */
-// TODO(qumeric): consider renaming/changing the whole hierarchy to make users more aware that it is used for rendering UI
 sealed class Parameter<T> {
   /** Name of the parameter. Should be unique. */
   abstract val name: String

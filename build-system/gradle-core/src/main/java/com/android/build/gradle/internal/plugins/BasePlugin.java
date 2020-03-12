@@ -54,6 +54,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.errors.DeprecationReporterImpl;
+import com.android.build.gradle.internal.errors.IncompatibleProjectOptionsReporter;
 import com.android.build.gradle.internal.errors.MessageReceiverImpl;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.ide.ModelBuilder;
@@ -74,7 +75,6 @@ import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.LegacyVariantInputManager;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.internal.variant.VariantInputModel;
-import com.android.build.gradle.internal.variant.AbstractVariantInputManager;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.internal.variant.VariantModelImpl;
 import com.android.build.gradle.options.BooleanOption;
@@ -307,6 +307,8 @@ public abstract class BasePlugin<
         projectOptions
                 .getAllOptions()
                 .forEach(projectServices.getDeprecationReporter()::reportOptionIssuesIfAny);
+        IncompatibleProjectOptionsReporter.check(
+                projectOptions, projectServices.getIssueReporter());
 
         // Enforce minimum versions of certain plugins
         GradlePluginUtils.enforceMinimumVersionsOfPlugins(project, issueReporter);

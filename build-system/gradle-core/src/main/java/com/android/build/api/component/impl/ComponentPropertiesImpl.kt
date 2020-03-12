@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_SOURCE_
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_TRIGGER
 import com.android.build.gradle.internal.scope.InternalArtifactType.MLKIT_SOURCE_OUT
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.VariantScope
@@ -74,7 +75,6 @@ import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.attributes.Attribute
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -191,7 +191,11 @@ abstract class ComponentPropertiesImpl(
             variantDslInfo.originalApplicationId,
             globalScope
                 .dataBindingBuilder
-                .createJavaFileWriter(paths.classOutputForDataBinding),
+                .createJavaFileWriter(
+                    // Can't use artifacts.getFinalProduct(DATA_BINDING_TRIGGER) here as it may not
+                    // have been set (DataBindingIntegrationTestAppsTest would fail).
+                    artifacts.getOperations()
+                        .getOutputPath(InternalArtifactType.DATA_BINDING_TRIGGER)),
             OriginalFileLookup { file: File? ->
                 val input =
                     SourceFile(file!!)
@@ -292,18 +296,48 @@ abstract class ComponentPropertiesImpl(
     ): ArtifactCollection {
         val mainCollection =
             variantDependencies.getArtifactCollection(configType, ArtifactScope.ALL, classesType)
-        val extraArtifact = internalServices.provider(Callable{
+        val extraArtifact = internalServices.provider(Callable {
             variantData.getGeneratedBytecode(generatedBytecodeKey);
         })
         val combinedCollection = internalServices.fileCollection(
             mainCollection.artifactFiles, extraArtifact
         )
-        return ArtifactCollectionWithExtraArtifact.makeExtraCollection(
+        val extraCollection = ArtifactCollectionWithExtraArtifact.makeExtraCollection(
             mainCollection,
             combinedCollection,
             extraArtifact,
             globalScope.project.path
         )
+
+        return onTestedConfig { testedVariant ->
+            // This is required because of http://b/150500779. Kotlin Gradle plugin relies on
+            // TestedComponentIdentifierImpl being present in the returned artifact collection, as
+            // artifacts with that identifier type are added to friend paths to kotlinc invocation.
+            // Because jar containing all classes of the main artifact is in the classpath when
+            // compiling test, we need to add TestedComponentIdentifierImpl artifact with that file.
+            // This is needed when compiling test variants that access internal members.
+            val internalArtifactType = testedVariant.variantScope.publishingSpec
+                .getSpec(classesType, configType.publishedTo)!!.outputType
+
+            @Suppress("USELESS_CAST") // Explicit cast needed here.
+            val testedAllClasses: Provider<FileCollection> =
+                internalServices.provider(Callable {
+                    internalServices.fileCollection(
+                        testedVariant.operations.get(internalArtifactType)
+                    ) as FileCollection
+                })
+            val combinedCollectionForTest = internalServices.fileCollection(
+                combinedCollection, testedAllClasses, testedAllClasses
+            )
+
+            ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
+                extraCollection,
+                combinedCollectionForTest,
+                testedAllClasses,
+                globalScope.project.path,
+                null
+            )
+        } ?: extraCollection
     }
 
     // TODO Move these outside of Variant specific class (maybe GlobalTaskScope?)
@@ -327,7 +361,9 @@ abstract class ComponentPropertiesImpl(
                 )
             }
             val artifactProvider = artifacts.getFinalProduct(buildArtifactType)
-            if (artifactProvider.isPresent) {
+            val artifactContainer =
+                artifacts.getOperations().getArtifactContainer(buildArtifactType)
+            if (!artifactContainer.needInitialProducer().get()) {
                 variantScope
                     .publishIntermediateArtifact(
                         artifactProvider,
@@ -395,8 +431,22 @@ abstract class ComponentPropertiesImpl(
             sourceSets.add(internalServices.fileTree(aidlFC).builtBy(aidlFC))
         }
         if (buildFeatures.dataBinding || buildFeatures.viewBinding) {
-            taskContainer.dataBindingExportBuildInfoTask?.let {
-                sourceSets.add(internalServices.fileTree(paths.classOutputForDataBinding).builtBy(it))
+            // DATA_BINDING_TRIGGER artifact is created for data binding only (not view binding)
+            if (buildFeatures.dataBinding) {
+                // Under some conditions (e.g., for a unit test variant where
+                // includeAndroidResources == false or testedVariantType != AAR, see
+                // TaskManager.createUnitTestVariantTasks), the artifact may not have been created,
+                // so we need to check its presence first (using internal AGP API instead of Gradle
+                // API---see https://android.googlesource.com/platform/tools/base/+/ca24108e58e6e0dc56ce6c6f639cdbd0fa3b812f).
+                if (!artifacts.getOperations().getArtifactContainer(DATA_BINDING_TRIGGER)
+                        .needInitialProducer().get()
+                ) {
+                    val dataBindingTriggerDir = artifacts.getFinalProduct(DATA_BINDING_TRIGGER)
+                    sourceSets.add(
+                        internalServices.fileTree(dataBindingTriggerDir)
+                            .builtBy(dataBindingTriggerDir)
+                    )
+                }
             }
             addDataBindingSources(sourceSets)
         }

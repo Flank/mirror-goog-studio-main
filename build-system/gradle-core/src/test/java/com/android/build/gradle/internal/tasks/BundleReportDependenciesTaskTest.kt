@@ -148,9 +148,9 @@ class BundleReportDependenciesTaskTest {
                     .setLibraryIndex(1)
                     .build())
             .build()
-        baseAppDeps.writeTo(FileOutputStream(baseDepsFile))
-        featureDep1.writeTo(FileOutputStream(feature1File))
-        featureDep2.writeTo(FileOutputStream(feature2File))
+        FileOutputStream(baseDepsFile).use { baseAppDeps.writeTo(it) }
+        FileOutputStream(feature1File).use { featureDep1.writeTo(it) }
+        FileOutputStream(feature2File).use { featureDep2.writeTo(it) }
         val expected = AppDependencies.newBuilder()
             .addLibrary(lib1)
             .addLibrary(lib2)

@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.ide.common.process.ProcessException;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Apk;
 import java.io.File;
@@ -60,9 +59,9 @@ public class MlGeneratedClassTest {
     }
 
     @Test
-    public void testModelClass() throws IOException, InterruptedException, ProcessException {
-        // Add model file to assets
-        File modelFile = project.file("src/main/assets/model.tflite");
+    public void testModelClass() throws IOException, InterruptedException {
+        // Add model file to ml folder
+        File modelFile = project.file("src/main/ml/model.tflite");
         FileUtils.copyFile(
                 TestUtils.getWorkspaceFile(
                         "prebuilts/tools/common/mlkit/testData/mobilenet_quant_metadata.tflite"),
@@ -75,10 +74,9 @@ public class MlGeneratedClassTest {
     }
 
     @Test
-    public void testModelClassWithoutMetadata()
-            throws IOException, InterruptedException, ProcessException {
-        // Add model file to assets
-        File modelFile = project.file("src/main/assets/model.tflite");
+    public void testModelClassWithoutMetadata() throws IOException, InterruptedException {
+        // Add model file to ml folder
+        File modelFile = project.file("src/main/ml/model.tflite");
         FileUtils.copyFile(
                 TestUtils.getWorkspaceFile(
                         "prebuilts/tools/common/mlkit/testData/mobilenet_quant_no_metadata.tflite"),

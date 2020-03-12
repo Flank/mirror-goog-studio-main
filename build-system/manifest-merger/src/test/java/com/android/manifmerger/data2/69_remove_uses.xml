@@ -76,7 +76,7 @@
 
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example">
+    package="com.example.lib1">
 
     <!-- The app can cope with API 1 but this library can only cope with API 4. -->
     <uses-sdk android:minSdkVersion="4" />
@@ -129,7 +129,7 @@
 
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example">
+    package="com.example.lib2">
 
     <!-- The app targets API 14 but this library targets 42. -->
     <uses-sdk android:targetSdkVersion="42" />

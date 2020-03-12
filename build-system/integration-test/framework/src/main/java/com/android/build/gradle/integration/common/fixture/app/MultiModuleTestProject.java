@@ -133,6 +133,12 @@ public class MultiModuleTestProject implements TestProject {
         }
 
         @NonNull
+        public Builder androidTestDependency(
+                @NonNull GradleProject from, @NonNull GradleProject to) {
+            return dependency("androidTestImplementation", from, to);
+        }
+
+        @NonNull
         public Builder dependency(
                 @NonNull String configuration,
                 @NonNull GradleProject from,

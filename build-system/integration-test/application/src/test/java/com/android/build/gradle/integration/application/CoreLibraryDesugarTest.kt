@@ -45,7 +45,6 @@ import com.android.testutils.truth.DexSubject
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
@@ -165,8 +164,6 @@ class CoreLibraryDesugarTest {
      */
     @Test
     @Category(DeviceTests::class)
-    @Ignore
-    //TODO Currently hit some regression, re-enable when r8/d8 is stable for core library desugaring
     fun testApiInvocation() {
         val device = adb.getDevice(AndroidVersionMatcher.exactly(21), AbiMatcher.anyAbi())
         project.executor()
@@ -205,7 +202,7 @@ class CoreLibraryDesugarTest {
         """.trimIndent())
         val result = project.executor().expectFailure().run("app:lintDebug")
         assertThat(result.failureMessage).contains(
-            "Call requires API level 24 (current min is 14): java.util.Collection#stream [NewApi]")
+            "Call requires API level 24 (current min is 21): java.util.Collection#stream [NewApi]")
     }
 
     @Test

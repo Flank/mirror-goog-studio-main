@@ -200,7 +200,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                     return testRunner.runTests(
                                             getProject().getName(),
                                             getFlavorName(),
-                                            testData,
+                                            testData.get(),
                                             buddyApks.getFiles(),
                                             deviceProvider.getDevices(),
                                             deviceProvider.getTimeoutInMs(),

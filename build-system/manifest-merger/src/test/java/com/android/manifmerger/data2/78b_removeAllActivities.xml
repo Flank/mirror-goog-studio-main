@@ -30,6 +30,7 @@
 
     <application
             android:name="TheApp"
+            tools:replace="android:name"
             android:backupAgent=".MyBackupAgent" >
         <activity
                 tools:node="removeAll"/>
@@ -41,7 +42,7 @@
 
 <manifest
 xmlns:android="http://schemas.android.com/apk/res/android"
-package="com.example.app1">
+package="com.example.lib1">
 
 <application android:name="TheApp" >
     <!-- Activity to configure widget -->
@@ -62,7 +63,7 @@ package="com.example.app1">
 
 <manifest
 xmlns:android="http://schemas.android.com/apk/res/android"
-package="com.example.app1">
+package="com.example.lib2">
 
 <application android:name="TheApp" >
     <!-- Activity to configure widget -->
@@ -94,5 +95,3 @@ package="com.example.app1">
 
 </manifest>
 
-
-@errors

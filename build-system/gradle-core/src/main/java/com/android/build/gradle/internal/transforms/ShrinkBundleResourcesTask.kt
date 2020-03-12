@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.transforms
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
-import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MultipleArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -185,12 +184,12 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         override fun handleProvider(
             taskProvider: TaskProvider<out ShrinkBundleResourcesTask>
         ) {
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                ShrinkBundleResourcesTask::compressedResources,
-                "shrunk-bundled-res.ap_"
+                ShrinkBundleResourcesTask::compressedResources
             )
+                .withName("shrunk-bundled-res.ap_")
+                .on(InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE)
         }
 
         override fun configure(
@@ -241,7 +240,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                 task.mappingFileSrc)
 
             operations.setTaskInputToFinalProduct(
-                InternalArtifactType.BUNDLE_MANIFEST,
+                InternalArtifactType.PACKAGED_MANIFESTS,
                 task.mergedManifests)
         }
     }

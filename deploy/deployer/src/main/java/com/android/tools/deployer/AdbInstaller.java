@@ -119,9 +119,13 @@ public class AdbInstaller implements Installer {
     }
 
     @Override
-    public Deploy.OverlayIdPushResponse pushOverlayId(String packageName, String oid)
-            throws IOException {
-        String[] cmd = buildCmd(new String[] {"overlayidpush", packageName, oid});
+    public Deploy.OverlayIdPushResponse pushOverlayId(
+            String packageName, String oid, boolean clearOverlays) throws IOException {
+        String[] cmd =
+                buildCmd(
+                        new String[] {
+                            "overlayidpush", packageName, oid, Boolean.toString(clearOverlays)
+                        });
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, null);
         Deploy.OverlayIdPushResponse response = installerResponse.getOverlayidpushResponse();
         logger.verbose("installer swap: " + response.getStatus().toString());

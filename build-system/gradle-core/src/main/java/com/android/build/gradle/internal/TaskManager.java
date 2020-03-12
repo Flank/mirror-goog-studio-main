@@ -189,6 +189,7 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PrepareKotlinCompileTask;
 import com.android.build.gradle.tasks.ProcessApplicationManifest;
+import com.android.build.gradle.tasks.ProcessManifestForBundleTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
@@ -928,7 +929,7 @@ public abstract class TaskManager<
                 new CompatibleScreensManifest.CreationAction(creationConfig, screenSizes));
 
         TaskProvider<? extends ManifestProcessorTask> processManifestTask =
-                createMergeManifestTask(creationConfig);
+                createMergeManifestTasks(creationConfig);
 
         final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
         if (taskContainer.getMicroApkTask() != null) {
@@ -967,8 +968,11 @@ public abstract class TaskManager<
 
     /** Creates the merge manifests task. */
     @NonNull
-    protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTask(
+    protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTasks(
             @NonNull ApkCreationConfig creationConfig) {
+
+        taskFactory.register(new ProcessManifestForBundleTask.CreationAction(creationConfig));
+
         return taskFactory.register(
                 new ProcessApplicationManifest.CreationAction(
                         creationConfig,
@@ -2517,6 +2521,7 @@ public abstract class TaskManager<
 
         taskFactory.register(new DataBindingGenBaseClassesTask.CreationAction(componentProperties));
 
+        // DATA_BINDING_TRIGGER artifact is created for data binding only (not view binding)
         if (dataBindingEnabled) {
             taskFactory.register(
                     new DataBindingExportBuildInfoTask.CreationAction(componentProperties));
@@ -3311,7 +3316,7 @@ public abstract class TaskManager<
 
     private void configureKaptTaskInScopeForDataBinding(
             @NonNull ComponentPropertiesImpl componentProperties, @NonNull Task kaptTask) {
-        DirectoryProperty databindingArtifact =
+        DirectoryProperty dataBindingArtifactDir =
                 componentProperties.getGlobalScope().getProject().getObjects().directoryProperty();
         RegularFileProperty exportClassListFile =
                 componentProperties.getGlobalScope().getProject().getObjects().fileProperty();
@@ -3319,17 +3324,25 @@ public abstract class TaskManager<
 
         // Data binding artifacts are part of the annotation processing outputs
         JavaCompileKt.registerDataBindingOutputs(
-                databindingArtifact,
+                dataBindingArtifactDir,
                 exportClassListFile,
                 componentProperties.getVariantType().isExportDataBindingClassList(),
                 false, // Set to false to replace the first registration done by JavaCompile earlier
                 kaptTaskProvider,
                 componentProperties.getArtifacts());
 
-        // Manually declare these output providers as the task's outputs as they are not yet
+        // Register the DirectoryProperty / RegularFileProperty as outputs as they are not yet
         // annotated as outputs (same with the code in JavaCompileCreationAction.configure).
-        kaptTask.getOutputs().dir(databindingArtifact);
-        kaptTask.getOutputs().file(exportClassListFile).optional();
+        // Ideally we need to unset the corresponding properties from JavaCompile's outputs, but
+        // there's currently no way to do it.
+        kaptTask.getOutputs()
+                .dir(dataBindingArtifactDir)
+                .withPropertyName("dataBindingArtifactDir");
+        if (componentProperties.getVariantType().isExportDataBindingClassList()) {
+            kaptTask.getOutputs()
+                    .file(exportClassListFile)
+                    .withPropertyName("dataBindingExportClassListFile");
+        }
     }
 
     protected void configureTestData(

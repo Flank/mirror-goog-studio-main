@@ -17,7 +17,7 @@ package com.android.ddmlib.jdwp;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ddmlib.JdwpPacket;
+import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.jdwp.packets.CapabilitiesNewReply;
 import com.android.ddmlib.jdwp.packets.IdSizesReply;
 import com.google.common.base.Charsets;

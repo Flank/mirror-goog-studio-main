@@ -16,6 +16,11 @@
 
 package com.android.zipflinger;
 
+import static com.android.zipflinger.Profiler.DEX_SIZE;
+import static com.android.zipflinger.Profiler.NUM_DEX;
+import static com.android.zipflinger.Profiler.NUM_RES;
+import static com.android.zipflinger.Profiler.RES_SIZE;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -26,8 +31,8 @@ import java.util.zip.ZipOutputStream;
 
 public class ApkMaker {
 
-    public static void create(long numRes, int resSize, int numDex, int dexSize, String path)
-            throws IOException {
+    public static void createWithDescriptors(
+            long numRes, int resSize, int numDex, int dexSize, String path) throws IOException {
         Random r = new Random(1);
         try (FileOutputStream f = new FileOutputStream(new File(path));
                 ZipOutputStream s = new ZipOutputStream(f)) {
@@ -52,6 +57,21 @@ public class ApkMaker {
                 s.write(dexBytes);
                 s.closeEntry();
             }
+        }
+    }
+
+    public static void createArchive(Archive archive) throws IOException {
+        Random r = new Random(0);
+        byte[] dexBytes = new byte[DEX_SIZE];
+        r.nextBytes(dexBytes);
+        for (int i = 0; i < NUM_DEX; i++) {
+            archive.add(new BytesSource(dexBytes, "classes" + i + ".dex", Deflater.BEST_SPEED));
+        }
+
+        byte[] resBytes = new byte[RES_SIZE];
+        r.nextBytes(resBytes);
+        for (int i = 0; i < NUM_RES; i++) {
+            archive.add(new BytesSource(resBytes, "res/foo/" + i, Deflater.NO_COMPRESSION));
         }
     }
 }

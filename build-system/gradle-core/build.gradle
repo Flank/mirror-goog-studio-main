@@ -179,8 +179,6 @@ tasks.processResources {
     }
 }
 
-// End Package instant run instrumentation inside of gradle-core.
-
 // Incremental update test support
 javadoc {
     classpath += configurations.provided

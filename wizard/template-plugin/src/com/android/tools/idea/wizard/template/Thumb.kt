@@ -20,19 +20,11 @@ import java.net.URL
 
 /**
  * Stores information about a thumb which should be displayed in galleries such as New Activity Gallery.
- * TODO(qumeric): consider adding the following information:
- * resizible: (None, Horizontal, Vertical, Both)
- * expandedStyle: (None, Text, List, Picture)
- * style: (Analog, Digital)
- * adFormat: (Interstitial, Banner)
- * minWidth, minHeight: Int
- *
- * Also, make inline class/typealias?
  */
-open class Thumb(val path: URL) {
+open class Thumb(val path: () -> URL) {
   /**
    * Represents absence of thumb (null object pattern).
    */
-  companion object NoThumb: Thumb(URL("file://noThumb"))
+  companion object NoThumb: Thumb({ URL("file://noThumb") })
 }
 

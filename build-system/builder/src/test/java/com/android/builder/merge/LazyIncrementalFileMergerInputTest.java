@@ -401,50 +401,6 @@ public class LazyIncrementalFileMergerInputTest {
     }
 
     @Test
-    public void incrementalInputs() throws Exception {
-        KeyedFileCache cache =
-                new KeyedFileCache(temporaryFolder.newFolder(), KeyedFileCache::fileNameKey);
-        Set<File> inputs = makeInputs(50);
-
-        for (File f : inputs) {
-            if (f.isFile()) {
-                cache.add(f);
-            }
-        }
-
-        /*
-         * Do several incremental changes and check the number of reported files is correct.
-         */
-        for (int i = 0; i < 20; i++) {
-            Pair<Map<File, FileStatus>, Map<String, FileStatus>> expected = makeChanges(inputs);
-            LazyIncrementalFileMergerInput input =
-                    LazyIncrementalFileMergerInputs.fromUpdates(
-                            "foo",
-                            ImmutableSet.copyOf(inputs),
-                            expected.getFirst(),
-                            cache,
-                            IncrementalRelativeFileSets.FileDeletionPolicy
-                                    .ASSUME_NO_DELETED_DIRECTORIES);
-
-            assertEquals(expected.getSecond().size(), input.getUpdatedPaths().size());
-
-            int fcount = 0;
-            for (File f : inputs) {
-                File dir = inputDirectory(f);
-                fcount += directoryContents(dir).size();
-            }
-
-            assertEquals(fcount, input.getAllPaths().size());
-
-            for (File f : inputs) {
-                if (f.isFile()) {
-                    cache.add(f);
-                }
-            }
-        }
-    }
-
-    @Test
     public void findFileInNonIncrementalLoad() throws Exception {
         Set<File> inputs = makeInputs(50);
         LazyIncrementalFileMergerInput input =

@@ -26,6 +26,7 @@ import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.T
 import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_REPLACABLE_FILE
 import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_TRANSFORMABLE_DIRECTORY
 import com.android.build.api.artifact.impl.OperationsImplTest.TestArtifactType.TEST_TRANSFORMABLE_FILE
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
@@ -1047,5 +1048,20 @@ class OperationsImplTest {
             .contains("lateProducer")
         Truth.assertThat(transformTask.get().outputFile.get().asFile).isEqualTo(
             artifactContainer.get().get()[0].asFile)
+    }
+
+    /** Regression test for bug 151076862 */
+    @Test
+    fun `test regular-file artifacts have a default file name`() {
+        abstract class AGPTask: DefaultTask() {
+            @get:OutputFile abstract val outputFile: RegularFileProperty
+        }
+        val agpTaskProvider = project.tasks.register("agpTaskProvider", AGPTask::class.java)
+        operations.setInitialProvider(agpTaskProvider, AGPTask::outputFile).on(TEST_FILE)
+
+        Truth.assertThat(operations.getArtifactContainer(TEST_FILE).get().get().asFile.absolutePath)
+            .endsWith(
+                FileUtils.join("test_file", "debug", DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS)
+            )
     }
 }

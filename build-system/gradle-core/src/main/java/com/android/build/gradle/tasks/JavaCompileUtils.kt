@@ -32,7 +32,6 @@ import com.google.gson.reflect.TypeToken
 import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.compile.JavaCompile
 import java.io.File
 import java.io.FileReader
@@ -43,19 +42,11 @@ import java.io.UncheckedIOException
 import java.util.jar.JarFile
 
 const val KOTLIN_KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
-const val LOMBOK = "lombok"
-// See https://projectlombok.org/contributing/lombok-execution-path
-const val LOMBOK_ANNOTATION_PROCESSOR =
-    "lombok.launch.AnnotationProcessorHider\$AnnotationProcessor"
 
 const val ANNOTATION_PROCESSORS_INDICATOR_FILE =
     "META-INF/services/javax.annotation.processing.Processor"
 const val INCREMENTAL_ANNOTATION_PROCESSORS_INDICATOR_FILE =
     "META-INF/gradle/incremental.annotation.processors"
-
-const val PROC_ONLY = "-proc:only"
-const val PROC_NONE = "-proc:none"
-const val PROCESSOR = "-processor"
 
 /** Whether incremental compilation is enabled or disabled by default. */
 const val DEFAULT_INCREMENTAL_COMPILATION = true
@@ -83,14 +74,14 @@ fun JavaCompile.configureProperties(componentProperties: ComponentPropertiesImpl
  * @see [JavaCompile.configureProperties]
  */
 fun JavaCompile.configurePropertiesForAnnotationProcessing(
-    componentProperties: ComponentPropertiesImpl, sourcesOutputFolder: File
+    componentProperties: ComponentPropertiesImpl
 ) {
     val processorOptions = componentProperties.variantDslInfo.javaCompileOptions.annotationProcessorOptions
     val compileOptions = this.options
 
     configureAnnotationProcessorPath(componentProperties)
 
-    if (!processorOptions.classNames.isEmpty()) {
+    if (processorOptions.classNames.isNotEmpty()) {
         compileOptions.compilerArgs.add("-processor")
         compileOptions
             .compilerArgs
@@ -102,8 +93,6 @@ fun JavaCompile.configurePropertiesForAnnotationProcessing(
     }
 
     compileOptions.compilerArgumentProviders.addAll(processorOptions.compilerArgumentProviders)
-
-    compileOptions.annotationProcessorGeneratedSourcesDirectory = sourcesOutputFolder
 }
 
 /**

@@ -52,7 +52,7 @@ public class ShardedTestRunnable implements Runnable {
     @NonNull private final String projectName;
     @NonNull private final DeviceConnector device;
     @NonNull private final String flavorName;
-    @NonNull private final TestData testData;
+    @NonNull private final StaticTestData testData;
     @NonNull private final File resultsDir;
     @NonNull private final File coverageDir;
     @NonNull private final List<File> testedApks;
@@ -142,10 +142,11 @@ public class ShardedTestRunnable implements Runnable {
 
             while ((shard = shardProvider.getNextShard()) != null) {
                 logger.verbose("Running shard %d on %s", shard, deviceName);
-                RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
-                        testData.getApplicationId(),
-                        testData.getInstrumentationRunner(),
-                        device);
+                RemoteAndroidTestRunner runner =
+                        new RemoteAndroidTestRunner(
+                                testData.getApplicationId(),
+                                testData.getInstrumentationRunner(),
+                                device);
 
                 for (Map.Entry<String, String> argument :
                         testData.getInstrumentationRunnerArguments().entrySet()) {
@@ -223,8 +224,8 @@ public class ShardedTestRunnable implements Runnable {
                             };
                     logger.verbose("Have %d coverage files to fetch", coverageFiles.size());
                     for (String name : coverageFiles) {
-                        String temporaryCoverageCopy = "/data/local/tmp/"
-                                + testData.getTestedApplicationId() + "." + name;
+                        String temporaryCoverageCopy =
+                                "/data/local/tmp/" + testData.getTestedApplicationId() + "." + name;
                         String coverageFile = coverageFileLocation + name;
                         logger.verbose("DeviceConnector '%s': fetching coverage data from %s",
                                 deviceName, coverageFile);
@@ -379,7 +380,7 @@ public class ShardedTestRunnable implements Runnable {
         @NonNull private final String projectName;
         @NonNull private final DeviceConnector device;
         @NonNull private final String flavorName;
-        @NonNull private final TestData testData;
+        @NonNull private final StaticTestData testData;
         @NonNull private final File resultsDir;
         @NonNull private final File coverageDir;
         @NonNull private final List<File> testedApks;
@@ -395,7 +396,7 @@ public class ShardedTestRunnable implements Runnable {
                 @NonNull String projectName,
                 @NonNull String flavorName,
                 @NonNull List<File> testedApks,
-                @NonNull TestData testData,
+                @NonNull StaticTestData testData,
                 @NonNull File resultsDir,
                 @NonNull File coverageDir,
                 int timeoutInMs,

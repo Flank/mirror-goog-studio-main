@@ -103,7 +103,8 @@ public class TestApplicationTaskManager
                 new TestApplicationTestData(
                         testVariantProperties.getVariantDslInfo(),
                         testVariantProperties.getVariantSources(),
-                        testVariantProperties.getVariantDslInfo()::getApplicationId,
+                        testVariantProperties.getApplicationId(),
+                        project.getObjects().property(String.class),
                         testingApk,
                         testedApks);
 
@@ -197,7 +198,7 @@ public class TestApplicationTaskManager
     /** Creates the merge manifests task. */
     @Override
     @NonNull
-    protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTask(
+    protected TaskProvider<? extends ManifestProcessorTask> createMergeManifestTasks(
             @NonNull ApkCreationConfig creationConfig) {
 
         return taskFactory.register(

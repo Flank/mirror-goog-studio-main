@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks.databinding
 import android.databinding.tool.LayoutXmlProcessor
 import android.databinding.tool.processing.Scope
 import com.android.build.api.component.impl.ComponentPropertiesImpl
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -32,8 +33,10 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 
 /**
- * Task to create an empty class annotated with @BindingBuildInfo, so that the Java compiler invokes
- * data binding even when the rest of the source code does not have data binding annotations.
+ * Task to create an empty class annotated with a data binding annotation (it could be any data
+ * binding annotation), so that the Java compiler still invokes data binding in the case that data
+ * binding is used (e.g., in layout files) but the source code does not use data binding
+ * annotations.
  *
  * Note: The task name might be misleading: Historically, this task was used to generate a class
  * that contained the build environment information needed for data binding, but it is now no longer
@@ -74,6 +77,10 @@ abstract class DataBindingExportBuildInfoTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.dataBindingExportBuildInfoTask = taskProvider
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                DataBindingExportBuildInfoTask::triggerDir
+            ).on(InternalArtifactType.DATA_BINDING_TRIGGER)
         }
 
         override fun configure(
@@ -97,13 +104,6 @@ abstract class DataBindingExportBuildInfoTask : NonIncrementalTask() {
                     .globalScope
                     .project
                     .provider<LayoutXmlProcessor>(creationConfig::layoutXmlProcessor)
-            )
-            task.triggerDir.setDisallowChanges(
-                creationConfig
-                    .globalScope
-                    .project.layout.projectDirectory.dir(
-                    creationConfig.paths.classOutputForDataBinding.path
-                )
             )
             task.dependsOn(creationConfig.taskContainer.sourceGenTask)
         }

@@ -47,6 +47,7 @@ public class Deployer {
 
     // Temp flag.
     private final boolean useOptimisticSwap;
+    private final boolean useStructuralRedefinition;
 
     public Deployer(
             AdbClient adb,
@@ -57,7 +58,8 @@ public class Deployer {
             UIService service,
             Collection<DeployMetric> metrics,
             ILogger logger,
-            boolean useOptimisticSwap) {
+            boolean useOptimisticSwap,
+            boolean useStructuralRedefinition) {
         this.adb = adb;
         this.deployCache = deployCache;
         this.dexDb = dexDb;
@@ -67,6 +69,7 @@ public class Deployer {
         this.metrics = metrics;
         this.logger = logger;
         this.useOptimisticSwap = useOptimisticSwap;
+        this.useStructuralRedefinition = useStructuralRedefinition;
     }
 
     enum Tasks {
@@ -135,7 +138,7 @@ public class Deployer {
                 OverlayIdPusher oidPusher = new OverlayIdPusher(installer);
                 String appId = ApplicationDumper.getPackageName(apkList);
                 OverlayId oid = new OverlayId(apkList);
-                oidPusher.pushOverlayId(appId, oid);
+                oidPusher.pushOverlayId(appId, oid, result.skippedInstall /* clearOverlays */);
 
                 runner.create(
                         Tasks.DEPLOY_CACHE_STORE,
@@ -310,7 +313,8 @@ public class Deployer {
 
         // Perform the swap.
         OptimisticApkSwapper swapper =
-                new OptimisticApkSwapper(installer, redefiners, argRestart, adb, logger);
+                new OptimisticApkSwapper(
+                        installer, redefiners, argRestart, useStructuralRedefinition, adb, logger);
         runner.create(
                 Tasks.OPTIMISTIC_SWAP, swapper::optimisticSwap, packageName, pids, arch, swapData);
 

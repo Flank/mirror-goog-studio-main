@@ -49,12 +49,15 @@ public class OutputsClassInjector implements CodeInjector<TypeSpec.Builder, List
 
         // Add constructor
         MethodSpec.Builder constructorBuilder =
-                MethodSpec.constructorBuilder().addModifiers(Modifier.PUBLIC);
+                MethodSpec.constructorBuilder()
+                        .addParameter(ClassNames.MODEL, "model")
+                        .addModifiers(Modifier.PUBLIC);
+        int index = 0;
         for (TensorInfo tensorInfo : tensorInfos) {
             constructorBuilder.addStatement(
-                    "this.$L = TensorBuffer.createFixedSize($L, $T.$L)",
+                    "this.$L = TensorBuffer.createFixedSize(model.getOutputTensorShape($L), $T.$L)",
                     tensorInfo.getName(),
-                    CodeUtils.getIntArrayString(tensorInfo.getShape()),
+                    index++,
                     ClassNames.DATA_TYPE,
                     CodeUtils.getDataType(tensorInfo.getDataType()));
         }

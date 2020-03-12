@@ -33,14 +33,6 @@ data class GradleVersion(val major: Int, val minor: Int, val micro: Int) {
   }
 }
 
-// TODO(qumeric): make more reliable (add validation etc.)
-private fun String.toGradleVersion(): GradleVersion {
-  val (major, minor, micro) = this.split(".")
-  return GradleVersion(major.toInt(), minor.toInt(), micro.toInt())
-}
-
-fun compareVersions(l: String, r: String): Int = l.toGradleVersion().compareTo(r.toGradleVersion())
-
 /** Converts an Activity class name into a suitable layout name. */
 fun activityToLayout(activityName: String, layoutName: String? = null): String =
   if (activityName.isNotEmpty())

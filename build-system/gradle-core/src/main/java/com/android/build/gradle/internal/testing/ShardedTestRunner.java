@@ -50,7 +50,7 @@ public class ShardedTestRunner extends BaseTestRunner {
     protected List<TestResult> scheduleTests(
             @NonNull String projectName,
             @NonNull String variantName,
-            @NonNull TestData testData,
+            @NonNull StaticTestData testData,
             @NonNull Map<DeviceConnector, ImmutableList<File>> apksForDevice,
             @NonNull Set<File> helperApks,
             int timeoutInMs,

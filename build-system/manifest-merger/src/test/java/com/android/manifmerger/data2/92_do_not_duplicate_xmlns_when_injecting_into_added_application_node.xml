@@ -12,7 +12,7 @@
 @lib1
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.example.blankactivity" >
+        package="com.example.lib" >
 
     <application
             android:name="TheApp" >
@@ -27,11 +27,8 @@
       package="com.example.blankactivity" >
 
     <application
-            android:name="TheApp"
+            android:name="com.example.lib.TheApp"
             android:debuggable="true" >
     </application>
 
 </manifest>
-
-
-@errors

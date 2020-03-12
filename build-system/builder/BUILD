@@ -99,8 +99,8 @@ kotlin_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":builder",
-        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.4:jar",
-        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/0.11.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.5:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/0.11.1:jar",
         "//tools/apkzlib",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.apksig",

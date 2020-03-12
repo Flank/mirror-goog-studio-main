@@ -30,8 +30,10 @@ import static org.jf.dexlib2.Opcode.INVOKE_VIRTUAL_RANGE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.collect.Lists;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -113,12 +115,12 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
     public void hasMethodThatInvokes(@NonNull String name, String descriptor) {
         assertSubjectIsNonNull();
         hasMethod(name);
-        DexBackedMethod method = findMethodWithImplementation(name);
-        if (method == null) {
+        List<DexBackedMethod> methods = findMethodWithImplementation(name);
+        if (methods.isEmpty()) {
             fail("contains an implementation for a method named `" + name + "`");
             return;
         }
-        if (!checkMethodInvokes(method, descriptor)) {
+        if (!checkHasMethodInvokes(methods, descriptor)) {
             fail("invokes a method with the descriptor `" + descriptor + "` from `" + name + "`");
         }
     }
@@ -126,12 +128,12 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
     public void hasMethodThatDoesNotInvoke(@NonNull String name, String descriptor) {
         assertSubjectIsNonNull();
         hasMethod(name);
-        DexBackedMethod method = findMethodWithImplementation(name);
-        if (method == null) {
+        List<DexBackedMethod> methods = findMethodWithImplementation(name);
+        if (methods.isEmpty()) {
             fail("contains an implementation for a method named `" + name + "`");
             return;
         }
-        if (checkMethodInvokes(method, descriptor)) {
+        if (checkHasMethodInvokes(methods, descriptor)) {
             fail(
                     "does not invoke a method with the descriptor `"
                             + descriptor
@@ -141,16 +143,27 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
         }
     }
 
-    @Nullable
-    private DexBackedMethod findMethodWithImplementation(@NonNull String name) {
+    @NonNull
+    private List<DexBackedMethod> findMethodWithImplementation(@NonNull String name) {
+        List methods = Lists.newArrayList();
         for (DexBackedMethod method : actual().getMethods()) {
             if (method.getName().equals(name)) {
                 if (method.getImplementation() != null) {
-                    return method;
+                    methods.add(method);
                 }
             }
         }
-        return null;
+        return methods;
+    }
+
+    private static boolean checkHasMethodInvokes(
+            @NonNull List<DexBackedMethod> methods, @NonNull String descriptor) {
+        for (DexBackedMethod method : methods) {
+            if (checkMethodInvokes(method, descriptor)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean checkMethodInvokes(

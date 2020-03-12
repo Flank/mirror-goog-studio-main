@@ -46,7 +46,7 @@ import com.android.builder.core.VariantTypeImpl
  */
 abstract class AbstractVariantInputManager<
         DefaultConfigT : com.android.build.api.dsl.DefaultConfig<*>,
-        BuildTypeT : com.android.build.api.dsl.BuildType<*>,
+        BuildTypeT : com.android.build.api.dsl.BuildType<*, *>,
         ProductFlavorT : com.android.build.api.dsl.ProductFlavor<*>,
         SigningConfigT : com.android.build.api.dsl.SigningConfig>(
     private val variantType: VariantType,

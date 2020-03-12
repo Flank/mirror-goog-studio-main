@@ -27,13 +27,11 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MER
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.mergeManifestsForApplication
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -161,11 +159,10 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                 if (params.aaptFriendlyManifestOutputFile != null) params.aaptFriendlyManifestOutputFile.absolutePath else null,
                 null /* outInstantRunManifestLocation */,
                 null,  /*outMetadataFeatureManifestLocation */
-                null /* outInstantAppManifestLocation */,
-                ManifestMerger2.MergeType.LIBRARY,
+                ManifestMerger2.MergeType.LIBRARY /* outInstantAppManifestLocation */,
                 params.manifestPlaceholders,
-                optionalFeatures, emptyList(),
-                params.reportFile,
+                optionalFeatures,
+                emptyList(), params.reportFile,
                 LoggerWrapper.getLogger(ProcessLibraryManifest::class.java)
             )
             val mergedXmlDocument =

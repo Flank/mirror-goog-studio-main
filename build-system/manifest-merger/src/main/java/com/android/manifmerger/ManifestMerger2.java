@@ -62,7 +62,6 @@ import java.util.stream.Collectors;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -73,6 +72,9 @@ import org.w3c.dom.NodeList;
  */
 @Immutable
 public class ManifestMerger2 {
+
+    public static final String COMPATIBLE_SCREENS_SUB_MANIFEST = "Compatible-Screens sub-manifest";
+    public static final String WEAR_APP_SUB_MANIFEST = "Wear App sub-manifest";
 
     static final String BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER =
             "com.android.tools.ir.server.InstantRunContentProvider";
@@ -204,10 +206,12 @@ public class ManifestMerger2 {
                                 ? mainPackageAttribute.get().getValue()
                                 : null);
 
-        if (mOptionalFeatures.contains(Invoker.Feature.ENFORCE_UNIQUE_PACKAGE_NAME)) {
-            checkUniquePackageName(
-                    loadedMainManifestInfo, loadedLibraryDocuments, mergingReportBuilder);
-        }
+        // make sure each module/library has a unique package name
+        checkUniquePackageName(
+                loadedMainManifestInfo,
+                loadedLibraryDocuments,
+                mergingReportBuilder,
+                mOptionalFeatures.contains(Invoker.Feature.ENFORCE_UNIQUE_PACKAGE_NAME));
 
         // perform system property injection
         performSystemPropertiesInjection(mergingReportBuilder,
@@ -565,6 +569,9 @@ public class ManifestMerger2 {
             addFeatureSplitAttribute(document, mFeatureName);
         }
 
+        mergingReport.setMergedDocument(
+                MergingReport.MergedManifestKind.INTERNAL_MERGED, prettyPrint(document));
+
         if (!mFeatureName.isEmpty()) {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
         }
@@ -637,8 +644,6 @@ public class ManifestMerger2 {
             adjustInstantAppFeatureSplitInfo(document, mFeatureName, true);
         }
 
-        mergingReport.setMergedDocument(
-                MergingReport.MergedManifestKind.BUNDLE, prettyPrint(document));
         if (mOptionalFeatures.contains(Invoker.Feature.CREATE_FEATURE_MANIFEST)) {
             // feature manifest should be added based on the bundle manifest for merging.
             createStrippedFeatureManifest(document, mergingReport);
@@ -953,52 +958,6 @@ public class ManifestMerger2 {
     }
 
     /**
-     * Sets the element's attribute value to True.
-     * @param element the xml element which attribute should be mutated.
-     * @param attributeName the android namespace attribute name.
-     */
-    private static void setAttributeToTrue(Element element, String attributeName) {
-
-        Attr enabledAttribute = element.getAttributeNodeNS(
-                SdkConstants.ANDROID_URI, attributeName);
-
-        // force it to be true.
-        if (enabledAttribute != null) {
-            element.setAttributeNS(
-                    SdkConstants.ANDROID_URI,
-                    enabledAttribute.getName(),
-                    SdkConstants.VALUE_TRUE);
-        }
-    }
-
-    /**
-     * Adds a provider element as a child of the document's application element, as shown here:
-     * <provider android:name="com.android.tools.ir.server.InstantRunContentProvider"
-     * android:authorities="com.android.tools.ir.server.InstantRunContentProvider"
-     * android:multiprocess="true" />
-     *
-     * @param document the document to add the provider element to
-     * @param application the application element to add the provider element to
-     */
-    private static void addIrContentProvider(
-            @NonNull Document document, @NonNull Element application) {
-        Element cp = document.createElement(SdkConstants.TAG_PROVIDER);
-        setAndroidAttribute(cp, SdkConstants.ATTR_NAME, BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER);
-        // Qualify authority as unique so that multiple IR app packages installed on a single
-        // device do not conflict.
-        String pkg = document.getDocumentElement().getAttribute(SdkConstants.ATTR_PACKAGE);
-        if (pkg == null) {
-            throw new RuntimeException("no package name set");
-        }
-        setAndroidAttribute(cp, SdkConstants.ATTR_AUTHORITIES, pkg + "." +
-                            BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER);
-        // Multiprocess so we start in every process and decide on our own how to handle
-        // having multiple processes
-        setAndroidAttribute(cp, SdkConstants.ATTR_MULTIPROCESS, SdkConstants.VALUE_TRUE);
-        application.appendChild(cp);
-    }
-
-    /**
      * Remove an Android-namespaced XML attribute on the given node.
      *
      * @param node Node in which to remove the attribute; must be part of a document
@@ -1017,7 +976,7 @@ public class ManifestMerger2 {
      * @param localName Non-prefixed attribute name
      * @param value value of the attribute
      */
-    private static void setAndroidAttribute(Element node, String localName, String value) {
+    public static void setAndroidAttribute(Element node, String localName, String value) {
         String prefix =
                 XmlUtils.lookupNamespacePrefix(
                         node, SdkConstants.ANDROID_URI, SdkConstants.ANDROID_NS_NAME, true);
@@ -1046,7 +1005,7 @@ public class ManifestMerger2 {
      * @return the list (possibly empty) of children elements with the given name
      */
     @NonNull
-    private static ImmutableList<Element> getChildElementsByName(
+    public static ImmutableList<Element> getChildElementsByName(
             @NonNull Element element, @NonNull String name) {
         ImmutableList.Builder<Element> childListBuilder = ImmutableList.builder();
         NodeList childNodes = element.getChildNodes();
@@ -1419,10 +1378,15 @@ public class ManifestMerger2 {
         return loadedLibraryDocuments.build();
     }
 
+    /**
+     * Checks whether all manifests have unique package names. If the strict mode is enabled it will
+     * result in an error for name collisions, otherwise it will result in a warning.
+     */
     private void checkUniquePackageName(
             @NonNull LoadedManifestInfo mainPackage,
             @NonNull List<LoadedManifestInfo> libraries,
-            @NonNull MergingReport.Builder mergingReportBuilder) {
+            @NonNull MergingReport.Builder mergingReportBuilder,
+            boolean strictUniquePackageNameCheck) {
         Multimap<String, LoadedManifestInfo> uniquePackageNameMap = ArrayListMultimap.create();
 
         // Is main manifest is a Overlay we need to fallback.
@@ -1437,16 +1401,12 @@ public class ManifestMerger2 {
                 .filter(l -> l.getOriginalPackageName().isPresent())
                 .forEach(l -> uniquePackageNameMap.put(l.getOriginalPackageName().get(), l));
 
-        uniquePackageNameMap
-                .asMap()
-                .entrySet()
-                .stream()
+        uniquePackageNameMap.asMap().entrySet().stream()
                 .filter(e -> e.getValue().size() > 1)
                 .forEach(
                         e -> {
                             Collection<String> offendingTargets =
-                                    e.getValue()
-                                            .stream()
+                                    e.getValue().stream()
                                             .map(i -> i.getName())
                                             .collect(Collectors.toList());
                             String repeatedPackageErrors =
@@ -1461,7 +1421,9 @@ public class ManifestMerger2 {
                             // to all manifests with the repeated package name.
                             mergingReportBuilder.addMessage(
                                     info.getXmlDocument().getSourceFile(),
-                                    MergingReport.Record.Severity.ERROR,
+                                    strictUniquePackageNameCheck
+                                            ? MergingReport.Record.Severity.ERROR
+                                            : MergingReport.Record.Severity.WARNING,
                                     repeatedPackageErrors);
                         });
     }
@@ -2158,7 +2120,7 @@ public class ManifestMerger2 {
      * Implementation a {@link com.android.manifmerger.KeyResolver} capable of resolving all
      * selectors value in the context of the passed libraries to this merging activities.
      */
-    static class SelectorResolver implements KeyResolver<String> {
+    public static class SelectorResolver implements KeyResolver<String> {
 
         private final Map<String, String> mSelectors = new HashMap<String, String>();
 

@@ -34,7 +34,6 @@ service CpuService {
 
   // Starts collecting execution metrics of a running app, such as usage info
   // and thread states. Does nothing if the app is already being monitored.
-  // TODO(b/29258733): Support configuring sampling details.
   rpc StartMonitoringApp(CpuStartRequest) returns (CpuStartResponse) {
   }
 

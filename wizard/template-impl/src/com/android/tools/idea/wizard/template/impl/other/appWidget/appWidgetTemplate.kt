@@ -35,22 +35,21 @@ import com.android.tools.idea.wizard.template.stringParameter
 import com.android.tools.idea.wizard.template.template
 import java.io.File
 
-@Suppress("EnumEntryName", "Unused")
 enum class Placement {
-  both,
-  homescreen,
-  keyguard
+  Both,
+  Homescreen,
+  Keyguard
 }
 
-@Suppress("EnumEntryName", "Unused")
-enum class Resizeable {
-  both,
-  horizontal,
-  vertical,
-  none
+// suffix is used to generate file name for thumb loading
+enum class Resizeable(val suffix: String) {
+  Both("vh"),
+  Horizontal("h"),
+  Vertical("v"),
+  None("")
 }
 
-@Suppress("EnumEntryName", "Unused")
+@Suppress("EnumEntryName")
 enum class MinimumCells {
   `1`,
   `2`,
@@ -79,13 +78,13 @@ val appWidgetTemplate
 
     val placement = enumParameter<Placement> {
       name = "Placement"
-      default = Placement.homescreen
+      default = Placement.Homescreen
       help = "Make the widget available on the Home-screen and/or on the Keyguard. Keyguard placement is only supported in Android 4.2 and above; this setting is ignored on earlier versions and defaults to Home-screen.>"
     }
 
     val resizable = enumParameter<Resizeable> {
       name = "Resizable"
-      default = Resizeable.both
+      default = Resizeable.Both
       help = "Allow the user to resize the widget. Feature only available on Android 3.1 and above.>"
     }
 
@@ -105,8 +104,9 @@ val appWidgetTemplate
       help = "Generates a widget configuration activity"
     }
 
-    // TODO: Change the thumbnail based on the minWidth and minHeight selection
-    thumb { File("template_widget_3x3_vh.png") }
+    thumb {
+      File("template_widget_" + minWidth.value.name + "x" + minHeight.value.name + "_" + resizable.value.suffix + ".png")
+    }
 
     widgets(
       TextFieldWidget(className),

@@ -17,6 +17,8 @@ package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.internal.ClientImpl;
+import com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler;
+import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.jdwp.JdwpAgent;
 import com.android.ddmlib.jdwp.JdwpExtension;
 import com.android.ddmlib.jdwp.JdwpInterceptor;
@@ -85,7 +87,7 @@ public class DdmJdwpExtension extends JdwpExtension {
         }
     }
 
-    void ddmSeen(@NonNull ClientImpl client) {
+    public void ddmSeen(@NonNull ClientImpl client) {
         // on first DDM packet received, broadcast a "ready" message
         if (!client.ddmSeen()) {
             broadcast(Event.CLIENT_READY, client);
