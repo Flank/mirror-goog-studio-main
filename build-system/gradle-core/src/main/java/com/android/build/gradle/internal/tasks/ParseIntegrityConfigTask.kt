@@ -97,8 +97,9 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
         }
 
         private fun storeProto(configProto: AppIntegrityConfig, output: File) {
-            val outputStream = Files.newOutputStream(output.toPath())
-            configProto.writeTo(outputStream)
+            Files.newOutputStream(output.toPath()).use { outputStream ->
+                configProto.writeTo(outputStream)
+            }
         }
 
     }

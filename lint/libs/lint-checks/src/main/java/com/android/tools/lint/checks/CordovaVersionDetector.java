@@ -15,6 +15,8 @@
  */
 package com.android.tools.lint.checks;
 
+import static java.nio.file.Files.walkFileTree;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.ide.common.repository.GradleVersion;
@@ -31,13 +33,16 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.base.Charsets;
+import com.google.common.io.CharSource;
 import com.google.common.io.Files;
 import com.google.common.io.LineProcessor;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -98,7 +103,7 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
      * The cordova version is similar to a dewey decimal like system used by {@link GradleVersion}
      * except for the named qualifiers.
      */
-    private GradleVersion mCordovaVersion;
+    private GradleVersion cordovaVersion;
 
     @Override
     public void afterCheckRootProject(@NonNull Context context) {
@@ -106,56 +111,55 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
     }
 
     private void checkAssetsFolder(@NonNull Context context) {
+        if (cordovaVersion != null) {
+            // Already checked
+            return;
+        }
         if (!context.getProject().getReportIssues()) {
             // If this is a library project not being analyzed, ignore it
             return;
         }
         Project project = context.getProject();
         List<File> assetFolders = project.getAssetFolders();
-        Deque<File> files = new ArrayDeque<>();
-        for (File assetFolder : assetFolders) {
-            // The js file could be at an arbitrary level in the directory tree.
-            // examples:
-            // assets/www/cordova.js
-            // assets/www/plugins/phonegap/cordova.js.2.2.android
-            files.push(assetFolder);
-            while (!files.isEmpty() && mCordovaVersion == null) {
-                File current = files.pop();
-                if (current.isDirectory()) {
-                    File[] filtered = current.listFiles(CORDOVA_JS_FILTER);
-                    if (filtered != null) {
-                        for (File file : filtered) {
-                            files.push(file);
-                        }
-                    }
-                } else {
-                    checkFile(context, current);
-                }
-            }
-            files.clear();
-        }
-    }
 
-    private void checkFile(@NonNull Context context, @NonNull File file) {
-        if (mCordovaVersion == null
-                && file.getPath().contains(CORDOVA_DOT_JS)
-                && file.getName().startsWith(CORDOVA_DOT_JS)) {
+        // The js file could be at an arbitrary level in the directory tree.
+        // examples:
+        // assets/www/cordova.js
+        // assets/www/plugins/phonegap/cordova.js.2.2.android
+        for (File assetFolder : assetFolders) {
+            Path start = assetFolder.toPath();
             try {
-                mCordovaVersion =
-                        Files.readLines(file, Charsets.UTF_8, new JsVersionLineProcessor());
-                if (mCordovaVersion != null) {
-                    validateCordovaVersion(context, mCordovaVersion, Location.create(file));
-                }
+                walkFileTree(
+                        start,
+                        new SimpleFileVisitor<Path>() {
+                            @Override
+                            public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
+                                    throws IOException {
+                                if (path.getFileName().toString().startsWith(CORDOVA_DOT_JS)) {
+                                    File file = path.toFile();
+                                    CharSource source = Files.asCharSource(file, Charsets.UTF_8);
+                                    cordovaVersion = source.readLines(new JsVersionLineProcessor());
+                                    if (cordovaVersion != null) {
+                                        validateCordovaVersion(
+                                                context, cordovaVersion, Location.create(file));
+                                    }
+                                    return FileVisitResult.TERMINATE;
+                                }
+                                return FileVisitResult.CONTINUE;
+                            }
+                        });
             } catch (IOException ignore) {
-                // Ignore this exception.
+                // ignore
             }
         }
     }
 
     private static void validateCordovaVersion(
             @NonNull Context context, @NonNull GradleVersion cordovaVersion, Location location) {
-        // All cordova versions below 4.1.1 are considered vulnerable.
-        if (!cordovaVersion.isAtLeast(4, 1, 1)) {
+        // See
+        // https://www.cvedetails.com/vulnerability-list/vendor_id-45/product_id-27153/Apache-Cordova.html
+        // See https://cordova.apache.org/announcements/2015/11/20/security.html
+        if (!cordovaVersion.isAtLeast(6, 1, 2)) {
             String message =
                     String.format(
                             "You are using a vulnerable version of Cordova: %1$s",
@@ -169,7 +173,7 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
     @Override
     public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
         //noinspection VariableNotUsedInsideIf
-        if (mCordovaVersion != null) {
+        if (cordovaVersion != null) {
             // Exit early if we have already found the cordova version in the JS file.
             // This will be the case for all versions > 3.x.x
             return;
@@ -216,10 +220,10 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
                         && (node.access & Opcodes.ACC_FINAL) == Opcodes.ACC_FINAL // is final
                         && (node.access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC // is static
                         && node.value instanceof String) {
-                    mCordovaVersion = createVersion((String) node.value);
-                    if (mCordovaVersion != null) {
+                    cordovaVersion = createVersion((String) node.value);
+                    if (cordovaVersion != null) {
                         validateCordovaVersion(
-                                context, mCordovaVersion, context.getLocation(classNode));
+                                context, cordovaVersion, context.getLocation(classNode));
                     }
                 }
             }
@@ -239,10 +243,9 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
             }
             LdcInsnNode ldcInsnNode = (LdcInsnNode) prevInstruction;
             if (ldcInsnNode.cst instanceof String) {
-                mCordovaVersion = createVersion((String) ldcInsnNode.cst);
-                if (mCordovaVersion != null) {
-                    validateCordovaVersion(
-                            context, mCordovaVersion, context.getLocation(classNode));
+                cordovaVersion = createVersion((String) ldcInsnNode.cst);
+                if (cordovaVersion != null) {
+                    validateCordovaVersion(context, cordovaVersion, context.getLocation(classNode));
                 }
             }
         }
@@ -272,11 +275,14 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
         private GradleVersion mVersion;
 
         @Override
-        public boolean processLine(@NonNull String line) throws IOException {
-            Matcher matcher = PATTERN.matcher(line);
-            if (matcher.matches()) {
-                mVersion = GradleVersion.tryParse(matcher.group(2));
-                return false; // stop processing other lines.
+        public boolean processLine(@NonNull String line) {
+            if (line.contains("PLATFORM_VERSION_BUILD_LABEL")
+                    || line.contains("CORDOVA_JS_BUILD_LABEL")) {
+                Matcher matcher = PATTERN.matcher(line);
+                if (matcher.matches()) {
+                    mVersion = GradleVersion.tryParse(matcher.group(2));
+                    return false; // stop processing other lines.
+                }
             }
             return true;
         }

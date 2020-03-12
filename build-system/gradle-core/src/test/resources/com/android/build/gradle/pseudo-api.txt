@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-fffa7f2111924b29ab757cb1099ab432093214d7e6879576d409288ad208e926
+0b3f2052cf8eece784dc372f92617f1bd06b33523f821d8936e30099fd236529
 -------------------------------------------------------------------------
 com.android.build.gradle.AbstractAppExtension extends com.android.build.gradle.TestedExtension
 com.android.build.gradle.AbstractAppExtension.<init>: com.android.build.gradle.AbstractAppExtension (com.android.build.gradle.internal.api.dsl.DslScope, com.android.build.gradle.options.ProjectOptions, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, boolean)
@@ -142,6 +142,7 @@ com.android.build.gradle.BaseExtension.setNdkVersion: void (java.lang.String)
 com.android.build.gradle.BaseExtension.setPublishNonDefault: void (boolean)
 com.android.build.gradle.BaseExtension.setVariantFilter: void (org.gradle.api.Action<com.android.build.api.variant.VariantFilter>)
 com.android.build.gradle.BaseExtension.signingConfigs: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.internal.dsl.SigningConfig>>)
+com.android.build.gradle.BaseExtension.sourceSets: void (kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.AndroidSourceSet>, kotlin.Unit>)
 com.android.build.gradle.BaseExtension.sourceSets: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.AndroidSourceSet>>)
 com.android.build.gradle.BaseExtension.splits: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.Splits>)
 com.android.build.gradle.BaseExtension.testOptions: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.TestOptions>)

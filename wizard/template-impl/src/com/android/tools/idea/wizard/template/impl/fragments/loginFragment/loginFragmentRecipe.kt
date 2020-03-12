@@ -127,6 +127,6 @@ fun RecipeExecutor.loginFragmentRecipe(
   }
   save(loggedInUserView, srcOut.resolve("ui/login/LoggedInUserView.${ktOrJavaExt}"))
 
-  open(srcOut.resolve("${fragmentClass}.${ktOrJavaExt}"))
+  open(srcOut.resolve("ui/login/${fragmentClass}.${ktOrJavaExt}"))
   open(resOut.resolve("layout/${layoutName}.xml"))
 }

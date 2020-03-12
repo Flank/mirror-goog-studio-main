@@ -71,6 +71,9 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
                             Severity.ERROR,
                             new Implementation(
                                     InvalidPackageDetector.class, Scope.JAVA_LIBRARY_SCOPE))
+                    // This detector is slow and in practice not finding a lot of
+                    // relevant issues anymore
+                    .setEnabledByDefault(false)
                     .setAndroidSpecific(true);
 
     private static final String JAVA_PKG_PREFIX = "java/";

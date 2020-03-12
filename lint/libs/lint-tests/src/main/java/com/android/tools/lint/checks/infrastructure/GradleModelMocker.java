@@ -57,6 +57,7 @@ import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeLintOptions;
+import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
@@ -515,7 +516,7 @@ public class GradleModelMocker {
                 GraphItem item = mock(GraphItem.class);
                 result.add(item);
                 when(item.getArtifactAddress()).thenReturn(name);
-                when(item.getRequestedCoordinates()).thenReturn(name);
+                when(item.getRequestedCoordinates()).thenThrow(UnusedModelMethodException.class);
                 when(item.getDependencies()).thenReturn(Lists.newArrayList());
 
                 if (library instanceof AndroidLibrary) {
@@ -1692,7 +1693,7 @@ public class GradleModelMocker {
         when(mavenCoordinates.toString()).thenReturn(coordinateString);
 
         AndroidLibrary library = mock(AndroidLibrary.class);
-        when(library.getRequestedCoordinates()).thenReturn(mavenCoordinates);
+        when(library.getRequestedCoordinates()).thenThrow(UnusedModelMethodException.class);
         if (promotedTo != null) {
             mavenCoordinates = mock(MavenCoordinates.class);
             when(mavenCoordinates.getGroupId()).thenReturn(coordinate.getGroupId());
@@ -1765,7 +1766,7 @@ public class GradleModelMocker {
         when(mavenCoordinates.toString()).thenReturn(coordinateString);
 
         JavaLibrary library = mock(JavaLibrary.class);
-        when(library.getRequestedCoordinates()).thenReturn(mavenCoordinates);
+        when(library.getRequestedCoordinates()).thenThrow(UnusedModelMethodException.class);
         if (promotedTo != null) {
             mavenCoordinates = mock(MavenCoordinates.class);
             when(mavenCoordinates.getGroupId()).thenReturn(coordinate.getGroupId());

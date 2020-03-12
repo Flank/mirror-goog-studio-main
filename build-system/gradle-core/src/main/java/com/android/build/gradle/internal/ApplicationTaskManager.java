@@ -76,6 +76,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.VariantType;
+import com.android.builder.errors.IssueReporter;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -538,7 +539,10 @@ public class ApplicationTaskManager extends TaskManager {
         }
 
         if (!notFound.isEmpty()) {
-            getLogger().error("Unable to find matching projects for Asset Packs: " + notFound);
+            globalScope.getDslScope().getIssueReporter().reportError(
+                IssueReporter.Type.GENERIC,
+                "Unable to find matching projects for Asset Packs: " + notFound
+            );
         }
     }
 }

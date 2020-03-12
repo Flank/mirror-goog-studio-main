@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import java.io.File
 import java.io.Serializable
@@ -46,7 +47,9 @@ abstract class AssetPackManifestGenerationTask : NonIncrementalTask() {
      * The dynamic delivery type that will be used for the asset pack in an instant app context.
      * The valid options are fast-follow or on-demand.
      */
-    @get:Input abstract val instantDeliveryType: Property<String>
+    @get:Input
+    @get:Optional
+    abstract val instantDeliveryType: Property<String>
 
     override val enableGradleWorkers: Property<Boolean> = project.objects.property(Boolean::class.java).value(true)
 
@@ -58,7 +61,7 @@ abstract class AssetPackManifestGenerationTask : NonIncrementalTask() {
                     manifestFile = manifestFile.get().asFile,
                     packName = packName.get(),
                     deliveryType = deliveryType.get(),
-                    instantDeliveryType = instantDeliveryType.get()
+                    instantDeliveryType = instantDeliveryType.orNull
                 )
             )
         }
@@ -67,8 +70,8 @@ abstract class AssetPackManifestGenerationTask : NonIncrementalTask() {
 
 class AssetPackManifestGenerationRunnable @Inject constructor(private val params: Params) : Runnable {
     override fun run() {
-        params.manifestFile.writeText(
-            "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" "
+        var manifestText =
+            ("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" "
                     + "xmlns:dist=\"http://schemas.android.com/apk/distribution\" "
                     + "package=\"basePackage\" " // Currently filled in by a different task.
                     + "split=\"${params.packName}\">\n"
@@ -76,18 +79,22 @@ class AssetPackManifestGenerationRunnable @Inject constructor(private val params
                     + "    <dist:fusing dist:include=\"true\" />"
                     + "    <dist:delivery>\n"
                     + "      <dist:${params.deliveryType}/>\n"
-                    + "    </dist:delivery>\n"
-                    + "    <dist:instantDelivery>\n"
-                    + "      <dist:${params.instantDeliveryType}/>\n"
-                    + "    </dist:instantDelivery>\n"
-                    + "  </dist:module>\n"
-                    + "</manifest>\n") //TODO(b/147242421): build this in chunks in case instant delivery is not set.
+                    + "    </dist:delivery>\n")
+        if (params.instantDeliveryType != null) {
+            manifestText +=
+                ("    <dist:instantDelivery>\n"
+                 +"      <dist:${params.instantDeliveryType}/>\n"
+                 +"    </dist:instantDelivery>\n")
+        }
+        manifestText += ("  </dist:module>\n"
+                    + "</manifest>\n")
+        params.manifestFile.writeText(manifestText)
     }
 
     class Params(
         val manifestFile: File,
         val packName: String,
         val deliveryType: String,
-        val instantDeliveryType: String
+        val instantDeliveryType: String?
     ) : Serializable
 }

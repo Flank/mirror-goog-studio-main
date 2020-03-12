@@ -26,7 +26,7 @@ import org.gradle.api.attributes.Attribute
  */
 interface BuildTypeAttr : org.gradle.api.Named {
     companion object {
-        @JvmStatic
+        @JvmField
         val ATTRIBUTE: Attribute<BuildTypeAttr> = Attribute.of(BuildTypeAttr::class.java)
     }
 }

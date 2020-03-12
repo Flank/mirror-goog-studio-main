@@ -488,7 +488,7 @@ public class Main {
                     @Override
                     protected boolean addBootClassPath(
                             @NonNull Collection<? extends Project> knownProjects,
-                            @NonNull List<File> files) {
+                            @NonNull Set<File> files) {
                         if (metadata != null && !metadata.getJdkBootClasspath().isEmpty()) {
                             boolean isAndroid = false;
                             for (Project project : knownProjects) {

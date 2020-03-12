@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.AndroidProjectTypes;
 import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.build.api.artifact.PublicArtifactType;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.ComponentIdentityImpl;
@@ -41,6 +42,7 @@ import com.android.build.gradle.internal.fixtures.FakeGradleDirectory;
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider;
 import com.android.build.gradle.internal.fixtures.FakeLogger;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -233,6 +235,43 @@ public class ModelBuilderTest {
         assertThat(buildOutput.getOutputFile().exists()).isTrue();
         assertThat(Files.readFirstLine(buildOutput.getOutputFile(), Charsets.UTF_8))
                 .isEqualTo("some apk");
+    }
+
+    @Test
+    public void testNewCodeWithOldBuildElementsFileFormat() throws IOException {
+
+        VariantDslInfo variantDslInfo = Mockito.mock(VariantDslInfo.class);
+        when(variantDslInfo.getDirName()).thenReturn("variant/name");
+        when(variantDslInfo.getVariantType()).thenReturn(VariantTypeImpl.BASE_APK);
+
+        VariantScope variantScope =
+                createVariantScope("variantName", "variant/name", variantDslInfo);
+        createVariantData(variantScope, variantDslInfo);
+
+        when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
+
+        File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
+        File apkOutput = new File(variantOutputFolder, "main.apk");
+        Files.createParentDirs(apkOutput);
+        Files.asCharSink(apkOutput, Charsets.UTF_8).write("some apk");
+
+        OutputFactory outputFactory = new OutputFactory(PROJECT, variantDslInfo);
+
+        new BuildElements(
+                        BuildElements.METADATA_FILE_VERSION,
+                        "com.android.test",
+                        "debug",
+                        ImmutableList.of(
+                                new BuildOutput(
+                                        PublicArtifactType.APK.INSTANCE,
+                                        ApkData.of(
+                                                VariantOutput.OutputType.MAIN,
+                                                ImmutableList.of(),
+                                                123),
+                                        apkOutput)))
+                .save(variantOutputFolder);
+
+        ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
     }
 
     @Test

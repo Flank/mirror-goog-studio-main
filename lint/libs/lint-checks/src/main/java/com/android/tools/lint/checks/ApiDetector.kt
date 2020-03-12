@@ -1652,11 +1652,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val initializerType = initializer.getExpressionType() as? PsiClassType ?: return
 
             val interfaceType = node.type
-            if (initializerType == interfaceType) {
+
+            if (interfaceType !is PsiClassType) {
                 return
             }
 
-            if (interfaceType !is PsiClassType) {
+            if (initializerType == interfaceType) {
                 return
             }
 
@@ -1670,11 +1671,11 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 val rhsType = rExpression.getExpressionType() as? PsiClassType ?: return
 
                 val interfaceType = node.leftOperand.getExpressionType()
-                if (rhsType == interfaceType) {
+                if (interfaceType !is PsiClassType) {
                     return
                 }
 
-                if (interfaceType !is PsiClassType) {
+                if (rhsType == interfaceType) {
                     return
                 }
 

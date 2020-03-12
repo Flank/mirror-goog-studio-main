@@ -30,8 +30,10 @@ import static org.jf.dexlib2.Opcode.INVOKE_VIRTUAL_RANGE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.collect.Lists;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -112,47 +114,85 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
 
     public void hasMethodThatInvokes(@NonNull String name, String descriptor) {
         assertSubjectIsNonNull();
+        hasMethod(name);
+        List<DexBackedMethod> methods = findMethodWithImplementation(name);
+        if (methods.isEmpty()) {
+            fail("contains an implementation for a method named `" + name + "`");
+            return;
+        }
+        if (!checkHasMethodInvokes(methods, descriptor)) {
+            fail("invokes a method with the descriptor `" + descriptor + "` from `" + name + "`");
+        }
+    }
+
+    public void hasMethodThatDoesNotInvoke(@NonNull String name, String descriptor) {
+        assertSubjectIsNonNull();
+        hasMethod(name);
+        List<DexBackedMethod> methods = findMethodWithImplementation(name);
+        if (methods.isEmpty()) {
+            fail("contains an implementation for a method named `" + name + "`");
+            return;
+        }
+        if (checkHasMethodInvokes(methods, descriptor)) {
+            fail(
+                    "does not invoke a method with the descriptor `"
+                            + descriptor
+                            + "` from `"
+                            + name
+                            + "`");
+        }
+    }
+
+    @NonNull
+    private List<DexBackedMethod> findMethodWithImplementation(@NonNull String name) {
+        List methods = Lists.newArrayList();
         for (DexBackedMethod method : actual().getMethods()) {
             if (method.getName().equals(name)) {
-                if (method.getImplementation() == null) {
-                    fail("contains an implementation for a method named `" + name + "`");
-                    return;
+                if (method.getImplementation() != null) {
+                    methods.add(method);
                 }
-                for (Instruction instruction : method.getImplementation().getInstructions()) {
-                    Opcode opcode = instruction.getOpcode();
-                    boolean isInvoke =
-                            opcode == INVOKE_VIRTUAL
-                                    || opcode == INVOKE_SUPER
-                                    || opcode == INVOKE_DIRECT
-                                    || opcode == INVOKE_STATIC
-                                    || opcode == INVOKE_INTERFACE;
-                    boolean isInvokeRange =
-                            opcode == INVOKE_VIRTUAL_RANGE
-                                    || opcode == INVOKE_SUPER_RANGE
-                                    || opcode == INVOKE_DIRECT_RANGE
-                                    || opcode == INVOKE_STATIC_RANGE
-                                    || opcode == INVOKE_INTERFACE_RANGE;
-                    if (isInvoke || isInvokeRange) {
-                        MethodReference reference =
-                                isInvoke
-                                        ? ((MethodReference)
-                                                ((Instruction35c) instruction).getReference())
-                                        : ((MethodReference)
-                                                ((Instruction3rc) instruction).getReference());
-                        if (reference.toString().equals(descriptor)) {
-                            return;
-                        }
-                    }
-                }
-                fail(
-                        "invokes a method with the descriptor `"
-                                + descriptor
-                                + "` from `"
-                                + name
-                                + "`");
             }
         }
-        fail("contains a method named `" + name + "`");
+        return methods;
+    }
+
+    private static boolean checkHasMethodInvokes(
+            @NonNull List<DexBackedMethod> methods, @NonNull String descriptor) {
+        for (DexBackedMethod method : methods) {
+            if (checkMethodInvokes(method, descriptor)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean checkMethodInvokes(
+            @NonNull DexBackedMethod method, @NonNull String descriptor) {
+        for (Instruction instruction : method.getImplementation().getInstructions()) {
+            Opcode opcode = instruction.getOpcode();
+            boolean isInvoke =
+                    opcode == INVOKE_VIRTUAL
+                            || opcode == INVOKE_SUPER
+                            || opcode == INVOKE_DIRECT
+                            || opcode == INVOKE_STATIC
+                            || opcode == INVOKE_INTERFACE;
+            boolean isInvokeRange =
+                    opcode == INVOKE_VIRTUAL_RANGE
+                            || opcode == INVOKE_SUPER_RANGE
+                            || opcode == INVOKE_DIRECT_RANGE
+                            || opcode == INVOKE_STATIC_RANGE
+                            || opcode == INVOKE_INTERFACE_RANGE;
+            if (isInvoke || isInvokeRange) {
+                MethodReference reference =
+                        isInvoke
+                                ? ((MethodReference) ((Instruction35c) instruction).getReference())
+                                : ((MethodReference) ((Instruction3rc) instruction).getReference());
+                if (reference.toString().equals(descriptor)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public void hasExactFields(@NonNull Set<String> names) {

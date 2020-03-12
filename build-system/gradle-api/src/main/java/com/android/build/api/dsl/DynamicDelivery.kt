@@ -27,7 +27,7 @@ interface DynamicDelivery {
      */
     val deliveryType: Property<String>
     /**
-     * Identifies the delivery type {fast-follow, on-demand}
+     * Identifies the delivery type {on-demand}
      * when the asset pack is used with an instant app.
      */
     val instantDeliveryType: Property<String>

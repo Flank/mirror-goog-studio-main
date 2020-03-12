@@ -565,7 +565,7 @@ public class VariantDependencies {
             applyVariantAttributes(attrContainer, buildType, publicationFlavorMap);
 
             if (variantNameAttr != null) {
-                attrContainer.attribute(VariantAttr.getATTRIBUTE(), variantNameAttr);
+                attrContainer.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
             }
 
             if (usage != null) {
@@ -664,7 +664,7 @@ public class VariantDependencies {
                 @NonNull String buildType,
                 @NonNull Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap) {
             attributeContainer.attribute(
-                    BuildTypeAttr.Companion.getATTRIBUTE(),
+                    BuildTypeAttr.ATTRIBUTE,
                     project.getObjects().named(BuildTypeAttr.class, buildType));
             for (Map.Entry<Attribute<ProductFlavorAttr>, ProductFlavorAttr> entry : flavorMap.entrySet()) {
                 attributeContainer.attribute(entry.getKey(), entry.getValue());

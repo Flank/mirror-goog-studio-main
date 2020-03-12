@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include <jni.h>
+#include <unistd.h>
 #include <sstream>
 #include "agent/agent.h"
 #include "agent/jni_wrappers.h"
@@ -73,6 +74,7 @@ Java_com_android_tools_agent_layoutinspector_Properties_sendPropertyEvent(
         auto *properties = inspector_event->mutable_properties();
         *properties = property_event;
         event->set_is_ended(true);
+        event->set_pid(getpid());
         event->set_kind(Event::LAYOUT_INSPECTOR);
         event->set_group_id(Event::PROPERTIES);
         EmptyResponse response;

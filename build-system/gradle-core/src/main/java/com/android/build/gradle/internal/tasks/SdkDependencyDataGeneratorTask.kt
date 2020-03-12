@@ -92,7 +92,9 @@ abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
       it.print("# List of SDK dependencies of this app, this information is also included in an"
         + " encrypted form in the APK.\n# For more information visit:"
         + " https://d.android.com/r/tools/dependency-metadata\n\n")
-      it.print(AppDependencies.parseFrom(FileInputStream(dependencies.get().asFile)).toString())
+      dependencies.get().asFile.inputStream().buffered().use { dependenciesInputStream ->
+        it.print(AppDependencies.parseFrom(dependenciesInputStream).toString())
+      }
     }
   }
 
