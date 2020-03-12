@@ -65,8 +65,7 @@ fun RecipeExecutor.masterDetailFlowRecipe(
   addDependency("com.android.support:recyclerview-v7:${appCompatVersion}.+")
   addDependency("com.android.support:design:${appCompatVersion}.+")
 
-  val baseFeatureResOut = moduleData.baseFeature?.resDir ?: resOut
-  generateThemeStyles(moduleData.themesData.main, moduleData.isDynamic, useMaterial2, resOut, baseFeatureResOut)
+  generateThemeStyles(moduleData.themesData.main, useMaterial2, moduleData.baseFeature?.resDir ?: resOut)
   mergeXml(androidManifestXml(
     collectionName, detailName, itemListLayout, detailNameLayout, isLauncher, moduleData.isLibrary, moduleData.isNewModule,
     packageName, moduleData.themesData.noActionBar.name),

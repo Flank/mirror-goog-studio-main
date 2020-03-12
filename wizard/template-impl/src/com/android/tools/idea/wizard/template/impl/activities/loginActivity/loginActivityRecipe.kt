@@ -69,12 +69,10 @@ fun RecipeExecutor.loginActivityRecipe(
   addDependency("com.android.support.constraint:constraint-layout:+")
   addLifecycleDependencies(useAndroidX)
 
-  val baseFeatureResOut = moduleData.baseFeature?.resDir ?: resOut
-  val isDynamicFeature = moduleData.baseFeature != null
+  val baseFeatureResOut = moduleData.baseFeature?.resDir
   val simpleName = activityToLayout(activityClass)
-  generateThemeStyles(moduleData.themesData.main, isDynamicFeature, useMaterial2, resOut, baseFeatureResOut)
-  generateManifestStrings(activityClass, activityClass, resOut, baseFeatureResOut, moduleData.isNewModule, generateActivityTitle = true,
-                          isDynamicFeature = isDynamicFeature)
+  generateThemeStyles(moduleData.themesData.main, useMaterial2, baseFeatureResOut ?: resOut)
+  generateManifestStrings(activityClass, activityClass, baseFeatureResOut ?: resOut, moduleData.isNewModule, generateActivityTitle = true)
   mergeXml(androidManifestXml(activityClass, simpleName,
                               isLauncher = moduleData.isNewModule, isLibrary = moduleData.isLibrary, isNewModule = moduleData.isNewModule),
            manifestOut.resolve("AndroidManifest.xml"))

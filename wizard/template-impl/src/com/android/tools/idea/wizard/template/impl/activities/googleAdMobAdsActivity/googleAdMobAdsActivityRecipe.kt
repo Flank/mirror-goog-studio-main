@@ -46,8 +46,7 @@ fun RecipeExecutor.googleAdMobAdsActivityRecipe(
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
-  val isDynamicFeature = moduleData.baseFeature != null
-  generateManifestStrings(activityClass, activityTitle, resOut, resOut, moduleData.isNewModule, true, isDynamicFeature)
+  generateManifestStrings(activityClass, activityTitle, moduleData.baseFeature?.resDir ?: resOut, moduleData.isNewModule, true)
   addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
   addDependency("com.google.android.gms:play-services-ads:+", toBase = moduleData.isDynamic)
 
