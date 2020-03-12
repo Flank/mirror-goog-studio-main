@@ -463,7 +463,7 @@ fun findNdkPath(
         return findNdkPathImpl(
             ndkVersionFromDsl,
             properties.getProperty(NDK_DIR_PROPERTY),
-            System.getenv("ANDROID_NDK_HOME"),
+            null, // ANDROID_NDK_HOME is no longer supported
             sdkPath,
             ::getNdkVersionedFolders,
             ::getNdkVersionInfo
