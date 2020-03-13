@@ -133,7 +133,7 @@ class NavGraphExpanderTest {
         val expectedXmlDocument =
                 TestUtils.xmlDocumentFromString(UNKNOWN, expectedOutputManifestString, model)
 
-        assertThat(expandedXmlDocument.compareTo(expectedXmlDocument)).isAbsent()
+        assertThat(expandedXmlDocument.prettyPrint()).isEqualTo(expectedXmlDocument.prettyPrint())
 
         // test that actions are recorded with final NodeKeys.
         // first make lists of the intent-filters' final NodeKeys (including descendant nodes).
@@ -391,7 +391,7 @@ class NavGraphExpanderTest {
         val expectedXmlDocument =
             TestUtils.xmlDocumentFromString(UNKNOWN, expectedOutputManifestString, model)
 
-        assertThat(expandedXmlDocument.compareTo(expectedXmlDocument)).isAbsent()
+        assertThat(expandedXmlDocument.prettyPrint()).isEqualTo(expectedXmlDocument.prettyPrint())
 
         // verify no error was recorded.
         Mockito.verify(mergingReportBuilder, never()).addMessage(
@@ -517,7 +517,7 @@ class NavGraphExpanderTest {
         val expectedXmlDocument =
             TestUtils.xmlDocumentFromString(UNKNOWN, expectedOutputManifestString, model)
 
-        assertThat(expandedXmlDocument.compareTo(expectedXmlDocument)).isAbsent()
+        assertThat(expandedXmlDocument.prettyPrint()).isEqualTo(expectedXmlDocument.prettyPrint())
 
         // verify no error was recorded.
         Mockito.verify(mergingReportBuilder, never()).addMessage(
@@ -602,7 +602,7 @@ class NavGraphExpanderTest {
         val expectedXmlDocument =
             TestUtils.xmlDocumentFromString(UNKNOWN, expectedOutputManifestString, model)
 
-        assertThat(expandedXmlDocument.compareTo(expectedXmlDocument)).isAbsent()
+        assertThat(expandedXmlDocument.prettyPrint()).isEqualTo(expectedXmlDocument.prettyPrint())
 
         // verify no error was recorded.
         Mockito.verify(mergingReportBuilder, never()).addMessage(

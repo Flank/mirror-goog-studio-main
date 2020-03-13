@@ -28,17 +28,15 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.testutils.MockLog;
-import com.google.common.base.Optional;
 import java.io.IOException;
+import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xml.sax.SAXException;
 
-/**
- * Tests for the {@link com.android.manifmerger.PlaceholderHandler}
- */
+/** Tests for the {@link PlaceholderHandler} */
 public class PlaceholderHandlerTest extends TestCase {
 
     private final ManifestModel mModel = new ManifestModel();

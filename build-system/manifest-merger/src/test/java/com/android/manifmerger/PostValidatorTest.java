@@ -21,10 +21,10 @@ import com.android.ide.common.blame.SourceFile;
 import com.android.utils.ILogger;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
@@ -36,9 +36,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-/**
- * Tests for the {@link com.android.manifmerger.PostValidator} class.
- */
+/** Tests for the {@link PostValidator} class. */
 public class PostValidatorTest extends TestCase {
 
     private ManifestModel mModel = new ManifestModel();

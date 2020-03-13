@@ -23,11 +23,11 @@ import com.android.ide.common.blame.SourceFile;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.testutils.MockLog;
 import com.android.utils.ILogger;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -44,9 +44,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-/**
- * Tests for {@link com.android.manifmerger.XmlDocument}
- */
+/** Tests for {@link XmlDocument} */
 public class XmlDocumentTest extends TestCase {
 
     private final ManifestModel mModel = new ManifestModel();
@@ -1180,7 +1178,7 @@ public class XmlDocumentTest extends TestCase {
                         TestUtils.sourceFile(getClass(), "overlay"),
                         overlay,
                         XmlDocument.Type.OVERLAY,
-                        Optional.of("com.example.lib3"),
+                        "com.example.lib3",
                         mModel);
         XmlDocument libraryDocument = loadXmlLib(TestUtils.sourceFile(getClass(), "main"), main);
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);

@@ -431,7 +431,7 @@ public class ManifestMerger2SmallTest {
                         + "    <activity android:name=\".activityOne\" android:label=\"${labelName}\"/>\n"
                         + "</manifest>";
 
-        Map<String, String> placeholders = ImmutableMap.of("labelName", "injectedLabelName");
+        Map<String, Object> placeholders = ImmutableMap.of("labelName", "injectedLabelName");
         MockLog mockLog = new MockLog();
         File inputFile = TestUtils.inputAsFile("testPlaceholderSubstitution", xml);
         try {

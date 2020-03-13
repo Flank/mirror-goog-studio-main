@@ -22,11 +22,11 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -67,10 +67,10 @@ public class PostValidator {
     }
 
     /**
-     * Enforces {@link com.android.SdkConstants#ANDROID_URI} declaration in the top level element.
-     * It is possible that the original manifest file did not contain any attribute declaration,
-     * therefore not requiring a xmlns: declaration. Yet the implicit elements handling may have
-     * added attributes requiring the namespace declaration.
+     * Enforces {@link SdkConstants#ANDROID_URI} declaration in the top level element. It is
+     * possible that the original manifest file did not contain any attribute declaration, therefore
+     * not requiring a xmlns: declaration. Yet the implicit elements handling may have added
+     * attributes requiring the namespace declaration.
      */
     private static void enforceAndroidNamespaceDeclaration(@NonNull XmlDocument xmlDocument) {
         final Element rootElement = xmlDocument.getRootNode().getXml();
@@ -79,10 +79,10 @@ public class PostValidator {
     }
 
     /**
-     * Enforces {@link com.android.SdkConstants#TOOLS_URI} declaration in the top level element, if
-     * necessary. It is possible that the original manifest file did not contain any attribute
-     * declaration, therefore not requiring a xmlns: declaration. Yet the implicit elements handling
-     * may have added attributes requiring the namespace declaration.
+     * Enforces {@link SdkConstants#TOOLS_URI} declaration in the top level element, if necessary.
+     * It is possible that the original manifest file did not contain any attribute declaration,
+     * therefore not requiring a xmlns: declaration. Yet the implicit elements handling may have
+     * added attributes requiring the namespace declaration.
      */
     protected static void enforceToolsNamespaceDeclaration(@NonNull XmlDocument xmlDocument) {
         final Element rootElement = xmlDocument.getRootNode().getXml();
@@ -366,13 +366,13 @@ public class PostValidator {
     }
 
     /**
-     * Check in our list of applied actions that a particular
-     * {@link com.android.manifmerger.Actions.ActionType} action was recorded on the passed element.
+     * Check in our list of applied actions that a particular {@link ActionType} action was recorded
+     * on the passed element.
+     *
      * @return true if it was applied, false otherwise.
      */
-    private static boolean isNodeOperationPresent(@NonNull XmlElement xmlElement,
-            @NonNull Actions actions,
-            ActionType action) {
+    private static boolean isNodeOperationPresent(
+            @NonNull XmlElement xmlElement, @NonNull Actions actions, ActionType action) {
 
         for (Actions.NodeRecord nodeRecord : actions.getNodeRecords(xmlElement.getId())) {
             if (nodeRecord.getActionType() == action) {
@@ -383,11 +383,13 @@ public class PostValidator {
     }
 
     /**
-     * Check in our list of attribute actions that a particular
-     * {@link com.android.manifmerger.Actions.ActionType} action was recorded on the passed element.
+     * Check in our list of attribute actions that a particular {@link ActionType} action was
+     * recorded on the passed element.
+     *
      * @return true if it was applied, false otherwise.
      */
-    private static boolean isAttributeOperationPresent(@NonNull XmlElement xmlElement,
+    private static boolean isAttributeOperationPresent(
+            @NonNull XmlElement xmlElement,
             @NonNull Map.Entry<XmlNode.NodeName, AttributeOperationType> attributeOperation,
             @NonNull Actions actions,
             ActionType action) {
@@ -402,14 +404,14 @@ public class PostValidator {
     }
 
     /**
-     * Validates all {@link com.android.manifmerger.XmlElement} attributes belonging to the
-     * {@link com.android.SdkConstants#ANDROID_URI} namespace.
+     * Validates all {@link XmlElement} attributes belonging to the {@link SdkConstants#ANDROID_URI}
+     * namespace.
      *
      * @param xmlElement xml element to check the attributes from.
      * @param mergingReport report for errors and warnings.
      */
-    private static void validateAndroidAttributes(@NonNull XmlElement xmlElement,
-            @NonNull MergingReport.Builder mergingReport) {
+    private static void validateAndroidAttributes(
+            @NonNull XmlElement xmlElement, @NonNull MergingReport.Builder mergingReport) {
 
         for (XmlAttribute xmlAttribute : xmlElement.getAttributes()) {
             if (xmlAttribute.getModel() != null) {

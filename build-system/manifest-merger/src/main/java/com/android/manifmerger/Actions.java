@@ -25,7 +25,6 @@ import com.android.ide.common.blame.SourceFilePosition;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -125,8 +124,9 @@ public class Actions {
 
     /**
      * Dump merging tool actions to a text file.
+     *
      * @param fileWriter the file to write all actions into.
-     * @throws IOException
+     * @throws IOException when logging failed.
      */
     void log(@NonNull FileWriter fileWriter) throws IOException {
         fileWriter.append(getLogs());
@@ -299,7 +299,7 @@ public class Actions {
     }
 
     @NonNull
-    public String persist() throws IOException  {
+    public String persist() {
         //noinspection SpellCheckingInspection
         GsonBuilder gson = new GsonBuilder().setPrettyPrinting();
         gson.enableComplexMapKeySerialization();
@@ -308,7 +308,7 @@ public class Actions {
     }
 
     @Nullable
-    public static Actions load(@NonNull InputStream inputStream) throws IOException {
+    public static Actions load(@NonNull InputStream inputStream) {
 
         return getGsonParser().fromJson(new InputStreamReader(inputStream), Actions.class);
     }
@@ -353,7 +353,7 @@ public class Actions {
                         inMemory,
                         xmlDocument.prettyPrint(),
                         XmlDocument.Type.MAIN,
-                        Optional.absent(), /* mainManifestPackageName */
+                        null, /* mainManifestPackageName */
                         xmlDocument.getModel());
 
         ImmutableMultimap.Builder<Integer, Record> mappingBuilder = ImmutableMultimap.builder();
@@ -447,11 +447,11 @@ public class Actions {
      */
     static class DecisionTreeRecord {
         // all other occurrences of the nodes decisions, in order of decisions.
-        private final List<NodeRecord> mNodeRecords = new ArrayList<NodeRecord>();
+        private final List<NodeRecord> mNodeRecords = new ArrayList<>();
 
         // all attributes decisions indexed by attribute name.
         @NonNull
-        final Map<XmlNode.NodeName, List<AttributeRecord>> mAttributeRecords = new HashMap();
+        final Map<XmlNode.NodeName, List<AttributeRecord>> mAttributeRecords = new HashMap<>();
 
         @NonNull
         ImmutableList<NodeRecord> getNodeRecords() {

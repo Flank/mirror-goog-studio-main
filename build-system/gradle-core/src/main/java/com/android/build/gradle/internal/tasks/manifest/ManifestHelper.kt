@@ -168,7 +168,7 @@ fun findOriginalManifestFilePosition(
  * in the manifest file.
  */
 private fun setInjectableValues(
-    invoker: ManifestMerger2.Invoker<*>,
+    invoker: ManifestMerger2.Invoker,
     packageOverride: String?,
     versionCode: Int?,
     versionName: String?,

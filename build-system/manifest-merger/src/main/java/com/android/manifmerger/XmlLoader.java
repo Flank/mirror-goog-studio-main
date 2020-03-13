@@ -19,10 +19,10 @@ package com.android.manifmerger;
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourceFile;
 import com.android.resources.NamespaceReferenceRewriter;
 import com.android.utils.PositionXmlParser;
-import com.google.common.base.Optional;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +43,7 @@ public final class XmlLoader {
      *
      * @param displayName the xml file display name.
      * @param xmlFile the xml file.
-     * @return the initialized {@link com.android.manifmerger.XmlDocument}
+     * @return the initialized {@link XmlDocument}
      */
     @NonNull
     public static XmlDocument load(
@@ -53,7 +53,7 @@ public final class XmlLoader {
             @NonNull File xmlFile,
             @NonNull InputStream inputStream,
             @NonNull XmlDocument.Type type,
-            @NonNull Optional<String> mainManifestPackageName,
+            @Nullable String mainManifestPackageName,
             @NonNull DocumentModel<ManifestModel.NodeTypes> model,
             boolean rewriteNamespaces)
             throws IOException, SAXException, ParserConfigurationException {
@@ -76,11 +76,11 @@ public final class XmlLoader {
 
     /**
      * Loads a xml document from its {@link String} representation without doing xml validation and
-     * return a {@link com.android.manifmerger.XmlDocument}
+     * return a {@link XmlDocument}
      *
      * @param sourceFile the source location to use for logging and record collection.
      * @param xml the persisted xml.
-     * @return the initialized {@link com.android.manifmerger.XmlDocument}
+     * @return the initialized {@link XmlDocument}
      * @throws IOException this should never be thrown.
      * @throws SAXException if the xml is incorrect
      * @throws ParserConfigurationException if the xml engine cannot be configured.
@@ -92,7 +92,7 @@ public final class XmlLoader {
             @NonNull SourceFile sourceFile,
             @NonNull String xml,
             @NonNull XmlDocument.Type type,
-            @NonNull Optional<String> mainManifestPackageName,
+            @Nullable String mainManifestPackageName,
             @NonNull DocumentModel<ManifestModel.NodeTypes> model)
             throws IOException, SAXException, ParserConfigurationException {
         Document domDocument = PositionXmlParser.parse(xml);
