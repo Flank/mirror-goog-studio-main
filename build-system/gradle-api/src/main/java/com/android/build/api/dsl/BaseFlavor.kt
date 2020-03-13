@@ -23,7 +23,7 @@ import org.gradle.api.Incubating
  */
 @Incubating
 interface BaseFlavor<AnnotationProcessorOptionsT : AnnotationProcessorOptions> :
-    BaseConfig<AnnotationProcessorOptionsT> {
+    VariantDimension<AnnotationProcessorOptionsT> {
     // TODO(b/140406102)
     /** The name of the flavor. */
     fun getName(): String

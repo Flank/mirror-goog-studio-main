@@ -23,7 +23,7 @@ import org.gradle.api.Named
 @Incubating
 interface BuildType<AnnotationProcessorOptionsT : AnnotationProcessorOptions,
         SigningConfigT : SigningConfig> : Named,
-    BaseConfig<AnnotationProcessorOptionsT> {
+    VariantDimension<AnnotationProcessorOptionsT> {
     /** Whether this build type should generate a debuggable apk. */
     var isDebuggable: Boolean
 

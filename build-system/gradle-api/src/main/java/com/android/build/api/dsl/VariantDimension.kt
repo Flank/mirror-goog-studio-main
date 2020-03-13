@@ -25,7 +25,7 @@ import java.io.File
  * That is, [BuildType] and [ProductFlavor] and [DefaultConfig].
  */
 @Incubating
-interface BaseConfig<AnnotationProcessorOptionsT : AnnotationProcessorOptions> {
+interface VariantDimension<AnnotationProcessorOptionsT : AnnotationProcessorOptions> {
     /**
      * Application id suffix. It is appended to the "base" application id when calculating the final
      * application id for a variant.
