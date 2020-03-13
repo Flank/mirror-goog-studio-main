@@ -257,6 +257,45 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testMoreRecentStableVersion() {
+        lint().files(
+                gradle(
+                    "" +
+                            "buildscript {\n" +
+                            "    repositories {\n" +
+                            "        jcenter()\n" +
+                            "    }\n" +
+                            "    dependencies {\n" +
+                            "        classpath 'com.android.tools.build:gradle:3.0.0'\n" +
+                            "        classpath 'com.android.tools.build:gradle:3.0.+'\n" +
+                            "        classpath 'com.android.tools.build:gradle:3.+'\n" +
+                            "    }\n" +
+                            "}\n"
+                )
+            )
+            .issues(DEPENDENCY)
+            .sdkHome(mockSupportLibraryInstallation)
+            .run()
+            .expect(
+                "" +
+                        "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 3.0.0 is available: 3.3.2. (There is also a newer version of 3.0.\uD835\uDC65 available, if upgrading to 3.3.2 is difficult: 3.0.1) [GradleDependency]\n" +
+                        "        classpath 'com.android.tools.build:gradle:3.0.0'\n" +
+                        "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "0 errors, 1 warnings"
+            )
+            .expectFixDiffs(
+                "" +
+                        "Fix for build.gradle line 6: Change to 3.3.2:\n" +
+                        "@@ -6 +6\n" +
+                        "-         classpath 'com.android.tools.build:gradle:3.0.0'\n" +
+                        "+         classpath 'com.android.tools.build:gradle:3.3.2'\n" +
+                        "Fix for build.gradle line 6: Change to 3.0.1:\n" +
+                        "@@ -6 +6\n" +
+                        "-         classpath 'com.android.tools.build:gradle:3.0.0'\n" +
+                        "+         classpath 'com.android.tools.build:gradle:3.0.1'"
+            )
+    }
+
     fun testDependenciesWithCallSyntax() {
         // Regression test for 134692580
         val expected = "" +
@@ -507,7 +546,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         // Same (older) version of Studio and Gradle:
         // Studio 3.0, gradle: 3.0.0-alpha4: Offer latest 3.0.0, not 3.1 or 3.2 etc
         val expected = "" +
-                "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.0 [GradleDependency]\n" +
+                "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [GradleDependency]\n" +
                 "    classpath 'com.android.tools.build:gradle:3.0.0-alpha4'\n" +
                 "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "0 errors, 1 warnings"
@@ -610,7 +649,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             })
             .run().expect(
                 """
-                build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.0 [GradleDependency]
+                build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [GradleDependency]
                     classpath 'com.android.tools.build:gradle:3.0.0-alpha4'
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
@@ -3277,7 +3316,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "" +
                         "<?xml version='1.0' encoding='UTF-8'?>\n" +
                         "<com.android.tools.build>\n" +
-                        "  <gradle versions=\"3.0.0-alpha1,3.0.0-alpha2,3.0.0-alpha3,3.0.0-alpha4,3.0.0-alpha5,3.0.0-alpha6,3.0.0-alpha7,3.0.0-alpha8,3.0.0-alpha9,3.0.0-beta1,3.0.0-beta2,3.0.0-beta3,3.0.0-beta4,3.0.0-beta5,3.0.0-beta6,3.0.0-beta7,3.0.0-rc1,3.0.0-rc2,3.0.0," +
+                        "  <gradle versions=\"3.0.0-alpha1,3.0.0-alpha2,3.0.0-alpha3,3.0.0-alpha4,3.0.0-alpha5,3.0.0-alpha6,3.0.0-alpha7,3.0.0-alpha8,3.0.0-alpha9,3.0.0-beta1,3.0.0-beta2,3.0.0-beta3,3.0.0-beta4,3.0.0-beta5,3.0.0-beta6,3.0.0-beta7,3.0.0-rc1,3.0.0-rc2,3.0.0,3.0.1," +
                         "3.1.0-alpha01,3.1.0-alpha02,3.1.0-alpha03,3.1.0-alpha04,3.1.0-alpha05,3.1.0-alpha06,3.1.0-alpha07,3.1.0-alpha08,3.1.0-alpha09,3.1.0-beta1,3.1.0-beta2,3.1.0-beta3,3.1.0-beta4,3.1.0-rc1,3.1.0," +
                         "3.2.0-alpha01,3.2.0-alpha02,3.2.0-alpha03,3.2.0-alpha04,3.2.0-alpha05,3.2.0-alpha06,3.2.0-alpha07,3.2.0-alpha08,3.2.0-alpha09,3.2.0-alpha10,3.2.0-alpha11,3.2.0-alpha12,3.2.0-alpha13,3.2.0-alpha14,3.2.0-alpha15,3.2.0-alpha16,3.2.0-alpha17,3.2.0-alpha18,3.2.0-beta01,3.2.0-beta02,3.2.0-beta03,3.2.0-beta04,3.2.0-beta05,3.2.0-rc01,3.2.0-rc02,3.2.0-rc03,3.2.0,3.2.1," +
                         "3.3.0-alpha01,3.3.0-alpha02,3.3.0-alpha03,3.3.0-alpha04,3.3.0-alpha05,3.3.0-alpha06,3.3.0-alpha07,3.3.0-alpha08,3.3.0-alpha09,3.3.0-alpha10,3.3.0-alpha11,3.3.0-alpha12,3.3.0-alpha13,3.3.0-beta01,3.3.0-beta02,3.3.0-beta03,3.3.0-beta04,3.3.0-rc01,3.3.0-rc02,3.3.0-rc03,3.3.0,3.3.1,3.3.2," +
