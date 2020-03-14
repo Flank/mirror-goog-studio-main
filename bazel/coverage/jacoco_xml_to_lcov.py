@@ -11,6 +11,7 @@ import xml.etree.ElementTree as ET
 
 
 def main():
+  test_name = sys.argv[1]
   # directory subtrees omitted from consideration
   skip = [
       # tests
@@ -247,6 +248,7 @@ def main():
     for sfile_name in data[pkg_name]:
       filepath = os.path.join(data[pkg_name][sfile_name]['path'], pkg_name,
                               sfile_name)
+      sys.stdout.write('TN:{}\n'.format(test_name))
       sys.stdout.write('SF:{}\n'.format(filepath))
       for line_num in data[pkg_name][sfile_name]['instrumented']:
         # format is DA:{line number},{number of hits}, but we don't care about
