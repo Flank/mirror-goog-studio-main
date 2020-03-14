@@ -16,6 +16,7 @@
 
 package com.android.tools.mlkit;
 
+import java.nio.FloatBuffer;
 import org.tensorflow.lite.schema.Tensor;
 import org.tensorflow.lite.support.metadata.schema.AssociatedFile;
 import org.tensorflow.lite.support.metadata.schema.ContentProperties;
@@ -290,17 +291,33 @@ public class TensorInfo {
             builder.setQuantizationParams(extractor.getQuantizationParams(tensor));
 
             NormalizationOptions normalizationOptions = extractNormalizationOptions(tensorMetadata);
-            if (tensorMetadata.stats() != null && normalizationOptions != null) {
-                builder.setNormalizationParams(
-                        new MetadataExtractor.NormalizationParams(
-                                normalizationOptions.meanAsByteBuffer().asFloatBuffer(),
-                                normalizationOptions.stdAsByteBuffer().asFloatBuffer(),
-                                tensorMetadata.stats().minAsByteBuffer().asFloatBuffer(),
-                                tensorMetadata.stats().maxAsByteBuffer().asFloatBuffer()));
-            }
+
+            FloatBuffer mean =
+                    normalizationOptions != null
+                            ? normalizationOptions.meanAsByteBuffer().asFloatBuffer()
+                            : toFloatBuffer(0);
+            FloatBuffer std =
+                    normalizationOptions != null
+                            ? normalizationOptions.stdAsByteBuffer().asFloatBuffer()
+                            : toFloatBuffer(1);
+            FloatBuffer min =
+                    tensorMetadata.stats() != null
+                            ? tensorMetadata.stats().minAsByteBuffer().asFloatBuffer()
+                            : toFloatBuffer(Float.MIN_VALUE);
+            FloatBuffer max =
+                    tensorMetadata.stats() != null
+                            ? tensorMetadata.stats().maxAsByteBuffer().asFloatBuffer()
+                            : toFloatBuffer(Float.MAX_VALUE);
+
+            builder.setNormalizationParams(
+                    new MetadataExtractor.NormalizationParams(mean, std, min, max));
         }
 
         return builder.build();
+    }
+
+    private static FloatBuffer toFloatBuffer(float value) {
+        return FloatBuffer.wrap(new float[] {value});
     }
 
     private static String getDefaultName(Source source, int index) {
