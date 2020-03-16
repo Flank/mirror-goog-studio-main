@@ -20,6 +20,8 @@ import com.android.SdkConstants
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.Scope
+import com.android.build.gradle.internal.databinding.DataBindingExcludeDelegate
+import com.android.build.gradle.internal.databinding.configureFrom
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -41,6 +43,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -67,8 +70,9 @@ import java.util.zip.Deflater
 // TODO(b/132975663): add workers
 @CacheableTask
 abstract class LibraryAarJarsTask : NonIncrementalTask() {
-    @get:Input
-    abstract val excludeList: ListProperty<String>
+    @get:Nested
+    @get:Optional
+    abstract val dataBindingExcludeDelegate: Property<DataBindingExcludeDelegate>
 
     @get:Input
     abstract val packageName: Property<String>
@@ -139,7 +143,9 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
         val excludes = getDefaultExcludes(
             packageName.get().replace(".", "/"))
 
-        excludes.addAll(excludeList.get())
+        dataBindingExcludeDelegate.orNull?.let {
+            excludes.addAll(it.excludedClassList)
+        }
 
         // create Pattern Objects.
         return excludes.map { Pattern.compile(it) }
@@ -282,8 +288,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     }
 
     class CreationAction(
-        componentProperties: ComponentPropertiesImpl,
-        private val excludeListProvider: Supplier<List<String>> =  Supplier { listOf<String>() }
+        componentProperties: ComponentPropertiesImpl
     ) : VariantTaskCreationAction<LibraryAarJarsTask, ComponentPropertiesImpl>(
         componentProperties
     ) {
@@ -314,12 +319,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.excludeList.set(
-                creationConfig.globalScope.project.provider {
-                    excludeListProvider.get()
-                }
-            )
-            task.excludeList.disallowChanges()
+            task.dataBindingExcludeDelegate.configureFrom(creationConfig)
 
             val operations = creationConfig.operations
 

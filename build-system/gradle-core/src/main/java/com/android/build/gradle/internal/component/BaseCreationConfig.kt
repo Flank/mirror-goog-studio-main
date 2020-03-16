@@ -99,8 +99,6 @@ interface BaseCreationConfig : ComponentIdentity {
     @Deprecated("Do not use if you can avoid it. Check if services has what you need")
     val globalScope: GlobalScope
 
-    val layoutXmlProcessor: LayoutXmlProcessor
-
     // ---------------------------------------------------------------------------------------------
     // INTERNAL HELPERS
     // ---------------------------------------------------------------------------------------------

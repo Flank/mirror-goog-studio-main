@@ -16,9 +16,6 @@
 
 package com.android.build.api.component.impl
 
-import android.databinding.tool.LayoutXmlProcessor
-import android.databinding.tool.LayoutXmlProcessor.OriginalFileLookup
-import android.databinding.tool.writer.JavaFileWriter
 import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
@@ -65,8 +62,6 @@ import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.ApiVersion
-import com.android.ide.common.blame.MergingLog
-import com.android.ide.common.blame.SourceFile
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
@@ -183,37 +178,6 @@ abstract class ComponentPropertiesImpl(
         }
 
         return null
-    }
-
-    override val layoutXmlProcessor: LayoutXmlProcessor by lazy {
-        val resourceBlameLogDir = paths.resourceBlameLogDir
-        val mergingLog = MergingLog(resourceBlameLogDir)
-        LayoutXmlProcessor(
-            variantDslInfo.originalApplicationId,
-            LegacyJavaFileWriter(),
-            OriginalFileLookup { file: File? ->
-                val input =
-                    SourceFile(file!!)
-                val original = mergingLog.find(input)
-                if (original === input) null else original.sourceFile
-            },
-            internalServices.projectOptions[BooleanOption.USE_ANDROID_X]
-        )
-    }
-
-    /**
-     * Legacy [JavaFileWriter] whose internal implementation should not be used, only the
-     * implementation from the superclass is used.
-     */
-    class LegacyJavaFileWriter : JavaFileWriter() {
-
-        override fun writeToFile(canonicalName: String, contents: String) {
-            throw UnsupportedOperationException("This method is no longer supported")
-        }
-
-        override fun deleteFile(canonicalName: String) {
-            throw UnsupportedOperationException("This method is no longer supported")
-        }
     }
 
     fun addVariantOutput(
