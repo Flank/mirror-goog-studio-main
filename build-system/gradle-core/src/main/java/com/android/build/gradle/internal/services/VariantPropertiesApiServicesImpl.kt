@@ -205,8 +205,16 @@ class VariantPropertiesApiServicesImpl(
 
     override fun fileTree(): ConfigurableFileTree = projectServices.objectFactory.fileTree()
 
-    override fun fileTree(dir: Any): ConfigurableFileTree =
-        projectServices.objectFactory.fileTree().setDir(dir)
+    override fun fileTree(dir: Any): ConfigurableFileTree {
+        val result = projectServices.objectFactory.fileTree().setDir(dir)
+
+        // workaround issue in Gradle <=6.3 where setDir does not set dependencies
+        // TODO remove when 6.4 ships
+        if (dir is Provider<*>) {
+            result.builtBy(dir)
+        }
+        return result
+    }
 
     override fun lockProperties() {
         for (property in properties) {

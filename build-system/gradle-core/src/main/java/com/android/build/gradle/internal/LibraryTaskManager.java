@@ -25,6 +25,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
+import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
@@ -552,12 +553,10 @@ public class LibraryTaskManager
                                     InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS.INSTANCE)
                             .get()
                             .getAsFile();
-            return globalScope
-                    .getDataBindingBuilder()
-                    .getJarExcludeList(
-                            componentProperties.getLayoutXmlProcessor(),
-                            exportClassListFile,
-                            dependencyArtifactsDir);
+            return DataBindingBuilder.getJarExcludeList(
+                    componentProperties.getLayoutXmlProcessor(),
+                    exportClassListFile,
+                    dependencyArtifactsDir);
         };
     }
 
