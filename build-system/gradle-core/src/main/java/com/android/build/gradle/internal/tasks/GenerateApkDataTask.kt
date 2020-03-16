@@ -92,9 +92,7 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
     abstract val execOperations: ExecOperations
 
     override fun doTaskAction() {
-        // always empty output dir.
         val outDir = resOutputDir.get().asFile
-        FileUtils.cleanOutputDir(outDir)
 
         // if the FileCollection contains no file, then there's nothing to do just abort.
         var apkDirectory: File? = null

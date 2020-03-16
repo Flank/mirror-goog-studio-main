@@ -111,7 +111,6 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     val jarCreatorType: Property<JarCreatorType> = objects.property(JarCreatorType::class.java)
 
     public override fun doTaskAction() {
-        FileUtils.cleanOutputDir(outputDir.get().asFile)
         val jarCreator =
             JarCreatorFactory.make(
                 jarFile = File(outputDir.get().asFile, fileName.get()).toPath(),

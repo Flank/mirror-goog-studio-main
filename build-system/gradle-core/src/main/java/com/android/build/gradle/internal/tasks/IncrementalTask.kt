@@ -106,6 +106,7 @@ abstract class IncrementalTask : AndroidVariantTask() {
         if (!incremental || !inputs.isIncremental) {
             Logger.getLogger(IncrementalTask::class.java)
                 .info("Unable do incremental execution: full task run")
+            cleanUpTaskOutputs()
             doFullTaskAction()
             return
         }

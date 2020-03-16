@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.tasks.NonIncrementalTask;
+import com.android.build.gradle.internal.tasks.UnsafeOutputsTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.errors.DefaultIssueReporter;
 import com.android.ide.common.process.ProcessException;
@@ -39,7 +39,7 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.process.ExecOperations;
 
 /** Task wrapper around ExternalNativeJsonGenerator. */
-public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
+public abstract class ExternalNativeBuildJsonTask extends UnsafeOutputsTask {
 
     private Provider<ExternalNativeJsonGenerator> generator;
     @NonNull private final ExecOperations execOperations;
@@ -47,12 +47,6 @@ public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
     @Inject
     public ExternalNativeBuildJsonTask(@NonNull ExecOperations execOperations) {
         this.execOperations = execOperations;
-        this.getOutputs()
-                .upToDateWhen(
-                        task -> {
-                            getLogger().debug("Generate json model is always run.");
-                            return false;
-                        });
     }
 
     @InputFiles
