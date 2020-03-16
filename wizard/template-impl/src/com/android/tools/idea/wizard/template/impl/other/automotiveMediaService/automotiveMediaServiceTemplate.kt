@@ -20,7 +20,6 @@ import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
-import com.android.tools.idea.wizard.template.Constraint.PACKAGE
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.FormFactor
 import com.android.tools.idea.wizard.template.LanguageWidget
@@ -44,7 +43,7 @@ val automotiveMediaServiceTemplate
 
     category = Category.Automotive
     formFactor = FormFactor.Automotive
-    screens = listOf(WizardUiContext.NewProject, WizardUiContext.MenuEntry)
+    screens = listOf(WizardUiContext.NewProject, WizardUiContext.MenuEntry, WizardUiContext.NewModule)
 
     val mediaBrowserServiceName = stringParameter {
       name = "Class name"
