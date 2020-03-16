@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.integration.common.utils
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
+import com.android.build.gradle.integration.common.truth.TaskStateList
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.FileTime
@@ -26,11 +28,14 @@ class IncrementalTestHelper(
     private val executor: GradleTaskExecutor,
     private val cleanTask: String = "clean",
     private val buildTask: String = "assembleDebug",
-    private val filesToTrackChanges: Set<File>
+    private val filesToTrackChanges: Set<File> = emptySet()
 ) {
 
     // Used to ensure the steps in the API are followed
     private var stage: Stage = Stage.INITIAL
+
+    // Build result
+    private lateinit var buildResult: GradleBuildResult
 
     // Record the timestamps and contents of files in the first (full) build
     private lateinit var fileTimestamps: Map<File, FileTime>
@@ -82,7 +87,7 @@ class IncrementalTestHelper(
         check(stage < Stage.RAN_INCREMENTAL_BUILD) { "runIncrementalBuild was already called" }
         check(stage == Stage.APPLIED_CHANGE) { "applyChange must be called first" }
 
-        executor.run(buildTask)
+        buildResult = executor.run(buildTask)
 
         // Record changed files
         filesWithChangedTimestamps = fileTimestamps.filter { (file, previousTimestamp) ->
@@ -96,6 +101,15 @@ class IncrementalTestHelper(
 
         stage = Stage.RAN_INCREMENTAL_BUILD
         return this
+    }
+
+    /** Asserts a task's state. */
+    fun assertTaskState(task: String, expectedState: TaskStateList.ExecutionState) {
+        val actualState = buildResult.getTask(task).executionState
+        assert(buildResult.getTask(task).executionState == expectedState) {
+            "Task $task is expected to have state $expectedState" +
+                    " but its actual state is $actualState"
+        }
     }
 
     /** Asserts file changes. */
