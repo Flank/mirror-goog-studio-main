@@ -81,8 +81,10 @@ class CacheabilityTest {
                     ":app:mergeDexDebug",
                     ":app:extractDeepLinksDebug",
                     ":app:dexBuilderDebug",
-                    ":app:parseDebugIntegrityConfig"
-                ),
+                    ":app:parseDebugIntegrityConfig",
+                    ":app:bundleDebugClasses",
+                    ":app:processDebugManifestForPackage"
+            ),
                 /*
                  * Tasks that should be cacheable but are not yet cacheable.
                  *
@@ -101,7 +103,8 @@ class CacheabilityTest {
                     ":app:assembleDebug",
                     ":app:processDebugUnitTestJavaRes",
                     ":app:compileDebugSources",
-                    ":app:stripDebugDebugSymbols"
+                    ":app:stripDebugDebugSymbols",
+                    ":app:mergeDebugNativeDebugMetadata"
                 ),
                 FAILED to setOf()
             )
@@ -139,20 +142,13 @@ class CacheabilityTest {
     fun testRelocatability() {
         val buildCacheDir = buildCacheDirRoot.root.resolve(GRADLE_BUILD_CACHE_DIR)
 
-        CacheabilityTestHelper
-            .forProjects(
-                projectCopy1,
-                projectCopy2)
-            .withBuildCacheDir(buildCacheDir)
-            .withTasks(
+        CacheabilityTestHelper(projectCopy1, projectCopy2, buildCacheDir)
+            .runTasks(
                 "clean",
                 "assembleDebug",
                 "testDebugUnitTest",
-                ":app:parseDebugIntegrityConfig")
-            .hasUpToDateTasks(EXPECTED_TASK_STATES.getValue(UP_TO_DATE))
-            .hasFromCacheTasks(EXPECTED_TASK_STATES.getValue(FROM_CACHE))
-            .hasDidWorkTasks(EXPECTED_TASK_STATES.getValue(DID_WORK))
-            .hasSkippedTasks(EXPECTED_TASK_STATES.getValue(SKIPPED))
-            .hasFailedTasks(EXPECTED_TASK_STATES.getValue(FAILED))
+                ":app:parseDebugIntegrityConfig"
+            )
+            .assertTaskStatesByGroups(EXPECTED_TASK_STATES, exhaustive = true)
     }
 }
