@@ -26,6 +26,7 @@ import com.android.SdkConstants.TAG_ISSUES
 import com.android.SdkConstants.TAG_LOCATION
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Position
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
@@ -66,18 +67,15 @@ class LintBaseline(
     val file: File
 ) {
 
-    /** Count of number of errors that were filtered out  */
-    /** Returns the number of errors that have been matched from the baseline  */
+    /** The number of errors that have been matched from the baseline  */
     var foundErrorCount: Int = 0
         private set
 
-    /** Count of number of warnings that were filtered out  */
-    /** Returns the number of warnings that have been matched from the baseline  */
+    /** The number of warnings that have been matched from the baseline  */
     var foundWarningCount: Int = 0
         private set
 
-    /** Raw number of issues found in the baseline when opened  */
-    /** Returns the total number of issues contained in this baseline  */
+    /** The total number of issues contained in this baseline  */
     var totalCount: Int = 0
         private set
 
@@ -93,8 +91,6 @@ class LintBaseline(
      * merging (across variants) of the results first and then writes that, via the
      * XML reporter.
      */
-    /** Returns whether this baseline is writing its result upon close  */
-    /** Sets whether the baseline should write its matched entries on [.close]  */
     var writeOnClose: Boolean = false
         set(writeOnClose) {
             if (writeOnClose) {
@@ -483,6 +479,19 @@ class LintBaseline(
     }
 
     /**
+     * Lightweight wrapper for a [Location] to avoid holding on to locations for
+     * too long, since for example the [Location.source] field (but also fields
+     * in subclasses of [Location] and [Position]) can reference large data structures
+     * like PSI.
+     */
+    private class LightLocation(location: Location) {
+        val file: File = location.file
+        val line: Int = location.start?.line ?: -1
+        val column: Int = location.start?.column ?: -1
+        val secondary: LightLocation? = location.secondary?.let { LightLocation(it) }
+    }
+
+    /**
      * Entries that have been reported during this lint run. We only create these
      * when we need to write a baseline file (since we need to sort them before
      * writing out the result file, to ensure stable files.
@@ -490,9 +499,10 @@ class LintBaseline(
     private class ReportedEntry(
         val issue: Issue,
         val project: Project?,
-        val location: Location,
+        location: Location,
         val message: String
     ) : Comparable<ReportedEntry> {
+        val location = LightLocation(location)
 
         override fun compareTo(other: ReportedEntry): Int {
             // Sort by category, then by priority, then by id,
@@ -521,10 +531,8 @@ class LintBaseline(
                 return fileDelta
             }
 
-            val start = location.start
-            val otherStart = other.location.start
-            val line = start?.line ?: -1
-            val otherLine = otherStart?.line ?: -1
+            val line = location.line
+            val otherLine = other.location.line
 
             if (line != otherLine) {
                 return line - otherLine
@@ -556,8 +564,8 @@ class LintBaseline(
 
             // This handles the case where you have a huge XML document without hewlines,
             // such that all the errors end up on the same line.
-            if (start != null && otherStart != null) {
-                delta = start.column - otherStart.column
+            if (line != -1 && otherLine != -1) {
+                delta = location.column - other.location.column
                 if (delta != 0) {
                     return delta
                 }
@@ -583,7 +591,7 @@ class LintBaseline(
                 writeAttribute(writer, 2, ATTR_MESSAGE, message)
 
                 writer.write(">\n")
-                var currentLocation: Location? = location
+                var currentLocation: LightLocation? = location
                 while (currentLocation != null) {
                     //
                     //
@@ -598,14 +606,11 @@ class LintBaseline(
                     writer.write(TAG_LOCATION)
                     val path = getDisplayPath(client, project, currentLocation.file)
                     writeAttribute(writer, 3, ATTR_FILE, path)
-                    val start = currentLocation.start
-                    if (start != null) {
-                        val line = start.line
-                        if (line >= 0) {
-                            // +1: Line numbers internally are 0-based, report should be
-                            // 1-based.
-                            writeAttribute(writer, 3, ATTR_LINE, (line + 1).toString())
-                        }
+                    val line = currentLocation.line
+                    if (line >= 0) {
+                        // +1: Line numbers internally are 0-based, report should be
+                        // 1-based.
+                        writeAttribute(writer, 3, ATTR_LINE, (line + 1).toString())
                     }
 
                     writer.write("/>\n")
