@@ -16,13 +16,7 @@
 
 package com.android.build.gradle.integration.dexing
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-
-import com.android.build.gradle.integration.dexing.IncrementalDexingWithDesugaringTest.Scenario.APP
-import com.android.build.gradle.integration.dexing.IncrementalDexingWithDesugaringTest.Scenario.ANDROID_LIB
-import com.android.build.gradle.integration.dexing.IncrementalDexingWithDesugaringTest.Scenario.ANDROID_LIB_WITH_POST_JAVAC_CLASSES
-import com.android.build.gradle.integration.dexing.IncrementalDexingWithDesugaringTest.Scenario.JAVA_LIB
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.ChangeType.CHANGED
@@ -30,6 +24,10 @@ import com.android.build.gradle.integration.common.utils.ChangeType.CHANGED_TIME
 import com.android.build.gradle.integration.common.utils.ChangeType.UNCHANGED
 import com.android.build.gradle.integration.common.utils.IncrementalTestHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.integration.dexing.IncrementalDexingWithDesugaringTest.Scenario.ANDROID_LIB
+import com.android.build.gradle.integration.dexing.IncrementalDexingWithDesugaringTest.Scenario.ANDROID_LIB_WITH_POST_JAVAC_CLASSES
+import com.android.build.gradle.integration.dexing.IncrementalDexingWithDesugaringTest.Scenario.APP
+import com.android.build.gradle.integration.dexing.IncrementalDexingWithDesugaringTest.Scenario.JAVA_LIB
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.PROJECT_DEX_ARCHIVE
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES_DIR
@@ -318,7 +316,7 @@ class IncrementalDexingWithDesugaringTest(
         dummyStandAloneDexFile = dexFile(dummyStandAlonePath)
 
         incrementalTestHelper = IncrementalTestHelper(
-            executor = getExecutor(),
+            project = project,
             buildTask = ":app:mergeDexDebug",
             filesToTrackChanges = setOf(
                 interfaceWithDefaultMethodClassFile,
@@ -336,13 +334,10 @@ class IncrementalDexingWithDesugaringTest(
                     dummyStandAlonePublishedClassFile!!
                 )
             })
-        )
+        ).useCustomExecutor {
+            it.with(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2, withIncrementalDexingV2)
+        }
     }
-
-    private fun getExecutor(): GradleTaskExecutor = project.executor().with(
-        BooleanOption.ENABLE_INCREMENTAL_DEXING_V2,
-        withIncrementalDexingV2
-    )
 
     /**
      * Finds the output directory of the dexing transform using heuristics. We can't hard-code the
@@ -354,7 +349,9 @@ class IncrementalDexingWithDesugaringTest(
      */
     private fun findDexTransformOutputDir(buildDir: File): File {
         // Run a full build so that dex outputs are generated, then we will try to locate them.
-        getExecutor().run("clean", ":app:mergeDexDebug")
+        project.executor()
+            .with(BooleanOption.ENABLE_INCREMENTAL_DEXING_V2, withIncrementalDexingV2)
+            .run("clean", ":app:mergeDexDebug")
 
         val dexOutputDirs = buildDir.resolve(".transforms").listFiles()!!.filter {
             it.isDirectory && it.walk().any { file ->
@@ -372,7 +369,7 @@ class IncrementalDexingWithDesugaringTest(
 
     @Test
     fun `change interface with default method, with a method signature change`() {
-        incrementalTestHelper
+        val testHelper = incrementalTestHelper
             .runFullBuild()
             .applyChange {
                 TestFileUtils.searchAndReplace(
@@ -385,7 +382,7 @@ class IncrementalDexingWithDesugaringTest(
 
         when (scenario) {
             APP -> {
-                incrementalTestHelper.assertFileChanges(
+                testHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
@@ -399,7 +396,7 @@ class IncrementalDexingWithDesugaringTest(
                 )
             }
             ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
-                incrementalTestHelper.assertFileChanges(
+                testHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
@@ -432,7 +429,7 @@ class IncrementalDexingWithDesugaringTest(
                 )
             }
             JAVA_LIB -> {
-                incrementalTestHelper.assertFileChanges(
+                testHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
@@ -454,7 +451,7 @@ class IncrementalDexingWithDesugaringTest(
 
     @Test
     fun `change interface with default method, with a method body change`() {
-        incrementalTestHelper
+        val testHelper = incrementalTestHelper
             .runFullBuild()
             .applyChange {
                 TestFileUtils.searchAndReplace(
@@ -467,7 +464,7 @@ class IncrementalDexingWithDesugaringTest(
 
         when (scenario) {
             APP -> {
-                incrementalTestHelper.assertFileChanges(
+                testHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
@@ -481,7 +478,7 @@ class IncrementalDexingWithDesugaringTest(
                 )
             }
             ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
-                incrementalTestHelper.assertFileChanges(
+                testHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
@@ -519,7 +516,7 @@ class IncrementalDexingWithDesugaringTest(
                 )
             }
             JAVA_LIB -> {
-                incrementalTestHelper.assertFileChanges(
+                testHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED,
@@ -541,7 +538,7 @@ class IncrementalDexingWithDesugaringTest(
 
     @Test
     fun `change interface with default method, with a comment change`() {
-        incrementalTestHelper
+        val testHelper = incrementalTestHelper
             .runFullBuild()
             .applyChange {
                 TestFileUtils.searchAndReplace(
@@ -554,7 +551,7 @@ class IncrementalDexingWithDesugaringTest(
 
         when (scenario) {
             APP -> {
-                incrementalTestHelper.assertFileChanges(
+                testHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
@@ -568,7 +565,7 @@ class IncrementalDexingWithDesugaringTest(
                 )
             }
             ANDROID_LIB, ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> {
-                incrementalTestHelper.assertFileChanges(
+                testHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,
@@ -586,7 +583,7 @@ class IncrementalDexingWithDesugaringTest(
                 )
             }
             JAVA_LIB -> {
-                incrementalTestHelper.assertFileChanges(
+                testHelper.assertFileChanges(
                     mapOf(
                         // Compiled class files
                         interfaceWithDefaultMethodClassFile to CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS,

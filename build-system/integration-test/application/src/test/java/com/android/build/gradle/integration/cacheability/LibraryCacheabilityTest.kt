@@ -123,16 +123,8 @@ class LibraryCacheabilityTest {
     fun testRelocatability() {
         val buildCacheDir = buildCacheDirRoot.root.resolve(GRADLE_BUILD_CACHE_DIR)
 
-        CacheabilityTestHelper
-            .forProjects(
-                projectCopy1,
-                projectCopy2)
-            .withBuildCacheDir(buildCacheDir)
-            .withTasks("clean", ":lib:assembleRelease")
-            .hasUpToDateTasks(EXPECTED_TASK_STATES.getValue(UP_TO_DATE))
-            .hasFromCacheTasks(EXPECTED_TASK_STATES.getValue(FROM_CACHE))
-            .hasDidWorkTasks(EXPECTED_TASK_STATES.getValue(DID_WORK))
-            .hasSkippedTasks(EXPECTED_TASK_STATES.getValue(SKIPPED))
-            .hasFailedTasks(EXPECTED_TASK_STATES.getValue(FAILED))
+        CacheabilityTestHelper(projectCopy1, projectCopy2, buildCacheDir)
+            .runTasks("clean", ":lib:assembleRelease")
+            .assertTaskStatesByGroups(EXPECTED_TASK_STATES, exhaustive = true)
     }
 }

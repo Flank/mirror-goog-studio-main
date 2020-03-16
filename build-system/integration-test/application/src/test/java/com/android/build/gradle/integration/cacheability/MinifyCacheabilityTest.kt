@@ -74,9 +74,16 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":mergeMinifiedJniLibFolders",
             ":mergeMinifiedNativeLibs",
             ":mergeMinifiedShaders",
-            if (shrinker == CodeShrinker.R8) ":minifyMinifiedWithR8"
-            else ":minifyMinifiedWithProguard",
             ":validateSigningMinified"
+        ).plus(
+            if (shrinker == CodeShrinker.R8) {
+                setOf(":minifyMinifiedWithR8")
+            } else {
+                setOf(
+                    ":minifyMinifiedWithProguard",
+                    ":mergeDexMinified"
+                )
+            }
         ),
         DID_WORK to setOf(
             ":createMinifiedCompatibleScreenManifests",
@@ -85,6 +92,12 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":packageMinified",
             ":processMinifiedManifest",
             ":processMinifiedResources"
+        ).plus(
+            if (shrinker == CodeShrinker.PROGUARD) {
+                setOf(":dexBuilderMinified")
+            } else {
+                emptySet()
+            }
         ),
         SKIPPED to setOf(
             ":assembleMinified",
@@ -93,7 +106,8 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":compileMinifiedShaders",
             ":preMinifiedBuild",
             ":processMinifiedJavaRes",
-            ":stripMinifiedDebugSymbols"
+            ":stripMinifiedDebugSymbols",
+            ":mergeMinifiedNativeDebugMetadata"
         ),
         FAILED to setOf()
     )
@@ -120,21 +134,13 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
     fun testRelocatability() {
         val buildCacheDir = buildCacheDirRoot.root.resolve(GRADLE_BUILD_CACHE_DIR)
 
-        CacheabilityTestHelper
-            .forProjects(
-                projectCopy1,
-                projectCopy2)
-            .withBuildCacheDir(buildCacheDir)
-            .withExecutorOperations(
-                { it.with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8) }
-            )
-            .withTasks(
+        CacheabilityTestHelper(projectCopy1, projectCopy2, buildCacheDir)
+            .useCustomExecutor {
+                it.with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
+            }
+            .runTasks(
                 "clean",
                 "assembleMinified")
-            .hasUpToDateTasks(EXPECTED_TASK_STATES.getValue(UP_TO_DATE))
-            .hasFromCacheTasks(EXPECTED_TASK_STATES.getValue(FROM_CACHE))
-            .hasDidWorkTasks(EXPECTED_TASK_STATES.getValue(DID_WORK))
-            .hasSkippedTasks(EXPECTED_TASK_STATES.getValue(SKIPPED))
-            .hasFailedTasks(EXPECTED_TASK_STATES.getValue(FAILED))
+            .assertTaskStatesByGroups(EXPECTED_TASK_STATES, exhaustive = true)
     }
 }
