@@ -49,7 +49,7 @@ val googleMapsWearActivityTemplate
 
     category = Category.Google
     formFactor = FormFactor.Wear
-    screens = listOf(WizardUiContext.MenuEntry, WizardUiContext.NewModule)
+    screens = listOf(WizardUiContext.MenuEntry, WizardUiContext.NewProject, WizardUiContext.NewModule)
 
     lateinit var layoutName: StringParameter
     val activityClass = stringParameter {
