@@ -153,8 +153,10 @@ jclass HotSwap::FindClass(const std::string& name) const {
 
 // Can be null if the application isn't a JetPack Compose application.
 jobject HotSwap::GetComposeHotReload() const {
-  jclass klass = FindClass("androidx/compose/Compose$HotReloader");
+  jclass klass = FindInClassLoader(GetApplicationClassLoader(jni_),
+                                   "androidx/compose/Compose$HotReloader");
   if (klass == nullptr) {
+    jni_->ExceptionClear();
     return nullptr;
   }
   Log::V("GetComposeHotReload found. Starting JetPack Compose HotReload");
