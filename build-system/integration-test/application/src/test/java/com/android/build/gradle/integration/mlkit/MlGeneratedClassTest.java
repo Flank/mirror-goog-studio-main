@@ -59,27 +59,46 @@ public class MlGeneratedClassTest {
     }
 
     @Test
-    public void testModelClass() throws IOException, InterruptedException {
-        // Add model file to ml folder
-        File modelFile = project.file("src/main/ml/model.tflite");
-        FileUtils.copyFile(
-                TestUtils.getWorkspaceFile(
-                        "prebuilts/tools/common/mlkit/testData/mobilenet_quant_metadata.tflite"),
-                modelFile);
-
-        project.executor().run(":assembleDebug");
-
-        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
-        assertThatApk(apk).containsClass("Lcom/android/app/ml/Model;");
+    public void testMobileNetModelClass() throws IOException, InterruptedException {
+        verifyModelClass("mobilenet_quant_metadata.tflite");
     }
 
     @Test
-    public void testModelClassWithoutMetadata() throws IOException, InterruptedException {
+    public void testMobileNetModelClassWithoutMetadata() throws IOException, InterruptedException {
+        verifyModelClass("mobilenet_quant_no_metadata.tflite");
+    }
+
+    @Test
+    public void testDeepLabModelClass() throws IOException, InterruptedException {
+        verifyModelClass("deeplab_image_seg_metadata.tflite");
+    }
+
+    @Test
+    public void testInceptionModelClass() throws IOException, InterruptedException {
+        verifyModelClass("inception_quant_metadata.tflite");
+    }
+
+    @Test
+    public void testMnasnetModelClass() throws IOException, InterruptedException {
+        verifyModelClass("mnasnet_metadta.tflite");
+    }
+
+    @Test
+    public void testSsdOdtModelClass() throws IOException, InterruptedException {
+        verifyModelClass("ssd_mobilenet_odt_metadata.tflite");
+    }
+
+    @Test
+    public void testStyleTransferModelClass() throws IOException, InterruptedException {
+        verifyModelClass("style_transfer_quant_metadata.tflite");
+    }
+
+    private void verifyModelClass(String modelFileName) throws IOException, InterruptedException {
         // Add model file to ml folder
         File modelFile = project.file("src/main/ml/model.tflite");
         FileUtils.copyFile(
                 TestUtils.getWorkspaceFile(
-                        "prebuilts/tools/common/mlkit/testData/mobilenet_quant_no_metadata.tflite"),
+                        "prebuilts/tools/common/mlkit/testData/" + modelFileName),
                 modelFile);
 
         project.executor().run(":assembleDebug");
