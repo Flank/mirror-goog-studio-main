@@ -63,7 +63,7 @@ public final class Log {
 
             return null;
         }
-        
+
         /**
          * Returns the {@link LogLevel} enum matching the specified letter.
          * @param letter the letter matching a <code>LogLevel</code> enum
@@ -83,7 +83,7 @@ public final class Log {
          * Returns the {@link LogLevel} enum matching the specified letter.
          * <p>
          * The letter is passed as a {@link String} argument, but only the first character
-         * is used. 
+         * is used.
          * @param letter the letter matching a <code>LogLevel</code> enum
          * @return a <code>LogLevel</code> object or <code>null</code> if no match were found.
          */
@@ -116,7 +116,7 @@ public final class Log {
             return mStringValue;
         }
     }
-    
+
     /**
      * Classes which implement this interface provides methods that deal with outputting log
      * messages.
@@ -356,7 +356,7 @@ public final class Log {
         hexDump("ddms", LogLevel.DEBUG, data, 0, data.length);
     }
 
-    private static void println(LogLevel logLevel, String tag, String message) {
+    public static void println(LogLevel logLevel, String tag, String message) {
         if (!isAtLeast(logLevel)) {
             return;
         }
