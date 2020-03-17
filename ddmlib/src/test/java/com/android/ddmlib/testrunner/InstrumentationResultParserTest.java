@@ -253,7 +253,7 @@ public class InstrumentationResultParserTest extends TestCase {
         addLine(output, "2) Something else");
         addLine(output, "INSTRUMENTATION_CODE: -1");
 
-        Capture<String> capture = new Capture<>();
+        Capture<String> capture = EasyMock.newCapture();
         mMockListener.testRunStarted(RUN_NAME, 5);
         TestIdentifier tid =
                 new TestIdentifier("com.android.server.utils.TraceBufferTest", "test_addItem");
