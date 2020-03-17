@@ -15,9 +15,11 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.ATTR_CONSTRAINT_LAYOUT_DESCRIPTION
 import com.android.SdkConstants.ATTR_LAYOUT_HEIGHT
 import com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX
 import com.android.SdkConstants.ATTR_LAYOUT_WIDTH
+import com.android.SdkConstants.AUTO_URI
 import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_BARRIER
 import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GROUP
 import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GUIDELINE
@@ -91,6 +93,12 @@ class ConstraintLayoutDetector : LayoutDetector() {
                     }
                 }
             }
+        }
+
+        // In MotionLayouts you can specify the constraints elsewhere.
+        // Note that MotionLayoutDetector performs additional validation.
+        if (element.hasAttributeNS(AUTO_URI, ATTR_CONSTRAINT_LAYOUT_DESCRIPTION)) {
+            return
         }
 
         // Ensure that all the children have been constrained horizontally and vertically
