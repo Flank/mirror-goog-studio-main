@@ -190,9 +190,8 @@ private fun findNdkPathImpl(
                 else -> {
                     val revision = versionInfo.getValue(SDK_PKG_REVISION)!!
                     try {
-                        val revision = Revision.parseRevision(revision)
                         // Trim preview information since we expect to match major.minor.micro only
-                        Pair(location, stripPreviewFromRevision(revision))
+                        Pair(location, stripPreviewFromRevision(Revision.parseRevision(revision)))
                     } catch (e: NumberFormatException) {
                         considerAndReject(
                             location, "that location had " +
@@ -326,7 +325,7 @@ private fun findNdkPathImpl(
                 return null
             }
             val (location, version) = ndkDirLocation
-            infoln("Found requested ndk.dir (${location.ndkRoot}) which has version ${version}")
+            infoln("Found requested ndk.dir (${location.ndkRoot}) which has version $version")
             return location.ndkRoot
         }
 
@@ -367,7 +366,7 @@ fun findNdkPathImpl(
     // Here, it's cached at module level instead because uncleanable caches can lead to difficult bugs.
     return cache(key, {
         with(key) {
-            PassThroughDeduplicatingLoggingEnvironment().use { loggingEnvironment ->
+            PassThroughDeduplicatingLoggingEnvironment().use {
                 val ndkFolder = findNdkPathImpl(
                     this.ndkDirProperty,
                     this.androidNdkHomeEnvironmentVariable,
@@ -420,7 +419,7 @@ fun getNdkVersionedFolders(ndkVersionRoot: File): List<String> {
 
 fun stripPreviewFromRevision(revision : Revision) : Revision
 {
-    var parts = revision.toIntArray(false)
+    val parts = revision.toIntArray(false)
     return when(parts.size) {
         1 -> Revision(parts[0])
         2 -> Revision(parts[0], parts[1])
