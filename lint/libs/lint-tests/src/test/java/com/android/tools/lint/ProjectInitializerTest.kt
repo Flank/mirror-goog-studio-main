@@ -21,6 +21,7 @@ import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.FN_PUBLIC_TXT
 import com.android.SdkConstants.FN_RESOURCE_TEXT
 import com.android.testutils.TestUtils
+import com.android.tools.lint.LintCliFlags.ERRNO_INVALID_ARGS
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.checks.AbstractCheckTest.base64gzip
 import com.android.tools.lint.checks.AbstractCheckTest.jar
@@ -1245,6 +1246,30 @@ class ProjectInitializerTest {
             ),
 
             null, null
+        )
+    }
+
+    @Test
+    fun testInvalidDescriptorFile() {
+        // Make sure we give a suitable error message when you pass in a directory instead of
+        // an XML file
+        val root = temp.newFolder()
+
+        MainTest.checkDriver(
+            "",
+            "Project descriptor ROOT should be an XML descriptor file, not a directory",
+
+            // Expected exit code
+            ERRNO_INVALID_ARGS,
+
+            // Args
+            arrayOf(
+                "--quiet",
+                "--project",
+                root.path
+            ),
+
+            { it.replace(root.path, "ROOT") }, null
         )
     }
 
