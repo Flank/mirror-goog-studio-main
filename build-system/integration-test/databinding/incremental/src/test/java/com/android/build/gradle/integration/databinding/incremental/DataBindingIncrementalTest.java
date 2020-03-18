@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.databinding.incremental;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTaskKt.DATA_BINDING_TRIGGER_CLASS;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -119,7 +120,7 @@ public class DataBindingIncrementalTest {
         return new File(
                 ArtifactTypeUtil.getOutputDir(
                         InternalArtifactType.DATA_BINDING_TRIGGER.INSTANCE, project.getBuildDir()),
-                "debug/android/databinding/testapp/DataBindingInfo.java");
+                "debug/android/databinding/testapp/" + DATA_BINDING_TRIGGER_CLASS + ".java");
     }
 
     private File getGeneratedSourceFile() {

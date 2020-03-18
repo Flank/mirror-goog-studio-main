@@ -18,6 +18,7 @@ package com.android.build.api.component.impl
 
 import android.databinding.tool.LayoutXmlProcessor
 import android.databinding.tool.LayoutXmlProcessor.OriginalFileLookup
+import android.databinding.tool.writer.JavaFileWriter
 import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
@@ -189,13 +190,7 @@ abstract class ComponentPropertiesImpl(
         val mergingLog = MergingLog(resourceBlameLogDir)
         LayoutXmlProcessor(
             variantDslInfo.originalApplicationId,
-            globalScope
-                .dataBindingBuilder
-                .createJavaFileWriter(
-                    // Can't use artifacts.getFinalProduct(DATA_BINDING_TRIGGER) here as it may not
-                    // have been set (DataBindingIntegrationTestAppsTest would fail).
-                    artifacts.getOperations()
-                        .getOutputPath(InternalArtifactType.DATA_BINDING_TRIGGER)),
+            LegacyJavaFileWriter(),
             OriginalFileLookup { file: File? ->
                 val input =
                     SourceFile(file!!)
@@ -204,6 +199,21 @@ abstract class ComponentPropertiesImpl(
             },
             internalServices.projectOptions[BooleanOption.USE_ANDROID_X]
         )
+    }
+
+    /**
+     * Legacy [JavaFileWriter] whose internal implementation should not be used, only the
+     * implementation from the superclass is used.
+     */
+    class LegacyJavaFileWriter : JavaFileWriter() {
+
+        override fun writeToFile(canonicalName: String, contents: String) {
+            throw UnsupportedOperationException("This method is no longer supported")
+        }
+
+        override fun deleteFile(canonicalName: String) {
+            throw UnsupportedOperationException("This method is no longer supported")
+        }
     }
 
     fun addVariantOutput(

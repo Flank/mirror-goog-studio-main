@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks.databinding
 
-import android.databinding.tool.LayoutXmlProcessor
 import android.databinding.tool.processing.Scope
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -24,11 +23,11 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 
@@ -46,23 +45,41 @@ import org.gradle.api.tasks.TaskProvider
 abstract class DataBindingExportBuildInfoTask : NonIncrementalTask() {
 
     @get:Input
-    abstract val generatedClassFileName: Property<String>
+    abstract val applicationId: Property<String>
 
     @get:Input
     abstract val useAndroidX: Property<Boolean>
-
-    @get:Internal
-    abstract val xmlProcessor: Property<LayoutXmlProcessor>
 
     @get:OutputDirectory
     abstract val triggerDir: DirectoryProperty
 
     override fun doTaskAction() {
-        xmlProcessor.get().writeEmptyInfoClass(useAndroidX.get())
+        // Create an empty class annotated with a data binding annotation. It could be any data
+        // binding annotation, so use @BindingBuildInfo for now.
+        val annotation: Class<*> =
+            if (useAndroidX.get()) {
+                androidx.databinding.BindingBuildInfo::class.java
+            } else {
+                android.databinding.BindingBuildInfo::class.java
+            }
+        val fileContents =
+            """
+            package ${applicationId.get()};
+
+            @${annotation.canonicalName}
+            public class $DATA_BINDING_TRIGGER_CLASS {}
+            """.trimIndent()
+
+        val outputFile = triggerDir.get().asFile.resolve(
+            "${applicationId.get().replace('.', '/')}/$DATA_BINDING_TRIGGER_CLASS.java"
+        )
+        FileUtils.mkdirs(outputFile.parentFile)
+        outputFile.writeText(fileContents)
+
         Scope.assertNoError()
     }
 
-    class CreationAction(componentProperties: ComponentPropertiesImpl) :
+    class CreationAction(private val componentProperties: ComponentPropertiesImpl) :
         VariantTaskCreationAction<DataBindingExportBuildInfoTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
@@ -83,29 +100,19 @@ abstract class DataBindingExportBuildInfoTask : NonIncrementalTask() {
             ).on(InternalArtifactType.DATA_BINDING_TRIGGER)
         }
 
-        override fun configure(
-            task: DataBindingExportBuildInfoTask
-        ) {
+        override fun configure(task: DataBindingExportBuildInfoTask) {
             super.configure(task)
-            task.generatedClassFileName.setDisallowChanges(
-                creationConfig
-                    .globalScope
-                    .project.provider<String> {
-                    task.xmlProcessor.get().infoClassFullName
+            task.applicationId.setDisallowChanges(
+                creationConfig.globalScope.project.provider {
+                    componentProperties.variantDslInfo.originalApplicationId
                 }
             )
             task.useAndroidX.setDisallowChanges(
-                creationConfig
-                    .services
-                    .projectOptions[BooleanOption.USE_ANDROID_X]
-            )
-            task.xmlProcessor.setDisallowChanges(
-                creationConfig
-                    .globalScope
-                    .project
-                    .provider<LayoutXmlProcessor>(creationConfig::layoutXmlProcessor)
+                creationConfig.services.projectOptions[BooleanOption.USE_ANDROID_X]
             )
             task.dependsOn(creationConfig.taskContainer.sourceGenTask)
         }
     }
 }
+
+const val DATA_BINDING_TRIGGER_CLASS = "DataBindingTriggerClass"
