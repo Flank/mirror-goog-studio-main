@@ -33,7 +33,7 @@ iml_module(
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/idea/.idea/libraries:gson",
         "//tools/base/build-system/builder-test-api:studio.android.sdktools.builder-test-api[module]",
-        "//tools/idea/.idea/libraries:Mocks[test]",
+        "//tools/idea/.idea/libraries:easymock[test]",
         "//tools/idea/.idea/libraries:bouncy-castle-provider",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",

@@ -15,6 +15,7 @@ iml_module(
         "//tools/idea/.idea/libraries:Trove4j",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/idea/.idea/libraries:mockito[test]",
+        "//tools/idea/.idea/libraries:Objenesis[test]",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8[test]",
     ],
