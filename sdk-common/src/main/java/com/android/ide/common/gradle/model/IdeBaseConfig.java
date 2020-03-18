@@ -15,12 +15,13 @@
  */
 package com.android.ide.common.gradle.model;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
@@ -66,7 +67,14 @@ public abstract class IdeBaseConfig implements BaseConfig, Serializable {
                         classField -> new IdeClassField(classField));
         myProguardFiles = ImmutableList.copyOf(config.getProguardFiles());
         myConsumerProguardFiles = ImmutableList.copyOf(config.getConsumerProguardFiles());
-        myManifestPlaceholders = ImmutableMap.copyOf(config.getManifestPlaceholders());
+        // AGP may return internal Groovy GString implementation as a value in manifestPlaceholders map. It cannot be serialized
+        // with IDEA's external system serialization. We convert values to String to make them usable as they are converted to String by
+        // the manifest merger anyway.
+        myManifestPlaceholders =
+                config.getManifestPlaceholders()
+                        .entrySet()
+                        .stream()
+                        .collect(toImmutableMap(it -> it.getKey(), it -> it.getValue().toString()));
         myApplicationIdSuffix = config.getApplicationIdSuffix();
         myVersionNameSuffix = IdeModel.copyNewProperty(config::getVersionNameSuffix, null);
         myMultiDexEnabled = IdeModel.copyNewProperty(config::getMultiDexEnabled, null);
