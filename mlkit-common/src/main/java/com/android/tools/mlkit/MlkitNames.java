@@ -31,6 +31,8 @@ public class MlkitNames {
 
     public static final String PACKAGE_SUFFIX = ".ml";
 
+    private static final String MODEL_NAME_PREFIX = "AutoModel";
+
     /** Format getter method to getPropertyNameAsType(i.e. getImage1AsTensorImage()). */
     public static String formatGetterName(String propertyName, String type) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -59,7 +61,7 @@ public class MlkitNames {
         if (className.isEmpty()) {
             // If we can't interpret a valid class name from file name, then create name from
             // fileName hashcode(i.e. Model75)
-            return "Model"
+            return MODEL_NAME_PREFIX
                     + UnsignedBytes.toString(
                             Hashing.murmur3_32()
                                     .hashString(modelFile.getName(), Charsets.UTF_8)
@@ -67,7 +69,7 @@ public class MlkitNames {
         } else if (SourceVersion.isIdentifier(className) && !SourceVersion.isKeyword(className)) {
             return className;
         } else {
-            return "Model" + className;
+            return MODEL_NAME_PREFIX + className;
         }
     }
 }
