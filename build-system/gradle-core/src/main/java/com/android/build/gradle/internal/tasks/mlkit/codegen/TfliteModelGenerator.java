@@ -27,6 +27,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import java.io.File;
@@ -101,6 +102,7 @@ public class TfliteModelGenerator implements ModelGenerator {
         FieldSpec model =
                 FieldSpec.builder(ClassNames.MODEL, FIELD_MODEL)
                         .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+                        .addAnnotation(ClassNames.NON_NULL)
                         .build();
         classBuilder.addField(model);
     }
@@ -176,12 +178,17 @@ public class TfliteModelGenerator implements ModelGenerator {
         MethodSpec.Builder methodBuilder =
                 MethodSpec.methodBuilder("process")
                         .addModifiers(Modifier.PUBLIC)
+                        .addAnnotation(ClassNames.NON_NULL)
                         .returns(outputType);
         List<String> byteBufferList = new ArrayList<>();
         for (TensorInfo tensorInfo : modelInfo.getInputs()) {
             String processedTypeName = CodeUtils.getProcessedTypeName(tensorInfo);
-            methodBuilder.addParameter(
-                    CodeUtils.getParameterType(tensorInfo), tensorInfo.getName());
+            ParameterSpec parameterSpec =
+                    ParameterSpec.builder(
+                                    CodeUtils.getParameterType(tensorInfo), tensorInfo.getName())
+                            .addAnnotation(ClassNames.NON_NULL)
+                            .build();
+            methodBuilder.addParameter(parameterSpec);
             byteBufferList.add(processedTypeName + ".getBuffer()");
         }
 
@@ -206,6 +213,7 @@ public class TfliteModelGenerator implements ModelGenerator {
                         .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                         .addParameter(ClassNames.CONTEXT, "context")
                         .addException(ClassNames.IO_EXCEPTION)
+                        .addAnnotation(ClassNames.NON_NULL)
                         .returns(returnType)
                         .addStatement("return new $T(context)", returnType);
 

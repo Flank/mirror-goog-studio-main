@@ -36,6 +36,7 @@ public class LabelGetMethodInjector extends MethodInjector {
                                 MlkitNames.formatGetterName(
                                         tensorInfo.getName(), returnType.simpleName()))
                         .addModifiers(Modifier.PUBLIC)
+                        .addAnnotation(ClassNames.NON_NULL)
                         .returns(returnType)
                         .addStatement(
                                 "return new $T($L, $L.process($L))",

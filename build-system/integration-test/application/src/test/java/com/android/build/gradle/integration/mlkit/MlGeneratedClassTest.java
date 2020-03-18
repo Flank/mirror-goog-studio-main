@@ -50,12 +50,16 @@ public class MlGeneratedClassTest {
         TestFileUtils.appendToFile(
                 buildFile,
                 "dependencies {\n"
+                        + "    implementation 'androidx.appcompat:appcompat:1.1.0'\n"
                         + "    implementation 'org.apache.commons:commons-compress:1.18'\n"
                         + "    implementation 'org.tensorflow:tensorflow-lite:1.12.0'\n"
                         + "    implementation 'org.tensorflow:tensorflow-lite-support:0.0.0-nightly'\n"
                         + "}");
         TestFileUtils.searchAndReplace(
                 buildFile, "defaultConfig.minSdkVersion 14", "defaultConfig.minSdkVersion 24");
+
+        File gradlePropertiesFile = project.getGradlePropertiesFile();
+        TestFileUtils.appendToFile(gradlePropertiesFile, "android.useAndroidX=true");
     }
 
     @Test

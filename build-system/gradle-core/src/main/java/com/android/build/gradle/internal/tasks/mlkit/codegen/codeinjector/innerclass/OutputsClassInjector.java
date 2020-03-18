@@ -81,6 +81,7 @@ public class OutputsClassInjector implements CodeInjector<TypeSpec.Builder, List
                 MethodSpec.methodBuilder("getBuffer")
                         .addModifiers(Modifier.PRIVATE)
                         .returns(mapType)
+                        .addAnnotation(ClassNames.NON_NULL)
                         .addStatement("$T outputs = new $T<>()", mapType, ClassNames.HASH_MAP);
 
         int index = 0;

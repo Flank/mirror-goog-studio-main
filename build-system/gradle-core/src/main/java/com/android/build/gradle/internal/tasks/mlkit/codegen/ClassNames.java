@@ -44,6 +44,7 @@ public class ClassNames {
             ClassName.get("org.apache.commons.compress.utils", "SeekableInMemoryByteChannel");
     public static final ParameterizedTypeName LIST_OF_STRING =
             ParameterizedTypeName.get(LIST, STRING);
+    public static final ClassName NON_NULL = ClassName.get("androidx.annotation", "NonNull");
 
     // ML model related type
     public static final ClassName DATA_TYPE = ClassName.get("org.tensorflow.lite", "DataType");

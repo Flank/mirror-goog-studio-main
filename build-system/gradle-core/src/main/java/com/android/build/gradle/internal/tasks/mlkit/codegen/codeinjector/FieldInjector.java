@@ -38,6 +38,7 @@ public class FieldInjector implements CodeInjector<TypeSpec.Builder, TensorInfo>
                                     ClassNames.LIST_OF_STRING,
                                     CodeUtils.getFileName(tensorInfo.getFileName()))
                             .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+                            .addAnnotation(ClassNames.NON_NULL)
                             .build();
             classBuilder.addField(fieldName);
         }
@@ -49,6 +50,7 @@ public class FieldInjector implements CodeInjector<TypeSpec.Builder, TensorInfo>
                                     ClassNames.IMAGE_PROCESSOR,
                                     CodeUtils.getProcessorName(tensorInfo))
                             .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+                            .addAnnotation(ClassNames.NON_NULL)
                             .build();
             classBuilder.addField(fieldName);
         } else {
@@ -57,6 +59,7 @@ public class FieldInjector implements CodeInjector<TypeSpec.Builder, TensorInfo>
                                     ClassNames.TENSOR_PROCESSOR,
                                     CodeUtils.getProcessorName(tensorInfo))
                             .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+                            .addAnnotation(ClassNames.NON_NULL)
                             .build();
             classBuilder.addField(fieldName);
         }
