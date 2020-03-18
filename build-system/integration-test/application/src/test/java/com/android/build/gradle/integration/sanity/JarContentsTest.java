@@ -398,7 +398,6 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/cxx/services/",
                 "com/android/build/gradle/internal/cxx/settings/",
                 "com/android/build/gradle/internal/cxx/stripping/",
-                "com/android/build/gradle/internal/databinding/",
                 "com/android/build/gradle/internal/dependency/",
                 "com/android/build/gradle/internal/dexing/",
                 "com/android/build/gradle/internal/dsl/",

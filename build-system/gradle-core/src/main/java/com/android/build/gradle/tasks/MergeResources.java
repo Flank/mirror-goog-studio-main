@@ -29,7 +29,6 @@ import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
-import com.android.build.gradle.internal.databinding.LayoutXmlProcessorDelegate;
 import com.android.build.gradle.internal.errors.MessageReceiverImpl;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
@@ -94,7 +93,6 @@ import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
@@ -136,7 +134,7 @@ public abstract class MergeResources extends ResourceAwareTask {
     @Internal
     public abstract ConfigurableFileCollection getAapt2FromMaven();
 
-    private LayoutXmlProcessorDelegate xmlProcessorDelegate;
+    @Nullable private SingleFileProcessor dataBindingLayoutProcessor;
 
     @Nullable private File mergedNotCompiledResourcesOutputDirectory;
 
@@ -263,8 +261,6 @@ public abstract class MergeResources extends ResourceAwareTask {
                                 useJvmResourceCompiler,
                                 getLogger(),
                                 getAapt2DaemonBuildService().get())) {
-
-            SingleFileProcessor dataBindingLayoutProcessor = maybeCreateLayoutProcessor();
 
             Blocks.recordSpan(
                     getProjectName(),
@@ -435,8 +431,6 @@ public abstract class MergeResources extends ResourceAwareTask {
                                     getLogger(),
                                     getAapt2DaemonBuildService().get())) {
 
-                SingleFileProcessor dataBindingLayoutProcessor = maybeCreateLayoutProcessor();
-
                 File publicFile =
                         getPublicFile().isPresent() ? getPublicFile().get().getAsFile() : null;
                 MergedResourceWriter writer =
@@ -474,95 +468,6 @@ public abstract class MergeResources extends ResourceAwareTask {
         } finally {
             cleanup();
         }
-    }
-
-    @Nullable
-    private SingleFileProcessor maybeCreateLayoutProcessor() {
-        if (!getDataBindingEnabled().get() && !getViewBindingEnabled().get()) {
-            return null;
-        }
-
-        final LayoutXmlProcessor processor = xmlProcessorDelegate.getLayoutXmlProcessor();
-        return new SingleFileProcessor() {
-
-            private LayoutXmlProcessor getProcessor() {
-                return processor;
-            }
-
-            @Override
-            public boolean processSingleFile(
-                    @NonNull File inputFile,
-                    @NonNull File outputFile,
-                    @Nullable Boolean inputFileIsFromDependency)
-                    throws Exception {
-                // Data binding doesn't need/want to process layout files that come
-                // from dependencies (see bug 132637061).
-                if (inputFileIsFromDependency == Boolean.TRUE) {
-                    return false;
-                }
-
-                // For cache relocatability, we want to use relative paths, but we
-                // can do that only for resource files that are located within the
-                // root project directory.
-                File rootProjectDir = getProject().getRootDir();
-                RelativizableFile normalizedInputFile;
-                if (FileUtils.isFileInDirectory(inputFile, rootProjectDir)) {
-                    // Check that the input file's absolute path has NOT been
-                    // annotated as @Input via this task's
-                    // getResourceDirsOutsideRootProjectDir() input file property.
-                    checkState(
-                            !resourceIsInResourceDirs(
-                                    inputFile, getResourceDirsOutsideRootProjectDir().get()),
-                            inputFile.getAbsolutePath() + " should not be annotated as @Input");
-
-                    // The base directory of the relative path has to be the root
-                    // project directory, not the current project directory, because
-                    // the consumer on the IDE side relies on that---see bug
-                    // 128643036.
-                    normalizedInputFile =
-                            RelativizableFile.fromAbsoluteFile(
-                                    inputFile.getCanonicalFile(), rootProjectDir);
-                    checkState(normalizedInputFile.getRelativeFile() != null);
-                } else {
-                    // Check that the input file's absolute path has been annotated
-                    // as @Input via this task's
-                    // getResourceDirsOutsideRootProjectDir() input file property.
-                    checkState(
-                            resourceIsInResourceDirs(
-                                    inputFile, getResourceDirsOutsideRootProjectDir().get()),
-                            inputFile.getAbsolutePath() + " is not annotated as @Input");
-
-                    normalizedInputFile =
-                            RelativizableFile.fromAbsoluteFile(inputFile.getCanonicalFile(), null);
-                    checkState(normalizedInputFile.getRelativeFile() == null);
-                }
-                return getProcessor()
-                        .processSingleFile(
-                                normalizedInputFile, outputFile, getViewBindingEnabled().get());
-            }
-
-            /**
-             * Returns `true` if the given resource file is located inside one of the resource
-             * directories.
-             */
-            private boolean resourceIsInResourceDirs(
-                    @NonNull File resFile, @NonNull Set<String> resDirs) {
-                return resDirs.stream()
-                        .anyMatch(resDir -> FileUtils.isFileInDirectory(resFile, new File(resDir)));
-            }
-
-            @Override
-            public void processRemovedFile(File file) {
-                getProcessor().processRemovedFile(file);
-            }
-
-            @Override
-            public void end() throws JAXBException {
-                getProcessor()
-                        .writeLayoutInfoFiles(
-                                getDataBindingLayoutInfoOutFolder().get().getAsFile());
-            }
-        };
     }
 
     private static class MergeResourcesVectorDrawableRenderer extends VectorDrawableRenderer {
@@ -742,12 +647,6 @@ public abstract class MergeResources extends ResourceAwareTask {
         return useJvmResourceCompiler;
     }
 
-    @Nested
-    @Optional
-    public LayoutXmlProcessorDelegate getLayoutXmlProcessorDelegate() {
-        return xmlProcessorDelegate;
-    }
-
     public static class CreationAction
             extends VariantTaskCreationAction<MergeResources, ComponentPropertiesImpl> {
         @NonNull private final TaskManager.MergeType mergeType;
@@ -872,14 +771,108 @@ public abstract class MergeResources extends ResourceAwareTask {
             final boolean isDataBindingEnabled = features.getDataBinding();
             boolean isViewBindingEnabled = features.getViewBinding();
             if (isDataBindingEnabled || isViewBindingEnabled) {
-                task.xmlProcessorDelegate =
-                        new LayoutXmlProcessorDelegate(
-                                creationConfig.getVariantDslInfo().getOriginalApplicationId(),
-                                creationConfig
-                                        .getServices()
-                                        .getProjectOptions()
-                                        .get(BooleanOption.USE_ANDROID_X),
-                                creationConfig.getPaths().getResourceBlameLogDir());
+                // Keep as an output.
+                task.dataBindingLayoutProcessor =
+                        new SingleFileProcessor() {
+
+                            // Lazily instantiate the processor to avoid parsing the manifest.
+                            private LayoutXmlProcessor processor;
+
+                            private LayoutXmlProcessor getProcessor() {
+                                if (processor == null) {
+                                    processor = creationConfig.getLayoutXmlProcessor();
+                                }
+                                return processor;
+                            }
+
+                            @Override
+                            public boolean processSingleFile(
+                                    @NonNull File inputFile,
+                                    @NonNull File outputFile,
+                                    @Nullable Boolean inputFileIsFromDependency)
+                                    throws Exception {
+                                // Data binding doesn't need/want to process layout files that come
+                                // from dependencies (see bug 132637061).
+                                if (inputFileIsFromDependency == Boolean.TRUE) {
+                                    return false;
+                                }
+
+                                // For cache relocatability, we want to use relative paths, but we
+                                // can do that only for resource files that are located within the
+                                // root project directory.
+                                File rootProjectDir = task.getProject().getRootDir();
+                                RelativizableFile normalizedInputFile;
+                                if (FileUtils.isFileInDirectory(inputFile, rootProjectDir)) {
+                                    // Check that the input file's absolute path has NOT been
+                                    // annotated as @Input via this task's
+                                    // getResourceDirsOutsideRootProjectDir() input file property.
+                                    checkState(
+                                            !resourceIsInResourceDirs(
+                                                    inputFile,
+                                                    task.getResourceDirsOutsideRootProjectDir()
+                                                            .get()),
+                                            inputFile.getAbsolutePath()
+                                                    + " should not be annotated as @Input");
+
+                                    // The base directory of the relative path has to be the root
+                                    // project directory, not the current project directory, because
+                                    // the consumer on the IDE side relies on that---see bug
+                                    // 128643036.
+                                    normalizedInputFile =
+                                            RelativizableFile.fromAbsoluteFile(
+                                                    inputFile.getCanonicalFile(), rootProjectDir);
+                                    checkState(normalizedInputFile.getRelativeFile() != null);
+                                } else {
+                                    // Check that the input file's absolute path has been annotated
+                                    // as @Input via this task's
+                                    // getResourceDirsOutsideRootProjectDir() input file property.
+                                    checkState(
+                                            resourceIsInResourceDirs(
+                                                    inputFile,
+                                                    task.getResourceDirsOutsideRootProjectDir()
+                                                            .get()),
+                                            inputFile.getAbsolutePath()
+                                                    + " is not annotated as @Input");
+
+                                    normalizedInputFile =
+                                            RelativizableFile.fromAbsoluteFile(
+                                                    inputFile.getCanonicalFile(), null);
+                                    checkState(normalizedInputFile.getRelativeFile() == null);
+                                }
+                                return getProcessor()
+                                        .processSingleFile(
+                                                normalizedInputFile,
+                                                outputFile,
+                                                isViewBindingEnabled);
+                            }
+
+                            /**
+                             * Returns `true` if the given resource file is located inside one of
+                             * the resource directories.
+                             */
+                            private boolean resourceIsInResourceDirs(
+                                    @NonNull File resFile, @NonNull Set<String> resDirs) {
+                                return resDirs.stream()
+                                        .anyMatch(
+                                                resDir ->
+                                                        FileUtils.isFileInDirectory(
+                                                                resFile, new File(resDir)));
+                            }
+
+                            @Override
+                            public void processRemovedFile(File file) {
+                                getProcessor().processRemovedFile(file);
+                            }
+
+                            @Override
+                            public void end() throws JAXBException {
+                                getProcessor()
+                                        .writeLayoutInfoFiles(
+                                                task.getDataBindingLayoutInfoOutFolder()
+                                                        .get()
+                                                        .getAsFile());
+                            }
+                        };
             }
 
             task.mergedNotCompiledResourcesOutputDirectory = mergedNotCompiledOutputDirectory;

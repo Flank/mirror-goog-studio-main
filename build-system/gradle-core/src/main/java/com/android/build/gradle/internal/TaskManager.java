@@ -2513,7 +2513,7 @@ public abstract class TaskManager<
         taskFactory.register(
                 new DataBindingMergeDependencyArtifactsTask.CreationAction(componentProperties));
 
-        DataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
+        globalScope.getDataBindingBuilder().setDebugLogEnabled(getLogger().isDebugEnabled());
 
         taskFactory.register(new DataBindingGenBaseClassesTask.CreationAction(componentProperties));
 
@@ -2550,7 +2550,7 @@ public abstract class TaskManager<
                     DataBindingCompilerArguments.createArguments(
                             componentProperties,
                             getLogger().isDebugEnabled(),
-                            DataBindingBuilder.getPrintMachineReadableOutput());
+                            globalScope.getDataBindingBuilder().getPrintMachineReadableOutput());
             options.compilerArgumentProvider(dataBindingArgs);
         } else {
             getLogger()
