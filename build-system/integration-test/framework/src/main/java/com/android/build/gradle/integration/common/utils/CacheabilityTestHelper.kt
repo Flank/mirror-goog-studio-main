@@ -19,54 +19,56 @@ package com.android.build.gradle.integration.common.utils
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.TaskStateList
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.DID_WORK
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FAILED
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.FROM_CACHE
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
+import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
+import com.android.build.gradle.options.StringOption
 import com.android.testutils.truth.FileSubject.assertThat
+import com.google.common.truth.Truth.assertThat
 import java.io.File
 
-/** Utility to write tests for cacheable tasks. */
-class CacheabilityTestHelper(
+class CacheabilityTestHelper private constructor(
     private val projectCopy1: GradleTestProject,
-    private val projectCopy2: GradleTestProject,
-    private val buildCacheDir: File
-) {
+    private val projectCopy2: GradleTestProject) {
 
-    private var executorSetter: ((GradleTaskExecutor) -> GradleTaskExecutor)? = null
+    private var buildCacheDir: File = File(projectCopy1.testDir.parent, "gradle-build-cache")
 
-    /**
-     * Sets a custom executor to run tasks by providing a lambda that replaces the default executor
-     * (project.executor()) with another one.
-     *
-     * @param executorSetter a lambda that takes the default executor and returns another one that
-     *     replaces it
-     */
-    fun useCustomExecutor(executorSetter: (GradleTaskExecutor) -> GradleTaskExecutor):
-            CacheabilityTestHelper {
-        this.executorSetter = executorSetter
-        return this
+    private val taskResults =
+        mapOf<TaskStateList.ExecutionState, MutableSet<String>>(
+            UP_TO_DATE to mutableSetOf(),
+            FROM_CACHE to mutableSetOf(),
+            DID_WORK to mutableSetOf(),
+            SKIPPED to mutableSetOf(),
+            FAILED to mutableSetOf()
+        )
+
+    private var didExecute = false
+
+    private val extraExecutorOperations: MutableList<(GradleTaskExecutor) -> GradleTaskExecutor> =
+        mutableListOf()
+
+    companion object {
+        /**
+         * Returns a CacheabilityTestHelper for two copies of a project
+         */
+        fun forProjects(projectCopy1: GradleTestProject, projectCopy2: GradleTestProject):
+                CacheabilityTestHelper {
+            return CacheabilityTestHelper(projectCopy1, projectCopy2)
+        }
     }
 
-    /** Runs the specified tasks on both projects. */
-    fun runTasks(vararg tasks: String): CacheabilityTestHelperAssertionStage {
-        // Run tasks on the first project
+    /**
+     * Sets build cache directory
+     */
+    fun withBuildCacheDir(buildCacheDir: File): CacheabilityTestHelper {
+        this.buildCacheDir = buildCacheDir
+
         setBuildCacheDirForProject(projectCopy1, buildCacheDir)
-        projectCopy1
-            .executor()
-            .withArgument("--build-cache")
-            .run(executorSetter ?: { it })
-            .run(tasks.asList())
-
-        // Check that the build cache has been populated
-        assertThat(buildCacheDir).exists()
-
-        // Run tasks on the second project
         setBuildCacheDirForProject(projectCopy2, buildCacheDir)
-        val result =
-            projectCopy2
-                .executor()
-                .withArgument("--build-cache")
-                .run(executorSetter ?: { it })
-                .run(tasks.asList())
 
-        return CacheabilityTestHelperAssertionStage(result.taskStates)
+        return this
     }
 
     private fun setBuildCacheDirForProject(project: GradleTestProject, buildCacheDir: File) {
@@ -77,43 +79,163 @@ class CacheabilityTestHelper(
             |    }
             |}""".trimMargin("|")
 
-        TestFileUtils.appendToFile(project.settingsFile, buildCacheString)
+
+        TestFileUtils.appendToFile(
+            project.settingsFile,
+            buildCacheString)
     }
 
-    class CacheabilityTestHelperAssertionStage(
-        private val actualTaskStates: Map<String, TaskStateList.ExecutionState>
-    ) {
+    /**
+     * Checks if the states of the given tasks are as expected.
+     *
+     * @param expectedTaskStates the expected task states
+     * @param exhaustive whether the list of actual tasks should contain ONLY the expected tasks
+     */
+    fun hasTaskStates(
+        expectedTaskStates: Map<String, TaskStateList.ExecutionState>,
+        exhaustive: Boolean = false
+    ): CacheabilityTestHelper {
+        hasUpToDateTasks(expectedTaskStates.filterValues { it == UP_TO_DATE }.keys, exhaustive)
+        hasFromCacheTasks(expectedTaskStates.filterValues { it == FROM_CACHE }.keys, exhaustive)
+        hasDidWorkTasks(expectedTaskStates.filterValues { it == DID_WORK }.keys, exhaustive)
+        hasSkippedTasks(expectedTaskStates.filterValues { it == SKIPPED }.keys, exhaustive)
+        hasFailedTasks(expectedTaskStates.filterValues { it == FAILED }.keys, exhaustive)
+        return this
+    }
 
-        /**
-         * Checks if the actual task states match the given expected task states.
-         *
-         * @param expectedTaskStates the expected task states
-         * @param exhaustive whether the list of expected tasks is exhaustive (whether the number of
-         *     expected tasks must equal the number of actual tasks)
-         */
-        fun assertTaskStates(
-            expectedTaskStates: Map<String, TaskStateList.ExecutionState>,
-            exhaustive: Boolean = false
-        ): CacheabilityTestHelperAssertionStage {
-            TaskStateAssertionHelper(actualTaskStates)
-                .assertTaskStates(expectedTaskStates, exhaustive)
-            return this
+    /**
+     * Checks if a number of tasks are in UpToDate
+     * @param tasks The list of tasks expected to be up to date
+     * @param exhaustive Whether the list of up to date tasks should contain ONLY the specified tasks
+     */
+    fun hasUpToDateTasks(tasks: Set<String>, exhaustive: Boolean = false): CacheabilityTestHelper =
+        hasTasks(UP_TO_DATE, tasks, "UpToDate Tasks", exhaustive)
+
+    /**
+     * Checks if a number of tasks are in FromCache
+     * @param tasks The list of tasks expected to be from cache
+     * @param exhaustive Whether the list of from cache tasks should contain ONLY the specified tasks
+     */
+    fun hasFromCacheTasks(tasks: Set<String>, exhaustive: Boolean = false): CacheabilityTestHelper =
+        hasTasks(FROM_CACHE, tasks, "FromCache Tasks", exhaustive)
+
+    /**
+     * Checks if a number of tasks are in DidWork
+     * @param tasks The list of tasks expected to have done work
+     * @param exhaustive Whether the list of did work tasks should contain ONLY the specified tasks
+     */
+    fun hasDidWorkTasks(tasks: Set<String>, exhaustive: Boolean = false): CacheabilityTestHelper =
+        hasTasks(DID_WORK, tasks, "DidWork Tasks", exhaustive)
+
+    /**
+     * Checks if a number of tasks are in Skipped
+     * @param tasks The list of tasks expected to have been skipped
+     * @param exhaustive Whether the list of skipped tasks should contain ONLY the specified tasks
+     */
+    fun hasSkippedTasks(tasks: Set<String>, exhaustive: Boolean = false): CacheabilityTestHelper =
+        hasTasks(SKIPPED, tasks, "Skipped Tasks", exhaustive)
+
+    /**
+     * Checks if a number of tasks are in Failed
+     * @param tasks The list of tasks expected to have failed
+     * @param exhaustive Whether the list of failed tasks should contain ONLY the specified tasks
+     */
+    fun hasFailedTasks(tasks: Set<String>, exhaustive: Boolean = false): CacheabilityTestHelper =
+        hasTasks(FAILED, tasks, "Failed Tasks", exhaustive)
+
+    private fun hasTasks(
+        state: TaskStateList.ExecutionState,
+        tasks: Set<String>,
+        name: String?,
+        exhaustive: Boolean): CacheabilityTestHelper {
+
+        assert(didExecute)
+
+        if (exhaustive) {
+            if (name == null) {
+                assertThat(taskResults.getValue(state))
+                    .containsExactlyElementsIn(tasks)
+            } else {
+                assertThat(taskResults.getValue(state))
+                    .named(name)
+                    .containsExactlyElementsIn(tasks)
+            }
+        } else {
+            if (name == null) {
+                assertThat(taskResults.getValue(state))
+                    .containsAtLeastElementsIn(tasks)
+            } else {
+                assertThat(taskResults.getValue(state))
+                    .named(name)
+                    .containsAtLeastElementsIn(tasks)
+            }
+        }
+        return this
+    }
+
+    /**
+     * Adds extra operations to be executed on the executor before running tasks
+     * For instance, (operation1, operation2, operation3) will result in
+     * operation1(executor), operation2(executor), operation3(executor) being run, with the
+     * previous return value being passed to the next operation.
+     * 
+     * @param operations a series of lambdas describing extra operations.
+     */
+    fun withExecutorOperations(vararg operations: (GradleTaskExecutor) -> GradleTaskExecutor):
+            CacheabilityTestHelper {
+        extraExecutorOperations.addAll(operations)
+        return this
+    }
+
+    /**
+     * Runs the specified tasks on both projects
+     */
+    fun withTasks(vararg tasks: String): CacheabilityTestHelper {
+        // Reset the result
+        taskResults.getValue(UP_TO_DATE).clear()
+        taskResults.getValue(FROM_CACHE).clear()
+        taskResults.getValue(DID_WORK).clear()
+        taskResults.getValue(SKIPPED).clear()
+        taskResults.getValue(FAILED).clear()
+
+        val chainExtraExecutorOperations = { it: GradleTaskExecutor ->
+            /* Simulates chain calling for additional operations
+             * similar to executor.operation1().operation2().operation3()...
+             */
+            var executor = it
+            for (operation in extraExecutorOperations) {
+                executor = operation(executor)
+            }
+
+            executor
         }
 
-        /**
-         * Checks if the actual task states match the given expected task states.
-         *
-         * @param expectedTaskStates the expected task states
-         * @param exhaustive whether the list of expected tasks is exhaustive (whether the number of
-         *     expected tasks must equal the number of actual tasks)
-         */
-        fun assertTaskStatesByGroups(
-            expectedTaskStates: Map<TaskStateList.ExecutionState, Set<String>>,
-            exhaustive: Boolean = false
-        ): CacheabilityTestHelperAssertionStage {
-            TaskStateAssertionHelper(actualTaskStates)
-                .assertTaskStatesByGroups(expectedTaskStates, exhaustive)
-            return this
-        }
+        // Build the first project
+        projectCopy1
+            .executor()
+            .withArgument("--build-cache")
+            .run(chainExtraExecutorOperations)
+            .run(tasks.asList())
+
+        // Check that the build cache has been populated
+        assertThat(buildCacheDir).exists()
+
+        // Build the second project
+        val result =
+            projectCopy2
+                .executor()
+                .withArgument("--build-cache")
+                .run(chainExtraExecutorOperations)
+                .run(tasks.asList())
+
+        taskResults.getValue(UP_TO_DATE).addAll(result.upToDateTasks)
+        taskResults.getValue(FROM_CACHE).addAll(result.fromCacheTasks)
+        taskResults.getValue(DID_WORK).addAll(result.didWorkTasks)
+        taskResults.getValue(SKIPPED).addAll(result.skippedTasks)
+        taskResults.getValue(FAILED).addAll(result.failedTasks)
+
+        didExecute = true
+
+        return this
     }
 }

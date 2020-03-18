@@ -127,9 +127,11 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
 
     @Test
     fun `test main resources located within root project directory, expect cacheable tasks`() {
-        CacheabilityTestHelper(project, projectCopy, buildCacheDirRoot.newFolder("build-cache"))
-            .runTasks("clean", ":compileDebugJavaWithJavac")
-            .assertTaskStates(expectedTaskStates, exhaustive = true)
+        CacheabilityTestHelper
+            .forProjects(project, projectCopy)
+            .withBuildCacheDir(buildCacheDirRoot.newFolder("gradle-build-cache"))
+            .withTasks("clean", ":compileDebugJavaWithJavac")
+            .hasTaskStates(expectedTaskStates, exhaustive = true)
     }
 
     @Test
@@ -144,9 +146,11 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
             )
         }
 
-        CacheabilityTestHelper(project, projectCopy, buildCacheDirRoot.newFolder("build-cache"))
-            .runTasks("clean", ":dataBindingExportBuildInfoDebug")
-            .assertTaskStates(mapOf(":dataBindingExportBuildInfoDebug" to DID_WORK))
+        CacheabilityTestHelper
+            .forProjects(project, projectCopy)
+            .withBuildCacheDir(buildCacheDirRoot.newFolder("gradle-build-cache"))
+            .withTasks("clean", ":dataBindingExportBuildInfoDebug")
+            .hasTaskStates(mapOf(":dataBindingExportBuildInfoDebug" to DID_WORK))
     }
 
 
@@ -178,8 +182,10 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
             updatedExpectedTaskStates[":compileDebugJavaWithJavac"] = DID_WORK
         }
 
-        CacheabilityTestHelper(project, projectCopy, buildCacheDirRoot.newFolder("build-cache"))
-            .runTasks("clean", ":compileDebugJavaWithJavac")
-            .assertTaskStates(updatedExpectedTaskStates, exhaustive = true)
+        CacheabilityTestHelper
+            .forProjects(project, projectCopy)
+            .withBuildCacheDir(buildCacheDirRoot.newFolder("gradle-build-cache"))
+            .withTasks("clean", ":compileDebugJavaWithJavac")
+            .hasTaskStates(updatedExpectedTaskStates, exhaustive = true)
     }
 }

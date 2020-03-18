@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -209,15 +208,6 @@ public class TaskStateList {
     @NonNull
     public List<String> getTasks() {
         return taskList;
-    }
-
-    @NonNull
-    public Map<String, ExecutionState> getTaskStates() {
-        Map<String, ExecutionState> taskStates = new HashMap<>();
-        for (Map.Entry<String, TaskInfo> entry : taskInfoMap.entrySet()) {
-            taskStates.put(entry.getKey(), entry.getValue().getExecutionState());
-        }
-        return taskStates;
     }
 
     @NonNull

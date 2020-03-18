@@ -17,19 +17,20 @@
 package com.android.build.gradle.integration.common.utils
 
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.truth.TaskStateList
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.FileTime
 
 /** Utility to write tests for incremental tasks. */
 class IncrementalTestHelper(
-    private val project: GradleTestProject,
+    private val executor: GradleTaskExecutor,
     private val cleanTask: String = "clean",
     private val buildTask: String = "assembleDebug",
-    private val filesToTrackChanges: Set<File> = emptySet()
+    private val filesToTrackChanges: Set<File>
 ) {
+
+    // Used to ensure the steps in the API are followed
+    private var stage: Stage = Stage.INITIAL
 
     // Record the timestamps and contents of files in the first (full) build
     private lateinit var fileTimestamps: Map<File, FileTime>
@@ -39,26 +40,12 @@ class IncrementalTestHelper(
     private lateinit var filesWithChangedTimestamps: Set<File>
     private lateinit var filesWithChangedContents: Set<File>
 
-    private var executorSetter: ((GradleTaskExecutor) -> GradleTaskExecutor)? = null
-
-    /**
-     * Sets a custom executor to run tasks by providing a lambda that replaces the default executor
-     * (project.executor()) with another one.
-     *
-     * @param executorSetter a lambda that takes the default executor and returns another one that
-     *     replaces it
-     */
-    fun useCustomExecutor(executorSetter: (GradleTaskExecutor) -> GradleTaskExecutor):
-            IncrementalTestHelper {
-        this.executorSetter = executorSetter
-        return this
-    }
-
     /** Runs a full build. */
-    fun runFullBuild(): IncrementalTestHelperStage2 {
-        project.executor()
-            .run(executorSetter ?: { it })
-            .run(cleanTask, buildTask)
+    fun runFullBuild(): IncrementalTestHelper {
+        check(stage < Stage.RAN_FULL_BUILD) { "runFullBuild was already called" }
+        check(stage == Stage.INITIAL) { "Expected ${Stage.INITIAL.name} but found: ${stage.name}" }
+
+        executor.run(cleanTask, buildTask)
 
         // Record timestamps and contents
         val timestamps = mutableMapOf<File, FileTime>()
@@ -75,145 +62,126 @@ class IncrementalTestHelper(
         fileTimestamps = timestamps.toMap()
         fileContents = contents.toMap()
 
-        return IncrementalTestHelperStage2(this)
+        stage = Stage.RAN_FULL_BUILD
+        return this
     }
 
-    class IncrementalTestHelperStage2(
-        private val incrementalTestHelper: IncrementalTestHelper
-    ) {
+    /** Applies a change. */
+    fun applyChange(change: () -> Unit): IncrementalTestHelper {
+        check(stage < Stage.APPLIED_CHANGE) { "applyChange was already called" }
+        check(stage == Stage.RAN_FULL_BUILD) { "runFullBuild must be called first" }
 
-        /** Applies a change. */
-        fun applyChange(change: () -> Unit): IncrementalTestHelperStage3 {
-            change()
-            return IncrementalTestHelperStage3(incrementalTestHelper)
-        }
+        change()
+
+        stage = Stage.APPLIED_CHANGE
+        return this
     }
 
-    class IncrementalTestHelperStage3(
-        private val incrementalTestHelper: IncrementalTestHelper
-    ) {
+    /** Runs an incremental build. */
+    fun runIncrementalBuild(): IncrementalTestHelper {
+        check(stage < Stage.RAN_INCREMENTAL_BUILD) { "runIncrementalBuild was already called" }
+        check(stage == Stage.APPLIED_CHANGE) { "applyChange must be called first" }
 
-        /** Runs an incremental build. */
-        fun runIncrementalBuild(): IncrementalTestHelperStage4 {
-            with(incrementalTestHelper) {
-                val result = project.executor()
-                    .run(executorSetter ?: { it })
-                    .run(buildTask)
+        executor.run(buildTask)
 
-                // Record changed files
-                filesWithChangedTimestamps = fileTimestamps.filter { (file, previousTimestamp) ->
-                    check(file.isFile) { "File `${file.path}` does not exist or is a directory." }
-                    Files.getLastModifiedTime(file.toPath()) != previousTimestamp
-                }.keys
-                filesWithChangedContents = fileContents.filter { (file, previousContents) ->
-                    check(file.isFile) { "File `${file.path}` does not exist or is a directory." }
-                    !file.readBytes().contentEquals(previousContents)
-                }.keys
+        // Record changed files
+        filesWithChangedTimestamps = fileTimestamps.filter { (file, previousTimestamp) ->
+            check(file.isFile) { "File `${file.path}` does not exist or is a directory." }
+            Files.getLastModifiedTime(file.toPath()) != previousTimestamp
+        }.keys
+        filesWithChangedContents = fileContents.filter { (file, previousContents) ->
+            check(file.isFile) { "File `${file.path}` does not exist or is a directory." }
+            !file.readBytes().contentEquals(previousContents)
+        }.keys
 
-                return IncrementalTestHelperStage4(incrementalTestHelper, result.taskStates)
+        stage = Stage.RAN_INCREMENTAL_BUILD
+        return this
+    }
+
+    /** Asserts file changes. */
+    fun assertFileChanges(fileChanges: Map<File, ChangeType>): IncrementalTestHelper {
+        return assertFileChanges(
+            fileChanges.filterValues { it == ChangeType.CHANGED }.keys,
+            fileChanges.filterValues { it == ChangeType.CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS }.keys,
+            fileChanges.filterValues { it == ChangeType.UNCHANGED }.keys
+        )
+    }
+
+    /** Asserts file changes. */
+    fun assertFileChanges(
+        filesWithChangedTimestampsAndContents: Set<File>,
+        filesWithChangedTimestampsButNotContents: Set<File>,
+        filesWithUnchangedTimestampsAndContents: Set<File>
+    ): IncrementalTestHelper {
+        check(stage < Stage.ASSERTED_FILE_CHANGES) { "assertFileChanges was already called" }
+        check(stage == Stage.RAN_INCREMENTAL_BUILD) { "runIncrementalBuild must be called first" }
+
+        (filesWithChangedTimestampsAndContents
+                + filesWithChangedTimestampsButNotContents
+                + filesWithUnchangedTimestampsAndContents).subtract(
+            filesToTrackChanges
+        ).let {
+            check(it.isEmpty()) {
+                "The following files are missing from the set of files to track:\n" +
+                        it.joinToString("\n")
             }
         }
-    }
 
-    class IncrementalTestHelperStage4(
-        private val incrementalTestHelper: IncrementalTestHelper,
-        private val taskStates: Map<String, TaskStateList.ExecutionState>
-    ) {
+        val actualFilesWithChangedTimestampsAndContents =
+            filesWithChangedTimestamps.intersect(filesWithChangedContents)
+        val actualFilesWithChangedTimestampsButNotContents =
+            filesWithChangedTimestamps.subtract(filesWithChangedContents)
+        val actualFilesWithUnchangedTimestampsAndContents =
+            filesToTrackChanges.subtract(filesWithChangedTimestamps.plus(filesWithChangedContents))
 
-        /**
-         * Checks if the actual task states match the given expected task states.
-         *
-         * @param expectedTaskStates the expected task states
-         * @param exhaustive whether the list of expected tasks is exhaustive (whether the number of
-         *     expected tasks must equal the number of actual tasks)
-         */
-        fun assertTaskStates(
-            expectedTaskStates: Map<String, TaskStateList.ExecutionState>,
-            exhaustive: Boolean = false
-        ): IncrementalTestHelperStage4 {
-            TaskStateAssertionHelper(taskStates).assertTaskStates(expectedTaskStates, exhaustive)
-            return this
+        val actualFilesWithChangedContentsButNotTimestamps =
+            filesWithChangedContents.subtract(filesWithChangedTimestamps)
+        check(actualFilesWithChangedContentsButNotTimestamps.isEmpty()) {
+            "The following files have changed contents but unchanged timestamps," +
+                    " which can cause tests to be flaky:\n" +
+                    actualFilesWithChangedContentsButNotTimestamps.joinToString("\n") +
+                    "To work around this, introduce a few milliseconds of sleep between builds."
         }
 
-        /** Asserts file changes. */
-        fun assertFileChanges(fileChanges: Map<File, ChangeType>): IncrementalTestHelperStage4 {
-            return assertFileChanges(
-                fileChanges.filterValues { it == ChangeType.CHANGED }.keys,
-                fileChanges.filterValues { it == ChangeType.CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS }.keys,
-                fileChanges.filterValues { it == ChangeType.UNCHANGED }.keys
-            )
-        }
-
-        /** Asserts file changes. */
-        private fun assertFileChanges(
-            filesWithChangedTimestampsAndContents: Set<File>,
-            filesWithChangedTimestampsButNotContents: Set<File>,
-            filesWithUnchangedTimestampsAndContents: Set<File>
-        ): IncrementalTestHelperStage4 {
-            (filesWithChangedTimestampsAndContents
-                    + filesWithChangedTimestampsButNotContents
-                    + filesWithUnchangedTimestampsAndContents).subtract(
-                incrementalTestHelper.filesToTrackChanges
-            ).let {
-                check(it.isEmpty()) {
-                    "The following files are missing from the set of files to track:\n" +
+        filesWithChangedTimestampsAndContents
+            .subtract(actualFilesWithChangedTimestampsAndContents).let {
+                assert(it.isEmpty()) {
+                    "The following files are expected to have changed timestamps and contents," +
+                            " but their contents have not changed:\n" +
                             it.joinToString("\n")
                 }
             }
 
-            val actualFilesWithChangedTimestampsAndContents =
-                incrementalTestHelper.filesWithChangedTimestamps
-                    .intersect(incrementalTestHelper.filesWithChangedContents)
-            val actualFilesWithChangedTimestampsButNotContents =
-                incrementalTestHelper.filesWithChangedTimestamps
-                    .subtract(incrementalTestHelper.filesWithChangedContents)
-            val actualFilesWithUnchangedTimestampsAndContents =
-                incrementalTestHelper.filesToTrackChanges.subtract(
-                    incrementalTestHelper.filesWithChangedTimestamps.plus(
-                        incrementalTestHelper.filesWithChangedContents
-                    )
-                )
-
-            val actualFilesWithChangedContentsButNotTimestamps =
-                incrementalTestHelper.filesWithChangedContents
-                    .subtract(incrementalTestHelper.filesWithChangedTimestamps)
-            check(actualFilesWithChangedContentsButNotTimestamps.isEmpty()) {
-                "The following files have changed contents but unchanged timestamps," +
-                        " which can cause tests to be flaky:\n" +
-                        actualFilesWithChangedContentsButNotTimestamps.joinToString("\n") +
-                        "To work around this, introduce a few milliseconds of sleep between builds."
+        filesWithChangedTimestampsButNotContents
+            .subtract(actualFilesWithChangedTimestampsButNotContents).let {
+                assert(it.isEmpty()) {
+                    "The following files are expected to have changed timestamps and unchanged contents," +
+                            " but either their timestamps have not changed or their contents have changed:\n" +
+                            it.joinToString("\n")
+                }
             }
 
-            filesWithChangedTimestampsAndContents
-                .subtract(actualFilesWithChangedTimestampsAndContents).let {
-                    assert(it.isEmpty()) {
-                        "The following files are expected to have changed timestamps and contents," +
-                                " but their contents have not changed:\n" +
-                                it.joinToString("\n")
-                    }
+        filesWithUnchangedTimestampsAndContents
+            .subtract(actualFilesWithUnchangedTimestampsAndContents).let {
+                assert(it.isEmpty()) {
+                    "The following files are expected to have unchanged timestamps and contents," +
+                            " but their timestamps have changed:\n" +
+                            it.joinToString("\n")
                 }
+            }
 
-            filesWithChangedTimestampsButNotContents
-                .subtract(actualFilesWithChangedTimestampsButNotContents).let {
-                    assert(it.isEmpty()) {
-                        "The following files are expected to have changed timestamps and unchanged contents," +
-                                " but either their timestamps have not changed or their contents have changed:\n" +
-                                it.joinToString("\n")
-                    }
-                }
-
-            filesWithUnchangedTimestampsAndContents
-                .subtract(actualFilesWithUnchangedTimestampsAndContents).let {
-                    assert(it.isEmpty()) {
-                        "The following files are expected to have unchanged timestamps and contents," +
-                                " but their timestamps have changed:\n" +
-                                it.joinToString("\n")
-                    }
-                }
-
-            return this
-        }
+        stage = Stage.ASSERTED_FILE_CHANGES
+        return this
     }
+}
+
+/** Indicates the steps in the API of [IncrementalTestHelper]. */
+private enum class Stage {
+    INITIAL,
+    RAN_FULL_BUILD,
+    APPLIED_CHANGE,
+    RAN_INCREMENTAL_BUILD,
+    ASSERTED_FILE_CHANGES
 }
 
 /** Type of a file change. */
