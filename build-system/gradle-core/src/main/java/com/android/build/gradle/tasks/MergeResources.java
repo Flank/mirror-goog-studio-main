@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.services.Aapt2Workers;
 import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.tasks.Blocks;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.BooleanOption;
@@ -144,12 +143,6 @@ public abstract class MergeResources extends ResourceAwareTask {
     private boolean precompileDependenciesResources;
 
     private ImmutableSet<Flag> flags;
-
-    @Input
-    public abstract Property<Boolean> getDataBindingEnabled();
-
-    @Input
-    public abstract Property<Boolean> getViewBindingEnabled();
 
     /**
      * Set of absolute paths to resource directories that are located outside of the root project
@@ -777,12 +770,6 @@ public abstract class MergeResources extends ResourceAwareTask {
             final BuildFeatureValues features = creationConfig.getBuildFeatures();
             final boolean isDataBindingEnabled = features.getDataBinding();
             boolean isViewBindingEnabled = features.getViewBinding();
-
-            HasConfigurableValuesKt.setDisallowChanges(
-                    task.getDataBindingEnabled(), isDataBindingEnabled);
-            HasConfigurableValuesKt.setDisallowChanges(
-                    task.getViewBindingEnabled(), isViewBindingEnabled);
-
             if (isDataBindingEnabled || isViewBindingEnabled) {
                 // Keep as an output.
                 task.dataBindingLayoutProcessor =

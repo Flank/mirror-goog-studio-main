@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -39,7 +38,6 @@ import org.junit.runners.JUnit4
  * See https://guides.gradle.org/using-build-cache/ for information on the Gradle build cache.
  */
 @RunWith(JUnit4::class)
-@Ignore("Broke build, fix will be uploaded soon")
 class CacheabilityTest {
 
     companion object {

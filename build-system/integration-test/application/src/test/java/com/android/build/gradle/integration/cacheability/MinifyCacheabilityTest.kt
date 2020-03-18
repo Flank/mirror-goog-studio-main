@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.builder.model.CodeShrinker
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -38,7 +37,6 @@ import org.junit.runners.Parameterized
  *
  * See https://guides.gradle.org/using-build-cache/ for information on the Gradle build cache.
  */
-@Ignore("Broke build, fix will be uploaded soon")
 @RunWith(FilterableParameterized::class)
 class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
 
