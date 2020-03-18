@@ -12,6 +12,7 @@ java_binary(
     ],
     main_class = "com.android.signflinger.ProfileV1",
     deps = [
+        "//tools/apksig",
         "//tools/base/signflinger",
         "//tools/base/signflinger:sign_utils",
         "//tools/base/tracer:tools.tracer",
