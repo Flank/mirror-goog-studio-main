@@ -59,7 +59,6 @@ apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
 dokka {
     outputFormat = 'dac'
-    outputDirectory = "$rootDir/../dokka-out"
     jdkVersion = 8
 
     includeNonPublic = false
@@ -81,3 +80,9 @@ dokka {
     }
 }
 
+task dokkaZip(type: Zip) {
+    dependsOn dokka
+    from dokka.outputDirectory
+    destinationDirectory = layout.projectDirectory.dir("$rootDir/../out/dist")
+    archiveFileName = "documentation.zip"
+}
