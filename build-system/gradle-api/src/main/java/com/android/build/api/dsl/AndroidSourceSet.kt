@@ -76,13 +76,43 @@ interface AndroidSourceSet : Named {
 
     /** The Android shaders directory for this source set. */
     val shaders: AndroidSourceDirectorySet
+
     /** The Android shaders directory for this source set. */
     fun shaders(action: AndroidSourceDirectorySet.() -> Unit)
 
     /** The machine learning models directory for this source set. */
     val mlModels: AndroidSourceDirectorySet
+
     /** The machine learning models directory for this source set. */
     fun mlModels(action: AndroidSourceDirectorySet.() -> Unit)
+
+    /** Returns the name of the api configuration for this source set.  */
+    val apiConfigurationName: String
+
+    /**
+     * Returns the name of the compileOnly configuration for this source set.
+     */
+    val compileOnlyConfigurationName: String
+
+    /**
+     * Returns the name of the implemenation configuration for this source set.
+     */
+    val implementationConfigurationName: String
+
+    /**
+     * Returns the name of the implemenation configuration for this source set.
+     */
+    val runtimeOnlyConfigurationName: String
+
+    /**
+     * Returns the name of the wearApp configuration for this source set.
+     */
+    val wearAppConfigurationName: String
+
+    /**
+     * Returns the name of the annotation processing tool classpath for this source set.
+     */
+    val annotationProcessorConfigurationName: String
 
     /**
      * Sets the root of the source sets to a given path.
