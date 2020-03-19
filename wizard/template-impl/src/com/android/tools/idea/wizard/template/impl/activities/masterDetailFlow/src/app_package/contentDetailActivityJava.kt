@@ -37,7 +37,7 @@ import ${getMaterialComponentName("android.support.design.widget.FloatingActionB
 import ${getMaterialComponentName("android.support.design.widget.Snackbar", useMaterial2)};
 import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)};
 import android.view.View;
-import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity;", useAndroidX)}
+import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)};
 import ${getMaterialComponentName("android.support.v7.app.ActionBar", useAndroidX)};
 import android.view.MenuItem;
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
