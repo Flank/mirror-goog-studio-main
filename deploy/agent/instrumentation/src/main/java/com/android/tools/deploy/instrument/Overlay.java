@@ -24,17 +24,20 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 class Overlay {
     private static final String TAG = "studio.deploy";
     private static final String OVERLAY_PATH_FORMAT = "/data/data/%s/code_cache/.overlay/";
 
     private final Path overlayPath;
+    private final Path resourceTablePath;
     private final Path libraryPath;
 
     public Overlay(String packageName) {
         String pathString = String.format(OVERLAY_PATH_FORMAT, packageName);
         overlayPath = Paths.get(pathString);
+        resourceTablePath = Paths.get(pathString, "resources.arsc");
         libraryPath = Paths.get(pathString, "lib");
     }
 
@@ -52,6 +55,13 @@ class Overlay {
             Log.e(TAG, "Could not enumerate overlay dex files", io);
         }
         return dexFiles;
+    }
+
+    public Optional<File> getResourceTable() {
+        if (!Files.exists(resourceTablePath)) {
+            return Optional.empty();
+        }
+        return Optional.of(resourceTablePath.toFile());
     }
 
     public List<File> getNativeLibraryDirs() {

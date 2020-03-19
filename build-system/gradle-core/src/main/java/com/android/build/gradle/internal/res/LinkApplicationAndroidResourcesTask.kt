@@ -433,6 +433,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS, task.aaptFriendlyManifestFiles
             )
             creationConfig.operations.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
+            creationConfig.operations.setTaskInputToFinalProduct(
+                InternalArtifactType.MERGED_MANIFESTS,
+                task.mergedManifestFiles
+            )
 
             task.setType(creationConfig.variantType)
             task.aaptOptions = creationConfig.globalScope.extension.aaptOptions.convert()

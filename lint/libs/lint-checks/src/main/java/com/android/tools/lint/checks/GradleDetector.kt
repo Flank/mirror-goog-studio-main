@@ -735,6 +735,7 @@ open class GradleDetector : Detector(), GradleScanner {
         val groupId = dependency.groupId
         val artifactId = dependency.artifactId
         val revision = dependency.revision
+        var safeReplacement: GradleVersion? = null
         if (version == null || groupId == null || artifactId == null) {
             return
         }
@@ -760,6 +761,22 @@ open class GradleDetector : Detector(), GradleScanner {
                         version,
                         getGoogleMavenRepoVersion(context, dependency, filter)
                     )
+
+                    // Don't just offer the latest available version, but if there is a newer
+                    // dot dot release available, offer that one as well since it may be easier
+                    // to update to
+                    if (newerVersion != null && !version.isPreview && newerVersion != version &&
+                        version.minorSegment?.acceptsGreaterValue() == false
+                    ) {
+                        safeReplacement = getGoogleMavenRepoVersion(context, dependency,
+                            Predicate { filterVersion ->
+                                filterVersion.major == version.major &&
+                                        filterVersion.minor == version.minor &&
+                                        filterVersion.micro > version.micro &&
+                                        !filterVersion.isPreview &&
+                                        filterVersion < newerVersion!!
+                            })
+                    }
                 }
             }
 
@@ -932,8 +949,8 @@ open class GradleDetector : Detector(), GradleScanner {
 
         if (newerVersion != null && newerVersion > version) {
             val versionString = newerVersion.toString()
-            val message = getNewerVersionAvailableMessage(dependency, versionString)
-            val fix = if (!isResolved) getUpdateDependencyFix(revision, versionString) else null
+            val message = getNewerVersionAvailableMessage(dependency, versionString, safeReplacement)
+            val fix = if (!isResolved) getUpdateDependencyFix(revision, versionString, safeReplacement) else null
             report(context, cookie, issue, message, fix)
         }
     }
@@ -1781,30 +1798,61 @@ open class GradleDetector : Detector(), GradleScanner {
 
     private fun getUpdateDependencyFix(
         currentVersion: String,
-        suggestedVersion: String
+        suggestedVersion: String,
+        safeReplacement: GradleVersion? = null
     ): LintFix {
-        return LintFix.create()
+        val fix = LintFix.create()
             .name("Change to $suggestedVersion")
             .sharedName("Update versions")
             .replace()
             .text(currentVersion)
             .with(suggestedVersion)
-            .autoFix()
             .build()
+        return if (safeReplacement != null) {
+            val stableVersion = safeReplacement.toString()
+            val stableFix = LintFix.create()
+                .name("Change to $stableVersion")
+                .sharedName("Update versions")
+                .replace()
+                .text(currentVersion)
+                .with(stableVersion)
+                .autoFix()
+                .build()
+            LintFix.create().alternatives(fix, stableFix)
+        } else {
+            fix
+        }
     }
 
     private fun getNewerVersionAvailableMessage(
         dependency: GradleCoordinate,
-        version: String
+        version: String,
+        stable: GradleVersion?
     ): String {
-        return "A newer version of " +
-                dependency.groupId +
-                ":" +
-                dependency.artifactId +
-                " than " +
-                dependency.revision +
-                " is available: " +
-                version
+        val message = StringBuilder()
+        with(message) {
+            append("A newer version of ")
+            append(dependency.groupId)
+            append(":")
+            append(dependency.artifactId)
+            append(" than ")
+            append(dependency.revision)
+            append(" is available: ")
+            append(version)
+            if (stable != null) {
+                append(". (There is also a newer version of ")
+                append(stable.major.toString())
+                append(".")
+                append(stable.minor.toString())
+                // \uD835\uDC65 is 𝑥, unicode for Mathematical Italic Small X
+                append(".\uD835\uDC65 available, if upgrading to ")
+                append(version)
+                append(" is difficult: ")
+                append(stable.toString())
+                append(")")
+            }
+        }
+        return message.toString()
     }
 
     /**

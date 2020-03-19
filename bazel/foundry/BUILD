@@ -15,7 +15,7 @@ platform(
         "@bazel_toolchains//constraints/sanitizers:support_msan",
     ],
     exec_properties = create_rbe_exec_properties_dict(
-        container_image = "docker://gcr.io/google.com/android-studio-alphasource/rbe-ubuntu16-as@sha256:aa2a7ab0825b6b7b13c5b2e1184674f8dd452853c11ae4b5fdf83f1fd9265926",
+        container_image = "docker://gcr.io/google.com/android-studio-alphasource/rbe-ubuntu18-as@sha256:b472f2ff3080b759d9abd112930170034603f8301cbce25e609be4733f5c0c74",
         docker_add_capabilities = "SYS_NICE",
         docker_network = "off",
         docker_privileged = True,  # This is required to support emulators/nested KVM.

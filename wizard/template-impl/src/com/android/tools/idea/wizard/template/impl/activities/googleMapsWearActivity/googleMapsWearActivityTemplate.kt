@@ -41,7 +41,7 @@ import java.io.File
 val googleMapsWearActivityTemplate
   get() = template {
     revision = 1
-    name = "Google Maps Wear Activity"
+    name = "Google Maps Activity"
     minApi = 23
     minBuildApi = 25
     constraints = listOf(TemplateConstraint.AndroidX)
@@ -49,7 +49,7 @@ val googleMapsWearActivityTemplate
 
     category = Category.Google
     formFactor = FormFactor.Wear
-    screens = listOf(WizardUiContext.MenuEntry)
+    screens = listOf(WizardUiContext.MenuEntry, WizardUiContext.NewProject, WizardUiContext.NewModule)
 
     lateinit var layoutName: StringParameter
     val activityClass = stringParameter {

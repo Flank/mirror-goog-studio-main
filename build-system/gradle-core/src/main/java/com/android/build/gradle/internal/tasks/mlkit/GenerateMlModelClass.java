@@ -93,7 +93,7 @@ public abstract class GenerateMlModelClass extends NonIncrementalTask {
             creationConfig
                     .getArtifacts()
                     .producesDir(
-                            InternalArtifactType.MLKIT_SOURCE_OUT.INSTANCE,
+                            InternalArtifactType.ML_SOURCE_OUT.INSTANCE,
                             taskProvider,
                             GenerateMlModelClass::getSourceOutDir,
                             "out");

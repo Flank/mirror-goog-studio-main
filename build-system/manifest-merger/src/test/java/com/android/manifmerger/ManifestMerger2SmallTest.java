@@ -98,7 +98,7 @@ public class ManifestMerger2SmallTest {
             assertEquals(MergingReport.Result.ERROR, mergingReport.getResult());
             // check the log complains about the incorrect "tools:replace"
             assertStringPresenceInLogRecords(mergingReport, "tools:replace");
-            assertNull(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+            assertNull(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         } finally {
             assertTrue(tmpFile.delete());
         }
@@ -130,7 +130,7 @@ public class ManifestMerger2SmallTest {
             assertEquals(MergingReport.Result.WARNING, mergingReport.getResult());
             // ensure tools annotation removal.
             Document xmlDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
             NodeList applications = xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
             assertTrue(applications.getLength() == 1);
             Node replace = applications.item(0).getAttributes()
@@ -191,7 +191,7 @@ public class ManifestMerger2SmallTest {
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
             // ensure tools annotation removal.
             Document xmlDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
             NodeList applications = xmlDocument.getElementsByTagName(SdkConstants.TAG_ACTIVITY);
             assertTrue(applications.getLength() == 0);
         } finally {
@@ -272,7 +272,7 @@ public class ManifestMerger2SmallTest {
             assertEquals(MergingReport.Result.WARNING, mergingReport.getResult());
             // ensure tools annotation removal.
             Document xmlDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
             NodeList applications = xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
             assertTrue(applications.getLength() == 1);
             Node replace = applications.item(0).getAttributes()
@@ -441,8 +441,7 @@ public class ManifestMerger2SmallTest {
                     .merge();
 
             assertTrue(mergingReport.getResult().isSuccess());
-            Document document =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+            Document document = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
             assertNotNull(document);
             Optional<Element> activityOne =
                     getElementByTypeAndKey(document, "activity", "foo.bar.activityOne");
@@ -474,8 +473,7 @@ public class ManifestMerger2SmallTest {
                             .merge();
 
             assertTrue(mergingReport.getResult().isSuccess());
-            Document document =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+            Document document = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
             assertEquals(
                     "foo.bar",
                     document.getElementsByTagName("manifest")
@@ -518,9 +516,8 @@ public class ManifestMerger2SmallTest {
                     .merge();
 
             assertTrue(mergingReport.getResult().isSuccess());
-            assertNotNull(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
-            Document document =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+            assertNotNull(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            Document document = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
             assertEquals(
                     "foo.bar",
                     document.getElementsByTagName("manifest")
@@ -567,8 +564,7 @@ public class ManifestMerger2SmallTest {
                 .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         assertEquals("com.foo.example.activityOne",
                 xmlDocument.getElementsByTagName("activity").item(0).getAttributes()
                         .item(0).getNodeValue());
@@ -612,8 +608,7 @@ public class ManifestMerger2SmallTest {
                 .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         assertEquals(".activityOne",
                 xmlDocument.getElementsByTagName("activity").item(0).getAttributes()
                         .item(0).getNodeValue());
@@ -661,8 +656,7 @@ public class ManifestMerger2SmallTest {
                 .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         assertEquals("${applicationId}",
                 xmlDocument.getElementsByTagName("manifest")
                         .item(0).getAttributes().getNamedItem("package").getNodeValue());
@@ -700,8 +694,7 @@ public class ManifestMerger2SmallTest {
                 .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         assertEquals("${applicationId}",
                 xmlDocument.getElementsByTagName("manifest")
                         .item(0).getAttributes().getNamedItem("package").getNodeValue());
@@ -739,8 +732,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         assertEquals("com.foo.example", xmlDocument.getElementsByTagName("manifest")
           .item(0).getAttributes().getNamedItem("package").getNodeValue());
 
@@ -787,8 +779,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
 
         NodeList activityList = xmlDocument.getElementsByTagName("activity");
         assertEquals(".activityOne", activityList.item(0).getAttributes().getNamedItem("t:name").getNodeValue());
@@ -825,8 +816,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document document =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document document = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         assertEquals(
                 "foo",
                 document.getElementsByTagName(SdkConstants.TAG_USES_SDK)
@@ -878,8 +868,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
 
         NodeList applications = xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
         assertEquals(1, applications.getLength());
@@ -928,8 +917,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
 
         NodeList applications = xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
         assertEquals(1, applications.getLength());
@@ -975,8 +963,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
 
         NodeList applications = xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION);
         assertEquals(1, applications.getLength());
@@ -1021,8 +1008,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertThat(mergingReport.getResult().isSuccess()).isTrue();
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
 
         NodeList modules = xmlDocument.getElementsByTagNameNS(DIST_URI, TAG_MODULE);
         assertThat(modules.getLength()).isEqualTo(1);
@@ -1075,8 +1061,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertThat(mergingReport.getResult().isSuccess()).isTrue();
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
 
         NodeList modules = xmlDocument.getElementsByTagNameNS(DIST_URI, TAG_MODULE);
         assertThat(modules.getLength()).isEqualTo(0);
@@ -1102,7 +1087,7 @@ public class ManifestMerger2SmallTest {
                 .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        String xmlText = mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED);
+        String xmlText = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
         Document xmlDocument = parse(xmlText);
         assertEquals("true",
                 xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION)
@@ -1132,7 +1117,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        String xmlText = mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED);
+        String xmlText = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
         Document xmlDocument = parse(xmlText);
         assertEquals(
                 "true",
@@ -1175,7 +1160,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        String xmlText = mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED);
+        String xmlText = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
         Document xmlDocument = parse(xmlText);
         assertEquals(
                 useAndroidX
@@ -1212,7 +1197,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        String xmlText = mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED);
+        String xmlText = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
         Document xmlDocument = parse(xmlText);
         assertEquals(
                 "com.foo.bar.applicationOne",
@@ -1246,8 +1231,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         NodeList nodes = xmlDocument.getElementsByTagName("uses-permission");
         assertEquals(2, nodes.getLength());
         assertEquals(
@@ -1281,8 +1265,7 @@ public class ManifestMerger2SmallTest {
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         NodeList nodes = xmlDocument.getElementsByTagName("uses-permission");
         assertEquals(2, nodes.getLength());
         assertEquals(
@@ -1291,98 +1274,6 @@ public class ManifestMerger2SmallTest {
         assertEquals(
                 "android.permission.RECEIVE_SMS",
                 nodes.item(1).getAttributes().getNamedItem("t:name").getNodeValue());
-    }
-
-    @Test
-    public void testInstantAppFeatureSplitOption() throws Exception {
-        String xml =
-                ""
-                        + "<manifest\n"
-                        + "    package=\"com.foo.example\""
-                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
-                        + "    <application t:name=\".applicationOne\">\n"
-                        + "        <activity t:name=\"activityOne\"/>\n"
-                        + "    </application>\n"
-                        + "</manifest>";
-
-        File inputFile = TestUtils.inputAsFile("testFeatureSplitOption", xml);
-
-        MockLog mockLog = new MockLog();
-        MergingReport mergingReport =
-                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
-                        .setFeatureName("feature")
-                        .merge();
-
-        assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_APP));
-        assertEquals(
-                "feature",
-                xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
-
-        assertEquals(
-                "feature",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
-                        .getNodeValue());
-    }
-
-    @Test
-    public void testInstantAppFeatureMetadataManifest() throws Exception {
-        String xml =
-                ""
-                        + "<manifest\n"
-                        + "    package=\"com.foo.example\""
-                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
-                        + "    <application t:name=\".applicationOne\">\n"
-                        + "        <activity t:name=\"activityOne\"/>\n"
-                        + "    </application>\n"
-                        + "    <uses-sdk\n"
-                        + "        t:minSdkVersion=\"22\"\n"
-                        + "        t:targetSdkVersion=\"27\" />"
-                        + "</manifest>";
-
-        File inputFile = TestUtils.inputAsFile("testInstantAppFeatureMetadataManifest", xml);
-
-        MockLog mockLog = new MockLog();
-        MergingReport mergingReport =
-                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_FEATURE_MANIFEST)
-                        .setFeatureName("feature")
-                        .merge();
-
-        assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.METADATA_FEATURE));
-        assertEquals(
-                "feature",
-                xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
-
-        assertEquals(
-                "feature",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
-                        .getNodeValue());
-
-        assertEquals(
-                "22",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_USES_SDK)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_MIN_SDK_VERSION)
-                        .getNodeValue());
     }
 
     @Test
@@ -1402,28 +1293,26 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
                         .withFeatures(
-                                ManifestMerger2.Invoker.Feature
-                                        .ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
+                                ManifestMerger2.Invoker.Feature.ADD_DYNAMIC_FEATURE_ATTRIBUTES)
                         .setFeatureName("feature")
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
         Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+                parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         assertEquals(
                 "feature",
                 xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
 
-        assertNull(
-                "splitName should not be supplied",
+        assertEquals(
+                "feature",
                 xmlDocument
                         .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
                         .item(0)
                         .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME));
+                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
+                        .getNodeValue());
     }
 
     @Test
@@ -1441,37 +1330,6 @@ public class ManifestMerger2SmallTest {
         validateFeatureName(invoker, "foosplit_12", true);
         validateFeatureName(invoker, "SPLIT", true);
         validateFeatureName(invoker, "_SPLIT", false);
-    }
-
-    @Test
-    public void testTargetSandboxVersionOption() throws Exception {
-        String xml =
-                ""
-                        + "<manifest\n"
-                        + "    package=\"com.foo.example\""
-                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
-                        + "    <application t:name=\".applicationOne\">\n"
-                        + "        <activity t:name=\"activityOne\"/>\n"
-                        + "    </application>\n"
-                        + "</manifest>";
-
-        File inputFile = TestUtils.inputAsFile("testTargetSandboxVersionOption", xml);
-
-        MockLog mockLog = new MockLog();
-        MergingReport mergingReport =
-                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.TARGET_SANDBOX_VERSION)
-                        .merge();
-
-        assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
-        assertEquals(
-                "2",
-                xmlDocument
-                        .getDocumentElement()
-                        .getAttributeNS(
-                                SdkConstants.ANDROID_URI,
-                                SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
     }
 
     @Test
@@ -1495,43 +1353,13 @@ public class ManifestMerger2SmallTest {
         MergingReport mergingReport =
                 ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
                         .setFeatureName("dynamic_split")
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
                         .withFeatures(
-                                ManifestMerger2.Invoker.Feature
-                                        .ADD_SPLIT_NAME_TO_BUNDLETOOL_MANIFEST)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_FEATURE_MANIFEST)
-                        .withFeatures(
-                                ManifestMerger2.Invoker.Feature.STRIP_MIN_SDK_FROM_FEATURE_MANIFEST)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
+                                ManifestMerger2.Invoker.Feature.ADD_DYNAMIC_FEATURE_ATTRIBUTES)
                         .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.METADATA_FEATURE));
-        assertEquals(
-                "dynamic_split",
-                xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
 
-        assertEquals(
-                "dynamic_split",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
-                        .getNodeValue());
-
-        assertNull(
-                "minSdk should be stripped",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_USES_SDK)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(
-                                SdkConstants.ANDROID_URI, SdkConstants.ATTR_MIN_SDK_VERSION));
-
-        Document mergedDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document mergedDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
 
         assertEquals(
                 "22",
@@ -1542,8 +1370,7 @@ public class ManifestMerger2SmallTest {
                         .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_MIN_SDK_VERSION)
                         .getNodeValue());
 
-        Document bundleDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+        Document bundleDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
 
         assertEquals(
                 "22",
@@ -1556,180 +1383,7 @@ public class ManifestMerger2SmallTest {
     }
 
     @Test
-    public void testInstantAppManifestDynamicFeature() throws Exception {
-        String xml =
-                ""
-                        + "<manifest\n"
-                        + "    package=\"com.foo.example\""
-                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
-                        + "    <application t:name=\".applicationOne\">\n"
-                        + "        <activity t:name=\"activityOne\"/>\n"
-                        + "    </application>\n"
-                        + "</manifest>";
-
-        File inputFile = TestUtils.inputAsFile("InstantAppManifestDynamicFeature", xml);
-
-        MockLog mockLog = new MockLog();
-        MergingReport mergingReport =
-                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .setFeatureName("dynamic_split")
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
-                        .merge();
-
-        assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_APP));
-        assertEquals(
-                "dynamic_split",
-                xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
-
-        assertEquals(
-                "dynamic_split",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
-                        .getNodeValue());
-        assertEquals(
-                "dynamic_split",
-                xmlDocument
-                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
-                        .getNodeValue());
-        assertEquals(
-                "2",
-                xmlDocument
-                        .getDocumentElement()
-                        .getAttributeNS(
-                                SdkConstants.ANDROID_URI,
-                                SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
-
-        Document mergedDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
-        assertNull(
-                "splitName should be empty",
-                mergedDocument
-                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                        .item(0)
-                        .getAttributes()
-                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME));
-        assertNull(
-                "targetSandboxVersion should be empty",
-                mergedDocument
-                        .getDocumentElement()
-                        .getAttributes()
-                        .getNamedItemNS(
-                                SdkConstants.ANDROID_URI,
-                                SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
-    }
-
-    @Test
-    public void testInstantAppManifestDynamicFeatureWithTargetSandboxVersionSet() throws Exception {
-        String xml =
-                ""
-                        + "<manifest\n"
-                        + "    package=\"com.foo.example\""
-                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\""
-                        + "    t:targetSandboxVersion=\"1\" >\n"
-                        + "    <application t:name=\".applicationOne\">\n"
-                        + "        <activity t:name=\"activityOne\"/>\n"
-                        + "    </application>\n"
-                        + "</manifest>";
-
-        File inputFile = TestUtils.inputAsFile("InstantAppManifestDynamicFeature", xml);
-
-        MockLog mockLog = new MockLog();
-        MergingReport mergingReport =
-                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                        .setFeatureName("dynamic_split")
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_ATTRIBUTE)
-                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
-                        .merge();
-
-        assertTrue(mergingReport.getResult().isSuccess());
-        Document xmlDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_APP));
-        assertEquals(
-                "2",
-                xmlDocument
-                        .getDocumentElement()
-                        .getAttributeNS(
-                                SdkConstants.ANDROID_URI,
-                                SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
-
-        Document mergedDocument =
-                parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
-        assertEquals(
-                "1",
-                mergedDocument
-                        .getDocumentElement()
-                        .getAttributeNS(
-                                SdkConstants.ANDROID_URI,
-                                SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
-    }
-
-    @Test
-    public void testMainAppWithDynamicFeatureInBundletool() throws Exception {
-        MockLog mockLog = new MockLog();
-        String app =
-                ""
-                        + "<manifest\n"
-                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                        + "    package=\"com.example.app1\">\n"
-                        + "\n"
-                        + "    <application t:name=\".applicationOne\" tools:replace=\"t:name\">\n"
-                        + "    </application>"
-                        + "\n"
-                        + "</manifest>";
-        File appFile =
-                TestUtils.inputAsFile("testMainAppWithDynamicFeatureInBundletoolMainApp", app);
-
-        String featureInput =
-                ""
-                        + "<manifest\n"
-                        + "    package=\"com.example.feature\""
-                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
-                        + "    <application t:name=\".applicationOne\">\n"
-                        + "        <activity t:name=\"activityOne\" t:splitName=\"feature\" />\n"
-                        + "    </application>\n"
-                        + "</manifest>";
-
-        File libFile =
-                TestUtils.inputAsFile(
-                        "testMainAppWithDynamicFeatureInBundletoolFeature", featureInput);
-        try {
-            MergingReport mergingReport =
-                    ManifestMerger2.newMerger(
-                                    appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                            .withFeatures(
-                                    ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
-                            .addLibraryManifest(libFile)
-                            .merge();
-            assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
-            // ensure tools annotation removal.
-            Document xmlDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
-            assertNull(
-                    "splitName should not be supplied for apk merged manifest",
-                    xmlDocument
-                            .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                            .item(0)
-                            .getAttributes()
-                            .getNamedItemNS(
-                                    SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME));
-        } finally {
-            assertTrue(appFile.delete());
-            assertTrue(libFile.delete());
-        }
-    }
-
-    @Test
-    public void testMainAppWithDynamicFeatureForInstantAppManifest() throws Exception {
+    public void testMainAppWithDynamicFeature() throws Exception {
         MockLog mockLog = new MockLog();
         String app =
                 ""
@@ -1762,47 +1416,29 @@ public class ManifestMerger2SmallTest {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(
                                     appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                            .withFeatures(ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
-                            .withFeatures(
-                                    ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
                             .addLibraryManifest(libFile)
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
             // ensure tools annotation removal.
             Document xmlDocument =
                     parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
-            assertNull(
-                    "splitName should not be supplied for apk merged manifest",
+            // the feature should still be in the merged manifest as it is stripped during
+            // packaged manifest production.
+            assertEquals(
+                    "feature",
                     xmlDocument
                             .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
                             .item(0)
                             .getAttributes()
-                            .getNamedItemNS(
-                                    SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME));
+                            .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
+                            .getNodeValue());
+            // the target sandbox is only set during INSTANT_APP production.
             assertNull(
                     "targetSandboxVersion should be empty",
                     xmlDocument
                             .getDocumentElement()
                             .getAttributes()
                             .getNamedItemNS(
-                                    SdkConstants.ANDROID_URI,
-                                    SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
-
-            Document instantAppDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_APP));
-            assertEquals(
-                    "feature",
-                    instantAppDocument
-                            .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
-                            .item(0)
-                            .getAttributes()
-                            .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
-                            .getNodeValue());
-            assertEquals(
-                    "2",
-                    instantAppDocument
-                            .getDocumentElement()
-                            .getAttributeNS(
                                     SdkConstants.ANDROID_URI,
                                     SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
         } finally {
@@ -1847,28 +1483,15 @@ public class ManifestMerger2SmallTest {
             MergingReport mergingReport =
                     ManifestMerger2.newMerger(
                                     appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                            .withFeatures(ManifestMerger2.Invoker.Feature.ADD_INSTANT_APP_MANIFEST)
-                            .withFeatures(
-                                    ManifestMerger2.Invoker.Feature.CREATE_BUNDLETOOL_MANIFEST)
                             .addLibraryManifest(libFile)
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
             // ensure tools annotation removal.
             Document xmlDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
             assertEquals(
                     "1",
                     xmlDocument
-                            .getDocumentElement()
-                            .getAttributeNS(
-                                    SdkConstants.ANDROID_URI,
-                                    SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
-
-            Document instantAppDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INSTANT_APP));
-            assertEquals(
-                    "2",
-                    instantAppDocument
                             .getDocumentElement()
                             .getAttributeNS(
                                     SdkConstants.ANDROID_URI,
@@ -1926,7 +1549,7 @@ public class ManifestMerger2SmallTest {
                             .merge();
             assertNotEquals(MergingReport.Result.ERROR, mergingReport.getResult());
             Document xmlDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
             Element meta =
                     (Element) xmlDocument.getElementsByTagName(SdkConstants.TAG_META_DATA).item(0);
             String standalone = meta.getAttributeNS(SdkConstants.ANDROID_URI, "value");
@@ -1996,8 +1619,7 @@ public class ManifestMerger2SmallTest {
                             .addFlavorAndBuildTypeManifest(overlayFile)
                             .merge();
             assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
-            String mergedDocument =
-                    mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED);
+            String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
             assertThat(mergedDocument).contains("This comment should NOT be removed");
             assertThat(mergedDocument).doesNotContain("This comment should be removed");
         } finally {
@@ -2032,7 +1654,7 @@ public class ManifestMerger2SmallTest {
             assertStringPresenceInLogRecords(mergingReport, "Package name 'example' at position ");
             assertStringPresenceInLogRecords(
                     mergingReport, " should contain at least one '.' (dot) character");
-            assertNull(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+            assertNull(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         } finally {
             assertTrue(tmpFile.delete());
         }
@@ -2060,7 +1682,7 @@ public class ManifestMerger2SmallTest {
                     ManifestMerger2.newMerger(tmpFile, mockLog, ManifestMerger2.MergeType.LIBRARY)
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
-            assertNotNull(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+            assertNotNull(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
         } finally {
             assertTrue(tmpFile.delete());
         }
@@ -2110,8 +1732,8 @@ public class ManifestMerger2SmallTest {
             assertStringPresenceInLogRecords(
                     mergingReport,
                     "See https://d.android.com/r/studio-ui/dynamic-delivery/dynamic-feature-manifest for details");
-            assertNotNull(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
-            assertThat(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED))
+            assertNotNull(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            assertThat(mergingReport.getMergedDocument(MergedManifestKind.MERGED))
                     .doesNotContain("split");
         } finally {
             assertTrue(featureManifest.delete());
@@ -2140,8 +1762,7 @@ public class ManifestMerger2SmallTest {
                                     Integer.toString(LOLLIPOP_MR1))
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
-            String mergedDocument =
-                    mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED);
+            String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
             assertThat(mergedDocument).doesNotContain("extractNativeLibs");
         } finally {
             assertTrue(tmpFile.delete());
@@ -2168,8 +1789,7 @@ public class ManifestMerger2SmallTest {
                                     ManifestSystemProperty.MIN_SDK_VERSION, Integer.toString(M))
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
-            String mergedDocument =
-                    mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED);
+            String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
             assertThat(mergedDocument).doesNotContain("extractNativeLibs");
         } finally {
             assertTrue(tmpFile.delete());
@@ -2197,8 +1817,7 @@ public class ManifestMerger2SmallTest {
                                     ManifestSystemProperty.MIN_SDK_VERSION, Integer.toString(M))
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
-            String mergedDocument =
-                    mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED);
+            String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
             assertThat(mergedDocument).contains("android:extractNativeLibs=\"false\"");
         } finally {
             assertTrue(tmpFile.delete());
@@ -2226,8 +1845,7 @@ public class ManifestMerger2SmallTest {
                                     ManifestSystemProperty.MIN_SDK_VERSION, Integer.toString(M))
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
-            String mergedDocument =
-                    mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED);
+            String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
             assertThat(mergedDocument).contains("android:extractNativeLibs=\"true\"");
             assertThat(mergedDocument).doesNotContain("android:extractNativeLibs=\"false\"");
         } finally {
@@ -2305,8 +1923,7 @@ public class ManifestMerger2SmallTest {
                             .addNavigationJsons(Lists.newArrayList(nav1, nav2))
                             .merge();
             assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
-            String mergedDocument =
-                    mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED);
+            String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
             assertThat(mergedDocument).contains("/nav2_foo");
         } finally {
             assertTrue(tmpFile.delete());
@@ -2358,7 +1975,7 @@ public class ManifestMerger2SmallTest {
                             .merge();
             assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
             Document xmlDocument =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
             NodeList packageList = xmlDocument.getElementsByTagName(SdkConstants.TAG_PACKAGE);
             assertThat(packageList.getLength()).isEqualTo(2);
             assertEquals(
@@ -2403,8 +2020,7 @@ public class ManifestMerger2SmallTest {
                             .merge();
             assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
             // check that MERGED manifest has <nav-graph> but AAPT_SAFE manifest doesn't
-            Document mergedDoc =
-                    parse(mergingReport.getMergedDocument(MergedManifestKind.INTERNAL_MERGED));
+            Document mergedDoc = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
             NodeList mergedNavGraphs = mergedDoc.getElementsByTagName(SdkConstants.TAG_NAV_GRAPH);
             assertThat(mergedNavGraphs.getLength()).isEqualTo(1);
             Document aaptDoc = parse(mergingReport.getMergedDocument(MergedManifestKind.AAPT_SAFE));

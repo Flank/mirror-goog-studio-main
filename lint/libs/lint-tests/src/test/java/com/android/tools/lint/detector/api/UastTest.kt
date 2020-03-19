@@ -896,8 +896,7 @@ class UastTest : TestCase() {
         })
     }
 
-    // Disabled until KT-37200 is fixed
-    fun ignore_testIdea234484() {
+    fun testIdea234484() {
         // Regression test for https://youtrack.jetbrains.com/issue/KT-37200
         val source = kotlin(
             """

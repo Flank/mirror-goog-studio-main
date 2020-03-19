@@ -81,7 +81,7 @@ jint HandleStartupAgent(JavaVM* vm, const std::string& app_data_dir) {
 
   const std::string package_name =
       app_data_dir.substr(app_data_dir.find_last_of('/') + 1);
-  if (!InstrumentApplication(jvmti, jni, package_name)) {
+  if (!InstrumentApplication(jvmti, jni, package_name, true)) {
     ErrEvent("Could not instrument application");
     jvmti->DisposeEnvironment();
     return JNI_OK;

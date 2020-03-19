@@ -16,7 +16,12 @@
 
 package com.android.build.gradle.internal.component
 
-interface TestCreationConfig: VariantCreationConfig {
+import org.gradle.api.provider.Provider
 
+/**
+ * Internal CreationConfig for test modules
+ */
+interface TestCreationConfig: ApkCreationConfig, VariantCreationConfig {
 
+    val testedApplicationId: Provider<String>
 }

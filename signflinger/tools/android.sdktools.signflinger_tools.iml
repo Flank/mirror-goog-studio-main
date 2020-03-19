@@ -22,5 +22,6 @@
     <orderEntry type="module" module-name="android.sdktools.zipflinger" />
     <orderEntry type="module" module-name="android.sdktools.zipflinger_tools" />
     <orderEntry type="module" module-name="android.sdktools.tracer" />
+    <orderEntry type="module" module-name="android.sdktools.apksig" />
   </component>
 </module>

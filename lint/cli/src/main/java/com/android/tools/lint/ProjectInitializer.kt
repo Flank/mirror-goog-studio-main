@@ -221,7 +221,6 @@ private class ProjectInitializer(
 
     /** Compute a list of lint [Project] instances from the given XML descriptor */
     fun computeMetadata(): ProjectMetadata {
-        assert(file.isFile) // should already have been enforced by the driver
         val document = client.xmlParser.parseXml(file)
 
         if (document == null || document.documentElement == null) {

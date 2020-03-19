@@ -694,7 +694,8 @@ class PathString private constructor(
         }
 
         for (idx in 0 until prefixEndIndex) {
-            if (path[idx] != other.path[idx]) {
+            if (path[idx] != other.path[idx]
+                    && !(isSeparator(path[idx]) && isSeparator(other.path[idx]))) {
                 return false
             }
         }

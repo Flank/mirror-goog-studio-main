@@ -37,8 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/** Implementation of the {@link ApkFileDatabase} based on SQLite. */
-public class SqlApkFileDatabase implements ApkFileDatabase {
+public class SqlApkFileDatabase {
     // The SQLite use this property to determine where to temporary extract the .so / .dll during init.
     private static final String SQLITE_JDBC_TEMP_DIR_PROPERTY = "org.sqlite.tmpdir";
 
@@ -116,7 +115,6 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
         }
     }
 
-    @Override
     public void close() {
         try {
             connection.close();
@@ -201,7 +199,6 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
         }
     }
 
-    @Override
     public List<DexClass> getClasses(ApkEntry dex) {
         try (Trace ignored = Trace.begin("SqlApkFileDatabase.getClasses");
                 Statement s = connection.createStatement();
@@ -228,7 +225,6 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
         }
     }
 
-    @Override
     public void addClasses(Collection<DexClass> allClasses) {
         int numDex = 0;
         try {
@@ -302,7 +298,6 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
         assert updated == files.size();
     }
 
-    @Override
     @VisibleForTesting
     public List<DexClass> dump() {
         List<DexClass> classes = new ArrayList<>();
@@ -313,6 +308,43 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
         }
         classes.sort(Comparator.comparingInt(a -> (int) a.checksum));
         return classes;
+    }
+
+    /**
+     * By design the database would allow APKs to have duplicates for two reasons:
+     *
+     * <p>1. Write Performance 2. APKs are allowed to have duplicated class (although ART will give
+     * an warning)
+     *
+     * <p>The Deployer, however, should avoid writing already existing class entries. Otherwise,
+     * each write and overwrite would increase the database size by O(2^N) scale.
+     *
+     * <p>This method performs a duplicates check which should only be used for testing only.
+     */
+    @VisibleForTesting
+    public boolean hasDuplicates() {
+        for (Apk apk : getApks()) {
+            List<DexClass> classes = new ArrayList<>();
+            for (ApkEntry file : getFiles(apk)) {
+                classes.addAll(getClasses(file));
+            }
+
+            // N^2 check. Given that unit test is small. We can sort first if runtime is an issue.
+            for (int i = 0; i < classes.size(); i++) {
+                DexClass dexI = classes.get(i);
+                for (int j = 0; j < classes.size(); j++) {
+                    if (i == j) {
+                        continue;
+                    }
+                    DexClass dexJ = classes.get(j);
+
+                    if (dexI.name.equals(dexJ.name) && dexI.checksum == dexJ.checksum) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /** Test only code */

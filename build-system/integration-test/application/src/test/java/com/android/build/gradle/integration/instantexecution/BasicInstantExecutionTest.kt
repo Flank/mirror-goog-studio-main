@@ -36,7 +36,7 @@ class BasicInstantExecutionTest {
     @JvmField
     @Rule
     var project = GradleTestProject.builder()
-        .setTargetGradleVersion("6.3-custom-20200221142234+0000")
+        .setTargetGradleVersion("6.4-20200312124006+0000")
         .fromTestApp(
             MultiModuleTestProject.builder()
                 .subproject(":app", app)
@@ -109,5 +109,9 @@ class BasicInstantExecutionTest {
     }
 
     private fun executor(): GradleTaskExecutor =
-        project.executor().withLoggingLevel(LoggingLevel.LIFECYCLE).withArgument("-Dorg.gradle.unsafe.instant-execution=true")
+        project.executor()
+            .withLoggingLevel(LoggingLevel.LIFECYCLE)
+            .withArgument("-Dorg.gradle.unsafe.instant-execution=true")
+            .withArgument("-Dorg.gradle.unsafe.instant-execution.fail-on-problems=true")
+            .withArgument("-Dorg.gradle.unsafe.instant-execution.max-problems=0")
 }

@@ -73,6 +73,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":createDebugCompatibleScreenManifests" to DID_WORK,
         ":extractDeepLinksDebug" to FROM_CACHE,
         ":processDebugManifest" to DID_WORK,
+        ":processDebugManifestForPackage" to FROM_CACHE,
         ":processDebugResources" to DID_WORK,
         ":compileDebugJavaWithJavac" to FROM_CACHE
     ).plus(
@@ -126,11 +127,9 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
 
     @Test
     fun `test main resources located within root project directory, expect cacheable tasks`() {
-        CacheabilityTestHelper
-            .forProjects(project, projectCopy)
-            .withBuildCacheDir(buildCacheDirRoot.newFolder("gradle-build-cache"))
-            .withTasks("clean", ":compileDebugJavaWithJavac")
-            .hasTaskStates(expectedTaskStates, exhaustive = true)
+        CacheabilityTestHelper(project, projectCopy, buildCacheDirRoot.newFolder("build-cache"))
+            .runTasks("clean", ":compileDebugJavaWithJavac")
+            .assertTaskStates(expectedTaskStates, exhaustive = true)
     }
 
     @Test
@@ -145,11 +144,9 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
             )
         }
 
-        CacheabilityTestHelper
-            .forProjects(project, projectCopy)
-            .withBuildCacheDir(buildCacheDirRoot.newFolder("gradle-build-cache"))
-            .withTasks("clean", ":dataBindingExportBuildInfoDebug")
-            .hasTaskStates(mapOf(":dataBindingExportBuildInfoDebug" to DID_WORK))
+        CacheabilityTestHelper(project, projectCopy, buildCacheDirRoot.newFolder("build-cache"))
+            .runTasks("clean", ":dataBindingExportBuildInfoDebug")
+            .assertTaskStates(mapOf(":dataBindingExportBuildInfoDebug" to DID_WORK))
     }
 
 
@@ -181,10 +178,8 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
             updatedExpectedTaskStates[":compileDebugJavaWithJavac"] = DID_WORK
         }
 
-        CacheabilityTestHelper
-            .forProjects(project, projectCopy)
-            .withBuildCacheDir(buildCacheDirRoot.newFolder("gradle-build-cache"))
-            .withTasks("clean", ":compileDebugJavaWithJavac")
-            .hasTaskStates(updatedExpectedTaskStates, exhaustive = true)
+        CacheabilityTestHelper(project, projectCopy, buildCacheDirRoot.newFolder("build-cache"))
+            .runTasks("clean", ":compileDebugJavaWithJavac")
+            .assertTaskStates(updatedExpectedTaskStates, exhaustive = true)
     }
 }

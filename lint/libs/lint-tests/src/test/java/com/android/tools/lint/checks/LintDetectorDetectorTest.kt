@@ -84,7 +84,7 @@ class LintDetectorDetectorTest {
                     public class MyJavaLintDetector extends Detector {
                         public static final Issue ISSUE =
                                 Issue.create(
-                                        "ContentDescription",
+                                        "com.android.namespaced.lint.check.FooDetector",
                                         "Wrong use of <LinearLayout>",
                                         "As described in "
                                             + "https://code.google.com/p/android/issues/detail?id=65351 blah blah blah.",
@@ -93,8 +93,8 @@ class LintDetectorDetectorTest {
                                         Severity.WARNING,
                                         new Implementation(MyJavaLintDetector.class, EnumSet.of(Scope.RESOURCE_FILE, Scope.JAVA_FILE)))
                                         .addMoreInfo("file://explanation.doc")
-                                        .addMoreInfo("http://my.personal.blogger.com/aboutme.htm");
-
+                                        .addMoreInfo("http://my.personal.blogger.com/aboutme.htm")
+                                        .addMoreInfo("mailto:lint@example.com");
                         public void testGetBody(PsiMethod method) {
                             method.getBody(); // ERROR - must use UAST
                         }
@@ -385,7 +385,7 @@ class LintDetectorDetectorTest {
                                     Here's a call: foo.bar.baz(args).
                                                    ~~~~~~~~~~~~~~~~~
                 src/test/pkg/MyJavaLintDetector.java:36: Error: Unexpected URL host my.personal.blogger.com; for the builtin Android Lint checks make sure to use an authoritative link (http://my.personal.blogger.com/aboutme.htm) [LintImplUnexpectedDomain]
-                                    .addMoreInfo("http://my.personal.blogger.com/aboutme.htm");
+                                    .addMoreInfo("http://my.personal.blogger.com/aboutme.htm")
                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/MyKotlinLintDetector.kt:74: Error: Use https, not http, for more info links (http://issuetracker.google.com/issues/37335487) [LintImplUnexpectedDomain]
                             .addMoreInfo("http://issuetracker.google.com/issues/37335487") // ERROR - http instead of https

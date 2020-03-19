@@ -24,6 +24,8 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.BaseCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
@@ -49,6 +51,7 @@ import com.google.common.base.Preconditions
 import com.google.common.base.Strings
 import com.google.common.io.Files
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -58,6 +61,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -78,16 +82,14 @@ import java.io.IOException
  */
 abstract class ProcessTestManifest : ManifestProcessorTask() {
 
-    @get:Optional
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFiles
-    lateinit var testTargetMetadata: FileCollection
-        private set
+    @get:OutputDirectory
+    abstract val packagedManifestOutputDirectory: DirectoryProperty
 
     /** Whether there's just a single APK with both test and tested code.  */
     private var onlyTestApk = false
     @get:Internal
     var tmpDir: File? = null
+
     private var manifests: ArtifactCollection? = null
 
     @get:Nested
@@ -100,19 +102,6 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         private set
 
     override fun doFullTaskAction() {
-        if (testedApplicationId.orNull == null && testTargetMetadata.isEmpty) {
-            throw RuntimeException("testedApplicationId and testTargetMetadata are null")
-        }
-        var testedApplicationId = testedApplicationId.orNull
-        if (!onlyTestApk) {
-            val manifestOutputs =
-                loadFromDirectory(testTargetMetadata.singleFile)
-            if (manifestOutputs == null || manifestOutputs.elements.isEmpty()) {
-                throw RuntimeException("Cannot find merged manifest, please file a bug.")
-            }
-            val mainSplit: BuiltArtifact = manifestOutputs.elements.first()
-            testedApplicationId = mainSplit.properties[BuiltArtifactProperty.PACKAGE_ID]
-        }
         val dirName = apkData.get().variantOutputConfiguration.dirName()
         val manifestOutputFolder =
             if (Strings.isNullOrEmpty(dirName)) packagedManifestOutputDirectory.get().asFile
@@ -125,7 +114,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             testApplicationId.get(),
             minSdkVersion.get(),
             targetSdkVersion.get(),
-            testedApplicationId!!,
+            testedApplicationId.get(),
             instrumentationRunner.get(),
             handleProfiling.get(),
             functionalTest.get(),
@@ -412,8 +401,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
     }
 
     class CreationAction(
-        creationConfig: BaseCreationConfig,
-        private val testTargetMetadata: FileCollection
+        creationConfig: BaseCreationConfig
     ) : VariantTaskCreationAction<ProcessTestManifest, BaseCreationConfig>(creationConfig) {
         override val name = computeTaskName("process", "Manifest")
         override val type = ProcessTestManifest::class.java
@@ -435,7 +423,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             creationConfig.taskContainer.processManifestTask = taskProvider
             creationConfig.operations.setInitialProvider(
                 taskProvider,
-                ManifestProcessorTask::packagedManifestOutputDirectory
+                ProcessTestManifest::packagedManifestOutputDirectory
             ).on(PACKAGED_MANIFESTS)
             creationConfig.operations.setInitialProvider(
                 taskProvider,
@@ -474,16 +462,32 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     project.provider { variantDslInfo.targetSdkVersion.apiString }
                 )
             task.targetSdkVersion.disallowChanges()
-            task.testTargetMetadata = testTargetMetadata
-            task.testApplicationId
-                .set(project.provider(variantDslInfo::testApplicationId))
-            task.testApplicationId.disallowChanges()
-            // will only be used if testTargetMetadata is null.
-            task.testedApplicationId
-                .set(project.provider(variantDslInfo::testedApplicationId))
-            task.testedApplicationId.disallowChanges()
+
+            task.testApplicationId.setDisallowChanges(project.provider(variantDslInfo::testApplicationId))
+
             val testedConfig = variantDslInfo.testedVariant
-            task.onlyTestApk = testedConfig != null && testedConfig.variantType.isAar
+            // Whether there's just a single APK with both test and tested code.
+            val onlyTestApk = testedConfig != null && testedConfig.variantType.isAar
+
+            task.testedApplicationId.setDisallowChanges(when {
+                creationConfig is TestCreationConfig -> {
+                    // test module, get the tested app ID from the creation Config. This is going
+                    // to be dynamic.
+                    creationConfig.testedApplicationId
+                }
+                onlyTestApk -> {
+                    // for AAR this is self tested
+                    project.provider(variantDslInfo::applicationId)
+                }
+                creationConfig is TestComponentCreationConfig -> {
+                    // otherwise get the tested config application ID
+                    project.provider { testedConfig!!.applicationId }
+                }
+                else -> {
+                    throw RuntimeException("unsupported code path")
+                }
+            })
+
             task.instrumentationRunner.setDisallowChanges(variantDslInfo.instrumentationRunner)
             task.handleProfiling.setDisallowChanges(variantDslInfo.handleProfiling)
             task.functionalTest.setDisallowChanges(variantDslInfo.functionalTest)

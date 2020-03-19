@@ -53,7 +53,7 @@ interface RecipeExecutor {
   fun applyPlugin(plugin: String)
 
   /** Records a classpath dependency. */
-  fun addClasspathDependency(mavenCoordinate: String)
+  fun addClasspathDependency(mavenCoordinate: String, minRev: String? = null)
 
   /**
    * Determines if a module/project already have a dependency.

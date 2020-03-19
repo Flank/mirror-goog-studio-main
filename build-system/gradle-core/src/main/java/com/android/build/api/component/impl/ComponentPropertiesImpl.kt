@@ -18,6 +18,7 @@ package com.android.build.api.component.impl
 
 import android.databinding.tool.LayoutXmlProcessor
 import android.databinding.tool.LayoutXmlProcessor.OriginalFileLookup
+import android.databinding.tool.writer.JavaFileWriter
 import com.android.build.api.artifact.impl.OperationsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
@@ -52,7 +53,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_R_CLASS_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_TRIGGER
-import com.android.build.gradle.internal.scope.InternalArtifactType.MLKIT_SOURCE_OUT
+import com.android.build.gradle.internal.scope.InternalArtifactType.ML_SOURCE_OUT
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -189,13 +190,7 @@ abstract class ComponentPropertiesImpl(
         val mergingLog = MergingLog(resourceBlameLogDir)
         LayoutXmlProcessor(
             variantDslInfo.originalApplicationId,
-            globalScope
-                .dataBindingBuilder
-                .createJavaFileWriter(
-                    // Can't use artifacts.getFinalProduct(DATA_BINDING_TRIGGER) here as it may not
-                    // have been set (DataBindingIntegrationTestAppsTest would fail).
-                    artifacts.getOperations()
-                        .getOutputPath(InternalArtifactType.DATA_BINDING_TRIGGER)),
+            LegacyJavaFileWriter(),
             OriginalFileLookup { file: File? ->
                 val input =
                     SourceFile(file!!)
@@ -204,6 +199,21 @@ abstract class ComponentPropertiesImpl(
             },
             internalServices.projectOptions[BooleanOption.USE_ANDROID_X]
         )
+    }
+
+    /**
+     * Legacy [JavaFileWriter] whose internal implementation should not be used, only the
+     * implementation from the superclass is used.
+     */
+    class LegacyJavaFileWriter : JavaFileWriter() {
+
+        override fun writeToFile(canonicalName: String, contents: String) {
+            throw UnsupportedOperationException("This method is no longer supported")
+        }
+
+        override fun deleteFile(canonicalName: String) {
+            throw UnsupportedOperationException("This method is no longer supported")
+        }
     }
 
     fun addVariantOutput(
@@ -236,7 +246,7 @@ abstract class ComponentPropertiesImpl(
                 String::class.java,
                 outputFileName
                     ?: variantDslInfo.getOutputFileName(
-                        globalScope.archivesBaseName,
+                        globalScope.projectBaseName,
                         variantOutputConfiguration.baseName(variantDslInfo)
                     ),
                 "$name::archivesBaseName")
@@ -424,7 +434,11 @@ abstract class ComponentPropertiesImpl(
 
         // for the other, there's no duplicate so no issue.
         taskContainer.generateBuildConfigTask?.let {
-            sourceSets.add(internalServices.fileTree(paths.buildConfigSourceOutputDir).builtBy(it.name))
+       if (buildFeatures.buildConfig){
+            val generatedBuildConfig =
+                operations.get(InternalArtifactType.GENERATED_BUILD_CONFIG_JAVA)
+            sourceSets.add(internalServices.fileTree(generatedBuildConfig).builtBy(generatedBuildConfig))
+            }
         }
         if (taskContainer.aidlCompileTask != null) {
             val aidlFC = artifacts.getFinalProduct(AIDL_SOURCE_OUTPUT_DIR)
@@ -457,10 +471,10 @@ abstract class ComponentPropertiesImpl(
             sourceSets.add(internalServices.fileTree(rsFC).builtBy(rsFC))
         }
         if (buildFeatures.mlModelBinding) {
-            val mlkitModelClassSourceOut: Provider<Directory> =
-                artifacts.getFinalProduct(MLKIT_SOURCE_OUT)
+            val mlModelClassSourceOut: Provider<Directory> =
+                artifacts.getFinalProduct(ML_SOURCE_OUT)
             sourceSets.add(
-                internalServices.fileTree(mlkitModelClassSourceOut).builtBy(mlkitModelClassSourceOut)
+                internalServices.fileTree(mlModelClassSourceOut).builtBy(mlModelClassSourceOut)
             )
         }
         sourceSets.build()

@@ -35,7 +35,18 @@ typealias Revision = String
 typealias FormFactorNames = Map<FormFactor, List<String>>
 enum class Language(val string: String, val extension: String) {
   Java("Java", "java"),
-  Kotlin("Kotlin", "kt")
+  Kotlin("Kotlin", "kt");
+
+  override fun toString(): String = string
+
+  companion object {
+    /**
+     * Finds a language matching the requested name. Returns specified 'defaultValue' if not found.
+     */
+    @JvmStatic
+    fun fromName(name: String?, defaultValue: Language): Language =
+      values().firstOrNull { it.string == name } ?: defaultValue
+  }
 }
 // We define a new enum here instead of reusing existing ones because it should be available
 // both from intellij.android.core and wizardTemplate modules.

@@ -970,6 +970,14 @@ public class Main {
                         System.err.println("Project descriptor " + input + " does not exist.");
                         exit(ERRNO_INVALID_ARGS);
                     }
+                    if (!input.isFile()) {
+                        System.err.println(
+                                "Project descriptor "
+                                        + input
+                                        + " should be an XML descriptor file"
+                                        + (input.isDirectory() ? ", not a directory" : ""));
+                        exit(ERRNO_INVALID_ARGS);
+                    }
                     File descriptor = flags.getProjectDescriptorOverride();
                     //noinspection VariableNotUsedInsideIf
                     if (descriptor != null) {

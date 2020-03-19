@@ -30,8 +30,8 @@ import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.configuration.DensityQualifier
 import com.android.ide.common.resources.configuration.FolderConfiguration
 import com.android.ide.common.resources.configuration.VersionQualifier
-import com.android.ide.common.resources.resourceNameToFieldName
 import com.android.ide.common.resources.getLocales
+import com.android.ide.common.resources.resourceNameToFieldName
 import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
@@ -379,11 +379,10 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             for (item in items) {
                 val qualifiers = run {
                     val s = item.configuration.qualifierString
-                    val index = s.indexOf('-')
-                    if (index != -1) {
-                        s.substring(0, index)
+                    if (defaultLocale != null && s.isEmpty()) {
+                        defaultLocale.substringBefore('-')
                     } else {
-                        s
+                        s.substringBefore('-')
                     }
                 }
 

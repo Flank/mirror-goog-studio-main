@@ -77,13 +77,13 @@ std::unique_ptr<InstallClient> TryStartServer(const Executor& executor,
 
   if (count > 0) {
     std::string error_message(err_buffer, 0, count);
-    ErrEvent("Unable to startup install-server, output: '"_s + error_message +
-             "'");
-
     if (error_message.find(kRunAsExecFailed)) {
       *result = StartResult::TRY_COPY;
       return nullptr;
     }
+
+    ErrEvent("Unable to startup install-server, output: '"_s + error_message +
+             "'");
   }
 
   *result = StartResult::FAILURE;

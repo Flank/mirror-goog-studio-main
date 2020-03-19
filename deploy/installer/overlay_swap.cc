@@ -112,6 +112,7 @@ proto::SwapRequest OverlaySwapCommand::PrepareAndBuildRequest(
   request.set_package_name(package_name_);
   request.set_restart_activity(request_.restart_activity());
   request.set_structural_redefinition(request_.structural_redefinition());
+  request.set_overlay_swap(true);
   return request;
 }
 
@@ -165,6 +166,17 @@ void OverlaySwapCommand::ProcessResponse(proto::SwapResponse* response) {
   response->set_status(
       OverlayStatusToSwapStatus(install_response.overlay_response().status()));
   response->set_extra(install_response.overlay_response().error_message());
+
+  bool should_restart = request_.restart_activity() &&
+                        response->status() == proto::SwapResponse::OK;
+
+  CmdCommand cmd(workspace_);
+  std::string error;
+  if (should_restart &&
+      !cmd.UpdateAppInfo("all", request_.package_name(), &error)) {
+    response->set_status(proto::SwapResponse::ACTIVITY_RESTART_FAILED);
+    return;
+  }
 
   if (!client_->KillServerAndWait(&install_response)) {
     response->set_status(proto::SwapResponse::READ_FROM_SERVER_FAILED);

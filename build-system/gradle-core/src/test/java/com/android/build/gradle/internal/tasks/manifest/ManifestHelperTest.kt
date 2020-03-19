@@ -29,7 +29,7 @@ class ManifestHelperTest {
     fun testFindingOriginalManifestFilePosition() {
         val filePath = "/usr/src/MyApplication/app/src/main/AndroidManifest.xml"
         val mergedManifestFile =
-            File("/usr/src/MyApplication/app/build/intermediates/packaged_manifests/debug/AndroidManifest.xml")
+            File("/usr/src/MyApplication/app/build/intermediates/merged_manifests/debug/AndroidManifest.xml")
         verifyWithGivenPaths(filePath, mergedManifestFile)
     }
 
@@ -38,7 +38,7 @@ class ManifestHelperTest {
     fun testFindingOriginalManifestFilePositionWithSpace() {
         val filePath = "/usr/src/[path] with space/My Application/app/src/main/AndroidManifest.xml"
         val mergedManifestFile =
-            File("/usr/src/[path] with space/My Application/app/build/intermediates/packaged_manifests/debug/AndroidManifest.xml")
+            File("/usr/src/[path] with space/My Application/app/build/intermediates/merged_manifests/debug/AndroidManifest.xml")
         verifyWithGivenPaths(filePath, mergedManifestFile)
     }
 

@@ -15,9 +15,9 @@
  */
 package com.android.build.gradle.internal.test
 
-import com.android.build.api.component.impl.AndroidTestPropertiesImpl
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.test.BuiltArtifactsSplitOutputMatcher.computeBestOutput
 import com.android.builder.testing.api.DeviceConfigProvider
@@ -26,27 +26,24 @@ import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
-import org.xml.sax.SAXException
 import java.io.File
-import java.io.IOException
-import javax.xml.parsers.ParserConfigurationException
 
 /**
  * Implementation of [TestData] on top of a [TestVariantData]
  */
-class TestDataImpl(
-    private val testVariantData: AndroidTestPropertiesImpl,
+class TestDataImpl constructor(
+    private val androidTestConfig: AndroidTestCreationConfig,
     testApkDir: Provider<Directory>,
     testedApksDir: FileCollection?
 ) : AbstractTestDataImpl(
-    testVariantData.variantDslInfo,
-    testVariantData.variantSources,
+    androidTestConfig.variantDslInfo,
+    androidTestConfig.variantSources,
     testApkDir,
     testedApksDir
 ) {
 
     init {
-        if (testVariantData
+        if (androidTestConfig
                 .outputs
                 .getSplitsByType(
                     VariantOutputConfiguration.OutputType.ONE_OF_MANY
@@ -57,35 +54,26 @@ class TestDataImpl(
         }
     }
 
-    @Throws(
-        ParserConfigurationException::class,
-        SAXException::class,
-        IOException::class
-    )
-    override fun load(folder: File) {
-        // do nothing, there is nothing in the metadata file we cannot get from the tested scope.
-    }
-
     override val applicationId: Provider<String>
-        get() = testVariantData.applicationId
+        get() = androidTestConfig.applicationId
 
     override val testedApplicationId: Provider<String>
-        get() = testVariantData.testedConfig.applicationId
+        get() = androidTestConfig.testedConfig.applicationId
 
     override val isLibrary: Boolean
         get() {
-            return testVariantData.testedVariant.variantType.isAar
+            return androidTestConfig.testedConfig.variantType.isAar
         }
 
     override fun getTestedApks(
         deviceConfigProvider: DeviceConfigProvider, logger: ILogger
     ): ImmutableList<File> {
-        val testedVariant = testVariantData.testedVariant
+        val testedConfig = androidTestConfig.testedConfig
         val apks =
             ImmutableList.builder<File>()
         val builtArtifacts = BuiltArtifactsLoaderImpl()
             .load(
-                testedVariant
+                testedConfig
                     .artifacts
                     .getFinalProduct(
                         InternalArtifactType.APK
@@ -97,7 +85,7 @@ class TestDataImpl(
             computeBestOutput(
                 deviceConfigProvider,
                 builtArtifacts,
-                testedVariant.variantDslInfo.supportedAbis
+                testedConfig.variantDslInfo.supportedAbis
             )
         )
         return apks.build()

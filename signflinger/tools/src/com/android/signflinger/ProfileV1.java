@@ -19,6 +19,8 @@ package com.android.signflinger;
 import static com.android.zipflinger.Profiler.WARM_UP_ITERATION;
 import static com.android.zipflinger.Profiler.prettyPrint;
 
+import com.android.apksig.util.RunnablesExecutor;
+import com.android.apksig.util.RunnablesProvider;
 import com.android.tools.tracer.Trace;
 import com.android.zipflinger.ApkMaker;
 import com.android.zipflinger.Archive;
@@ -35,8 +37,12 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
 import java.util.zip.Deflater;
 
 public class ProfileV1 {
@@ -65,7 +71,7 @@ public class ProfileV1 {
                         .setMinSdkVersion(21)
                         .setPrivateKey(privateKey)
                         .setCertificates(certificates)
-                        .setExecutor(Utils.createExecutor());
+                        .setExecutor(createExecutor());
         SignedApkOptions options = builder.build();
 
         for (int i = 0; i < WARM_UP_ITERATION; i++) {
@@ -101,5 +107,28 @@ public class ProfileV1 {
 
     private static byte[] getResource(String s) throws IOException {
         return Files.readAllBytes(Paths.get(s));
+    }
+
+    public static RunnablesExecutor createExecutor() {
+        RunnablesExecutor executor =
+                (RunnablesProvider provider) -> {
+                    ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
+                    int jobCount = forkJoinPool.getParallelism();
+                    List<Future<?>> jobs = new ArrayList<>(jobCount);
+
+                    for (int i = 0; i < jobCount; i++) {
+                        jobs.add(forkJoinPool.submit(provider.createRunnable()));
+                    }
+
+                    try {
+                        for (Future<?> future : jobs) {
+                            future.get();
+                        }
+                    } catch (InterruptedException | ExecutionException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException(e);
+                    }
+                };
+        return executor;
     }
 }

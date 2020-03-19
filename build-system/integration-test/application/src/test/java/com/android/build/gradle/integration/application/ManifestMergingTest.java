@@ -302,7 +302,7 @@ public class ManifestMergingTest {
 
         File manifestFile =
                 navigation.file(
-                        "app/build/intermediates/packaged_manifests/debug/AndroidManifest.xml");
+                        "app/build/intermediates/merged_manifests/debug/AndroidManifest.xml");
 
         // Deep links from nav graph ARE resolved into intent filters at the app level
         assertThat(manifestFile).contains("library/nav1");

@@ -16,5 +16,8 @@
 
 package com.android.build.gradle.internal.component
 
-interface AndroidTestCreationConfig: TestComponentCreationConfig {
+/**
+ * Internal interface for Android Test component
+ */
+interface AndroidTestCreationConfig: TestComponentCreationConfig, ApkCreationConfig {
 }

@@ -67,7 +67,7 @@ final class ReflectionHelpers {
         }
     }
 
-    private static Object call(Object object, Class<?> clazz, String name, Arg... args)
+    public static Object call(Object object, Class<?> clazz, String name, Arg... args)
             throws Exception {
         Class<?>[] classes = new Class<?>[args.length];
         Object[] vals = new Object[args.length];

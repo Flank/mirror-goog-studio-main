@@ -24,10 +24,10 @@ import java.util.function.Predicate;
 
 public class CachedDexSplitter implements DexSplitter {
 
-    private final ApkFileDatabase db;
+    private final SqlApkFileDatabase db;
     private final DexSplitter splitter;
 
-    public CachedDexSplitter(ApkFileDatabase db, DexSplitter splitter) {
+    public CachedDexSplitter(SqlApkFileDatabase db, DexSplitter splitter) {
         this.db = db;
         this.splitter = splitter;
     }

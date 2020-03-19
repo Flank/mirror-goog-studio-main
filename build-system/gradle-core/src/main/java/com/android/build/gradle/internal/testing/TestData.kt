@@ -21,30 +21,12 @@ import com.android.sdklib.AndroidVersion
 import com.android.utils.ILogger
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
-import org.xml.sax.SAXException
 import java.io.File
-import java.io.IOException
-import javax.xml.parsers.ParserConfigurationException
 
 /**
  * Data representing the test app and the tested application/library.
  */
 interface TestData {
-    /**
-     * load the tested variant build output metadata file.
-     *
-     * @param folder folder containing the metadata file of the tested variant.
-     * @throws ParserConfigurationException xml configuration error
-     * @throws SAXException xml parsing error
-     * @throws IOException cannot load the xml file.
-     */
-    @Throws(
-        ParserConfigurationException::class,
-        SAXException::class,
-        IOException::class
-    )
-    fun load(folder: File)
-
     /**
      * Returns the application id.
      *

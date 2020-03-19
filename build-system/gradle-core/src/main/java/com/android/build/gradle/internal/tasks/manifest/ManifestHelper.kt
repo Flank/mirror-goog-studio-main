@@ -44,10 +44,7 @@ fun mergeManifestsForApplication(
     targetSdkVersion: String?,
     maxSdkVersion: Int?,
     outMergedManifestLocation: String?,
-    outPackagedManifestLocation: String,
     outAaptSafeManifestLocation: String?,
-    outMetadataFeatureManifestLocation: String?,
-    outInstantAppManifestLocation: String?,
     mergeType: ManifestMerger2.MergeType,
     placeHolders: Map<String, Any>,
     optionalFeatures: Collection<ManifestMerger2.Invoker.Feature>,
@@ -93,17 +90,14 @@ fun mergeManifestsForApplication(
             mergingReport.log(logger)
         }
 
-        val xmlDocument =
-            mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED)
         val annotatedDocument =
             mergingReport.getMergedDocument(MergingReport.MergedManifestKind.BLAME)
         if (annotatedDocument != null) {
             logger.verbose(annotatedDocument)
         }
-        save(xmlDocument, File(outPackagedManifestLocation))
-        logger.verbose("Merged manifest saved to $outPackagedManifestLocation")
+        logger.verbose("Merged manifest saved to $outMergedManifestLocation")
         if (outMergedManifestLocation != null) {
-            save(mergingReport.getMergedDocument(MergingReport.MergedManifestKind.INTERNAL_MERGED),
+            save(mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED),
                 File(outMergedManifestLocation))
         }
 
@@ -114,20 +108,6 @@ fun mergeManifestsForApplication(
                     outAaptSafeManifestLocation
                 )
             )
-        }
-        if (outMetadataFeatureManifestLocation != null) {
-            val featureManifest =
-                mergingReport.getMergedDocument(MergingReport.MergedManifestKind.METADATA_FEATURE)
-            if (featureManifest != null) {
-                save(featureManifest, File(outMetadataFeatureManifestLocation))
-            }
-        }
-        if (outInstantAppManifestLocation != null) {
-            val instantAppManifest =
-                mergingReport.getMergedDocument(MergingReport.MergedManifestKind.INSTANT_APP)
-            if (instantAppManifest != null) {
-                save(instantAppManifest, File(outInstantAppManifestLocation))
-            }
         }
         return mergingReport
     } catch (e: ManifestMerger2.MergeFailureException) {
@@ -148,7 +128,7 @@ fun findOriginalManifestFilePosition(
     mergedFilePosition: SourceFilePosition
 ): SourceFilePosition {
     if (mergedFilePosition.file == SourceFile.UNKNOWN || mergedFilePosition.file.sourceFile?.absolutePath?.contains(
-            "packaged_manifests"
+            "merged_manifests"
         ) == false
     ) {
         return mergedFilePosition

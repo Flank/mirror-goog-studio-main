@@ -135,7 +135,7 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
     override fun doTaskAction() {
 
         val mergedManifestsOutputs = BuiltArtifactsLoaderImpl().load(mergedManifests)
-            ?: throw RuntimeException("Cannot load merged manifests from $mergedManifests")
+            ?: throw RuntimeException("Cannoft load merged manifests from $mergedManifests")
 
         artifactTransformationRequest.get().submit(
             task = this,

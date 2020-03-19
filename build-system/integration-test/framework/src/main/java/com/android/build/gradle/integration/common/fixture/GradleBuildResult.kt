@@ -20,7 +20,6 @@ import com.android.build.gradle.integration.common.truth.TaskStateList
 import com.android.builder.model.ProjectBuildOutput
 import com.google.api.client.repackaged.com.google.common.base.Preconditions
 import com.google.api.client.repackaged.com.google.common.base.Throwables
-import com.google.common.base.Splitter
 import com.google.common.collect.ImmutableList
 import org.gradle.api.ProjectConfigurationException
 import org.gradle.api.tasks.TaskExecutionException
@@ -30,12 +29,7 @@ import org.gradle.tooling.BuildException
 import org.gradle.tooling.GradleConnectionException
 import org.gradle.tooling.events.ProgressEvent
 import java.io.File
-import java.io.OutputStream
 import java.util.Scanner
-import java.util.Spliterators
-import java.util.regex.Pattern
-import java.util.stream.Stream
-import java.util.stream.StreamSupport
 
 /**
  * The result from running a build.
@@ -72,7 +66,7 @@ class GradleBuildResult @JvmOverloads constructor(
      * Most tests don't examine the state of the build's tasks and [TaskStateList] is relatively
      * expensive to initialize, so this is done lazily.
      */
-    private val taskStates: TaskStateList by lazy {
+    private val taskStateList: TaskStateList by lazy {
         TaskStateList(taskEvents, this.stdout)
     }
 
@@ -121,22 +115,25 @@ class GradleBuildResult @JvmOverloads constructor(
         }
 
     val tasks: List<String>
-        get() = taskStates.tasks
+        get() = taskStateList.tasks
+
+    val taskStates: Map<String, TaskStateList.ExecutionState>
+        get() = taskStateList.taskStates
 
     val upToDateTasks: Set<String>
-        get() = taskStates.upToDateTasks
+        get() = taskStateList.upToDateTasks
 
     val fromCacheTasks: Set<String>
-        get() = taskStates.fromCacheTasks
+        get() = taskStateList.fromCacheTasks
 
     val didWorkTasks: Set<String>
-        get() = taskStates.didWorkTasks
+        get() = taskStateList.didWorkTasks
 
     val skippedTasks: Set<String>
-        get() = taskStates.skippedTasks
+        get() = taskStateList.skippedTasks
 
     val failedTasks: Set<String>
-        get() = taskStates.failedTasks
+        get() = taskStateList.failedTasks
 
     /**
      * Returns the task info given the task name, or null if the task is not found (if it is not in
@@ -145,7 +142,7 @@ class GradleBuildResult @JvmOverloads constructor(
      * @see getTask
      */
     fun findTask(name: String): TaskStateList.TaskInfo? {
-        return taskStates.findTask(name)
+        return taskStateList.findTask(name)
     }
 
     /**
@@ -156,7 +153,7 @@ class GradleBuildResult @JvmOverloads constructor(
      */
     fun getTask(name: String): TaskStateList.TaskInfo {
         Preconditions.checkArgument(name.startsWith(":"), "Task name must start with :")
-        return taskStates.getTask(name)
+        return taskStateList.getTask(name)
     }
 
     private fun isPlaceholderEx(throwableType: String) =

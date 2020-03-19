@@ -79,7 +79,7 @@ data class ResourceName(
   }
 }
 
-class SourcedResourceName(val name: ResourceName, val line: Int)
+data class SourcedResourceName(val name: ResourceName, val line: Int)
 
 fun Int.isValidId(): Boolean = (this and 0xff000000.toInt()) != 0 && this.isValidDynamicId()
 

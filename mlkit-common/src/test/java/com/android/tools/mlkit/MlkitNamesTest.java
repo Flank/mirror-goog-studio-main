@@ -37,12 +37,12 @@ public class MlkitNamesTest {
 
     @Test
     public void computeModelClassName_nameAllWithInvalidCharacters_returnModelWithHashcode() {
-        assertEquals(MlkitNames.computeModelClassName(new File(" %$.tflite")), "Model40");
+        assertEquals(MlkitNames.computeModelClassName(new File(" %$.tflite")), "AutoModel40");
     }
 
     @Test
     public void computeModelClassName_nameStartWithDigit_correctIt() {
-        assertEquals(MlkitNames.computeModelClassName(new File("012.tflite")), "Model012");
+        assertEquals(MlkitNames.computeModelClassName(new File("012.tflite")), "AutoModel012");
     }
 
     @Test

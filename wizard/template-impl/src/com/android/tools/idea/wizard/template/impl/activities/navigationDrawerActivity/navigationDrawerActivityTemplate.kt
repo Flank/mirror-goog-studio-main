@@ -21,8 +21,6 @@ import com.android.tools.idea.wizard.template.Constraint
 import com.android.tools.idea.wizard.template.FormFactor
 import com.android.tools.idea.wizard.template.LanguageWidget
 import com.android.tools.idea.wizard.template.ModuleTemplateData
-import com.android.tools.idea.wizard.template.PackageNameWidget
-import com.android.tools.idea.wizard.template.Separator
 import com.android.tools.idea.wizard.template.StringParameter
 import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
@@ -45,7 +43,7 @@ val navigationDrawerActivityTemplate = template {
 
   category = Category.Activity
   formFactor = FormFactor.Mobile
-  screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry, WizardUiContext.NewProject)
+  screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry, WizardUiContext.NewProject, WizardUiContext.NewModule)
 
   lateinit var layoutName: StringParameter
 

@@ -318,6 +318,14 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "com.google.test.platform_core-proto",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/test/platform/core-proto/0.0.1-dev:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "com.google.testing.compile_compile-testing",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/compile/compile-testing/0.16:jar",
     visibility = ["//visibility:public"],
@@ -1302,7 +1310,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.gradle_gradle-tooling-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/6.2.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/6.3-rc-1:jar",
     visibility = ["//visibility:public"],
     exports = [":org.slf4j_slf4j-api"],
 )

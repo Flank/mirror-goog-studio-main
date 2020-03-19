@@ -520,7 +520,14 @@ class LintDetectorDetector : Detector(), UastScanner {
                 return
             }
 
-            if (!id[0].isUpperCase() || (id.none { it.isLowerCase() })) {
+            // namespaced id?
+            val leafIndex = id.lastIndexOf('.') + 1
+            val leaf = if (leafIndex > 0 && leafIndex < id.length - 1)
+                id.substring(leafIndex)
+            else
+                id
+
+            if (!leaf[0].isUpperCase() || (leaf.none { it.isLowerCase() })) {
                 context.report(
                     ID, idArgument, context.getLocation(idArgument),
                     "Lint issue IDs should use capitalized camel case, such as `MyIssueId`"
@@ -530,7 +537,7 @@ class LintDetectorDetector : Detector(), UastScanner {
                     ID, idArgument, context.getLocation(idArgument),
                     "Lint issue IDs should not contain spaces, such as `MyIssueId`"
                 )
-            } else if (id.length >= 40) {
+            } else if (leaf.length >= 40) {
                 context.report(
                     ID, idArgument, context.getLocation(idArgument),
                     "Lint issue IDs should be reasonably short (< 40 chars); they're used in suppress annotations etc"
@@ -634,7 +641,9 @@ class LintDetectorDetector : Detector(), UastScanner {
                 try {
                     val parsed = URL(url)
                     val protocol = parsed.protocol?.toLowerCase(Locale.US)
-                    if (protocol != null && protocol != "http" && protocol != "https") {
+                    if (protocol == "mailto") {
+                        return
+                    } else if (protocol != null && protocol != "http" && protocol != "https") {
                         context.report(
                             CHECK_URL, argument, getStringLocation(argument, url),
                             "Unexpected protocol `$protocol` in `$url`"

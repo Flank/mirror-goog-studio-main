@@ -263,6 +263,22 @@ public abstract class RenderParams {
         return mSetTransparentBackground;
     }
 
+    /** @deprecated use {@link #isTransparentBackground()} instead */
+    @Deprecated
+    public boolean isBgColorOverridden() {
+        return mSetTransparentBackground;
+    }
+
+    /**
+     * @deprecated background color may only be overridden with transparent background. If for some
+     *     reason in the future one wants to override background with a specific color one can do it
+     *     in studio and drawing the image with transparent background on top.
+     */
+    @Deprecated
+    public int getOverrideBgColor() {
+        return 0;
+    }
+
     public long getTimeout() {
         return mTimeout;
     }

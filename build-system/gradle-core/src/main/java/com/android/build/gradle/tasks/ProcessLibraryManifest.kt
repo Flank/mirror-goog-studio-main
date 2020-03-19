@@ -31,6 +31,7 @@ import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -42,6 +43,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -78,6 +80,10 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
     @get:Optional
     @get:Input
     abstract val manifestPlaceholders: MapProperty<String, Any>
+
+    /** The processed Manifests files folder.  */
+    @get:OutputDirectory
+    abstract val packagedManifestOutputDirectory: DirectoryProperty
 
     @VisibleForTesting
     @get:Nested
@@ -154,16 +160,13 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                 params.minSdkVersion,
                 params.targetSdkVersion,
                 params.maxSdkVersion,
-                null,
                 params.manifestOutputFile.absolutePath,
                 if (params.aaptFriendlyManifestOutputFile != null) params.aaptFriendlyManifestOutputFile.absolutePath else null,
-                null /* outInstantRunManifestLocation */,
-                null,  /*outMetadataFeatureManifestLocation */
-                ManifestMerger2.MergeType.LIBRARY /* outInstantAppManifestLocation */,
-                params.manifestPlaceholders,
+                ManifestMerger2.MergeType.LIBRARY /* outInstantRunManifestLocation */,
+                params.manifestPlaceholders /* outInstantAppManifestLocation */,
                 optionalFeatures,
-                emptyList(), params.reportFile,
-                LoggerWrapper.getLogger(ProcessLibraryManifest::class.java)
+                emptyList(),
+                params.reportFile, LoggerWrapper.getLogger(ProcessLibraryManifest::class.java)
             )
             val mergedXmlDocument =
                 mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED)
@@ -259,7 +262,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
 
             operations.setInitialProvider(
                 taskProvider,
-                ManifestProcessorTask::packagedManifestOutputDirectory
+                ProcessLibraryManifest::packagedManifestOutputDirectory
             ).on(InternalArtifactType.PACKAGED_MANIFESTS)
 
             operations.setInitialProvider(

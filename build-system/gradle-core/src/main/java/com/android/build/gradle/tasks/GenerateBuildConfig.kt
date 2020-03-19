@@ -37,7 +37,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 
 @CacheableTask
 abstract class GenerateBuildConfig : NonIncrementalTask() {
@@ -45,13 +44,13 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
     // ----- PUBLIC TASK API -----
 
     @get:OutputDirectory
-    lateinit var sourceOutputDir: File
+    abstract val sourceOutputDir: DirectoryProperty
 
     // ----- PRIVATE TASK API -----
 
     @get:Input
     @get:Optional
-    var buildTypeName: String? = null
+    abstract val buildTypeName: Property<String>
 
     @get:Input
     var isLibrary: Boolean = false
@@ -88,15 +87,15 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             val list = Lists.newArrayListWithCapacity<String>(resolvedItems.size * 3)
 
             for (item in resolvedItems) {
-                if (item is String) {
-                    list.add(item)
-                } else if (item is ClassField) {
-                    list.add(item.type)
-                    list.add(item.name)
-                    list.add(item.value)
+                when (item) {
+                    is String -> list.add(item)
+                    is ClassField -> list.apply {
+                        add(item.type)
+                        add(item.name)
+                        add(item.value)
+                    }
                 }
             }
-
             return list
         }
 
@@ -111,11 +110,11 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
     override fun doTaskAction() {
         // must clear the folder in case the packagename changed, otherwise,
         // there'll be two classes.
-        val destinationDir = sourceOutputDir
+        val destinationDir = sourceOutputDir.get().asFile
         FileUtils.cleanOutputDir(destinationDir)
 
         val generator = BuildConfigGenerator(
-            sourceOutputDir,
+            sourceOutputDir.get().asFile,
             buildConfigPackageName.get()
         )
 
@@ -146,9 +145,8 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             )
         }
 
-        buildTypeName?.let {
-            generator
-                .addField("String", "BUILD_TYPE", """"$it"""")
+        buildTypeName.orNull?.let {
+            generator.addField("String", "BUILD_TYPE", """"$it"""")
         }
 
         flavorName.get().let {
@@ -158,8 +156,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
         }
 
         versionCode.orNull?.let {
-            generator
-                    .addField("int", "VERSION_CODE", it.toString())
+            generator.addField("int", "VERSION_CODE", it.toString())
         }
         generator
             .addField(
@@ -202,6 +199,11 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.generateBuildConfigTask = taskProvider
+            creationConfig.operations.setInitialProvider(
+                taskProvider,
+                GenerateBuildConfig::sourceOutputDir
+            ).atLocation(creationConfig.paths.buildConfigSourceOutputDir.canonicalPath)
+                .on(InternalArtifactType.GENERATED_BUILD_CONFIG_JAVA)
         }
 
         override fun configure(
@@ -212,15 +214,13 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
             val variantDslInfo = creationConfig.variantDslInfo
 
             val project = creationConfig.globalScope.project
-            task.buildConfigPackageName.set(project.provider {
+            task.buildConfigPackageName.setDisallowChanges(project.provider {
                 variantDslInfo.originalApplicationId
             })
-            task.buildConfigPackageName.disallowChanges()
 
             if (creationConfig is ApkCreationConfig) {
-                task.appPackageName.set(creationConfig.applicationId)
+                task.appPackageName.setDisallowChanges(creationConfig.applicationId)
             }
-            task.appPackageName.disallowChanges()
 
             val mainSplit = creationConfig.outputs.getMainSplit()
             // check the variant API property first (if there is one) in case the variant
@@ -230,28 +230,23 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             task.debuggable.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
 
-            task.buildTypeName = variantDslInfo.componentIdentity.buildType
+            task.buildTypeName.setDisallowChanges(variantDslInfo.componentIdentity.buildType)
 
             // no need to memoize, variant configuration does that already.
-            task.flavorName.set(project.provider { variantDslInfo.componentIdentity.flavorName })
-            task.flavorName.disallowChanges()
+            task.flavorName.setDisallowChanges(
+                    project.provider { variantDslInfo.componentIdentity.flavorName })
 
-            task.flavorNamesWithDimensionNames.set(project.provider {
+            task.flavorNamesWithDimensionNames.setDisallowChanges(project.provider {
                 variantDslInfo.flavorNamesWithDimensionNames
             })
-            task.flavorNamesWithDimensionNames.disallowChanges()
 
-            task.items.set(project.provider { variantDslInfo.buildConfigItems })
-            task.items.disallowChanges()
-
-            task.sourceOutputDir = creationConfig.paths.buildConfigSourceOutputDir
+            task.items.setDisallowChanges(project.provider { variantDslInfo.buildConfigItems })
 
             if (creationConfig.variantType.isTestComponent) {
                 creationConfig.operations.setTaskInputToFinalProduct(
                     InternalArtifactType.PACKAGED_MANIFESTS, task.mergedManifests
                 )
             }
-
             task.isLibrary = creationConfig.variantType.isAar
         }
     }

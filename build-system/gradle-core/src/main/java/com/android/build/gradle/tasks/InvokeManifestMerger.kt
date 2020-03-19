@@ -74,7 +74,7 @@ abstract class InvokeManifestMerger : NonIncrementalTask(), Supplier<File> {
         FileWriter(outputFile!!).use { fileWriter ->
             fileWriter.append(
                 mergingReport
-                    .getMergedDocument(MergingReport.MergedManifestKind.INTERNAL_MERGED)
+                    .getMergedDocument(MergingReport.MergedManifestKind.MERGED)
             )
         }
     }

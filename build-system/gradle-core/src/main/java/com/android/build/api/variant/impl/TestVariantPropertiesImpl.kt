@@ -18,20 +18,23 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.variant.TestVariantProperties
-import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.BuiltArtifactProperty
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
+import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import java.util.concurrent.Callable
 import javax.inject.Inject
 
@@ -46,7 +49,7 @@ open class TestVariantPropertiesImpl @Inject constructor(
     variantScope: VariantScope,
     variantData: BaseVariantData,
     transformManager: TransformManager,
-    variantPropertiesApiServices: VariantPropertiesApiServices,
+    variantApiServices: VariantPropertiesApiServices,
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : VariantPropertiesImpl(
@@ -60,10 +63,15 @@ open class TestVariantPropertiesImpl @Inject constructor(
     variantScope,
     variantData,
     transformManager,
-    variantPropertiesApiServices,
+    variantApiServices,
     taskCreationServices,
     globalScope
-), TestVariantProperties, ApkCreationConfig {
+), TestVariantProperties, TestCreationConfig {
+
+    /*
+     * Provider of data coming from the tested modules. These are loaded just once and finalized.
+     */
+    private val testedProjectManifestMetadata: Provider<BuiltArtifactsImpl> = instantiateProjectManifestMetadata(variantDependencies)
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -72,8 +80,10 @@ open class TestVariantPropertiesImpl @Inject constructor(
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
 
-    override val applicationId: Property<String> =
-        variantPropertiesApiServices.propertyOf(String::class.java, Callable { variantDslInfo.applicationId })
+    override val applicationId: Property<String> = variantApiServices.propertyOf(
+        String::class.java,
+        Callable { variantDslInfo.applicationId }
+    )
 
     override val manifestPlaceholders: Map<String, Any>
         get() = variantDslInfo.manifestPlaceholders
@@ -89,4 +99,32 @@ open class TestVariantPropertiesImpl @Inject constructor(
     // always true for this kind
     override val testOnlyApk: Boolean
         get() = true
+
+    // tested application Id
+    override val testedApplicationId: Provider<String> = testedProjectManifestMetadata.map { it.applicationId }
+
+    // ---------------------------------------------------------------------------------------------
+    // Private stuff
+    // ---------------------------------------------------------------------------------------------
+
+    private fun instantiateProjectManifestMetadata(
+        variantDependencies: VariantDependencies
+    ): Provider<BuiltArtifactsImpl> {
+        val artifact = variantDependencies
+            .getArtifactFileCollection(
+                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                AndroidArtifacts.ArtifactScope.PROJECT,
+                AndroidArtifacts.ArtifactType.MANIFEST_METADATA
+            )
+
+        // Have to wrap the return of artifact.elements.map because we cannot call
+        // finalizeValueOnRead directly on Provider
+        return internalServices.providerOf(
+            BuiltArtifactsImpl::class.java,
+            artifact.elements.map {
+                val manifestDirectory = it.single().asFile
+                BuiltArtifactsLoaderImpl.loadFromDirectory(manifestDirectory)
+                    ?: throw RuntimeException("Cannot find merged manifest at '$manifestDirectory', please file a bug.\"")
+            })
+    }
 }

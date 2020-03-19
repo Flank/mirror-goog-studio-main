@@ -20,7 +20,6 @@ import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
-import com.android.tools.idea.wizard.template.Constraint.PACKAGE
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.EnumWidget
 import com.android.tools.idea.wizard.template.FormFactor
@@ -54,7 +53,7 @@ val watchFaceServiceTemplate
 
     category = Category.Wear
     formFactor = FormFactor.Wear
-    screens = listOf(WizardUiContext.NewProject, WizardUiContext.MenuEntry)
+    screens = listOf(WizardUiContext.NewProject, WizardUiContext.MenuEntry, WizardUiContext.NewModule)
 
     val serviceClass = stringParameter {
       name = "Service Name"
