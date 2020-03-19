@@ -26,9 +26,9 @@ fun musicServiceKt(
 package ${sharedPackageName}
 
 import android.os.Bundle
-import ${getMaterialComponentName("android.support.v4.media.MediaBrowserCompat.MediaItem", useAndroidX)}
+import android.support.v4.media.MediaBrowserCompat.MediaItem
 import ${getMaterialComponentName("android.support.v4.media.MediaBrowserServiceCompat", useAndroidX)}
-import ${getMaterialComponentName("android.support.v4.media.session.MediaSessionCompat", useAndroidX)}
+import android.support.v4.media.session.MediaSessionCompat
 
 import java.util.ArrayList
 
