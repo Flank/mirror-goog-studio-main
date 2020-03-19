@@ -46,6 +46,7 @@ public abstract class ExternalNativeBuildJsonTask extends UnsafeOutputsTask {
 
     @Inject
     public ExternalNativeBuildJsonTask(@NonNull ExecOperations execOperations) {
+        super("Generate json model is always run.");
         this.execOperations = execOperations;
     }
 
