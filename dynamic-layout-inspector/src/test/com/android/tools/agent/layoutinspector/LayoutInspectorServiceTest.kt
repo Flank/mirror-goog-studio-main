@@ -16,7 +16,7 @@
 package com.android.tools.agent.layoutinspector
 
 import android.content.res.Configuration
-import android.graphics.Canvas
+import android.graphics.Bitmap
 import android.graphics.HardwareRenderer
 import android.graphics.Picture
 import android.os.Handler
@@ -29,16 +29,18 @@ import com.android.tools.agent.layoutinspector.testing.ResourceEntry
 import com.android.tools.agent.layoutinspector.testing.StandardView
 import com.android.tools.agent.layoutinspector.testing.StringTable
 import com.android.tools.agent.layoutinspector.testing.TestCanvasFactory
-import com.android.tools.agent.layoutinspector.testing.TestCanvasFactory.PictureCanvas
 import com.android.tools.layoutinspector.proto.LayoutInspectorProto
 import com.android.tools.profiler.proto.Common
 import com.android.tools.transport.AgentRule
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.ArgumentMatchers
-import org.mockito.Mockito
-import org.mockito.invocation.InvocationOnMock
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.eq
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.anyInt
+import org.mockito.Mockito.mock
+import java.io.OutputStream
 import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeUnit
 
@@ -46,8 +48,13 @@ class LayoutInspectorServiceTest {
     @get:Rule
     var agentRule = AgentRule()
 
+    private companion object {
+        init {
+            System.loadLibrary("jni-test")
+        }
+    }
+
     @Test
-    @Throws(Exception::class)
     fun testError() {
         LayoutInspectorService.sendErrorMessage("foo")
         val event = agentRule.events.poll(5, TimeUnit.SECONDS)
@@ -61,40 +68,15 @@ class LayoutInspectorServiceTest {
         assertThat(event).isEqualTo(expected)
     }
 
-    private companion object {
-        init {
-            System.loadLibrary("jni-test")
-        }
-    }
-
     @Test
-    @Throws(java.lang.Exception::class)
     fun testComponentTreeEvent() {
-        val handler = Mockito.mock(Handler::class.java)
-        Mockito.`when`(handler.looper).thenReturn(Looper.myLooper())
-        val renderer = HardwareRenderer()
-        val info = AttachInfo(handler, renderer)
-        val view: View = StandardView.createLinearLayout()
-        setField(view, "mAttachInfo", info)
-        WindowInspector.setGlobalWindowViews(listOf(view))
-        Picture.setCanvasFactory(TestCanvasFactory())
-        Mockito.doAnswer { invocation: InvocationOnMock ->
-            val picture = invocation.getArgument<PictureCanvas>(0).picture
-            picture.setImage(byteArrayOf(1, 2, 3, 4, 5))
-            val callback = renderer.pictureCaptureCallback
-            callback?.onPictureCaptured(picture)
-            null
-        }.`when`(view).draw(ArgumentMatchers.any(Canvas::class.java))
-
-        val service = LayoutInspectorService.instance()
-        service.startLayoutInspector(view)
         val picture = Picture()
-        picture.setImage(byteArrayOf(1, 2, 3, 4, 5))
-        val callback = renderer.pictureCaptureCallback
-        assertThat(callback).isNotNull()
-        callback!!.onPictureCaptured(picture)
+        val pictureBytes = byteArrayOf(1, 2, 3, 4, 5)
+        picture.setImage(pictureBytes)
 
-        val event = agentRule.events.poll(5, TimeUnit.SECONDS)!!
+        val (_, callback) = setUpInspectorService()
+
+        val event = onPictureCaptured(callback, picture)
         val expectedPid = ManagementFactory.getRuntimeMXBean().name.substringBefore('@').toInt()
         assertThat(event.pid).isEqualTo(expectedPid)
         assertThat(event.groupId).isEqualTo(1101)
@@ -141,10 +123,10 @@ class LayoutInspectorServiceTest {
         assertThat(config.countryCode).isEqualTo(310)
         assertThat(config.networkCode).isEqualTo(4)
         assertThat(config.screenLayout).isEqualTo(Configuration.SCREENLAYOUT_SIZE_LARGE or
-                    Configuration.SCREENLAYOUT_LONG_NO or
-                    Configuration.SCREENLAYOUT_LAYOUTDIR_RTL)
+                Configuration.SCREENLAYOUT_LONG_NO or
+                Configuration.SCREENLAYOUT_LAYOUTDIR_RTL)
         assertThat(config.colorMode).isEqualTo(Configuration.COLOR_MODE_WIDE_COLOR_GAMUT_NO or
-                    Configuration.COLOR_MODE_HDR_YES)
+                Configuration.COLOR_MODE_HDR_YES)
         assertThat(config.touchScreen).isEqualTo(Configuration.TOUCHSCREEN_FINGER)
         assertThat(config.keyboard).isEqualTo(Configuration.KEYBOARD_QWERTY)
         assertThat(config.keyboardHidden).isEqualTo(Configuration.KEYBOARDHIDDEN_YES)
@@ -157,9 +139,86 @@ class LayoutInspectorServiceTest {
         assertThat(config.orientation).isEqualTo(Configuration.ORIENTATION_PORTRAIT)
         assertThat(config.screenWidth).isEqualTo(1080)
         assertThat(config.screenHeight).isEqualTo(2280)
+
+        assertThat(agentRule.payloads[event.layoutInspectorEvent.tree.payloadId])
+            .isEqualTo(pictureBytes)
     }
 
-    @Throws(java.lang.Exception::class)
+    @Test
+    fun testPictureTooLarge() {
+        val bitmap = mock(Bitmap::class.java)
+        Bitmap.INSTANCE = bitmap
+        val bitmapBytes = byteArrayOf(1, 2, 3, 4)
+        `when`(bitmap.compress(eq(Bitmap.CompressFormat.PNG), anyInt(), any()))
+            .then { invocation ->
+                invocation.getArgument<OutputStream>(2).write(bitmapBytes)
+                Unit
+            }
+        val picture = Picture()
+        val pictureContents = ByteArray(LayoutInspectorService.MAX_IMAGE_SIZE + 1)
+        picture.setImage(pictureContents)
+
+        val (_, callback) = setUpInspectorService()
+
+        val event = onPictureCaptured(callback, picture)
+        assertThat(event.groupId).isEqualTo(1101)
+        assertThat(event.kind).isEqualTo(Common.Event.Kind.LAYOUT_INSPECTOR)
+        val tree = event.layoutInspectorEvent.tree
+        assertThat(tree.payloadType)
+            .isEqualTo(LayoutInspectorProto.ComponentTreeEvent.PayloadType.PNG_SKP_TOO_LARGE)
+        assertThat(agentRule.payloads[event.layoutInspectorEvent.tree.payloadId])
+            .isEqualTo(bitmapBytes)
+    }
+
+    @Test
+    fun testUseScreenshotMode() {
+        val bitmap = mock(Bitmap::class.java)
+        Bitmap.INSTANCE = bitmap
+        val bitmapBytes = byteArrayOf(1, 2, 3, 4, 5)
+        `when`(bitmap.compress(eq(Bitmap.CompressFormat.PNG), anyInt(), any()))
+            .then { invocation ->
+                invocation.getArgument<OutputStream>(2).write(bitmapBytes)
+                Unit
+            }
+        val (service, callback) = setUpInspectorService()
+
+        service.onUseScreenshotModeCommand(true)
+
+        val event = onPictureCaptured(callback, Picture())
+        assertThat(event.groupId).isEqualTo(1101)
+        assertThat(event.kind).isEqualTo(Common.Event.Kind.LAYOUT_INSPECTOR)
+        val tree = event.layoutInspectorEvent.tree
+        assertThat(tree.payloadType)
+            .isEqualTo(LayoutInspectorProto.ComponentTreeEvent.PayloadType.PNG_AS_REQUESTED)
+        assertThat(agentRule.payloads[event.layoutInspectorEvent.tree.payloadId])
+            .isEqualTo(bitmapBytes)
+    }
+
+    private fun setUpInspectorService()
+            : Pair<LayoutInspectorService, HardwareRenderer.PictureCapturedCallback> {
+        val handler = mock(Handler::class.java)
+        `when`(handler.looper).thenReturn(Looper.myLooper())
+        val renderer = HardwareRenderer()
+        val info = AttachInfo(handler, renderer)
+        val view: View = StandardView.createLinearLayout()
+        setField(view, "mAttachInfo", info)
+        WindowInspector.setGlobalWindowViews(listOf(view))
+        Picture.setCanvasFactory(TestCanvasFactory())
+        val service = LayoutInspectorService.instance()
+        service.startLayoutInspector(view)
+        val callback = renderer.pictureCaptureCallback!!
+        return Pair(service, callback)
+    }
+
+    private fun onPictureCaptured(
+        callback: HardwareRenderer.PictureCapturedCallback,
+        picture: Picture
+    ): Common.Event {
+        callback.onPictureCaptured(picture)
+        val event = agentRule.events.poll(5, TimeUnit.SECONDS)!!
+        return event
+    }
+
     private fun setField(instance: Any, fieldName: String, value: Any) {
         val field = instance.javaClass.getDeclaredField(fieldName)
         field.isAccessible = true

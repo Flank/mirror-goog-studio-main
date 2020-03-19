@@ -32,7 +32,8 @@ message ComponentTreeEvent {
   enum PayloadType {
     UNKNOWN = 0;
     SKP = 1;
-    PNG = 2;
+    PNG_SKP_TOO_LARGE = 2;
+    PNG_AS_REQUESTED = 3;
   }
   PayloadType payload_type = 2;
   View root = 3;
@@ -169,10 +170,12 @@ message LayoutInspectorCommand {
     STOP = 2;
     GET_PROPERTIES = 3;
     EDIT_PROPERTY = 4;
+    USE_SCREENSHOT_MODE = 5;
   }
 
   Type type = 1;
   int64 view_id = 2;
+  bool screenshot_mode = 3;
 
   EditProperty edit_property = 17;
 }

@@ -34,13 +34,14 @@ class AgentRule : ExternalResource() {
     private var origConfigAddr: Long = 0
 
     val events: BlockingQueue<Common.Event> = LinkedBlockingQueue()
+    val payloads: MutableMap<Int, ByteArray> = mutableMapOf()
 
     override fun before() {
         socket = ServerSocket(0)
         socket.close()
         server = NettyServerBuilder
             .forPort(socket.localPort)
-            .addService(TestAgentServiceImpl(events))
+            .addService(TestAgentServiceImpl(events, payloads))
             .build()
             .start()
         try {
@@ -63,13 +64,26 @@ class AgentRule : ExternalResource() {
     private external fun resetAgent(origConfigAddr: Long)
 
     private class TestAgentServiceImpl(
-        private val events: Queue<Common.Event>
+        private val events: Queue<Common.Event>,
+        private val payloads: MutableMap<Int, ByteArray>
     ) : AgentServiceGrpc.AgentServiceImplBase() {
         override fun sendEvent(
             request: Agent.SendEventRequest?,
             responseObserver: StreamObserver<Agent.EmptyResponse>?
         ) {
             request?.event?.let { events.add(it) }
+            responseObserver?.onNext(Agent.EmptyResponse.getDefaultInstance())
+            responseObserver?.onCompleted()
+        }
+
+        override fun sendBytes(
+            request: Agent.SendBytesRequest,
+            responseObserver: StreamObserver<Agent.EmptyResponse>?
+        ) {
+            if (!request.isComplete) {
+                payloads[request.name.toInt()] = request.bytes.toByteArray()
+            }
+            responseObserver?.onNext(Agent.EmptyResponse.getDefaultInstance())
             responseObserver?.onCompleted()
         }
     }

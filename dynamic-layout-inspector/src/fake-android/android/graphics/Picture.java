@@ -27,11 +27,13 @@ import java.io.OutputStream;
  */
 public class Picture {
     private static CanvasFactory ourCanvasFactory;
-    private final Canvas mCanvas;
+    private Canvas mCanvas;
     private byte[] mBytes;
 
     public Picture() {
-        mCanvas = ourCanvasFactory.createCanvas(this);
+        if (ourCanvasFactory != null) {
+            mCanvas = ourCanvasFactory.createCanvas(this);
+        }
     }
 
     public static void setCanvasFactory(@NonNull CanvasFactory canvasFactory) {
