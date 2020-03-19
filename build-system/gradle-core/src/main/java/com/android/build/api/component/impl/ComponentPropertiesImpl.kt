@@ -455,11 +455,7 @@ abstract class ComponentPropertiesImpl(
                 if (!artifacts.getOperations().getArtifactContainer(DATA_BINDING_TRIGGER)
                         .needInitialProducer().get()
                 ) {
-                    val dataBindingTriggerDir = artifacts.getFinalProduct(DATA_BINDING_TRIGGER)
-                    sourceSets.add(
-                        internalServices.fileTree(dataBindingTriggerDir)
-                            .builtBy(dataBindingTriggerDir)
-                    )
+                    sourceSets.add(internalServices.fileTree(artifacts.getFinalProduct(DATA_BINDING_TRIGGER)))
                 }
             }
             addDataBindingSources(sourceSets)
