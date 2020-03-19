@@ -59,21 +59,18 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":compileDebugJavaWithJavac" to FROM_CACHE,
         ":compileDebugRenderscript" to SKIPPED,
         ":createDebugCompatibleScreenManifests" to DID_WORK,
-        ":dataBindingExportBuildInfoDebug" to FROM_CACHE,
         ":dataBindingGenBaseClassesDebug" to FROM_CACHE,
         ":dataBindingMergeDependencyArtifactsDebug" to FROM_CACHE,
         ":dataBindingMergeGenClassesDebug" to FROM_CACHE,
+        ":dataBindingTriggerDebug" to FROM_CACHE,
         ":extractDeepLinksDebug" to FROM_CACHE,
         ":generateDebugBuildConfig" to FROM_CACHE,
         ":generateDebugResources" to UP_TO_DATE,
         ":generateDebugResValues" to FROM_CACHE,
-        ":generateDebugSources" to SKIPPED,
         ":javaPreCompileDebug" to FROM_CACHE,
         ":mergeDebugResources" to DID_WORK, /* Bug 141301405 */
         ":preBuild" to UP_TO_DATE,
         ":preDebugBuild" to UP_TO_DATE,
-        ":prepareLintJar" to DID_WORK,
-        ":prepareLintJarForPublish" to DID_WORK,
         ":processDebugManifest" to DID_WORK,
         ":processDebugManifestForPackage" to FROM_CACHE,
         ":processDebugResources" to DID_WORK
@@ -146,8 +143,8 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         }
 
         CacheabilityTestHelper(project, projectCopy, buildCacheDirRoot.newFolder("build-cache"))
-            .runTasks("clean", ":dataBindingExportBuildInfoDebug")
-            .assertTaskStates(mapOf(":dataBindingExportBuildInfoDebug" to DID_WORK))
+            .runTasks("clean", ":dataBindingTriggerDebug")
+            .assertTaskStates(mapOf(":dataBindingTriggerDebug" to DID_WORK))
     }
 
 

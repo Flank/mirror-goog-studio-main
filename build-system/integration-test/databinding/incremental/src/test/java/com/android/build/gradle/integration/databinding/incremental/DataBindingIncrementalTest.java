@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.databinding.incremental;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTaskKt.DATA_BINDING_TRIGGER_CLASS;
+import static com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTaskKt.DATA_BINDING_TRIGGER_CLASS;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -54,7 +54,7 @@ public class DataBindingIncrementalTest {
     @Rule
     public GradleTestProject project;
 
-    private static final String EXPORT_INFO_TASK = ":dataBindingExportBuildInfoDebug";
+    private static final String TRIGGER_TASK = ":dataBindingTriggerDebug";
     private static final String COMPILE_JAVA_TASK = ":compileDebugJavaWithJavac";
 
     private static final String MAIN_ACTIVITY_BINDING_CLASS =
@@ -155,11 +155,11 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void compileWithoutChange() throws Exception {
-        project.executor().run(EXPORT_INFO_TASK);
+        project.executor().run(TRIGGER_TASK);
         File infoClass = getGeneratedInfoClass();
         assertThat(infoClass).exists();
         String contents = FileUtils.readFileToString(infoClass, Charsets.UTF_8);
-        project.executor().run(EXPORT_INFO_TASK);
+        project.executor().run(TRIGGER_TASK);
         assertThat(getGeneratedInfoClass()).hasContents(contents);
     }
 
@@ -193,7 +193,7 @@ public class DataBindingIncrementalTest {
         assertThat(updatedInfoFileContents).isEqualTo(infoFileContents);
         assertThat(updatedSourceFileContents).isEqualTo(sourceFileContents);
 
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasUpToDate();
+        assertThat(result.getTask(TRIGGER_TASK)).wasUpToDate();
         assertThat(result.getTask(COMPILE_JAVA_TASK)).didWork();
 
         TestUtils.waitForFileSystemTick();
@@ -229,7 +229,7 @@ public class DataBindingIncrementalTest {
         assertThat(updatedInfoFileContents).isEqualTo(infoFileContents);
         assertThat(updatedSourceFileContents).isEqualTo(sourceFileContents);
 
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasUpToDate();
+        assertThat(result.getTask(TRIGGER_TASK)).wasUpToDate();
         assertThat(result.getTask(COMPILE_JAVA_TASK)).didWork();
 
         TestUtils.waitForFileSystemTick();
@@ -278,7 +278,7 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void changeVariableName() throws Exception {
-        project.execute(EXPORT_INFO_TASK);
+        project.execute(TRIGGER_TASK);
         TestFileUtils.searchAndReplace(
                 project.file(ACTIVITY_MAIN_XML),
                 "<variable name=\"foo\" type=\"String\"/>",
@@ -303,7 +303,7 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void addVariable() throws Exception {
-        project.execute(EXPORT_INFO_TASK);
+        project.execute(TRIGGER_TASK);
         TestFileUtils.searchAndReplace(
                 project.file(ACTIVITY_MAIN_XML),
                 "<variable name=\"foo\" type=\"String\"/>",
@@ -322,7 +322,7 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void addIdToView() throws Exception {
-        project.execute(EXPORT_INFO_TASK);
+        project.execute(TRIGGER_TASK);
         TestFileUtils.searchAndReplace(
                 project.file(ACTIVITY_MAIN_XML),
                 "<TextView android:text='@{foo + \" \" + foo}'",
@@ -358,7 +358,7 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void addNewLayoutFolderAndFile() throws Exception {
-        project.execute(EXPORT_INFO_TASK);
+        project.execute(TRIGGER_TASK);
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File landscapeActivity = new File(mainActivity
                 .getParentFile().getParentFile(), "layout-land/activity_main.xml");
@@ -383,7 +383,7 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void addNewLayout() throws Exception {
-        project.execute(EXPORT_INFO_TASK);
+        project.execute(TRIGGER_TASK);
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File activity2 = new File(mainActivity.getParentFile(), "activity2.xml");
         Files.copy(mainActivity, activity2);

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks.databinding
 
-import android.databinding.tool.processing.Scope
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -36,13 +35,9 @@ import org.gradle.api.tasks.TaskProvider
  * binding annotation), so that the Java compiler still invokes data binding in the case that data
  * binding is used (e.g., in layout files) but the source code does not use data binding
  * annotations.
- *
- * Note: The task name might be misleading: Historically, this task was used to generate a class
- * that contained the build environment information needed for data binding, but it is now no longer
- * the case. We'll rename it later.
  */
 @CacheableTask
-abstract class DataBindingExportBuildInfoTask : NonIncrementalTask() {
+abstract class DataBindingTriggerTask : NonIncrementalTask() {
 
     @get:Input
     abstract val applicationId: Property<String>
@@ -75,32 +70,28 @@ abstract class DataBindingExportBuildInfoTask : NonIncrementalTask() {
         )
         FileUtils.mkdirs(outputFile.parentFile)
         outputFile.writeText(fileContents)
-
-        Scope.assertNoError()
     }
 
     class CreationAction(private val componentProperties: ComponentPropertiesImpl) :
-        VariantTaskCreationAction<DataBindingExportBuildInfoTask, ComponentPropertiesImpl>(
+        VariantTaskCreationAction<DataBindingTriggerTask, ComponentPropertiesImpl>(
             componentProperties
         ) {
 
-        override val name: String = computeTaskName("dataBindingExportBuildInfo")
+        override val name: String = computeTaskName("dataBindingTrigger")
 
-        override val type: Class<DataBindingExportBuildInfoTask> =
-            DataBindingExportBuildInfoTask::class.java
+        override val type: Class<DataBindingTriggerTask> = DataBindingTriggerTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<out DataBindingExportBuildInfoTask>
+            taskProvider: TaskProvider<out DataBindingTriggerTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.taskContainer.dataBindingExportBuildInfoTask = taskProvider
             creationConfig.operations.setInitialProvider(
                 taskProvider,
-                DataBindingExportBuildInfoTask::triggerDir
+                DataBindingTriggerTask::triggerDir
             ).on(InternalArtifactType.DATA_BINDING_TRIGGER)
         }
 
-        override fun configure(task: DataBindingExportBuildInfoTask) {
+        override fun configure(task: DataBindingTriggerTask) {
             super.configure(task)
             task.applicationId.setDisallowChanges(
                 creationConfig.globalScope.project.provider {
@@ -110,7 +101,6 @@ abstract class DataBindingExportBuildInfoTask : NonIncrementalTask() {
             task.useAndroidX.setDisallowChanges(
                 creationConfig.services.projectOptions[BooleanOption.USE_ANDROID_X]
             )
-            task.dependsOn(creationConfig.taskContainer.sourceGenTask)
         }
     }
 }
