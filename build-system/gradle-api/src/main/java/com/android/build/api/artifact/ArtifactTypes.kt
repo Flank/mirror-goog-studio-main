@@ -27,7 +27,7 @@ import org.gradle.api.file.FileSystemLocation
  * class.
  */
 @Incubating
-sealed class PublicArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>)
+sealed class ArtifactTypes<T : FileSystemLocation>(kind: ArtifactKind<T>)
     : ArtifactType<T>(kind) {
     override val isPublic: Boolean = true
 
@@ -35,5 +35,11 @@ sealed class PublicArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>)
      * APK directory where final APK files will be located.
      */
     @Incubating
-    object APK: PublicArtifactType<Directory>(DIRECTORY), Replaceable
+    object APK: ArtifactTypes<Directory>(DIRECTORY), Replaceable
+
+    /**
+     * Merged manifests file that will be used in the APK, Bundle and InstantApp packages.
+     */
+    object MERGED_MANIFESTS: ArtifactTypes<Directory>(DIRECTORY), Replaceable, ContainsMany
+
 }

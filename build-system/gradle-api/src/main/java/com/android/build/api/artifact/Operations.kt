@@ -73,9 +73,9 @@ interface Operations {
      * and an ArtifactType defined as follow :
      *
      * <pre
-     *     sealed class PublicArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {
+     *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {
      *          object MULTIPLE_FILE_ARTIFACT:
-     *                  PublicArtifactType<RegularFile>(FILE), Appendable
+     *                  ArtifactTypes<RegularFile>(FILE), Appendable
      *     }
      * </pre>
      *
@@ -85,7 +85,7 @@ interface Operations {
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "appendTask")
      *     Operations.append(taskProvider, MyTask::outputFile)
-     *              .on(PublicArtifactType.MULTIPLE_FILE_ARTIFACT)
+     *              .on(ArtifactTypes.MULTIPLE_FILE_ARTIFACT)
      * </pre>
      *
      * @return an [AppendRequest] to finish the append request.
@@ -121,9 +121,9 @@ interface Operations {
      * and an ArtifactType defined as follow :
      *
      * <pre
-     *     sealed class PublicArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {
+     *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {
      *          object SINGLE_FILE_ARTIFACT:
-     *                  PublicArtifactType<RegularFile>(FILE), Single, Transformable
+     *                  ArtifactTypes<RegularFile>(FILE), Single, Transformable
      *     }
      * </pre>
      *
@@ -132,7 +132,7 @@ interface Operations {
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "transformTask")
      *     Operations.transform(taskProvider, MyTask::inputFile, MyTask::outputFile)
-     *              .on(PublicArtifactType.SINGLE_FILE_ARTIFACT)
+     *              .on(ArtifactTypes.SINGLE_FILE_ARTIFACT)
      * </pre>
      *
      * @return a instance of [TransformRequest] that can be used to specify the artifact type.
@@ -176,9 +176,9 @@ interface Operations {
      * and an ArtifactType defined as follow :
      *
      * <pre
-     *     sealed class PublicArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {
+     *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {
      *          object MULTIPLE_FILE_ARTIFACT:
-     *                  PublicArtifactType<RegularFile>(FILE), Multiple, Replaceable
+     *                  ArtifactTypes<RegularFile>(FILE), Multiple, Replaceable
      *     }
      * </pre>
      *
@@ -187,7 +187,7 @@ interface Operations {
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "combineTask")
      *     Operations.transformAll(taskProvider, MyTask::inputFiles, MyTask::outputFile)
-     *              .on(PublicArtifactType.MULTIPLE_FILE_ARTIFACT)
+     *              .on(ArtifactTypes.MULTIPLE_FILE_ARTIFACT)
      * </pre>
      *
      * @return a instance of [TransformRequest] that can be used to specify the artifact type.
@@ -240,9 +240,9 @@ interface Operations {
      * and an ArtifactType defined as follow :
      *
      * <pre
-     *     sealed class PublicArtifactType<T: FileSystemLocation>(val kind: ArtifactKind) {
+     *     sealed class ArtifactTypes<T: FileSystemLocation>(val kind: ArtifactKind) {
      *          object SINGLE_FILE_ARTIFACT:
-     *                  PublicArtifactType<RegularFile>(FILE), Replaceable
+     *                  ArtifactTypes<RegularFile>(FILE), Replaceable
      *     }
      * </pre>
      *
@@ -251,7 +251,7 @@ interface Operations {
      * <pre>
      *     val taskProvider= projects.tasks.register(MyTask::class.java, "replaceTask")
      *     Operations.replace(taskProvider, MyTask::outputFile)
-     *              .on(PublicArtifactType.SINGLE_FILE_ARTIFACT)
+     *              .on(ArtifactTypes.SINGLE_FILE_ARTIFACT)
      * </pre>
      */
     fun <TASK: Task, FILE_TYPE: FileSystemLocation> replace(

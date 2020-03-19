@@ -247,7 +247,6 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     object CHECK_MANIFEST_RESULT: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     object COMPATIBLE_SCREEN_MANIFEST: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
-    object MERGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     // manifests that end up being packaged in the aar or the apk file formats.
     object PACKAGED_MANIFESTS: InternalArtifactType<Directory>(DIRECTORY), Replaceable, ContainsMany
     object LIBRARY_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable

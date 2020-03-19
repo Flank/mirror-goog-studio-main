@@ -53,7 +53,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.PublicArtifactType;
+import com.android.build.api.artifact.ArtifactTypes;
 import com.android.build.api.component.impl.AndroidTestPropertiesImpl;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
@@ -2621,7 +2621,7 @@ public abstract class TaskManager<
         // republish APK to the external world.
         creationConfig
                 .getArtifacts()
-                .republish(InternalArtifactType.APK.INSTANCE, PublicArtifactType.APK.INSTANCE);
+                .republish(InternalArtifactType.APK.INSTANCE, ArtifactTypes.APK.INSTANCE);
 
         // create install task for the variant Data. This will deal with finding the
         // right output if there are more than one.

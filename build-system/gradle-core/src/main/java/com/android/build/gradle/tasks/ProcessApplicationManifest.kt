@@ -16,6 +16,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
@@ -218,7 +219,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             )
         }
         BuiltArtifactsImpl(
-            artifactType = InternalArtifactType.MERGED_MANIFESTS,
+            artifactType = ArtifactTypes.MERGED_MANIFESTS,
             applicationId = applicationId.get(),
             variantName = variantName,
             elements = mergedManifestOutputs.toList()
@@ -393,7 +394,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             operations.setInitialProvider(
                 taskProvider,
                 ProcessApplicationManifest::mergedManifestOutputDirectory
-            ).on(InternalArtifactType.MERGED_MANIFESTS)
+            ).on(ArtifactTypes.MERGED_MANIFESTS)
             operations.setInitialProvider(
                 taskProvider,
                 ManifestProcessorTask::mergeBlameFile

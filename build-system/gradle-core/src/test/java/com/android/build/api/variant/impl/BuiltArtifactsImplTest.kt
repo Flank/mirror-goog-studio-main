@@ -16,7 +16,7 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.PublicArtifactType
+import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
@@ -42,7 +42,7 @@ class BuiltArtifactsImplTest {
     fun simpleWriting() {
         val outputFolder = tmpFolder.newFolder("some_folder")
         BuiltArtifactsImpl(
-            artifactType = PublicArtifactType.APK,
+            artifactType = ArtifactTypes.APK,
             applicationId = "com.android.test",
             variantName = "debug",
             elements = listOf(
@@ -85,7 +85,7 @@ class BuiltArtifactsImplTest {
     fun testMultipleOutputWithFilters() {
         val outputFolder = tmpFolder.newFolder("some_folder")
         BuiltArtifactsImpl(
-            artifactType = PublicArtifactType.APK,
+            artifactType = ArtifactTypes.APK,
             applicationId = "com.android.test",
             variantName = "debug",
             elements = listOf(
@@ -255,10 +255,10 @@ class BuiltArtifactsImplTest {
             BuiltArtifacts.METADATA_FILE_VERSION
         )
         Truth.assertThat(builtArtifacts.artifactType.type).isEqualTo(
-            PublicArtifactType.APK.name()
+            ArtifactTypes.APK.name()
         )
         Truth.assertThat(builtArtifacts.artifactType.kind).isEqualTo(
-            PublicArtifactType.APK.kind.dataType().simpleName
+            ArtifactTypes.APK.kind.dataType().simpleName
         )
         Truth.assertThat(builtArtifacts.applicationId).isEqualTo("com.android.test")
         Truth.assertThat(builtArtifacts.version).isEqualTo(
@@ -327,7 +327,7 @@ class BuiltArtifactsImplTest {
 
     private fun createBuiltArtifacts(vararg elements: BuiltArtifactImpl) =
         BuiltArtifactsImpl(
-            artifactType = PublicArtifactType.APK,
+            artifactType = ArtifactTypes.APK,
             applicationId = "com.android.test",
             variantName = "debug",
             elements = elements.toList()

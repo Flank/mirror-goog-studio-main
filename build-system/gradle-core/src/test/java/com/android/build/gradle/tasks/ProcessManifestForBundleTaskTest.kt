@@ -16,19 +16,15 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.google.common.truth.Truth
-import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkQueue
 import org.gradle.workers.WorkerExecutor
 import org.junit.Before
 import org.junit.Rule
@@ -78,7 +74,7 @@ class ProcessManifestForBundleTaskTest {
         val sourceManifest = File(sourceManifestFolder, "AndroidManifest.xml")
         sourceManifest.writeText("Some content")
         BuiltArtifactsImpl(
-            artifactType = InternalArtifactType.MERGED_MANIFESTS,
+            artifactType = ArtifactTypes.MERGED_MANIFESTS,
             applicationId = "appId",
             variantName = "debug",
             elements = listOf(
@@ -120,7 +116,7 @@ class ProcessManifestForBundleTaskTest {
         )
 
         BuiltArtifactsImpl(
-            artifactType = InternalArtifactType.MERGED_MANIFESTS,
+            artifactType = ArtifactTypes.MERGED_MANIFESTS,
             applicationId = "appId",
             variantName = "debug",
             elements = listOf(

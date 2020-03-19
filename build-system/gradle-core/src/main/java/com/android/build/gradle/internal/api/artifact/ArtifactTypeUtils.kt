@@ -19,10 +19,9 @@ package com.android.build.gradle.internal.api.artifact
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildArtifactType
-import com.android.build.api.artifact.PublicArtifactType
+import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import org.gradle.api.file.Directory
 import java.lang.RuntimeException
 import kotlin.reflect.KClass
 
@@ -31,7 +30,7 @@ import kotlin.reflect.KClass
  */
 
 private val publicArtifactMap : Map<String, KClass<out ArtifactType<*>>> =
-        PublicArtifactType::class.sealedSubclasses.associateBy {
+        ArtifactTypes::class.sealedSubclasses.associateBy {
                 it.objectInstance?.name() ?: throw RuntimeException("No instance")
         }
 

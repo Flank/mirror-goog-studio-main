@@ -4,8 +4,9 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-2c2371913076c070e621fbe3ff5b063bd5a3be9f9e0b825952ab7b148a71d58c
+c56d14a23b332580082d53cef10ece6fbc98258adc91eadbc40f0720b42e80ea
 -------------------------------------------------------------------------
+com.android.build.api.artifact.ArtifactTypes$MERGED_MANIFESTS extends com.android.build.api.artifact.ArtifactTypes implements com.android.build.api.artifact.ArtifactType$Replaceable, com.android.build.api.artifact.ArtifactType$ContainsMany
 com.android.build.api.attributes.BuildTypeAttr implements org.gradle.api.Named
 com.android.build.api.attributes.BuildTypeAttr$Companion
 com.android.build.api.attributes.BuildTypeAttr$Companion.<init>: com.android.build.api.attributes.BuildTypeAttr$Companion (kotlin.jvm.internal.DefaultConstructorMarker)

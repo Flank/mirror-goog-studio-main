@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
+import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
@@ -285,7 +286,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFacto
                 InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles)
 
             creationConfig.operations.setTaskInputToFinalProduct(
-                InternalArtifactType.MERGED_MANIFESTS, task.mergedManifestFiles)
+                ArtifactTypes.MERGED_MANIFESTS, task.mergedManifestFiles)
 
             task.mainSplit = creationConfig.outputs.getMainSplit()
 

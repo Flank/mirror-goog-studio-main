@@ -64,6 +64,7 @@ android {
 
 import javax.inject.Inject
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.FilterConfiguration
@@ -219,7 +220,7 @@ android.onVariantProperties {
   TaskProvider consumerTask = tasks.register(it.getName() + 'ConsumerTask', ConsumerTask)
   ArtifactTransformationRequest replacementRequest = it.operations.use(consumerTask)
     .toRead(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST.INSTANCE) { it.getCompatibleManifests() }
-    .andWrite(InternalArtifactType.MERGED_MANIFESTS.INSTANCE) { it.getOutputDir() }
+    .andWrite(ArtifactTypes.MERGED_MANIFESTS.INSTANCE) { it.getOutputDir() }
 
   consumerTask.configure { task ->
     task.replacementRequest = replacementRequest
@@ -227,7 +228,7 @@ android.onVariantProperties {
 
   tasks.register(it.getName() + 'Verifier', VerifierTask) { task ->
     task.getInputDir().set(
-      it.operations.get(InternalArtifactType.MERGED_MANIFESTS.INSTANCE)
+      it.operations.get(ArtifactTypes.MERGED_MANIFESTS.INSTANCE)
     )
   }
 }

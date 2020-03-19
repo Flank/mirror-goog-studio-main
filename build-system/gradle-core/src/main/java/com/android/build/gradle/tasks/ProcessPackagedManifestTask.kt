@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactTransformationRequest
+import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -25,7 +26,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.XmlDocument
 import com.android.utils.FileUtils
 import com.android.utils.PositionXmlParser
@@ -38,7 +38,6 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
@@ -46,7 +45,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import org.w3c.dom.Document
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
@@ -133,7 +131,7 @@ abstract class ProcessPackagedManifestTask @Inject constructor(
             super.handleProvider(taskProvider)
             transformationRequest = creationConfig.operations.use(taskProvider)
                 .toRead(
-                    InternalArtifactType.MERGED_MANIFESTS,
+                    ArtifactTypes.MERGED_MANIFESTS,
                     ProcessPackagedManifestTask::mergedManifests
                 )
                 .andWrite(

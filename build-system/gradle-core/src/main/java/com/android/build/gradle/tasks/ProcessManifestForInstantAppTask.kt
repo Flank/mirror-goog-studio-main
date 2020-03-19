@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.ArtifactTransformationRequest
+import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.component.BaseCreationConfig
@@ -135,7 +136,7 @@ abstract class ProcessManifestForInstantAppTask @Inject constructor(
             super.handleProvider(taskProvider)
             transformationRequest = creationConfig.operations.use(taskProvider)
                 .toRead(
-                    InternalArtifactType.MERGED_MANIFESTS,
+                    ArtifactTypes.MERGED_MANIFESTS,
                     ProcessManifestForInstantAppTask::mergedManifests
                 )
                 .andWrite(

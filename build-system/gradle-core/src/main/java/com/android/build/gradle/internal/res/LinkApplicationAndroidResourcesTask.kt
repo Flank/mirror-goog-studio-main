@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.SdkConstants.FN_RES_BASE
 import com.android.SdkConstants.FN_R_CLASS_JAR
 import com.android.SdkConstants.RES_QUALIFIER_SEP
+import com.android.build.api.artifact.ArtifactTypes
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.BuiltArtifactImpl
@@ -434,7 +435,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             )
             creationConfig.operations.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
             creationConfig.operations.setTaskInputToFinalProduct(
-                InternalArtifactType.MERGED_MANIFESTS,
+                ArtifactTypes.MERGED_MANIFESTS,
                 task.mergedManifestFiles
             )
 
