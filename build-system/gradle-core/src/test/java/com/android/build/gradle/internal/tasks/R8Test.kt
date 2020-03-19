@@ -700,7 +700,8 @@ class R8Test(val r8OutputType: R8OutputType) {
                 ProguardOutputFiles(
                     outputProguardMapping.toPath(),
                     tmp.root.resolve("seeds.txt").toPath(),
-                    tmp.root.resolve("usage.txt").toPath()),
+                    tmp.root.resolve("usage.txt").toPath(),
+                    tmp.root.resolve("configuration.txt").toPath()),
             output = output,
             outputResources = outputDir.resolve("java_res.jar").toFile(),
             mainDexListOutput = null,

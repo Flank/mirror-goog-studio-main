@@ -355,7 +355,8 @@ class R8ToolTest {
                         ProguardOutputFiles(
                             tmp.root.toPath().resolve("mapping.txt"),
                             tmp.root.toPath().resolve("seeds.txt"),
-                            tmp.root.toPath().resolve("usage.txt")
+                            tmp.root.toPath().resolve("usage.txt"),
+                            tmp.root.toPath().resolve("configuration.txt")
                         )
                 )
 
@@ -401,6 +402,7 @@ class R8ToolTest {
 
         val proguardSeedsOutput = tmp.root.toPath().resolve("seeds.txt")
         val proguardUsageOutput = tmp.root.toPath().resolve("usage.txt")
+        val proguardConfigurationOutput = tmp.root.toPath().resolve("configuration.txt")
         val proguardConfig =
             ProguardConfig(
                 listOf(),
@@ -409,7 +411,8 @@ class R8ToolTest {
                 ProguardOutputFiles(
                     tmp.root.toPath().resolve("mapping.txt"),
                     proguardSeedsOutput,
-                    proguardUsageOutput
+                    proguardUsageOutput,
+                    proguardConfigurationOutput
                 )
             )
         runR8(
@@ -428,6 +431,7 @@ class R8ToolTest {
         )
         assertThat(Files.exists(proguardSeedsOutput)).isTrue()
         assertThat(Files.exists(proguardUsageOutput)).isTrue()
+        assertThat(Files.exists(proguardConfigurationOutput)).isTrue()
     }
 
     @Test

@@ -135,6 +135,12 @@ public class MinifyTest {
                 .that()
                 // Make sure default ProGuard rules were applied.
                 .hasMethod("handleOnClick");
+        assertThat(project.file("build/outputs/mapping/minified/mapping.txt")).exists();
+        assertThat(project.file("build/outputs/mapping/minified/usage.txt")).exists();
+        assertThat(project.file("build/outputs/mapping/minified/seeds.txt")).exists();
+        if (codeShrinker == CodeShrinker.R8) {
+            assertThat(project.file("build/outputs/mapping/minified/configuration.txt")).exists();
+        }
     }
 
     @Test

@@ -160,6 +160,11 @@ abstract class R8Task: ProguardConfigurableTask() {
     fun getProguardUsageOutput(): File? =
         mappingFile.orNull?.asFile?.resolveSibling("usage.txt")
 
+    @Optional
+    @OutputFile
+    fun getProguardConfigurationOutput(): File? =
+        mappingFile.orNull?.asFile?.resolveSibling("configuration.txt")
+
     @get:Optional
     @get:OutputFile
     abstract val mainDexListOutput: RegularFileProperty
@@ -367,7 +372,8 @@ abstract class R8Task: ProguardConfigurableTask() {
                     ProguardOutputFiles(
                         mappingFile.get().asFile.toPath(),
                         getProguardSeedsOutput()!!.toPath(),
-                        getProguardUsageOutput()!!.toPath())
+                        getProguardUsageOutput()!!.toPath(),
+                        getProguardConfigurationOutput()!!.toPath())
                 } else {
                     null
                 },

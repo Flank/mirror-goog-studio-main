@@ -198,7 +198,9 @@ class DexSplitterTaskTest {
                 ProguardOutputFiles(
                     tmp.newFile("mapping.txt").toPath(),
                     tmp.newFile("seeds.txt").toPath(),
-                    tmp.newFile("usage.txt").toPath()),
+                    tmp.newFile("usage.txt").toPath(),
+                    tmp.newFile("configuration.txt").toPath()
+                ),
             output = shrunkDexDir,
             outputResources = tmp.newFile("shrunkResources.jar"),
             mainDexListOutput = null,
