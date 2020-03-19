@@ -51,7 +51,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
 
     private final boolean isSigned;
     @NonNull private final String baseName;
-    @NonNull private final String applicationId;
     @NonNull private final String sourceGenTaskName;
     @NonNull private final List<File> generatedResourceFolders;
     @NonNull private final List<File> additionalRuntimeApks;
@@ -73,7 +72,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @Nullable RegularFile postAssembleTaskModelFile,
             boolean isSigned,
             @Nullable String signingConfigName,
-            @NonNull String applicationId,
             @NonNull String sourceGenTaskName,
             @NonNull String compileTaskName,
             @NonNull List<File> generatedSourceFolders,
@@ -112,7 +110,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         this.baseName = baseName;
         this.isSigned = isSigned;
         this.signingConfigName = signingConfigName;
-        this.applicationId = applicationId;
         this.sourceGenTaskName = sourceGenTaskName;
         this.generatedResourceFolders = generatedResourceFolders;
         this.additionalRuntimeApks = additionalRuntimeApks;
@@ -153,7 +150,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @NonNull
     @Override
     public String getApplicationId() {
-        return applicationId;
+        return "";
     }
 
     @NonNull
@@ -218,7 +215,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         AndroidArtifactImpl that = (AndroidArtifactImpl) o;
         return isSigned == that.isSigned
                 && Objects.equals(signingConfigName, that.signingConfigName)
-                && Objects.equals(applicationId, that.applicationId)
                 && Objects.equals(sourceGenTaskName, that.sourceGenTaskName)
                 && Objects.equals(generatedResourceFolders, that.generatedResourceFolders)
                 && Objects.equals(abiFilters, that.abiFilters)
@@ -241,7 +237,6 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 super.hashCode(),
                 isSigned,
                 signingConfigName,
-                applicationId,
                 sourceGenTaskName,
                 generatedResourceFolders,
                 abiFilters,
@@ -262,7 +257,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         return MoreObjects.toStringHelper(this)
                 .add("isSigned", isSigned)
                 .add("signingConfigName", signingConfigName)
-                .add("applicationId", applicationId)
+                .add("applicationId", "")
                 .add("sourceGenTaskName", sourceGenTaskName)
                 .add("generatedResourceFolders", generatedResourceFolders)
                 .add("abiFilters", abiFilters)
