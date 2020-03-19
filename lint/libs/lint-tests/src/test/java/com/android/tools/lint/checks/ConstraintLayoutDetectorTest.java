@@ -564,6 +564,83 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testMotionLayoutExternalConstraints() {
+        // Regression test for
+        // https://issuetracker.google.com/151409564
+        // In MotionLayout, constraints can be specified externally
+        lint().files(
+                        xml(
+                                "res/layout/supplier_search_fragment.xml",
+                                ""
+                                        + "<layout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                                        + "    <data>\n"
+                                        + "        <variable\n"
+                                        + "            name=\"viewBinding\"\n"
+                                        + "            type=\"com.wayfair.waystation.supplier.search.SupplierSearchViewBinding\" />\n"
+                                        + "    </data>\n"
+                                        + "    <androidx.constraintlayout.motion.widget.MotionLayout\n"
+                                        + "        android:id=\"@+id/motionLayout\"\n"
+                                        + "        android:layout_width=\"match_parent\"\n"
+                                        + "        android:layout_height=\"match_parent\"\n"
+                                        + "        android:background=\"@color/white\"\n"
+                                        + "        app:layoutDescription=\"@xml/supplier_search_scene\"\n"
+                                        + "        app:transitionListener=\"@{viewBinding.motionTransitionListener}\">\n"
+                                        + "        <androidx.recyclerview.widget.RecyclerView\n"
+                                        + "            android:id=\"@+id/recyclerView\"\n"
+                                        + "            android:layout_width=\"match_parent\"\n"
+                                        + "            android:layout_height=\"match_parent\"\n"
+                                        + "            android:layout_marginTop=\"?attr/actionBarSize\"\n"
+                                        + "            android:clipToPadding=\"false\"\n"
+                                        + "            android:paddingTop=\"@dimen/small_spacing\"\n"
+                                        + "            android:visibility=\"@{viewBinding.recyclerViewVisibility}\"\n"
+                                        + "            app:bindableAdapter=\"@{viewBinding.adapter}\"\n"
+                                        + "            app:data=\"@{viewBinding.suppliers}\"\n"
+                                        + "            app:layoutManager=\"androidx.recyclerview.widget.LinearLayoutManager\"\n"
+                                        + "            app:swipeListener=\"@{viewBinding.swipeListener}\" />\n"
+                                        + "        <cww.animation.LoopingAnimationView\n"
+                                        + "            android:id=\"@+id/loadingIndicator\"\n"
+                                        + "            style=\"@style/Widget.Animation.Loading\"\n"
+                                        + "            android:layout_width=\"@dimen/widget_loading_indicator_width\"\n"
+                                        + "            android:layout_height=\"@dimen/widget_loading_indicator_width\"\n"
+                                        + "            android:alpha=\"@{viewBinding.loadingIndicatorVisibility}\"\n"
+                                        + "            app:layout_constraintBottom_toBottomOf=\"parent\"\n"
+                                        + "            app:layout_constraintEnd_toEndOf=\"parent\"\n"
+                                        + "            app:layout_constraintStart_toStartOf=\"parent\"\n"
+                                        + "            app:layout_constraintTop_toTopOf=\"parent\" />\n"
+                                        + "        <FrameLayout\n"
+                                        + "            android:id=\"@+id/backgroundImageContainer\"\n"
+                                        + "            android:layout_width=\"match_parent\"\n"
+                                        + "            android:layout_height=\"wrap_content\"\n"
+                                        + "            android:background=\"@drawable/supplier_search_gradient\">\n"
+                                        + "            <ImageView\n"
+                                        + "                android:id=\"@+id/backgroundImage\"\n"
+                                        + "                android:layout_width=\"wrap_content\"\n"
+                                        + "                android:layout_height=\"match_parent\"\n"
+                                        + "                android:layout_gravity=\"center_horizontal\"\n"
+                                        + "                android:adjustViewBounds=\"true\"\n"
+                                        + "                android:contentDescription=\"@string/supplier_search_welcome_text\"\n"
+                                        + "                android:paddingHorizontal=\"@dimen/base_spacing\"\n"
+                                        + "                android:scaleType=\"fitEnd\"\n"
+                                        + "                android:src=\"@drawable/supplier_search_background\"\n"
+                                        + "                app:onClickListener=\"@{viewBinding.debugOptionsClickListener}\" />\n"
+                                        + "        </FrameLayout>\n"
+                                        + "        <androidx.appcompat.widget.Toolbar\n"
+                                        + "            android:id=\"@+id/toolbar\"\n"
+                                        + "            style=\"@style/SupplierSearchToolbarStyle\"\n"
+                                        + "            android:layout_width=\"match_parent\"\n"
+                                        + "            android:layout_height=\"wrap_content\"\n"
+                                        + "            android:alpha=\"0\"\n"
+                                        + "            tools:ignore=\"Overdraw, RawDimen\">\n"
+                                        + "        </androidx.appcompat.widget.Toolbar>\n"
+                                        + "    </androidx.constraintlayout.motion.widget.MotionLayout>\n"
+                                        + "</layout>\n"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected void checkReportedError(
             @NonNull Context context,

@@ -35,6 +35,8 @@ METADATA_FEATURE
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.somefeature">
 
+    <application/>
+
 </manifest>
 
 @errors

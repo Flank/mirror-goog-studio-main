@@ -71,6 +71,8 @@
     <activity
         android:name="com.example.ActivityOne" />
 
+    <application/>
+
 </manifest>
 
 

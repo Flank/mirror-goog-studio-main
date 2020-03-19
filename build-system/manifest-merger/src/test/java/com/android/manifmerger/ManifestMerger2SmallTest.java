@@ -40,6 +40,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.truth.Truth;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -1311,6 +1312,30 @@ public class ManifestMerger2SmallTest {
                         .getAttributes()
                         .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
                         .getNodeValue());
+    }
+
+    @Test
+    public void testMissingApplicationInManifest() throws Exception {
+        String xml =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.example\""
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <activity t:name=\"activityOne\"/>\n"
+                        + "</manifest>";
+
+        File inputFile = TestUtils.inputAsFile("testMissingApplication", xml);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+
+        Truth.assertThat(xmlDocument.getElementsByTagName(SdkConstants.TAG_APPLICATION).getLength())
+                .isEqualTo(1);
     }
 
     @Test

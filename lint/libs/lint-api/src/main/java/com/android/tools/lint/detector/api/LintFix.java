@@ -151,6 +151,24 @@ public class LintFix {
         return this;
     }
 
+    /**
+     * Creates a copy of the given location range which only holds on to the starting and ending
+     * offsets, to help reduce active memory usage in the IDE; see b/151240516
+     */
+    @Nullable
+    private static Location extractOffsets(@NonNull Location range) {
+        Position start = range.getStart();
+        Position end = range.getEnd();
+        if (start != null && end != null) {
+            return Location.create(
+                    range.getFile(),
+                    new DefaultPosition(-1, -1, start.getOffset()),
+                    new DefaultPosition(-1, -1, end.getOffset()));
+        } else {
+            return null;
+        }
+    }
+
     /** Builder for creating various types of fixes */
     public static class Builder {
         @Nls protected String displayName;
@@ -546,7 +564,7 @@ public class LintFix {
          * make a replacement that is larger than the error range highlighted as the problem range.
          */
         public ReplaceStringBuilder range(@NonNull Location range) {
-            this.range = range;
+            this.range = extractOffsets(range);
             return this;
         }
 
@@ -844,7 +862,7 @@ public class LintFix {
          * elements outside the element marked as the problem range.
          */
         public SetAttributeBuilder range(@NonNull Location range) {
-            this.range = range;
+            this.range = extractOffsets(range);
             return this;
         }
 
