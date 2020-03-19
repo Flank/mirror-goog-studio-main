@@ -581,10 +581,8 @@ public abstract class TaskManager<
         // Make sure MAIN_PREBUILD runs first:
         taskFactory.register(MAIN_PREBUILD);
 
-        taskFactory.register(
-                EXTRACT_PROGUARD_FILES,
-                ExtractProguardFiles.class,
-                task -> task.dependsOn(MAIN_PREBUILD));
+        taskFactory.register(new ExtractProguardFiles.CreationAction(globalScope))
+                .configure(it -> it.dependsOn(MAIN_PREBUILD));
 
         taskFactory.register(new SourceSetsTask.CreationAction(sourceSetContainer));
 
