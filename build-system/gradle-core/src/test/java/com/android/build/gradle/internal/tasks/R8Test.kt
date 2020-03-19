@@ -597,7 +597,21 @@ class R8Test(val r8OutputType: R8OutputType) {
                 "    j\$.time.LocalTime MIDNIGHT;$lineSeparator" +
                 "}$lineSeparator"
         FileSubject.assertThat(outputKeepRulesDir.resolve("output")).contains(expectedKeepRules)
+    }
 
+    /** Regression test for b/151605314. */
+    @Test
+    fun testNonExistingFileAsInput() {
+        val classes = tmp.root.toPath().resolve("classes.jar")
+        TestInputsGenerator.jarWithEmptyClasses(classes, listOf("test/A"))
+
+        runR8(
+            classes = listOf(classes.toFile(), tmp.root.resolve("non_existing")),
+            resources = listOf(),
+            r8Keep = "class **"
+        )
+
+        assertClassExists("test/A")
     }
 
     private fun getDex(): Dex {
