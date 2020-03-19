@@ -92,5 +92,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="platform_core_proto" level="project" />
   </component>
 </module>
