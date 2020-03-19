@@ -55,7 +55,7 @@ class IncrementalTestHelper(
     }
 
     /** Runs a full build. */
-    fun runFullBuild(): IncrementalTestHelperStage2 {
+    fun runFullBuild(): IncrementalTestHelperAfterFullBuild {
         project.executor()
             .run(executorSetter ?: { it })
             .run(cleanTask, buildTask)
@@ -75,26 +75,26 @@ class IncrementalTestHelper(
         fileTimestamps = timestamps.toMap()
         fileContents = contents.toMap()
 
-        return IncrementalTestHelperStage2(this)
+        return IncrementalTestHelperAfterFullBuild(this)
     }
 
-    class IncrementalTestHelperStage2(
+    class IncrementalTestHelperAfterFullBuild(
         private val incrementalTestHelper: IncrementalTestHelper
     ) {
 
         /** Applies a change. */
-        fun applyChange(change: () -> Unit): IncrementalTestHelperStage3 {
+        fun applyChange(change: () -> Unit): IncrementalTestHelperAfterIncrementalChange {
             change()
-            return IncrementalTestHelperStage3(incrementalTestHelper)
+            return IncrementalTestHelperAfterIncrementalChange(incrementalTestHelper)
         }
     }
 
-    class IncrementalTestHelperStage3(
+    class IncrementalTestHelperAfterIncrementalChange(
         private val incrementalTestHelper: IncrementalTestHelper
     ) {
 
         /** Runs an incremental build. */
-        fun runIncrementalBuild(): IncrementalTestHelperStage4 {
+        fun runIncrementalBuild(): IncrementalTestHelperAfterIncrementalBuild {
             with(incrementalTestHelper) {
                 val result = project.executor()
                     .run(executorSetter ?: { it })
@@ -110,12 +110,15 @@ class IncrementalTestHelper(
                     !file.readBytes().contentEquals(previousContents)
                 }.keys
 
-                return IncrementalTestHelperStage4(incrementalTestHelper, result.taskStates)
+                return IncrementalTestHelperAfterIncrementalBuild(
+                    incrementalTestHelper,
+                    result.taskStates
+                )
             }
         }
     }
 
-    class IncrementalTestHelperStage4(
+    class IncrementalTestHelperAfterIncrementalBuild(
         private val incrementalTestHelper: IncrementalTestHelper,
         private val taskStates: Map<String, TaskStateList.ExecutionState>
     ) {
@@ -130,13 +133,14 @@ class IncrementalTestHelper(
         fun assertTaskStates(
             expectedTaskStates: Map<String, TaskStateList.ExecutionState>,
             exhaustive: Boolean = false
-        ): IncrementalTestHelperStage4 {
+        ): IncrementalTestHelperAfterIncrementalBuild {
             TaskStateAssertionHelper(taskStates).assertTaskStates(expectedTaskStates, exhaustive)
             return this
         }
 
         /** Asserts file changes. */
-        fun assertFileChanges(fileChanges: Map<File, ChangeType>): IncrementalTestHelperStage4 {
+        fun assertFileChanges(fileChanges: Map<File, ChangeType>):
+                IncrementalTestHelperAfterIncrementalBuild {
             return assertFileChanges(
                 fileChanges.filterValues { it == ChangeType.CHANGED }.keys,
                 fileChanges.filterValues { it == ChangeType.CHANGED_TIMESTAMPS_BUT_NOT_CONTENTS }.keys,
@@ -149,7 +153,7 @@ class IncrementalTestHelper(
             filesWithChangedTimestampsAndContents: Set<File>,
             filesWithChangedTimestampsButNotContents: Set<File>,
             filesWithUnchangedTimestampsAndContents: Set<File>
-        ): IncrementalTestHelperStage4 {
+        ): IncrementalTestHelperAfterIncrementalBuild {
             (filesWithChangedTimestampsAndContents
                     + filesWithChangedTimestampsButNotContents
                     + filesWithUnchangedTimestampsAndContents).subtract(
