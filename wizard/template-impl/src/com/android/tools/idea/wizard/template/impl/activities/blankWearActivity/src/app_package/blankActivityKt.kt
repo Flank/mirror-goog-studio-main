@@ -16,19 +16,17 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 
 fun blankActivityKt(
   activityClass: String,
   layoutName: String,
-  packageName: String,
-  useAndroidX: Boolean
+  packageName: String
 ) = """
 package ${escapeKotlinIdentifier(packageName)}
 
 import android.os.Bundle
-import ${getMaterialComponentName("android.support.wearable.activity.WearableActivity", useAndroidX)}
+import android.support.wearable.activity.WearableActivity
 
 class ${activityClass} : WearableActivity() {
 

@@ -52,8 +52,8 @@ fun RecipeExecutor.blankWearActivityRecipe(
   addDependency("com.android.support:wear:+")
 
   val blankActivity = when (projectData.language) {
-    Language.Java -> blankActivityJava(activityClass, layoutName, packageName, useAndroidX)
-    Language.Kotlin -> blankActivityKt(activityClass, layoutName, packageName, useAndroidX)
+    Language.Java -> blankActivityJava(activityClass, layoutName, packageName)
+    Language.Kotlin -> blankActivityKt(activityClass, layoutName, packageName)
   }
   save(blankActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
 

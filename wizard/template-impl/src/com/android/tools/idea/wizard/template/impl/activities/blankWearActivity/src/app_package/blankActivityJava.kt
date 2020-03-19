@@ -16,18 +16,15 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
-
 fun blankActivityJava(
   activityClass: String,
   layoutName: String,
-  packageName: String,
-  useAndroidX: Boolean
+  packageName: String
 ) = """
 package ${packageName};
 
 import android.os.Bundle;
-import ${getMaterialComponentName("android.support.wearable.activity.WearableActivity", useAndroidX)};
+import android.support.wearable.activity.WearableActivity;
 import android.widget.TextView;
 
 public class ${activityClass} extends WearableActivity {
