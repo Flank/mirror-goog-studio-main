@@ -53,6 +53,7 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
      * enabled from an identical project at a different location.
      */
     private val EXPECTED_TASK_STATES = mapOf(
+        // Sort by alphabetical order for easier searching
         UP_TO_DATE to setOf(
             ":clean",
             ":compileMinifiedSources",
@@ -74,15 +75,15 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":mergeMinifiedJniLibFolders",
             ":mergeMinifiedNativeLibs",
             ":mergeMinifiedShaders",
-            ":validateSigningMinified",
-            ":processMinifiedManifestForPackage"
+            ":processMinifiedManifestForPackage",
+            ":validateSigningMinified"
         ).plus(
             if (shrinker == CodeShrinker.R8) {
                 setOf(":minifyMinifiedWithR8")
             } else {
                 setOf(
-                    ":minifyMinifiedWithProguard",
-                    ":mergeDexMinified"
+                    ":mergeDexMinified",
+                    ":minifyMinifiedWithProguard"
                 )
             }
         ),
@@ -105,10 +106,10 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":compileMinifiedAidl",
             ":compileMinifiedRenderscript",
             ":compileMinifiedShaders",
+            ":mergeMinifiedNativeDebugMetadata",
             ":preMinifiedBuild",
             ":processMinifiedJavaRes",
-            ":stripMinifiedDebugSymbols",
-            ":mergeMinifiedNativeDebugMetadata"
+            ":stripMinifiedDebugSymbols"
         ),
         FAILED to setOf()
     )

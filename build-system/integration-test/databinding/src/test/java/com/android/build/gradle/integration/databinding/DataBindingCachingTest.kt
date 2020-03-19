@@ -54,37 +54,38 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
      * enabled from an identical project at a different location.
      */
     private val expectedTaskStates: Map<String, TaskStateList.ExecutionState> = mapOf(
-        ":preBuild" to UP_TO_DATE,
-        ":preDebugBuild" to UP_TO_DATE,
+        // Sort by alphabetical order for easier searching
         ":compileDebugAidl" to SKIPPED,
+        ":compileDebugJavaWithJavac" to FROM_CACHE,
         ":compileDebugRenderscript" to SKIPPED,
-        ":generateDebugBuildConfig" to FROM_CACHE,
-        ":prepareLintJar" to DID_WORK,
-        ":prepareLintJarForPublish" to DID_WORK,
-        ":generateDebugSources" to SKIPPED,
+        ":createDebugCompatibleScreenManifests" to DID_WORK,
         ":dataBindingExportBuildInfoDebug" to FROM_CACHE,
+        ":dataBindingGenBaseClassesDebug" to FROM_CACHE,
         ":dataBindingMergeDependencyArtifactsDebug" to FROM_CACHE,
         ":dataBindingMergeGenClassesDebug" to FROM_CACHE,
-        ":generateDebugResValues" to FROM_CACHE,
-        ":generateDebugResources" to UP_TO_DATE,
-        ":mergeDebugResources" to DID_WORK, /* Bug 141301405 */
-        ":dataBindingGenBaseClassesDebug" to FROM_CACHE,
-        ":javaPreCompileDebug" to FROM_CACHE,
-        ":createDebugCompatibleScreenManifests" to DID_WORK,
         ":extractDeepLinksDebug" to FROM_CACHE,
+        ":generateDebugBuildConfig" to FROM_CACHE,
+        ":generateDebugResources" to UP_TO_DATE,
+        ":generateDebugResValues" to FROM_CACHE,
+        ":generateDebugSources" to SKIPPED,
+        ":javaPreCompileDebug" to FROM_CACHE,
+        ":mergeDebugResources" to DID_WORK, /* Bug 141301405 */
+        ":preBuild" to UP_TO_DATE,
+        ":preDebugBuild" to UP_TO_DATE,
+        ":prepareLintJar" to DID_WORK,
+        ":prepareLintJarForPublish" to DID_WORK,
         ":processDebugManifest" to DID_WORK,
         ":processDebugManifestForPackage" to FROM_CACHE,
-        ":processDebugResources" to DID_WORK,
-        ":compileDebugJavaWithJavac" to FROM_CACHE
+        ":processDebugResources" to DID_WORK
     ).plus(
         if (withKotlin) {
             mapOf(
                 ":clean" to DID_WORK,
                 // Kotlin tasks are not FROM_CACHE because they includes the project name in the
                 // cache key, and the two project names in this test are currently different.
-                ":kaptGenerateStubsDebugKotlin" to DID_WORK,
+                ":compileDebugKotlin" to DID_WORK,
                 ":kaptDebugKotlin" to DID_WORK,
-                ":compileDebugKotlin" to DID_WORK
+                ":kaptGenerateStubsDebugKotlin" to DID_WORK
             )
         } else {
             mapOf(
