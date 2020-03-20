@@ -819,7 +819,9 @@ public final class DeviceMonitor implements ClientTracker {
                         mConnectionAttempt++;
                         Log.e("DeviceMonitor", "Connection attempts: " + mConnectionAttempt);
                         if (mConnectionAttempt > 10) {
-                            if (!mBridge.startAdb()) {
+                            if (!mBridge.startAdb(
+                                    AndroidDebugBridge.DEFAULT_START_ADB_TIMEOUT_MILLIS,
+                                    TimeUnit.MILLISECONDS)) {
                                 mRestartAttemptCount++;
                                 Log.e("DeviceMonitor",
                                         "adb restart attempts: " + mRestartAttemptCount);

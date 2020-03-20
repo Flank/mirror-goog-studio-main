@@ -19,7 +19,6 @@ package com.android.ddmlib;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.concurrency.GuardedBy;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.internal.ClientImpl;
 import com.android.ddmlib.internal.DeviceMonitor;
@@ -71,11 +70,14 @@ import java.util.stream.Collectors;
  * <p><b>{@link #init(boolean)} must be called before anything is done.</b>
  */
 public class AndroidDebugBridge {
-    /*
-     * Minimum and maximum version of adb supported. This correspond to
-     * ADB_SERVER_VERSION found in //device/tools/adb/adb.h
+    /**
+     * Minimum and maximum version of adb supported. This correspond to ADB_SERVER_VERSION found in
+     * //device/tools/adb/adb.h
      */
     public static final AdbVersion MIN_ADB_VERSION = AdbVersion.parseFrom("1.0.20");
+
+    /** Default timeout used when starting the ADB server */
+    public static final int DEFAULT_START_ADB_TIMEOUT_MILLIS = 20_000;
 
     private static final String ADB = "adb"; //$NON-NLS-1$
     private static final String DDMS = "ddms"; //$NON-NLS-1$
@@ -85,7 +87,7 @@ public class AndroidDebugBridge {
     static final int DEFAULT_ADB_PORT = 5037;
 
     // ADB exit value when no Universal C Runtime on Windows
-    private static int STATUS_DLL_NOT_FOUND = (int) (long) 0xc0000135;
+    private static final int STATUS_DLL_NOT_FOUND = (int) (long) 0xc0000135;
 
     // Only set when in unit testing mode. This is a hack until we move to devicelib.
     // http://b.android.com/221925
@@ -115,7 +117,6 @@ public class AndroidDebugBridge {
     // lock object for synchronization
     private static final Object sLock = new Object();
 
-    @GuardedBy("sLock")
     private static final Set<IDebugBridgeChangeListener> sBridgeListeners =
             Sets.newCopyOnWriteArraySet();
 
@@ -264,6 +265,7 @@ public class AndroidDebugBridge {
         init(clientSupport, false, ImmutableMap.of());
     }
 
+    /** Similar to {@link #init(boolean)}, with ability to pass a custom set of env. variables. */
     public static synchronized void init(
             boolean clientSupport, boolean useLibusb, @NonNull Map<String, String> env) {
         Preconditions.checkState(
@@ -346,88 +348,163 @@ public class AndroidDebugBridge {
 
     /**
      * Creates a {@link AndroidDebugBridge} that is not linked to any particular executable.
-     * <p>This bridge will expect adb to be running. It will not be able to start/stop/restart
-     * adb.
-     * <p>If a bridge has already been started, it is directly returned with no changes (similar
-     * to calling {@link #getBridge()}).
-     * @return a connected bridge.
+     *
+     * <p>This bridge will expect adb to be running. It will not be able to start/stop/restart adb.
+     *
+     * <p>If a bridge has already been started, it is directly returned with no changes (similar to
+     * calling {@link #getBridge()}).
+     *
+     * @return a connected bridge, or null if there were errors while creating or connecting to the
+     *     bridge
+     * @deprecated This method may hang if ADB is not responding. Use {@link #createBridge(long,
+     *     TimeUnit)} instead.
      */
+    @Deprecated
+    @Nullable
     public static AndroidDebugBridge createBridge() {
+        return createBridge(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Creates a {@link AndroidDebugBridge} that is not linked to any particular executable.
+     *
+     * <p>This bridge will expect adb to be running. It will not be able to start/stop/restart adb.
+     *
+     * <p>If a bridge has already been started, it is directly returned with no changes (similar to
+     * calling {@link #getBridge()}).
+     *
+     * @return a connected bridge, or null if there were errors while creating or connecting to the
+     *     bridge
+     */
+    @Nullable
+    public static AndroidDebugBridge createBridge(long timeout, @NonNull TimeUnit unit) {
+        AndroidDebugBridge localThis;
         synchronized (sLock) {
             if (sThis != null) {
                 return sThis;
             }
 
             try {
-                sThis = new AndroidDebugBridge();
-                sThis.start();
-            } catch (InvalidParameterException e) {
-                sThis = null;
-            }
-
-            // notify the listeners of the change
-            for (IDebugBridgeChangeListener listener : sBridgeListeners) {
-                // we attempt to catch any exception so that a bad listener doesn't kill our thread
-                try {
-                    listener.bridgeChanged(sThis);
-                } catch (Exception e) {
-                    Log.e(DDMS, e);
+                localThis = new AndroidDebugBridge();
+                if (!localThis.start(timeout, unit)) {
+                    // We return without notifying listeners, since there were no changes
+                    return null;
                 }
+            } catch (InvalidParameterException e) {
+                // We return without notifying listeners, since there were no changes
+                return null;
             }
 
-            return sThis;
+            // Success, store static instance
+            sThis = localThis;
         }
+
+        // Notify the listeners of the change (outside of the lock to decrease the likelihood
+        // of deadlocks)
+        for (IDebugBridgeChangeListener listener : sBridgeListeners) {
+            // we attempt to catch any exception so that a bad listener doesn't kill our thread
+            try {
+                listener.bridgeChanged(localThis);
+            } catch (Exception e) {
+                Log.e(DDMS, e);
+            }
+        }
+
+        return localThis;
     }
 
-
     /**
-     * Creates a new debug bridge from the location of the command line tool. <p>
-     * Any existing server will be disconnected, unless the location is the same and
-     * <code>forceNewBridge</code> is set to false.
+     * Creates a new debug bridge from the location of the command line tool.
+     *
+     * <p>Any existing server will be disconnected, unless the location is the same and <code>
+     * forceNewBridge</code> is set to false.
+     *
      * @param osLocation the location of the command line tool 'adb'
      * @param forceNewBridge force creation of a new bridge even if one with the same location
-     * already exists.
-     * @return a connected bridge, or null if there were errors while creating or connecting
-     * to the bridge
+     *     already exists.
+     * @return a connected bridge, or null if there were errors while creating or connecting to the
+     *     bridge
+     * @deprecated This method may hang if ADB is not responding. Use {@link #createBridge(String,
+     *     boolean, long, TimeUnit)} instead.
+     */
+    @Deprecated
+    @Nullable
+    public static AndroidDebugBridge createBridge(
+            @NonNull String osLocation, boolean forceNewBridge) {
+        return createBridge(osLocation, forceNewBridge, Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Creates a new debug bridge from the location of the command line tool.
+     *
+     * <p>Any existing server will be disconnected, unless the location is the same and <code>
+     * forceNewBridge</code> is set to false.
+     *
+     * @param osLocation the location of the command line tool 'adb'
+     * @param forceNewBridge force creation of a new bridge even if one with the same location
+     *     already exists.
+     * @param timeout the maximum time to wait
+     * @param unit the time unit of the {@code timeout} argument
+     * @return a connected bridge, or null if there were errors while creating or connecting to the
+     *     bridge
      */
     @Nullable
-    public static AndroidDebugBridge createBridge(@NonNull String osLocation,
-                                                  boolean forceNewBridge) {
+    public static AndroidDebugBridge createBridge(
+            @NonNull String osLocation,
+            boolean forceNewBridge,
+            long timeout,
+            @NonNull TimeUnit unit) {
+        AndroidDebugBridge localThis;
         synchronized (sLock) {
+            TimeoutRemainder rem = new TimeoutRemainder(timeout, unit);
             if (!sUnitTestMode) {
                 if (sThis != null) {
                     if (sThis.mAdbOsLocation != null
                             && sThis.mAdbOsLocation.equals(osLocation)
                             && !forceNewBridge) {
+                        // We return without notifying listeners, since there were no changes
                         return sThis;
                     } else {
                         // stop the current server
-                        sThis.stop();
+                        if (!sThis.stop(rem.getRemainingUnits(), unit)) {
+                            // We return without notifying listeners, since there were no changes
+                            return null;
+                        }
                     }
+
+                    // We are successfully stopped. We need to notify listeners in all code paths
+                    // past this point.
+                    sThis = null;
                 }
             }
 
             try {
-                sThis = new AndroidDebugBridge(osLocation);
-                if (!sThis.start()) {
-                    return null;
+                localThis = new AndroidDebugBridge(osLocation);
+                if (!localThis.start(rem.getRemainingUnits(), unit)) {
+                    // Note: Don't return here, as we want to notify listeners
+                    localThis = null;
                 }
             } catch (InvalidParameterException e) {
-                sThis = null;
+                // Note: Don't return here, as we want to notify listeners
+                localThis = null;
             }
 
-            // notify the listeners of the change
-            for (IDebugBridgeChangeListener listener : sBridgeListeners) {
-                // we attempt to catch any exception so that a bad listener doesn't kill our thread
-                try {
-                    listener.bridgeChanged(sThis);
-                } catch (Exception e) {
-                    Log.e(DDMS, e);
-                }
-            }
-
-            return sThis;
+            // Success, store static instance
+            sThis = localThis;
         }
+
+        // Notify the listeners of the change (outside of the lock to decrease the likelihood
+        // of deadlocks)
+        for (IDebugBridgeChangeListener listener : sBridgeListeners) {
+            // we attempt to catch any exception so that a bad listener doesn't kill our thread
+            try {
+                listener.bridgeChanged(localThis);
+            } catch (Exception e) {
+                Log.e(DDMS, e);
+            }
+        }
+
+        return localThis;
     }
 
     /**
@@ -439,29 +516,51 @@ public class AndroidDebugBridge {
     }
 
     /**
-     * Disconnects the current debug bridge, and destroy the object.
+     * Disconnects the current debug bridge, and destroy the object. A new object will have to be
+     * created with {@link #createBridge(String, boolean)}.
+     *
      * <p>This also stops the current adb host server.
-     * <p>
-     * A new object will have to be created with {@link #createBridge(String, boolean)}.
+     *
+     * @deprecated This method may hang if ADB is not responding. Use {@link #disconnectBridge(long,
+     *     TimeUnit)} instead.
      */
+    @Deprecated
     public static void disconnectBridge() {
+        disconnectBridge(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Disconnects the current debug bridge, and destroy the object. A new object will have to be
+     * created with {@link #createBridge(String, boolean)}.
+     *
+     * <p>This also stops the current adb host server.
+     *
+     * @return {@code true} if the method succeeds within the specified timeout.
+     */
+    public static boolean disconnectBridge(long timeout, @NonNull TimeUnit unit) {
         synchronized (sLock) {
             if (sThis != null) {
-                sThis.stop();
-                sThis = null;
-
-                // notify the listeners.
-                for (IDebugBridgeChangeListener listener : sBridgeListeners) {
-                    // we attempt to catch any exception so that a bad listener doesn't kill our
-                    // thread
-                    try {
-                        listener.bridgeChanged(sThis);
-                    } catch (Exception e) {
-                        Log.e(DDMS, e);
-                    }
+                if (!sThis.stop(timeout, unit)) {
+                    // We could not stop ADB. Assume we are still running.
+                    return false;
                 }
+                // Success, store our local instance
+                sThis = null;
             }
         }
+
+        // Notify the listeners of the change (outside of the lock to decrease the likelihood
+        // of deadlocks)
+        for (IDebugBridgeChangeListener listener : sBridgeListeners) {
+            // we attempt to catch any exception so that a bad listener doesn't kill our thread
+            try {
+                listener.bridgeChanged(null);
+            } catch (Exception e) {
+                Log.e(DDMS, e);
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -471,16 +570,19 @@ public class AndroidDebugBridge {
      * @param listener The listener which should be notified.
      */
     public static void addDebugBridgeChangeListener(@NonNull IDebugBridgeChangeListener listener) {
-        synchronized (sLock) {
-            sBridgeListeners.add(listener);
+        sBridgeListeners.add(listener);
 
-            if (sThis != null) {
-                // we attempt to catch any exception so that a bad listener doesn't kill our thread
-                try {
-                    listener.bridgeChanged(sThis);
-                } catch (Exception e) {
-                    Log.e(DDMS, e);
-                }
+        AndroidDebugBridge localThis;
+        synchronized (sLock) {
+            localThis = sThis;
+        }
+
+        if (localThis != null) {
+            // we attempt to catch any exception so that a bad listener doesn't kill our thread
+            try {
+                listener.bridgeChanged(localThis);
+            } catch (Exception e) {
+                Log.e(DDMS, e);
             }
         }
     }
@@ -491,9 +593,7 @@ public class AndroidDebugBridge {
      * @param listener The listener which should no longer be notified.
      */
     public static void removeDebugBridgeChangeListener(IDebugBridgeChangeListener listener) {
-        synchronized (sLock) {
-            sBridgeListeners.remove(listener);
-        }
+        sBridgeListeners.remove(listener);
     }
 
     /**
@@ -538,7 +638,6 @@ public class AndroidDebugBridge {
     public static void removeClientChangeListener(IClientChangeListener listener) {
         sClientListeners.remove(listener);
     }
-
 
     /**
      * Returns the devices.
@@ -868,8 +967,10 @@ public class AndroidDebugBridge {
      *
      * @return true if success.
      */
-    boolean start() {
-        if (mAdbOsLocation != null && sAdbServerPort != 0 && (!mVersionCheck || !startAdb())) {
+    boolean start(long timeout, @NonNull TimeUnit unit) {
+        if (mAdbOsLocation != null
+                && sAdbServerPort != 0
+                && (!mVersionCheck || !startAdb(timeout, unit))) {
             return false;
         }
 
@@ -882,23 +983,25 @@ public class AndroidDebugBridge {
         return true;
     }
 
-   /**
+    /**
      * Kills the debug bridge, and the adb host server.
-     * @return true if success
+     *
+     * @return {@code true} if success within the specified timeout
      */
-    boolean stop() {
-        // if we haven't started we return false;
+    boolean stop(long timeout, @NonNull TimeUnit unit) {
+        // if we haven't started we return true (i.e. success)
         if (!mStarted) {
-            return false;
+            return true;
         }
 
+        TimeoutRemainder rem = new TimeoutRemainder(timeout, unit);
         // kill the monitoring services
         if (mDeviceMonitor != null) {
             mDeviceMonitor.stop();
             mDeviceMonitor = null;
         }
 
-        if (!stopAdb()) {
+        if (!stopAdb(rem.getRemainingUnits(), unit)) {
             return false;
         }
 
@@ -908,9 +1011,22 @@ public class AndroidDebugBridge {
 
     /**
      * Restarts adb, but not the services around it.
+     *
+     * @return true if success.
+     * @deprecated This method may hang if ADB is not responding. Use {@link #restart(long,
+     *     TimeUnit)} instead.
+     */
+    @Deprecated
+    public boolean restart() {
+        return restart(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Restarts adb, but not the services around it.
+     *
      * @return true if success.
      */
-    public boolean restart() {
+    public boolean restart(long timeout, @NonNull TimeUnit unit) {
         if (mAdbOsLocation == null) {
             Log.e(ADB,
                     "Cannot restart adb when AndroidDebugBridge is created without the location of adb."); //$NON-NLS-1$
@@ -928,30 +1044,47 @@ public class AndroidDebugBridge {
             return false;
         }
 
-        synchronized (sLock) {
-            for (IDebugBridgeChangeListener listener : sBridgeListeners) {
+        TimeoutRemainder rem = new TimeoutRemainder(timeout, unit);
+        // Notify the listeners of the change (outside of the lock to decrease the likelihood
+        // of deadlocks)
+        for (IDebugBridgeChangeListener listener : sBridgeListeners) {
+            // we attempt to catch any exception so that a bad listener doesn't kill our thread
+            try {
                 listener.restartInitiated();
+            } catch (Exception e) {
+                Log.e(DDMS, e);
             }
         }
-        boolean restart;
+
+        boolean isSuccessful;
         synchronized (this) {
-            stopAdb();
+            isSuccessful = stopAdb(rem.getRemainingUnits(), unit);
+            if (!isSuccessful) {
+                Log.w(ADB, "Error stopping ADB without specified timeout");
+            }
 
-            restart = startAdb();
+            if (isSuccessful) {
+                isSuccessful = startAdb(rem.getRemainingUnits(), unit);
+            }
 
-            if (restart && mDeviceMonitor == null) {
+            if (isSuccessful && mDeviceMonitor == null) {
                 mDeviceMonitor = new DeviceMonitor(this);
                 mDeviceMonitor.start();
             }
         }
 
-        synchronized (sLock) {
-            for (IDebugBridgeChangeListener listener : sBridgeListeners) {
-                listener.restartCompleted(restart);
+        // Notify the listeners of the change (outside of the lock to decrease the likelihood
+        // of deadlocks)
+        for (IDebugBridgeChangeListener listener : sBridgeListeners) {
+            // we attempt to catch any exception so that a bad listener doesn't kill our thread
+            try {
+                listener.restartCompleted(isSuccessful);
+            } catch (Exception e) {
+                Log.e(DDMS, e);
             }
         }
 
-        return restart;
+        return isSuccessful;
     }
 
     /**
@@ -961,12 +1094,7 @@ public class AndroidDebugBridge {
      * expect the listeners to potentially access various methods of {@link IDevice} as well as
      * {@link #getDevices()} which use internal locks.
      *
-     * <p>For this reason, any call to this method from a method of {@link DeviceMonitor}, {@link
-     * IDevice} which is also inside a synchronized block, should first synchronize on the {@link
-     * AndroidDebugBridge} lock. Access to this lock is done through {@link #getLock()}.
-     *
      * @param device the new <code>IDevice</code>.
-     * @see #getLock()
      */
     public static void deviceConnected(@NonNull IDevice device) {
         for (IDeviceChangeListener listener : sDeviceListeners) {
@@ -986,12 +1114,7 @@ public class AndroidDebugBridge {
      * expect the listeners to potentially access various methods of {@link IDevice} as well as
      * {@link #getDevices()} which use internal locks.
      *
-     * <p>For this reason, any call to this method from a method of {@link DeviceMonitor}, {@link
-     * IDevice} which is also inside a synchronized block, should first synchronize on the {@link
-     * AndroidDebugBridge} lock. Access to this lock is done through {@link #getLock()}.
-     *
      * @param device the disconnected <code>IDevice</code>.
-     * @see #getLock()
      */
     public static void deviceDisconnected(@NonNull IDevice device) {
         for (IDeviceChangeListener listener : sDeviceListeners) {
@@ -1012,12 +1135,7 @@ public class AndroidDebugBridge {
      * expect the listeners to potentially access various methods of {@link IDevice} as well as
      * {@link #getDevices()} which use internal locks.
      *
-     * <p>For this reason, any call to this method from a method of {@link DeviceMonitor}, {@link
-     * IDevice} which is also inside a synchronized block, should first synchronize on the {@link
-     * AndroidDebugBridge} lock. Access to this lock is done through {@link #getLock()}.
-     *
      * @param device the modified <code>IDevice</code>.
-     * @see #getLock()
      */
     public static void deviceChanged(@NonNull IDevice device, int changeMask) {
         // Notify the listeners
@@ -1039,13 +1157,8 @@ public class AndroidDebugBridge {
      * expect the listeners to potentially access various methods of {@link IDevice} as well as
      * {@link #getDevices()} which use internal locks.
      *
-     * <p>For this reason, any call to this method from a method of {@link DeviceMonitor}, {@link
-     * IDevice} which is also inside a synchronized block, should first synchronize on the {@link
-     * AndroidDebugBridge} lock. Access to this lock is done through {@link #getLock()}.
-     *
      * @param client the modified <code>Client</code>.
      * @param changeMask the mask indicating what changed in the <code>Client</code>
-     * @see #getLock()
      */
     public static void clientChanged(@NonNull ClientImpl client, int changeMask) {
         // Notify the listeners
@@ -1065,7 +1178,7 @@ public class AndroidDebugBridge {
      *
      * @return true if success
      */
-    public synchronized boolean startAdb() {
+    public synchronized boolean startAdb(long timeout, @NonNull TimeUnit unit) {
         if (sUnitTestMode) {
             // in this case, we assume the FakeAdbServer was already setup by the test code
             return true;
@@ -1105,12 +1218,16 @@ public class AndroidDebugBridge {
 
             ArrayList<String> errorOutput = new ArrayList<String>();
             ArrayList<String> stdOutput = new ArrayList<String>();
-            status = grabProcessOutput(proc, errorOutput, stdOutput, false /* waitForReaders */);
-        } catch (IOException ioe) {
+            status =
+                    grabProcessOutput(
+                            proc,
+                            errorOutput,
+                            stdOutput,
+                            false /* waitForReaders */,
+                            timeout,
+                            unit);
+        } catch (IOException | InterruptedException ioe) {
             Log.e(DDMS, "Unable to run 'adb': " + ioe.getMessage()); //$NON-NLS-1$
-            // we'll return false;
-        } catch (InterruptedException ie) {
-            Log.e(DDMS, "Unable to run 'adb': " + ie.getMessage()); //$NON-NLS-1$
             // we'll return false;
         }
 
@@ -1140,7 +1257,7 @@ public class AndroidDebugBridge {
      *
      * @return true if success
      */
-    private synchronized boolean stopAdb() {
+    private synchronized boolean stopAdb(long timeout, @NonNull TimeUnit unit) {
         if (mAdbOsLocation == null) {
             Log.e(ADB,
                 "Cannot stop adb when AndroidDebugBridge is created without the location of adb.");
@@ -1158,7 +1275,12 @@ public class AndroidDebugBridge {
         String[] command = getAdbLaunchCommand("kill-server"); //$NON-NLS-1$
         try {
             proc = Runtime.getRuntime().exec(command);
-            status = proc.waitFor();
+            if (proc.waitFor(timeout, unit)) {
+                status = proc.exitValue();
+            } else {
+                proc.destroy();
+                status = -1;
+            }
         }
         catch (IOException ioe) {
             // we'll return false;
@@ -1178,8 +1300,9 @@ public class AndroidDebugBridge {
     }
 
     /**
-     * Get the stderr/stdout outputs of a process and return when the process is done.
-     * Both <b>must</b> be read or the process will block on windows.
+     * Get the stderr/stdout outputs of a process and return when the process is done. Both
+     * <b>must</b> be read or the process will block on windows.
+     *
      * @param process The process to get the output from
      * @param errorOutput The array to store the stderr output. cannot be null.
      * @param stdOutput The array to store the stdout output. cannot be null.
@@ -1187,11 +1310,19 @@ public class AndroidDebugBridge {
      * @return the process return code.
      * @throws InterruptedException
      */
-    private static int grabProcessOutput(final Process process, final ArrayList<String> errorOutput,
-      final ArrayList<String> stdOutput, boolean waitForReaders)
+    private static int grabProcessOutput(
+            final Process process,
+            final ArrayList<String> errorOutput,
+            final ArrayList<String> stdOutput,
+            boolean waitForReaders,
+            long timeout,
+            @NonNull TimeUnit unit)
             throws InterruptedException {
         assert errorOutput != null;
         assert stdOutput != null;
+
+        TimeoutRemainder rem = new TimeoutRemainder(timeout, unit);
+
         // read the lines as they come. if null is returned, it's
         // because the process finished
         Thread t1 = new Thread("adb:stderr reader") { //$NON-NLS-1$
@@ -1251,29 +1382,32 @@ public class AndroidDebugBridge {
         // it looks like on windows process#waitFor() can return
         // before the thread have filled the arrays, so we wait for both threads and the
         // process itself.
+        long remMillis;
         if (waitForReaders) {
             try {
-                t1.join();
-            } catch (InterruptedException e) {
+                remMillis = rem.getRemainingUnits(TimeUnit.MILLISECONDS);
+                if (remMillis > 0) {
+                    t1.join(remMillis);
+                }
+            } catch (InterruptedException ignored) {
             }
+            remMillis = rem.getRemainingUnits(TimeUnit.MILLISECONDS);
             try {
-                t2.join();
-            } catch (InterruptedException e) {
+                if (remMillis > 0) {
+                    t2.join(remMillis);
+                }
+            } catch (InterruptedException ignored) {
             }
         }
 
         // get the return code from the process
-        return process.waitFor();
-    }
-
-    /**
-     * Returns the singleton lock used by this class to protect any access to the listener.
-     * <p>
-     * This includes adding/removing listeners, but also notifying listeners of new bridges,
-     * devices, and clients.
-     */
-    private static Object getLock() {
-        return sLock;
+        if (process.waitFor(rem.getRemainingUnits(), unit)) {
+            return process.exitValue();
+        } else {
+            Log.w(ADB, "Process did not terminate within specified timeout, killing it");
+            process.destroyForcibly();
+            return -1;
+        }
     }
 
     /**
