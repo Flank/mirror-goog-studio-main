@@ -18,6 +18,7 @@ package com.android.ide.common.rendering.api;
 
 import static com.android.ide.common.rendering.api.Result.Status.NOT_IMPLEMENTED;
 
+import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.Result.Status;
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -252,5 +253,11 @@ public class RenderSession {
      * Discards the layout. No more actions can be called on this object.
      */
     public void dispose() {
+    }
+
+    /** Returns validation data if it exists. */
+    @Nullable
+    public Object getValidationData() {
+        return null;
     }
 }
