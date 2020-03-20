@@ -370,7 +370,7 @@ class CoreLibraryDesugarTest {
                 "    j\$.time.LocalTime MIDNIGHT;$lineSeparator" +
                 "}$lineSeparator"
         assertThat(collectKeepRulesUnderDirectory(out)).isEqualTo(expectedKeepRules)
-        Truth.assertThat(out.list()).asList().containsExactly("core_lib_keep_rules_0.txt", "core_lib_keep_rules_1.txt")
+        Truth.assertThat(out.list()).asList().containsExactly("core_lib_keep_rules_0.txt")
     }
 
     @Test

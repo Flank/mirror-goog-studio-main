@@ -439,7 +439,8 @@ public abstract class TaskManager<
 
         VariantDependencies variantDependencies = variantProperties.getVariantDependencies();
 
-        if (variantProperties.getVariantDslInfo().isLegacyMultiDexMode()) {
+        if (variantProperties.getVariantDslInfo().isLegacyMultiDexMode()
+                && variantProperties.getVariantType().isApk()) {
             String multiDexDependency =
                     variantProperties
                                     .getServices()
