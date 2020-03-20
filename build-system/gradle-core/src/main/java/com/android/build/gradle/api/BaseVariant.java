@@ -466,10 +466,13 @@ public interface BaseVariant {
     /**
      * Adds to the variant a task that generates Java source code.
      *
-     * This will make the generate[Variant]Sources task depend on this task and add the
-     * new source folders as compilation inputs.
+     * <p>This will make the generate[Variant]Sources task depend on this task and add the new
+     * source folders as compilation inputs.
      *
-     * The new source folders are also added to the model.
+     * <p>The new source folders are also added to the model.
+     *
+     * <p>N.B. This method also supports adding generated Kotlin sources, but this behavior may
+     * change in the future. Future versions of AGP or Kotlin Gradle plugin may not support this.
      *
      * @param task the task
      * @param sourceFolders the source folders where the generated source code is.
@@ -479,10 +482,13 @@ public interface BaseVariant {
     /**
      * Adds to the variant a task that generates Java source code.
      *
-     * This will make the generate[Variant]Sources task depend on this task and add the
-     * new source folders as compilation inputs.
+     * <p>This will make the generate[Variant]Sources task depend on this task and add the new
+     * source folders as compilation inputs.
      *
-     * The new source folders are also added to the model.
+     * <p>The new source folders are also added to the model.
+     *
+     * <p>N.B. This method also supports adding generated Kotlin sources, but this behavior may
+     * change in the future. Future versions of AGP or Kotlin Gradle plugin may not support this.
      *
      * @param task the task
      * @param sourceFolders the source folders where the generated source code is.
