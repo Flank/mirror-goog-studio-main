@@ -361,6 +361,13 @@ void Agent::RunSocketThread() {
         os << kGrpcUnixSocketAddrPrefix << "&" << fd;
         ConnectToDaemon(os.str());
         current_fd_ = fd;
+        AddDaemonStatusChangedCallback([this](bool becomes_alive) {
+          // If the daemon is no longer alive, we should close the fd because
+          // it's a client connecting to the abstract domain socket. Otherwise,
+          // the open reference would prevent the socket from disappearing
+          // which would prevent the daemon from successful restarting.
+          if (!becomes_alive) close(this->current_fd_);
+        });
       }
     }
   }
