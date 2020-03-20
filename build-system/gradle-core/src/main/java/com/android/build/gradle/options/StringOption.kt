@@ -41,6 +41,9 @@ enum class StringOption(
     // location where to write the APK/BUNDLE
     IDE_APK_LOCATION(AndroidProject.PROPERTY_APK_LOCATION, ApiStage.Stable),
 
+    // Installation related options
+    IDE_INSTALL_DYNAMIC_MODULES_LIST(AndroidProject.PROPERTY_INJECTED_DYNAMIC_MODULES_LIST, ApiStage.Experimental),
+
     // Instant run
     IDE_OPTIONAL_COMPILATION_STEPS(AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS, ApiStage.Stable),
     IDE_COLD_SWAP_MODE(AndroidProject.PROPERTY_SIGNING_COLDSWAP_MODE, ApiStage.Stable),

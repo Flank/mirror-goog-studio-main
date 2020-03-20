@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.bundle.Devices.DeviceSpec
@@ -31,6 +32,7 @@ import com.android.utils.FileUtils
 import com.google.protobuf.util.JsonFormat
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -78,6 +80,10 @@ abstract class ExtractApksTask : NonIncrementalTask() {
     abstract val applicationId: Property<String>
 
     @get:Input
+    @get:Optional
+    abstract val dynamicModulesToInstall: ListProperty<String>
+
+    @get:Input
     var extractInstant = false
         private set
 
@@ -94,7 +100,8 @@ abstract class ExtractApksTask : NonIncrementalTask() {
                     extractInstant,
                     apksFromBundleIdeModel.get().asFile,
                     applicationId.get(),
-                    variantName
+                    variantName,
+                    dynamicModulesToInstall.getOrElse(listOf())
                 )
             )
         }
@@ -107,7 +114,8 @@ abstract class ExtractApksTask : NonIncrementalTask() {
         val extractInstant: Boolean,
         val apksFromBundleIdeModel: File,
         val applicationId: String,
-        val variantName: String
+        val variantName: String,
+        val optionalListOfDynamicModulesToInstall: List<String>
     ) : Serializable
 
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
@@ -126,6 +134,11 @@ abstract class ExtractApksTask : NonIncrementalTask() {
                 .setDeviceSpec(builder.build())
                 .setOutputDirectory(params.outputDir.toPath())
                 .setInstant(params.extractInstant)
+                .also {
+                    if (params.optionalListOfDynamicModulesToInstall.isNotEmpty())
+                        it.setModules(
+                            params.optionalListOfDynamicModulesToInstall.toImmutableSet())
+                }
 
             command.build().execute()
 
@@ -154,17 +167,15 @@ abstract class ExtractApksTask : NonIncrementalTask() {
             taskProvider: TaskProvider<out ExtractApksTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.producesDir(
-                InternalArtifactType.EXTRACTED_APKS,
+            creationConfig.operations.setInitialProvider(
                 taskProvider,
-                ExtractApksTask::outputDir
-            )
-            creationConfig.artifacts.producesFile(
-                InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL,
-                taskProvider,
-                ExtractApksTask::apksFromBundleIdeModel,
-                BuiltArtifactsImpl.METADATA_FILE_NAME
-            )
+                ExtractApksTask::outputDir)
+                .on(InternalArtifactType.EXTRACTED_APKS)
+            creationConfig.operations.setInitialProvider(
+                    taskProvider,
+                    ExtractApksTask::apksFromBundleIdeModel)
+                .withName(BuiltArtifactsImpl.METADATA_FILE_NAME)
+                .on(InternalArtifactType.APK_FROM_BUNDLE_IDE_MODEL)
         }
 
         override fun configure(
@@ -172,7 +183,8 @@ abstract class ExtractApksTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            creationConfig.operations.setTaskInputToFinalProduct(InternalArtifactType.APKS_FROM_BUNDLE,
+            creationConfig.operations.setTaskInputToFinalProduct(
+                InternalArtifactType.APKS_FROM_BUNDLE,
                 task.apkSetArchive)
 
             val devicePath = creationConfig.services.projectOptions.get(StringOption.IDE_APK_SELECT_CONFIG)
@@ -182,6 +194,14 @@ abstract class ExtractApksTask : NonIncrementalTask() {
 
             task.extractInstant = creationConfig.services.projectOptions.get(BooleanOption.IDE_EXTRACT_INSTANT)
             task.applicationId.setDisallowChanges(creationConfig.applicationId)
+            val optionalListOfDynamicModulesToInstall = creationConfig.services.projectOptions.get(
+                StringOption.IDE_INSTALL_DYNAMIC_MODULES_LIST
+            )
+            if (!optionalListOfDynamicModulesToInstall.isNullOrEmpty()) {
+                task.dynamicModulesToInstall.addAll(
+                    optionalListOfDynamicModulesToInstall.split(','))
+            }
+            task.dynamicModulesToInstall.disallowChanges()
         }
     }
 }
