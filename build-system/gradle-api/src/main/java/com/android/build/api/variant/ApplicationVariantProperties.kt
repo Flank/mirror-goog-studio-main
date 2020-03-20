@@ -38,4 +38,15 @@ interface ApplicationVariantProperties : VariantProperties {
 
     /** Specify whether to include SDK dependency information in APKs and Bundles. */
     val dependenciesInfo: DependenciesInfo
+
+    /**
+     * Variant's aaptOptions, initialized by the corresponding global DSL element.
+     */
+    val aaptOptions: AaptOptions
+
+    /**
+     * Variant's aaptOptions, initialized by the corresponding global DSL element.
+     */
+    fun aaptOptions(action: AaptOptions.() -> Unit)
+
 }

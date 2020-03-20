@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.DynamicFeatureVariantProperties
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -88,6 +89,17 @@ open class DynamicFeatureVariantPropertiesImpl @Inject constructor(
 
     override val manifestPlaceholders: Map<String, Any>
         get() = variantDslInfo.manifestPlaceholders
+
+    override val aaptOptions: AaptOptions by lazy {
+        initializeAaptOptionsFromDsl(
+            globalScope.extension.aaptOptions,
+            variantApiServices
+        )
+    }
+
+    override fun aaptOptions(action: AaptOptions.() -> Unit) {
+        action.invoke(aaptOptions)
+    }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

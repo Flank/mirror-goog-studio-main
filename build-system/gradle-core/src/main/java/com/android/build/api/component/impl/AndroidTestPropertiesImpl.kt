@@ -18,9 +18,10 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.component.AndroidTestProperties
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.impl.VariantPropertiesImpl
+import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
-import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -82,6 +83,17 @@ open class AndroidTestPropertiesImpl @Inject constructor(
 
     override val manifestPlaceholders: Map<String, Any>
         get() = variantDslInfo.manifestPlaceholders
+
+    override val aaptOptions: AaptOptions by lazy {
+        initializeAaptOptionsFromDsl(
+            globalScope.extension.aaptOptions,
+            variantPropertiesApiServices
+        )
+    }
+
+    override fun aaptOptions(action: AaptOptions.() -> Unit) {
+        action.invoke(aaptOptions)
+    }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

@@ -28,4 +28,14 @@ interface DynamicFeatureVariantProperties : VariantProperties {
      */
     override val applicationId: Provider<String>
 
+    /**
+     * Variant's aaptOptions, initialized by the corresponding global DSL element.
+     */
+    val aaptOptions: AaptOptions
+
+    /**
+     * Variant's aaptOptions, initialized by the corresponding global DSL element.
+     */
+    fun aaptOptions(action: AaptOptions.() -> Unit)
+
 }

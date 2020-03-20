@@ -16,6 +16,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApplicationVariantProperties
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -81,6 +82,17 @@ open class ApplicationVariantPropertiesImpl @Inject constructor(
         get() = variantDslInfo.manifestPlaceholders
 
     override val dependenciesInfo: com.android.build.api.variant.DependenciesInfo = variantDependencyInfo
+
+    override val aaptOptions: AaptOptions by lazy {
+        initializeAaptOptionsFromDsl(
+            globalScope.extension.aaptOptions,
+            variantPropertiesApiServices
+        )
+    }
+
+    override fun aaptOptions(action: AaptOptions.() -> Unit) {
+        action.invoke(aaptOptions)
+    }
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

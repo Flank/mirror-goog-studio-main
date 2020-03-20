@@ -16,6 +16,7 @@
 
 package com.android.build.api.component
 
+import com.android.build.api.variant.AaptOptions
 import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 
@@ -29,5 +30,15 @@ interface AndroidTestProperties : TestComponentProperties {
      * Variant's application ID as present in the final manifest file of the APK.
      */
     val applicationId: Property<String>
+
+    /**
+     * Variant's aaptOptions, initialized by the corresponding global DSL element.
+     */
+    val aaptOptions: AaptOptions
+
+    /**
+     * Variant's aaptOptions, initialized by the corresponding global DSL element.
+     */
+    fun aaptOptions(action: AaptOptions.() -> Unit)
 
 }

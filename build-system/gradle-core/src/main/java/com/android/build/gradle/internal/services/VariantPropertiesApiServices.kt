@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.services
 import org.gradle.api.Named
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -100,6 +101,16 @@ interface VariantPropertiesApiServices:
      * with [Property.disallowChanges] after the variant API(s) have run.
      */
     fun <T> nullablePropertyOf(type: Class<T>, value: Provider<T?>, id: String = ""): Property<T?>
+
+    /**
+     * Creates a new [ListProperty].
+     *
+     * This should be used for properties used in the new API.
+     *
+     * The [ListProperty] will be marked as [Property.finalizeValueOnRead], and will be locked
+     * with [Property.disallowChanges] after the variant API(s) have run.
+     */
+    fun <T> listPropertyOf(type: Class<T>, value: Collection<T>, id: String): ListProperty<T>
 
     /**
      * Creates a new property that is backing an old API returning T.
