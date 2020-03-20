@@ -653,7 +653,7 @@ public class VariantManager {
         final VariantDependencies variantDep = builder.build(variantScope);
         variantData.setVariantDependency(variantDep);
 
-        if (variantDslInfo.isLegacyMultiDexMode()) {
+        if (variantDslInfo.isLegacyMultiDexMode() && variantDslInfo.getVariantType().isApk()) {
             String multiDexDependency =
                     globalScope.getProjectOptions().get(BooleanOption.USE_ANDROID_X)
                             ? ANDROIDX_MULTIDEX_MULTIDEX
