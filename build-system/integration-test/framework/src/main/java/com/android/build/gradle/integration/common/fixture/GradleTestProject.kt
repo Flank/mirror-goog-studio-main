@@ -453,6 +453,10 @@ apply from: "../commonLocalRepo.gradle"
     val testDir: File
         get() = _testDir ?: throw java.lang.RuntimeException("testDir called before the project was properly initialized.")
 
+    /** Returns a path to NDK suitable for embedding in build.gradle. It has slashes escaped for Windows */
+    val ndkPath: String
+        get() = androidNdkHome.absolutePath.replace("\\", "\\\\")
+
     private var additionalMavenRepoDir: Path? = null
 
     /** \Returns the latest build result.  */

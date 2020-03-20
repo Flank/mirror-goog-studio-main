@@ -85,18 +85,11 @@ class NdkHandler(
     private val issueReporter: IssueReporter,
     private val enableSideBySideNdk: Boolean,
     private val ndkVersionFromDsl: String?,
+    private val ndkPathFromDsl: String?,
     private val compileSdkVersion: String,
     private val projectDir: File
 ) {
     private var ndkInstallStatus: NdkInstallStatus? = null
-
-    private fun findNdk(): File? {
-        return if (enableSideBySideNdk) {
-            findNdkPath(issueReporter, ndkVersionFromDsl, projectDir)
-        } else {
-            findNdkDirectory(projectDir, issueReporter)
-        }
-    }
 
     private fun getNdkInfo(ndkDirectory: File, revision: Revision): NdkInfo {
         return when {
@@ -108,7 +101,8 @@ class NdkHandler(
     }
 
     private fun getNdkStatus(): NdkInstallStatus {
-        val ndkDirectory = findNdk()
+        val ndkDirectory =
+            findNdkPath(issueReporter, ndkVersionFromDsl, ndkPathFromDsl, projectDir)
         if (ndkDirectory == null || !ndkDirectory.exists()) {
             return NdkInstallStatus.NotInstalled
         }

@@ -90,6 +90,7 @@ open class SdkComponents(
                     issueReporter,
                     projectOptions.get(BooleanOption.ENABLE_SIDE_BY_SIDE_NDK),
                     extensionSupplier.get()?.ndkVersion,
+                    extensionSupplier.get()?.ndkPath,
                     extensionSupplier.get()!!.compileSdkVersion!!,
                     project.rootDir)
             }

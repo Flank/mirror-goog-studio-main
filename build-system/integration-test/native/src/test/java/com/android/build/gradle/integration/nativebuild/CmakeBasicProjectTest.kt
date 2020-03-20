@@ -55,6 +55,7 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
         .fromTestApp(
             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+        .withoutNdk()
         .create()
 
     companion object {
@@ -81,6 +82,7 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
         android {
             compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
             buildToolsVersion "${GradleTestProject.DEFAULT_BUILD_TOOL_VERSION}"
+            ndkPath "${project.ndkPath}"
             defaultConfig {
               externalNativeBuild {
                   cmake {
