@@ -68,6 +68,9 @@ message OverlaySwapRequest {
 
   bool structural_redefinition = 11;
   bool variable_reinitialization = 12;
+
+  // Always update the overlay, even when swap fails.
+  bool always_update_overlay = 13;
 }
 
 message OverlayIdPush {
@@ -204,6 +207,7 @@ message SwapResponse {
     READ_FROM_SERVER_FAILED = 15; // The install server failed to response
     OVERLAY_ID_MISMATCH = 16;     // The expected overlay was not present
     OVERLAY_UPDATE_FAILED = 17;   // The overlay update failed to complete
+    SWAP_FAILED_BUT_OVERLAY_UPDATED = 18; // Swap failed, but overlay was updated
   }
 
   Status status = 1;

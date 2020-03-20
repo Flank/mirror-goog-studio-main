@@ -27,24 +27,24 @@ import java.util.Map;
 public class ApkSwapper {
     private final Installer installer;
     private final boolean restart;
-    private final Map<Integer, ClassRedefiner> redefiners;
+    private final Map<Integer, ClassRedefiner> debuggerRedefiners;
     private final AdbClient adb;
     private final ILogger logger;
 
     /**
      * @param installer used to perform swaps on device.
      * @param restart whether to restart the application or not.
-     * @param redefiners an additional set of redefiners that will handle the swap for the given
-     *     process ids
+     * @param debuggerRedefiners an additional set of redefiners that will handle the swap for the
+     *     given process ids that have debugger attached
      */
     public ApkSwapper(
             Installer installer,
-            Map<Integer, ClassRedefiner> redefiners,
+            Map<Integer, ClassRedefiner> debuggerRedefiners,
             boolean restart,
             AdbClient adb,
             ILogger logger) {
         this.installer = installer;
-        this.redefiners = redefiners;
+        this.debuggerRedefiners = debuggerRedefiners;
         this.restart = restart;
         this.adb = adb;
         this.logger = logger;
@@ -129,7 +129,7 @@ public class ApkSwapper {
         }
 
         // Do the debugger swap.
-        for (Map.Entry<Integer, ClassRedefiner> entry : redefiners.entrySet()) {
+        for (Map.Entry<Integer, ClassRedefiner> entry : debuggerRedefiners.entrySet()) {
             sendSwapRequest(swapRequest, entry.getValue());
         }
 
@@ -191,8 +191,8 @@ public class ApkSwapper {
 
         int extraAgents = 0;
         for (Integer pid : pids) {
-            if (redefiners.containsKey(pid)) {
-                ClassRedefiner redefiner = redefiners.get(pid);
+            if (debuggerRedefiners.containsKey(pid)) {
+                ClassRedefiner redefiner = debuggerRedefiners.get(pid);
                 switch (redefiner.canRedefineClass().support) {
                     case FULL:
                         continue;

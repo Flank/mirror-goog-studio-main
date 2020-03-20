@@ -129,7 +129,8 @@ public class DeployerRunner {
                         true,
                         true,
                         true,
-                        true);
+                        true,
+                        false);
         try {
             if (parameters.getCommand() == DeployRunnerParameters.Command.INSTALL) {
                 InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();

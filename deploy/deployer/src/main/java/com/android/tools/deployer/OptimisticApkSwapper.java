@@ -16,6 +16,7 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
+import com.android.tools.deployer.InstallerResponseHandler.SuccessStatus;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.idea.protobuf.ByteString;
@@ -44,6 +45,7 @@ public class OptimisticApkSwapper {
 
     private final Installer installer;
     private final boolean restart;
+    private final boolean alwaysUpdateOverlay;
     private final Map<Integer, ClassRedefiner> redefiners;
     private final MetricsRecorder metrics;
     private final AdbClient adb;
@@ -65,6 +67,7 @@ public class OptimisticApkSwapper {
             boolean restart,
             boolean useStructuralRedefinition,
             boolean useVariableReinitialization,
+            boolean alwaysUpdateOverlay,
             MetricsRecorder metrics,
             AdbClient adb,
             ILogger logger) {
@@ -73,6 +76,7 @@ public class OptimisticApkSwapper {
         this.restart = restart;
         this.useStructuralRedefinition = useStructuralRedefinition;
         this.useVariableReinitialization = useVariableReinitialization;
+        this.alwaysUpdateOverlay = alwaysUpdateOverlay;
         this.metrics = metrics;
         this.adb = adb;
         this.logger = logger;
@@ -85,7 +89,7 @@ public class OptimisticApkSwapper {
      * @param sessionId the installation session
      * @param toSwap the actual dex classes to swap.
      */
-    public OverlayId optimisticSwap(
+    public SwapResult optimisticSwap(
             String packageId, List<Integer> pids, Deploy.Arch arch, OverlayUpdate overlayUpdate)
             throws DeployerException {
         final DeploymentCacheDatabase.Entry cachedDump = overlayUpdate.cachedDump;
@@ -103,7 +107,8 @@ public class OptimisticApkSwapper {
                         .setArch(arch)
                         .setExpectedOverlayId(
                                 expectedOverlayId.isBaseInstall() ? "" : expectedOverlayId.getSha())
-                        .setOverlayId(nextOverlayId.getSha());
+                        .setOverlayId(nextOverlayId.getSha())
+                        .setAlwaysUpdateOverlay(alwaysUpdateOverlay);
 
         boolean hasDebuggerAttached = false;
         for (Integer pid : pids) {
@@ -147,22 +152,23 @@ public class OptimisticApkSwapper {
 
         Deploy.OverlaySwapRequest swapRequest = request.build();
 
+        SuccessStatus successStatus = SuccessStatus.OK;
+
         if (hasDebuggerAttached) {
             // Anytime we have an non-Installer based redefiner, it is not going to do any OID
             // verification.
             // Therefore we are going to do a manual OID check first. Here is the order:
-
+            //
             //  1. Do a DUMP like verification on the app's current OID.
-            //  2. Perform debugger swap
+            //  2. Perform debugger swap.
             //  3. Perform overlay swap that installs overlays as well as swapping
             //     processes that are not attached to d a debugger.
             //
             // Failure at any step would short circuit the whole operation. The only issue that
-            // might
-            // occur is when the debugger swap succeed and somehow the overlay install fails. We
-            // would
-            // have the running app be swapped but nothing installed. This is also the case in the
-            // non-optimistic case and user would get an error message as well.
+            // might occur is when the debugger swap succeeds and somehow the overlay install
+            // fails. We would have the running app be swapped but nothing installed. This is
+            // also the case in the non-optimistic case and user would get an error message as
+            // well.
             try {
                 Deploy.OverlayIdPushResponse response =
                         installer.verifyOverlayId(
@@ -174,23 +180,55 @@ public class OptimisticApkSwapper {
                 throw DeployerException.installerIoException(e);
             }
 
-            // Given the installer swap succeeded, we are targeting the right
+            // Given the installer verification succeeded, we are targeting the right
             // device with the right APK in cache. We then proceed to do the debugger swaps.
+            // If the debugger swap failed but the fallback flag is set, the redefiner will
+            // signal the caller with SWAP_FAILED_BUT_OVERLAY_UPDATED.
             for (Map.Entry<Integer, ClassRedefiner> entry : redefiners.entrySet()) {
-                sendSwapRequest(swapRequest, entry.getValue());
+                switch (sendSwapRequest(swapRequest, entry.getValue())) {
+                    case SWAP_FAILED_BUT_APP_UPDATED:
+                        successStatus = SuccessStatus.SWAP_FAILED_BUT_APP_UPDATED;
+                        break;
+                    case OK:
+                        break;
+                    default:
+                        throw new IllegalStateException("Unknown swap status");
+                }
             }
         }
 
-        // Do the installer swap first.
-        sendSwapRequest(swapRequest, new InstallerBasedClassRedefiner(installer));
+        // Do the installer swap.
+        switch (sendSwapRequest(swapRequest, new InstallerBasedClassRedefiner(installer))) {
+            case SWAP_FAILED_BUT_APP_UPDATED:
+                successStatus = SuccessStatus.SWAP_FAILED_BUT_APP_UPDATED;
+                break;
+            case OK:
+                break;
+            default:
+                throw new IllegalStateException("Unknown swap status");
+        }
 
-        return nextOverlayId;
+        return new SwapResult(nextOverlayId, successStatus == SuccessStatus.OK);
     }
 
-    private void sendSwapRequest(Deploy.OverlaySwapRequest request, ClassRedefiner redefiner)
-            throws DeployerException {
+    private SuccessStatus sendSwapRequest(
+            Deploy.OverlaySwapRequest request, ClassRedefiner redefiner) throws DeployerException {
         Deploy.SwapResponse swapResponse = redefiner.redefine(request);
         metrics.add(swapResponse.getAgentLogsList());
-        new InstallerResponseHandler().handle(swapResponse);
+        for (Deploy.AgentExceptionLog log : swapResponse.getAgentLogsList()) {
+            // TODO: Report these as metrics somehow
+            logger.info("Agent log: %s", log.toString());
+        }
+        return new InstallerResponseHandler().handle(swapResponse);
+    }
+
+    public static class SwapResult {
+        public final OverlayId overlayId;
+        public final boolean hotswapSucceeded;
+
+        private SwapResult(OverlayId overlayId, boolean hotswapSucceeded) {
+            this.overlayId = overlayId;
+            this.hotswapSucceeded = hotswapSucceeded;
+        }
     }
 }

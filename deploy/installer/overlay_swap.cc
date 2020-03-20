@@ -145,7 +145,8 @@ void OverlaySwapCommand::BuildOverlayUpdateRequest(
 void OverlaySwapCommand::ProcessResponse(proto::SwapResponse* response) {
   Phase p("PostSwap");
 
-  if (response->status() == proto::SwapResponse::OK) {
+  if (response->status() == proto::SwapResponse::OK ||
+      request_.always_update_overlay()) {
     UpdateOverlay(response);
   }
 
@@ -168,6 +169,8 @@ void OverlaySwapCommand::ProcessResponse(proto::SwapResponse* response) {
 
 void OverlaySwapCommand::UpdateOverlay(proto::SwapResponse* response) {
   Phase p("UpdateOverlay");
+
+  bool swap_failed = (response->status() != proto::SwapResponse::OK);
 
   proto::InstallServerRequest install_request;
   install_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
@@ -197,6 +200,14 @@ void OverlaySwapCommand::UpdateOverlay(proto::SwapResponse* response) {
   if (should_restart &&
       !cmd.UpdateAppInfo("all", request_.package_name(), &error)) {
     response->set_status(proto::SwapResponse::ACTIVITY_RESTART_FAILED);
+  }
+
+  if (swap_failed &&
+      (response->status() == proto::SwapResponse::OK ||
+       response->status() == proto::SwapResponse::ACTIVITY_RESTART_FAILED)) {
+    // If we updated overlay even on swap fail or restart fail,
+    // alter the response accordingly.
+    response->set_status(proto::SwapResponse::SWAP_FAILED_BUT_OVERLAY_UPDATED);
   }
 }
 

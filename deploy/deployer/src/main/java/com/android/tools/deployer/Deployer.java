@@ -52,6 +52,7 @@ public class Deployer {
     private final boolean useOptimisticResourceSwap;
     private final boolean useStructuralRedefinition;
     private final boolean useVariableReinitialization;
+    private final boolean fastRestartOnSwapFail;
 
     public Deployer(
             AdbClient adb,
@@ -65,7 +66,8 @@ public class Deployer {
             boolean useOptimisticSwap,
             boolean useOptimisticResourceSwap,
             boolean useStructuralRedefinition,
-            boolean useVariableReinitialization) {
+            boolean useVariableReinitialization,
+            boolean fastRestartOnSwapFail) {
         this.adb = adb;
         this.deployCache = deployCache;
         this.dexDb = dexDb;
@@ -78,6 +80,7 @@ public class Deployer {
         this.useOptimisticResourceSwap = useOptimisticResourceSwap;
         this.useStructuralRedefinition = useStructuralRedefinition;
         this.useVariableReinitialization = useVariableReinitialization;
+        this.fastRestartOnSwapFail = fastRestartOnSwapFail;
     }
 
     enum Tasks {
@@ -117,8 +120,9 @@ public class Deployer {
      * <p>Note that there is indication to success or failure of the operation. Failure is indicated
      * by {@link DeployerException} thus this object is created only on successful deployments.
      */
-    public class Result {
+    public static class Result {
         public boolean skippedInstall = false;
+        public boolean needsRestart = false;
     }
 
     /**
@@ -186,13 +190,13 @@ public class Deployer {
         }
     }
 
-    public Result codeSwap(List<String> apks, Map<Integer, ClassRedefiner> redefiners)
+    public Result codeSwap(List<String> apks, Map<Integer, ClassRedefiner> debuggerRedefiners)
             throws DeployerException {
         try (Trace ignored = Trace.begin("codeSwap")) {
             if (supportsNewPipeline()) {
-                return optimisticSwap(apks, false /* Restart Activity */, redefiners);
+                return optimisticSwap(apks, false /* Restart Activity */, debuggerRedefiners);
             } else {
-                return swap(apks, false /* Restart Activity */, redefiners);
+                return swap(apks, false /* Restart Activity */, debuggerRedefiners);
             }
         }
     }
@@ -208,7 +212,9 @@ public class Deployer {
     }
 
     private Result swap(
-            List<String> argPaths, boolean argRestart, Map<Integer, ClassRedefiner> redefiners)
+            List<String> argPaths,
+            boolean argRestart,
+            Map<Integer, ClassRedefiner> debuggerRedefiners)
             throws DeployerException {
 
         if (!adb.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.O)) {
@@ -255,7 +261,7 @@ public class Deployer {
                 runner.create(Tasks.COMPARE, new DexComparator()::compare, dexDiffs, splitter);
 
         // Do the swap
-        ApkSwapper swapper = new ApkSwapper(installer, redefiners, argRestart, adb, logger);
+        ApkSwapper swapper = new ApkSwapper(installer, debuggerRedefiners, argRestart, adb, logger);
         runner.create(Tasks.SWAP, swapper::swap, swapper::error, dumps, sessionId, toSwap);
 
         TaskResult result = runner.run();
@@ -339,6 +345,7 @@ public class Deployer {
                         argRestart,
                         useStructuralRedefinition,
                         useVariableReinitialization,
+                        fastRestartOnSwapFail,
                         metrics,
                         adb,
                         logger);
@@ -349,7 +356,7 @@ public class Deployer {
                         verifyDump,
                         changedClasses,
                         extractedFiles);
-        Task<OverlayId> nextOverlayId =
+        Task<OptimisticApkSwapper.SwapResult> swapResultTask =
                 runner.create(
                         Tasks.OPTIMISTIC_SWAP,
                         swapper::optimisticSwap,
@@ -372,11 +379,12 @@ public class Deployer {
         runner.create(Tasks.CACHE, DexSplitter::cache, splitter, newFiles);
         runner.create(
                 Tasks.DEPLOY_CACHE_STORE,
-                deployCache::store,
+                (serial, pkgName, files, swap) ->
+                        deployCache.store(serial, pkgName, files, swap.overlayId),
                 deviceSerial,
                 packageName,
                 newFiles,
-                nextOverlayId);
+                swapResultTask);
 
         // Wait only for swap to finish
         runner.runAsync();
@@ -384,6 +392,9 @@ public class Deployer {
         Result deployResult = new Result();
         // TODO: May be notify user we IWI'ed.
         // deployResult.didIwi = true;
+        if (fastRestartOnSwapFail && !swapResultTask.get().hotswapSucceeded) {
+            deployResult.needsRestart = true;
+        }
         return deployResult;
     }
 
@@ -420,7 +431,7 @@ public class Deployer {
         return entry;
     }
 
-    private boolean supportsNewPipeline() {
+    public boolean supportsNewPipeline() {
         // New API level is not yet determined yet so this is only for fake android tests:
         if (adb.getVersion().getApiLevel() > 29) {
             return true;
