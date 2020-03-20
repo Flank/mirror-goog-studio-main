@@ -146,6 +146,8 @@ sealed class InternalArtifactType<T : FileSystemLocation>(kind: ArtifactKind<T>,
     // --- android res ---
     // output of the resource merger ready for aapt.
     object MERGED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // folder for the blame report on the merged resources
+    object MERGED_RES_BLAME_FOLDER: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // The R class jar for compile classpath use.
     object COMPILE_R_CLASS_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
     // output of the resource merger for unit tests and the resource shrinker.

@@ -38,7 +38,6 @@ class DeterministicTaskOutputsTest {
          */
         private val INCONSISTENT_TASK_OUTPUTS = setOf(
             // The following task outputs need more investigation.
-            "app/build/intermediates/blame/res/debug",
             "app/build/intermediates/incremental/debug-mergeJavaRes/merge-state",
             "app/build/intermediates/incremental/debug-mergeNativeLibs",
             "app/build/intermediates/incremental/mergeDebugAssets/merger.xml",
@@ -50,6 +49,7 @@ class DeterministicTaskOutputsTest {
             "app/build/intermediates/incremental/packageDebug/tmp/debug/zip-cache",
             "app/build/intermediates/manifest_merge_blame_file/debug/manifest-merger-blame-debug-report.txt",
             "app/build/intermediates/merged_java_res/debug/out.jar",
+            "app/build/intermediates/merged_res_blame_folder/debug/out",
             "app/build/intermediates/res/merged/debug",
             "app/build/outputs/apk/debug/app-debug.apk",
             "app/build/outputs/logs/manifest-merger-debug-report.txt",

@@ -23,18 +23,20 @@ import static com.google.common.base.Preconditions.checkState;
 
 import android.databinding.tool.LayoutXmlProcessor;
 import android.databinding.tool.util.RelativizableFile;
+import android.databinding.tool.writer.JavaFileWriter;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.ComponentPropertiesImpl;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
-import com.android.build.gradle.internal.databinding.LayoutXmlProcessorDelegate;
+import com.android.build.gradle.internal.databinding.MergingFileLookup;
 import com.android.build.gradle.internal.errors.MessageReceiverImpl;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.Aapt2Daemon;
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService;
@@ -44,7 +46,6 @@ import com.android.build.gradle.internal.services.Aapt2WorkersBuildService;
 import com.android.build.gradle.internal.tasks.Blocks;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.SyncOptions;
@@ -95,7 +96,6 @@ import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
@@ -120,8 +120,6 @@ public abstract class MergeResources extends ResourceAwareTask {
 
     private boolean crunchPng;
 
-    private File blameLogFolder;
-
     private List<ResourceSet> processedInputs;
 
     private final FileValidity<ResourceSet> fileValidity = new FileValidity<>();
@@ -137,8 +135,6 @@ public abstract class MergeResources extends ResourceAwareTask {
     @Internal
     public abstract ConfigurableFileCollection getAapt2FromMaven();
 
-    private LayoutXmlProcessorDelegate xmlProcessorDelegate;
-
     @Nullable private File mergedNotCompiledResourcesOutputDirectory;
 
     private boolean pseudoLocalesEnabled;
@@ -152,6 +148,14 @@ public abstract class MergeResources extends ResourceAwareTask {
 
     @Input
     public abstract Property<Boolean> getViewBindingEnabled();
+
+    @Input
+    @Optional
+    public abstract Property<String> getPackageName();
+
+    @Input
+    @Optional
+    public abstract Property<Boolean> getUseAndroidX();
 
     /**
      * Set of absolute paths to resource directories that are located outside of the root project
@@ -252,7 +256,8 @@ public abstract class MergeResources extends ResourceAwareTask {
         // create a new merger and populate it with the sets.
         ResourceMerger merger = new ResourceMerger(getMinSdk().get());
         MergingLog mergingLog = null;
-        if (blameLogFolder != null) {
+        if (getBlameLogOutputFolder().isPresent()) {
+            File blameLogFolder = getBlameLogOutputFolder().get().getAsFile();
             FileUtils.cleanOutputDir(blameLogFolder);
             mergingLog = new MergingLog(blameLogFolder);
         }
@@ -426,7 +431,9 @@ public abstract class MergeResources extends ResourceAwareTask {
             }
 
             MergingLog mergingLog =
-                    getBlameLogFolder() != null ? new MergingLog(getBlameLogFolder()) : null;
+                    getBlameLogOutputFolder().isPresent()
+                            ? new MergingLog(getBlameLogOutputFolder().get().getAsFile())
+                            : null;
 
             try (WorkerExecutorFacade workerExecutorFacade = getAaptWorkerFacade();
                     ResourceCompilationService resourceCompiler =
@@ -489,7 +496,36 @@ public abstract class MergeResources extends ResourceAwareTask {
             return null;
         }
 
-        final LayoutXmlProcessor processor = xmlProcessorDelegate.getLayoutXmlProcessor();
+        LayoutXmlProcessor.OriginalFileLookup fileLookup;
+        if (getBlameLogOutputFolder().isPresent()) {
+            fileLookup = new MergingFileLookup(getBlameLogOutputFolder().get().getAsFile());
+        } else {
+            fileLookup = file -> null;
+        }
+
+        final LayoutXmlProcessor processor =
+                new LayoutXmlProcessor(
+                        getPackageName().get(),
+                        new JavaFileWriter() {
+                            // These methods are not supposed to be used, they are here only because
+                            // the superclass requires an implementation of it.
+                            // Whichever is calling this method is probably using it incorrectly
+                            // (see stacktrace).
+                            @Override
+                            public void writeToFile(String canonicalName, String contents) {
+                                throw new UnsupportedOperationException(
+                                        "Not supported in this mode");
+                            }
+
+                            @Override
+                            public void deleteFile(String canonicalName) {
+                                throw new UnsupportedOperationException(
+                                        "Not supported in this mode");
+                            }
+                        },
+                        fileLookup,
+                        getUseAndroidX().get());
+
         return new SingleFileProcessor() {
 
             private LayoutXmlProcessor getProcessor() {
@@ -703,15 +739,10 @@ public abstract class MergeResources extends ResourceAwareTask {
         return getResourcesComputer().getValidateEnabled();
     }
 
+    // the optional blame output folder for the case where the task generates it.
     @OutputDirectory
     @Optional
-    public File getBlameLogFolder() {
-        return blameLogFolder;
-    }
-
-    public void setBlameLogFolder(File blameLogFolder) {
-        this.blameLogFolder = blameLogFolder;
-    }
+    public abstract DirectoryProperty getBlameLogOutputFolder();
 
     @Optional
     @OutputDirectory
@@ -755,12 +786,6 @@ public abstract class MergeResources extends ResourceAwareTask {
     @Input
     public boolean isJvmResourceCompilerEnabled() {
         return useJvmResourceCompiler;
-    }
-
-    @Nested
-    @Optional
-    public LayoutXmlProcessorDelegate getLayoutXmlProcessorDelegate() {
-        return xmlProcessorDelegate;
     }
 
     public static class CreationAction
@@ -829,6 +854,17 @@ public abstract class MergeResources extends ResourceAwareTask {
                             taskProvider,
                             MergeResources::getDataBindingLayoutInfoOutFolder,
                             "out");
+
+            // only the full run with dependencies generates the blame folder
+            if (includeDependencies) {
+                creationConfig
+                        .getArtifacts()
+                        .producesDir(
+                                InternalArtifactType.MERGED_RES_BLAME_FOLDER.INSTANCE,
+                                taskProvider,
+                                MergeResources::getBlameLogOutputFolder,
+                                "out");
+            }
         }
 
         @Override
@@ -837,7 +873,6 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             VariantScope variantScope = creationConfig.getVariantScope();
             GlobalScope globalScope = creationConfig.getGlobalScope();
-            BaseVariantData variantData = creationConfig.getVariantData();
             VariantPathHelper paths = creationConfig.getPaths();
 
             task.getMinSdk()
@@ -853,11 +888,6 @@ public abstract class MergeResources extends ResourceAwareTask {
             task.getAapt2FromMaven().from(aapt2AndVersion.getFirst());
             task.aapt2Version = aapt2AndVersion.getSecond();
             task.setIncrementalFolder(paths.getIncrementalDir(getName()));
-            // Libraries use this task twice, once for compilation (with dependencies),
-            // where blame is useful, and once for packaging where it is not.
-            if (includeDependencies) {
-                task.setBlameLogFolder(paths.getResourceBlameLogDir());
-            }
             task.processResources = processResources;
             task.crunchPng = variantScope.isCrunchPngs();
 
@@ -893,14 +923,14 @@ public abstract class MergeResources extends ResourceAwareTask {
                     task.getViewBindingEnabled(), isViewBindingEnabled);
 
             if (isDataBindingEnabled || isViewBindingEnabled) {
-                task.xmlProcessorDelegate =
-                        new LayoutXmlProcessorDelegate(
-                                creationConfig.getPackageName(),
-                                creationConfig
-                                        .getServices()
-                                        .getProjectOptions()
-                                        .get(BooleanOption.USE_ANDROID_X),
-                                creationConfig.getPaths().getResourceBlameLogDir());
+                HasConfigurableValuesKt.setDisallowChanges(
+                        task.getPackageName(), creationConfig.getVariantDslInfo().getPackageName());
+                HasConfigurableValuesKt.setDisallowChanges(
+                        task.getUseAndroidX(),
+                        creationConfig
+                                .getServices()
+                                .getProjectOptions()
+                                .get(BooleanOption.USE_ANDROID_X));
             }
 
             task.mergedNotCompiledResourcesOutputDirectory = mergedNotCompiledOutputDirectory;

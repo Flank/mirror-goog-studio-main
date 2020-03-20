@@ -19,11 +19,13 @@ package com.android.build.gradle.internal.databinding
 import android.databinding.tool.DataBindingBuilder
 import com.android.build.gradle.internal.component.BaseCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.databinding.DATA_BINDING_TRIGGER_CLASS
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
@@ -45,8 +47,6 @@ import javax.inject.Inject
  * [configureFrom].
  */
 abstract class DataBindingExcludeDelegate @Inject constructor(
-    @get:Nested
-    val layoutXmlProcessorDelegate: LayoutXmlProcessorDelegate,
     @get:Input
     val databindingEnabled: Boolean
 ) {
@@ -60,52 +60,43 @@ abstract class DataBindingExcludeDelegate @Inject constructor(
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val dependencyArtifactsDir: DirectoryProperty
 
-    @get:Internal
-    internal val excludedClassList: List<String>
-        get() {
-            if (!databindingEnabled) {
-                return listOf()
-            }
-
-            return DataBindingBuilder.getJarExcludeList(
-                layoutXmlProcessorDelegate.layoutXmlProcessor,
-                exportClassListLocation.orNull?.asFile,
-                dependencyArtifactsDir.get().asFile);
+    internal fun getExcludedClassList(packageName: String): List<String> {
+        if (!databindingEnabled) {
+            return listOf()
         }
+
+        return DataBindingBuilder.getJarExcludeList(
+            packageName,
+            DATA_BINDING_TRIGGER_CLASS,
+            exportClassListLocation.orNull?.asFile,
+            dependencyArtifactsDir.get().asFile);
+    }
 }
 
 fun Property<DataBindingExcludeDelegate>.configureFrom(creationConfig: BaseCreationConfig) {
-    val dataBindingEnabled: Boolean = creationConfig.buildFeatures.dataBinding
-    val viewBindingEnabled: Boolean = creationConfig.buildFeatures.viewBinding
-    if (!dataBindingEnabled && !viewBindingEnabled) {
+    // if databinding is not enabled. Do not set this delegate.
+    // this means the delegate probably needs to be @Optional
+    if (!creationConfig.buildFeatures.dataBinding) {
         return
     }
 
-    setDisallowChanges(creationConfig.globalScope.project.provider {
-        creationConfig.services.newInstance(
-            DataBindingExcludeDelegate::class.java,
-            LayoutXmlProcessorDelegate(
-                creationConfig.packageName,
-                creationConfig.services.projectOptions[BooleanOption.USE_ANDROID_X],
-                creationConfig.paths.resourceBlameLogDir
-            ),
-            creationConfig.buildFeatures.dataBinding
-        ).also {
-            it.dependencyArtifactsDir.setDisallowChanges(
-                creationConfig.artifacts
-                    .getFinalProduct(
-                        InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS
-                    )
-            )
+    setDisallowChanges(creationConfig.services.newInstance(
+        DataBindingExcludeDelegate::class.java,
+        creationConfig.buildFeatures.dataBinding
+    ).also {
+        it.dependencyArtifactsDir.setDisallowChanges(
+            creationConfig.artifacts
+                .getFinalProduct(
+                    InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS
+                )
+        )
 
-            it.exportClassListLocation.setDisallowChanges(
-                creationConfig.artifacts
-                    .getFinalProduct(
-                        InternalArtifactType.DATA_BINDING_EXPORT_CLASS_LIST
-                    )
-            )
-        }
+        it.exportClassListLocation.setDisallowChanges(
+            creationConfig.artifacts
+                .getFinalProduct(
+                    InternalArtifactType.DATA_BINDING_EXPORT_CLASS_LIST
+                )
+        )
     })
-
 }
 
