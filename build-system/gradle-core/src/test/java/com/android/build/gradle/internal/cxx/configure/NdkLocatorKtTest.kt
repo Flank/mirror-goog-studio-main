@@ -36,6 +36,7 @@ class NdkLocatorKtTest {
             messages.add(message)
         }
         fun errors() = messages.filter { it -> it.level == LoggingLevel.ERROR }
+        fun warnings() = messages.filter { it -> it.level == LoggingLevel.WARN }
     }
 
     @get:Rule
@@ -266,6 +267,57 @@ class NdkLocatorKtTest {
                 }
             })
         assertThat(path).isEqualTo("/my/sdk/folder/ndk-bundle".toSlashFile())
+    }
+
+    @Test
+    fun `no version specified by user and only old ndk available (bug 148189425)`() {
+        val path = findNdkPath(
+            ndkVersionFromDsl = null,
+            ndkDirProperty = null,
+            sdkFolder = "/my/sdk/folder".toSlashFile(),
+            getNdkVersionedFolderNames = { listOf("18.1.23456") },
+            getNdkSourceProperties = { path ->
+                when (path.path) {
+                    "/my/sdk/folder/ndk/18.1.23456".toSlash() -> SdkSourceProperties(
+                        mapOf(SDK_PKG_REVISION.key to "18.1.23456")
+                    )
+                    else -> null
+                }
+            }
+        )
+        assertThat(path).isEqualTo(null)
+        assertThat(log.errors()).hasSize(0)
+        assertThat(log.warnings()).hasSize(1)
+        assertThat(log.warnings()[0].message).isEqualTo(
+            "No version of NDK matched the required version " +
+                    "$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION. Versions available " +
+                    "locally: 18.1.23456"
+        )
+    }
+
+    @Test
+    fun `version specified by user and only old ndk available (bug 148189425)`() {
+        val path = findNdkPath(
+            ndkVersionFromDsl = "18.9.99999",
+            ndkDirProperty = null,
+            sdkFolder = "/my/sdk/folder".toSlashFile(),
+            getNdkVersionedFolderNames = { listOf("18.1.23456") },
+            getNdkSourceProperties = { path ->
+                when (path.path) {
+                    "/my/sdk/folder/ndk/18.1.23456".toSlash() -> SdkSourceProperties(
+                        mapOf(SDK_PKG_REVISION.key to "18.1.23456")
+                    )
+                    else -> null
+                }
+            }
+        )
+        assertThat(path).isEqualTo(null)
+        assertThat(log.errors()).hasSize(0)
+        assertThat(log.warnings()).hasSize(1)
+        assertThat(log.warnings()[0].message).isEqualTo(
+            "No version of NDK matched the required version 18.9.99999. Versions " +
+                    "available locally: 18.1.23456"
+        )
     }
 
     @Test
