@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a526f1e9c255e9cbacbe4ba6e0f3d4119b8e0d99d2bf5fd47118fff7ceb34786
+feaebf2e0c2747f599f9de7445b4216e6af5d0d930f6e6af4d7b0a192c6ac623
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -414,7 +414,7 @@ com.android.builder.model.TestedTargetVariant.getTargetProjectPath: java.lang.St
 com.android.builder.model.TestedTargetVariant.getTargetVariant: java.lang.String ()
 com.android.builder.model.Variant
 com.android.builder.model.Variant.getBuildType: java.lang.String ()
-com.android.builder.model.Variant.getDesugarLibLintFiles: java.util.Collection<java.io.File> ()
+com.android.builder.model.Variant.getDesugaredMethods: java.util.List<java.lang.String> ()
 com.android.builder.model.Variant.getDisplayName: java.lang.String ()
 com.android.builder.model.Variant.getExtraAndroidArtifacts: java.util.Collection<com.android.builder.model.AndroidArtifact> ()
 com.android.builder.model.Variant.getExtraJavaArtifacts: java.util.Collection<com.android.builder.model.JavaArtifact> ()

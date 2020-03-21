@@ -17,7 +17,6 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
-import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
@@ -120,14 +119,14 @@ public interface Variant {
     boolean isInstantAppCompatible();
 
     /**
-     * Returns the lint information on methods desugared by D8/R8 to avoid warnings for APIs which
-     * do not need to be guarded by an API level check after desugaring. An empty list is returned
-     * if coreLibraryDesugaring is disabled or we are not able to find expected lint files from the
-     * dependency of coreLibraryDesugaring configuration.
+     * Returns all desugared methods including backported methods handled by D8 and methods provided
+     * by core library desugaring. Only D8 backported methods are returned if coreLibraryDesugaring
+     * is disabled or we are not able to find expected lint files from the dependency of
+     * coreLibraryDesugaring configuration.
      *
-     * @return the lint files for library desugaring
+     * @return all desugared methods
      * @since 4.1
      */
     @NonNull
-    Collection<File> getDesugarLibLintFiles();
+    List<String> getDesugaredMethods();
 }

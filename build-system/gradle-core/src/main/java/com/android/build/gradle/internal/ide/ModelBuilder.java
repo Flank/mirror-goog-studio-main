@@ -72,6 +72,7 @@ import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
+import com.android.builder.dexing.D8DesugaredMethodsGenerator;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.model.AaptOptions;
@@ -665,13 +666,6 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         checkProguardFiles(componentProperties);
 
-        Collection<File> desugarLibLint =
-                DesugarLibUtils.getDesugarLibLintFiles(
-                        componentProperties.getGlobalScope().getProject(),
-                        componentProperties.getVariantScope().isCoreLibraryDesugaringEnabled(),
-                        componentProperties.getMinSdkVersion(),
-                        componentProperties.getGlobalScope().getExtension().getCompileSdkVersion());
-
         return new VariantImpl(
                 variantName,
                 componentProperties.getBaseName(),
@@ -683,7 +677,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 clonedExtraJavaArtifacts,
                 testTargetVariants,
                 inspectManifestForInstantTag(componentProperties),
-                desugarLibLint);
+                getDesugaredMethods(componentProperties));
     }
 
     private void checkProguardFiles(@NonNull ComponentPropertiesImpl componentProperties) {
@@ -1124,4 +1118,19 @@ public class ModelBuilder<Extension extends BaseExtension>
         }
     }
 
+    @NonNull
+    private List<String> getDesugaredMethods(@NonNull ComponentPropertiesImpl componentProperties) {
+        List<String> desugaredMethodsFromDesugarLib =
+                DesugarLibUtils.getDesugaredMethods(
+                        componentProperties.getGlobalScope().getProject(),
+                        componentProperties.getVariantScope().isCoreLibraryDesugaringEnabled(),
+                        componentProperties.getMinSdkVersion(),
+                        componentProperties.getGlobalScope().getExtension().getCompileSdkVersion());
+
+        List<String> desugaredMethodsFromD8 = D8DesugaredMethodsGenerator.INSTANCE.generate();
+
+        List<String> desugaredMethods = new ArrayList<>(desugaredMethodsFromDesugarLib);
+        desugaredMethods.addAll(desugaredMethodsFromD8);
+        return desugaredMethods;
+    }
 }

@@ -16,12 +16,16 @@
 package com.android.ide.common.gradle.model.stubs;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.*;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.JavaArtifact;
+import com.android.builder.model.ProductFlavor;
+import com.android.builder.model.TestedTargetVariant;
+import com.android.builder.model.Variant;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -36,7 +40,7 @@ public class VariantStub extends BaseStub implements Variant {
     @NonNull private final ProductFlavor myMergedFlavor;
     @NonNull private final Collection<TestedTargetVariant> myTestedTargetVariants;
     private final boolean myInstantAppCompatible;
-    @NonNull private final Collection<File> myDesugarLibLintFiles;
+    @NonNull private final List<String> myDesugaredMethods;
 
     public VariantStub() {
         this(
@@ -50,7 +54,7 @@ public class VariantStub extends BaseStub implements Variant {
                 new ProductFlavorStub(),
                 Lists.newArrayList(new TestedTargetVariantStub()),
                 false,
-                Lists.newArrayList());
+                Collections.emptyList());
     }
 
     public VariantStub(String name, String buildType, String... flavors) {
@@ -65,7 +69,7 @@ public class VariantStub extends BaseStub implements Variant {
                 new ProductFlavorStub(),
                 Lists.newArrayList(new TestedTargetVariantStub()),
                 false,
-                Lists.newArrayList());
+                Collections.emptyList());
     }
 
     public VariantStub(
@@ -79,7 +83,7 @@ public class VariantStub extends BaseStub implements Variant {
             @NonNull ProductFlavor mergedFlavor,
             @NonNull Collection<TestedTargetVariant> testedTargetVariants,
             boolean instantAppCompatible,
-            @NonNull Collection<File> desugarLibLintFiles) {
+            @NonNull List<String> desugaredMethods) {
         myName = name;
         myDisplayName = displayName;
         myMainArtifact = mainArtifact;
@@ -90,7 +94,7 @@ public class VariantStub extends BaseStub implements Variant {
         myMergedFlavor = mergedFlavor;
         myTestedTargetVariants = testedTargetVariants;
         myInstantAppCompatible = instantAppCompatible;
-        myDesugarLibLintFiles = desugarLibLintFiles;
+        myDesugaredMethods = desugaredMethods;
     }
 
     @Override
@@ -154,8 +158,8 @@ public class VariantStub extends BaseStub implements Variant {
 
     @NonNull
     @Override
-    public Collection<File> getDesugarLibLintFiles() {
-        return myDesugarLibLintFiles;
+    public List<String> getDesugaredMethods() {
+        return myDesugaredMethods;
     }
 
     @Override
@@ -177,7 +181,7 @@ public class VariantStub extends BaseStub implements Variant {
                 && Objects.equals(getMergedFlavor(), variant.getMergedFlavor())
                 && Objects.equals(getTestedTargetVariants(), variant.getTestedTargetVariants())
                 && Objects.equals(isInstantAppCompatible(), variant.isInstantAppCompatible())
-                && Objects.equals(getDesugarLibLintFiles(), variant.getDesugarLibLintFiles());
+                && Objects.equals(getDesugaredMethods(), variant.getDesugaredMethods());
     }
 
     @Override
@@ -193,7 +197,7 @@ public class VariantStub extends BaseStub implements Variant {
                 getMergedFlavor(),
                 getTestedTargetVariants(),
                 isInstantAppCompatible(),
-                getDesugarLibLintFiles());
+                getDesugaredMethods());
     }
 
     @Override
@@ -222,8 +226,8 @@ public class VariantStub extends BaseStub implements Variant {
                 + myTestedTargetVariants
                 + ", myInstantAppCompatible="
                 + myInstantAppCompatible
-                + ", myDesugarLibLintFiles="
-                + myDesugarLibLintFiles
+                + ", myDesugaredMethods="
+                + myDesugaredMethods
                 + "}";
     }
 }
