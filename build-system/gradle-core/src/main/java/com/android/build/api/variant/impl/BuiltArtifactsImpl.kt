@@ -39,8 +39,6 @@ class BuiltArtifactsImpl(
     : CommonBuiltArtifacts, BuiltArtifacts, Serializable {
 
     companion object {
-        fun getMetadataFile(folder: File) = File(folder, METADATA_FILE_NAME)
-
         const val METADATA_FILE_NAME = "output.json"
     }
 
@@ -55,7 +53,7 @@ class BuiltArtifactsImpl(
 
     fun getBuiltArtifact(variantOutputConfiguration: VariantOutputConfiguration): BuiltArtifactImpl? =
         elements.firstOrNull {
-            it.outputType == variantOutputConfiguration.outputType
+            it.outputType == variantOutputConfiguration.outputType &&
             it.filters == variantOutputConfiguration.filters }
 
     /**
@@ -121,7 +119,6 @@ class BuiltArtifactsImpl(
                     BuiltArtifactImpl.make(
                         outputFile = projectPath.relativize(
                             Paths.get(builtArtifact.outputFile)).toString(),
-                        properties = builtArtifact.properties,
                         versionCode = builtArtifact.versionCode,
                         versionName = builtArtifact.versionName,
                         variantOutputConfiguration = builtArtifact.variantOutputConfiguration

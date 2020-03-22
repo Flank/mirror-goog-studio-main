@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraA
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
-import com.android.build.gradle.internal.scope.BuiltArtifactProperty
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT
@@ -208,14 +207,8 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             val mergedXmlDocument =
                 mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED)
             outputMergeBlameContents(mergingReport, mergeBlameFile.get().asFile)
-            val properties =
-                if (mergedXmlDocument != null) mapOf(
-                    BuiltArtifactProperty.PACKAGE_ID to mergedXmlDocument.packageName,
-                    BuiltArtifactProperty.SPLIT to mergedXmlDocument.splitName,
-                    SdkConstants.ATTR_MIN_SDK_VERSION to mergedXmlDocument.minSdkVersion
-                ) else mapOf()
             mergedManifestOutputs.add(
-                variantOutput.toBuiltArtifact(mergedManifestOutputFile, properties)
+                variantOutput.toBuiltArtifact(mergedManifestOutputFile)
             )
         }
         BuiltArtifactsImpl(

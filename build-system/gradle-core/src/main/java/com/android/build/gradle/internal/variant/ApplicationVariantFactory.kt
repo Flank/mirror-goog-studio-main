@@ -307,8 +307,7 @@ class ApplicationVariantFactory(
                     // this is wrong, talk to xav@, we cannot continue supporting this.
                     versionCode = variantOutput.versionCode.orNull,
                     versionName = variantOutput.versionName.orNull,
-                    outputFile = "not_provided",
-                    properties = mapOf()
+                    outputFile = "not_provided"
                 ) to variantOutput
             }
             .toMap()

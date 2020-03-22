@@ -84,7 +84,6 @@ public class InstallVariantTaskTest {
                         ImmutableList.of(
                                 BuiltArtifactImpl.make(
                                         mainOutputFileApk.getAbsolutePath(),
-                                        ImmutableMap.of(),
                                         123,
                                         "version_name",
                                         new VariantOutputConfigurationImpl(

@@ -44,13 +44,4 @@ interface BuiltArtifact: VariantOutputConfiguration {
      * @return the output file path.
      */
     val outputFile: String
-
-    /**
-     * [Map] of [String] for properties that are associated with the output. Such properties
-     * can be consumed by downstream [org.gradle.api.Task] but represents an implicit contract
-     * between the producer and consumer.
-     *
-     * TODO: once cleanup is finished, consider removing this facility.
-     */
-    val properties: Map<String, String>
 }

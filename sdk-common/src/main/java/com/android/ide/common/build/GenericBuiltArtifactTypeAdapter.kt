@@ -47,14 +47,6 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
         }
         out.beginObject()
         writeSpecificAttributes(out, value)
-        out.name("properties").beginArray()
-        for (entry in value.properties.entries) {
-            out.beginObject()
-            out.name("key").value(entry.key)
-            out.name("value").value(entry.value)
-            out.endObject()
-        }
-        out.endArray()
         out.name("versionCode").value(value.versionCode)
         out.name("versionName").value(value.versionName)
         out.name("outputFile").value(value.outputFile)
@@ -79,22 +71,20 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
         handleAttribute: (attributeName: String) -> Unit,
         instantiate: (
             outputFile: String,
-            properties: Map<String, String>,
             versionCode: Int,
             versionName: String
         ) -> T
     ): T {
 
         reader.beginObject()
-        val properties =
-            ImmutableMap.Builder<String, String>()
         var versionCode = 0
         var versionName: String? = null
         var outputFile: String? = null
 
         while (reader.hasNext()) {
             when (val attributeName = reader.nextName()) {
-                "properties" -> readProperties(reader, properties)
+                // keep reading properties for backward compatibility but ignore it.
+                "properties" -> readProperties(reader, ImmutableMap.Builder<String, String>())
                 "versionCode" -> versionCode = reader.nextInt()
                 "versionName" -> versionName = reader.nextString()
                 "outputFile" -> outputFile = reader.nextString()
@@ -105,7 +95,6 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
 
         return instantiate(
             outputFile!!,
-            properties.build(),
             versionCode,
             versionName.orEmpty()
         )
@@ -164,14 +153,12 @@ internal class GenericBuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<G
                 }
             },
             { outputFile: String,
-                properties: Map<String, String>,
                 versionCode: Int,
                 versionName: String ->
                 GenericBuiltArtifact(
                     outputType = outputType.orEmpty(),
                     filters = filters.build(),
                     outputFile = outputFile,
-                    properties = properties,
                     versionCode = versionCode,
                     versionName = versionName
                 )

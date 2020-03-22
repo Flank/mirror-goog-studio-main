@@ -110,7 +110,6 @@ abstract class ProducerTask extends DefaultTask {
       writer.close()
       return new BuiltArtifactImpl(
         outputFile.getAbsolutePath(),
-        new HashMap<String, String>(),
         123,
         "123",
         new VariantOutputConfigurationImpl(false,

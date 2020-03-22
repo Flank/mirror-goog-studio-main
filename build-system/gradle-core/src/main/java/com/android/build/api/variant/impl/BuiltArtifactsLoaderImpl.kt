@@ -67,7 +67,7 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
 
             val gson = gsonBuilder.create()
             val buildOutputs = FileReader(metadataFile).use {
-                gson.fromJson<BuiltArtifactsImpl>(it, BuiltArtifactsImpl::class.java)
+                gson.fromJson(it, BuiltArtifactsImpl::class.java)
             }
             // resolve the file path to the current project location.
             return BuiltArtifactsImpl(
@@ -81,7 +81,6 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
                         BuiltArtifactImpl.make(
                             outputFile = relativePath.resolve(
                                 Paths.get(builtArtifact.outputFile)).toString(),
-                            properties = builtArtifact.properties,
                             versionCode = builtArtifact.versionCode,
                             versionName = builtArtifact.versionName,
                             variantOutputConfiguration = builtArtifact.variantOutputConfiguration

@@ -45,9 +45,6 @@ class ProcessManifestForBundleTaskTest {
     lateinit var mainSplit: VariantOutputImpl
 
     @Mock
-    lateinit var variantOutputConfiguration: VariantOutputConfigurationImpl
-
-    @Mock
     lateinit var workers: WorkerExecutor
 
     private lateinit var task: ProcessManifestForBundleTask
@@ -61,10 +58,9 @@ class ProcessManifestForBundleTaskTest {
         val taskProvider = project.tasks.register("testManifestForBundle", ProcessManifestForBundleTask::class.java)
         task = taskProvider.get()
         sourceManifestFolder = temporaryFolder.newFolder("source_manifest")
-        Mockito.`when`(mainSplit.variantOutputConfiguration).thenReturn(variantOutputConfiguration)
-        Mockito.`when`(variantOutputConfiguration.outputType).thenReturn(
+        Mockito.`when`(mainSplit.outputType).thenReturn(
             VariantOutputConfiguration.OutputType.SINGLE)
-        Mockito.`when`(variantOutputConfiguration.filters).thenReturn(listOf())
+        Mockito.`when`(mainSplit.filters).thenReturn(listOf())
         task.mainSplit.set(mainSplit)
     }
 

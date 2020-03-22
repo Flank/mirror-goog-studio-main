@@ -60,8 +60,7 @@ object BuiltArtifactsSplitOutputMatcher {
                     },
                     versionCode = sourceBuiltArtifact.versionCode,
                     versionName = sourceBuiltArtifact.versionName,
-                    outputFile = sourceBuiltArtifact.outputFile,
-                    properties = sourceBuiltArtifact.properties
+                    outputFile = sourceBuiltArtifact.outputFile
                 )
             }
 

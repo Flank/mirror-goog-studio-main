@@ -48,7 +48,6 @@ class BuiltArtifactsImplTest {
             elements = listOf(
                 BuiltArtifactImpl.make(
                     outputFile = File(outputFolder, "file1.apk").absolutePath,
-                    properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name"
                 )
@@ -71,7 +70,6 @@ class BuiltArtifactsImplTest {
     {
       "type": "SINGLE",
       "filters": [],
-      "properties": [],
       "versionCode": 123,
       "versionName": "version_name",
       "outputFile": "file1.apk"
@@ -91,7 +89,6 @@ class BuiltArtifactsImplTest {
             elements = listOf(
                 BuiltArtifactImpl.make(
                     outputFile = File(outputFolder, "file1.apk").absolutePath,
-                    properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
@@ -102,7 +99,6 @@ class BuiltArtifactsImplTest {
                 ),
                 BuiltArtifactImpl.make(
                     outputFile = File(outputFolder, "file2.apk").absolutePath,
-                    properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
@@ -113,7 +109,6 @@ class BuiltArtifactsImplTest {
                 ),
                 BuiltArtifactImpl.make(
                     outputFile = File(outputFolder, "file3.apk").absolutePath,
-                    properties = mapOf(),
                     versionCode = 123,
                     versionName = "version_name",
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
@@ -146,7 +141,6 @@ class BuiltArtifactsImplTest {
           "value": "xhdpi"
         }
       ],
-      "properties": [],
       "versionCode": 123,
       "versionName": "version_name",
       "outputFile": "file1.apk"
@@ -159,7 +153,6 @@ class BuiltArtifactsImplTest {
           "value": "xxhdpi"
         }
       ],
-      "properties": [],
       "versionCode": 123,
       "versionName": "version_name",
       "outputFile": "file2.apk"
@@ -172,7 +165,6 @@ class BuiltArtifactsImplTest {
           "value": "xxxhdpi"
         }
       ],
-      "properties": [],
       "versionCode": 123,
       "versionName": "version_name",
       "outputFile": "file3.apk"
@@ -210,16 +202,6 @@ class BuiltArtifactsImplTest {
         {
           "filterType": "DENSITY",
           "value": "xhdpi"
-        }
-      ],
-      "properties": [
-        {
-          "key": "key1",
-          "value": "value1"
-        },
-        {
-          "key": "key2",
-          "value": "value2"
         }
       ],
       "versionCode": 123,
@@ -278,12 +260,6 @@ class BuiltArtifactsImplTest {
                 Truth.assertThat(filter.filterType).isEqualTo("DENSITY")
                 Truth.assertThat(filter.identifier).isAnyOf("xxhdpi", "xhdpi")
             }
-            val properties = builtArtifact.properties
-            Truth.assertThat(properties).hasSize(2)
-            properties.forEach {
-                Truth.assertThat(it.key).isAnyOf("key1", "key2")
-                Truth.assertThat(it.value).isAnyOf("value1", "value2")
-            }
         }
     }
 
@@ -315,7 +291,6 @@ class BuiltArtifactsImplTest {
     ) =
         BuiltArtifactImpl.make(
             outputFile = File(outputFolder, "$fileName.apk").absolutePath,
-            properties = mapOf("key1" to "value1", "key2" to "value2"),
             versionCode = versionCode,
             versionName = versionCode.toString(),
             variantOutputConfiguration = VariantOutputConfigurationImpl(

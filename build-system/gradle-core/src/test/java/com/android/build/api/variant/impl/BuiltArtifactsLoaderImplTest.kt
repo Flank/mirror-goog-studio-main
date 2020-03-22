@@ -81,7 +81,6 @@ class BuiltArtifactsLoaderImplTest {
         assertThat(updatedBuiltArtifact.versionName).isEqualTo("version_name")
         assertThat(updatedBuiltArtifact.outputType).isEqualTo(VariantOutputConfiguration.OutputType.SINGLE)
         assertThat(updatedBuiltArtifact.filters).isEmpty()
-        assertThat(updatedBuiltArtifact.properties).isEmpty()
     }
 
     @Test
