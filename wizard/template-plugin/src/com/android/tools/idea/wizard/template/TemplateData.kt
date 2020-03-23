@@ -58,7 +58,7 @@ enum class BytecodeLevel(val description: String, val versionString: String) {
   override fun toString() = description
 
   companion object {
-    val default: BytecodeLevel get() = L7
+    val default: BytecodeLevel get() = L8
   }
 }
 
