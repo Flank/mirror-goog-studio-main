@@ -151,35 +151,37 @@ public final class SigningBlockUtils {
      */
     public static ByteBuffer extractBlock(File apk, int blockId)
             throws IOException, ZipFormatException, ApkSigningBlockNotFoundException {
-        DataSource apkDataSource = DataSources.asDataSource(new RandomAccessFile(apk, "r"));
-        ApkSigningBlock signingBlockInfo =
-                ApkUtils.findApkSigningBlock(
-                        apkDataSource, ApkUtils.findZipSections(apkDataSource));
+        try (RandomAccessFile file = new RandomAccessFile(apk, "r")) {
+            DataSource apkDataSource = DataSources.asDataSource(file);
+            ApkSigningBlock signingBlockInfo =
+                    ApkUtils.findApkSigningBlock(
+                            apkDataSource, ApkUtils.findZipSections(apkDataSource));
 
-        DataSource wholeV2Block = signingBlockInfo.getContents();
-        final int lengthAndIdByteCount = BLOCK_LENGTH_NUM_BYTES + BLOCK_ID_NUM_BYTES;
-        DataSource signingBlock =
-                wholeV2Block.slice(
-                        SIZE_OF_BLOCK_NUM_BYTES,
-                        wholeV2Block.size() - SIZE_OF_BLOCK_NUM_BYTES - MAGIC_NUM_BYTES);
-        ByteBuffer lengthAndId =
-                ByteBuffer.allocate(lengthAndIdByteCount).order(ByteOrder.LITTLE_ENDIAN);
-        for (int index = 0; index <= signingBlock.size() - lengthAndIdByteCount; ) {
-            signingBlock.copyTo(index, lengthAndIdByteCount, lengthAndId);
-            lengthAndId.flip();
-            int blockLength = (int) lengthAndId.getLong();
-            int id = lengthAndId.getInt();
-            lengthAndId.flip();
-            if (id == blockId) {
-                ByteBuffer block = ByteBuffer.allocate(blockLength - BLOCK_ID_NUM_BYTES);
-                signingBlock.copyTo(
-                        index + lengthAndIdByteCount, blockLength - BLOCK_ID_NUM_BYTES, block);
-                block.flip();
-                return block;
+            DataSource wholeV2Block = signingBlockInfo.getContents();
+            final int lengthAndIdByteCount = BLOCK_LENGTH_NUM_BYTES + BLOCK_ID_NUM_BYTES;
+            DataSource signingBlock =
+                    wholeV2Block.slice(
+                            SIZE_OF_BLOCK_NUM_BYTES,
+                            wholeV2Block.size() - SIZE_OF_BLOCK_NUM_BYTES - MAGIC_NUM_BYTES);
+            ByteBuffer lengthAndId =
+                    ByteBuffer.allocate(lengthAndIdByteCount).order(ByteOrder.LITTLE_ENDIAN);
+            for (int index = 0; index <= signingBlock.size() - lengthAndIdByteCount; ) {
+                signingBlock.copyTo(index, lengthAndIdByteCount, lengthAndId);
+                lengthAndId.flip();
+                int blockLength = (int) lengthAndId.getLong();
+                int id = lengthAndId.getInt();
+                lengthAndId.flip();
+                if (id == blockId) {
+                    ByteBuffer block = ByteBuffer.allocate(blockLength - BLOCK_ID_NUM_BYTES);
+                    signingBlock.copyTo(
+                            index + lengthAndIdByteCount, blockLength - BLOCK_ID_NUM_BYTES, block);
+                    block.flip();
+                    return block;
+                }
+                index += blockLength + BLOCK_LENGTH_NUM_BYTES;
             }
-            index += blockLength + BLOCK_LENGTH_NUM_BYTES;
+            return null;
         }
-        return null;
     }
 
     private SigningBlockUtils() {}
