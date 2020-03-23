@@ -29,6 +29,9 @@ import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULiteralExpression
+import org.jetbrains.uast.UPolyadicExpression
+import org.jetbrains.uast.UastBinaryOperator
+import org.jetbrains.uast.expressions.UInjectionHost
 
 /** Checks for errors related to Date Formats */
 class DateFormatDetector : Detector(), SourceCodeScanner {
@@ -79,12 +82,13 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
     }
 
     private fun checkDateFormat(context: JavaContext, argument: UExpression) {
-        val value =
-            if (argument is ULiteralExpression) {
-                argument.value
-            } else {
-                ConstantEvaluator().allowUnknowns().evaluate(argument) ?: return
-            }
+        val value = when (argument) {
+            is ULiteralExpression -> argument.value
+            is UInjectionHost -> argument.evaluateToString()
+                ?: ConstantEvaluator().allowUnknowns().evaluate(argument)
+                ?: return
+            else -> ConstantEvaluator().allowUnknowns().evaluate(argument) ?: return
+        }
         val format = value.toString()
         if (!format.contains("Y")) {
             return
@@ -117,6 +121,12 @@ class DateFormatDetector : Detector(), SourceCodeScanner {
             val digits = format.substring(index, end)
             if (argument is ULiteralExpression) {
                 location = context.getRangeLocation(argument, index, end - index)
+            } else if (argument is UInjectionHost && argument is UPolyadicExpression &&
+                argument.operator == UastBinaryOperator.PLUS &&
+                argument.operands.size == 1 &&
+                argument.operands.first() is ULiteralExpression
+            ) {
+                location = context.getRangeLocation(argument.operands[0], index, end - index)
             }
 
             context.report(

@@ -592,7 +592,13 @@ class LintDetectorDetector : Detector(), UastScanner {
                         index = alt
                     }
                 }
-                context.getRangeLocation(argument, index - start, string.length)
+                if (argument is KotlinStringTemplateUPolyadicExpression &&
+                        argument.operands.size == 1 &&
+                            location.source === argument.operands[0]) {
+                    context.getRangeLocation(argument.operands[0], index - start, string.length)
+                } else {
+                    context.getRangeLocation(argument, index - start, string.length)
+                }
             } else {
                 // Couldn't find string; this typically happens if the string value is split across
                 // multiple string literals (line concatenations)  or has escapes etc. Just

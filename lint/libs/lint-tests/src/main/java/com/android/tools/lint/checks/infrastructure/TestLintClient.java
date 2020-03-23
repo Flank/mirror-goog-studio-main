@@ -313,10 +313,6 @@ public class TestLintClient extends LintCliClient {
 
         String result = analyze(files, issues);
 
-        for (File f : files) {
-            TestUtils.deleteFile(f);
-        }
-
         return Pair.of(result, warnings);
     }
 

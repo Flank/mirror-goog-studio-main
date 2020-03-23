@@ -82,6 +82,7 @@ import org.jetbrains.uast.UastBinaryOperator;
 import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.UastPrefixOperator;
 import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.kotlin.KotlinStringTemplateUPolyadicExpression;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
@@ -187,6 +188,12 @@ public class ConstantEvaluator {
             UPolyadicExpression polyadicExpression = (UPolyadicExpression) node;
             UastBinaryOperator operator = polyadicExpression.getOperator();
             List<UExpression> operands = polyadicExpression.getOperands();
+            if (operands.isEmpty()) {
+                // For empty strings the Kotlin string template will return an empty operand list
+                if (node instanceof KotlinStringTemplateUPolyadicExpression) {
+                    return "";
+                }
+            }
             assert !operands.isEmpty();
             Object result = evaluate(operands.get(0));
             for (int i = 1, n = operands.size(); i < n; i++) {
