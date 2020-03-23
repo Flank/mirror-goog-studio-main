@@ -85,6 +85,30 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
     @get:OutputDirectory
     abstract val packagedManifestOutputDirectory: DirectoryProperty
 
+    /**
+     * The aapt friendly processed Manifest. In case we are processing a library manifest, some
+     * placeholders may not have been resolved (and will be when the library is merged into the
+     * importing application). However, such placeholders keys are not friendly to aapt which flags
+     * some illegal characters. Such characters are replaced/encoded in this version.
+     */
+    @get:Optional
+    @get:OutputDirectory
+    abstract val aaptFriendlyManifestOutputDirectory: DirectoryProperty
+
+    /**
+     * The aapt friendly processed Manifest. In case we are processing a library manifest, some
+     * placeholders may not have been resolved (and will be when the library is merged into the
+     * importing application). However, such placeholders keys are not friendly to aapt which flags
+     * some illegal characters. Such characters are replaced/encoded in this version.
+     */
+    @get:Internal
+    val aaptFriendlyManifestOutputFile: File?
+        get() = if (aaptFriendlyManifestOutputDirectory.isPresent) FileUtils.join(
+            aaptFriendlyManifestOutputDirectory.get().asFile,
+            mainSplit.get().dirName(),
+            SdkConstants.ANDROID_MANIFEST_XML
+        ) else null
+
     @VisibleForTesting
     @get:Nested
     abstract val mainSplit: Property<VariantOutputImpl>
@@ -215,14 +239,6 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
 
     }
 
-    @get:Internal
-    override val aaptFriendlyManifestOutputFile: File?
-        get() = if (aaptFriendlyManifestOutputDirectory.isPresent) FileUtils.join(
-            aaptFriendlyManifestOutputDirectory.get().asFile,
-            mainSplit.get().dirName(),
-            SdkConstants.ANDROID_MANIFEST_XML
-        ) else null
-
     @get:Optional
     @get:Input
     abstract val minSdkVersion: Property<String?>
@@ -257,7 +273,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             val operations = creationConfig.operations
             operations.setInitialProvider(
                 taskProvider,
-                ManifestProcessorTask::aaptFriendlyManifestOutputDirectory
+                ProcessLibraryManifest::aaptFriendlyManifestOutputDirectory
             ).withName("aapt").on(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
 
             operations.setInitialProvider(

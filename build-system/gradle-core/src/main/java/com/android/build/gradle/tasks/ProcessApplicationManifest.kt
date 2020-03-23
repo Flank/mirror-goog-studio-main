@@ -45,7 +45,6 @@ import com.android.manifmerger.ManifestMerger2.Invoker
 import com.android.manifmerger.ManifestMerger2.COMPATIBLE_SCREENS_SUB_MANIFEST
 import com.android.manifmerger.ManifestMerger2.WEAR_APP_SUB_MANIFEST
 import com.android.manifmerger.ManifestProvider
-import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import org.gradle.api.InvalidUserDataException
@@ -204,8 +203,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 reportFile.get().asFile,
                 LoggerWrapper.getLogger(ProcessApplicationManifest::class.java)
             )
-            val mergedXmlDocument =
-                mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED)
             outputMergeBlameContents(mergingReport, mergeBlameFile.get().asFile)
             mergedManifestOutputs.add(
                 variantOutput.toBuiltArtifact(mergedManifestOutputFile)
@@ -219,10 +216,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         )
             .save(mergedManifestOutputDirectory.get())
     }
-
-    @get:Internal
-    override val aaptFriendlyManifestOutputFile: File?
-        get() = null
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile

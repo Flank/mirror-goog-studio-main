@@ -82,8 +82,6 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
     @get:OutputDirectory
     abstract val packagedManifestOutputDirectory: DirectoryProperty
 
-    /** Whether there's just a single APK with both test and tested code.  */
-    private var onlyTestApk = false
     @get:Internal
     var tmpDir: File? = null
 
@@ -341,9 +339,6 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         }
         logger.verbose("Merged manifest saved to $outFile")
     }
-
-    override val aaptFriendlyManifestOutputFile: File?
-        get() = null
 
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)

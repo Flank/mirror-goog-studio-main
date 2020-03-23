@@ -20,45 +20,14 @@ import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Files
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import java.io.File
 import java.io.IOException
 
 /** A task that processes the manifest  */
 abstract class ManifestProcessorTask : IncrementalTask() {
-
-    /**
-     * The aapt friendly processed Manifest. In case we are processing a library manifest, some
-     * placeholders may not have been resolved (and will be when the library is merged into the
-     * importing application). However, such placeholders keys are not friendly to aapt which flags
-     * some illegal characters. Such characters are replaced/encoded in this version.
-     */
-    @get:Optional
-    @get:OutputDirectory
-    abstract val aaptFriendlyManifestOutputDirectory: DirectoryProperty
-
-    /**
-     * The aapt friendly processed Manifest. In case we are processing a library manifest, some
-     * placeholders may not have been resolved (and will be when the library is merged into the
-     * importing application). However, such placeholders keys are not friendly to aapt which flags
-     * some illegal characters. Such characters are replaced/encoded in this version.
-     */
-    @get:Internal
-    abstract val aaptFriendlyManifestOutputFile: File?
-
-    /**
-     * The feature manifest which is consumed by its base feature (as opposed to the one packaged
-     * with the feature APK). This manifest, unlike the one packaged with the APK, does not specify
-     * a minSdkVersion. This is used by by both normal features and dynamic-features.
-     */
-    @get:Optional
-    @get:OutputDirectory
-    abstract val metadataFeatureManifestOutputDirectory: DirectoryProperty
 
     @get:Optional
     @get:OutputFile
