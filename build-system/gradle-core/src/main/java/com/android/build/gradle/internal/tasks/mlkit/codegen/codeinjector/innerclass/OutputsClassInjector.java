@@ -51,7 +51,7 @@ public class OutputsClassInjector implements CodeInjector<TypeSpec.Builder, List
         MethodSpec.Builder constructorBuilder =
                 MethodSpec.constructorBuilder()
                         .addParameter(ClassNames.MODEL, "model")
-                        .addModifiers(Modifier.PUBLIC);
+                        .addModifiers(Modifier.PRIVATE);
         int index = 0;
         for (TensorInfo tensorInfo : tensorInfos) {
             constructorBuilder.addStatement(

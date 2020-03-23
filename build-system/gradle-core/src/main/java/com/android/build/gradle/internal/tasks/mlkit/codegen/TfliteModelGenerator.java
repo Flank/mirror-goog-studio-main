@@ -112,6 +112,7 @@ public class TfliteModelGenerator implements ModelGenerator {
                 MethodSpec.methodBuilder("getAssociatedFile")
                         .addParameter(ClassNames.CONTEXT, "context")
                         .addParameter(String.class, "fileName")
+                        .addModifiers(Modifier.PRIVATE)
                         .addException(IOException.class)
                         .returns(InputStream.class);
 
