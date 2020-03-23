@@ -1559,7 +1559,7 @@ public abstract class TaskManager<
 
     public void createExternalNativeBuildJsonGenerators(
             @NonNull ComponentPropertiesImpl componentProperties) {
-        CxxModuleModel module = tryCreateCxxModuleModel(componentProperties.getGlobalScope());
+        CxxModuleModel module = tryCreateCxxModuleModel(componentProperties);
 
         if (module == null) {
             return;
@@ -1599,7 +1599,7 @@ public abstract class TaskManager<
 
         // Set up clean tasks
         TaskProvider<Task> cleanTask = taskFactory.named("clean");
-        CxxModuleModel module = tryCreateCxxModuleModel(componentProperties.getGlobalScope());
+        CxxModuleModel module = tryCreateCxxModuleModel(componentProperties);
 
         if (module != null) {
             TaskProvider<ExternalNativeCleanTask> externalNativeCleanTask =

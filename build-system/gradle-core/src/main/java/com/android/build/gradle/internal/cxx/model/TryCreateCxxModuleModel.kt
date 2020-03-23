@@ -20,6 +20,7 @@ import com.android.SdkConstants.CMAKE_DIR_PROPERTY
 import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.NDK_SYMLINK_DIR
 import com.android.SdkConstants.PLATFORM_WINDOWS
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
@@ -37,7 +38,6 @@ import com.android.build.gradle.internal.cxx.services.createDefaultServiceRegist
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.Stl
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
@@ -85,9 +85,10 @@ import java.util.function.Consumer
  * to always use it.
  */
 fun tryCreateCxxModuleModel(
-    global: GlobalScope,
+    componentProperties: ComponentPropertiesImpl,
     cmakeLocator: CmakeLocator
 ) : CxxModuleModel? {
+    val global = componentProperties.globalScope
 
     val (buildSystem, makeFile, buildStagingFolder) =
         getProjectPath(global.extension.externalNativeBuild) ?: return null
@@ -146,7 +147,7 @@ fun tryCreateCxxModuleModel(
     return object : CxxModuleModel {
         override val moduleBuildFile by lazy { global.project.buildFile }
         override val cxxFolder get() = cxxFolder
-        override val project by lazy { createCxxProjectModel(global) }
+        override val project by lazy { createCxxProjectModel(componentProperties) }
         override val services by lazy { createDefaultServiceRegistry(global) }
         override val ndkMetaPlatforms by lazy {
             val ndkMetaPlatformsFile = NdkMetaPlatforms.jsonFile(ndkFolder)
@@ -230,8 +231,8 @@ fun tryCreateCxxModuleModel(
     }
 }
 
-fun tryCreateCxxModuleModel(global : GlobalScope) = tryCreateCxxModuleModel(
-    global,
+fun tryCreateCxxModuleModel(componentProperties: ComponentPropertiesImpl) = tryCreateCxxModuleModel(
+    componentProperties,
     CmakeLocator()
 )
 

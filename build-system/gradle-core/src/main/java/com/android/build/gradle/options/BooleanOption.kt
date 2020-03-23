@@ -81,7 +81,6 @@ enum class BooleanOption(
     ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", true, FeatureStage.Supported),
     PRECOMPILE_DEPENDENCIES_RESOURCES("android.precompileDependenciesResources", true, FeatureStage.Supported),
 
-    ENABLE_PREFAB("android.enablePrefab", false, FeatureStage.Supported),
     INCLUDE_DEPENDENCY_INFO_IN_APKS("android.includeDependencyInfoInApks", true, FeatureStage.Supported),
 
     // FIXME switch to false once we know we don't use these getters internally.

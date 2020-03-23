@@ -28,7 +28,7 @@ import org.mockito.Mockito.mock
 open class BasicCmakeMock : BasicModuleModelMock() {
 
     // Walk all vals in the model and invoke them
-    val module by lazy { tryCreateCxxModuleModel(global, cmakeFinder)!! }
+    val module by lazy { tryCreateCxxModuleModel(componentProperties, cmakeFinder)!! }
     val variant by lazy { createCxxVariantModel(module, componentProperties) }
     val abi by lazy { createCxxAbiModel(variant, Abi.X86, global, componentProperties) }
 

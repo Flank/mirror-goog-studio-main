@@ -40,6 +40,8 @@ class BuildFeatureValuesImpl constructor(
 
     override val buildConfig: Boolean = buildFeatures.buildConfig ?: projectOptions[BooleanOption.BUILD_FEATURE_BUILDCONFIG]
 
+    override val prefab: Boolean = buildFeatures.prefab ?: false
+
     override val renderScript: Boolean = buildFeatures.renderScript ?: projectOptions[BooleanOption.BUILD_FEATURE_RENDERSCRIPT]
 
     override val resValues: Boolean = buildFeatures.resValues ?: projectOptions[BooleanOption.BUILD_FEATURE_RESVALUES]

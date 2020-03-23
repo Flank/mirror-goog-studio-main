@@ -16,14 +16,13 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.api.component.impl.ComponentPropertiesImpl
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.CXX_LOCAL_PROPERTIES_CACHE_DIR
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.profile.ProfilerInitializer
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
-import com.android.build.gradle.tasks.getPrefabFromMaven
 import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.utils.FileUtils.join
 import java.io.File
@@ -35,7 +34,8 @@ import java.io.File
  * For this reason, [CxxProjectModel] is not suitable to hold services that are meant to
  * be strictly per-project.
  */
-fun createCxxProjectModel(global : GlobalScope) : CxxProjectModel {
+fun createCxxProjectModel(componentProperties: ComponentPropertiesImpl) : CxxProjectModel {
+    val global = componentProperties.globalScope
     fun option(option: BooleanOption) = global.projectOptions.get(option)
     fun option(option: StringOption) = global.projectOptions.get(option)
     fun localPropertyFile(property : String) : File? {
@@ -75,6 +75,6 @@ fun createCxxProjectModel(global : GlobalScope) : CxxProjectModel {
                 return profileDir.resolve(ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY)
             }
 
-        override val isPrefabEnabled: Boolean = global.projectOptions.get(BooleanOption.ENABLE_PREFAB)
+        override val isPrefabEnabled: Boolean = componentProperties.buildFeatures.prefab
     }
 }

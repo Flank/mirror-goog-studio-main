@@ -30,7 +30,7 @@ class BuiltInCmakeSettingsJsonKtTest {
     //@Test
     fun `NDK-level CMakeSettings is completely lazy`() {
         EmptyGlobalMock().let {
-            val module = tryCreateCxxModuleModel(it.global)!!
+            val module = tryCreateCxxModuleModel(it.componentProperties)!!
             val variant = createCxxVariantModel(
                 module,
                 it.componentProperties)
@@ -46,7 +46,7 @@ class BuiltInCmakeSettingsJsonKtTest {
     //@Test
     fun `Gradle-level CMakeSettings is completely lazy`() {
         EmptyGlobalMock().let {
-            val module = tryCreateCxxModuleModel(it.global)!!
+            val module = tryCreateCxxModuleModel(it.componentProperties)!!
             val variant = createCxxVariantModel(
                 module,
                 it.componentProperties)
@@ -62,7 +62,7 @@ class BuiltInCmakeSettingsJsonKtTest {
     @Test
     fun `NDK-level CMakeSettings does not throw exception when evaluated`() {
         BasicCmakeMock().let {
-            val module = tryCreateCxxModuleModel(it.global)!!
+            val module = tryCreateCxxModuleModel(it.componentProperties)!!
             val variant = createCxxVariantModel(
                 module,
                 it.componentProperties)

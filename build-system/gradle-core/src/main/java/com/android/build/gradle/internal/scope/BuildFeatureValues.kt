@@ -37,6 +37,7 @@ interface BuildFeatureValues {
     val buildConfig: Boolean
     val dataBinding: Boolean
     val mlModelBinding: Boolean
+    val prefab: Boolean
     val renderScript: Boolean
     val resValues: Boolean
     val shaders: Boolean
