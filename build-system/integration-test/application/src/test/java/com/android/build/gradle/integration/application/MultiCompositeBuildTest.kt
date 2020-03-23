@@ -85,7 +85,6 @@ class MultiCompositeBuildTest {
                     "TestCompositeApp",
                     "TestCompositeLib1",
                     "TestCompositeLib3")
-            .withoutNdk()
             .create()
 
     lateinit var modelContainer: ModelContainer<AndroidProject>

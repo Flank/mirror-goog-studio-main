@@ -47,7 +47,6 @@ class FileOrFolderOutputTest(apkCreatorType: ApkCreatorType) {
     var project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("basic")
         .setApkCreatorType(apkCreatorType)
-        .withoutNdk()
         .create()
 
     @Test

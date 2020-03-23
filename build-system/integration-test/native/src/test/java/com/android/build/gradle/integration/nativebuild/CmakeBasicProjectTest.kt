@@ -55,7 +55,6 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
         .fromTestApp(
             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .withoutNdk()
         .create()
 
     companion object {

@@ -76,7 +76,6 @@ class DynamicAppTest {
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("dynamicApp")
-        .withoutNdk()
         .create()
 
     private val bundleContent: Array<String> = arrayOf(

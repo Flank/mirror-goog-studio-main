@@ -26,7 +26,6 @@ class DynamicAppLintTest {
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("dynamicApp")
-        .withoutNdk()
         .create()
 
     @Test

@@ -35,7 +35,6 @@ class DynamicAppLegacyMultidexTest {
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("multiDex")
-        .withoutNdk()
         .create()
 
     private val forcedPrimaryDexClasses = listOf(

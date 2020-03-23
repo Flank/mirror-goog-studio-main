@@ -53,6 +53,7 @@ class NdkBuildBuildSettingsTest {
                 android {
                     compileSdkVersion 29
                     buildToolsVersion "29.0.2"
+                    ndkPath "${project.ndkPath}"
                     defaultConfig {
                       externalNativeBuild {
                           ndkBuild {

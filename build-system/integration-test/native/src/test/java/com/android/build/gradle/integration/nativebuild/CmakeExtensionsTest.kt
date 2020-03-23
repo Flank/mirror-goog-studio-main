@@ -103,6 +103,7 @@ class CmakeExtensionsTest(
             project.buildFile, """
                 apply plugin: 'com.android.application'
                 android.compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
+                android.ndkPath "${project.ndkPath}"
                 android.externalNativeBuild.cmake.path "src/main/cpp/CMakeLists.txt"
                 android.externalNativeBuild.cmake.version "$cmakeVersion"
                 android.defaultConfig.ndk.abiFilters "x86_64"

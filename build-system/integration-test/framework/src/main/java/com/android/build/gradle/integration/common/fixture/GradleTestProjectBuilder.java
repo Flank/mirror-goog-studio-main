@@ -53,7 +53,6 @@ public final class GradleTestProjectBuilder {
     @Nullable private String targetGradleVersion;
     @Nullable private String compileSdkVersion;
     @Nullable private String buildToolsVersion;
-    private boolean withoutNdk = false;
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
     @Nullable private String heapSize;
     @Nullable private String metaspace;
@@ -148,7 +147,6 @@ public final class GradleTestProjectBuilder {
                 (name != null ? name : DEFAULT_TEST_PROJECT_NAME),
                 testProject,
                 (targetGradleVersion != null ? targetGradleVersion : GRADLE_TEST_VERSION),
-                withoutNdk,
                 withDependencyChecker,
                 gradleProperties,
                 memoryRequirement,
@@ -224,12 +222,6 @@ public final class GradleTestProjectBuilder {
      */
     public GradleTestProjectBuilder withName(@NonNull String name) {
         this.name = name;
-        return this;
-    }
-
-    /** Create a project without setting ndk.dir in local.properties. */
-    public GradleTestProjectBuilder withoutNdk() {
-        this.withoutNdk = true;
         return this;
     }
 

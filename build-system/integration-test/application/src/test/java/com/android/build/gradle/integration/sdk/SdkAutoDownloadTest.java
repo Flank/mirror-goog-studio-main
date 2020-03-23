@@ -83,7 +83,6 @@ public class SdkAutoDownloadTest {
                                     .useCppSource(true)
                                     .build())
                     .addGradleProperties(IntegerOption.ANDROID_SDK_CHANNEL.getPropertyName() + "=3")
-                    .withoutNdk()
                     .create();
 
     private File mSdkHome;

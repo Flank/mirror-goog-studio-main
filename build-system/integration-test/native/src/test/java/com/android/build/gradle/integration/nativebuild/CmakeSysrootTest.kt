@@ -55,6 +55,7 @@ class CmakeSysrootTest {
             project.buildFile,
             """apply plugin: 'com.android.application'
                         android.compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
+                        android.ndkPath "${project.ndkPath}"
                         android.externalNativeBuild.cmake.path "src/main/cpp/CMakeLists.txt"
                 """
 

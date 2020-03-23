@@ -33,7 +33,6 @@ public class InvalidNdkTest {
     @ClassRule
     public static GradleTestProject sProject = GradleTestProject.builder()
             .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-            .withoutNdk()
             .create();
 
 
