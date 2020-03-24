@@ -69,6 +69,7 @@ public class AndroidDebugBridge {
     private static final String ADB = "adb"; //$NON-NLS-1$
     private static final String DDMS = "ddms"; //$NON-NLS-1$
     private static final String SERVER_PORT_ENV_VAR = "ANDROID_ADB_SERVER_PORT"; //$NON-NLS-1$
+    private static final String USER_MANAGED_ADB_ENV_VAR = "ANDROID_ADB_USER_MANAGED_MODE"; //$NON-NLS-1$
 
     // Where to find the ADB bridge.
     static final int DEFAULT_ADB_PORT = 5037;
@@ -82,6 +83,9 @@ public class AndroidDebugBridge {
 
     /** Port where adb server will be started **/
     private static int sAdbServerPort = 0;
+
+    /** Don't automatically manage ADB server. */
+    private static boolean sUserManagedAdbMode = false;
 
     private static InetAddress sHostAddr;
     private static InetSocketAddress sSocketAddr;
@@ -249,6 +253,10 @@ public class AndroidDebugBridge {
         sClientSupport = clientSupport;
         sUseLibusb = useLibusb;
         sEnv = env;
+        String userManagedAdbModeSetting = System.getenv(USER_MANAGED_ADB_ENV_VAR);
+        if (userManagedAdbModeSetting != null) {
+            sUserManagedAdbMode = Boolean.parseBoolean(userManagedAdbModeSetting);
+        }
 
         // Determine port and instantiate socket address.
         initAdbSocketAddr();
@@ -842,13 +850,16 @@ public class AndroidDebugBridge {
      * @return true if success.
      */
     boolean start() {
-        if (mAdbOsLocation != null && sAdbServerPort != 0 && (!mVersionCheck || !startAdb())) {
-            return false;
+        // Skip server start check if using user managed ADB server
+        if (!sUserManagedAdbMode) {
+            if (mAdbOsLocation != null && sAdbServerPort != 0 && (!mVersionCheck || !startAdb())) {
+                return false;
+            }
         }
 
         mStarted = true;
 
-        // now that the bridge is connected, we start the underlying services.
+        // Start the underlying services.
         mDeviceMonitor = new DeviceMonitor(this);
         mDeviceMonitor.start();
 
@@ -871,7 +882,10 @@ public class AndroidDebugBridge {
             mDeviceMonitor = null;
         }
 
-        if (!stopAdb()) {
+        // Don't stop ADB when using user managed ADB server.
+        if (sUserManagedAdbMode) {
+            Log.i(DDMS, "User managed ADB mode: Not stopping ADB server");
+        } else if (!stopAdb()) {
             return false;
         }
 
@@ -884,6 +898,11 @@ public class AndroidDebugBridge {
      * @return true if success.
      */
     public boolean restart() {
+        if (sUserManagedAdbMode) {
+            Log.e(ADB, "Cannot restart adb when using user managed ADB server."); //$NON-NLS-1$
+            return false;
+        }
+
         if (mAdbOsLocation == null) {
             Log.e(ADB,
                     "Cannot restart adb when AndroidDebugBridge is created without the location of adb."); //$NON-NLS-1$
@@ -1037,10 +1056,24 @@ public class AndroidDebugBridge {
     }
 
     /**
-     * Starts the adb host side server.
+     * @return If operating in user managed ADB mode where ddmlib will and should not manage the ADB server.
+     */
+    public static boolean isUserManagedAdbMode() {
+        return sUserManagedAdbMode;
+    }
+
+    /**
+     * Starts the adb host side server.  This method should not be used when using user managed
+     * ADB server as the server lifecycle should be managed by the user, not ddmlib.
+     *
      * @return true if success
      */
     synchronized boolean startAdb() {
+        if (sUserManagedAdbMode) {
+            Log.e(ADB, "startADB should never be called when using user managed ADB server.");
+            return false;
+        }
+
         if (sUnitTestMode) {
             // in this case, we assume the FakeAdbServer was already setup by the test code
             return true;
@@ -1115,6 +1148,11 @@ public class AndroidDebugBridge {
      * @return true if success
      */
     private synchronized boolean stopAdb() {
+        if (sUserManagedAdbMode) {
+            Log.e(ADB, "stopADB should never be called when using user managed ADB server.");
+            return false;
+        }
+
         if (mAdbOsLocation == null) {
             Log.e(ADB,
                 "Cannot stop adb when AndroidDebugBridge is created without the location of adb.");
