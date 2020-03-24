@@ -30,8 +30,11 @@ android_cc_binary(
         "armeabi-v7a",
         "arm64-v8a",
     ],
-    binary = ":transport_main.stripped",
+    # Cross compiling from windows doesn't produce a stripped binary.
+    binary = select({
+        "//tools/base/bazel:windows": ":transport_main",
+        "//conditions:default": ":transport_main.stripped",
+    }),
     filename = "transport",
-    tags = ["no_windows"],
     visibility = ["//visibility:public"],
 )
