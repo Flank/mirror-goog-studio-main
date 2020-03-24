@@ -231,7 +231,7 @@ public class ApkVerifierTrackerTest {
 
                     @Override
                     public void deviceChanged(@NonNull IDevice device, int changeMask) {
-                        if (deviceId.equals(device.getSerialNumber())) {
+                        if (deviceId.equals(device.getSerialNumber()) && device.isOnline()) {
                             AndroidDebugBridge.removeDeviceChangeListener(this);
                             countDownLatch.countDown();
                         }
