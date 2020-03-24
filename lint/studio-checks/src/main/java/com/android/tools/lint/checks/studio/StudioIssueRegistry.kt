@@ -64,6 +64,7 @@ class StudioIssueRegistry : IssueRegistry() {
         SwingUtilitiesDetector.ISSUE,
         SwingWorkerDetector.ISSUE,
         GradleApiUsageDetector.ISSUE,
+        HdpiDetector.ISSUE,
         LintDetectorDetector.ID,
         LintDetectorDetector.PSI_COMPARE,
         LintDetectorDetector.CHECK_URL,
