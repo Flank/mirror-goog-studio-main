@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Scanner;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -75,6 +76,7 @@ public class DataBindingIncrementalTest {
             = "src/main/java/android/databinding/testapp/MainActivity.java";
     private static final String USER_JAVA = "src/main/java/android/databinding/testapp/User.java";
 
+    private final boolean useAndroidX;
     private final boolean withKotlin;
 
     private final List<String> mainActivityBindingClasses;
@@ -89,6 +91,7 @@ public class DataBindingIncrementalTest {
     }
 
     public DataBindingIncrementalTest(boolean useAndroidX, boolean withKotlin) {
+        this.useAndroidX = useAndroidX;
         this.withKotlin = withKotlin;
         mainActivityBindingClasses =
                 ImmutableList.of(MAIN_ACTIVITY_BINDING_CLASS, MAIN_ACTIVITY_BINDING_CLASS_IMPL);
@@ -463,5 +466,28 @@ public class DataBindingIncrementalTest {
         String customNameImpl = "Landroid/databinding/testapp/databinding/MyCustomNameImpl;";
         assertThat(project.getApk(DEBUG)).containsClass(customName);
         assertThat(project.getApk(DEBUG)).containsClass(customNameImpl);
+    }
+
+    /** Regression test for bug 151860061. */
+    @Test
+    public void testErrorsDoNotPersistAfterGettingFixed() throws Exception {
+        // Test on one scenario is enough
+        Assume.assumeTrue(useAndroidX && withKotlin);
+
+        // Create a layout file with duplicate IDs, expect the build to fail
+        TestFileUtils.searchAndReplace(
+                project.file(ACTIVITY_MAIN_XML),
+                "<TextView android:text='@{foo + \" \" + foo}'",
+                "<TextView android:id=\"@+id/duplicateId\" />\n"
+                        + "<TextView android:id=\"@+id/duplicateId\" />\n"
+                        + "<TextView android:text='@{foo + \" \" + foo}'");
+        project.executor().expectFailure().run(COMPILE_JAVA_TASK);
+
+        // Correct the layout file, expect the build to pass
+        TestFileUtils.searchAndReplace(
+                project.file(ACTIVITY_MAIN_XML),
+                "<TextView android:id=\"@+id/duplicateId\" />",
+                "");
+        project.executor().run(COMPILE_JAVA_TASK);
     }
 }

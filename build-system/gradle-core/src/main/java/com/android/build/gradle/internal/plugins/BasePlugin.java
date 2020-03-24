@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.plugins;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import android.databinding.tool.processing.Scope;
 import com.android.SdkConstants;
 import com.android.Version;
 import com.android.annotations.NonNull;
@@ -363,6 +364,7 @@ public abstract class BasePlugin<
                                 null,
                                 Main::clearInternTables);
                         DeprecationReporterImpl.Companion.clean();
+                        Scope.clear();
                     }
                 });
 
