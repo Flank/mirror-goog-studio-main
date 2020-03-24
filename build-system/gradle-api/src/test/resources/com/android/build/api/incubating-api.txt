@@ -76,7 +76,6 @@ com.android.build.api.component.ComponentIdentity.getFlavorName: java.lang.Strin
 com.android.build.api.component.ComponentIdentity.getProductFlavors: java.util.List<kotlin.Pair<java.lang.String, java.lang.String>> ()
 com.android.build.api.component.ComponentProperties implements com.android.build.api.component.ComponentIdentity, com.android.build.api.component.ActionableComponentObject
 com.android.build.api.component.ComponentProperties.getOperations: com.android.build.api.artifact.Operations ()
-com.android.build.api.component.ComponentProperties.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()
 com.android.build.api.component.FilteredComponentActionRegistrar
 com.android.build.api.component.FilteredComponentActionRegistrar.withBuildType: com.android.build.api.component.BuildTypedComponentActionRegistrar<ComponentT> (java.lang.String)
 com.android.build.api.component.FilteredComponentActionRegistrar.withBuildType: void (java.lang.String, kotlin.jvm.functions.Function1<? super ComponentT, kotlin.Unit>)
@@ -682,6 +681,7 @@ com.android.build.api.variant.ApplicationVariant.getDependenciesInfo: com.androi
 com.android.build.api.variant.ApplicationVariantProperties implements com.android.build.api.variant.VariantProperties
 com.android.build.api.variant.ApplicationVariantProperties.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
 com.android.build.api.variant.ApplicationVariantProperties.getDependenciesInfo: com.android.build.api.variant.DependenciesInfo ()
+com.android.build.api.variant.ApplicationVariantProperties.getOutputs: java.util.List<com.android.build.api.variant.VariantOutput> ()
 com.android.build.api.variant.BuiltArtifact implements com.android.build.api.variant.VariantOutputConfiguration
 com.android.build.api.variant.BuiltArtifact.getOutputFile: java.lang.String ()
 com.android.build.api.variant.BuiltArtifact.getVersionCode: java.lang.Integer ()

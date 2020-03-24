@@ -99,14 +99,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
 
     @get:Optional
     @get:Input
-    abstract val baseModuleVersionCode: Property<Int?>
-
-    @get:Optional
-    @get:Input
-    abstract val baseModuleVersionName: Property<String?>
-
-    @get:Optional
-    @get:Input
     abstract val packageOverride: Property<String>
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -158,10 +150,8 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             navJsons,
             featureName.orNull,
             packageOverride.get(),
-            if (baseModuleVersionCode.isPresent) baseModuleVersionCode.orNull else variantOutput.get().versionCode.orNull,
-            if (baseModuleVersionName.isPresent
-                && !baseModuleVersionName.get().isNullOrEmpty()
-            ) baseModuleVersionName.orNull else variantOutput.get().versionName.orNull,
+            variantOutput.get().versionCode.orNull,
+            variantOutput.get().versionName.orNull,
             minSdkVersion.orNull,
             targetSdkVersion.orNull,
             maxSdkVersion.orNull,
@@ -417,8 +407,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                     creationConfig as DynamicFeatureCreationConfig
                 task.featureName.setDisallowChanges(dfCreationConfig.featureName)
                 task.baseModuleDebuggable.setDisallowChanges(dfCreationConfig.baseModuleDebuggable)
-                task.baseModuleVersionCode.setDisallowChanges(dfCreationConfig.baseModuleVersionCode)
-                task.baseModuleVersionName.setDisallowChanges(dfCreationConfig.baseModuleVersionName)
                 task.dependencyFeatureNameArtifacts = creationConfig
                     .variantDependencies
                     .getArtifactFileCollection(

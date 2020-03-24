@@ -137,8 +137,8 @@ public class ApiObjectFactory {
                         services,
                         extension,
                         variantApi,
-                        componentProperties.getTaskContainer(),
-                        services.getDeprecationReporter());
+                        componentProperties.getVariantType(),
+                        componentProperties.getTaskContainer());
 
         componentProperties
                 .getOutputs()

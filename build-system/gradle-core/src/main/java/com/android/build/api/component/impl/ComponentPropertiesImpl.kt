@@ -74,6 +74,7 @@ import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.concurrent.Callable
@@ -99,9 +100,6 @@ abstract class ComponentPropertiesImpl(
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
 
-    override val outputs: VariantOutputList
-        get() = VariantOutputList(variantOutputs.toList())
-
     override val operations: OperationsImpl
         get() = artifacts.getOperations()
 
@@ -109,11 +107,12 @@ abstract class ComponentPropertiesImpl(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
+    // this is technically a public API for the Application Variant (only)
+    override val outputs: VariantOutputList
+        get() = VariantOutputList(variantOutputs.toList())
 
     // Move as direct delegates
     override val taskContainer = variantData.taskContainer
-
-    private val variantOutputs= mutableListOf<VariantOutputImpl>()
 
     override val variantType: VariantType
         get() = variantDslInfo.variantType
@@ -180,28 +179,21 @@ abstract class ComponentPropertiesImpl(
         return null
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // Private stuff
+    // ---------------------------------------------------------------------------------------------
+
+    private val variantOutputs= mutableListOf<VariantOutputImpl>()
+
+    // FIXME make internal
     fun addVariantOutput(
         variantOutputConfiguration: VariantOutputConfigurationImpl,
         outputFileName: String? = null
     ): VariantOutputImpl {
 
-        val versionCodeProperty =
-            internalServices.newNullablePropertyBackingDeprecatedApi(
-                Int::class.java,
-                variantDslInfo.versionCode,
-                "$name::versionCode"
-            )
-
-        val versionNameProperty =
-            internalServices.newNullablePropertyBackingDeprecatedApi(
-                String::class.java,
-                variantDslInfo.versionName,
-                "$name::versionName"
-            )
-
         return VariantOutputImpl(
-            versionCodeProperty,
-            versionNameProperty,
+            createVersionCodeProperty(),
+            createVersionNameProperty(),
             internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true, "$name::isEnabled"),
             variantOutputConfiguration,
             variantOutputConfiguration.baseName(variantDslInfo),
@@ -216,6 +208,22 @@ abstract class ComponentPropertiesImpl(
                 "$name::archivesBaseName")
         ).also {
             variantOutputs.add(it)
+        }
+    }
+
+    // default impl for variants that don't actually have versionName
+    protected open fun createVersionNameProperty(): Property<String?> {
+        val stringValue: String? = null
+        return internalServices.nullablePropertyOf(String::class.java, stringValue).also {
+            it.disallowChanges()
+        }
+    }
+
+    // default impl for variants that don't actually have versionCode
+    protected open fun createVersionCodeProperty() : Property<Int?> {
+        val intValue: Int? = null
+        return internalServices.nullablePropertyOf(Int::class.java, intValue).also {
+            it.disallowChanges()
         }
     }
 

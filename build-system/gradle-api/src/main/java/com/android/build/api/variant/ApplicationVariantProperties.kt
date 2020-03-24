@@ -30,7 +30,12 @@ interface ApplicationVariantProperties : VariantProperties {
      */
     override val applicationId: Property<String>
 
+    /**
+     * Returns the final list of variant outputs.
+     * @return read only list of [VariantOutput] for this variant.
+     */
+    val outputs: List<VariantOutput>
+
     /** Specify whether to include SDK dependency information in APKs and Bundles. */
     val dependenciesInfo: DependenciesInfo
-
 }

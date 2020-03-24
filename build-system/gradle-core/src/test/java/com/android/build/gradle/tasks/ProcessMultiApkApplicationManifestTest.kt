@@ -266,54 +266,6 @@ class ProcessMultiApkApplicationManifestTest {
         }
     }
 
-    @Test
-    fun testSeveralSplitNoUniversalAsBaseModule() {
-        val xxhdpi = createVariantOutputForDensity("xxhdpi")
-        xxhdpi.versionCode.set(24)
-        xxhdpi.versionName.set("twentyfour")
-        task.variantOutputs.add(xxhdpi)
-        val xhdpi = createVariantOutputForDensity("xhdpi")
-        xhdpi.versionCode.set(23)
-        xhdpi.versionName.set("twentythree")
-        task.variantOutputs.add(xhdpi)
-        val hdpi = createVariantOutputForDensity("hdpi")
-        hdpi.versionCode.set(22)
-        hdpi.versionName.set("twentytwo")
-        task.variantOutputs.add(hdpi)
-
-        BuiltArtifactsImpl(
-            artifactType = InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
-            applicationId = task.applicationId.get(),
-            variantName = task.variantName,
-            elements = listOf(
-                xxhdpi.toBuiltArtifact(createCompatibleScreensManifestForDensity(
-                    task.compatibleScreensManifest.get().asFile,
-                    "480")),
-                xhdpi.toBuiltArtifact(createCompatibleScreensManifestForDensity(
-                    task.compatibleScreensManifest.get().asFile,
-                    "xhdpi")),
-                hdpi.toBuiltArtifact(createCompatibleScreensManifestForDensity(
-                    task.compatibleScreensManifest.get().asFile,
-                    "hdpi"))
-            )
-        ).saveToDirectory(task.compatibleScreensManifest.get().asFile)
-
-        task.baseModuleVersionCode.set(24)
-        task.baseModuleVersionName.set("version_name")
-
-        task.taskAction(Mockito.mock(IncrementalTaskInputs::class.java))
-
-        val listFiles = task.multiApkManifestOutputDirectory.asFile.get().listFiles()
-        assertThat(listFiles).hasLength(4)
-        val builtArtifacts = BuiltArtifactsLoaderImpl().load(task.multiApkManifestOutputDirectory)
-        assertThat(builtArtifacts).isNotNull()
-        assertThat(builtArtifacts!!.elements).hasSize(3)
-        builtArtifacts.elements.forEach {
-            val manifestContent = File(it.outputFile).readText()
-            assertThat(manifestContent).contains("android:versionCode=\"24\"")
-        }
-    }
-
     private fun createVariantOutput(filter: FilterConfiguration? = null) =
         VariantOutputImpl(
             FakeGradleProperty(value = 0),

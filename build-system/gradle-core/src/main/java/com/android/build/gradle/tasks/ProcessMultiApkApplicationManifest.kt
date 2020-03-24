@@ -64,14 +64,6 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
     @get:Input
     abstract val applicationId: Property<String>
 
-    @get:Optional
-    @get:Input
-    abstract val baseModuleVersionCode: Property<Int?>
-
-    @get:Optional
-    @get:Input
-    abstract val baseModuleVersionName: Property<String?>
-
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
     abstract val mainMergedManifest: RegularFileProperty
@@ -130,10 +122,6 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
         )
 
         if (compatibleScreensManifestFilePath == null) {
-            if (baseModuleVersionCode.isPresent && baseModuleVersionName.isPresent) {
-                mainMergedManifest.get().asFile.copyTo(mergedManifestOutputFile, overwrite = true)
-                return mergedManifestOutputFile
-            }
             if (variantOutput.versionCode.orNull == singleVariantOutput.get().versionCode.orNull
                 && variantOutput.versionName.orNull == singleVariantOutput.get().versionName.orNull) {
 
@@ -150,10 +138,8 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
             listOf(),
             null,
             null,
-            if (baseModuleVersionCode.isPresent) baseModuleVersionCode.orNull else variantOutput.versionCode.orNull,
-            if (baseModuleVersionName.isPresent
-                && !baseModuleVersionName.get().isNullOrEmpty()
-            ) baseModuleVersionName.orNull else variantOutput.versionName.orNull,
+            variantOutput.versionCode.orNull,
+            variantOutput.versionName.orNull,
             null,
             null,
             null,
@@ -211,10 +197,6 @@ abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
                 )
 
             task.applicationId.setDisallowChanges(creationConfig.applicationId)
-            if (creationConfig is DynamicFeatureCreationConfig) {
-                task.baseModuleVersionCode.setDisallowChanges(creationConfig.baseModuleVersionCode)
-                task.baseModuleVersionName.setDisallowChanges(creationConfig.baseModuleVersionName)
-            }
         }
     }
 }
