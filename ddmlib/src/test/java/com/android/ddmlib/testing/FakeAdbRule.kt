@@ -115,6 +115,9 @@ class FakeAdbRule : ExternalResource() {
     AndroidDebugBridge.disableFakeAdbServerMode()
     if (closeFakeAdbServerDuringCleanUp) {
       fakeAdbServer?.close()
+      if (fakeAdbServer?.awaitServerTermination(30, TimeUnit.SECONDS) == false) {
+        error("The adbServer didn't terminate in 30 seconds")
+      }
     }
   }
 }
